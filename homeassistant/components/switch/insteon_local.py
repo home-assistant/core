@@ -22,7 +22,7 @@ DOMAIN = 'switch'
 INSTEON_LOCAL_SWITCH_CONF = 'insteon_local_switch.conf'
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -36,15 +36,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             setup_switch(
                 device_id, conf_switches[device_id], insteonhub, hass,
                 add_devices)
+    else:
+        linked = insteonhub.get_linked()
 
-    linked = insteonhub.get_linked()
-
-    for device_id in linked:
-        if linked[device_id]['cat_type'] == 'switch'\
-                and device_id not in conf_switches:
-            request_configuration(device_id, insteonhub,
-                                  linked[device_id]['model_name'] + ' ' +
-                                  linked[device_id]['sku'], hass, add_devices)
+        for device_id in linked:
+            if linked[device_id]['cat_type'] == 'switch'\
+                    and device_id not in conf_switches:
+                request_configuration(device_id, insteonhub,
+                                      linked[device_id]['model_name'] + ' ' +
+                                      linked[device_id]['sku'], hass, add_devices)
 
 
 def request_configuration(device_id, insteonhub, model, hass,
