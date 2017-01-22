@@ -10,6 +10,7 @@ from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor.rest as rest
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.config_validation import template
+
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
@@ -24,13 +25,6 @@ class TestRestSwitchSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_missing_config(self):
-        """Test setup with configuration missing required entries."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost'
-        }, None))
-
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
         with self.assertRaises(MissingSchema):
@@ -40,7 +34,8 @@ class TestRestSwitchSetup(unittest.TestCase):
                 'method': 'GET'
             }, None)
 
-    @patch('requests.get', side_effect=requests.exceptions.ConnectionError())
+    @patch('requests.Session.send',
+        side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
@@ -48,7 +43,7 @@ class TestRestSwitchSetup(unittest.TestCase):
             'resource': 'http://localhost',
         }, None))
 
-    @patch('requests.get', side_effect=Timeout())
+    @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
