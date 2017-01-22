@@ -359,6 +359,7 @@ omit =
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
+    homeassistant/components/switch/fritzdect.py
     homeassistant/components/switch/hdmi_cec.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/hook.py

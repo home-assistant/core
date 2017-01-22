@@ -151,6 +151,9 @@ freesms==0.1.1
 # homeassistant.components.device_tracker.fritz
 # fritzconnection==0.6
 
+# homeassistant.components.switch.fritzdect
+fritzhome==1.0.2
+
 # homeassistant.components.conversation
 fuzzywuzzy==0.14.0
 
