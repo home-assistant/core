@@ -55,13 +55,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for an Amcrest IP Camera."""
     from amcrest import AmcrestCamera
 
-    data = AmcrestCamera(
+    camera = AmcrestCamera(
         config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+        config.get(CONF_USERNAME), config.get(CONF_PASSWORD)).camera
 
     persistent_notification = loader.get_component('persistent_notification')
     try:
-        data.camera.current_time
+        camera.current_time
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
         persistent_notification.create(
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        sensors.append(AmcrestSensor(config, data, sensor_type))
+        sensors.append(AmcrestSensor(config, camera, sensor_type))
 
     add_devices(sensors, True)
 
@@ -84,11 +84,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AmcrestSensor(Entity):
     """A sensor implementation for Amcrest IP camera."""
 
-    def __init__(self, device_info, data, sensor_type):
+    def __init__(self, device_info, camera, sensor_type):
         """Initialize a sensor for Amcrest camera."""
         super(AmcrestSensor, self).__init__()
         self._attrs = {}
-        self._data = data
+        self._camera = camera
         self._sensor_type = sensor_type
         self._name = '{0}_{1}'.format(device_info.get(CONF_NAME),
                                       SENSOR_TYPES.get(self._sensor_type)[0])
@@ -122,21 +122,21 @@ class AmcrestSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        version, build_date = self._data.camera.software_information
+        version, build_date = self._camera.software_information
         self._attrs['Build Date'] = build_date.split('=')[-1]
-        self._attrs['Serial Number'] = self._data.camera.serial_number
+        self._attrs['Serial Number'] = self._camera.serial_number
         self._attrs['Version'] = version.split('=')[-1]
 
         if self._sensor_type == 'motion_detector':
-            self._state = self._data.camera.is_motion_detected
-            self._attrs['Record Mode'] = self._data.camera.record_mode
+            self._state = self._camera.is_motion_detected
+            self._attrs['Record Mode'] = self._camera.record_mode
 
         elif self._sensor_type == 'ptz_preset':
-            self._state = self._data.camera.ptz_presets_count
+            self._state = self._camera.ptz_presets_count
 
         elif self._sensor_type == 'sdcard':
-            sd_used = self._data.camera.storage_used
-            sd_total = self._data.camera.storage_total
+            sd_used = self._camera.storage_used
+            sd_total = self._camera.storage_total
             self._attrs['Total'] = '{0} {1}'.format(*sd_total)
             self._attrs['Used'] = '{0} {1}'.format(*sd_used)
-            self._state = self._data.camera.percent(sd_used[0], sd_total[0])
+            self._state = self._camera.percent(sd_used[0], sd_total[0])
