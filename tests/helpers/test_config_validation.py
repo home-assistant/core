@@ -461,10 +461,6 @@ def test_ordered_dict_order():
     """Test ordered_dict validator."""
     schema = vol.Schema(cv.ordered_dict(int, cv.string))
 
-    for value in (None, [], 100, 'hello'):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
     val = OrderedDict()
     val['first'] = 1
     val['second'] = 2
