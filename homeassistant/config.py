@@ -89,7 +89,7 @@ tts:
 
 CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
     vol.Required(CONF_ENTITY_ID): vol.All(
-        cv.ensure_list_csv, [cv.string], [vol.Lower])
+        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
 }, extra=vol.ALLOW_EXTRA)
 
 
