@@ -39,11 +39,11 @@ def get_scanner(hass, config):
 
 
 class SkyHubDeviceScanner(DeviceScanner):
-    """This class queries a BT Home Hub 5."""
+    """This class queries a Sky Hub router."""
 
     def __init__(self, config):
         """Initialise the scanner."""
-        _LOGGER.info('Initialising BT Home Hub 5')
+        _LOGGER.info('Initialising Sky Hub')
         self.host = config.get(CONF_HOST, '192.168.1.254')
 
         self.lock = threading.Lock()
@@ -98,7 +98,7 @@ class SkyHubDeviceScanner(DeviceScanner):
 
 
 def _get_homehub_data(url):
-    """Retrieve data from BT Home Hub 5 and return parsed result."""
+    """Retrieve data from Sky Hub and return parsed result."""
     try:
         response = requests.get(url, timeout=5)
     except requests.exceptions.Timeout:
@@ -111,7 +111,7 @@ def _get_homehub_data(url):
 
 
 def _parse_homehub_response(data_str):
-    """Parse the BT Home Hub 5 data format."""
+    """Parse the Sky Hub data format."""
     m = re.search('attach_dev = \'(.*)\'', data_str);
     str = m.group(1);
     
