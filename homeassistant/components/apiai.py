@@ -56,6 +56,7 @@ class ApiaiIntentsView(HomeAssistantView):
         """Initialize API.AI view."""
         super().__init__()
 
+        self.hass = hass
         intents = copy.deepcopy(intents)
         template.attach(hass, intents)
 
@@ -120,7 +121,7 @@ class ApiaiIntentsView(HomeAssistantView):
         if action is not None:
             # We can wait for the action to be executed
             # API.AI expects a response in less than 5s
-            asyncio.ensure_future(action.async_run(response.parameters))
+            self.hass.async_add_job(action.async_run(response.parameters))
 
         # pylint: disable=unsubscriptable-object
         if speech is not None:

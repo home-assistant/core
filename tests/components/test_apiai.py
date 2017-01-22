@@ -1,6 +1,7 @@
 """The tests for the APIAI component."""
 # pylint: disable=protected-access
 import json
+from datetime import datetime
 import unittest
 
 import requests
@@ -27,6 +28,7 @@ INTENT_NAME = "tests"
 REQUEST_ID = "19ef7e78-fe15-4e94-99dd-0c0b1e8753c3"
 REQUEST_TIMESTAMP = "2017-01-21T17:54:18.952Z"
 CONTEXT_NAME = "78a5db95-b7d6-4d50-9c9b-2fc73a5e34c3_id_dialog_context"
+MAX_RESPONSE_TIME = 5  # https://docs.api.ai/docs/webhook
 
 # pylint: disable=invalid-name
 hass = None
@@ -83,6 +85,15 @@ def setUpModule():
                             "hello": "{{ ZodiacSign }}"
                         },
                         "entity_id": "switch.test",
+                    }
+                },
+                "TooLong": {
+                    "speech": "Too long intent",
+                    "action": {
+                        "service": "notify.undefined",
+                        "data_template": {
+                            "message": "nothing"
+                        }
                     }
                 }
             }
@@ -501,3 +512,46 @@ class TestApiai(unittest.TestCase):
         self.assertEqual(
             "Intent 'unknown' is not yet configured within Home Assistant.",
             text)
+
+    def test_response_time(self):
+        """Test response time. Should not exceed 5s."""
+        data = {
+            "id": REQUEST_ID,
+            "timestamp": REQUEST_TIMESTAMP,
+            "result": {
+                "source": "agent",
+                "resolvedQuery": "too long",
+                "speech": "",
+                "action": "TooLong",
+                "actionIncomplete": False,
+                "parameters": {},
+                "contexts": [],
+                "metadata": {
+                    "intentId": INTENT_ID,
+                    "webhookUsed": "true",
+                    "webhookForSlotFillingUsed": "false",
+                    "intentName": INTENT_NAME
+                },
+                "fulfillment": {
+                    "speech": "",
+                    "messages": [
+                        {
+                            "type": 0,
+                            "speech": ""
+                        }
+                    ]
+                },
+                "score": 1
+            },
+            "status": {
+                "code": 200,
+                "errorType": "success"
+            },
+            "sessionId": SESSION_ID,
+            "originalRequest": None
+        }
+        req_start_time = datetime.now()
+        _intent_req(data)
+        req_end_time = datetime.now()
+        request_time = (req_end_time - req_start_time).total_seconds()
+        self.assertLess(request_time, MAX_RESPONSE_TIME)
