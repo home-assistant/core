@@ -546,7 +546,7 @@ pyvera==0.2.23
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.9
+pywemo==0.4.11
 
 # homeassistant.components.light.yeelight
 pyyeelight==1.0-beta
