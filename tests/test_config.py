@@ -170,16 +170,17 @@ class TestConfig(unittest.TestCase):
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
         self.assertTrue(mock_print.called)
 
+    # pylint: disable=no-self-use
     def test_core_config_schema(self):
         """Test core config schema."""
         for value in (
-            {CONF_UNIT_SYSTEM: 'K'},
-            {'time_zone': 'non-exist'},
-            {'latitude': '91'},
-            {'longitude': -181},
-            {'customize': 'bla'},
-            {'customize': {'invalid_entity_id': {}}},
-            {'customize': {'light.sensor': 100}},
+                {CONF_UNIT_SYSTEM: 'K'},
+                {'time_zone': 'non-exist'},
+                {'latitude': '91'},
+                {'longitude': -181},
+                {'customize': 'bla'},
+                {'customize': {'light.sensor': 100}},
+                {'customize': {'entity_id': []}},
         ):
             with pytest.raises(MultipleInvalid):
                 config_util.CORE_CONFIG_SCHEMA(value)
@@ -196,13 +197,7 @@ class TestConfig(unittest.TestCase):
             },
         })
 
-    def test_entity_customization(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
-
+    def _compute_state(self, config):
         run_coroutine_threadsafe(
             config_util.async_process_ha_core_config(self.hass, config),
             self.hass.loop).result()
@@ -214,9 +209,49 @@ class TestConfig(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        state = self.hass.states.get('test.test')
+        return self.hass.states.get('test.test')
+
+    def test_entity_customization_false(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {
+                      'test.test': {'hidden': False}}}
+
+        state = self._compute_state(config)
+
+        assert 'hidden' not in state.attributes
+
+    def test_entity_customization(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
+
+        state = self._compute_state(config)
 
         assert state.attributes['hidden']
+
+    def test_entity_customization_comma_separated(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: [
+                      {'entity_id': 'test.not_test,test,test.not_t*',
+                       'key1': 'value1'},
+                      {'entity_id': 'test.test,not_test,test.not_t*',
+                       'key2': 'value2'},
+                      {'entity_id': 'test.not_test,not_test,test.t*',
+                       'key3': 'value3'}]}
+
+        state = self._compute_state(config)
+
+        assert state.attributes['key1'] == 'value1'
+        assert state.attributes['key2'] == 'value2'
+        assert state.attributes['key3'] == 'value3'
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
@@ -229,6 +264,7 @@ class TestConfig(unittest.TestCase):
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
+            # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
             self.hass.config.path = mock.Mock()
@@ -258,6 +294,7 @@ class TestConfig(unittest.TestCase):
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
+            # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
             self.hass.config.path = mock.Mock()

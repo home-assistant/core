@@ -6,7 +6,7 @@ import os
 import shutil
 from types import MappingProxyType
 # pylint: disable=unused-import
-from typing import Any, Tuple  # NOQA
+from typing import Any, List, Tuple  # NOQA
 
 import voluptuous as vol
 
@@ -14,15 +14,15 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    __version__)
-from homeassistant.core import valid_entity_id, DOMAIN as CONF_CORE
+    CONF_ENTITY_ID, __version__)
+from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import set_customize
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.helpers.customize import set_customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,19 +87,24 @@ tts:
 """
 
 
-def _valid_customize(value):
-    """Config validator for customize."""
-    if not isinstance(value, dict):
-        raise vol.Invalid('Expected dictionary')
+CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): vol.All(
+        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
+}, extra=vol.ALLOW_EXTRA)
 
-    for key, val in value.items():
-        if not valid_entity_id(key):
-            raise vol.Invalid('Invalid entity ID: {}'.format(key))
 
-        if not isinstance(val, dict):
-            raise vol.Invalid('Value of {} is not a dictionary'.format(key))
+def _convert_old_config(inp: Any) -> List:
+    if not isinstance(inp, dict):
+        return cv.ensure_list(inp)
+    if CONF_ENTITY_ID in inp:
+        return [inp]  # sigle entry
+    res = []
 
-    return value
+    inp = vol.Schema({cv.match_all: dict})(inp)
+    for key, val in inp.items():
+        val[CONF_ENTITY_ID] = key
+        res.append(val)
+    return res
 
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
@@ -116,7 +121,8 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Required(CONF_CUSTOMIZE,
-                 default=MappingProxyType({})): _valid_customize,
+                 default=MappingProxyType({})): vol.All(
+                     _convert_old_config, [CUSTOMIZE_SCHEMA_ENTRY]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -301,7 +307,7 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    set_customize(config.get(CONF_CUSTOMIZE) or {})
+    set_customize(hass, config.get(CONF_CUSTOMIZE) or {})
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
