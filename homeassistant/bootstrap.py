@@ -395,6 +395,10 @@ def async_from_config_dict(config: Dict[str, Any],
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
+    # Merge packages
+    conf_util.merge_packages_config(
+        config, core_config.get(conf_util.CONF_PACKAGES, {}))
+
     # Make a copy because we are mutating it.
     # Use OrderedDict in case original one was one.
     # Convert values to dictionaries if they are None
@@ -504,8 +508,10 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     Async friendly.
     """
     logging.basicConfig(level=logging.INFO)
-    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-           "[%(name)s] %(message)s%(reset)s")
+    fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
+           "[%(name)s] %(message)s")
+    colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
+    datefmt = '%y-%m-%d %H:%M:%S'
 
     # suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
@@ -515,8 +521,8 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     try:
         from colorlog import ColoredFormatter
         logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            fmt,
-            datefmt='%y-%m-%d %H:%M:%S',
+            colorfmt,
+            datefmt=datefmt,
             reset=True,
             log_colors={
                 'DEBUG': 'cyan',
@@ -550,9 +556,7 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                 err_log_path, mode='w', delay=True)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(
-            logging.Formatter('%(asctime)s %(name)s: %(message)s',
-                              datefmt='%y-%m-%d %H:%M:%S'))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
         async_handler = AsyncHandler(hass.loop, err_handler)
         hass.data[core.DATA_ASYNCHANDLER] = async_handler
@@ -606,7 +610,7 @@ def async_log_exception(ex, domain, config, hass):
         message += '{}.'.format(humanize_error(config, ex))
 
     domain_config = config.get(domain, config)
-    message += " (See {}:{}). ".format(
+    message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 

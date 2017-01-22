@@ -5,16 +5,16 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH,
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
                                           FanEntity, SUPPORT_SET_SPEED,
-                                          SUPPORT_OSCILLATE)
+                                          SUPPORT_OSCILLATE, SUPPORT_DIRECTION)
 from homeassistant.const import STATE_OFF
 
 
 FAN_NAME = 'Living Room Fan'
 FAN_ENTITY_ID = 'fan.living_room_fan'
 
-DEMO_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE
+DEMO_SUPPORT = SUPPORT_SET_SPEED | SUPPORT_OSCILLATE | SUPPORT_DIRECTION
 
 
 # pylint: disable=unused-argument
@@ -31,8 +31,9 @@ class DemoFan(FanEntity):
     def __init__(self, hass, name: str, initial_state: str) -> None:
         """Initialize the entity."""
         self.hass = hass
-        self.speed = initial_state
+        self._speed = initial_state
         self.oscillating = False
+        self.direction = "forward"
         self._name = name
 
     @property
@@ -46,11 +47,16 @@ class DemoFan(FanEntity):
         return False
 
     @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self._speed
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [STATE_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
+        return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=SPEED_MED) -> None:
+    def turn_on(self, speed: str=SPEED_MEDIUM) -> None:
         """Turn on the entity."""
         self.set_speed(speed)
 
@@ -61,13 +67,23 @@ class DemoFan(FanEntity):
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        self.speed = speed
+        self._speed = speed
+        self.update_ha_state()
+
+    def set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        self.direction = direction
         self.update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         self.oscillating = oscillating
         self.update_ha_state()
+
+    @property
+    def current_direction(self) -> str:
+        """Fan direction."""
+        return self.direction
 
     @property
     def supported_features(self) -> int:

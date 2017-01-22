@@ -538,6 +538,25 @@ class TestMediaPlayer(unittest.TestCase):
 
         self.assertEqual(check_flags, ump.supported_media_commands)
 
+    def test_service_call_no_active_child(self):
+        """Test a service call to children with no active child."""
+        config = self.config_children_only
+        universal.validate_config(config)
+
+        ump = universal.UniversalMediaPlayer(self.hass, **config)
+        ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
+        ump.update()
+
+        self.mock_mp_1._state = STATE_OFF
+        self.mock_mp_1.update_ha_state()
+        self.mock_mp_2._state = STATE_OFF
+        self.mock_mp_2.update_ha_state()
+        ump.update()
+
+        ump.turn_off()
+        self.assertEqual(0, len(self.mock_mp_1.service_calls['turn_off']))
+        self.assertEqual(0, len(self.mock_mp_2.service_calls['turn_off']))
+
     def test_service_call_to_child(self):
         """Test service calls that should be routed to a child."""
         config = self.config_children_only

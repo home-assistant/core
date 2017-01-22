@@ -9,8 +9,6 @@ import logging
 from contextlib import closing
 
 import aiohttp
-from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout
 import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
@@ -20,18 +18,21 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession, async_aiohttp_proxy_stream)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_MJPEG_URL = 'mjpeg_url'
+CONF_STILL_IMAGE_URL = 'still_image_url'
 CONTENT_TYPE_HEADER = 'Content-Type'
 
 DEFAULT_NAME = 'Mjpeg Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MJPEG_URL): cv.url,
+    vol.Optional(CONF_STILL_IMAGE_URL): cv.url,
     vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -70,6 +71,7 @@ class MjpegCamera(Camera):
         self._username = device_info.get(CONF_USERNAME)
         self._password = device_info.get(CONF_PASSWORD)
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
+        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
 
         self._auth = None
         if self._username and self._password:
@@ -77,6 +79,37 @@ class MjpegCamera(Camera):
                 self._auth = aiohttp.BasicAuth(
                     self._username, password=self._password
                 )
+
+    @asyncio.coroutine
+    def async_camera_image(self):
+        """Return a still image response from the camera."""
+        # DigestAuth is not supported
+        if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
+           self._still_image_url is None:
+            image = yield from self.hass.loop.run_in_executor(
+                None, self.camera_image)
+            return image
+
+        websession = async_get_clientsession(self.hass)
+        response = None
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                response = yield from websession.get(
+                    self._still_image_url, auth=self._auth)
+
+                image = yield from response.read()
+                return image
+
+        except asyncio.TimeoutError:
+            _LOGGER.error('Timeout getting camera image')
+
+        except (aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError) as err:
+            _LOGGER.error('Error getting new camera image: %s', err)
+
+        finally:
+            if response is not None:
+                yield from response.release()
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -103,32 +136,9 @@ class MjpegCamera(Camera):
 
         # connect to stream
         websession = async_get_clientsession(self.hass)
-        stream = None
-        response = None
-        try:
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                stream = yield from websession.get(self._mjpeg_url,
-                                                   auth=self._auth)
+        stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
-            response = web.StreamResponse()
-            response.content_type = stream.headers.get(CONTENT_TYPE_HEADER)
-
-            yield from response.prepare(request)
-
-            while True:
-                data = yield from stream.content.read(102400)
-                if not data:
-                    break
-                response.write(data)
-
-        except asyncio.TimeoutError:
-            raise HTTPGatewayTimeout()
-
-        finally:
-            if stream is not None:
-                self.hass.async_add_job(stream.release())
-            if response is not None:
-                yield from response.write_eof()
+        yield from async_aiohttp_proxy_stream(self.hass, request, stream_coro)
 
     @property
     def name(self):

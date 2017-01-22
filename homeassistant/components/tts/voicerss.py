@@ -2,7 +2,7 @@
 Support for the voicerss speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/voicerss/
+https://home-assistant.io/components/tts.voicerss/
 """
 import asyncio
 import logging
@@ -83,37 +83,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup VoiceRSS speech component."""
+    """Set up VoiceRSS TTS component."""
     return VoiceRSSProvider(hass, config)
 
 
 class VoiceRSSProvider(Provider):
-    """VoiceRSS speech api provider."""
+    """The VoiceRSS speech API provider."""
 
     def __init__(self, hass, conf):
         """Init VoiceRSS TTS service."""
         self.hass = hass
-        self.extension = conf.get(CONF_CODEC)
+        self._extension = conf[CONF_CODEC]
+        self._lang = conf[CONF_LANG]
 
-        self.form_data = {
-            'key': conf.get(CONF_API_KEY),
-            'hl': conf.get(CONF_LANG),
-            'c': (conf.get(CONF_CODEC)).upper(),
-            'f': conf.get(CONF_FORMAT),
+        self._form_data = {
+            'key': conf[CONF_API_KEY],
+            'hl': conf[CONF_LANG],
+            'c': (conf[CONF_CODEC]).upper(),
+            'f': conf[CONF_FORMAT],
         }
 
+    @property
+    def default_language(self):
+        """Default language."""
+        return self._lang
+
+    @property
+    def supported_languages(self):
+        """List of supported languages."""
+        return SUPPORT_LANGUAGES
+
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language=None):
-        """Load TTS from voicerss."""
+    def async_get_tts_audio(self, message, language, options=None):
+        """Load TTS from VoiceRSS."""
         websession = async_get_clientsession(self.hass)
-        form_data = self.form_data.copy()
+        form_data = self._form_data.copy()
 
         form_data['src'] = message
-
-        # If language is specified and supported - use it instead of the
-        # language in the config.
-        if language in SUPPORT_LANGUAGES:
-            form_data['hl'] = language
+        form_data['hl'] = language
 
         request = None
         try:
@@ -130,15 +137,15 @@ class VoiceRSSProvider(Provider):
 
                 if data in ERROR_MSG:
                     _LOGGER.error(
-                        "Error receive %s from voicerss.", str(data, 'utf-8'))
+                        "Error receive %s from VoiceRSS", str(data, 'utf-8'))
                     return (None, None)
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Timeout for voicerss api.")
+            _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 
         finally:
             if request is not None:
                 yield from request.release()
 
-        return (self.extension, data)
+        return (self._extension, data)

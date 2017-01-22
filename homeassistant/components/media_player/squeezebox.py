@@ -5,8 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.squeezebox/
 """
 import logging
-import telnetlib
+import asyncio
 import urllib.parse
+import json
+import aiohttp
+import async_timeout
 
 import voluptuous as vol
 
@@ -14,21 +17,24 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA,
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
     STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = 9090
+DEFAULT_PORT = 9000
+TIMEOUT = 10
 
 KNOWN_DEVICES = []
 
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+    SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
+    SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -38,7 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the squeezebox platform."""
     import socket
 
@@ -47,10 +54,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info is not None:
         host = discovery_info[0]
-        port = DEFAULT_PORT
+        port = None  # Port is not collected in netdisco 0.8.1
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
+
+    # In case the port is not discovered
+    if port is None:
+        port = DEFAULT_PORT
 
     # Get IP of host, to prevent duplication of same host (different DNS names)
     try:
@@ -68,13 +79,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     KNOWN_DEVICES.append(key)
 
-    _LOGGER.debug("Creating LMS object for %s", key)
-    lms = LogitechMediaServer(host, port, username, password)
-
-    if not lms.init_success:
+    _LOGGER.debug("Creating LMS object for %s", ipaddr)
+    lms = LogitechMediaServer(hass, host, port, username, password)
+    if lms is False:
         return False
 
-    add_devices(lms.create_players())
+    players = yield from lms.create_players()
+    yield from async_add_devices(players)
 
     return True
 
@@ -82,107 +93,86 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LogitechMediaServer(object):
     """Representation of a Logitech media server."""
 
-    def __init__(self, host, port, username, password):
+    def __init__(self, hass, host, port, username, password):
         """Initialize the Logitech device."""
+        self.hass = hass
         self.host = host
         self.port = port
         self._username = username
         self._password = password
-        self.http_port = self._get_http_port()
-        self.init_success = True if self.http_port else False
 
-    def _get_http_port(self):
-        """Get http port from media server, it is used to get cover art."""
-        http_port = self.query('pref', 'httpport', '?')
-        if not http_port:
-            _LOGGER.error("Failed to connect to server %s:%s",
-                          self.host, self.port)
-        return http_port
-
+    @asyncio.coroutine
     def create_players(self):
-        """Create a list of SqueezeBoxDevices connected to the LMS."""
-        players = []
-        count = self.query('player', 'count', '?')
-        for index in range(0, int(count)):
-            player_id = self.query('player', 'id', str(index), '?')
-            player = SqueezeBoxDevice(self, player_id)
-            players.append(player)
-        return players
+        """Create a list of devices connected to LMS."""
+        result = []
+        data = yield from self.async_query('players', 'status')
 
-    def query(self, *parameters):
-        """Send request and await response from server."""
-        response = self.get(' '.join(parameters))
-        response = response.split(' ')[-1].strip()
-        response = urllib.parse.unquote(response)
+        for players in data['players_loop']:
+            player = SqueezeBoxDevice(
+                self, players['playerid'], players['name'])
+            yield from player.async_update()
+            result.append(player)
+        return result
 
-        return response
+    @asyncio.coroutine
+    def async_query(self, *command, player=""):
+        """Abstract out the JSON-RPC connection."""
+        response = None
+        auth = None if self._username is None else aiohttp.BasicAuth(
+            self._username, self._password)
+        url = "http://{}:{}/jsonrpc.js".format(
+            self.host, self.port)
+        data = json.dumps({
+            "id": "1",
+            "method": "slim.request",
+            "params": [player, command]
+            })
 
-    def get_player_status(self, player):
-        """Get the status of a player."""
-        #   (title) : Song title
-        # Requested Information
-        # a (artist): Artist name 'artist'
-        # d (duration): Song duration in seconds 'duration'
-        # K (artwork_url): URL to remote artwork
-        # l (album): Album, including the server's  "(N of M)"
-        tags = 'adKl'
-        new_status = {}
-        response = self.get('{player} status - 1 tags:{tags}\n'
-                            .format(player=player, tags=tags))
+        _LOGGER.debug("URL: %s Data: %s", url, data)
 
-        if not response:
-            return {}
-
-        response = response.split(' ')
-
-        for item in response:
-            parts = urllib.parse.unquote(item).partition(':')
-            new_status[parts[0]] = parts[2]
-        return new_status
-
-    def get(self, command):
-        """Abstract out the telnet connection."""
         try:
-            telnet = telnetlib.Telnet(self.host, self.port)
+            websession = async_get_clientsession(self.hass)
+            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+                response = yield from websession.post(
+                    url,
+                    data=data,
+                    auth=auth)
 
-            if self._username and self._password:
-                _LOGGER.debug("Logging in")
+                if response.status == 200:
+                    data = yield from response.json()
+                else:
+                    _LOGGER.error(
+                        "Query failed, response code: %s Full message: %s",
+                        response.status, response)
+                    return False
 
-                telnet.write('login {username} {password}\n'.format(
-                    username=self._username,
-                    password=self._password).encode('UTF-8'))
-                telnet.read_until(b'\n', timeout=3)
+        except (asyncio.TimeoutError,
+                aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError) as error:
+            _LOGGER.error("Failed communicating with LMS: %s", type(error))
+            return False
+        finally:
+            if response is not None:
+                yield from response.release()
 
-            _LOGGER.debug("About to send message: %s", command)
-            message = '{}\n'.format(command)
-            telnet.write(message.encode('UTF-8'))
-
-            response = telnet.read_until(b'\n', timeout=3)\
-                             .decode('UTF-8')\
-
-            telnet.write(b'exit\n')
-            _LOGGER.debug("Response: %s", response)
-
-            return response
-
-        except (OSError, EOFError) as error:
-            _LOGGER.error("Could not communicate with %s:%d: %s",
-                          self.host,
-                          self.port,
-                          error)
-            return None
+        try:
+            return data['result']
+        except AttributeError:
+            _LOGGER.error("Received invalid response: %s", data)
+            return False
 
 
 class SqueezeBoxDevice(MediaPlayerDevice):
     """Representation of a SqueezeBox device."""
 
-    def __init__(self, lms, player_id):
+    def __init__(self, lms, player_id, name):
         """Initialize the SqueezeBox device."""
         super(SqueezeBoxDevice, self).__init__()
         self._lms = lms
         self._id = player_id
-        self._name = self._lms.query(self._id, 'name', '?')
-        self._status = self._lms.get_player_status(self._id)
+        self._status = {}
+        self._name = name
+        _LOGGER.debug("Creating SqueezeBox object: %s, %s", name, player_id)
 
     @property
     def name(self):
@@ -203,9 +193,31 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 return STATE_IDLE
         return STATE_UNKNOWN
 
-    def update(self):
-        """Retrieve latest state."""
-        self._status = self._lms.get_player_status(self._id)
+    def async_query(self, *parameters):
+        """Send a command to the LMS.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self._lms.async_query(
+            *parameters, player=self._id)
+
+    def query(self, *parameters):
+        """Queue up a command to send the LMS."""
+        self.hass.loop.create_task(self.async_query(*parameters))
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve the current state of the player."""
+        tags = 'adKl'
+        response = yield from self.async_query(
+            "status", "-", "1", "tags:{tags}"
+            .format(tags=tags))
+
+        try:
+            self._status = response.copy()
+            self._status.update(response["remoteMeta"])
+        except KeyError:
+            pass
 
     @property
     def volume_level(self):
@@ -217,7 +229,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Return true if volume is muted."""
         if 'mixer volume' in self._status:
-            return self._status['mixer volume'].startswith('-')
+            return str(self._status['mixer volume']).startswith('-')
 
     @property
     def media_content_id(self):
@@ -254,15 +266,14 @@ class SqueezeBoxDevice(MediaPlayerDevice):
                 username=self._lms._username,
                 password=self._lms._password,
                 server=self._lms.host,
-                port=self._lms.http_port)
+                port=self._lms.port)
         else:
             base_url = 'http://{server}:{port}/'.format(
                 server=self._lms.host,
-                port=self._lms.http_port)
+                port=self._lms.port)
 
         url = urllib.parse.urljoin(base_url, media_url)
 
-        _LOGGER.debug("Media image url: %s", url)
         return url
 
     @property
@@ -284,7 +295,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def media_album_name(self):
         """Album of current playing media."""
         if 'album' in self._status:
-            return self._status['album'].rstrip()
+            return self._status['album']
 
     @property
     def supported_media_commands(self):
@@ -293,64 +304,64 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn off media player."""
-        self._lms.query(self._id, 'power', '0')
+        self.query('power', '0')
         self.update_ha_state()
 
     def volume_up(self):
         """Volume up media player."""
-        self._lms.query(self._id, 'mixer', 'volume', '+5')
+        self.query('mixer', 'volume', '+5')
         self.update_ha_state()
 
     def volume_down(self):
         """Volume down media player."""
-        self._lms.query(self._id, 'mixer', 'volume', '-5')
+        self.query('mixer', 'volume', '-5')
         self.update_ha_state()
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         volume_percent = str(int(volume*100))
-        self._lms.query(self._id, 'mixer', 'volume', volume_percent)
+        self.query('mixer', 'volume', volume_percent)
         self.update_ha_state()
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         mute_numeric = '1' if mute else '0'
-        self._lms.query(self._id, 'mixer', 'muting', mute_numeric)
+        self.query('mixer', 'muting', mute_numeric)
         self.update_ha_state()
 
     def media_play_pause(self):
         """Send pause command to media player."""
-        self._lms.query(self._id, 'pause')
+        self.query('pause')
         self.update_ha_state()
 
     def media_play(self):
         """Send play command to media player."""
-        self._lms.query(self._id, 'play')
+        self.query('play')
         self.update_ha_state()
 
     def media_pause(self):
         """Send pause command to media player."""
-        self._lms.query(self._id, 'pause', '1')
+        self.query('pause', '1')
         self.update_ha_state()
 
     def media_next_track(self):
         """Send next track command."""
-        self._lms.query(self._id, 'playlist', 'index', '+1')
+        self.query('playlist', 'index', '+1')
         self.update_ha_state()
 
     def media_previous_track(self):
         """Send next track command."""
-        self._lms.query(self._id, 'playlist', 'index', '-1')
+        self.query('playlist', 'index', '-1')
         self.update_ha_state()
 
     def media_seek(self, position):
         """Send seek command."""
-        self._lms.query(self._id, 'time', position)
+        self.query('time', position)
         self.update_ha_state()
 
     def turn_on(self):
         """Turn the media player on."""
-        self._lms.query(self._id, 'power', '1')
+        self.query('power', '1')
         self.update_ha_state()
 
     def play_media(self, media_type, media_id, **kwargs):
@@ -365,51 +376,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             self._play_uri(media_id)
 
     def _play_uri(self, media_id):
-        """
-        Replace the current play list with the uri.
-
-        Telnet Command Structure:
-        <playerid> playlist play <item> <title> <fadeInSecs>
-
-        The "playlist play" command puts the specified song URL,
-        playlist or directory contents into the current playlist
-        and plays starting at the first item. Any songs previously
-        in the playlist are discarded. An optional title value may be
-        passed to set a title. This can be useful for remote URLs.
-        The "fadeInSecs" parameter may be passed to specify fade-in period.
-
-        Examples:
-        Request: "04:20:00:12:23:45 playlist play
-                    /music/abba/01_Voulez_Vous.mp3<LF>"
-        Response: "04:20:00:12:23:45 playlist play
-            /music/abba/01_Voulez_Vous.mp3<LF>"
-
-        """
-        self._lms.query(self._id, 'playlist', 'play', media_id)
+        """Replace the current play list with the uri."""
+        self.query('playlist', 'play', media_id)
         self.update_ha_state()
 
     def _add_uri_to_playlist(self, media_id):
-        """
-        Add a items to the existing playlist.
-
-        Telnet Command Structure:
-        <playerid> playlist add <item>
-
-        The "playlist add" command adds the specified song URL, playlist or
-        directory contents to the end of the current playlist. Songs
-        currently playing or already on the playlist are not affected.
-
-        Examples:
-        Request: "04:20:00:12:23:45 playlist add
-            /music/abba/01_Voulez_Vous.mp3<LF>"
-        Response: "04:20:00:12:23:45 playlist add
-            /music/abba/01_Voulez_Vous.mp3<LF>"
-
-        Request: "04:20:00:12:23:45 playlist add
-            /playlists/abba.m3u<LF>"
-        Response: "04:20:00:12:23:45 playlist add
-            /playlists/abba.m3u<LF>"
-
-        """
-        self._lms.query(self._id, 'playlist', 'add', media_id)
+        """Add a items to the existing playlist."""
+        self.query('playlist', 'add', media_id)
         self.update_ha_state()

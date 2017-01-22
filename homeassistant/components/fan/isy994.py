@@ -8,7 +8,7 @@ import logging
 from typing import Callable
 
 from homeassistant.components.fan import (FanEntity, DOMAIN, SPEED_OFF,
-                                          SPEED_LOW, SPEED_MED,
+                                          SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
 import homeassistant.components.isy994 as isy
 from homeassistant.const import STATE_UNKNOWN, STATE_ON, STATE_OFF
@@ -20,8 +20,8 @@ VALUE_TO_STATE = {
     0: SPEED_OFF,
     63: SPEED_LOW,
     64: SPEED_LOW,
-    190: SPEED_MED,
-    191: SPEED_MED,
+    190: SPEED_MEDIUM,
+    191: SPEED_MEDIUM,
     255: SPEED_HIGH,
 }
 
@@ -29,7 +29,7 @@ STATE_TO_VALUE = {}
 for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
-STATES = [SPEED_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
+STATES = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
 
 # pylint: disable=unused-argument
@@ -64,7 +64,11 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def __init__(self, node) -> None:
         """Initialize the ISY994 fan device."""
         isy.ISYDevice.__init__(self, node)
-        self.speed = self.state
+
+    @property
+    def speed(self) -> str:
+        """Return the current speed."""
+        return self.state
 
     @property
     def state(self) -> str:

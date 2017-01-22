@@ -5,26 +5,32 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/qwikswitch/
 """
 import logging
+
 import voluptuous as vol
 
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_URL)
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.switch import SwitchDevice
 
-DOMAIN = 'qwikswitch'
 REQUIREMENTS = ['pyqwikswitch==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'qwikswitch'
+
+CONF_DIMMER_ADJUST = 'dimmer_adjust'
+CONF_BUTTON_EVENTS = 'button_events'
 CV_DIM_VALUE = vol.All(vol.Coerce(float), vol.Range(min=1, max=3))
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required('url', default='http://127.0.0.1:2020'): vol.Coerce(str),
-        vol.Optional('dimmer_adjust', default=1): CV_DIM_VALUE,
-        vol.Optional('button_events'): vol.Coerce(str)
+        vol.Required(CONF_URL, default='http://127.0.0.1:2020'):
+            vol.Coerce(str),
+        vol.Optional(CONF_DIMMER_ADJUST, default=1): CV_DIM_VALUE,
+        vol.Optional(CONF_BUTTON_EVENTS): vol.Coerce(str)
     })}, extra=vol.ALLOW_EXTRA)
 
 QSUSB = {}
@@ -118,16 +124,17 @@ class QSLight(QSToggleEntity, Light):
 
 def setup(hass, config):
     """Setup the QSUSB component."""
-    from pyqwikswitch import (QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD,
-                              PQS_VALUE, PQS_TYPE, QSType)
+    from pyqwikswitch import (
+        QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD, PQS_VALUE, PQS_TYPE,
+        QSType)
 
     # Override which cmd's in /&listen packets will fire events
     # By default only buttons of type [TOGGLE,SCENE EXE,LEVEL]
-    cmd_buttons = config[DOMAIN].get('button_events', ','.join(CMD_BUTTONS))
+    cmd_buttons = config[DOMAIN].get(CONF_BUTTON_EVENTS, ','.join(CMD_BUTTONS))
     cmd_buttons = cmd_buttons.split(',')
 
-    url = config[DOMAIN]['url']
-    dimmer_adjust = config[DOMAIN]['dimmer_adjust']
+    url = config[DOMAIN][CONF_URL]
+    dimmer_adjust = config[DOMAIN][CONF_DIMMER_ADJUST]
 
     qsusb = QSUsb(url, _LOGGER, dimmer_adjust)
 

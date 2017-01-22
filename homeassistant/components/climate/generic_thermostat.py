@@ -87,6 +87,7 @@ class GenericThermostat(ClimateDevice):
         self._unit = hass.config.units.temperature_unit
 
         track_state_change(hass, sensor_entity_id, self._sensor_changed)
+        track_state_change(hass, heater_entity_id, self._switch_changed)
 
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
@@ -134,7 +135,7 @@ class GenericThermostat(ClimateDevice):
             return
         self._target_temp = temperature
         self._control_heating()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def min_temp(self):
@@ -163,6 +164,12 @@ class GenericThermostat(ClimateDevice):
 
         self._update_temp(new_state)
         self._control_heating()
+        self.schedule_update_ha_state()
+
+    def _switch_changed(self, entity_id, old_state, new_state):
+        """Called when heater switch changes state."""
+        if new_state is None:
+            return
         self.schedule_update_ha_state()
 
     def _update_temp(self, state):

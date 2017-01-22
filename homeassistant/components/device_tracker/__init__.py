@@ -70,6 +70,10 @@ ATTR_LOCATION_NAME = 'location_name'
 ATTR_GPS = 'gps'
 ATTR_BATTERY = 'battery'
 ATTR_ATTRIBUTES = 'attributes'
+ATTR_SOURCE_TYPE = 'source_type'
+
+SOURCE_TYPE_GPS = 'gps'
+SOURCE_TYPE_ROUTER = 'router'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
@@ -154,7 +158,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                     None, platform.get_scanner, hass, {DOMAIN: p_config})
             elif hasattr(platform, 'async_setup_scanner'):
                 setup = yield from platform.async_setup_scanner(
-                    hass, p_config, tracker.see)
+                    hass, p_config, tracker.async_see)
             elif hasattr(platform, 'setup_scanner'):
                 setup = yield from hass.loop.run_in_executor(
                     None, platform.setup_scanner, hass, p_config, tracker.see)
@@ -234,17 +238,19 @@ class DeviceTracker(object):
 
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
-            battery: str=None, attributes: dict=None):
+            battery: str=None, attributes: dict=None,
+            source_type: str=SOURCE_TYPE_GPS):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           gps_accuracy, battery, attributes)
+                           gps_accuracy, battery, attributes, source_type)
         )
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
-                  gps_accuracy=None, battery: str=None, attributes: dict=None):
+                  gps_accuracy=None, battery: str=None, attributes: dict=None,
+                  source_type: str=SOURCE_TYPE_GPS):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -262,7 +268,8 @@ class DeviceTracker(object):
 
         if device:
             yield from device.async_seen(host_name, location_name, gps,
-                                         gps_accuracy, battery, attributes)
+                                         gps_accuracy, battery, attributes,
+                                         source_type)
             if device.track:
                 yield from device.async_update_ha_state()
             return
@@ -277,7 +284,8 @@ class DeviceTracker(object):
             self.mac_to_dev[mac] = device
 
         yield from device.async_seen(host_name, location_name, gps,
-                                     gps_accuracy, battery, attributes)
+                                     gps_accuracy, battery, attributes,
+                                     source_type)
 
         if device.track:
             yield from device.async_update_ha_state()
@@ -381,6 +389,9 @@ class Device(Entity):
 
         self.away_hide = hide_if_away
         self.vendor = vendor
+
+        self.source_type = None
+
         self._attributes = {}
 
     @property
@@ -401,7 +412,9 @@ class Device(Entity):
     @property
     def state_attributes(self):
         """Return the device state attributes."""
-        attr = {}
+        attr = {
+            ATTR_SOURCE_TYPE: self.source_type
+        }
 
         if self.gps:
             attr[ATTR_LATITUDE] = self.gps[0]
@@ -426,12 +439,13 @@ class Device(Entity):
     @asyncio.coroutine
     def async_seen(self, host_name: str=None, location_name: str=None,
                    gps: GPSType=None, gps_accuracy=0, battery: str=None,
-                   attributes: dict=None):
+                   attributes: dict=None, source_type: str=SOURCE_TYPE_GPS):
         """Mark the device as seen."""
+        self.source_type = source_type
         self.last_seen = dt_util.utcnow()
         self.host_name = host_name
         self.location_name = location_name
-        self.gps_accuracy = gps_accuracy or 0
+
         if battery:
             self.battery = battery
         if attributes:
@@ -442,7 +456,10 @@ class Device(Entity):
         if gps is not None:
             try:
                 self.gps = float(gps[0]), float(gps[1])
+                self.gps_accuracy = gps_accuracy or 0
             except (ValueError, TypeError, IndexError):
+                self.gps = None
+                self.gps_accuracy = 0
                 _LOGGER.warning('Could not parse gps value for %s: %s',
                                 self.dev_id, gps)
 
@@ -467,7 +484,7 @@ class Device(Entity):
             return
         elif self.location_name:
             self._state = self.location_name
-        elif self.gps is not None:
+        elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
             zone_state = zone.async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
@@ -476,9 +493,9 @@ class Device(Entity):
                 self._state = STATE_HOME
             else:
                 self._state = zone_state.name
-
         elif self.stale():
             self._state = STATE_NOT_HOME
+            self.gps = None
             self.last_update_home = False
         else:
             self._state = STATE_HOME
@@ -637,7 +654,20 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             else:
                 host_name = yield from scanner.async_get_device_name(mac)
                 seen.add(mac)
-            hass.async_add_job(async_see_device(mac=mac, host_name=host_name))
+
+            kwargs = {
+                'mac': mac,
+                'host_name': host_name,
+                'source_type': SOURCE_TYPE_ROUTER
+            }
+
+            zone_home = hass.states.get(zone.ENTITY_ID_HOME)
+            if zone_home:
+                kwargs['gps'] = [zone_home.attributes[ATTR_LATITUDE],
+                                 zone_home.attributes[ATTR_LONGITUDE]]
+                kwargs['gps_accuracy'] = 0
+
+            hass.async_add_job(async_see_device(**kwargs))
 
     async_track_time_interval(hass, async_device_tracker_scan, interval)
     hass.async_add_job(async_device_tracker_scan, None)

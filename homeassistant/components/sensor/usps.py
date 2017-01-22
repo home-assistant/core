@@ -15,14 +15,17 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.util import Throttle
+from homeassistant.util.dt import now, parse_datetime
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['myusps==1.0.0']
+REQUIREMENTS = ['myusps==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+COOKIE = 'usps_cookies.pickle'
 CONF_UPDATE_INTERVAL = 'update_interval'
 ICON = 'mdi:package-variant-closed'
+STATUS_DELIVERED = 'delivered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -37,8 +40,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the USPS platform."""
     import myusps
     try:
+        cookie = hass.config.path(COOKIE)
         session = myusps.get_session(config.get(CONF_USERNAME),
-                                     config.get(CONF_PASSWORD))
+                                     config.get(CONF_PASSWORD),
+                                     cookie_path=cookie)
     except myusps.USPSError:
         _LOGGER.exception('Could not connect to My USPS')
         return False
@@ -54,7 +59,8 @@ class USPSSensor(Entity):
         import myusps
         self._session = session
         self._profile = myusps.get_profile(session)
-        self._packages = None
+        self._attributes = None
+        self._state = None
         self.update = Throttle(interval)(self._update)
         self.update()
 
@@ -66,25 +72,28 @@ class USPSSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return len(self._packages)
+        return self._state
 
     def _update(self):
         """Update device state."""
         import myusps
-        self._packages = myusps.get_packages(self._session)
+        status_counts = defaultdict(int)
+        for package in myusps.get_packages(self._session):
+            status = slugify(package['primary_status'])
+            if status == STATUS_DELIVERED and \
+                    parse_datetime(package['date']).date() < now().date():
+                continue
+            status_counts[status] += 1
+        self._attributes = {
+            ATTR_ATTRIBUTION: myusps.ATTRIBUTION
+        }
+        self._attributes.update(status_counts)
+        self._state = sum(status_counts.values())
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        import myusps
-        status_counts = defaultdict(int)
-        for package in self._packages:
-            status_counts[slugify(package['status'])] += 1
-        attributes = {
-            ATTR_ATTRIBUTION: myusps.ATTRIBUTION
-        }
-        attributes.update(status_counts)
-        return attributes
+        return self._attributes
 
     @property
     def icon(self):

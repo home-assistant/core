@@ -1,9 +1,13 @@
 """Helper for aiohttp webclient stuff."""
-import sys
 import asyncio
-import aiohttp
+import sys
 
-from aiohttp.hdrs import USER_AGENT
+import aiohttp
+from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
+from aiohttp import web
+from aiohttp.web_exceptions import HTTPGatewayTimeout
+import async_timeout
+
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.const import __version__
@@ -34,7 +38,6 @@ def async_get_clientsession(hass, verify_ssl=True):
             connector=connector,
             headers={USER_AGENT: SERVER_SOFTWARE}
         )
-        _async_register_clientsession_shutdown(hass, clientsession)
         hass.data[key] = clientsession
 
     return hass.data[key]
@@ -64,6 +67,43 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
         _async_register_clientsession_shutdown(hass, clientsession)
 
     return clientsession
+
+
+@asyncio.coroutine
+def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
+                               timeout=10):
+    """Stream websession request to aiohttp web response."""
+    response = None
+    stream = None
+
+    try:
+        with async_timeout.timeout(timeout, loop=hass.loop):
+            stream = yield from stream_coro
+
+        response = web.StreamResponse()
+        response.content_type = stream.headers.get(CONTENT_TYPE)
+
+        yield from response.prepare(request)
+
+        while True:
+            data = yield from stream.content.read(buffer_size)
+            response.write(data)
+
+    except asyncio.TimeoutError:
+        raise HTTPGatewayTimeout()
+
+    except (aiohttp.errors.ClientError,
+            aiohttp.errors.ClientDisconnectedError):
+        pass
+
+    except (asyncio.CancelledError, ConnectionResetError):
+        response = None
+
+    finally:
+        if stream is not None:
+            stream.close()
+        if response is not None:
+            yield from response.write_eof()
 
 
 @callback
@@ -111,8 +151,12 @@ def async_cleanup_websession(hass):
     This method is a coroutine.
     """
     tasks = []
+    if DATA_CLIENTSESSION in hass.data:
+        hass.data[DATA_CLIENTSESSION].detach()
     if DATA_CONNECTOR in hass.data:
         tasks.append(hass.data[DATA_CONNECTOR].close())
+    if DATA_CLIENTSESSION_NOTVERIFY in hass.data:
+        hass.data[DATA_CLIENTSESSION_NOTVERIFY].detach()
     if DATA_CONNECTOR_NOTVERIFY in hass.data:
         tasks.append(hass.data[DATA_CONNECTOR_NOTVERIFY].close())
 
