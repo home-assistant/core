@@ -13,7 +13,7 @@ from homeassistant import util
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.components.http import HomeAssistantWSGI
+from homeassistant.components.http import REQUIREMENTS, HomeAssistantWSGI
 import homeassistant.helpers.config_validation as cv
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
@@ -21,7 +21,6 @@ from .hue_api import (
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
-DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
