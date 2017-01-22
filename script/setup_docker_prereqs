@@ -2,6 +2,7 @@
 # Install requirements and build dependencies for Home Assinstant in Docker.
 
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
+INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 
@@ -9,6 +10,8 @@ INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 PACKAGES=(
   # build-essential is required for python pillow module on non-x86_64 arch
   build-essential
+  # libxrandr-dev is required for openalpr
+  libxrandr-dev
   # homeassistant.components.device_tracker.nmap_tracker
   nmap net-tools libcurl3-dev
   # homeassistant.components.device_tracker.bluetooth_tracker
@@ -17,10 +20,11 @@ PACKAGES=(
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
+  cmake git
   # python-openzwave
   cython3 libudev-dev
   # libcec
-  cmake swig libxrandr-dev
+  swig
 )
 
 install_tellstick () {
@@ -34,6 +38,26 @@ install_tellstick () {
   wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
 
   apt-get install -y --no-install-recommends ${TELLSTICK_PACKAGES[@]}
+}
+
+install_openalpr () {
+  OPENALPR_PACKAGES=(
+    # homeassistant.components.image_processing.openalpr_local
+    libopencv-dev libtesseract-dev libleptonica-dev liblog4cplus-dev
+  )
+  apt-get install -y --no-install-recommends ${OPENALPR_PACKAGES[@]}
+  # Clone the latest code from GitHub
+  git clone https://github.com/openalpr/openalpr.git /usr/local/src/openalpr
+  # Setup the build directory
+  cd /usr/local/src/openalpr/src
+  mkdir -p build
+  cd build
+  # Setup the compile environment
+  cmake -DWITH_TEST=FALSE -DWITH_BINDING_JAVA=FALSE --DWITH_BINDING_PYTHON=FALSE --DWITH_BINDING_GO=FALSE -DWITH_DAEMON=FALSE -DCMAKE_INSTALL_PREFIX:PATH=/usr/local ..
+  # compile the library
+  make
+  # Install the binaries/libraries to your local system (prefix is /usr/local)
+  make install
 }
 
 install_ffmpeg () {
@@ -58,6 +82,11 @@ apt-get install -y --no-install-recommends ${PACKAGES[@]} ${PACKAGES_DEV[@]}
 if [ "$INSTALL_TELLSTICK" == "yes" ]; then
   echo "Installing tellstick"
   install_tellstick
+fi
+
+if [ "$INSTALL_OPENALPR" == "yes" ]; then
+  echo "Installing openalpr"
+  install_openalpr
 fi
 
 if [ "$INSTALL_FFPMEG" == "yes" ]; then

@@ -2,6 +2,7 @@ FROM python:3.5
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
 ENV INSTALL_TELLSTICK yes
+ENV INSTALL_OPENALPR yes
 ENV INSTALL_FFMPEG yes
 ENV INSTALL_PHANTOMJS yes
 
