@@ -389,8 +389,6 @@ def ordered_dict(value_validator, key_validator=match_all):
 
 def ensure_list_csv(value: Any) -> Sequence:
     """Ensure that input is a list or make one from comma-separated string."""
-    if value is None:
-        raise vol.Invalid('Value can not be None')
     if isinstance(value, str):
         return [member.strip() for member in value.split(',')]
     return ensure_list(value)
