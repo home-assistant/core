@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/alert/
 """
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import os
 
@@ -28,12 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'alert'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-CONF_BACKOFF = 'backoff'
 CONF_CAN_ACK = 'can_acknowledge'
 CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
-CONF_REPEAT_MAX = 'max_repeat'
-CONF_REPEAT_MIN = 'min_repeat'
 CONF_SKIP_FIRST = 'skip_first'
 
 ALERT_SCHEMA = vol.Schema({
@@ -41,10 +38,7 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.string,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
-    vol.Required(CONF_REPEAT): cv.positive_int,
-    vol.Required(CONF_REPEAT_MAX, default=1440): cv.positive_int,
-    vol.Required(CONF_REPEAT_MIN, default=1): cv.positive_int,
-    vol.Required(CONF_BACKOFF, default=1): vol.Any(int, float),
+    vol.Required(CONF_REPEAT): cv.ensure_list,
     vol.Required(CONF_CAN_ACK, default=True): cv.boolean,
     vol.Required(CONF_SKIP_FIRST, default=False): cv.boolean,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
@@ -130,9 +124,8 @@ def async_setup(hass, config):
         entity = Alert(hass, entity_id,
                        alert[CONF_NAME], alert[CONF_ENTITY_ID],
                        alert[CONF_STATE], alert[CONF_REPEAT],
-                       alert[CONF_REPEAT_MIN], alert[CONF_REPEAT_MAX],
                        alert[CONF_SKIP_FIRST], alert[CONF_NOTIFIERS],
-                       alert[CONF_CAN_ACK], alert[CONF_BACKOFF])
+                       alert[CONF_CAN_ACK])
         all_alerts[entity.entity_id] = entity
 
     # read descriptions
@@ -162,21 +155,18 @@ class Alert(ToggleEntity):
     """Representation of an alert."""
 
     def __init__(self, hass, entity_id, name, entity, state, repeat,
-                 min_repeat, max_repeat, skip_first, notifiers, can_ack,
-                 backoff):
+                 skip_first, notifiers, can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
         self._alert_state = state
-        self._delay = timedelta(minutes=repeat)
-        self._delay_limits = (timedelta(minutes=min_repeat),
-                              timedelta(minutes=max_repeat))
         self._skip_first = skip_first
         self._notifiers = notifiers
         self._can_ack = can_ack
-        self._backoff = float(backoff)
 
-        self._next_delay = None
+        self._delay = [timedelta(minutes=val) for val in repeat]
+        self._next_delay = 0
+
         self._firing = False
         self._ack = False
         self._cancel = None
@@ -219,7 +209,7 @@ class Alert(ToggleEntity):
         _LOGGER.debug('Beginning Alert: %s', self._name)
         self._ack = False
         self._firing = True
-        self._next_delay = self._delay
+        self._next_delay = 0
 
         if not self._skip_first:
             yield from self._notify()
@@ -240,13 +230,11 @@ class Alert(ToggleEntity):
     @asyncio.coroutine
     def _schedule_notify(self):
         """Schedule a notification."""
+        delay = self._delay[self._next_delay]
+        next_msg = datetime.now() + delay
         self._cancel = \
-            event.async_track_time_interval(self.hass, self._notify,
-                                            self._next_delay)
-        self._next_delay = \
-            min(max(self._next_delay * self._backoff,
-                    self._delay_limits[0]),
-                self._delay_limits[1])
+            event.async_track_point_in_time(self.hass, self._notify, next_msg)
+        self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
 
     @asyncio.coroutine
     def _notify(self, *args):
