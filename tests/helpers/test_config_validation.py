@@ -165,6 +165,25 @@ def test_entity_ids():
     ]
 
 
+def test_ensure_list_csv():
+    """Test ensure_list_csv."""
+    schema = vol.Schema(cv.ensure_list_csv)
+
+    options = (
+        None,
+        12,
+        [],
+        ['string'],
+        'string1,string2'
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('string1, string2 ') == [
+        'string1', 'string2'
+    ]
+
+
 def test_event_schema():
     """Test event_schema validation."""
     options = (
@@ -427,6 +446,15 @@ def test_has_at_least_one_key():
 
     for value in ({'beer': None}, {'soda': None}):
         schema(value)
+
+
+def test_ordered_dict_only_dict():
+    """Test ordered_dict validator."""
+    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.match_all))
+
+    for value in (None, [], 100, 'hello'):
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
 
 
 def test_ordered_dict_order():

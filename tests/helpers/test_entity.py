@@ -6,6 +6,7 @@ from unittest.mock import MagicMock
 import pytest
 
 import homeassistant.helpers.entity as entity
+from homeassistant.helpers.customize import set_customize
 from homeassistant.const import ATTR_HIDDEN
 
 from tests.common import get_test_home_assistant
@@ -78,7 +79,6 @@ class TestHelpersEntity(object):
 
     def teardown_method(self, method):
         """Stop everything that was started."""
-        entity.set_customize({})
         self.hass.stop()
 
     def test_default_hidden_not_in_attributes(self):
@@ -88,7 +88,9 @@ class TestHelpersEntity(object):
 
     def test_overwriting_hidden_property_to_true(self):
         """Test we can overwrite hidden property to True."""
-        entity.set_customize({self.entity.entity_id: {ATTR_HIDDEN: True}})
+        set_customize(
+            self.hass,
+            [{'entity_id': [self.entity.entity_id], ATTR_HIDDEN: True}])
         self.entity.update_ha_state()
 
         state = self.hass.states.get(self.entity.entity_id)
