@@ -8,9 +8,6 @@ import logging
 import re
 import threading
 from datetime import timedelta
-import xml.etree.ElementTree as ET
-import json
-from urllib.parse import unquote
 
 import requests
 import voluptuous as vol
