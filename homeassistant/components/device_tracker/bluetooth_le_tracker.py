@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the Bluetooth LE Scanner."""
     # pylint: disable=import-error
     from gattlib import DiscoveryService

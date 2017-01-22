@@ -73,7 +73,7 @@ class Host:
         _LOGGER.debug("ping KO on ip=%s failed=%d", self.ip_address, failed)
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the Host objects and return the update function."""
     hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
              config[const.CONF_HOSTS].items()]

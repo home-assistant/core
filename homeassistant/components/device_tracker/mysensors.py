@@ -6,23 +6,13 @@ https://home-assistant.io/components/device_tracker.mysensors/
 """
 import logging
 
-import voluptuous as vol
-
 from homeassistant.components import mysensors
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
-DEPENDENCIES = ['mysensors']
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAX_GPS_ACCURACY, default=0): vol.Coerce(float),
-})
-
-
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the MySensors tracker."""
     def mysensors_callback(gateway, node_id):
         """Callback for mysensors platform."""
@@ -33,7 +23,8 @@ def setup_scanner(hass, config, see):
 
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
-        max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
+        max_gps_accuracy = discovery_info.get(
+            mysensors.CONF_MAX_GPS_ACCURACY, 0.0)
 
         for child in node.children.values():
             position = child.values.get(set_req.V_POSITION)

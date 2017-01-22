@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['http']
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup an endpoint for the GPSLogger application."""
     hass.http.register_view(GPSLoggerView(see))
 

@@ -31,6 +31,7 @@ CONF_BAUD_RATE = 'baud_rate'
 CONF_DEVICE = 'device'
 CONF_DEBUG = 'debug'
 CONF_GATEWAYS = 'gateways'
+CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 CONF_PERSISTENCE = 'persistence'
 CONF_PERSISTENCE_FILE = 'persistence_file'
 CONF_TCP_PORT = 'tcp_port'
@@ -126,6 +127,7 @@ CONFIG_SCHEMA = vol.Schema({
             }]
         ),
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_MAX_GPS_ACCURACY, default=0): vol.Coerce(float),
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
         vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
         vol.Optional(CONF_RETAIN, default=True): cv.boolean,
@@ -140,6 +142,7 @@ def setup(hass, config):
 
     version = config[DOMAIN].get(CONF_VERSION)
     persistence = config[DOMAIN].get(CONF_PERSISTENCE)
+    gps_accuracy = config[DOMAIN].get(CONF_MAX_GPS_ACCURACY)
 
     def setup_gateway(device, persistence_file, baud_rate, tcp_port, in_prefix,
                       out_prefix):
@@ -233,6 +236,10 @@ def setup(hass, config):
     for component in ['sensor', 'switch', 'light', 'binary_sensor', 'climate',
                       'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
+
+    discovery.load_platform(
+        hass, 'device_tracker', DOMAIN, {CONF_MAX_GPS_ACCURACY: gps_accuracy},
+        config)
 
     discovery.load_platform(
         hass, 'notify', DOMAIN, {CONF_NAME: DOMAIN}, config)
