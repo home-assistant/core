@@ -114,16 +114,17 @@ def _get_homehub_data(url):
 
 def _parse_homehub_response(data_str):
     """Parse the Sky Hub data format."""
-    m = re.search('attach_dev = \'(.*)\'', data_str);
-    str = m.group(1);
-    
-    dev = [d.split(',') for d in str.split('<lf>')];
-    
-    devices = {};
-    for d in dev:
-        if (_MAC_REGEX.match(d[1])):
-            devices[d[1]] = d[0];
+    pattmatch = re.search('attach_dev = \'(.*)\'', data_str)
+    patt = pattmatch.group(1)
+
+    dev = [patt1.split(',') for patt1 in patt.split('<lf>')]
+
+    devices = {}
+    for dvc in dev:
+        if _MAC_REGEX.match(dvc[1]):
+            devices[dvc[1]] = dvc[0]
         else:
-            raise RuntimeError('Error: MAC address ' + d[1] + ' not in correct format.')
+            raise RuntimeError('Error: MAC address ' + dvc[1] +
+                               ' not in correct format.')
 
     return devices
