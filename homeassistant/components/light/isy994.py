@@ -8,17 +8,12 @@ import logging
 from typing import Callable
 
 from homeassistant.components.light import (
-    Light, SUPPORT_BRIGHTNESS, ATTR_BRIGHTNESS)
+    Light, SUPPORT_BRIGHTNESS)
 import homeassistant.components.isy994 as isy
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNKNOWN
+from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
-
-VALUE_TO_STATE = {
-    False: STATE_OFF,
-    True: STATE_ON,
-}
 
 UOM = ['2', '51', '78']
 STATES = [STATE_OFF, STATE_ON, 'true', 'false', '%']
@@ -52,12 +47,12 @@ class ISYLightDevice(isy.ISYDevice, Light):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 light is on."""
-        return self.state == STATE_ON
+        return self.value > 0
 
     @property
-    def state(self) -> str:
-        """Get the state of the ISY994 light."""
-        return VALUE_TO_STATE.get(bool(self.value), STATE_UNKNOWN)
+    def brightness(self) -> float:
+        """Get the brightness of the ISY994 light."""
+        return self.value
 
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
@@ -68,11 +63,6 @@ class ISYLightDevice(isy.ISYDevice, Light):
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):
             _LOGGER.debug('Unable to turn on light.')
-
-    @property
-    def state_attributes(self):
-        """Flag supported attributes."""
-        return {ATTR_BRIGHTNESS: self.value}
 
     @property
     def supported_features(self):

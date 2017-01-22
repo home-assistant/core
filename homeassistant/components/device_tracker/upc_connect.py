@@ -74,9 +74,15 @@ class UPCDeviceScanner(DeviceScanner):
                 return []
 
         raw = yield from self._async_ws_function(CMD_DEVICES)
-        xml_root = ET.fromstring(raw)
 
-        return [mac.text for mac in xml_root.iter('MACAddr')]
+        try:
+            xml_root = ET.fromstring(raw)
+            return [mac.text for mac in xml_root.iter('MACAddr')]
+        except (ET.ParseError, TypeError):
+            _LOGGER.warning("Can't read device from %s", self.host)
+            self.token = None
+
+        return []
 
     @asyncio.coroutine
     def async_get_device_name(self, device):
@@ -94,7 +100,8 @@ class UPCDeviceScanner(DeviceScanner):
                     "http://{}/common_page/login.html".format(self.host)
                 )
 
-            self.token = self._async_get_token()
+            yield from response.text()
+            self.token = response.cookies['sessionToken'].value
 
             # login
             data = yield from self._async_ws_function(CMD_LOGIN, {
@@ -103,7 +110,7 @@ class UPCDeviceScanner(DeviceScanner):
             })
 
             # successfull?
-            if data.find("successful") != -1:
+            if data is not None:
                 return True
             return False
 
@@ -144,7 +151,7 @@ class UPCDeviceScanner(DeviceScanner):
 
                 # load data, store token for next request
                 raw = yield from response.text()
-                self.token = self._async_get_token()
+                self.token = response.cookies['sessionToken'].value
 
                 return raw
 
@@ -155,10 +162,3 @@ class UPCDeviceScanner(DeviceScanner):
         finally:
             if response is not None:
                 yield from response.release()
-
-    def _async_get_token(self):
-        """Extract token from cookies."""
-        cookie_manager = self.websession.cookie_jar.filter_cookies(
-            "http://{}".format(self.host))
-
-        return cookie_manager.get('sessionToken')

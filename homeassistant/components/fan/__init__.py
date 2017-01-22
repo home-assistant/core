@@ -41,7 +41,6 @@ SERVICE_SET_DIRECTION = 'set_direction'
 
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
-SPEED_MED = 'med'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
 
@@ -230,6 +229,9 @@ class FanEntity(ToggleEntity):
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan."""
+        if speed is SPEED_OFF:
+            self.turn_off()
+            return
         raise NotImplementedError()
 
     def set_direction(self: ToggleEntity, direction: str) -> None:
@@ -238,6 +240,9 @@ class FanEntity(ToggleEntity):
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
+        if speed is SPEED_OFF:
+            self.turn_off()
+            return
         raise NotImplementedError()
 
     def turn_off(self: ToggleEntity, **kwargs) -> None:

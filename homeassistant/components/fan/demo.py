@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_HIGH,
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
                                           FanEntity, SUPPORT_SET_SPEED,
                                           SUPPORT_OSCILLATE, SUPPORT_DIRECTION)
 from homeassistant.const import STATE_OFF
@@ -54,9 +54,9 @@ class DemoFan(FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        return [STATE_OFF, SPEED_LOW, SPEED_MED, SPEED_HIGH]
+        return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str=SPEED_MED) -> None:
+    def turn_on(self, speed: str=SPEED_MEDIUM) -> None:
         """Turn on the entity."""
         self.set_speed(speed)
 

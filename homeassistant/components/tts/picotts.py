@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_engine(hass, config):
-    """Setup pico speech component."""
+    """Set up Pico speech component."""
     if shutil.which("pico2wave") is None:
         _LOGGER.error("'pico2wave' was not found")
         return False
@@ -49,7 +49,7 @@ class PicoProvider(Provider):
         """List of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language):
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS using pico2wave."""
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
             fname = tmpf.name

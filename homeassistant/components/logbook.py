@@ -307,6 +307,10 @@ def _exclude_events(events, config):
         if event.event_type == EVENT_STATE_CHANGED:
             to_state = State.from_dict(event.data.get('new_state'))
             # Do not report on new entities
+            if event.data.get('old_state') is None:
+                continue
+
+            # Do not report on entity removal
             if not to_state:
                 continue
 
