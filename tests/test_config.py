@@ -180,6 +180,7 @@ class TestConfig(unittest.TestCase):
                 {'longitude': -181},
                 {'customize': 'bla'},
                 {'customize': {'light.sensor': 100}},
+                {'customize': {'entity_id': []}},
         ):
             with pytest.raises(MultipleInvalid):
                 config_util.CORE_CONFIG_SCHEMA(value)
