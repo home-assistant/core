@@ -6,4 +6,4 @@ set -e
 
 cd "$(dirname "$0")/.."
 script/bootstrap_server
-script/bootstrap_frontend
+command -v npm >/dev/null && script/bootstrap_frontend
