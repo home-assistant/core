@@ -9,7 +9,7 @@ from homeassistant.components.sensor import wsdot
 from homeassistant.components.sensor.wsdot import (
     WashingtonStateTravelTimeSensor, ATTR_DESCRIPTION,
     ATTR_TIME_UPDATED, CONF_API_KEY, CONF_NAME,
-    CONF_TRAVEL_TIME_ID, CONF_TRAVEL_TIMES, SCAN_INTERVAL)
+    CONF_ID, CONF_TRAVEL_TIMES, SCAN_INTERVAL)
 from homeassistant.bootstrap import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
@@ -29,12 +29,11 @@ class TestWSDOT(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.key = 'foo'
         self.config = {
             CONF_API_KEY: 'foo',
             SCAN_INTERVAL: timedelta(seconds=120),
             CONF_TRAVEL_TIMES: [{
-                CONF_TRAVEL_TIME_ID: 96,
+                CONF_ID: 96,
                 CONF_NAME: 'I90 EB'}],
         }
         self.entities = []

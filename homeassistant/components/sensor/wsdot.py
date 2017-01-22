@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, ATTR_ATTRIBUTION,
+    CONF_API_KEY, CONF_NAME, ATTR_ATTRIBUTION, CONF_ID
     )
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
@@ -21,8 +21,6 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TRAVEL_TIMES = 'travel_time'
-CONF_TRAVEL_TIME_ID = 'id'
-CONF_ATTRIBUTION = "Data provided by WSDOT"
 
 # API codes for travel time details
 ATTR_ACCESS_CODE = 'AccessCode'
@@ -32,13 +30,14 @@ ATTR_AVG_TIME = 'AverageTime'
 ATTR_NAME = 'Name'
 ATTR_TIME_UPDATED = 'TimeUpdated'
 ATTR_DESCRIPTION = 'Description'
+ATTRIBUTION = "Data provided by WSDOT"
 
 SCAN_INTERVAL = timedelta(minutes=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_TRAVEL_TIMES): [{
-        vol.Required(CONF_TRAVEL_TIME_ID): cv.string,
+        vol.Required(CONF_ID): cv.string,
         vol.Optional(CONF_NAME): cv.string}]
 })
 
@@ -48,12 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for travel_time in config.get(CONF_TRAVEL_TIMES):
         name = (travel_time.get(CONF_NAME) or
-                travel_time.get(CONF_TRAVEL_TIME_ID))
+                travel_time.get(CONF_ID))
         sensors.append(
             WashingtonStateTravelTimeSensor(
                 name,
                 config.get(CONF_API_KEY),
-                travel_time.get(CONF_TRAVEL_TIME_ID)))
+                travel_time.get(CONF_ID)))
     add_devices(sensors)
 
 
@@ -120,7 +119,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
     def device_state_attributes(self):
         """Return other details about the sensor state."""
         if self._data is not None:
-            attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+            attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
             for key in [ATTR_AVG_TIME, ATTR_NAME, ATTR_DESCRIPTION,
                         ATTR_TRAVEL_TIME_ID]:
                 attrs[key] = self._data.get(key)
