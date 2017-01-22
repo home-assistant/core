@@ -7,6 +7,7 @@ from requests.exceptions import Timeout, MissingSchema, RequestException
 import requests_mock
 
 from homeassistant.bootstrap import setup_component
+import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.rest as rest
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.config_validation import template
@@ -24,6 +25,12 @@ class TestRestSwitchSetup(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def test_setup_missing_config(self):
+        """Test setup with configuration missing required entries."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                'sensor': {'platform': 'rest'}})
 
     def test_setup_missing_schema(self):
         """Test setup with resource missing schema."""
