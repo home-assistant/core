@@ -1,8 +1,10 @@
 """
 Support for Sky Hub.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/device_tracker.TBD/
+# Example configuration.yaml entry
+device_tracker:
+  - platform: sky_hub
+    host: 192.168.1.254
 """
 import logging
 import re
