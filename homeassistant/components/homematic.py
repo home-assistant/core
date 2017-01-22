@@ -68,7 +68,7 @@ HM_DEVICE_TYPES = {
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch'],
+        'HMWIOSwitch', 'MaxShutterContact'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
