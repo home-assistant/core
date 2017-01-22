@@ -35,7 +35,7 @@ class TestRestSwitchSetup(unittest.TestCase):
             }, None)
 
     @patch('requests.Session.send',
-        side_effect=requests.exceptions.ConnectionError())
+           side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
         self.assertFalse(rest.setup_platform(self.hass, {
