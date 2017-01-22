@@ -171,12 +171,6 @@ def test_ensure_list_csv():
 
     options = (
         None,
-    )
-    for value in options:
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    options = (
         12,
         [],
         ['string'],
