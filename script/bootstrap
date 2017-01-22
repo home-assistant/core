@@ -7,8 +7,8 @@ set -e
 cd "$(dirname "$0")/.."
 script/bootstrap_server
 
-if [ -x "$(command -v npm >/dev/null)" ]; then
+if [ -x "$(command -v yarn >/dev/null)" ]; then
   script/bootstrap_frontend
 else
-  echo "Frontend development not possible without Node/npm"
+  echo "Frontend development not possible without Node/yarn"
 fi
