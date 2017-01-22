@@ -7,10 +7,12 @@ import pytest
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
 import homeassistant.components.camera as camera
+import homeassistant.components.http as http
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async import run_coroutine_threadsafe
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import (
+    get_test_home_assistant, get_test_instance_port, assert_setup_component)
 
 
 class TestSetupCamera(object):
@@ -42,6 +44,10 @@ class TestGetImage(object):
     def setup_method(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        setup_component(
+            self.hass, http.DOMAIN,
+            {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}})
 
         config = {
             camera.DOMAIN: {
