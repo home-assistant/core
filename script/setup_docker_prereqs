@@ -1,20 +1,18 @@
 #!/bin/bash
 # Install requirements and build dependencies for Home Assinstant in Docker.
 
+INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
+INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
+INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
+
 # Required debian packages for running hass or components
 PACKAGES=(
+  # build-essential is required for python pillow module on non-x86_64 arch
+  build-essential
   # homeassistant.components.device_tracker.nmap_tracker
-  nmap net-tools
+  nmap net-tools libcurl3-dev
   # homeassistant.components.device_tracker.bluetooth_tracker
   bluetooth libglib2.0-dev libbluetooth-dev
-  # homeassistant.components.tellstick
-  libtelldus-core2
-)
-
-# Required debian packages for running hass or components from jessie-backports
-PACKAGES_BACKPORTS=(
-  # homeassistant.components.ffmpeg
-  ffmpeg
 )
 
 # Required debian packages for building dependencies
@@ -25,39 +23,69 @@ PACKAGES_DEV=(
   cmake swig libxrandr-dev
 )
 
+install_tellstick () {
+  TELLSTICK_PACKAGES=(
+    # homeassistant.components.tellstick
+    libtelldus-core2
+  )
+
+  # Add Tellstick repository
+  echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list
+  wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
+
+  apt-get install -y --no-install-recommends ${TELLSTICK_PACKAGES[@]}
+}
+
+install_ffmpeg () {
+  apt-get install -y --no-install-recommends -t jessie-backports ffmpeg
+}
+
 # Stop on errors
 set -e
 
 cd "$(dirname "$0")/.."
 
-# Add Tellstick repository
-echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.list.d/telldus.list
-wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
-
 # Add jessie-backports
+echo "Adding jessie-backports"
 echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
 
 # Install packages
+echo "Updating Apt repositories"
 apt-get update
+echo "Installing packages"
 apt-get install -y --no-install-recommends ${PACKAGES[@]} ${PACKAGES_DEV[@]}
-apt-get install -y --no-install-recommends -t jessie-backports ${PACKAGES_BACKPORTS[@]}
+
+if [ "$INSTALL_TELLSTICK" == "yes" ]; then
+  echo "Installing tellstick"
+  install_tellstick
+fi
+
+if [ "$INSTALL_FFPMEG" == "yes" ]; then
+  echo "Installing ffmpeg"
+  install_ffmpeg
+fi
 
 # Build and install openzwave
-script/build_python_openzwave
+echo "Installing python-openzwave"
+/usr/src/app/script/build_python_openzwave
 mkdir -p /usr/local/share/python-openzwave
 cp -R /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/python-openzwave/config
 
 # Build and install libcec
-script/build_libcec
+echo "Installing libcec"
+/usr/src/app/script/build_libcec
 
-# Install phantomjs
-script/install_phantomjs
+if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
+  # Install phantomjs
+  script/install_phantomjs
+fi
 
 # Remove packages
 apt-get remove -y --purge ${PACKAGES_DEV[@]}
 apt-get -y --purge autoremove
 
 # Cleanup
+echo "Removing dev packages"
 apt-get clean
 rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* build/
 

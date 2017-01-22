@@ -1,6 +1,10 @@
 FROM python:3.5
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
+ENV INSTALL_TELLSTICK yes
+ENV INSTALL_FFMPEG yes
+ENV INSTALL_PHANTOMJS yes
+
 VOLUME /config
 
 RUN mkdir -p /usr/src/app
