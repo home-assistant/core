@@ -20,7 +20,7 @@ import homeassistant.loader as loader
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['amcrest==1.1.0']
+REQUIREMENTS = ['amcrest==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

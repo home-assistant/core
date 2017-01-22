@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_stream)
 
-REQUIREMENTS = ['amcrest==1.1.0']
+REQUIREMENTS = ['amcrest==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,11 +90,7 @@ class AmcrestCam(Camera):
     def __init__(self, hass, device_info, data):
         """Initialize an Amcrest camera."""
         super(AmcrestCam, self).__init__()
-        self._base_url = '%s://%s:%s/cgi-bin' % (
-            'http',
-            device_info.get(CONF_HOST),
-            device_info.get(CONF_PORT)
-        )
+        self._base_url = data.camera.get_base_url()
         self._data = data
         self._hass = hass
         self._name = device_info.get(CONF_NAME)
@@ -123,10 +119,8 @@ class AmcrestCam(Camera):
 
         # Otherwise, stream an MJPEG image stream directly from the camera
         websession = async_get_clientsession(self.hass)
-        streaming_url = '%s/mjpg/video.cgi?channel=0&subtype=%d' % (
-            self._base_url,
-            self._resolution
-        )
+        streaming_url = '{0}mjpg/video.cgi?channel=0&subtype={1}'.format(
+            self._base_url, self._resolution)
 
         stream_coro = websession.get(
             streaming_url, auth=self._token, timeout=TIMEOUT)
