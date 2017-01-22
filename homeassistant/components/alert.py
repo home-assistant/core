@@ -38,7 +38,7 @@ ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.string,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
-    vol.Required(CONF_REPEAT): cv.ensure_list,
+    vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
     vol.Required(CONF_CAN_ACK, default=True): cv.boolean,
     vol.Required(CONF_SKIP_FIRST, default=False): cv.boolean,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
