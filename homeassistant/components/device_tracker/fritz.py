@@ -15,9 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['https://github.com/deisi/fritzconnection/archive/'
-                'b5c14515e1c8e2652b06b6316a7f3913df942841.zip'
-                '#fritzconnection==0.4.6']
+REQUIREMENTS = ['fritzconnection==0.6']
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)

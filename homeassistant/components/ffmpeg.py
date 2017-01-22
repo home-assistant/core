@@ -10,12 +10,13 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==0.15"]
+REQUIREMENTS = ["ha-ffmpeg==1.0"]
 
 _LOGGER = logging.getLogger(__name__)
+
+DATA_FFMPEG = 'ffmpeg'
 
 CONF_INPUT = 'input'
 CONF_FFMPEG_BIN = 'ffmpeg_bin'
@@ -34,53 +35,54 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-FFMPEG_CONFIG = {
-    CONF_FFMPEG_BIN: DEFAULT_BINARY,
-    CONF_RUN_TEST: DEFAULT_RUN_TEST,
-}
-FFMPEG_TEST_CACHE = {}
-
-
-def setup(hass, config):
-    """Setup the FFmpeg component."""
-    if DOMAIN in config:
-        FFMPEG_CONFIG.update(config.get(DOMAIN))
-    return True
-
-
-def get_binary():
-    """Return ffmpeg binary from config.
-
-    Async friendly.
-    """
-    return FFMPEG_CONFIG.get(CONF_FFMPEG_BIN)
-
-
-def run_test(hass, input_source):
-    """Run test on this input. TRUE is deactivate or run correct."""
-    return run_coroutine_threadsafe(
-        async_run_test(hass, input_source), hass.loop).result()
-
-
 @asyncio.coroutine
-def async_run_test(hass, input_source):
-    """Run test on this input. TRUE is deactivate or run correct.
+def async_setup(hass, config):
+    """Setup the FFmpeg component."""
+    conf = config.get(DOMAIN, {})
 
-    This method must be run in the event loop.
-    """
-    from haffmpeg import TestAsync
+    hass.data[DATA_FFMPEG] = FFmpegManager(
+        hass,
+        conf.get(CONF_FFMPEG_BIN, DEFAULT_BINARY),
+        conf.get(CONF_RUN_TEST, DEFAULT_RUN_TEST)
+    )
 
-    if FFMPEG_CONFIG.get(CONF_RUN_TEST):
-        # if in cache
-        if input_source in FFMPEG_TEST_CACHE:
-            return FFMPEG_TEST_CACHE[input_source]
-
-        # run test
-        ffmpeg_test = TestAsync(get_binary(), loop=hass.loop)
-        success = yield from ffmpeg_test.run_test(input_source)
-        if not success:
-            _LOGGER.error("FFmpeg '%s' test fails!", input_source)
-            FFMPEG_TEST_CACHE[input_source] = False
-            return False
-        FFMPEG_TEST_CACHE[input_source] = True
     return True
+
+
+class FFmpegManager(object):
+    """Helper for ha-ffmpeg."""
+
+    def __init__(self, hass, ffmpeg_bin, run_test):
+        """Initialize helper."""
+        self.hass = hass
+        self._cache = {}
+        self._bin = ffmpeg_bin
+        self._run_test = run_test
+
+    @property
+    def binary(self):
+        """Return ffmpeg binary from config."""
+        return self._bin
+
+    @asyncio.coroutine
+    def async_run_test(self, input_source):
+        """Run test on this input. TRUE is deactivate or run correct.
+
+        This method must be run in the event loop.
+        """
+        from haffmpeg import Test
+
+        if self._run_test:
+            # if in cache
+            if input_source in self._cache:
+                return self._cache[input_source]
+
+            # run test
+            ffmpeg_test = Test(self.binary, loop=self.hass.loop)
+            success = yield from ffmpeg_test.run_test(input_source)
+            if not success:
+                _LOGGER.error("FFmpeg '%s' test fails!", input_source)
+                self._cache[input_source] = False
+                return False
+            self._cache[input_source] = True
+        return True

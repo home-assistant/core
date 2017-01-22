@@ -48,6 +48,8 @@ REQUIREMENTS = ['evdev==0.6.1']
 _LOGGER = logging.getLogger(__name__)
 ICON = 'mdi:remote'
 KEYBOARD_REMOTE_COMMAND_RECEIVED = 'keyboard_remote_command_received'
+KEYBOARD_REMOTE_CONNECTED = 'keyboard_remote_connected'
+KEYBOARD_REMOTE_DISCONNECTED = 'keyboard_remote_disconnected'
 KEY_CODE = 'key_code'
 KEY_VALUE = {'key_up': 0, 'key_down': 1, 'key_hold': 2}
 TYPE = 'type'
@@ -151,13 +153,19 @@ class KeyboardRemote(threading.Thread):
                     self.keyboard_connected = True
                     _LOGGER.debug('KeyboardRemote: keyboard re-connected, %s',
                                   self.device_descriptor)
+                    self.hass.bus.fire(
+                        KEYBOARD_REMOTE_CONNECTED
+                    )
 
             try:
                 event = self.dev.read_one()
             except IOError:  # Keyboard Disconnected
                 self.keyboard_connected = False
-                _LOGGER.debug('KeyboardRemote: keyard disconnected, %s',
+                _LOGGER.debug('KeyboardRemote: keyboard disconnected, %s',
                               self.device_descriptor)
+                self.hass.bus.fire(
+                    KEYBOARD_REMOTE_DISCONNECTED
+                )
                 continue
 
             if not event:

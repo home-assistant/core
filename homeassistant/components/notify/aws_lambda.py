@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the AWS Lambda notification service."""
     context_str = json.dumps({'hass': hass.config.as_dict(),
                               'custom': config[CONF_CONTEXT]})

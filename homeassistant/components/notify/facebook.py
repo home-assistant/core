@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Facebook notification service."""
     return FacebookNotificationService(config[CONF_PAGE_ACCESS_TOKEN])
 

@@ -42,7 +42,7 @@ _SCRIPT_ENTRY_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    vol.Required(DOMAIN): vol.Schema({cv.slug: _SCRIPT_ENTRY_SCHEMA})
+    DOMAIN: vol.Schema({cv.slug: _SCRIPT_ENTRY_SCHEMA})
 }, extra=vol.ALLOW_EXTRA)
 
 SCRIPT_SERVICE_SCHEMA = vol.Schema(dict)

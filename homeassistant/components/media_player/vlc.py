@@ -20,28 +20,31 @@ REQUIREMENTS = ['python-vlc==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ARGUMENTS = 'arguments'
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_ARGUMENTS, default=''): cv.string,
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the vlc platform."""
-    add_devices([VlcDevice(config.get(CONF_NAME))])
+    add_devices([VlcDevice(config.get(CONF_NAME),
+                           config.get(CONF_ARGUMENTS))])
 
 
 class VlcDevice(MediaPlayerDevice):
     """Representation of a vlc player."""
 
-    def __init__(self, name):
+    def __init__(self, name, arguments):
         """Initialize the vlc device."""
         import vlc
-        self._instance = vlc.Instance()
+        self._instance = vlc.Instance(arguments)
         self._vlc = self._instance.media_player_new()
         self._name = name
         self._volume = None
