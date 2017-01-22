@@ -170,16 +170,17 @@ class TestConfig(unittest.TestCase):
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
         self.assertTrue(mock_print.called)
 
+    # pylint: disable=no-self-use
     def test_core_config_schema(self):
         """Test core config schema."""
         for value in (
-            {CONF_UNIT_SYSTEM: 'K'},
-            {'time_zone': 'non-exist'},
-            {'latitude': '91'},
-            {'longitude': -181},
-            {'customize': 'bla'},
-            {'customize': {'invalid_entity_id': {}}},
-            {'customize': {'light.sensor': 100}},
+                {CONF_UNIT_SYSTEM: 'K'},
+                {'time_zone': 'non-exist'},
+                {'latitude': '91'},
+                {'longitude': -181},
+                {'customize': 'bla'},
+                {'customize': {'light.sensor': 100}},
+                {'customize': {'entity_id': []}},
         ):
             with pytest.raises(MultipleInvalid):
                 config_util.CORE_CONFIG_SCHEMA(value)
@@ -196,13 +197,7 @@ class TestConfig(unittest.TestCase):
             },
         })
 
-    def test_entity_customization(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
-
+    def _compute_state(self, config):
         run_coroutine_threadsafe(
             config_util.async_process_ha_core_config(self.hass, config),
             self.hass.loop).result()
@@ -214,9 +209,49 @@ class TestConfig(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        state = self.hass.states.get('test.test')
+        return self.hass.states.get('test.test')
+
+    def test_entity_customization_false(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {
+                      'test.test': {'hidden': False}}}
+
+        state = self._compute_state(config)
+
+        assert 'hidden' not in state.attributes
+
+    def test_entity_customization(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
+
+        state = self._compute_state(config)
 
         assert state.attributes['hidden']
+
+    def test_entity_customization_comma_separated(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: [
+                      {'entity_id': 'test.not_test,test,test.not_t*',
+                       'key1': 'value1'},
+                      {'entity_id': 'test.test,not_test,test.not_t*',
+                       'key2': 'value2'},
+                      {'entity_id': 'test.not_test,not_test,test.t*',
+                       'key3': 'value3'}]}
+
+        state = self._compute_state(config)
+
+        assert state.attributes['key1'] == 'value1'
+        assert state.attributes['key2'] == 'value2'
+        assert state.attributes['key3'] == 'value3'
 
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
@@ -229,6 +264,7 @@ class TestConfig(unittest.TestCase):
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
+            # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
             self.hass.config.path = mock.Mock()
@@ -258,6 +294,7 @@ class TestConfig(unittest.TestCase):
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
+            # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
             self.hass.config.path = mock.Mock()
@@ -357,3 +394,128 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == blankConfig.location_name
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
+
+
+# pylint: disable=redefined-outer-name
+@pytest.fixture
+def merge_log_err(hass):
+    """Patch _merge_log_error from packages."""
+    with mock.patch('homeassistant.config._LOGGER.error') \
+            as logerr:
+        yield logerr
+
+
+def test_merge(merge_log_err):
+    """Test if we can merge packages."""
+    packages = {
+        'pack_dict': {'input_boolean': {'ib1': None}},
+        'pack_11': {'input_select': {'is1': None}},
+        'pack_list': {'light': {'platform': 'test'}},
+        'pack_list2': {'light': [{'platform': 'test'}]},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'input_boolean': {'ib2': None},
+        'light': {'platform': 'test'}
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 0
+    assert len(config) == 4
+    assert len(config['input_boolean']) == 2
+    assert len(config['input_select']) == 1
+    assert len(config['light']) == 3
+
+
+def test_merge_new(merge_log_err):
+    """Test adding new components to outer scope."""
+    packages = {
+        'pack_1': {'light': [{'platform': 'one'}]},
+        'pack_11': {'input_select': {'ib1': None}},
+        'pack_2': {
+            'light': {'platform': 'one'},
+            'panel_custom': {'pan1': None},
+            'api': {}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 0
+    assert 'api' in config
+    assert len(config) == 5
+    assert len(config['light']) == 2
+    assert len(config['panel_custom']) == 1
+
+
+def test_merge_type_mismatch(merge_log_err):
+    """Test if we have a type mismatch for packages."""
+    packages = {
+        'pack_1': {'input_boolean': [{'ib1': None}]},
+        'pack_11': {'input_select': {'ib1': None}},
+        'pack_2': {'light': {'ib1': None}},  # light gets merged - ensure_list
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'input_boolean': {'ib2': None},
+        'input_select': [{'ib2': None}],
+        'light': [{'platform': 'two'}]
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 2
+    assert len(config) == 4
+    assert len(config['input_boolean']) == 1
+    assert len(config['light']) == 2
+
+
+def test_merge_once_only(merge_log_err):
+    """Test if we have a merge for a comp that may occur only once."""
+    packages = {
+        'pack_1': {'homeassistant': {}},
+        'pack_2': {
+            'mqtt': {},
+            'api': {},  # No config schema
+        },
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'mqtt': {}, 'api': {}
+    }
+    config_util.merge_packages_config(config, packages)
+    assert merge_log_err.call_count == 3
+    assert len(config) == 3
+
+
+def test_merge_id_schema(hass):
+    """Test if we identify the config schemas correctly."""
+    types = {
+        'panel_custom': 'list',
+        'group': 'dict',
+        'script': 'dict',
+        'input_boolean': 'dict',
+        'shell_command': 'dict',
+        'qwikswitch': '',
+    }
+    for name, expected_type in types.items():
+        module = config_util.get_component(name)
+        typ, _ = config_util._identify_config_schema(module)
+        assert typ == expected_type, "{} expected {}, got {}".format(
+            name, expected_type, typ)
+
+
+def test_merge_duplicate_keys(merge_log_err):
+    """Test if keys in dicts are duplicates."""
+    packages = {
+        'pack_1': {'input_select': {'ib1': None}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'input_select': {'ib1': None},
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 1
+    assert len(config) == 2
+    assert len(config['input_select']) == 1

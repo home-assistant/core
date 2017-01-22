@@ -10,12 +10,19 @@ from datetime import timedelta
 import logging
 import hashlib
 
+import aiohttp
 from aiohttp import web
+import async_timeout
 
+from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
@@ -30,10 +37,44 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 
 @asyncio.coroutine
+def async_get_image(hass, entity_id, timeout=10):
+    """Fetch a image from a camera entity."""
+    websession = async_get_clientsession(hass)
+    state = hass.states.get(entity_id)
+
+    if state is None:
+        raise HomeAssistantError(
+            "No entity '{0}' for grab a image".format(entity_id))
+
+    url = "{0}{1}".format(
+        hass.config.api.base_url,
+        state.attributes.get(ATTR_ENTITY_PICTURE)
+    )
+
+    response = None
+    try:
+        with async_timeout.timeout(timeout, loop=hass.loop):
+            response = yield from websession.get(url)
+
+            if response.status != 200:
+                raise HomeAssistantError("Error {0} on {1}".format(
+                    response.status, url))
+
+            image = yield from response.read()
+            return image
+
+    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        raise HomeAssistantError("Can't connect to {0}".format(url))
+
+    finally:
+        if response is not None:
+            yield from response.release()
+
+
+@asyncio.coroutine
 def async_setup(hass, config):
     """Setup the camera component."""
-    component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.http.register_view(CameraImageView(component.entities))
     hass.http.register_view(CameraMjpegStream(component.entities))
@@ -132,8 +173,14 @@ class Camera(Entity):
                     yield from response.drain()
 
                 yield from asyncio.sleep(.5)
+
+        except (asyncio.CancelledError, ConnectionResetError):
+            _LOGGER.debug("Close stream by frontend.")
+            response = None
+
         finally:
-            yield from response.write_eof()
+            if response is not None:
+                yield from response.write_eof()
 
     @property
     def state(self):
@@ -202,12 +249,16 @@ class CameraImageView(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
-        image = yield from camera.async_camera_image()
+        try:
+            image = yield from camera.async_camera_image()
 
-        if image is None:
-            return web.Response(status=500)
+            if image is None:
+                return web.Response(status=500)
 
-        return web.Response(body=image)
+            return web.Response(body=image)
+
+        except asyncio.CancelledError:
+            _LOGGER.debug("Close stream by frontend.")
 
 
 class CameraMjpegStream(CameraView):

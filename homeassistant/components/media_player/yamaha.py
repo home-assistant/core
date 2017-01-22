@@ -103,6 +103,7 @@ class YamahaDevice(MediaPlayerDevice):
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
         self._reverse_mapping = None
+        self._playback_support = None
         self._is_playback_supported = False
         self._play_status = None
         self.update()
@@ -131,6 +132,7 @@ class YamahaDevice(MediaPlayerDevice):
         current_source = self._receiver.input
         self._current_source = self._source_names.get(
             current_source, current_source)
+        self._playback_support = self._receiver.get_playback_support()
         self._is_playback_supported = self._receiver.is_playback_supported(
             self._current_source)
 
@@ -183,7 +185,7 @@ class YamahaDevice(MediaPlayerDevice):
         """Flag of media commands that are supported."""
         supported_commands = SUPPORT_YAMAHA
 
-        supports = self._receiver.get_playback_support()
+        supports = self._playback_support
         mapping = {'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
                    'pause': SUPPORT_PAUSE,
                    'stop': SUPPORT_STOP,

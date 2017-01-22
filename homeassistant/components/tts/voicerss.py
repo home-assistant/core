@@ -2,7 +2,7 @@
 Support for the voicerss speech service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/voicerss/
+https://home-assistant.io/components/tts.voicerss/
 """
 import asyncio
 import logging
@@ -83,12 +83,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup VoiceRSS speech component."""
+    """Set up VoiceRSS TTS component."""
     return VoiceRSSProvider(hass, config)
 
 
 class VoiceRSSProvider(Provider):
-    """VoiceRSS speech api provider."""
+    """The VoiceRSS speech API provider."""
 
     def __init__(self, hass, conf):
         """Init VoiceRSS TTS service."""
@@ -114,8 +114,8 @@ class VoiceRSSProvider(Provider):
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
-    def async_get_tts_audio(self, message, language):
-        """Load TTS from voicerss."""
+    def async_get_tts_audio(self, message, language, options=None):
+        """Load TTS from VoiceRSS."""
         websession = async_get_clientsession(self.hass)
         form_data = self._form_data.copy()
 
@@ -137,11 +137,11 @@ class VoiceRSSProvider(Provider):
 
                 if data in ERROR_MSG:
                     _LOGGER.error(
-                        "Error receive %s from voicerss.", str(data, 'utf-8'))
+                        "Error receive %s from VoiceRSS", str(data, 'utf-8'))
                     return (None, None)
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Timeout for voicerss api.")
+            _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
 
         finally:

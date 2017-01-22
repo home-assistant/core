@@ -97,7 +97,7 @@ HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir',
                                      'vibrate')
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the HTML5 push notification service."""
     json_path = hass.config.path(REGISTRATIONS_FILE)
 

@@ -228,10 +228,6 @@ class ISYDevice(Entity):
         self._change_handler = self._node.status.subscribe('changed',
                                                            self.on_update)
 
-    def __del__(self) -> None:
-        """Cleanup the subscriptions."""
-        self._change_handler.unsubscribe()
-
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
@@ -272,7 +268,7 @@ class ISYDevice(Entity):
         return self._node.status._val
 
     @property
-    def state_attributes(self) -> Dict:
+    def device_state_attributes(self) -> Dict:
         """Get the state attributes for the device."""
         attr = {}
         if hasattr(self._node, 'aux_properties'):

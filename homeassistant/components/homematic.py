@@ -23,10 +23,10 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.util import Throttle
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.18"]
+REQUIREMENTS = ["pyhomematic==0.1.20"]
 
 MIN_TIME_BETWEEN_UPDATE_HUB = timedelta(seconds=300)
-MIN_TIME_BETWEEN_UPDATE_VAR = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 DISCOVER_SWITCHES = 'homematic.switch'
 DISCOVER_LIGHTS = 'homematic.light'
@@ -54,19 +54,21 @@ SERVICE_SET_DEV_VALUE = 'set_dev_value'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch',
-        'IPSwitchPowermeter', 'KeyMatic'],
+        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer'],
     DISCOVER_SENSORS: [
-        'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion',
+        'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
-        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter'],
+        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch'],
     DISCOVER_CLIMATE: [
-        'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2'],
+        'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
+        'MAXWallThermostat'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
-        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact'],
+        'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
+        'HMWIOSwitch'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
@@ -234,7 +236,7 @@ def setup(hass, config):
     """Setup the Homematic component."""
     from pyhomematic import HMConnection
 
-    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.data[DATA_DELAY] = config[DOMAIN].get(CONF_DELAY)
     hass.data[DATA_DEVINIT] = {}
@@ -430,8 +432,8 @@ def _system_callback_handler(hass, config, src, *args):
                     }, config)
 
 
-def _get_devices(hass, device_type, keys, proxy):
-    """Get the Homematic devices."""
+def _get_devices(hass, discovery_type, keys, proxy):
+    """Get the Homematic devices for given discovery_type."""
     device_arr = []
 
     for key in keys:
@@ -439,14 +441,14 @@ def _get_devices(hass, device_type, keys, proxy):
         class_name = device.__class__.__name__
         metadata = {}
 
-        # is class supported by discovery type
-        if class_name not in HM_DEVICE_TYPES[device_type]:
+        # Class supported by discovery type
+        if class_name not in HM_DEVICE_TYPES[discovery_type]:
             continue
 
         # Load metadata if needed to generate a param list
-        if device_type == DISCOVER_SENSORS:
+        if discovery_type == DISCOVER_SENSORS:
             metadata.update(device.SENSORNODE)
-        elif device_type == DISCOVER_BINARY_SENSORS:
+        elif discovery_type == DISCOVER_BINARY_SENSORS:
             metadata.update(device.BINARYNODE)
         else:
             metadata.update({None: device.ELEMENT})
@@ -457,13 +459,12 @@ def _get_devices(hass, device_type, keys, proxy):
                 if param in HM_IGNORE_DISCOVERY_NODE:
                     continue
 
-                # add devices
-                _LOGGER.debug("Handling %s: %s", param, channels)
+                # Add devices
+                _LOGGER.debug("%s: Handling %s: %s: %s",
+                              discovery_type, key, param, channels)
                 for channel in channels:
                     name = _create_ha_name(
-                        name=device.NAME,
-                        channel=channel,
-                        param=param,
+                        name=device.NAME, channel=channel, param=param,
                         count=len(channels)
                     )
                     device_dict = {
@@ -485,7 +486,7 @@ def _get_devices(hass, device_type, keys, proxy):
                                       str(err))
         else:
             _LOGGER.debug("Got no params for %s", key)
-    _LOGGER.debug("%s autodiscovery: %s", device_type, str(device_arr))
+    _LOGGER.debug("%s autodiscovery done: %s", discovery_type, str(device_arr))
     return device_arr
 
 
@@ -623,7 +624,6 @@ class HMHub(Entity):
         state = self._homematic.getServiceMessages(self._name)
         self._state = STATE_UNKNOWN if state is None else len(state)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATE_VAR)
     def _update_variables_state(self):
         """Retrive all variable data and update hmvariable states."""
         if not self._use_variables:
@@ -855,11 +855,11 @@ class HMDevice(Entity):
 
         # Set callbacks
         for channel in channels_to_sub:
-            _LOGGER.debug("Subscribe channel %s from %s",
-                          str(channel), self._name)
-            self._hmdevice.setEventCallback(callback=self._hm_event_callback,
-                                            bequeath=False,
-                                            channel=channel)
+            _LOGGER.debug(
+                "Subscribe channel %s from %s", str(channel), self._name)
+            self._hmdevice.setEventCallback(
+                callback=self._hm_event_callback, bequeath=False,
+                channel=channel)
 
     def _load_data_from_hm(self):
         """Load first value from pyhomematic."""
@@ -874,7 +874,7 @@ class HMDevice(Entity):
                 (self._hmdevice.SENSORNODE, self._hmdevice.getSensorData),
                 (self._hmdevice.BINARYNODE, self._hmdevice.getBinaryData)):
             for node in metadata:
-                if node in self._data:
+                if metadata[node] and node in self._data:
                     self._data[node] = funct(name=node, channel=self._channel)
 
         return True

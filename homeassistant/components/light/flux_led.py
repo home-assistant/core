@@ -72,6 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             continue
         device['name'] = device['id'] + " " + ipaddr
         device[ATTR_MODE] = 'rgbw'
+        device[CONF_PROTOCOL] = None
         light = FluxLight(device)
         if light.is_valid:
             lights.append(light)
