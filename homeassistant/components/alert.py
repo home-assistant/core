@@ -145,8 +145,9 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handle_alert_service,
         descriptions.get(SERVICE_TOGGLE), schema=ALERT_SERVICE_SCHEMA)
 
-    for alert in all_alerts.values():
-        yield from alert.async_update_ha_state()
+    tasks = [alert.async_update_ha_state() for alert in all_alerts.values()]
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     return True
 
