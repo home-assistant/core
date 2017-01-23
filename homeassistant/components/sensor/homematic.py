@@ -41,6 +41,7 @@ HM_UNIT_HA_CAST = {
     "SUNSHINEDURATION": "#",
     "AIR_PRESSURE": "hPa",
     "FREQUENCY": "Hz",
+    "VALUE": "#"
 }
 
 

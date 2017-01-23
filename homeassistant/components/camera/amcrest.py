@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_stream)
 
-REQUIREMENTS = ['amcrest==1.1.0']
+REQUIREMENTS = ['amcrest==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,13 +62,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Amcrest IP Camera."""
     from amcrest import AmcrestCamera
-    data = AmcrestCamera(
+    camera = AmcrestCamera(
         config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
+        config.get(CONF_USERNAME), config.get(CONF_PASSWORD)).camera
 
     persistent_notification = loader.get_component('persistent_notification')
     try:
-        data.camera.current_time
+        camera.current_time
     # pylint: disable=broad-except
     except Exception as ex:
         _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
@@ -80,22 +80,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             notification_id=NOTIFICATION_ID)
         return False
 
-    add_devices([AmcrestCam(hass, config, data)])
+    add_devices([AmcrestCam(hass, config, camera)])
     return True
 
 
 class AmcrestCam(Camera):
     """An implementation of an Amcrest IP camera."""
 
-    def __init__(self, hass, device_info, data):
+    def __init__(self, hass, device_info, camera):
         """Initialize an Amcrest camera."""
         super(AmcrestCam, self).__init__()
-        self._base_url = '%s://%s:%s/cgi-bin' % (
-            'http',
-            device_info.get(CONF_HOST),
-            device_info.get(CONF_PORT)
-        )
-        self._data = data
+        self._camera = camera
+        self._base_url = self._camera.get_base_url()
         self._hass = hass
         self._name = device_info.get(CONF_NAME)
         self._resolution = RESOLUTION_LIST[device_info.get(CONF_RESOLUTION)]
@@ -110,7 +106,7 @@ class AmcrestCam(Camera):
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = self._data.camera.snapshot(channel=self._resolution)
+        response = self._camera.snapshot(channel=self._resolution)
         return response.data
 
     @asyncio.coroutine
@@ -123,10 +119,8 @@ class AmcrestCam(Camera):
 
         # Otherwise, stream an MJPEG image stream directly from the camera
         websession = async_get_clientsession(self.hass)
-        streaming_url = '%s/mjpg/video.cgi?channel=0&subtype=%d' % (
-            self._base_url,
-            self._resolution
-        )
+        streaming_url = '{0}mjpg/video.cgi?channel=0&subtype={1}'.format(
+            self._base_url, self._resolution)
 
         stream_coro = websession.get(
             streaming_url, auth=self._token, timeout=TIMEOUT)
