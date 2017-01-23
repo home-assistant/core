@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     # Add devices
-    add_devices([PiglowLight(piglow)])
+    add_devices([PiglowLight(piglow, name)])
 
 
 class PiglowLight(Light):
