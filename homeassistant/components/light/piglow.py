@@ -34,6 +34,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Piglow Light platform."""
     import piglow
 
+    import subprocess
+    if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != '54':
+        _LOGGER.error("A Piglow device was not found")
+        return False
+
     name = config.get(CONF_NAME)
 
     # Add devices
