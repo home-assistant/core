@@ -235,11 +235,12 @@ class MqttFan(FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    def turn_on(self, speed: str=SPEED_MEDIUM) -> None:
+    def turn_on(self, speed: str=None) -> None:
         """Turn on the entity."""
         mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
                      self._payload[STATE_ON], self._qos, self._retain)
-        self.set_speed(speed)
+        if speed:
+            self.set_speed(speed)
 
     def turn_off(self) -> None:
         """Turn off the entity."""
