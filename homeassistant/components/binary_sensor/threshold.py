@@ -110,7 +110,7 @@ class ThresholdSensor(BinarySensorDevice):
         return self._sensor_class
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_ENTITY_ID: self._entity_id,
