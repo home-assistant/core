@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Digital Ocean droplet sensor."""
+    """Set up the Digital Ocean droplet sensor."""
     digital_ocean = get_component('digital_ocean')
     droplets = config.get(CONF_DROPLETS)
 
@@ -68,7 +68,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
         return DEFAULT_SENSOR_CLASS
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
             ATTR_CREATED_AT: self.data.created_at,
