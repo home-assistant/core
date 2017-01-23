@@ -102,6 +102,7 @@ def _convert_old_config(inp: Any) -> List:
 
     inp = vol.Schema({cv.match_all: dict})(inp)
     for key, val in inp.items():
+        val = dict(val)
         val[CONF_ENTITY_ID] = key
         res.append(val)
     return res
