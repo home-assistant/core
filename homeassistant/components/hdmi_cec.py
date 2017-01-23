@@ -26,7 +26,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC==0.4.9']
+REQUIREMENTS = ['pyCEC==0.4.10']
 
 DOMAIN = 'hdmi_cec'
 
