@@ -21,7 +21,7 @@ DEFAULT_EVENT = EVENT_ENTER
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'zone',
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Required(CONF_ZONE): cv.entity_id,
+    vol.Required(CONF_ZONE): cv.zone_id,
     vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
         vol.Any(EVENT_ENTER, EVENT_LEAVE),
 })
@@ -50,7 +50,7 @@ def async_trigger(hass, config, action):
         #
         #  If zone is "zone.*", trigger automation when entering or leaving
         #
-        if zone_entity_id == "zone."+MATCH_ALL and from_s.state != to_s.state:
+        if zone_entity_id == MATCH_ALL and from_s.state != to_s.state:
             if event == EVENT_ENTER and to_s.state != STATE_NOT_HOME or \
                event == EVENT_LEAVE and from_s.state != STATE_NOT_HOME:
                 hass.async_run_job(action, {

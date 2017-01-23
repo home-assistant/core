@@ -15,7 +15,8 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
-    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
+    SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
+    MATCH_ALL)
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
 import homeassistant.util.dt as dt_util
@@ -88,6 +89,14 @@ def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     if value is None:
         return []
     return value if isinstance(value, list) else [value]
+
+
+def zone_id(value: Any) -> str:
+    """Validate Zone ID."""
+    value = string(value).lower()
+    if value == MATCH_ALL or valid_entity_id(value):
+        return value
+    raise vol.Invalid('Zone ID {} is an invalid entity id'.format(value))
 
 
 def entity_id(value: Any) -> str:
