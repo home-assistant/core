@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.piglow/
 """
 import logging
+import subprocess
 
 import voluptuous as vol
 
@@ -34,7 +35,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Piglow Light platform."""
     import piglow
 
-    import subprocess
     if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != '54':
         _LOGGER.error("A Piglow device was not found")
         return False
