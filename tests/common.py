@@ -73,8 +73,7 @@ def get_test_home_assistant():
     hass.start = start_hass
     hass.stop = stop_hass
 
-    # FIXME should not be a daemon. Means hass.stop() not called in teardown
-    threading.Thread(name="LoopThread", target=run_loop, daemon=True).start()
+    threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
     return hass
 
