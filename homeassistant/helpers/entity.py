@@ -266,7 +266,7 @@ class Entity(object):
             self.entity_id, state, attr, self.force_update)
 
     def schedule_update_ha_state(self, force_refresh=False):
-        """Shedule a update ha state change task.
+        """Schedule a update ha state change task.
 
         That is only needed on executor to not block.
         """
@@ -285,7 +285,7 @@ class Entity(object):
 
     @asyncio.coroutine
     def async_remove(self) -> None:
-        """Remove entitiy from async HASS.
+        """Remove entity from async HASS.
 
         This method must be run in the event loop.
         """
