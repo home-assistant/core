@@ -10,7 +10,8 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
     ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-    Light)
+    Light, PLATFORM_SCHEMA)
+import homeassistant.helpers.config_validation as cv
 
 # Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['piglow==1.2.4']
@@ -19,10 +20,18 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_PIGLOW = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
+DEFAULT_NAME = 'Piglow'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Piglow Light platform."""
     import piglow
+
+    name = config.get(CONF_NAME)
 
     # Add devices
     add_devices([PiglowLight(piglow)])
@@ -31,9 +40,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PiglowLight(Light):
     """Representation of an Piglow Light."""
 
-    def __init__(self, piglow):
+    def __init__(self, piglow, name):
         """Initialize an PiglowLight."""
         self._piglow = piglow
+        self._name = name
         self._is_on = False
         self._brightness = 255
         self._rgb_color = [255, 255, 255]
@@ -41,7 +51,7 @@ class PiglowLight(Light):
     @property
     def name(self):
         """Return the display name of this light."""
-        return "piglow"
+        return self._name
 
     @property
     def brightness(self):
