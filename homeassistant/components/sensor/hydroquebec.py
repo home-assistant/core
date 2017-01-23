@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.5.1']
+REQUIREMENTS = ['beautifulsoup4==4.5.3']
 
 _LOGGER = logging.getLogger(__name__)
 
