@@ -121,6 +121,7 @@ def async_setup(hass, config):
     )
 
     try:
+        # read exists group/person from cloud and create entities
         yield from face.update_store()
     except HomeAssistantError as err:
         _LOGGER.error("Can't load data from face api: %s", err)

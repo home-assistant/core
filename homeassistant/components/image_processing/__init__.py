@@ -36,6 +36,7 @@ CONF_SOURCE = 'source'
 CONF_CONFIDENCE = 'confidence'
 
 DEFAULT_TIMEOUT = 10
+DEFAULT_CONFIDENCE = 80
 
 SOURCE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -44,6 +45,8 @@ SOURCE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -93,6 +96,11 @@ class ImageProcessingEntity(Entity):
     @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
+        return None
+
+    @property
+    def confidence(self):
+        """Return minimum confidence for do some things."""
         return None
 
     def process_image(self, image):
