@@ -23,7 +23,7 @@ DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_FOUND_FACE = 'found_face'
+EVENT_IDENTIFY_FACE = 'identify_face'
 
 ATTR_NAME = 'name'
 ATTR_TOTAL_FACES = 'total_faces'
@@ -104,7 +104,7 @@ class ImageProcessingFaceIdentifyEntity(ImageProcessingEntity):
         # send events
         for name, confidence in detect.items():
             self.hass.async_add_job(
-                self.hass.bus.async_fire, EVENT_FOUND_FACE, {
+                self.hass.bus.async_fire, EVENT_IDENTIFY_FACE, {
                     ATTR_NAME: name,
                     ATTR_ENTITY_ID: self.entity_id,
                     ATTR_CONFIDENCE: confidence,
@@ -180,7 +180,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceIdentifyEntity):
 
             data = face['candidates'][0]
             name = ''
-            for s_name, s_id in self._api.store[self._face_group]:
+            for s_name, s_id in self._api.store[self._face_group].items():
                 if data['personId'] == s_id:
                     name = s_name
                     break

@@ -242,7 +242,7 @@ class TestImageProcessingFaceIdentify(object):
             """Mock event."""
             self.face_events.append(event)
 
-        self.hass.bus.listen('found_face', mock_face_event)
+        self.hass.bus.listen('identify_face', mock_face_event)
 
     def teardown_method(self):
         """Stop everything that was started."""
@@ -265,6 +265,6 @@ class TestImageProcessingFaceIdentify(object):
                       event.data.get('name') == 'Hans']
         assert len(event_data) == 1
         assert event_data[0]['name'] == 'Hans'
-        assert event_data[0]['confidence'] == 98.3
+        assert event_data[0]['confidence'] == 98.34
         assert event_data[0]['entity_id'] == \
             'image_processing.demo_face_identify'
