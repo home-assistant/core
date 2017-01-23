@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """Return a BT Home Hub 5 scanner if successful."""
+    """Return a Sky Hub 5 scanner if successful."""
     scanner = SkyHubDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -55,7 +55,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         self.url = 'http://{}/'.format(self.host)
 
         # Test the router is accessible
-        data = _get_homehub_data(self.url)
+        data = _get_skyhub_data(self.url)
         self.success_init = data is not None
 
     def scan_devices(self):
@@ -88,7 +88,7 @@ class SkyHubDeviceScanner(DeviceScanner):
         with self.lock:
             _LOGGER.info('Scanning')
 
-            data = _get_homehub_data(self.url)
+            data = _get_skyhub_data(self.url)
 
             if not data:
                 _LOGGER.warning('Error scanning devices')
@@ -99,7 +99,7 @@ class SkyHubDeviceScanner(DeviceScanner):
             return True
 
 
-def _get_homehub_data(url):
+def _get_skyhub_data(url):
     """Retrieve data from Sky Hub and return parsed result."""
     try:
         response = requests.get(url, timeout=5)
@@ -107,12 +107,12 @@ def _get_homehub_data(url):
         _LOGGER.exception("Connection to the router timed out")
         return
     if response.status_code == 200:
-        return _parse_homehub_response(response.text)
+        return _parse_skyhub_response(response.text)
     else:
-        _LOGGER.error("Invalid response from Home Hub: %s", response)
+        _LOGGER.error("Invalid response from Sky Hub: %s", response)
 
 
-def _parse_homehub_response(data_str):
+def _parse_skyhub_response(data_str):
     """Parse the Sky Hub data format."""
     pattmatch = re.search('attach_dev = \'(.*)\'', data_str)
     patt = pattmatch.group(1)
