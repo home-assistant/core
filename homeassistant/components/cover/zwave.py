@@ -70,8 +70,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                     _LOGGER.debug("Controller without positioning feedback")
                     self._workaround = 1
 
-    def update(self):
-        """Get the current state of the entity."""
+    def update_properties(self):
+        """Callback on data changes for node values."""
         # Position value
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():

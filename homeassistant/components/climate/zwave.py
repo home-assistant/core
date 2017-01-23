@@ -68,7 +68,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._unit = temp_unit
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
-        self.update()
+        self.update_properties()
         # Make sure that we have values for the key before converting to int
         if (value.node.manufacturer_id.strip() and
                 value.node.product_id.strip()):
@@ -80,8 +80,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                                   " workaround")
                     self._zxt_120 = 1
 
-    def update(self):
-        """Get the current state of the entity."""
+    def update_properties(self):
+        """Callback on data changes for node values."""
         # Operation Mode
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_MODE).values():

@@ -624,7 +624,12 @@ class ZWaveDeviceEntity(Entity):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
-        self.schedule_update_ha_state(True)
+        self.update_properties()
+        self.schedule_update_ha_state()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        pass
 
     @property
     def should_poll(self):

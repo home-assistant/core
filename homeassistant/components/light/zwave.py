@@ -108,7 +108,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
 
-        self.update()
+        self.update_properties()
 
         # Used for value change event handling
         self._refreshing = False
@@ -116,7 +116,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
 
-    def update(self):
+    def update_properties(self):
         """Update internal properties based on zwave values."""
         # Brightness
         self._brightness, self._state = brightness_state(self._value)
@@ -126,7 +126,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         if self._refresh_value:
             if self._refreshing:
                 self._refreshing = False
-                self.schedule_update_ha_state(True)
+                self.update_properties()
             else:
                 def _refresh_value():
                     """Used timer callback for delayed value refresh."""
@@ -138,9 +138,10 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
                 self._timer = Timer(self._delay, _refresh_value)
                 self._timer.start()
-                self.schedule_update_ha_state()
+            self.schedule_update_ha_state()
         else:
-            self.schedule_update_ha_state(True)
+            self.update_properties()
+            self.schedule_update_ha_state()
 
     @property
     def brightness(self):
@@ -226,7 +227,7 @@ class ZwaveColorLight(ZwaveDimmer):
             _LOGGER.debug("Zwave node color values found.")
             dispatcher.disconnect(
                 self._value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED)
-            self.update()
+            self.update_properties()
 
     def _value_added(self, value):
         """Called when a value has been added to the network."""
@@ -235,9 +236,9 @@ class ZwaveColorLight(ZwaveDimmer):
         # Check for the missing color values
         self._get_color_values()
 
-    def update(self):
+    def update_properties(self):
         """Update internal properties based on zwave values."""
-        super().update()
+        super().update_properties()
 
         if self._value_color is None:
             return

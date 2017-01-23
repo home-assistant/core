@@ -112,10 +112,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._state = None
         self._notification = None
         self._lock_status = None
-        self.update()
+        self.update_properties()
 
-    def update(self):
-        """Get the current state of the entity."""
+    def update_properties(self):
+        """Callback on data changes for node values."""
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_ALARM).values():
             if value.label != "Access Control":
