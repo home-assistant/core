@@ -71,7 +71,7 @@ class MjpegCamera(Camera):
         self._username = device_info.get(CONF_USERNAME)
         self._password = device_info.get(CONF_PASSWORD)
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
-        self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
+        self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
 
         self._auth = None
         if self._username and self._password:
