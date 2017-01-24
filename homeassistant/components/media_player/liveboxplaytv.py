@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if host is None:
         _LOGGER.error("No Orange Livebox TV found in configuration file "
-            "or with discovery")
+                      "or with discovery")
         return False
 
     # Only act if we are not already configuring this host
