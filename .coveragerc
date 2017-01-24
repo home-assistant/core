@@ -133,6 +133,7 @@ omit =
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/hikvision.py
+    homeassistant/components/binary_sensor/iss.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
@@ -303,7 +304,6 @@ omit =
     homeassistant/components/sensor/hddtemp.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/hydroquebec.py
-    homeassistant/components/sensor/iss.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
