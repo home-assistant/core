@@ -152,7 +152,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         # Sort channels by tvIndex
-        return [self._channel_list[c] for c in \
+        return [self._channel_list[c] for c in
                 sorted(self._channel_list.keys())]
 
     @property
