@@ -149,7 +149,7 @@ CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_INSTANCE, default=0x00): vol.Coerce(int)
 })
 
-CUSTOMIZE_SCHEMA = customize.get_customize_schema(vol.Schema({
+CUSTOMIZE_SCHEMA = customize.get_customize_schema({
     vol.Optional(CONF_POLLING_INTENSITY):
         vol.All(cv.positive_int),
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
@@ -157,7 +157,7 @@ CUSTOMIZE_SCHEMA = customize.get_customize_schema(vol.Schema({
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
         cv.positive_int
-}))
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -267,8 +267,6 @@ def setup(hass, config):
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
     customize.set_customize(hass, DOMAIN, config[DOMAIN].get(CONF_CUSTOMIZE))
-    #hass.data['zwave_customize'] = config[DOMAIN].get(CONF_CUSTOMIZE)
-    #customize = hass.data['zwave_customize']
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
 
     # Setup options

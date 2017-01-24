@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    CONF_ENTITY_ID, __version__)
+    __version__)
 from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
@@ -99,10 +99,11 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Required(CONF_CUSTOMIZE, default=[]): customize.get_customize_schema(vol.Schema({cv.match_all: cv.match_all}, extra=vol.ALLOW_EXTRA)),
+    vol.Required(CONF_CUSTOMIZE, default=[]):
+        customize.get_customize_schema(extra=vol.ALLOW_EXTRA),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
-print(CORE_CONFIG_SCHEMA)
+
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on OS."""

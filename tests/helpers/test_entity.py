@@ -90,6 +90,7 @@ class TestHelpersEntity(object):
         """Test we can overwrite hidden property to True."""
         set_customize(
             self.hass,
+            entity.CORE_DOMAIN,
             [{'entity_id': [self.entity.entity_id], ATTR_HIDDEN: True}])
         self.entity.update_ha_state()
 

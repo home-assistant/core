@@ -60,7 +60,7 @@ batinfo==0.4.2
 
 # homeassistant.components.sensor.hydroquebec
 # homeassistant.components.sensor.scrape
-beautifulsoup4==4.5.1
+beautifulsoup4==4.5.3
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -348,6 +348,9 @@ pexpect==4.0.1
 # homeassistant.components.light.hue
 phue==0.9
 
+# homeassistant.components.light.piglow
+piglow==1.2.4
+
 # homeassistant.components.pilight
 pilight==0.1.1
 
@@ -381,7 +384,7 @@ pwaqi==1.3
 py-cpuinfo==0.2.3
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.4.9
+pyCEC==0.4.12
 
 # homeassistant.components.switch.tplink
 pyHS100==0.2.3
@@ -440,7 +443,7 @@ pyhomematic==0.1.20
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
 
-# homeassistant.components.sensor.iss
+# homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
 # homeassistant.components.sensor.lastfm

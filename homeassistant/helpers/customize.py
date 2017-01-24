@@ -11,10 +11,11 @@ import homeassistant.helpers.config_validation as cv
 _OVERWRITE_KEY_FORMAT = '{}.overwrite'
 _OVERWRITE_CACHE_KEY_FORMAT = '{}.overwrite_cache'
 
-_CUSTOMIZE_SCHEMA_ENTRY_DICT = {
+_CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
     vol.Required(CONF_ENTITY_ID): vol.All(
-        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
-}
+        cv.ensure_list_csv, vol.Length(min=1), [vol.Schema(str)], [vol.Lower])
+})
+
 
 def _convert_old_config(inp: Any) -> List:
     if not isinstance(inp, dict):
@@ -30,10 +31,17 @@ def _convert_old_config(inp: Any) -> List:
         res.append(val)
     return res
 
-def get_customize_schema(schema: vol.Schema) -> vol.Schema:
-    return vol.All(_convert_old_config, [schema.extend(_CUSTOMIZE_SCHEMA_ENTRY_DICT)])
 
-def set_customize(hass: HomeAssistant, domain: str, customize: List[Dict]) -> None:
+def get_customize_schema(
+        schema: dict=None, extra=vol.PREVENT_EXTRA) -> vol.Schema:
+    """Get generic customize schema extended with keys and extra."""
+    return vol.All(
+        _convert_old_config,
+        [_CUSTOMIZE_SCHEMA_ENTRY.extend(schema if schema else {}, extra=extra)])
+
+
+def set_customize(
+        hass: HomeAssistant, domain: str, customize: List[Dict]) -> None:
     """Overwrite all current customize settings.
 
     Async friendly.
