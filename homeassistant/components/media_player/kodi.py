@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
-    CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
+    CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -31,6 +31,7 @@ CONF_TURN_OFF_ACTION = 'turn_off_action'
 DEFAULT_NAME = 'Kodi'
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 5
+DEFAULT_SSL = False
 
 TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
 
@@ -42,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -54,6 +56,7 @@ def async_setup_platform(hass, config, async_add_entities,
     """Setup the Kodi platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    use_encryption = config.get(CONF_SSL)
 
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
@@ -65,7 +68,7 @@ def async_setup_platform(hass, config, async_add_entities,
     entity = KodiDevice(
         hass,
         name=config.get(CONF_NAME),
-        host=host, port=port,
+        host=host, port=port, encryption=use_encryption,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION))
@@ -76,8 +79,8 @@ def async_setup_platform(hass, config, async_add_entities,
 class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
-    def __init__(self, hass, name, host, port, username=None, password=None,
-                 turn_off_action=None):
+    def __init__(self, hass, name, host, port, encryption=False, username=None,
+                 password=None, turn_off_action=None):
         """Initialize the Kodi device."""
         import jsonrpc_async
         self.hass = hass
@@ -94,9 +97,11 @@ class KodiDevice(MediaPlayerDevice):
         else:
             image_auth_string = ""
 
-        self._http_url = 'http://{}:{}/jsonrpc'.format(host, port)
-        self._image_url = 'http://{}{}:{}/image'.format(
-            image_auth_string, host, port)
+        protocol = 'https' if encryption else 'http'
+
+        self._http_url = '{}://{}:{}/jsonrpc'.format(protocol, host, port)
+        self._image_url = '{}://{}{}:{}/image'.format(
+            protocol, image_auth_string, host, port)
 
         self._server = jsonrpc_async.Server(self._http_url, **kwargs)
 
