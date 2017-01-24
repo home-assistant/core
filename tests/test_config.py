@@ -473,7 +473,6 @@ def test_merge_type_mismatch(merge_log_err):
 def test_merge_once_only(merge_log_err):
     """Test if we have a merge for a comp that may occur only once."""
     packages = {
-        'pack_1': {'homeassistant': {}},
         'pack_2': {
             'mqtt': {},
             'api': {},  # No config schema
@@ -484,7 +483,7 @@ def test_merge_once_only(merge_log_err):
         'mqtt': {}, 'api': {}
     }
     config_util.merge_packages_config(config, packages)
-    assert merge_log_err.call_count == 3
+    assert merge_log_err.call_count == 2
     assert len(config) == 3
 
 
@@ -519,3 +518,28 @@ def test_merge_duplicate_keys(merge_log_err):
     assert merge_log_err.call_count == 1
     assert len(config) == 2
     assert len(config['input_select']) == 1
+
+
+@pytest.mark.asyncio
+def test_merge_customize(hass):
+    """Test loading core config onto hass object."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'America/New_York',
+        'customize': {'a.a': {'friendly_name': 'A'}},
+        'packages': {'pkg1': {'homeassistant': {'customize': {
+            'b.b': {'friendly_name': 'BB'}}}}},
+    }
+    yield from config_util.async_process_ha_core_config(hass, core_config)
+
+    entity = Entity()
+    entity.entity_id = 'b.b'
+    entity.hass = hass
+    yield from entity.async_update_ha_state()
+
+    state = hass.states.get('b.b')
+    assert 'friendly_name' in state.attributes
