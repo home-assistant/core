@@ -85,11 +85,6 @@ def request_configuration(host, port, name, hass, add_devices):
             _CONFIGURING[host], 'Failed to set up, please try again.')
         return
 
-    # pylint: disable=unused-argument
-    def liveboxplaytv_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
-        setup_liveboxplaytv(host, port, name, hass, add_devices)
-
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
     """Representation of an Orange Livebox Play TV."""
