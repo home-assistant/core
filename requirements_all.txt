@@ -443,7 +443,7 @@ pyhomematic==0.1.20
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
 
-# homeassistant.components.sensor.iss
+# homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
 # homeassistant.components.sensor.lastfm
