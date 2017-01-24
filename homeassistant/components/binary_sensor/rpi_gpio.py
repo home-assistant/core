@@ -65,6 +65,7 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
         self._pull_mode = pull_mode
         self._bouncetime = bouncetime
         self._invert_logic = invert_logic
+        self._state = None
 
         rpi_gpio.setup_input(self._port, self._pull_mode)
 
