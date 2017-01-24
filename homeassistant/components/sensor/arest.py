@@ -29,7 +29,7 @@ CONF_PINS = 'pins'
 DEFAULT_NAME = 'aREST sensor'
 
 PIN_VARIABLE_SCHEMA = vol.Schema({
-    vol.Required(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             renderer = make_renderer(var_data.get(CONF_VALUE_TEMPLATE))
             dev.append(ArestSensor(
                 arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-                var_data.get(CONF_NAME), variable=variable,
+                var_data.get(CONF_NAME, variable), variable=variable,
                 unit_of_measurement=var_data.get(CONF_UNIT_OF_MEASUREMENT),
                 renderer=renderer))
 
