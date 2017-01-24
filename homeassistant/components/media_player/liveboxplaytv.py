@@ -1,5 +1,5 @@
 """
-Support for interface with an Orange Livebox Play TV appliance
+Support for interface with an Orange Livebox Play TV appliance.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.liveboxplaytv/
@@ -175,6 +175,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         return SUPPORT_LIVEBOXPLAYTV
 
     def refresh_channel_list(self):
+        """Refresh the list of available channels."""
         new_channel_list = {}
         # update channels
         for c in self._client.get_channels():
