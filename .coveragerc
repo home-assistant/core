@@ -198,6 +198,7 @@ omit =
     homeassistant/components/light/hyperion.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
+    homeassistant/components/light/mipow.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/x10.py

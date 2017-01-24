@@ -234,6 +234,9 @@ https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.6.zip#russound==0.1.6
 
+# homeassistant.components.light.mipow
+# https://github.com/mjg59/python-mipow/releases/download/0.3/mipow-0.3.tar.gz#mipow==0.3
+
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
