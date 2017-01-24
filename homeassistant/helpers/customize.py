@@ -37,7 +37,8 @@ def get_customize_schema(
     """Get generic customize schema extended with keys and extra."""
     return vol.All(
         _convert_old_config,
-        [_CUSTOMIZE_SCHEMA_ENTRY.extend(schema if schema else {}, extra=extra)])
+        [_CUSTOMIZE_SCHEMA_ENTRY.extend(
+            schema if schema else {}, extra=extra)])
 
 
 def set_customize(
