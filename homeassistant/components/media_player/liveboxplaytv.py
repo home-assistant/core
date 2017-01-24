@@ -108,11 +108,13 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._current_source = None
         self._state = STATE_UNKNOWN
         self._channel_list = {}
+        self._current_channel = None
+        self._media_image_url = None
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data."""
-        from requests import ConnectionError
+        import requests
         try:
             self._state = STATE_PLAYING if self._client.is_on else STATE_OFF
             # TODO
@@ -124,7 +126,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             self._current_channel = channel['name']
             self._media_image_url = channel['imageUrl']
             self.refresh_channel_list()
-        except ConnectionError:
+        except requests.ConnectionError:
             self._state = STATE_OFF
 
     @property
@@ -178,8 +180,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         """Refresh the list of available channels."""
         new_channel_list = {}
         # update channels
-        for c in self._client.get_channels():
-            new_channel_list[int(c['tvIndex'])] = c['name']
+        for channel in self._client.get_channels():
+            new_channel_list[int(channel['tvIndex'])] = channel['name']
         self._channel_list = new_channel_list
 
     def turn_off(self):
