@@ -18,23 +18,20 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL, MediaPlayerDevice,
     PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, STATE_ON, STATE_OFF,
-    STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN, CONF_NAME)
+    CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
+    STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
-from liveboxplaytv import LiveboxPlayTv
 
 REQUIREMENTS = [
-    'https://github.com/pschmitt/python-liveboxplaytv/archive/1.0.1.zip'
-    '#liveboxplaytv==1.0.1']
+    'https://github.com/pschmitt/python-liveboxplaytv/archive/1.1.0.zip'
+    '#liveboxplaytv==1.1.0']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SOURCES = 'sources'
-
 DEFAULT_NAME = 'Livebox Play TV'
+DEFAULT_PORT = 8080
 
 SUPPORT_LIVEBOXPLAYTV = SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
     SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
@@ -45,8 +42,9 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
@@ -55,48 +53,52 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Orange Livebox Play TV platform."""
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
+        port = urlparse(discovery_info[1]).port
     else:
         host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
 
     if host is None:
-        _LOGGER.error("No Orange Livebox TV found in configuration file or with discovery")
+        _LOGGER.error("No Orange Livebox TV found in configuration file "
+            "or with discovery")
         return False
 
     # Only act if we are not already configuring this host
     if host in _CONFIGURING:
         return
 
-    setup_liveboxplaytv(host, name, hass, add_devices)
+    setup_liveboxplaytv(host, port, name, hass, add_devices)
 
 
-def setup_liveboxplaytv(host, name, hass, add_devices):
+def setup_liveboxplaytv(host, port, name, hass, add_devices):
     """Setup an Orange Livebox Play TV based on host parameter."""
-    add_devices([LiveboxPlayTvDevice(host, name)], True)
+    add_devices([LiveboxPlayTvDevice(host, port, name)], True)
 
 
-def request_configuration(host, hass, name, add_devices):
+def request_configuration(host, port, name, hass, add_devices):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(
-            _CONFIGURING[host], 'Failed to pair, please try again.')
+            _CONFIGURING[host], 'Failed to set up, please try again.')
         return
 
     # pylint: disable=unused-argument
-    def lgtv_configuration_callback(data):
+    def liveboxplaytv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_liveboxplaytv(host, name, hass, add_devices)
+        setup_liveboxplaytv(host, port, name, hass, add_devices)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
     """Representation of an Orange Livebox Play TV."""
 
-    def __init__(self, host, name):
-        """Initialize the webos device."""
-        self._client = LiveboxPlayTv(host)
+    def __init__(self, host, port, name):
+        """Initialize the Livebox Play TV device."""
+        from liveboxplaytv import LiveboxPlayTv
+        self._client = LiveboxPlayTv(host, port)
         # Assume that the appliance is not muted
         self._muted = False
         # Assume that the TV is in Play mode
@@ -104,25 +106,25 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._playing = True
         self._volume = 0
         self._current_source = None
-        self._current_source_id = None
         self._state = STATE_UNKNOWN
-        self._source_list = {}
+        self._channel_list = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data."""
-        from websockets.exceptions import ConnectionClosed
+        from requests import ConnectionError
         try:
-            channel = self._client.get_current_channel()
             self._state = STATE_PLAYING if self._client.is_on else STATE_OFF
-            self.muted = False
-            self._volume = 100 # self._client.get_volume()
+            # TODO
+            self._muted = False
+            self._volume = 100  # self._client.get_volume()
+
+            # Update current channel
+            channel = self._client.get_current_channel()
             self._current_channel = channel['name']
             self._media_image_url = channel['imageUrl']
-            # update channels
-            for c in self._client.get_channels():
-                self._source_list[int(c['tvIndex'])] = c['name']
-        except (OSError, ConnectionClosed):
+            self.refresh_channel_list()
+        except ConnectionError:
             self._state = STATE_OFF
 
     @property
@@ -153,11 +155,13 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return [self._source_list[x] for x in sorted(self._source_list.keys())]
+        # Sort channels by tvIndex
+        return [self._channel_list[x] for x in sorted(self._channel_list.keys())]
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
+        # return self._client.media_type
         return MEDIA_TYPE_CHANNEL
 
     @property
@@ -169,6 +173,13 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         return SUPPORT_LIVEBOXPLAYTV
+
+    def refresh_channel_list(self):
+        new_channel_list = {}
+        # update channels
+        for c in self._client.get_channels():
+            new_channel_list[int(c['tvIndex'])] = c['name']
+        self._channel_list = new_channel_list
 
     def turn_off(self):
         """Turn off media player."""
@@ -190,6 +201,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
+        # TODO
         pass
 
     def mute_volume(self, mute):
@@ -199,10 +211,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     def media_play_pause(self):
         """Simulate play pause media player."""
-        if self._playing:
-            self.media_pause()
-        else:
-            self.media_play()
+        self._client.play_pause()
 
     def select_source(self, source):
         """Select input source."""
