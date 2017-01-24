@@ -4,7 +4,6 @@ from collections import OrderedDict
 import logging
 import os
 import shutil
-from types import MappingProxyType
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
 
@@ -22,7 +21,7 @@ from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.helpers.customize import set_customize
+from homeassistant.helpers import customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,26 +86,6 @@ tts:
 """
 
 
-CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): vol.All(
-        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
-}, extra=vol.ALLOW_EXTRA)
-
-
-def _convert_old_config(inp: Any) -> List:
-    if not isinstance(inp, dict):
-        return cv.ensure_list(inp)
-    if CONF_ENTITY_ID in inp:
-        return [inp]  # sigle entry
-    res = []
-
-    inp = vol.Schema({cv.match_all: dict})(inp)
-    for key, val in inp.items():
-        val[CONF_ENTITY_ID] = key
-        res.append(val)
-    return res
-
-
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
         {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
@@ -120,12 +99,10 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Required(CONF_CUSTOMIZE,
-                 default=MappingProxyType({})): vol.All(
-                     _convert_old_config, [CUSTOMIZE_SCHEMA_ENTRY]),
+    vol.Required(CONF_CUSTOMIZE, default=[]): customize.get_customize_schema(vol.Schema({cv.match_all: cv.match_all}, extra=vol.ALLOW_EXTRA)),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
-
+print(CORE_CONFIG_SCHEMA)
 
 def get_default_config_dir() -> str:
     """Put together the default configuration directory based on OS."""
@@ -281,6 +258,7 @@ def async_process_ha_core_config(hass, config):
 
     This method is a coroutine.
     """
+    print(CORE_CONFIG_SCHEMA)
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
 
@@ -307,7 +285,7 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    set_customize(hass, config.get(CONF_CUSTOMIZE) or {})
+    customize.set_customize(hass, CONF_CORE, config.get(CONF_CUSTOMIZE))
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:

@@ -1,25 +1,48 @@
 """A helper module for customization."""
 import collections
-from typing import Dict, List
+from typing import Any, Dict, List
 import fnmatch
+import voluptuous as vol
 
 from homeassistant.const import CONF_ENTITY_ID
 from homeassistant.core import HomeAssistant, split_entity_id
+import homeassistant.helpers.config_validation as cv
 
-_OVERWRITE_KEY = 'overwrite'
-_OVERWRITE_CACHE_KEY = 'overwrite_cache'
+_OVERWRITE_KEY_FORMAT = '{}.overwrite'
+_OVERWRITE_CACHE_KEY_FORMAT = '{}.overwrite_cache'
 
+_CUSTOMIZE_SCHEMA_ENTRY_DICT = {
+    vol.Required(CONF_ENTITY_ID): vol.All(
+        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
+}
 
-def set_customize(hass: HomeAssistant, customize: List[Dict]) -> None:
+def _convert_old_config(inp: Any) -> List:
+    if not isinstance(inp, dict):
+        return cv.ensure_list(inp)
+    if CONF_ENTITY_ID in inp:
+        return [inp]  # sigle entry
+    res = []
+
+    inp = vol.Schema({cv.match_all: dict})(inp)
+    for key, val in inp.items():
+        val = dict(val)
+        val[CONF_ENTITY_ID] = key
+        res.append(val)
+    return res
+
+def get_customize_schema(schema: vol.Schema) -> vol.Schema:
+    return vol.All(_convert_old_config, [schema.extend(_CUSTOMIZE_SCHEMA_ENTRY_DICT)])
+
+def set_customize(hass: HomeAssistant, domain: str, customize: List[Dict]) -> None:
     """Overwrite all current customize settings.
 
     Async friendly.
     """
-    hass.data[_OVERWRITE_KEY] = customize
-    hass.data[_OVERWRITE_CACHE_KEY] = {}
+    hass.data[_OVERWRITE_KEY_FORMAT.format(domain)] = customize
+    hass.data[_OVERWRITE_CACHE_KEY_FORMAT.format(domain)] = {}
 
 
-def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
+def get_overrides(hass: HomeAssistant, domain: str, entity_id: str) -> Dict:
     """Return a dictionary of overrides related to entity_id.
 
     Whole-domain overrides are of lowest priorities,
@@ -28,10 +51,11 @@ def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
 
     The lookups are cached.
     """
-    if _OVERWRITE_CACHE_KEY in hass.data and \
-            entity_id in hass.data[_OVERWRITE_CACHE_KEY]:
-        return hass.data[_OVERWRITE_CACHE_KEY][entity_id]
-    if _OVERWRITE_KEY not in hass.data:
+    cache_key = _OVERWRITE_CACHE_KEY_FORMAT.format(domain)
+    if cache_key in hass.data and entity_id in hass.data[cache_key]:
+        return hass.data[cache_key][entity_id]
+    overwrite_key = _OVERWRITE_KEY_FORMAT.format(domain)
+    if overwrite_key not in hass.data:
         return {}
     domain_result = {}  # type: Dict[str, Any]
     glob_result = {}  # type: Dict[str, Any]
@@ -57,7 +81,7 @@ def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
             else:
                 target[key] = source[key]
 
-    for rule in hass.data[_OVERWRITE_KEY]:
+    for rule in hass.data[overwrite_key]:
         if CONF_ENTITY_ID in rule:
             entities = rule[CONF_ENTITY_ID]
             if domain in entities:
@@ -74,7 +98,7 @@ def get_overrides(hass: HomeAssistant, entity_id: str) -> Dict:
     deep_update(result, clean_entry(domain_result))
     deep_update(result, clean_entry(glob_result))
     deep_update(result, clean_entry(exact_result))
-    if _OVERWRITE_CACHE_KEY not in hass.data:
-        hass.data[_OVERWRITE_CACHE_KEY] = {}
-    hass.data[_OVERWRITE_CACHE_KEY][entity_id] = result
+    if cache_key not in hass.data:
+        hass.data[cache_key] = {}
+    hass.data[cache_key][entity_id] = result
     return result
