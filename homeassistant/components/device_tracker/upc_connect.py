@@ -81,8 +81,7 @@ class UPCDeviceScanner(DeviceScanner):
         except (ET.ParseError, TypeError):
             _LOGGER.warning("Can't read device from %s", self.host)
             self.token = None
-
-        return []
+            return []
 
     @asyncio.coroutine
     def async_get_device_name(self, device):
