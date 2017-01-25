@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.liveboxplaytv/
 """
 import logging
 from datetime import timedelta
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -19,7 +18,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
     STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
@@ -41,7 +39,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
@@ -50,12 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Orange Livebox Play TV platform."""
-    if discovery_info is not None:
-        host = urlparse(discovery_info[1]).hostname
-        port = urlparse(discovery_info[1]).port
-    else:
-        host = config.get(CONF_HOST)
-        port = config.get(CONF_PORT)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
 
     if host is None:
@@ -67,23 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if host in _CONFIGURING:
         return
 
-    setup_liveboxplaytv(host, port, name, hass, add_devices)
-
-
-def setup_liveboxplaytv(host, port, name, hass, add_devices):
-    """Setup an Orange Livebox Play TV based on host parameter."""
     add_devices([LiveboxPlayTvDevice(host, port, name)], True)
-
-
-def request_configuration(host, port, name, hass, add_devices):
-    """Request configuration steps from the user."""
-    configurator = get_component('configurator')
-
-    # We got an error if this method is called while we are configuring
-    if host in _CONFIGURING:
-        configurator.notify_errors(
-            _CONFIGURING[host], 'Failed to set up, please try again.')
-        return
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
@@ -98,7 +76,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         # Assume that the TV is in Play mode
         self._name = name
         self._playing = True
-        self._volume = 0
         self._current_source = None
         self._state = STATE_UNKNOWN
         self._channel_list = {}
@@ -111,10 +88,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         import requests
         try:
             self._state = STATE_PLAYING if self._client.is_on else STATE_OFF
-            # TODO
-            self._muted = False
-            self._volume = 100  # self._client.get_volume()
-
             # Update current channel
             channel = self._client.get_current_channel()
             self._current_channel = channel['name']
@@ -137,11 +110,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
-
-    @property
-    def volume_level(self):
-        """Volume level of the media player (0..1)."""
-        return self._volume / 100.0
 
     @property
     def source(self):
@@ -196,11 +164,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         self._client.volume_down()
-
-    def set_volume_level(self, volume):
-        """Set volume level, range 0..1."""
-        # TODO
-        pass
 
     def mute_volume(self, mute):
         """Send mute command."""
