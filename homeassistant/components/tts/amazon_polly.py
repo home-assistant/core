@@ -66,8 +66,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
     vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
-    # vol.Optional(CONF_VOICE, default=DEFAULT_VOICE):
-    #     vol.In(SUPPORTED_VOICES),
     vol.Optional(CONF_OUTPUT_FORMAT, default=DEFAULT_OUTPUT_FORMAT):
         vol.In(SUPPORTED_OUTPUT_FORMATS),
     vol.Optional(CONF_SAMPLE_RATE): vol.All(cv.string,
@@ -148,6 +146,10 @@ class AmazonPollyProvider(Provider):
 
     def get_tts_audio(self, message, language=None, options=None):
         """Request TTS file from Polly."""
+        if language not in self.all_languages:
+            _LOGGER.error("%s is not an acceptable language", language)
+            return (None, None)
+
         resp = self.client.synthesize_speech(
             OutputFormat=self.config[CONF_OUTPUT_FORMAT],
             SampleRate=self.config[CONF_SAMPLE_RATE],
