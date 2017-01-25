@@ -72,7 +72,7 @@ class UPCDeviceScanner(DeviceScanner):
         def async_logout(event):
             """Logout from upc connect box."""
             try:
-                yield from _async_ws_function(CMD_LOGOUT)
+                yield from self._async_ws_function(CMD_LOGOUT)
                 self.token = None
             finally:
                 self.websession.detach()
