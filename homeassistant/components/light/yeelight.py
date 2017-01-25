@@ -14,7 +14,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin as mired_to_kelvin,
     color_temperature_kelvin_to_mired as kelvin_to_mired,
     color_temperature_to_rgb)
-from homeassistant.const import CONF_DEVICES, CONF_NAME, STATE_OFF
+from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
     ATTR_FLASH, FLASH_SHORT, FLASH_LONG,
@@ -99,8 +99,7 @@ class YeelightLight(Light):
 
         self._supported_features = SUPPORT_YEELIGHT
         self._available = False
-        self.__bulb = None
-        self.__properties = None
+        self._bulb_device = None
 
         self._brightness = None
         self._color_temp = None
@@ -176,12 +175,12 @@ class YeelightLight(Light):
     @property
     def _bulb(self) -> object:
         import yeelight
-        if self.__bulb is None:
+        if self._bulb_device is None:
             try:
-                self.__bulb = yeelight.Bulb(self._ipaddr)
-                self.__bulb.get_properties()  # force init for type
+                self._bulb_device = yeelight.Bulb(self._ipaddr)
+                self._bulb_device.get_properties()  # force init for type
 
-                btype = self.__bulb.bulb_type
+                btype = self._bulb_device.bulb_type
                 if btype == yeelight.BulbType.Color:
                     self._supported_features |= SUPPORT_YEELIGHT_RGB
                 self._available = True
@@ -190,7 +189,7 @@ class YeelightLight(Light):
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
 
-        return self.__bulb
+        return self._bulb_device
 
     def set_music_mode(self, mode) -> None:
         """Set the music mode on or off."""
@@ -205,11 +204,7 @@ class YeelightLight(Light):
         try:
             self._bulb.get_properties()
 
-            is_on = self._properties.get("power", STATE_OFF)
-            if is_on == STATE_OFF:
-                self._is_on = False
-            else:
-                self._is_on = True
+            self._is_on = self._properties.get("power") == "on"
 
             bright = self._properties.get("bright", None)
             if bright:
@@ -292,9 +287,9 @@ class YeelightLight(Light):
         rgb = kwargs.get(ATTR_RGB_COLOR)
         flash = kwargs.get(ATTR_FLASH)
 
-        config_transition = self.config[CONF_TRANSITION]  # in ms
-        kwargs_transition = kwargs.get(ATTR_TRANSITION, 0) * 1000  # kwarg in s
-        duration = max(config_transition, kwargs_transition)
+        duration = self.config[CONF_TRANSITION]  # in ms
+        if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
+            duration = kwargs.get(ATTR_TRANSITION) * 1000  # kwarg in s
 
         self._bulb.turn_on(duration=duration)
 
