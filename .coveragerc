@@ -46,6 +46,9 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
+    homeassistant/components/lutron.py
+    homeassistant/components/*/lutron.py
+
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
