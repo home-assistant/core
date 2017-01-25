@@ -50,7 +50,7 @@ def setup(hass, config):
 
     if not config.get(DEVICE_DESCRIPTOR) and\
        not config.get(DEVICE_NAME):
-        _LOGGER.warn(
+        _LOGGER.debug(
             'KeyboardRemote: Error: No device_descriptor\
              or device_name found.'
             )
@@ -90,14 +90,14 @@ class KeyboardRemote(threading.Thread):
         self.device_name = config.get(DEVICE_NAME)
         self.dev = self._get_keyboard_device()
         if self.dev is not None:
-            _LOGGER.warn(
+            _LOGGER.debug(
                 'KeyboardRemote: keyboard connected'
                 )
         else:
             id_folder = '/dev/input/by-id/'
             device_names = [InputDevice(file_name).name
                             for file_name in list_devices()]
-            _LOGGER.warn(
+            _LOGGER.debug(
                 'KeyboardRemote: keyboard not connected.\
                 Check /dev/input/event* permissions.\
                 Possible device names are:\n %s.\n \
@@ -152,7 +152,7 @@ class KeyboardRemote(threading.Thread):
                     self.hass.bus.fire(
                         KEYBOARD_REMOTE_CONNECTED
                     )
-                    _LOGGER.warn('KeyboardRemote: keyboard re-connected')
+                    _LOGGER.debug('KeyboardRemote: keyboard re-connected')
                 else:
                     continue
 
@@ -163,7 +163,7 @@ class KeyboardRemote(threading.Thread):
                 self.hass.bus.fire(
                     KEYBOARD_REMOTE_DISCONNECTED
                 )
-                _LOGGER.warn('KeyboardRemote: keyboard disconnected')
+                _LOGGER.debug('KeyboardRemote: keyboard disconnected')
                 continue
 
             if not event:
