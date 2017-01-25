@@ -58,6 +58,8 @@ CONF_INTERFACE_ADDR = 'interface_addr'
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
 
+ATTR_IS_COORDINATOR = 'is_coordinator'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
     vol.Optional(CONF_INTERFACE_ADDR): cv.string,
@@ -973,3 +975,8 @@ class SonosDevice(MediaPlayerDevice):
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
         self._player.set_sleep_timer(None)
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {ATTR_IS_COORDINATOR: self.is_coordinator}
