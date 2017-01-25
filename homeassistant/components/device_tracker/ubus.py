@@ -67,6 +67,7 @@ class UbusDeviceScanner:
         self.session_id = None  # lazy init, will be fetched on first error
 
     def login(self):
+        """Login and fetch the session id."""
         _LOGGER.debug("Fetching the session id..")
         self.session_id = _get_session_id(self.url,
                                           self.username, self.password)
@@ -76,7 +77,7 @@ class UbusDeviceScanner:
         """Fetch clients and leases from the router."""
         clients = self._get_devices()
         leases = self._get_leases()
-        _LOGGER.info("Got %s clients, %s leases", len(clients), len(leases))
+        _LOGGER.debug("Got %s clients, %s leases", len(clients), len(leases))
 
         # Note, we may have clients who have leases expired..
         for client in clients:
@@ -86,8 +87,8 @@ class UbusDeviceScanner:
                 client["ip"] = lease[0]["ip"]
                 client["hostname"] = lease[0]["hostname"]
             else:
-                _LOGGER.warning("No lease found for %s, using mac as name",
-                                client["mac"])
+                _LOGGER.debug("No lease found for %s, using mac as name",
+                              client["mac"])
                 client["hostname"] = mac
                 client["ip"] = "<no lease>"
 
@@ -96,7 +97,7 @@ class UbusDeviceScanner:
                 "signal": client["signal"],
                 "noise": client["noise"]
             }
-            # _LOGGER.info("Seen: %s (%s)", client["hostname"], client["mac"])
+
             see(mac=client["mac"], host_name=client["hostname"],
                 source_type=SOURCE_TYPE_ROUTER,
                 attributes=extra_attrs)
@@ -115,7 +116,7 @@ class UbusDeviceScanner:
             self.login()  # try to renew the session
             return clients
 
-        # _LOGGER.debug("Found %s ifaces: %s", len(ifaces), ifaces)
+        _LOGGER.debug("Found %s ifaces: %s", len(ifaces), ifaces)
         for iface in ifaces["devices"]:
             devices = _req_json_rpc(self.url, self.session_id,
                                     "call", "iwinfo", "assoclist",
@@ -131,8 +132,8 @@ class UbusDeviceScanner:
         # 'mac': 'F0:B4:29:XX:XX:XX',
         # 'rx': {'mcs': 7, '40mhz': False, 'rate': 72200, 'short_gi': True},
         # 'noise': -95}]
-        # _LOGGER.info("Found %s clients: %s", len(clients),
-        #             [client["mac"] for client in clients])
+        _LOGGER.debug("Found %s clients: %s", len(clients),
+                      [client["mac"] for client in clients])
 
         return clients
 
@@ -148,9 +149,8 @@ class UbusDeviceScanner:
                 self.login()  # try to renew the session
                 return leases
             for network in lease_res["device"]:
-                # _LOGGER.debug("Checking network %s" % network)
                 for lease in lease_res["device"][network]["leases"]:
-                    # _LOGGER.debug("[%s] client: %s", network, lease)
+                    _LOGGER.debug("[%s] client: %s", network, lease)
                     leases.append(lease)
 
         # example lease
@@ -243,10 +243,10 @@ def _get_session_id(url, username, password):
 def setup_scanner(hass, config, see):
     """Setup an endpoint for the ubus logger."""
     try:
-        _LOGGER.info("Trying to start the scanner..")
+        _LOGGER.debug("Trying to start the scanner..")
         scanner = UbusDeviceScanner(config)
         interval = DEFAULT_SCAN_INTERVAL
-        _LOGGER.info("Started ubustracker with interval=%s", interval)
+        _LOGGER.debug("Started ubustracker with interval=%s", interval)
 
         def update(now):
             """Update all the hosts on every interval time."""
