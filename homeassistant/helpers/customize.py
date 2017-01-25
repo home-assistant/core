@@ -14,7 +14,7 @@ _OVERWRITE_CACHE_KEY_FORMAT = '{}.overwrite_cache'
 _CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
     vol.Required(CONF_ENTITY_ID): vol.All(
         cv.ensure_list_csv, vol.Length(min=1), [vol.Schema(str)], [vol.Lower])
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def _convert_old_config(inp: Any) -> List:
@@ -32,13 +32,7 @@ def _convert_old_config(inp: Any) -> List:
     return res
 
 
-def get_customize_schema(
-        schema: dict=None, extra=vol.PREVENT_EXTRA) -> vol.Schema:
-    """Get generic customize schema extended with keys and extra."""
-    return vol.All(
-        _convert_old_config,
-        [_CUSTOMIZE_SCHEMA_ENTRY.extend(
-            schema if schema else {}, extra=extra)])
+CUSTOMIZE_SCHEMA = vol.All(_convert_old_config, [_CUSTOMIZE_SCHEMA_ENTRY])
 
 
 def set_customize(

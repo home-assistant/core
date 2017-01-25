@@ -99,8 +99,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Required(CONF_CUSTOMIZE, default=[]):
-        customize.get_customize_schema(extra=vol.ALLOW_EXTRA),
+    vol.Required(CONF_CUSTOMIZE, default=[]): customize.CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 

@@ -40,6 +40,11 @@ class TestComponentZwave(unittest.TestCase):
         self._validate_config(self.assertTrue, {'customize': {}})
         self._validate_config(self.assertTrue, {'customize': []})
 
+    def test_empty_customize_content(self):
+        """Test empty customize."""
+        self._validate_config(
+            self.assertTrue, {'customize': {'test.test': {}}})
+
     def test_full_customize_dict(self):
         """Test full customize as dict."""
         self._validate_config(self.assertTrue, {'customize': {'test.test': {

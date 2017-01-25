@@ -1,6 +1,6 @@
 """Test the customize helper."""
 import homeassistant.helpers.customize as customize
-from voluptuous import MultipleInvalid, ALLOW_EXTRA
+from voluptuous import MultipleInvalid
 import pytest
 
 
@@ -89,51 +89,31 @@ class TestHelpersCustomize(object):
             'key2': 'value22',
             'key3': 'value3'}
 
-    def test_get_customize_schema_bad_schema(self):
+    def test_schema_bad_schema(self):
         """Test bad customize schemas."""
         for value in (
                 {'test.test': 10},
                 {'test.test': ['hello']},
-                {'test.test': {'hidden': True}},
                 {'entity_id': {'a': 'b'}},
                 {'entity_id': 10},
                 [{'test.test': 'value'}],
-                [{'entity_id': 'test', 'key': 'value'}],
         ):
-            with pytest.raises(MultipleInvalid):
-                customize.get_customize_schema()(value)
+            with pytest.raises(
+                MultipleInvalid,
+                message="{} should have raised MultipleInvalid".format(
+                    value)):
+                customize.CUSTOMIZE_SCHEMA(value)
 
     def test_get_customize_schema_allow_extra(self):
         """Test schema with ALLOW_EXTRA."""
-        schema = customize.get_customize_schema(extra=ALLOW_EXTRA)
         for value in (
                 {'test.test': {'hidden': True}},
                 {'test.test': {'key': ['value1', 'value2']}},
                 [{'entity_id': 'id1', 'key': 'value'}],
         ):
-            schema(value)
-
-    def test_get_customize_schema_additional_key(self):
-        """Test schema with extra keys."""
-        schema = customize.get_customize_schema(schema={'key': 'value'})
-
-        for value in (
-                {'test.test': {'key': 'value1'}},
-                {'test.test': {'key1': 'value'}},
-                {'test.test': {'key': 'value', 'key1': 'value1'}},
-        ):
-            with pytest.raises(MultipleInvalid):
-                schema(value)
-
-        for value in (
-                {'test.test': {'key': 'value'}},
-                [{'entity_id': 'id1', 'key': 'value'}],
-        ):
-            schema(value)
+            customize.CUSTOMIZE_SCHEMA(value)
 
     def test_get_customize_schema_csv(self):
         """Test schema with comma separated entity IDs."""
-        schema = customize.get_customize_schema()
-
-        assert [{'entity_id': ['id1', 'id2', 'id3']}] == schema(
-            [{'entity_id': 'id1,ID2 , id3'}])
+        assert [{'entity_id': ['id1', 'id2', 'id3']}] == \
+            customize.CUSTOMIZE_SCHEMA([{'entity_id': 'id1,ID2 , id3'}])
