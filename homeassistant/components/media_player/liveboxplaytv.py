@@ -90,8 +90,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             self._state = STATE_PLAYING if self._client.is_on else STATE_OFF
             # Update current channel
             channel = self._client.get_current_channel()
-            self._current_channel = channel['name']
-            self._media_image_url = channel['imageUrl']
+            self._current_channel = channel.get('name', None)
+            self._media_image_url = channel.get('imageUrl', None)
             self.refresh_channel_list()
         except requests.ConnectionError:
             self._state = STATE_OFF
