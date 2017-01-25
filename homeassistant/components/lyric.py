@@ -23,8 +23,7 @@ DEPENDENCIES = ['http']
 
 REQUIREMENTS = [
     'https://github.com/bramkragten/python-lyric'
-    '/archive/v0.0.1-alpha.1.zip'
-    '#python-lyric==0.0.1']
+    '/archive/v0.1.0.zip#python-lyric==0.1.0']
 
 DOMAIN = 'lyric'
 
@@ -45,7 +44,6 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-
 def request_configuration(lyric, hass, config):
 
     """Request configuration steps from the user."""
@@ -59,28 +57,29 @@ def request_configuration(lyric, hass, config):
     def lyric_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
         _LOGGER.debug("configurator callback")
-        pin = data.get('pin')
-        setup_lyric(hass, lyric, config, pin=pin)
+        #url = data.get('url')
+        setup_lyric(hass, lyric, config)#url=url
 
     hass.http.register_view(LyricAuthenticateView(lyric))
 
     _CONFIGURING['lyric'] = configurator.request_config(
         hass, "Lyric", lyric_configuration_callback,
         description=('To configure Lyric, click Request Authorization below, '
-                     'log into your Lyric account, if you get a successfull authorize, click continue. '
-                     'Else enter the URL you are forwared to below and press continue'),
+                     'log into your Lyric account, when you get a successfull '
+                     'authorize, click continue. '),
+                    #'You can also paste the return url under here.'
         link_name='Request Authorization',
         link_url=lyric.getauthorize_url,
         submit_caption="Continue...",
-        fields=[{'id': 'pin', 'name': 'Enter the URL', 'type': ''}]
+        #fields=[{'id': 'url', 'name': 'Enter the URL', 'type': ''}]
     )
 
 
-def setup_lyric(hass, lyric, config, pin=None):
+def setup_lyric(hass, lyric, config, url=None):
     """Setup Lyric Devices."""
-    if pin is not None:
-        _LOGGER.debug("pin acquired, requesting access token")
-        lyric.authorization_response(pin)
+    if url is not None:
+        _LOGGER.debug("url acquired, requesting access token")
+        lyric.authorization_response(url)
 
     if lyric._token is None:
         _LOGGER.debug("no access_token, requesting configuration")
@@ -117,7 +116,8 @@ def setup(hass, config):
     client_secret = conf[CONF_CLIENT_SECRET]
     filename = config.get(CONF_FILENAME, LYRIC_CONFIG_FILE)
     token_cache_file = hass.config.path(filename)
-    redirect_uri = conf.get(CONF_REDIRECT_URI, hass.config.api.base_url + '/api/lyric/authenticate')
+    redirect_uri = conf.get(CONF_REDIRECT_URI, hass.config.api.base_url + 
+                            '/api/lyric/authenticate')
 
     lyric = lyric.Lyric(
         token_cache_file=token_cache_file,
@@ -176,7 +176,6 @@ class LyricAuthenticateView(HomeAssistantView):
 
     url = '/api/lyric/authenticate'
     name = 'api:lyric:authenticate'
-    #extra_urls = ['/api/lyric/authenticate/']
     requires_auth = False
 
     def __init__(self, lyric):
@@ -191,9 +190,10 @@ class LyricAuthenticateView(HomeAssistantView):
         data = request.GET
 
         if 'code' not in data or 'state' not in data:
-          return self.json_message('Authentication failed, not the right variables, try again.',
-                  HTTP_BAD_REQUEST)
+          return self.json_message('Authentication failed, not the right '
+                                   'variables, try again.', HTTP_BAD_REQUEST)
 
         self.lyric.authorization_code(code=data['code'], state=data['state'])
 
-        return self.json_message('Got the respons! You can close this window now, and click "Continue" in the configurator.')
+        return self.json_message('Got the respons! You can close this window ' 
+                                 'now, and click "Continue" in the configurator.')
