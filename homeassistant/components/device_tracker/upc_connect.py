@@ -64,13 +64,18 @@ class UPCDeviceScanner(DeviceScanner):
         }
 
         self.websession = async_create_clientsession(
-            hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
+            hass, auto_cleanup=False,
+            cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop)
+        )
 
         @asyncio.coroutine
         def async_logout(event):
             """Logout from upc connect box."""
-            yield from _async_ws_function(CMD_LOGOUT)
-            self.token = None
+            try:
+                yield from _async_ws_function(CMD_LOGOUT)
+                self.token = None
+            finally:
+                self.websession.detach()
 
         hass.buss.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, async_logout)
