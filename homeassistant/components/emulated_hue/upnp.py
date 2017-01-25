@@ -50,12 +50,12 @@ class DescriptionXmlView(HomeAssistantView):
 """
 
         resp_ip = self.config.advertise_ip if \
-                  self.config.advertise_ip else \
-                  self.config.host_ip_addr
+            self.config.advertise_ip else \
+            self.config.host_ip_addr
 
         resp_port = self.config.advertise_port if \
-                    self.config.advertise_port else \
-                    self.config.listen_port
+            self.config.advertise_port else \
+            self.config.listen_port
 
         resp_text = xml_template.format(
             resp_ip, resp_port)
@@ -82,12 +82,12 @@ class UPNPResponderThread(threading.Thread):
         # If using the advertisement overides, only
         # use them for forming the responses
         resp_ip = self.advertise_ip if \
-                  self.advertise_ip else \
-                  self.host_ip_addr
-        resp_port = self.advertise_port if \
-                    self.advertise_port else \
-                    self.listen_port
+            self.advertise_ip else \
+            self.host_ip_addr
 
+        resp_port = self.advertise_port if \
+            self.advertise_port else \
+            self.listen_port
 
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
