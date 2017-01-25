@@ -8,7 +8,6 @@ at https://home-assistant.io/components/binary_sensor.wink/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.wink import WinkDevice
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wink']
 
@@ -43,6 +42,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for hub in pywink.get_hubs():
         add_devices([WinkHub(hub, hass)])
 
+    for remote in pywink.get_remotes():
+        add_devices([WinkRemote(remote, hass)])
+
+    for button in pywink.get_buttons():
+        add_devices([WinkButton(button, hass)])
+
+    for gang in pywink.get_gangs():
+        add_devices([WinkGang(gang, hass)])
+
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     """Representation of a Wink binary sensor."""
@@ -50,33 +58,13 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
         super().__init__(wink, hass)
-        wink = get_component('wink')
-        self._unit_of_measurement = self.wink.UNIT
+        self._unit_of_measurement = self.wink.unit()
         self.capability = self.wink.capability()
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        if self.capability == "loudness":
-            state = self.wink.loudness_boolean()
-        elif self.capability == "vibration":
-            state = self.wink.vibration_boolean()
-        elif self.capability == "brightness":
-            state = self.wink.brightness_boolean()
-        elif self.capability == "liquid_detected":
-            state = self.wink.liquid_boolean()
-        elif self.capability == "motion":
-            state = self.wink.motion_boolean()
-        elif self.capability == "presence":
-            state = self.wink.presence_boolean()
-        elif self.capability == "co_detected":
-            state = self.wink.co_detected_boolean()
-        elif self.capability == "smoke_detected":
-            state = self.wink.smoke_detected_boolean()
-        else:
-            state = self.wink.state()
-
-        return state
+        return self.wink.state()
 
     @property
     def sensor_class(self):
@@ -92,6 +80,11 @@ class WinkHub(WinkDevice, BinarySensorDevice, Entity):
         WinkDevice.__init__(self, wink, hass)
 
     @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self.wink.state()
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
@@ -99,7 +92,59 @@ class WinkHub(WinkDevice, BinarySensorDevice, Entity):
             'firmware version': self.wink.firmware_version()
         }
 
+
+class WinkRemote(WinkDevice, BinarySensorDevice, Entity):
+    """Representation of a Wink Lutron Connected bulb remote."""
+
+    def __init(self, wink, hass):
+        """Initialize the hub sensor."""
+        WinkDevice.__init__(self, wink, hass)
+
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
+        return self.wink.state()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'button_on_pressed': self.wink.button_on_pressed(),
+            'button_off_pressed': self.wink.button_off_pressed(),
+            'button_up_pressed': self.wink.button_up_pressed(),
+            'button_down_pressed': self.wink.button_down_pressed()
+        }
+
+
+class WinkButton(WinkDevice, BinarySensorDevice, Entity):
+    """Representation of a Wink Relay button."""
+
+    def __init(self, wink, hass):
+        """Initialize the hub sensor."""
+        WinkDevice.__init__(self, wink, hass)
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self.wink.state()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'pressed': self.wink.pressed(),
+            'long_pressed': self.wink.long_pressed()
+        }
+
+
+class WinkGang(WinkDevice, BinarySensorDevice, Entity):
+    """Representation of a Wink Relay gang."""
+
+    def __init(self, wink, hass):
+        """Initialize the gang sensor."""
+        WinkDevice.__init__(self, wink, hass)
+
+    @property
+    def is_on(self):
+        """Return true if the gang is connected."""
         return self.wink.state()
