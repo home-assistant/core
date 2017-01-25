@@ -244,9 +244,7 @@ def setup(hass, config):
     if CONFIG_FILE == {}:
         CONFIG_FILE[ATTR_DEVICES] = {}
 
-    # Notify needs to have discovery
-    # notify_config = {"notify": {CONF_PLATFORM: "ios"}}
-    # bootstrap.setup_component(hass, "notify", notify_config)
+    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
