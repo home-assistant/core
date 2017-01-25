@@ -50,10 +50,7 @@ def setup(hass, config):
 
     if not config.get(DEVICE_DESCRIPTOR) and\
        not config.get(DEVICE_NAME):
-        _LOGGER.error(
-            'No device_descriptor\
-             or device_name found.'
-            )
+        _LOGGER.error('No device_descriptor or device_name found.')
         return
 
     keyboard_remote = KeyboardRemote(
