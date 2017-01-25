@@ -75,10 +75,14 @@ class UbusDeviceScanner:
 
     def update(self, see):
         """Fetch clients and leases from the router."""
-        clients = self._get_devices()
-        leases = self._get_leases()
-        _LOGGER.debug("Got %s clients, %s leases", len(clients), len(leases))
+        try:
+            clients = self._get_devices()
+            leases = self._get_leases()
+        except requests.exceptions.ConnectionError as ex:
+            _LOGGER.debug("Got exception from requests: %s", ex)
+            return False
 
+        _LOGGER.debug("Got %s clients, %s leases", len(clients), len(leases))
         # Note, we may have clients who have leases expired..
         for client in clients:
             mac = client["mac"].replace(":", "").lower()
