@@ -245,7 +245,7 @@ def setup(hass, config):
         CONFIG_FILE[ATTR_DEVICES] = {}
 
     discovery.load_platform(hass, "notify", DOMAIN, {}, config)
-    
+
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
     hass.http.register_view(iOSIdentifyDeviceView)
