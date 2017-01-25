@@ -57,8 +57,8 @@ class LinksysAPDeviceScanner(object):
         self.last_results = []
 
         # Check if the access point is accessible
-        request = self._make_request()
-        if not request.status_code == requests.codes.ok:
+        response = self._make_request()
+        if not response.status_code == 200:
             raise ConnectionError('Cannot connect to Linksys Access Point')
 
     def scan_devices(self):
@@ -67,6 +67,7 @@ class LinksysAPDeviceScanner(object):
 
         return self.last_results
 
+    # pylint: disable=no-self-use
     def get_device_name(self, mac):
         """
         Return the name (if known) of the device.
