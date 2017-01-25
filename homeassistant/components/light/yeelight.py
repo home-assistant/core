@@ -37,9 +37,9 @@ DOMAIN = 'yeelight'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
-    vol.Required(CONF_MODE_MUSIC, default=False): cv.boolean,
-    vol.Required(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
+    vol.Optional(CONF_TRANSITION, default=DEFAULT_TRANSITION): cv.positive_int,
+    vol.Optional(CONF_MODE_MUSIC, default=False): cv.boolean,
+    vol.Optional(CONF_SAVE_ON_CHANGE, default=True): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
             lights.append(YeelightLight(device, device_config))
 
-    add_devices(lights)
+    add_devices(lights, True)  # true to request an update before adding.
 
 
 class YeelightLight(Light):
