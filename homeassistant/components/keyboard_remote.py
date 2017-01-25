@@ -31,13 +31,13 @@ KEY_VALUE = {'key_up': 0, 'key_down': 1, 'key_hold': 2}
 TYPE = 'type'
 DEVICE_DESCRIPTOR = 'device_descriptor'
 DEVICE_NAME = 'device_name'
-SECRET_GROUP = 'Device descriptor or name'
+DEVICE_ID_GROUP = 'Device descriptor or name'
 
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Exclusive(DEVICE_DESCRIPTOR, SECRET_GROUP): cv.string,
-        vol.Exclusive(DEVICE_NAME, SECRET_GROUP): cv.string,
+        vol.Exclusive(DEVICE_DESCRIPTOR, DEVICE_ID_GROUP): cv.string,
+        vol.Exclusive(DEVICE_NAME, DEVICE_ID_GROUP): cv.string,
         vol.Optional(TYPE, default='key_up'):
         vol.All(cv.string, vol.Any('key_up', 'key_down', 'key_hold')),
     }),
@@ -51,7 +51,7 @@ def setup(hass, config):
     if not config.get(DEVICE_DESCRIPTOR) and\
        not config.get(DEVICE_NAME):
         _LOGGER.debug(
-            'KeyboardRemote: Error: No device_descriptor\
+            'Error: No device_descriptor\
              or device_name found.'
             )
         return
@@ -88,20 +88,26 @@ class KeyboardRemote(threading.Thread):
 
         self.device_descriptor = config.get(DEVICE_DESCRIPTOR)
         self.device_name = config.get(DEVICE_NAME)
+        if self.device_descriptor:
+            self.device_id = self.device_descriptor
+        else:
+            self.device_id = self.device_name
         self.dev = self._get_keyboard_device()
         if self.dev is not None:
             _LOGGER.debug(
-                'KeyboardRemote: keyboard connected'
+                'Keyboard connected, %s',
+                self.device_id
                 )
         else:
             id_folder = '/dev/input/by-id/'
             device_names = [InputDevice(file_name).name
                             for file_name in list_devices()]
             _LOGGER.debug(
-                'KeyboardRemote: keyboard not connected.\
+                'Keyboard not connected, %s.\n\
                 Check /dev/input/event* permissions.\
                 Possible device names are:\n %s.\n \
                 Possible device descriptors are %s:\n %s',
+                self.device_id,
                 device_names,
                 id_folder,
                 os.listdir(id_folder)
@@ -122,14 +128,11 @@ class KeyboardRemote(threading.Thread):
         elif self.device_descriptor:
             try:
                 device = InputDevice(self.device_descriptor)
-            except OSError:  # Keyboard not present
-                _LOGGER.debug(
-                    'KeyboardRemote: keyboard not connected, %s',
-                    self.device_descriptor)
-                return None
-            return device
-        else:
-            return None
+            except OSError:
+                pass
+            else:
+                return device
+        return None
 
     def run(self):
         """Main loop of the KeyboardRemote."""
@@ -138,7 +141,7 @@ class KeyboardRemote(threading.Thread):
         if self.dev is not None:
             self.dev.grab()
             _LOGGER.debug(
-                'KeyboardRemote interface started for %s',
+                'Interface started for %s',
                 self.dev)
 
         while not self.stopped.isSet():
@@ -152,7 +155,8 @@ class KeyboardRemote(threading.Thread):
                     self.hass.bus.fire(
                         KEYBOARD_REMOTE_CONNECTED
                     )
-                    _LOGGER.debug('KeyboardRemote: keyboard re-connected')
+                    _LOGGER.debug('Keyboard re-connected, %s',
+                                  self.device_id)
                 else:
                     continue
 
@@ -163,7 +167,8 @@ class KeyboardRemote(threading.Thread):
                 self.hass.bus.fire(
                     KEYBOARD_REMOTE_DISCONNECTED
                 )
-                _LOGGER.debug('KeyboardRemote: keyboard disconnected')
+                _LOGGER.debug('Keyboard disconnected, %s',
+                              self.device_id)
                 continue
 
             if not event:
