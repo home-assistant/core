@@ -50,8 +50,8 @@ def setup(hass, config):
 
     if not config.get(DEVICE_DESCRIPTOR) and\
        not config.get(DEVICE_NAME):
-        _LOGGER.debug(
-            'Error: No device_descriptor\
+        _LOGGER.error(
+            'No device_descriptor\
              or device_name found.'
             )
         return
