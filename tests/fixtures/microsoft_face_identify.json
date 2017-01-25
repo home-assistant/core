@@ -1,0 +1,20 @@
+[
+    {
+        "faceId":"c5c24a82-6845-4031-9d5d-978df9175426",
+        "candidates":[
+            {
+                "personId":"2ae4935b-9659-44c3-977f-61fac20d0538",
+                "confidence":0.92
+            }
+        ]
+    },
+    {
+        "faceId":"c5c24a82-6825-4031-9d5d-978df0175426",
+        "candidates":[
+            {
+                "personId":"25985303-c537-4467-b41d-bdb45cd95ca1",
+                "confidence":0.32
+            }
+        ]
+    }
+]

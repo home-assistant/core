@@ -133,17 +133,70 @@ homematic:
   reconnect:
     description: Reconnect to all Homematic Hubs.
 
-openalpr:
-  scan:
-    description: Scan immediately a device.
+microsoft_face:
+  create_group:
+    description: Create a new person group.
 
     fields:
-      entity_id:
-        description: Name(s) of entities to scan
-        example: 'openalpr.garage'
+      name:
+        description: Name of the group
+        example: 'family'
 
-  restart:
-    description: Restart ffmpeg process of device.
+  delete_group:
+    description: Delete a new person group.
+
+    fields:
+      name:
+        description: Name of the group
+        example: 'family'
+
+  train_group:
+    description: Train a person group.
+
+    fields:
+      name:
+        description: Name of the group
+        example: 'family'
+
+  create_person:
+    description: Create a new person in the group.
+
+    fields:
+      name:
+        description: Name of the person
+        example: 'Hans'
+
+      group:
+        description: Name of the group
+        example: 'family'
+
+  delete_person:
+    description: Delete a person in the group.
+
+    fields:
+      name:
+        description: Name of the person
+        example: 'Hans'
+
+      group:
+        description: Name of the group
+        example: 'family'
+
+  face_person:
+    description: Add a new picture to a person.
+
+    fields:
+      name:
+        description: Name of the person
+        example: 'Hans'
+
+      group:
+        description: Name of the group
+        example: 'family'
+
+      camera_entity:
+        description: Camera to take a picture
+        example: camera.door
 
 verisure:
   capture_smartcam:
