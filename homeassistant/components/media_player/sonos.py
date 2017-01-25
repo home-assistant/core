@@ -653,6 +653,8 @@ class SonosDevice(MediaPlayerDevice):
 
     def _format_media_image_url(self, url, fallback_uri):
         if url in ('', 'NOT_IMPLEMENTED', None):
+            if fallback_uri in ('', 'NOT_IMPLEMENTED', None):
+                return None
             return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
                 host=self._player.ip_address,
                 port=1400,
