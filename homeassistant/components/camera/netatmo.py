@@ -85,6 +85,23 @@ class NetatmoCamera(Camera):
             return None
         return response.content
 
+    def camera_stream(self):
+        """Return a stream response from the camera."""
+        try:
+            if self._localurl:
+                response = requests.get('{0}/live/index_local.m3u8'.format(
+                    self._localurl), timeout=10)
+            else:
+                response = requests.get('{0}//live/index.m3u8'.format(
+                    self._vpnurl), timeout=10)
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error('Welcome VPN url changed: %s', error)
+            self._data.update()
+            (self._vpnurl, self._localurl) = \
+                self._data.camera_data.cameraUrls(camera=self._camera_name)
+            return None
+        return response
+
     @property
     def name(self):
         """Return the name of this Netatmo camera device."""
