@@ -70,6 +70,15 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
+def isdevice(value):
+    """Validate that value is a real device."""
+    try:
+        os.stat(value)
+        return str(value)
+    except OSError:
+        raise vol.Invalid('No device at {} found'.format(value))
+
+
 def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
