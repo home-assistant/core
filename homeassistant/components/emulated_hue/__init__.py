@@ -45,7 +45,7 @@ DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'switch', 'light', 'group', 'input_boolean', 'media_player', 'fan'
 ]
-DEFAULT_TYPE = TYPE_ALEXA
+DEFAULT_TYPE = TYPE_GOOGLE
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -121,6 +121,10 @@ class Config(object):
         self.type = conf.get(CONF_TYPE)
         self.numbers = None
         self.cached_states = {}
+
+        if self.type == TYPE_ALEXA:
+            _LOGGER.warning('Alexa type is deprecated and will be removed in a'
+                            ' future version')
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
