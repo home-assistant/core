@@ -529,7 +529,7 @@ def test_merge_customize(hass):
         'elevation': 25,
         'name': 'Huis',
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
-        'time_zone': 'America/New_York',
+        'time_zone': 'GMT',
         'customize': {'a.a': {'friendly_name': 'A'}},
         'packages': {'pkg1': {'homeassistant': {'customize': {
             'b.b': {'friendly_name': 'BB'}}}}},
