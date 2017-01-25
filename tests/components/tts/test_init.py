@@ -6,6 +6,7 @@ from unittest.mock import patch, PropertyMock
 
 import requests
 
+import homeassistant.components.http as http
 import homeassistant.components.tts as tts
 from homeassistant.components.tts.demo import DemoProvider
 from homeassistant.components.media_player import (
@@ -14,7 +15,8 @@ from homeassistant.components.media_player import (
 from homeassistant.bootstrap import setup_component
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_service)
+    get_test_home_assistant, get_test_instance_port, assert_setup_component,
+    mock_service)
 
 
 class TestTTS(object):
@@ -25,6 +27,10 @@ class TestTTS(object):
         self.hass = get_test_home_assistant()
         self.demo_provider = DemoProvider('en')
         self.default_tts_cache = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
+
+        setup_component(
+            self.hass, http.DOMAIN,
+            {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}})
 
     def teardown_method(self):
         """Stop everything that was started."""
