@@ -8,7 +8,6 @@ at https://home-assistant.io/components/binary_sensor.wink/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.sensor.wink import WinkDevice
 from homeassistant.helpers.entity import Entity
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wink']
 
@@ -49,8 +48,7 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
 
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
-        super().__init__(wink, hass)
-        wink = get_component('wink')
+        WinkDevice.__init__(self, wink, hass)
         self._unit_of_measurement = self.wink.UNIT
         self.capability = self.wink.capability()
 
