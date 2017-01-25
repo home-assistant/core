@@ -12,6 +12,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
@@ -29,6 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 CMD_LOGIN = 15
+CMD_LOGOUT = 16
 CMD_DEVICES = 123
 
 
@@ -62,7 +64,21 @@ class UPCDeviceScanner(DeviceScanner):
         }
 
         self.websession = async_create_clientsession(
-            hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
+            hass, auto_cleanup=False,
+            cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop)
+        )
+
+        @asyncio.coroutine
+        def async_logout(event):
+            """Logout from upc connect box."""
+            try:
+                yield from self._async_ws_function(CMD_LOGOUT)
+                self.token = None
+            finally:
+                self.websession.detach()
+
+        hass.buss.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, async_logout)
 
     @asyncio.coroutine
     def async_scan_devices(self):
@@ -94,6 +110,7 @@ class UPCDeviceScanner(DeviceScanner):
         response = None
         try:
             # get first token
+            self.websession.cookie_jar.clear()
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from self.websession.get(
                     "http://{}/common_page/login.html".format(self.host)
