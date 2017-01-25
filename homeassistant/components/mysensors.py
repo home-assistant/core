@@ -5,12 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
+import os
 import socket
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.bootstrap import setup_component
+from homeassistant.components.mqtt import (valid_publish_topic,
+                                           valid_subscribe_topic)
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_NAME,
                                  CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
@@ -44,22 +47,61 @@ REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
     '0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8']
 
+
+def is_socket_address(value):
+    """Validate that value is a valid address."""
+    try:
+        socket.getaddrinfo(value, None)
+        return value
+    except OSError:
+        raise vol.Invalid('Device is not a valid domain name or ip address')
+
+
+def has_parent_dir(value):
+    """Validate that value is in an existing directory which is writetable."""
+    parent = os.path.dirname(os.path.realpath(value))
+    is_dir_writable = os.path.isdir(parent) and os.access(parent, os.W_OK)
+    if not is_dir_writable:
+        raise vol.Invalid(
+            '{} directory does not exist or is not writetable'.format(parent))
+    return value
+
+
+def has_all_unique_files(value):
+    """Validate that all persistence files are unique and set if any is set."""
+    persistence_files = [
+        gateway.get(CONF_PERSISTENCE_FILE) for gateway in value]
+    if None in persistence_files and any(
+            name is not None for name in persistence_files):
+        raise vol.Invalid(
+            'persistence file name of all devices must be set if any is set')
+    if not all(name is None for name in persistence_files):
+        schema = vol.Schema(vol.Unique())
+        schema(persistence_files)
+    return value
+
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_GATEWAYS): vol.All(cv.ensure_list, [
-            {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Optional(CONF_PERSISTENCE_FILE): cv.string,
+        vol.Required(CONF_GATEWAYS): vol.All(
+            cv.ensure_list, has_all_unique_files,
+            [{
+                vol.Required(CONF_DEVICE):
+                    vol.Any(cv.isdevice, MQTT_COMPONENT, is_socket_address),
+                vol.Optional(CONF_PERSISTENCE_FILE):
+                    vol.All(cv.string, has_parent_dir),
                 vol.Optional(
                     CONF_BAUD_RATE,
                     default=DEFAULT_BAUD_RATE): cv.positive_int,
                 vol.Optional(
                     CONF_TCP_PORT,
                     default=DEFAULT_TCP_PORT): cv.port,
-                vol.Optional(CONF_TOPIC_IN_PREFIX, default=''): cv.string,
-                vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''): cv.string,
-            },
-        ]),
+                vol.Optional(
+                    CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
+                vol.Optional(
+                    CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+            }]
+        ),
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
         vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
@@ -100,7 +142,7 @@ def setup(hass, config):
                 out_prefix=out_prefix, retain=retain)
         else:
             try:
-                socket.inet_aton(device)
+                socket.getaddrinfo(device, None)
                 # valid ip address
                 gateway = mysensors.TCPGateway(
                     device, event_callback=None, persistence=persistence,
