@@ -25,7 +25,8 @@ WEMO_MODEL_DISPATCH = {
     'Maker':   'switch',
     'Sensor':  'binary_sensor',
     'Socket':  'switch',
-    'LightSwitch': 'switch'
+    'LightSwitch': 'switch',
+    'CoffeeMaker': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
