@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 name,
                 config.get(CONF_API_KEY),
                 travel_time.get(CONF_ID)))
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class WashingtonStateTransportSensor(Entity):
@@ -73,7 +73,6 @@ class WashingtonStateTransportSensor(Entity):
         self._access_code = access_code
         self._name = name
         self._state = None
-        self.update()
 
     @property
     def name(self):
