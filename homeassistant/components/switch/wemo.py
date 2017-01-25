@@ -18,9 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_SENSOR_STATE = "sensor_state"
 ATTR_SWITCH_MODE = "switch_mode"
 ATTR_CURRENT_STATE_DETAIL = 'state_detail'
-
-MAKER_SWITCH_MOMENTARY = "momentary"
-MAKER_SWITCH_TOGGLE = "toggle"
+ATTR_COFFEMAKER_MODE = "coffeemaker_mode"
 
 MAKER_SWITCH_MOMENTARY = "momentary"
 MAKER_SWITCH_TOGGLE = "toggle"
@@ -52,7 +50,10 @@ class WemoSwitch(SwitchDevice):
         self.wemo = device
         self.insight_params = None
         self.maker_params = None
+        self.coffeemaker_mode = None
         self._state = None
+        # look up model name once as it incurs network traffic
+        self._model_name = self.wemo.model_name
 
         wemo = get_component('wemo')
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
@@ -63,7 +64,11 @@ class WemoSwitch(SwitchDevice):
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
-        self.update()
+        if self._model_name == 'CoffeeMaker':
+            self.wemo.subscription_callback(_params)
+            self._update(force_update=False)
+        else:
+            self.update()
         if not hasattr(self, 'hass'):
             return
         self.schedule_update_ha_state()
@@ -102,8 +107,11 @@ class WemoSwitch(SwitchDevice):
             else:
                 attr[ATTR_SWITCH_MODE] = MAKER_SWITCH_TOGGLE
 
-        if self.insight_params:
+        if self.insight_params or (self.coffeemaker_mode is not None):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
+
+        if self.coffeemaker_mode is not None:
+            attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
 
         return attr
 
@@ -122,6 +130,8 @@ class WemoSwitch(SwitchDevice):
     @property
     def detail_state(self):
         """Return the state of the device."""
+        if self.coffeemaker_mode is not None:
+            return self.wemo.mode_string
         if self.insight_params:
             standby_state = int(self.insight_params['state'])
             if standby_state == WEMO_ON:
@@ -141,11 +151,21 @@ class WemoSwitch(SwitchDevice):
     @property
     def available(self):
         """True if switch is available."""
-        if self.wemo.model_name == 'Insight' and self.insight_params is None:
+        if self._model_name == 'Insight' and self.insight_params is None:
             return False
-        if self.wemo.model_name == 'Maker' and self.maker_params is None:
+        if self._model_name == 'Maker' and self.maker_params is None:
+            return False
+        if self._model_name == 'CoffeeMaker' and self.coffeemaker_mode is None:
             return False
         return True
+
+    @property
+    def icon(self):
+        """Icon of device based on its type."""
+        if self._model_name == 'CoffeeMaker':
+            return 'mdi:coffee'
+        else:
+            return super().icon
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -161,13 +181,18 @@ class WemoSwitch(SwitchDevice):
 
     def update(self):
         """Update WeMo state."""
+        self._update(force_update=True)
+
+    def _update(self, force_update=True):
         try:
-            self._state = self.wemo.get_state(True)
-            if self.wemo.model_name == 'Insight':
+            self._state = self.wemo.get_state(force_update)
+            if self._model_name == 'Insight':
                 self.insight_params = self.wemo.insight_params
                 self.insight_params['standby_state'] = (
                     self.wemo.get_standby_state)
-            elif self.wemo.model_name == 'Maker':
+            elif self._model_name == 'Maker':
                 self.maker_params = self.wemo.maker_params
+            elif self._model_name == 'CoffeeMaker':
+                self.coffeemaker_mode = self.wemo.mode
         except AttributeError:
             _LOGGER.warning('Could not update status for %s', self.name)
