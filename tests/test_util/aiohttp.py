@@ -17,8 +17,6 @@ class AiohttpClientMocker:
         self._cookies = {}
         self.mock_calls = []
 
-        self.cookie_jar = mock.MagicMock()
-
     def request(self, method, url, *,
                 auth=None,
                 status=200,
