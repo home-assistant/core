@@ -82,9 +82,9 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
 """
 
-        self.upnp_response = resp_template.format(advertise_ip, advertise_port) \
-                                          .replace("\n", "\r\n") \
-                                          .encode('utf-8')
+        self.upnp_response = resp_template.format(
+            advertise_ip, advertise_port).replace("\n", "\r\n") \
+                                         .encode('utf-8')
 
         # Set up a pipe for signaling to the receiver that it's time to
         # shutdown. Essentially, we place the SSDP socket into nonblocking
