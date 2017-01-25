@@ -194,6 +194,9 @@ hikvision==0.4
 # homeassistant.components.nest
 http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip#python-nest==3.0.2
 
+# homeassistant.components.lyric
+https://github.com/bramkragten/python-lyric/archive/v0.1.0.zip#python-lyric==0.1.0
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
 
