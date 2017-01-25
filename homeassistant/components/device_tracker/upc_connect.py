@@ -77,7 +77,7 @@ class UPCDeviceScanner(DeviceScanner):
             finally:
                 self.websession.detach()
 
-        hass.buss.async_listen_once(
+        hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, async_logout)
 
     @asyncio.coroutine
