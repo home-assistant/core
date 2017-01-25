@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkSensorDevice(sensor, hass)])
 
     for eggtray in pywink.get_eggtrays():
-        add_devices([WinkEggMinder(eggtray, hass)])
+        add_devices([WinkSensorDevice(eggtray, hass)])
 
     for piggy_bank in pywink.get_piggy_banks():
         try:
@@ -43,53 +43,32 @@ class WinkSensorDevice(WinkDevice, Entity):
         super().__init__(wink, hass)
         wink = get_component('wink')
         self.capability = self.wink.capability()
-        if self.wink.UNIT == '°':
+        if self.wink.unit() == '°':
             self._unit_of_measurement = TEMP_CELSIUS
         else:
-            self._unit_of_measurement = self.wink.UNIT
+            self._unit_of_measurement = self.wink.unit()
 
     @property
     def state(self):
         """Return the state."""
         state = None
         if self.capability == 'humidity':
-            if self.wink.humidity_percentage() is not None:
-                state = round(self.wink.humidity_percentage())
+            if self.wink.state() is not None:
+                state = round(self.wink.state())
         elif self.capability == 'temperature':
-            if self.wink.temperature_float() is not None:
-                state = round(self.wink.temperature_float(), 1)
+            if self.wink.state() is not None:
+                state = round(self.wink.state(), 1)
         elif self.capability == 'balance':
-            if self.wink.balance() is not None:
-                state = round(self.wink.balance() / 100, 2)
+            if self.wink.state() is not None:
+                state = round(self.wink.state() / 100, 2)
         elif self.capability == 'proximity':
-            if self.wink.proximity_float() is not None:
-                state = self.wink.proximity_float()
+            if self.wink.state() is not None:
+                state = self.wink.state()
         else:
-            # A sensor should never get here, anything that does
-            # will require an update to python-wink
-            logging.getLogger(__name__).error("Please report this as an issue")
-            state = None
+            state = self.wink.state()
         return state
-
-    @property
-    def available(self):
-        """True if connection == True."""
-        return self.wink.available
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
-
-
-class WinkEggMinder(WinkDevice, Entity):
-    """Representation of a Wink Egg Minder."""
-
-    def __init__(self, wink, hass):
-        """Initialize the sensor."""
-        WinkDevice.__init__(self, wink, hass)
-
-    @property
-    def state(self):
-        """Return the state."""
-        return self.wink.state()
