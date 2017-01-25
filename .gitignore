@@ -84,7 +84,6 @@ pyvenv.cfg
 pip-selfcheck.json
 venv
 .venv
-env
 
 # vimmy stuff
 *.swp
