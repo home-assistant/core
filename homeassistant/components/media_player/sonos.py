@@ -151,7 +151,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         for device in devices:
             if service.service == SERVICE_JOIN:
-                device.join(service.data[ATTR_MASTER])
+                if device.entity_id != service.data[ATTR_MASTER]:
+                    device.join(service.data[ATTR_MASTER])
             elif service.service == SERVICE_UNJOIN:
                 device.unjoin()
             elif service.service == SERVICE_SNAPSHOT:
@@ -212,6 +213,14 @@ class _ProcessSonosEventQueue():
         self._sonos_device.process_sonos_event(item)
 
 
+def _get_entity_from_soco(hass, soco):
+    """Return SonosDevice from SoCo."""
+    for device in hass.data[DATA_SONOS]:
+        if soco == device.soco_device:
+            return
+    raise ValueError("No entity for SoCo device!")
+
+
 class SonosDevice(MediaPlayerDevice):
     """Representation of a Sonos device."""
 
@@ -252,7 +261,7 @@ class SonosDevice(MediaPlayerDevice):
         self._favorite_sources = None
         self._source_name = None
         self.soco_snapshot = Snapshot(self._player)
-        self._snapshot_coordinator = None
+        self._snapshot_group = None
 
     @property
     def should_poll(self):
@@ -925,26 +934,59 @@ class SonosDevice(MediaPlayerDevice):
 
     def snapshot(self, with_group=True):
         """Snapshot the player."""
-        if with_group and self._coordinator:
-            self._coordinator.snapshot(False)
-            self._snapshot_coordinator = self._coordinator
-        else:
-            self._snapshot_coordinator = None
-
         self.soco_snapshot.snapshot()
+
+        if with_group:
+            self._snapshot_group = self._player.group
+            if self._coordinator:
+                self._coordinator.snapshot(False)
+        else:
+            self._snapshot_group = None
 
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
-        # restore playlist in group
-        if with_group and self._coordinator:
-            self._coordinator.restore(False)
-
+        # restore playlist in group if that have not changed
         self.soco_snapshot.restore(True)
 
-        # restore original group
-        if with_group and (self._coordinator is None or
-                           self._coordinator != self._snapshot_coordinator):
-            self._player.join(self._snapshot_coordinator.soco_device)
+        if with_group and self._snapshot_group:
+            old = self._snapshot_group
+            actual = self._player.group
+
+            # Master have not change, restore
+            if old.coordinator == actual.coordinator:
+                if self._player is not old.coordinator:
+                    # restore state of the groups
+                    self._coordinator.restore(False)
+                remove = actual.members - old.members
+                add = old.members - actual.members
+
+                # remove new members
+                for soco_dev in list(remove):
+                    soco_dev.unjoin()
+
+                # remove old members
+                for soco_dev in list(add):
+                    soco_dev.join(old.coordinator)
+                return
+
+            # old allready master, rejoin
+            if old.coordinator.group.coordinator == old.coordinator:
+                self._player.join(old.coordinator)
+                return
+
+            # restore old master
+            old.coordinator.unjoin()
+            coordinator = _get_entity_from_soco(self.hass, old.coordinator)
+            coordinator.restore(False)
+
+            for s_dev in list(old.coordinator):
+                if s_dev == old.coordinator:
+                    break
+                # if joinable
+                if len(s_dev.group.members) > 1 and \
+                   s_dev.group.coordinator == s_dev:
+                    s_dev.unjoin()
+                s_dev.join(old.coordinator)
 
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""

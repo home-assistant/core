@@ -155,11 +155,11 @@ clear_playlist:
       example: 'media_player.living_room_chromecast'
 
 sonos_join:
-  description: Group player toggether.
+  description: Group player together.
 
   fields:
     master:
-      description: this player is the coordinator of the group. Platform dependent.
+      description: Entity ID of the player that should become the coordinator of the group.
       example: 'media_player.living_room_sonos'
 
     entity_id:
