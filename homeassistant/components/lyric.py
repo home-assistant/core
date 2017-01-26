@@ -23,7 +23,8 @@ DEPENDENCIES = ['http']
 
 REQUIREMENTS = [
     'https://github.com/bramkragten/python-lyric'
-    '/archive/v0.1.0.zip#python-lyric==0.1.0']
+    '/archive/v0.0.1-alpha.1.zip'
+    '#python-lyric==0.0.1']
 
 DOMAIN = 'lyric'
 
@@ -106,7 +107,7 @@ def setup_lyric(hass, lyric, config, url=None):
 
 def setup(hass, config):
     """Setup the Lyric thermostat component."""
-    from lyric import lyric
+    import lyric
 
     if 'lyric' in _CONFIGURING:
         return

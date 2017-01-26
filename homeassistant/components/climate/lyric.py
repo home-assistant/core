@@ -59,16 +59,16 @@ class LyricThermostat(ClimateDevice):
         self._operation_list = [STATE_OFF]
 
         # Add supported lyric thermostat features
-        #if self.device.can_heat:
-        self._operation_list.append(STATE_HEAT)
+        if self.device.can_heat:
+            self._operation_list.append(STATE_HEAT)
 
-#         if self.device.can_cool:
-#             self._operation_list.append(STATE_COOL)
-# 
-#         if self.device.can_heat and self.device.can_cool:
-#             self._operation_list.append(STATE_AUTO)
-# 
-#         self._operation_list.append(STATE_ECO)
+        if self.device.can_cool:
+            self._operation_list.append(STATE_COOL)
+ 
+        if self.device.can_heat and self.device.can_cool:
+            self._operation_list.append(STATE_AUTO)
+ 
+        self._operation_list.append(STATE_ECO)
 
         # feature of device
         self._has_fan = False#self.device.has_fan
@@ -107,7 +107,7 @@ class LyricThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+        if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF]:
             return self._mode
         elif self._mode == STATE_HEAT_COOL:
             return STATE_AUTO
@@ -161,16 +161,18 @@ class LyricThermostat(ClimateDevice):
         else:
             temp = kwargs.get(ATTR_TEMPERATURE)
         _LOGGER.debug("Lyric set_temperature-output-value=%s", temp)
-        #self.device.target = temp
         self.device.temperatureSetpoint = temp
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode."""
-        if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
+        _LOGGER.debug(operation_mode)        
+        _LOGGER.debug(operation_mode.capitalize())        
+
+        if operation_mode in [STATE_HEAT, STATE_COOL, STATE_OFF]:
             device_mode = operation_mode
         elif operation_mode == STATE_AUTO:
             device_mode = STATE_HEAT_COOL
-        #self.device.mode = device_mode
+        self.device.operationMode = device_mode.capitalize()
 
     @property
     def operation_list(self):
@@ -179,11 +181,11 @@ class LyricThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        self.structure.away = True
+        #self.structure.away = True
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self.structure.away = False
+        #self.structure.away = False
 
     @property
     def current_fan_mode(self):
@@ -216,19 +218,19 @@ class LyricThermostat(ClimateDevice):
 
     def update(self):
         """Cache value from Python-lyric."""
-        self._location = 'locatie'#self.device.where
+        self._location = self.device.where
         self._name = self.device.name
         self._humidity = self.device.indoorHumidity
         self._temperature = self.device.indoorTemperature
-        self._mode = STATE_HEAT
+        _LOGGER.debug(self.device.operationMode)
+        _LOGGER.debug(self.device.operationMode.lower())        
+        self._mode = self.device.operationMode.lower()
         self._target_temperature = self.device.temperatureSetpoint
         self._fan = False
-        self._away = False
-        self._eco_temperature = 0
-        self._locked_temperature = 0
-        self._min_temperature = self.device.minCoolSetpoint
-        self._max_temperature = self.device.maxHeatSetpoint
-        self._is_locked = False#self.device.is_locked
+        self._away = self.device.away
+        self._eco_temperature = [16, 28]
+        self._min_temperature = self.device.minSetpoint
+        self._max_temperature = self.device.maxSetpoint
         if self.device.units == 'Celsius':
             self._temperature_scale = TEMP_CELSIUS
         else:
