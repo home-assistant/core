@@ -23,7 +23,7 @@ DEPENDENCIES = ['http']
 
 REQUIREMENTS = [
     'https://github.com/bramkragten/python-lyric'
-    '/archive/v0.0.1-alpha.1.zip'
+    '/archive/v0.0.1-alpha.2.zip'
     '#python-lyric==0.0.1']
 
 DOMAIN = 'lyric'
