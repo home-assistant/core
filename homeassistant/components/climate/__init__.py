@@ -122,6 +122,8 @@ def set_away_mode(hass, away_mode, entity_id=None):
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
+    _LOGGER.warning(
+        'This service has been deprecated; use climate.set_hold_mode')
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
 
 
@@ -247,6 +249,8 @@ def async_setup(hass, config):
                 SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
             return
 
+        _LOGGER.warning(
+            'This service has been deprecated; use climate.set_hold_mode')
         for climate in target_climate:
             if away_mode:
                 yield from climate.async_turn_away_mode_on()
