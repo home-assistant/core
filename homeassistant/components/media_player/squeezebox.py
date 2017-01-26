@@ -213,19 +213,19 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             "status", "-", "1", "tags:{tags}"
             .format(tags=tags))
 
+        if response is False:
+            return
+
+        self._status = response.copy()
+
         try:
-            self._status = response.copy()
-        except AttributeError:
-            _LOGGER.error("Squeezebox object %s invalid status", self._name)
-        else:
-            try:
-                self._status.update(response["playlist_loop"][0])
-            except KeyError:
-                pass
-            try:
-                self._status.update(response["remoteMeta"])
-            except KeyError:
-                pass
+            self._status.update(response["playlist_loop"][0])
+        except KeyError:
+            pass
+        try:
+            self._status.update(response["remoteMeta"])
+        except KeyError:
+            pass
 
     @property
     def volume_level(self):
