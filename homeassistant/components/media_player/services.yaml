@@ -154,10 +154,14 @@ clear_playlist:
       description: Name(s) of entites to change source on
       example: 'media_player.living_room_chromecast'
 
-sonos_group_players:
-  description: Send Sonos media player the command for grouping all players into one (party mode).
+sonos_join:
+  description: Group player toggether.
 
   fields:
+    master:
+      description: this player is the coordinator of the group. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
     entity_id:
       description: Name(s) of entites that will coordinate the grouping. Platform dependent.
       example: 'media_player.living_room_sonos'
@@ -178,6 +182,10 @@ sonos_snapshot:
       description: Name(s) of entites that will be snapshot. Platform dependent.
       example: 'media_player.living_room_sonos'
 
+    with_group:
+      description: True (default) or False. Snapshot with all group attributes.
+      example: 'true'
+
 sonos_restore:
   description: Restore a snapshot of the media player.
 
@@ -185,6 +193,10 @@ sonos_restore:
     entity_id:
       description: Name(s) of entites that will be restored. Platform dependent.
       example: 'media_player.living_room_sonos'
+
+    with_group:
+      description: True (default) or False. Restore with all group attributes.
+      example: 'true'
 
 sonos_set_sleep_timer:
   description: Set a Sonos timer
