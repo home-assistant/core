@@ -217,7 +217,7 @@ def _get_entity_from_soco(hass, soco):
     """Return SonosDevice from SoCo."""
     for device in hass.data[DATA_SONOS]:
         if soco == device.soco_device:
-            return
+            return device
     raise ValueError("No entity for SoCo device!")
 
 
@@ -342,6 +342,19 @@ class SonosDevice(MediaPlayerDevice):
 
         if is_available:
 
+            if self._player.group.coordinator != self._player:
+                try:
+                    self._coordinator = _get_entity_from_soco(
+                        self.hass, self._player.group.coordinator)
+                except ValueError:
+                    self._coordinator = None
+            else:
+                self._coordinator = None
+
+            if self._coordinator == self:
+                _LOGGER.warning("Coordinator loop on: %s", self.unique_id)
+                self._coordinator = None
+
             track_info = None
             if self._last_avtransport_event:
                 variables = self._last_avtransport_event.variables
@@ -371,20 +384,6 @@ class SonosDevice(MediaPlayerDevice):
 
             if not track_info:
                 track_info = self._player.get_current_track_info()
-
-            if track_info['uri'].startswith('x-rincon:'):
-                # this speaker is a slave, find the coordinator
-                # the uri of the track is 'x-rincon:{coordinator-id}'
-                coordinator_id = track_info['uri'][9:]
-                coordinators = [device for device in self.hass.data[DATA_SONOS]
-                                if device.unique_id == coordinator_id]
-                self._coordinator = coordinators[0] if coordinators else None
-            else:
-                self._coordinator = None
-
-            if self._coordinator == self:
-                _LOGGER.warning("Coordinator loop on: %s", self.unique_id)
-                self._coordinator = None
 
             if not self._coordinator:
 
@@ -980,13 +979,8 @@ class SonosDevice(MediaPlayerDevice):
             coordinator.restore(False)
 
             for s_dev in list(old.coordinator):
-                if s_dev == old.coordinator:
-                    break
-                # if joinable
-                if len(s_dev.group.members) > 1 and \
-                   s_dev.group.coordinator == s_dev:
-                    s_dev.unjoin()
-                s_dev.join(old.coordinator)
+                if s_dev != old.coordinator:
+                    s_dev.join(old.coordinator)
 
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
