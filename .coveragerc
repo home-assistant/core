@@ -297,6 +297,7 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
     homeassistant/components/sensor/fastdotcom.py
+    homeassistant/components/sensor/fido.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
