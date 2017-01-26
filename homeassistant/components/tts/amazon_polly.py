@@ -19,6 +19,9 @@ CONF_SECRET_ACCESS_KEY = "aws_secret_access_key"
 CONF_PROFILE_NAME = "profile_name"
 ATTR_CREDENTIALS = "credentials"
 
+DEFAULT_REGION = "us-east-1"
+SUPPORTED_REGIONS = ["us-east-1", "us-east-2", "us-west-2", "eu-west-1"]
+
 CONF_VOICE = "voice"
 CONF_OUTPUT_FORMAT = "output_format"
 CONF_SAMPLE_RATE = "sample_rate"
@@ -62,7 +65,8 @@ DEFAULT_SAMPLE_RATES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION, default="us-east-1"): cv.string,
+    vol.Optional(CONF_REGION, default=DEFAULT_REGION):
+        vol.In(SUPPORTED_REGIONS),
     vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
     vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
