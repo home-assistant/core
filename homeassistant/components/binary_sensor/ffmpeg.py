@@ -110,6 +110,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         def async_start(event):
             """Start ffmpeg."""
             yield from entity.async_start_ffmpeg()
+            yield from entity.async_update_ha_state()
 
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, async_start)
