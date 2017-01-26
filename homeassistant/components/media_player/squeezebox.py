@@ -182,7 +182,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if 'power' in self._status and self._status['power'] == '0':
+        if 'power' in self._status and self._status['power'] == 0:
             return STATE_OFF
         if 'mode' in self._status:
             if self._status['mode'] == 'pause':
@@ -215,9 +215,17 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
         try:
             self._status = response.copy()
-            self._status.update(response["remoteMeta"])
-        except KeyError:
-            pass
+        except AttributeError:
+            _LOGGER.error("Squeezebox object %s invalid status", self._name)
+        else:
+            try:
+                self._status.update(response["playlist_loop"][0])
+            except KeyError:
+                pass
+            try:
+                self._status.update(response["remoteMeta"])
+            except KeyError:
+                pass
 
     @property
     def volume_level(self):
