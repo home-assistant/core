@@ -174,7 +174,7 @@ googlemaps==2.4.4
 gps3==0.33.3
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.1
+ha-ffmpeg==1.2
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
