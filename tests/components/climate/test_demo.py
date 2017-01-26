@@ -9,7 +9,6 @@ from homeassistant.components import climate
 
 from tests.common import get_test_home_assistant
 
-
 ENTITY_CLIMATE = 'climate.hvac'
 ENTITY_ECOBEE = 'climate.ecobee'
 ENTITY_HEATPUMP = 'climate.heatpump'
@@ -207,6 +206,27 @@ class TestDemoClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('away_mode'))
+
+    def test_set_hold_mode_home(self):
+        """Test setting the hold mode home."""
+        climate.set_hold_mode(self.hass, 'home', ENTITY_ECOBEE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('home', state.attributes.get('hold_mode'))
+
+    def test_set_hold_mode_away(self):
+        """Test setting the hold mode away."""
+        climate.set_hold_mode(self.hass, 'away', ENTITY_ECOBEE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('away', state.attributes.get('hold_mode'))
+
+    def test_set_hold_mode_none(self):
+        """Test setting the hold mode off/false."""
+        climate.set_hold_mode(self.hass, None, ENTITY_ECOBEE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual(None, state.attributes.get('hold_mode'))
 
     def test_set_aux_heat_bad_attr(self):
         """Test setting the auxillary heater without required attribute."""
