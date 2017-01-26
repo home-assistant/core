@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     "Auto Low", None, None, "Auto", "heat", None, None, None),
         DemoClimate("Hvac", 21, TEMP_CELSIUS, True, None, 22, "On High",
                     67, 54, "Off", "cool", False, None, None),
-        DemoClimate("Ecobee", None, TEMP_CELSIUS, None, 'home', 23, "Auto Low",
+        DemoClimate("Ecobee", None, TEMP_CELSIUS, None, None, 23, "Auto Low",
                     None, None, "Auto", "auto", None, 24, 21)
     ])
 
@@ -108,8 +108,8 @@ class DemoClimate(ClimateDevice):
         return self._away
 
     @property
-    def is_hold_mode_on(self):
-        """Return if home mode is on."""
+    def current_hold_mode(self):
+        """Return hold mode setting."""
         return self._hold
 
     @property
