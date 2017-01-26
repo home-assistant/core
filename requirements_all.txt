@@ -244,9 +244,6 @@ https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a8
 # homeassistant.components.notify.joaoapps_join
 https://github.com/nkgilley/python-join-api/archive/3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1
 
-# homeassistant.components.media_player.liveboxplaytv
-https://github.com/pschmitt/python-liveboxplaytv/archive/1.1.0.zip#liveboxplaytv==1.1.0
-
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
 
@@ -304,6 +301,9 @@ liffylights==0.9.4
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.2
+
+# homeassistant.components.media_player.liveboxplaytv
+liveboxplaytv==1.4.1
 
 # homeassistant.components.notify.matrix
 matrix-client==0.0.5

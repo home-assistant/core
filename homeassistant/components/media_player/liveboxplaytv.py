@@ -20,9 +20,7 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/pschmitt/python-liveboxplaytv/archive/1.1.0.zip'
-    '#liveboxplaytv==1.1.0']
+REQUIREMENTS = ['liveboxplaytv==1.4.1']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -80,6 +78,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._state = STATE_UNKNOWN
         self._channel_list = {}
         self._current_channel = None
+        self._current_program = None
         self._media_image_url = None
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -90,9 +89,13 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             self._state = STATE_PLAYING if self._client.is_on else STATE_OFF
             # Update current channel
             channel = self._client.get_current_channel()
-            self._current_channel = channel.get('name', None)
-            self._media_image_url = channel.get('imageUrl', None)
-            self.refresh_channel_list()
+            if channel is not None:
+                self._current_program = self._client.program
+                self._current_channel = channel.get('name', None) if channel \
+                                                                  else None
+                self._media_image_url = \
+                    self._client.get_current_channel_image(img_size=300)
+                self.refresh_channel_list()
         except requests.ConnectionError:
             self._state = STATE_OFF
 
@@ -135,6 +138,13 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         return self._media_image_url
 
     @property
+    def media_title(self):
+        """Title of current playing media."""
+        if self._current_channel:
+            return '{}: {}'.format(self._current_channel,
+                                   self._current_program)
+
+    @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
         return SUPPORT_LIVEBOXPLAYTV
@@ -144,7 +154,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         new_channel_list = {}
         # update channels
         for channel in self._client.get_channels():
-            new_channel_list[int(channel['tvIndex'])] = channel['name']
+            new_channel_list[int(channel['index'])] = channel['name']
         self._channel_list = new_channel_list
 
     def turn_off(self):
