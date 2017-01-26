@@ -91,6 +91,8 @@ def get_engine(hass, config):
                       sample_rate, output_format)
         return None
 
+    config[CONF_SAMPLE_RATE] = sample_rate
+
     import boto3
 
     profile = config.get(CONF_PROFILE_NAME)
@@ -104,13 +106,15 @@ def get_engine(hass, config):
         CONF_SECRET_ACCESS_KEY: config.get(CONF_SECRET_ACCESS_KEY),
     }
 
+    del config[CONF_REGION]
+    del config[CONF_ACCESS_KEY_ID]
+    del config[CONF_SECRET_ACCESS_KEY]
+
     polly_client = boto3.client("polly", **aws_config)
 
     supported_languages = []
 
     all_voices = {}
-
-    voice_language = "en-US"
 
     all_voices_req = polly_client.describe_voices()
 
@@ -118,40 +122,37 @@ def get_engine(hass, config):
         all_voices[voice.get("Id")] = voice
         if voice.get("LanguageCode") not in supported_languages:
             supported_languages.append(voice.get("LanguageCode"))
-        if voice.get("Id", "") == config.get(CONF_VOICE):
-            voice_language = "{}-{}".format(config.get(CONF_VOICE).lower(),
-                                            voice.get("LanguageCode"))
 
     return AmazonPollyProvider(polly_client, config, supported_languages,
-                               all_voices, voice_language)
+                               all_voices)
 
 
 class AmazonPollyProvider(Provider):
     """Amazon Polly speech api provider."""
 
     def __init__(self, polly_client, config, supported_languages,
-                 all_voices, voice_language):
+                 all_voices):
         """Initialize Amazon Polly provider for TTS."""
         self.client = polly_client
         self.config = config
-        self.all_languages = supported_languages
+        self.supported_langs = supported_languages
         self.all_voices = all_voices
-        self.language = voice_language
+        self.default_voice = self.config.get(CONF_VOICE)
 
     @property
     def supported_languages(self):
         """List of supported languages."""
-        return self.all_languages
+        return self.supported_langs
 
     @property
     def default_language(self):
         """Default language."""
-        return self.language
+        return self.all_voices.get(self.default_voice).get("LanguageCode")
 
     @property
     def default_options(self):
         """Dict include default options."""
-        return {CONF_VOICE: self.config[CONF_VOICE]}
+        return {CONF_VOICE: self.default_voice}
 
     @property
     def supported_options(self):
@@ -160,7 +161,7 @@ class AmazonPollyProvider(Provider):
 
     def get_tts_audio(self, message, language=None, options=None):
         """Request TTS file from Polly."""
-        voice_id = options.get(CONF_VOICE, self.config[CONF_VOICE])
+        voice_id = options.get(CONF_VOICE, self.default_voice)
         voice_in_dict = self.all_voices.get(voice_id)
         if language is not voice_in_dict.get("LanguageCode"):
             _LOGGER.error("%s does not support the %s language",
