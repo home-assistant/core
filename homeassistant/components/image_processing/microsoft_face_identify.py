@@ -160,7 +160,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceIdentifyEntity):
             face_data = yield from self._api.call_api(
                 'post', 'detect', image, binary=True)
 
-            if face_data is None:
+            if face_data is None or len(face_data) < 1:
                 return
 
             face_ids = [data['faceId'] for data in face_data]
