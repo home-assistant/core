@@ -91,8 +91,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
             channel = self._client.get_current_channel()
             if channel is not None:
                 self._current_program = self._client.program
-                self._current_channel = channel.get('name', None) if channel \
-                                                                  else None
+                self._current_channel = channel.get('name', None)
                 self._media_image_url = \
                     self._client.get_current_channel_image(img_size=300)
                 self.refresh_channel_list()
