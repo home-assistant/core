@@ -326,7 +326,7 @@ myusps==1.0.2
 netdisco==0.8.1
 
 # homeassistant.components.sensor.neurio_energy
-neurio==0.2.10
+neurio==0.3.1
 
 # homeassistant.components.google
 oauth2client==3.0.0
