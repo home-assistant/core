@@ -154,7 +154,7 @@ microsoft_face:
     description: Train a person group.
 
     fields:
-      name:
+      group:
         description: Name of the group
         example: 'family'
 
@@ -186,7 +186,7 @@ microsoft_face:
     description: Add a new picture to a person.
 
     fields:
-      name:
+      person:
         description: Name of the person
         example: 'Hans'
 
