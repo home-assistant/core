@@ -68,7 +68,7 @@ class LyricThermostat(ClimateDevice):
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
  
-        self._operation_list.append(STATE_ECO)
+        #self._operation_list.append(STATE_ECO)
 
         # feature of device
         self._has_fan = False#self.device.has_fan
