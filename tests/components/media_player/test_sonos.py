@@ -100,6 +100,10 @@ class SoCoMock():
         """Return a player uid."""
         return "RINCON_XXXXXXXXXXXXXXXXX"
 
+    def group(self):
+        """Return all group data of this player."""
+        return
+
 
 def fake_add_device(devices, update_befor_add=False):
     """Fake add device / update."""

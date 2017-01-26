@@ -521,6 +521,10 @@ class SonosDevice(MediaPlayerDevice):
                     update_media_position |= rel_time is not None and \
                         self._media_position is None
 
+                    # used only if a media is playing
+                    if self.state != STATE_PLAYING:
+                        update_media_position = None
+
                     # position changed?
                     if rel_time is not None and \
                        self._media_position is not None:
@@ -678,7 +682,7 @@ class SonosDevice(MediaPlayerDevice):
                 self._player_volume_muted = \
                     event.variables['mute'].get('Master') == '1'
 
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
         if next_track_image_url:
             self.preload_media_image_url(next_track_image_url)
@@ -945,7 +949,11 @@ class SonosDevice(MediaPlayerDevice):
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
         # restore playlist in group if that have not changed
-        self.soco_snapshot.restore(True)
+        from soco.exceptions import SoCoException
+        try:
+            self.soco_snapshot.restore(True)
+        except (TypeError, SoCoException):
+            _LOGGER.debug("Error on restore %s", self.entity_id)
 
         if with_group and self._snapshot_group:
             old = self._snapshot_group
@@ -978,7 +986,7 @@ class SonosDevice(MediaPlayerDevice):
             coordinator = _get_entity_from_soco(self.hass, old.coordinator)
             coordinator.restore(False)
 
-            for s_dev in list(old.coordinator):
+            for s_dev in list(old.members):
                 if s_dev != old.coordinator:
                     s_dev.join(old.coordinator)
 
