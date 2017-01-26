@@ -175,6 +175,13 @@ class Config(object):
         self.exposed_domains = conf.get(
             CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
 
+        # Calculated effective advertised IP and port for network isolation
+        self.advertise_ip = conf.get(
+            CONF_ADVERTISE_IP) or self.host_ip_addr
+
+        self.advertise_port = conf.get(
+            CONF_ADVERTISE_PORT) or self.listen_port
+
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:

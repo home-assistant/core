@@ -49,16 +49,8 @@ class DescriptionXmlView(HomeAssistantView):
 </root>
 """
 
-        resp_ip = self.config.advertise_ip if \
-            self.config.advertise_ip else \
-            self.config.host_ip_addr
-
-        resp_port = self.config.advertise_port if \
-            self.config.advertise_port else \
-            self.config.listen_port
-
         resp_text = xml_template.format(
-            resp_ip, resp_port)
+            self.config.advertise_ip, self.config.advertise_port)
 
         return web.Response(text=resp_text, content_type='text/xml')
 
@@ -76,18 +68,6 @@ class UPNPResponderThread(threading.Thread):
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
         self.upnp_bind_multicast = upnp_bind_multicast
-        self.advertise_ip = advertise_ip
-        self.advertise_port = advertise_port
-
-        # If using the advertisement overides, only
-        # use them for forming the responses
-        resp_ip = self.advertise_ip if \
-            self.advertise_ip else \
-            self.host_ip_addr
-
-        resp_port = self.advertise_port if \
-            self.advertise_port else \
-            self.listen_port
 
         # Note that the double newline at the end of
         # this string is required per the SSDP spec
@@ -102,9 +82,9 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
 """
 
-        self.upnp_response = resp_template.format(resp_ip, resp_port) \
-                                          .replace("\n", "\r\n") \
-                                          .encode('utf-8')
+        self.upnp_response = resp_template.format(
+            advertise_ip, advertise_port).replace("\n", "\r\n") \
+                                         .encode('utf-8')
 
         # Set up a pipe for signaling to the receiver that it's time to
         # shutdown. Essentially, we place the SSDP socket into nonblocking
