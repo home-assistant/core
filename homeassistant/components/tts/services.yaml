@@ -16,7 +16,11 @@ say:
 
     language:
       description: Language to use for speech generation.
-      example: 'ru' 
+      example: 'ru'
+
+    options:
+      description: A dictionary containing platform-specific options. Optional depending on the platform.
+      example: platform specific
 
 clear_cache:
   description: Remove cache files and RAM cache.
