@@ -54,7 +54,7 @@ ATTR_LANGUAGE = 'language'
 ATTR_OPTIONS = 'options'
 
 _RE_VOICE_FILE = re.compile(
-    r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z]+)\.[a-z0-9]{3,4}")
+    r"([a-f0-9]{40})_([^_]+)_([^_]+)_([a-z_]+)\.[a-z0-9]{3,4}")
 KEY_PATTERN = '{0}_{1}_{2}_{3}'
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({

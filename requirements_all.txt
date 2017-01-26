@@ -72,7 +72,8 @@ blockchain==1.3.3
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
-boto3==1.3.1
+# homeassistant.components.tts.amazon_polly
+boto3==1.4.3
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
@@ -174,7 +175,7 @@ googlemaps==2.4.4
 gps3==0.33.3
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.1
+ha-ffmpeg==1.2
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
