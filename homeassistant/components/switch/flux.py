@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_STOP_CT, default=1900):
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_BRIGHTNESS):
-        vol.All(vol.Coerce(int), vol.Range(min=-1, max=255)),
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
         vol.Any(MODE_XY, MODE_MIRED)
