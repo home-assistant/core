@@ -58,7 +58,6 @@ CONFIG_SCHEMA = vol.Schema({
 ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
-DATA_KNOWN_DEVICES = 'rflink_known_device_ids'
 DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
 DATA_DEVICE_REGISTER = 'rflink_device_register'
 
@@ -90,9 +89,6 @@ def identify_event_type(event):
 def async_setup(hass, config):
     """Setup the Rflink component."""
     from rflink.protocol import create_rflink_connection
-
-    # initialize list of known devices
-    hass.data[DATA_KNOWN_DEVICES] = []
 
     # allow entities to register themselves by device_id to be looked up when
     # new rflink events arrive to be handled
@@ -138,9 +134,6 @@ def async_setup(hass, config):
                         ATTR_STATE: event[EVENT_KEY_COMMAND],
                     })
         else:
-            if event_id in hass.data[DATA_KNOWN_DEVICES]:
-                return
-
             _LOGGER.debug('device_id not known, adding new device')
 
             # if device is not yet known, register with platform (if loaded)

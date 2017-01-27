@@ -8,8 +8,8 @@ import asyncio
 import logging
 
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICES, DATA_ENTITY_LOOKUP, DATA_KNOWN_DEVICES,
-    DOMAIN, EVENT_KEY_COMMAND, SwitchableRflinkDevice, cv, vol)
+    CONF_ALIASSES, CONF_DEVICES, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_COMMAND,
+    SwitchableRflinkDevice, cv, vol)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
@@ -36,7 +36,7 @@ def devices_from_config(domain_config, hass=None):
     for device_id, config in domain_config[CONF_DEVICES].items():
         device = RflinkSwitch(device_id, hass, **config)
         devices.append(device)
-        hass.data[DATA_KNOWN_DEVICES].append(device_id)
+
         # register entity (and aliasses) to listen to incoming rflink events
         for _id in config[CONF_ALIASSES] + [device_id]:
             hass.data[DATA_ENTITY_LOOKUP][

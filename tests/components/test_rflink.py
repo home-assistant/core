@@ -59,7 +59,7 @@ def test_version_banner(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, create, protocol = yield from mock_rflink(
+    event_callback, _, _ = yield from mock_rflink(
         hass, config, domain, monkeypatch)
 
     yield from event_callback({
@@ -91,7 +91,7 @@ def test_send_no_wait(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, create, protocol = yield from mock_rflink(
+    _, _, protocol = yield from mock_rflink(
         hass, config, domain, monkeypatch)
 
     hass.async_add_job(

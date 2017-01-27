@@ -12,8 +12,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
     CONF_ALIASSES, CONF_DEVICES, CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP,
-    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DATA_KNOWN_DEVICES, DOMAIN,
-    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
+    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_COMMAND,
+    EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
 DEPENDENCIES = ['rflink']
@@ -78,11 +78,8 @@ def devices_from_config(domain_config, hass=None):
         device = entity_class(device_id, hass, **config)
         devices.append(device)
 
-        # now we know
-        device_ids = [device_id] + config[CONF_ALIASSES]
-        hass.data[DATA_KNOWN_DEVICES].extend(device_ids)
         # register entity (and aliasses) to listen to incoming rflink events
-        for _id in config[CONF_ALIASSES] + [device_id]:
+        for _id in [device_id] + config[CONF_ALIASSES]:
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
 
@@ -110,9 +107,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
 
-        hass.data[DATA_KNOWN_DEVICES].append(device_id)
         device = entity_class(device_id, hass)
         yield from async_add_devices([device])
+
+        # register entity to listen to incoming rflink events
+        hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][device_id].append(device)
+
         # make sure the event is processed by the new entity
         device.handle_event(event)
 

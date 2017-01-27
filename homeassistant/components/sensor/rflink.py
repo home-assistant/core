@@ -11,8 +11,8 @@ import logging
 from homeassistant.components import group
 from homeassistant.components.rflink import (
     CONF_ALIASSES, CONF_DEVICES, CONF_NEW_DEVICES_GROUP, DATA_DEVICE_REGISTER,
-    DATA_ENTITY_LOOKUP, DATA_KNOWN_DEVICES, DOMAIN, EVENT_KEY_ID,
-    EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice, cv, vol)
+    DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT,
+    RflinkDevice, cv, vol)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM)
 
@@ -62,7 +62,7 @@ def devices_from_config(domain_config, hass=None):
             config[CONF_SENSOR_TYPE])
         device = RflinkSensor(device_id, hass, **config)
         devices.append(device)
-        hass.data[DATA_KNOWN_DEVICES].append(device_id)
+
         # register entity to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
@@ -86,8 +86,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
         device_id = event[EVENT_KEY_ID]
-
-        hass.data[DATA_KNOWN_DEVICES].append(device_id)
 
         rflinksensor = partial(RflinkSensor, device_id, hass)
         device = rflinksensor(event[EVENT_KEY_SENSOR], event[EVENT_KEY_UNIT])
