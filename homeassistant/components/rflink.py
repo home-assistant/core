@@ -42,6 +42,7 @@ DOMAIN = 'rflink'
 
 CONF_ALIASSES = 'aliasses'
 CONF_DEVICES = 'devices'
+CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_NEW_DEVICES_GROUP = 'new_devices_group'
@@ -57,10 +58,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
         vol.Optional(CONF_IGNORE_DEVICES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_SIGNAL_REPETITIONS,
-                     default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
-
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -315,6 +312,10 @@ class RflinkCommand(RflinkDevice):
             return self.hass.loop.run_in_executor(
                 None, ft.partial(
                     self._protocol.send_command, self._device_id, cmd))
+
+        # give away control to allow repetitions of simultanious switched
+        # entities to alternate
+        yield from asyncio.sleep(0)
 
 
 class SwitchableRflinkDevice(RflinkCommand):

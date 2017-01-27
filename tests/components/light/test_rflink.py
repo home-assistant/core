@@ -207,3 +207,75 @@ def test_firing_bus_event(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert calls[0].data == {'state': 'off', 'entity_id': 'light.test'}
+
+
+@asyncio.coroutine
+def test_signal_repetitions(hass, monkeypatch):
+    """Command should be sent amount of configured repetitions."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'signal_repetitions': 2,
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {ATTR_ENTITY_ID: 'light.test'}))
+
+    yield from hass.async_block_till_done()
+
+    assert protocol.send_command_ack.call_count == 2
+
+
+@asyncio.coroutine
+def test_signal_repetitions_alternation(hass, monkeypatch):
+    """Entities switched simultaniously should alternate repetitions."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'signal_repetitions': 2,
+                },
+                'protocol_0_1': {
+                    'name': 'test1',
+                    'signal_repetitions': 2,
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {ATTR_ENTITY_ID: 'light.test'}))
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {ATTR_ENTITY_ID: 'light.test1'}))
+
+    yield from hass.async_block_till_done()
+
+    assert protocol.send_command_ack.call_args_list[0][0][0] == 'protocol_0_0'
+    assert protocol.send_command_ack.call_args_list[1][0][0] == 'protocol_0_1'
+    assert protocol.send_command_ack.call_args_list[2][0][0] == 'protocol_0_0'
+    assert protocol.send_command_ack.call_args_list[3][0][0] == 'protocol_0_1'

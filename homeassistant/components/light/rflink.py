@@ -11,9 +11,10 @@ from homeassistant.components import group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICES, CONF_FIRE_EVENT, CONF_IGNORE_DEVICES,
-    CONF_NEW_DEVICES_GROUP, DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN,
-    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
+    CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
+    CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP, CONF_SIGNAL_REPETITIONS,
+    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DEFAULT_SIGNAL_REPETITIONS,
+    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
 DEPENDENCIES = ['rflink']
@@ -27,6 +28,11 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_NEW_DEVICES_GROUP, default=None): cv.string,
     vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DEVICE_DEFAULTS, default={}): vol.Schema({
+        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+        vol.Optional(CONF_SIGNAL_REPETITIONS,
+                     default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+    }),
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
@@ -34,6 +40,8 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+            vol.Optional(CONF_SIGNAL_REPETITIONS,
+                         default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
         },
     }),
 })
@@ -76,7 +84,9 @@ def devices_from_config(domain_config, hass=None):
             entity_type = entity_type_for_device_id(device_id)
         entity_class = entity_class_for_type(entity_type)
 
-        device = entity_class(device_id, hass, **config)
+        device_config = domain_config[CONF_DEVICE_DEFAULTS]
+        device_config.update(**config)
+        device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
         # register entity (and aliasses) to listen to incoming rflink events
