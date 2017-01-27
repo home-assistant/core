@@ -948,18 +948,21 @@ class SonosDevice(MediaPlayerDevice):
 
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
-        # restore playlist in group if that have not changed
         from soco.exceptions import SoCoException
         try:
+            # need catch exception if a coordinator is going to slave.
+            # this state will recover with group part.
             self.soco_snapshot.restore(True)
         except (TypeError, SoCoException):
             _LOGGER.debug("Error on restore %s", self.entity_id)
 
+        # restore groups
         if with_group and self._snapshot_group:
             old = self._snapshot_group
             actual = self._player.group
 
-            # Master have not change, restore
+            ##
+            # Master have not change, update group
             if old.coordinator == actual.coordinator:
                 if self._player is not old.coordinator:
                     # restore state of the groups
@@ -971,17 +974,19 @@ class SonosDevice(MediaPlayerDevice):
                 for soco_dev in list(remove):
                     soco_dev.unjoin()
 
-                # remove old members
+                # add old members
                 for soco_dev in list(add):
                     soco_dev.join(old.coordinator)
                 return
 
-            # old allready master, rejoin
+            ##
+            # old is allready master, rejoin
             if old.coordinator.group.coordinator == old.coordinator:
                 self._player.join(old.coordinator)
                 return
 
-            # restore old master
+            ##
+            # restore old master, update group
             old.coordinator.unjoin()
             coordinator = _get_entity_from_soco(self.hass, old.coordinator)
             coordinator.restore(False)
