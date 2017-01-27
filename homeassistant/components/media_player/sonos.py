@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SONOS_SCHEMA = vol.Schema({
-    ATTR_ENTITY_ID: cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 SONOS_JOIN_SCHEMA = SONOS_SCHEMA.extend({
@@ -923,17 +923,22 @@ class SonosDevice(MediaPlayerDevice):
 
     def join(self, master):
         """Join the player to a group."""
-        coord = [device.soco_device for device in self.hass.data[DATA_SONOS]
+        coord = [device for device in self.hass.data[DATA_SONOS]
                  if device.entity_id == master]
 
         if coord and master != self.entity_id:
-            self._player.join(coord[0])
+            coord = coord[0]
+            if coord.soco_device.group.coordinator != coord.soco_device:
+                coord.soco_device.unjoin()
+            self._player.join(coord.soco_device)
+            self._coordinator = coord
         else:
             _LOGGER.error("Master not found %s", master)
 
     def unjoin(self):
         """Unjoin the player from a group."""
         self._player.unjoin()
+        self._coordinator = None
 
     def snapshot(self, with_group=True):
         """Snapshot the player."""
