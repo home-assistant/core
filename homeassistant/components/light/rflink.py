@@ -11,9 +11,9 @@ from homeassistant.components import group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICES, CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP,
-    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_COMMAND,
-    EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
+    CONF_ALIASSES, CONF_DEVICES, CONF_FIRE_EVENT, CONF_IGNORE_DEVICES,
+    CONF_NEW_DEVICES_GROUP, DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DOMAIN,
+    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
 DEPENDENCIES = ['rflink']
@@ -33,6 +33,7 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_TYPE): vol.Any(TYPE_DIMMABLE),
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
         },
     }),
 })

@@ -8,8 +8,8 @@ import asyncio
 import logging
 
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICES, DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_COMMAND,
-    SwitchableRflinkDevice, cv, vol)
+    CONF_ALIASSES, CONF_DEVICES, CONF_FIRE_EVENT, DATA_ENTITY_LOOKUP, DOMAIN,
+    EVENT_KEY_COMMAND, SwitchableRflinkDevice, cv, vol)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
@@ -25,6 +25,7 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
         },
     }),
 })

@@ -182,6 +182,7 @@ def test_firing_bus_event(hass, monkeypatch):
                 'protocol_0_0': {
                     'name': 'test',
                     'aliasses': ['test_alias_0_0'],
+                    'fire_event': True,
                 },
             },
         },

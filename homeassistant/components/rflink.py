@@ -40,10 +40,11 @@ REQUIREMENTS = ['rflink==0.0.18']
 
 DOMAIN = 'rflink'
 
-CONF_IGNORE_DEVICES = 'ignore_devices'
-CONF_DEVICES = 'devices'
-CONF_NEW_DEVICES_GROUP = 'new_devices_group'
 CONF_ALIASSES = 'aliasses'
+CONF_DEVICES = 'devices'
+CONF_FIRE_EVENT = 'fire_event'
+CONF_IGNORE_DEVICES = 'ignore_devices'
+CONF_NEW_DEVICES_GROUP = 'new_devices_group'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -59,14 +60,14 @@ CONFIG_SCHEMA = vol.Schema({
 ATTR_EVENT = 'event'
 ATTR_STATE = 'state'
 
-DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
 DATA_DEVICE_REGISTER = 'rflink_device_register'
+DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 
+EVENT_KEY_COMMAND = 'command'
 EVENT_KEY_ID = 'id'
 EVENT_KEY_SENSOR = 'sensor'
-EVENT_KEY_COMMAND = 'command'
 EVENT_KEY_UNIT = 'unit'
 
 _LOGGER = logging.getLogger(__name__)
@@ -177,7 +178,8 @@ class RflinkDevice(Entity):
     # default state
     _state = STATE_UNKNOWN
 
-    def __init__(self, device_id, hass, name=None, aliasses=None):
+    def __init__(self, device_id, hass, name=None,
+                 aliasses=None, fire_event=False):
         """Initialize the device."""
         self.hass = hass
 
@@ -194,6 +196,8 @@ class RflinkDevice(Entity):
         else:
             self._aliasses = []
 
+        self._should_fire_event = fire_event
+
     def handle_event(self, event):
         """Handle incoming event for device type."""
         # call platform specific event handler
@@ -203,7 +207,8 @@ class RflinkDevice(Entity):
         self.hass.async_add_job(self.async_update_ha_state())
 
         # put command onto bus for user to subscribe to
-        if identify_event_type(event) == EVENT_KEY_COMMAND:
+        if self._should_fire_event and identify_event_type(
+                event) == EVENT_KEY_COMMAND:
             self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
                 ATTR_ENTITY_ID: self.entity_id,
                 ATTR_STATE: event[EVENT_KEY_COMMAND],
