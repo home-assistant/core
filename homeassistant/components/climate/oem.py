@@ -65,14 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ThermostatDevice(ClimateDevice):
-    """
-    Interface class for the oemthermostat module and HA.
-    """
+    """Interface class for the oemthermostat module and HA."""
 
     def __init__(self, hass, thermostat, name, away_temp):
-        """
-        Constructor
-        """
+        """Constructor."""
         self._name = name
         self.hass = hass
 
@@ -85,9 +81,14 @@ class ThermostatDevice(ClimateDevice):
         # Set the thermostat mode to manual
         self.thermostat.mode = 2
 
+        # set up internal state varS
+        self._state = None
+        self._temperature = None
+        self._setpoint = None
+
     @property
     def name(self):
-        """Name of this Thermostat"""
+        """Name of this Thermostat."""
         return self._name
 
     @property
@@ -142,7 +143,7 @@ class ThermostatDevice(ClimateDevice):
         self._away = False
 
     def update(self):
-        """Update local state"""
+        """Update local state."""
         self._setpoint = self.thermostat.setpoint
         self._temperature = self.thermostat.temperature
         self._state = self.thermostat.state
