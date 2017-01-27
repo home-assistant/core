@@ -8,7 +8,6 @@ import logging
 import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
-from homeassistant.helpers.entity import Entity
 from homeassistant.components import zwave
 from homeassistant.components.binary_sensor import (
     DOMAIN,
@@ -65,20 +64,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([ZWaveBinarySensor(value, None)])
 
 
-class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity, Entity):
+class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
     def __init__(self, value, sensor_class):
         """Initialize the sensor."""
         self._sensor_type = sensor_class
-        # pylint: disable=import-error
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-
-        dispatcher.connect(
-            self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     @property
     def is_on(self):
@@ -95,32 +87,25 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity, Entity):
         """No polling needed."""
         return False
 
-    def value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.schedule_update_ha_state()
 
-
-class ZWaveTriggerSensor(ZWaveBinarySensor, Entity):
+class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, sensor_value, sensor_class, hass, re_arm_sec=60):
+    def __init__(self, value, sensor_class, hass, re_arm_sec=60):
         """Initialize the sensor."""
-        super(ZWaveTriggerSensor, self).__init__(sensor_value, sensor_class)
+        super(ZWaveTriggerSensor, self).__init__(value, sensor_class)
         self._hass = hass
         self.re_arm_sec = re_arm_sec
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
         # If it's active make sure that we set the timeout tracker
-        if sensor_value.data:
+        if value.data:
             track_point_in_time(
                 self._hass, self.async_update_ha_state,
                 self.invalidate_after)
 
     def value_changed(self, value):
-        """Called when a value has changed on the network."""
+        """Called when a value for this entity's node has changed."""
         if self._value.value_id == value.value_id:
             self.schedule_update_ha_state()
             if value.data:

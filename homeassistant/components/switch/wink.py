@@ -17,10 +17,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     for switch in pywink.get_switches():
         add_devices([WinkToggleDevice(switch, hass)])
-    for switch in pywink.get_powerstrip_outlets():
+    for switch in pywink.get_powerstrips():
         add_devices([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_sirens():
         add_devices([WinkToggleDevice(switch, hass)])
+    for sprinkler in pywink.get_sprinklers():
+        add_devices([WinkToggleDevice(sprinkler, hass)])
 
 
 class WinkToggleDevice(WinkDevice, ToggleEntity):

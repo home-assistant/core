@@ -7,14 +7,25 @@ https://home-assistant.io/components/lock.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
+from os import path
+
+import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
+from homeassistant.config import load_yaml_config_file
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_NOTIFICATION = 'notification'
 ATTR_LOCK_STATUS = 'lock_status'
+ATTR_CODE_SLOT = 'code_slot'
+ATTR_USERCODE = 'usercode'
+
+SERVICE_SET_USERCODE = 'set_usercode'
+SERVICE_GET_USERCODE = 'get_usercode'
+SERVICE_CLEAR_USERCODE = 'clear_usercode'
+
 LOCK_NOTIFICATION = {
     1: 'Manual Lock',
     2: 'Manual Unlock',
@@ -80,6 +91,22 @@ ALARM_TYPE_STD = [
     113
 ]
 
+SET_USERCODE_SCHEMA = vol.Schema({
+    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+    vol.Required(ATTR_USERCODE): vol.Coerce(int),
+})
+
+GET_USERCODE_SCHEMA = vol.Schema({
+    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+})
+
+CLEAR_USERCODE_SCHEMA = vol.Schema({
+    vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
+})
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -90,13 +117,81 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
 
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    def set_usercode(service):
+        """Set the usercode to index X on the lock."""
+        node_id = service.data.get(zwave.const.ATTR_NODE_ID)
+        lock_node = zwave.NETWORK.nodes[node_id]
+        code_slot = service.data.get(ATTR_CODE_SLOT)
+        usercode = service.data.get(ATTR_USERCODE)
+
+        for value in lock_node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
+            if value.index != code_slot:
+                continue
+            if len(str(usercode)) > 4:
+                _LOGGER.error('Invalid code provided: (%s)'
+                              ' usercode must %s or less digits',
+                              usercode, len(value.data))
+            value.data = str(usercode)
+            break
+
+    def get_usercode(service):
+        """Get a usercode at index X on the lock."""
+        node_id = service.data.get(zwave.const.ATTR_NODE_ID)
+        lock_node = zwave.NETWORK.nodes[node_id]
+        code_slot = service.data.get(ATTR_CODE_SLOT)
+
+        for value in lock_node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
+            if value.index != code_slot:
+                continue
+            _LOGGER.info('Usercode at slot %s is: %s', value.index, value.data)
+            break
+
+    def clear_usercode(service):
+        """Set usercode to slot X on the lock."""
+        node_id = service.data.get(zwave.const.ATTR_NODE_ID)
+        lock_node = zwave.NETWORK.nodes[node_id]
+        code_slot = service.data.get(ATTR_CODE_SLOT)
+        data = ''
+
+        for value in lock_node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
+            if value.index != code_slot:
+                continue
+            for i in range(len(value.data)):
+                data += '\0'
+                i += 1
+            _LOGGER.debug('Data to clear lock: %s', data)
+            value.data = data
+            _LOGGER.info('Usercode at slot %s is cleared', value.index)
+            break
+
     if value.command_class != zwave.const.COMMAND_CLASS_DOOR_LOCK:
         return
     if value.type != zwave.const.TYPE_BOOL:
         return
     if value.genre != zwave.const.GENRE_USER:
         return
-
+    if node.has_command_class(zwave.const.COMMAND_CLASS_USER_CODE):
+        hass.services.register(DOMAIN,
+                               SERVICE_SET_USERCODE,
+                               set_usercode,
+                               descriptions.get(SERVICE_SET_USERCODE),
+                               schema=SET_USERCODE_SCHEMA)
+        hass.services.register(DOMAIN,
+                               SERVICE_GET_USERCODE,
+                               get_usercode,
+                               descriptions.get(SERVICE_GET_USERCODE),
+                               schema=GET_USERCODE_SCHEMA)
+        hass.services.register(DOMAIN,
+                               SERVICE_CLEAR_USERCODE,
+                               clear_usercode,
+                               descriptions.get(SERVICE_CLEAR_USERCODE),
+                               schema=CLEAR_USERCODE_SCHEMA)
     value.set_change_verified(False)
     add_devices([ZwaveLock(value)])
 
@@ -106,29 +201,16 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def __init__(self, value):
         """Initialize the Z-Wave switch device."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         self._node = value.node
         self._state = None
         self._notification = None
         self._lock_status = None
-        dispatcher.connect(
-            self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         self.update_properties()
 
-    def _value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.update_properties()
-            self.schedule_update_ha_state()
-
     def update_properties(self):
-        """Callback on data change for the registered node/value pair."""
+        """Callback on data changes for node values."""
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_ALARM).values():
             if value.label != "Access Control":

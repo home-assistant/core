@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==0.12.0', 'pubnubsub-handler==0.0.7']
+REQUIREMENTS = ['python-wink==1.0.0', 'pubnubsub-handler==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,14 +28,16 @@ CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 CONF_USER_AGENT = 'user_agent'
 CONF_OATH = 'oath'
+CONF_APPSPOT = 'appspot'
 CONF_DEFINED_BOTH_MSG = 'Remove access token to use oath2.'
 CONF_MISSING_OATH_MSG = 'Missing oath2 credentials.'
+CONF_TOKEN_URL = "https://winkbearertoken.appspot.com/token"
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Inclusive(CONF_EMAIL, CONF_OATH,
+        vol.Inclusive(CONF_EMAIL, CONF_APPSPOT,
                       msg=CONF_MISSING_OATH_MSG): cv.string,
-        vol.Inclusive(CONF_PASSWORD, CONF_OATH,
+        vol.Inclusive(CONF_PASSWORD, CONF_APPSPOT,
                       msg=CONF_MISSING_OATH_MSG): cv.string,
         vol.Inclusive(CONF_CLIENT_ID, CONF_OATH,
                       msg=CONF_MISSING_OATH_MSG): cv.string,
@@ -45,19 +47,22 @@ CONFIG_SCHEMA = vol.Schema({
                       msg=CONF_DEFINED_BOTH_MSG): cv.string,
         vol.Exclusive(CONF_ACCESS_TOKEN, CONF_OATH,
                       msg=CONF_DEFINED_BOTH_MSG): cv.string,
+        vol.Exclusive(CONF_ACCESS_TOKEN, CONF_APPSPOT,
+                      msg=CONF_DEFINED_BOTH_MSG): cv.string,
         vol.Optional(CONF_USER_AGENT, default=None): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan'
+    'fan', 'alarm_control_panel'
 ]
 
 
 def setup(hass, config):
     """Set up the Wink component."""
     import pywink
+    import requests
     from pubnubsubhandler import PubNubSubscriptionHandler
 
     user_agent = config[DOMAIN].get(CONF_USER_AGENT)
@@ -66,16 +71,24 @@ def setup(hass, config):
         pywink.set_user_agent(user_agent)
 
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
+    client_id = config[DOMAIN].get('client_id')
 
     if access_token:
         pywink.set_bearer_token(access_token)
-    else:
+    elif client_id:
         email = config[DOMAIN][CONF_EMAIL]
         password = config[DOMAIN][CONF_PASSWORD]
         client_id = config[DOMAIN]['client_id']
         client_secret = config[DOMAIN]['client_secret']
         pywink.set_wink_credentials(email, password, client_id,
                                     client_secret)
+    else:
+        email = config[DOMAIN][CONF_EMAIL]
+        password = config[DOMAIN][CONF_PASSWORD]
+        payload = {'username': email, 'password': password}
+        token_response = requests.post(CONF_TOKEN_URL, data=payload)
+        token = token_response.text.split(':')[1].split()[0].rstrip('<br')
+        pywink.set_bearer_token(token)
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['entities'] = []
@@ -112,8 +125,9 @@ class WinkDevice(Entity):
 
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
+        self.hass = hass
         self.wink = wink
-        self._battery = self.wink.battery_level
+        self._battery = self.wink.battery_level()
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['entities'].append(self)
@@ -133,11 +147,6 @@ class WinkDevice(Entity):
             self.update_ha_state(True)
 
     @property
-    def unique_id(self):
-        """Return the ID of this Wink device."""
-        return '{}.{}'.format(self.__class__, self.wink.device_id())
-
-    @property
     def name(self):
         """Return the name of the device."""
         return self.wink.name()
@@ -145,7 +154,7 @@ class WinkDevice(Entity):
     @property
     def available(self):
         """True if connection == True."""
-        return self.wink.available
+        return self.wink.available()
 
     def update(self):
         """Update state of the device."""
@@ -167,5 +176,5 @@ class WinkDevice(Entity):
     @property
     def _battery_level(self):
         """Return the battery level."""
-        if self.wink.battery_level is not None:
-            return self.wink.battery_level * 100
+        if self.wink.battery_level() is not None:
+            return self.wink.battery_level() * 100

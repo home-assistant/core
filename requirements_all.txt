@@ -33,6 +33,7 @@ SoCo==0.12
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.3
 
+# homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.5.0
 
@@ -41,7 +42,7 @@ aiohttp_cors==0.5.0
 amcrest==1.1.3
 
 # homeassistant.components.media_player.anthemav
-anthemav==1.1.7
+anthemav==1.1.8
 
 # homeassistant.components.apcupsd
 apcaccess==0.0.4
@@ -58,6 +59,7 @@ astral==1.3.3
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.hydroquebec
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
@@ -71,7 +73,8 @@ blockchain==1.3.3
 # homeassistant.components.notify.aws_lambda
 # homeassistant.components.notify.aws_sns
 # homeassistant.components.notify.aws_sqs
-boto3==1.3.1
+# homeassistant.components.tts.amazon_polly
+boto3==1.4.3
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
@@ -173,7 +176,7 @@ googlemaps==2.4.4
 gps3==0.33.3
 
 # homeassistant.components.ffmpeg
-ha-ffmpeg==1.0
+ha-ffmpeg==1.2
 
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.1
@@ -220,7 +223,7 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.2
 
 # homeassistant.components.netatmo
-https://github.com/jabesq/netatmo-api-python/archive/v0.9.0.zip#lnetatmo==0.9.0
+https://github.com/jabesq/netatmo-api-python/archive/v0.9.1.zip#lnetatmo==0.9.1
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
@@ -258,6 +261,9 @@ https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 
 # homeassistant.components.light.osramlightify
 https://github.com/tfriedel/python-lightify/archive/d6eadcf311e6e21746182d1480e97b350dda2b3e.zip#lightify==1.0.4
+
+# homeassistant.components.lutron
+https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
@@ -316,13 +322,13 @@ mficlient==0.3.0
 miflora==0.1.14
 
 # homeassistant.components.sensor.usps
-myusps==1.0.1
+myusps==1.0.2
 
 # homeassistant.components.discovery
 netdisco==0.8.1
 
 # homeassistant.components.sensor.neurio_energy
-neurio==0.2.10
+neurio==0.3.1
 
 # homeassistant.components.google
 oauth2client==3.0.0
@@ -369,7 +375,7 @@ proliphix==0.4.1
 psutil==5.0.1
 
 # homeassistant.components.wink
-pubnubsub-handler==0.0.7
+pubnubsub-handler==1.0.0
 
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.10.0
@@ -528,7 +534,7 @@ python-twitch==1.3.0
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==0.12.0
+python-wink==1.0.0
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -546,7 +552,7 @@ pyvera==0.2.23
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.9
+pywemo==0.4.11
 
 # homeassistant.components.light.yeelight
 pyyeelight==1.0-beta

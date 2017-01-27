@@ -15,6 +15,7 @@ from homeassistant.helpers import discovery, customize
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, CONF_CUSTOMIZE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_ENTITY_ID)
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
@@ -600,13 +601,35 @@ def setup(hass, config):
     return True
 
 
-class ZWaveDeviceEntity:
+class ZWaveDeviceEntity(Entity):
     """Representation of a Z-Wave node entity."""
 
     def __init__(self, value, domain):
         """Initialize the z-Wave device."""
+        # pylint: disable=import-error
+        from openzwave.network import ZWaveNetwork
+        from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
+
+        dispatcher.connect(
+            self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+
+    def network_value_changed(self, value):
+        """Called when a value has changed on the network."""
+        if self._value.value_id == value.value_id or \
+           self._value.node == value.node:
+            _LOGGER.debug('Value changed for label %s', self._value.label)
+            self.value_changed(value)
+
+    def value_changed(self, value):
+        """Called when a value for this entity's node has changed."""
+        self.update_properties()
+        self.schedule_update_ha_state()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        pass
 
     @property
     def should_poll(self):

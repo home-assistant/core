@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['anthemav==1.1.7']
+REQUIREMENTS = ['anthemav==1.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 

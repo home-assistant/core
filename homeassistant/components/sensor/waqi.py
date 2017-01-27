@@ -24,8 +24,10 @@ ATTR_DOMINENTPOL = 'dominentpol'
 ATTR_HUMIDITY = 'humidity'
 ATTR_NITROGEN_DIOXIDE = 'nitrogen_dioxide'
 ATTR_OZONE = 'ozone'
-ATTR_PARTICLE = 'particle'
+ATTR_PM10 = 'pm_10'
+ATTR_PM2_5 = 'pm_2_5'
 ATTR_PRESSURE = 'pressure'
+ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
 ATTR_TIME = 'time'
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
@@ -52,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     station_filter = config.get(CONF_STATIONS)
     for location_name in config.get(CONF_LOCATIONS):
         station_ids = pwaqi.findStationCodesByCity(location_name)
-        _LOGGER.info('The following stations were returned: %s', station_ids)
+        _LOGGER.info("The following stations were returned: %s", station_ids)
         for station in station_ids:
             waqi_sensor = WaqiSensor(WaqiData(station), station)
             if (not station_filter) or \
@@ -107,22 +109,35 @@ class WaqiSensor(Entity):
         return 'AQI'
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the last update."""
-        try:
-            return {
-                ATTR_ATTRIBUTION: ATTRIBUTION,
-                ATTR_TIME: self._details.get('time'),
-                ATTR_HUMIDITY: self._details['iaqi'][5]['cur'],
-                ATTR_PRESSURE: self._details['iaqi'][4]['cur'],
-                ATTR_TEMPERATURE: self._details['iaqi'][3]['cur'],
-                ATTR_OZONE: self._details['iaqi'][1]['cur'],
-                ATTR_PARTICLE: self._details['iaqi'][0]['cur'],
-                ATTR_NITROGEN_DIOXIDE: self._details['iaqi'][2]['cur'],
-                ATTR_DOMINENTPOL: self._details.get('dominentpol'),
-            }
-        except (IndexError, KeyError):
-            return {ATTR_ATTRIBUTION: ATTRIBUTION}
+        attrs = {}
+
+        if self.data is not None:
+            try:
+                attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
+                attrs[ATTR_TIME] = self._details.get('time')
+                attrs[ATTR_DOMINENTPOL] = self._details.get('dominentpol')
+                for values in self._details['iaqi']:
+                    if values['p'] == 'pm25':
+                        attrs[ATTR_PM2_5] = values['cur']
+                    elif values['p'] == 'pm10':
+                        attrs[ATTR_PM10] = values['cur']
+                    elif values['p'] == 'h':
+                        attrs[ATTR_HUMIDITY] = values['cur']
+                    elif values['p'] == 'p':
+                        attrs[ATTR_PRESSURE] = values['cur']
+                    elif values['p'] == 't':
+                        attrs[ATTR_TEMPERATURE] = values['cur']
+                    elif values['p'] == 'o3':
+                        attrs[ATTR_OZONE] = values['cur']
+                    elif values['p'] == 'no2':
+                        attrs[ATTR_NITROGEN_DIOXIDE] = values['cur']
+                    elif values['p'] == 'so2':
+                        attrs[ATTR_SULFUR_DIOXIDE] = values['cur']
+                return attrs
+            except (IndexError, KeyError):
+                return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     def update(self):
         """Get the latest data and updates the states."""

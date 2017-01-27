@@ -42,12 +42,14 @@ SUPPORT_SONOS = SUPPORT_STOP | SUPPORT_PAUSE | SUPPORT_VOLUME_SET |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SEEK | SUPPORT_CLEAR_PLAYLIST |\
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-SERVICE_GROUP_PLAYERS = 'sonos_group_players'
+SERVICE_JOIN = 'sonos_join'
 SERVICE_UNJOIN = 'sonos_unjoin'
 SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
 SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
 SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
+
+DATA_SONOS = 'sonos'
 
 SUPPORT_SOURCE_LINEIN = 'Line-in'
 SUPPORT_SOURCE_TV = 'TV'
@@ -57,6 +59,10 @@ CONF_INTERFACE_ADDR = 'interface_addr'
 
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
+ATTR_MASTER = 'master'
+ATTR_WITH_GROUP = 'with_group'
+
+ATTR_IS_COORDINATOR = 'is_coordinator'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -68,19 +74,26 @@ SONOS_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
 })
 
-SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
-    vol.Required(ATTR_SLEEP_TIME): vol.All(vol.Coerce(int),
-                                           vol.Range(min=0, max=86399))
+SONOS_JOIN_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Required(ATTR_MASTER): cv.entity_id,
 })
 
-# List of devices that have been registered
-DEVICES = []
+SONOS_STATES_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Optional(ATTR_WITH_GROUP, default=True): cv.boolean,
+})
+
+SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Required(ATTR_SLEEP_TIME):
+        vol.All(vol.Coerce(int), vol.Range(min=0, max=86399))
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Sonos platform."""
     import soco
-    global DEVICES
+
+    if DATA_SONOS not in hass.data:
+        hass.data[DATA_SONOS] = []
 
     advertise_addr = config.get(CONF_ADVERTISE_ADDR, None)
     if advertise_addr:
@@ -90,154 +103,92 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         player = soco.SoCo(discovery_info)
 
         # if device allready exists by config
-        if player.uid in [x.unique_id for x in DEVICES]:
-            return True
+        if player.uid in [x.unique_id for x in hass.data[DATA_SONOS]]:
+            return
 
         if player.is_visible:
             device = SonosDevice(hass, player)
             add_devices([device], True)
-            if not DEVICES:
-                register_services(hass)
-            DEVICES.append(device)
-            return True
-        return False
+            hass.data[DATA_SONOS].append(device)
+            if len(hass.data[DATA_SONOS]) > 1:
+                return
+    else:
+        players = None
+        hosts = config.get(CONF_HOSTS, None)
+        if hosts:
+            # Support retro compatibility with comma separated list of hosts
+            # from config
+            hosts = hosts[0] if len(hosts) == 1 else hosts
+            hosts = hosts.split(',') if isinstance(hosts, str) else hosts
+            players = []
+            for host in hosts:
+                players.append(soco.SoCo(socket.gethostbyname(host)))
 
-    players = None
-    hosts = config.get(CONF_HOSTS, None)
-    if hosts:
-        # Support retro compatibility with comma separated list of hosts
-        # from config
-        hosts = hosts[0] if len(hosts) == 1 else hosts
-        hosts = hosts.split(',') if isinstance(hosts, str) else hosts
-        players = []
-        for host in hosts:
-            players.append(soco.SoCo(socket.gethostbyname(host)))
+        if not players:
+            players = soco.discover(
+                interface_addr=config.get(CONF_INTERFACE_ADDR))
 
-    if not players:
-        players = soco.discover(interface_addr=config.get(CONF_INTERFACE_ADDR))
+        if not players:
+            _LOGGER.warning('No Sonos speakers found.')
+            return
 
-    if not players:
-        _LOGGER.warning('No Sonos speakers found.')
-        return False
+        hass.data[DATA_SONOS] = [SonosDevice(hass, p) for p in players]
+        add_devices(hass.data[DATA_SONOS], True)
+        _LOGGER.info('Added %s Sonos speakers', len(players))
 
-    DEVICES = [SonosDevice(hass, p) for p in players]
-    add_devices(DEVICES, True)
-    register_services(hass)
-    _LOGGER.info('Added %s Sonos speakers', len(players))
-    return True
-
-
-def register_services(hass):
-    """Register all services for sonos devices."""
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_GROUP_PLAYERS,
-                           _group_players_service,
-                           descriptions.get(SERVICE_GROUP_PLAYERS),
-                           schema=SONOS_SCHEMA)
+    def service_handle(service):
+        """Internal func for applying a service."""
+        entity_ids = service.data.get('entity_id')
 
-    hass.services.register(DOMAIN, SERVICE_UNJOIN,
-                           _unjoin_service,
-                           descriptions.get(SERVICE_UNJOIN),
-                           schema=SONOS_SCHEMA)
-
-    hass.services.register(DOMAIN, SERVICE_SNAPSHOT,
-                           _snapshot_service,
-                           descriptions.get(SERVICE_SNAPSHOT),
-                           schema=SONOS_SCHEMA)
-
-    hass.services.register(DOMAIN, SERVICE_RESTORE,
-                           _restore_service,
-                           descriptions.get(SERVICE_RESTORE),
-                           schema=SONOS_SCHEMA)
-
-    hass.services.register(DOMAIN, SERVICE_SET_TIMER,
-                           _set_sleep_timer_service,
-                           descriptions.get(SERVICE_SET_TIMER),
-                           schema=SONOS_SET_TIMER_SCHEMA)
-
-    hass.services.register(DOMAIN, SERVICE_CLEAR_TIMER,
-                           _clear_sleep_timer_service,
-                           descriptions.get(SERVICE_CLEAR_TIMER),
-                           schema=SONOS_SCHEMA)
-
-
-def _apply_service(service, service_func, *service_func_args):
-    """Internal func for applying a service."""
-    entity_ids = service.data.get('entity_id')
-
-    if entity_ids:
-        _devices = [device for device in DEVICES
-                    if device.entity_id in entity_ids]
-    else:
-        _devices = DEVICES
-
-    for device in _devices:
-        service_func(device, *service_func_args)
-        device.update_ha_state(True)
-
-
-def _group_players_service(service):
-    """Group media players, use player as coordinator."""
-    _apply_service(service, SonosDevice.group_players)
-
-
-def _unjoin_service(service):
-    """Unjoin the player from a group."""
-    _apply_service(service, SonosDevice.unjoin)
-
-
-def _snapshot_service(service):
-    """Take a snapshot."""
-    _apply_service(service, SonosDevice.snapshot)
-
-
-def _restore_service(service):
-    """Restore a snapshot."""
-    _apply_service(service, SonosDevice.restore)
-
-
-def _set_sleep_timer_service(service):
-    """Set a timer."""
-    _apply_service(service,
-                   SonosDevice.set_sleep_timer,
-                   service.data[ATTR_SLEEP_TIME])
-
-
-def _clear_sleep_timer_service(service):
-    """Set a timer."""
-    _apply_service(service,
-                   SonosDevice.clear_sleep_timer)
-
-
-def only_if_coordinator(func):
-    """Decorator for coordinator.
-
-    If used as decorator, avoid calling the decorated method if player is not
-    a coordinator. If not, a grouped speaker (not in coordinator role) will
-    throw soco.exceptions.SoCoSlaveException.
-
-    Also, partially catch exceptions like:
-
-    soco.exceptions.SoCoUPnPException: UPnP Error 701 received:
-    Transition not available from <player ip address>
-    """
-    def wrapper(*args, **kwargs):
-        """Decorator wrapper."""
-        if args[0].is_coordinator:
-            from soco.exceptions import SoCoUPnPException
-            try:
-                func(*args, **kwargs)
-            except SoCoUPnPException:
-                _LOGGER.error('command "%s" for Sonos device "%s" '
-                              'not available in this mode',
-                              func.__name__, args[0].name)
+        if entity_ids:
+            devices = [device for device in hass.data[DATA_SONOS]
+                       if device.entity_id in entity_ids]
         else:
-            _LOGGER.debug('Ignore command "%s" for Sonos device "%s" (%s)',
-                          func.__name__, args[0].name, 'not coordinator')
+            devices = hass.data[DATA_SONOS]
 
-    return wrapper
+        for device in devices:
+            if service.service == SERVICE_JOIN:
+                if device.entity_id != service.data[ATTR_MASTER]:
+                    device.join(service.data[ATTR_MASTER])
+            elif service.service == SERVICE_UNJOIN:
+                device.unjoin()
+            elif service.service == SERVICE_SNAPSHOT:
+                device.snapshot(service.data[ATTR_WITH_GROUP])
+            elif service.service == SERVICE_RESTORE:
+                device.restore(service.data[ATTR_WITH_GROUP])
+            elif service.service == SERVICE_SET_TIMER:
+                device.set_timer(service.data[ATTR_SLEEP_TIME])
+            elif service.service == SERVICE_CLEAR_TIMER:
+                device.clear_timer()
+
+            device.schedule_update_ha_state(True)
+
+    hass.services.register(
+        DOMAIN, SERVICE_JOIN, service_handle,
+        descriptions.get(SERVICE_JOIN), schema=SONOS_JOIN_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_UNJOIN, service_handle,
+        descriptions.get(SERVICE_UNJOIN), schema=SONOS_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SNAPSHOT, service_handle,
+        descriptions.get(SERVICE_SNAPSHOT), schema=SONOS_STATES_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_RESTORE, service_handle,
+        descriptions.get(SERVICE_RESTORE), schema=SONOS_STATES_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_SET_TIMER, service_handle,
+        descriptions.get(SERVICE_SET_TIMER), schema=SONOS_SET_TIMER_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_CLEAR_TIMER, service_handle,
+        descriptions.get(SERVICE_CLEAR_TIMER), schema=SONOS_SCHEMA)
 
 
 def _parse_timespan(timespan):
@@ -260,6 +211,14 @@ class _ProcessSonosEventQueue():
         # Instead of putting events on a queue, dispatch them to the event
         # processing method.
         self._sonos_device.process_sonos_event(item)
+
+
+def _get_entity_from_soco(hass, soco):
+    """Return SonosDevice from SoCo."""
+    for device in hass.data[DATA_SONOS]:
+        if soco == device.soco_device:
+            return device
+    raise ValueError("No entity for SoCo device!")
 
 
 class SonosDevice(MediaPlayerDevice):
@@ -302,6 +261,7 @@ class SonosDevice(MediaPlayerDevice):
         self._favorite_sources = None
         self._source_name = None
         self.soco_snapshot = Snapshot(self._player)
+        self._snapshot_group = None
 
     @property
     def should_poll(self):
@@ -335,6 +295,16 @@ class SonosDevice(MediaPlayerDevice):
     def is_coordinator(self):
         """Return true if player is a coordinator."""
         return self._coordinator is None
+
+    @property
+    def soco_device(self):
+        """Return soco device."""
+        return self._player
+
+    @property
+    def coordinator(self):
+        """Return coordinator of this player."""
+        return self._coordinator
 
     def _is_available(self):
         try:
@@ -372,6 +342,19 @@ class SonosDevice(MediaPlayerDevice):
 
         if is_available:
 
+            if self._player.group.coordinator != self._player:
+                try:
+                    self._coordinator = _get_entity_from_soco(
+                        self.hass, self._player.group.coordinator)
+                except ValueError:
+                    self._coordinator = None
+            else:
+                self._coordinator = None
+
+            if self._coordinator == self:
+                _LOGGER.warning("Coordinator loop on: %s", self.unique_id)
+                self._coordinator = None
+
             track_info = None
             if self._last_avtransport_event:
                 variables = self._last_avtransport_event.variables
@@ -401,16 +384,6 @@ class SonosDevice(MediaPlayerDevice):
 
             if not track_info:
                 track_info = self._player.get_current_track_info()
-
-            if track_info['uri'].startswith('x-rincon:'):
-                # this speaker is a slave, find the coordinator
-                # the uri of the track is 'x-rincon:{coordinator-id}'
-                coordinator_id = track_info['uri'][9:]
-                coordinators = [device for device in DEVICES
-                                if device.unique_id == coordinator_id]
-                self._coordinator = coordinators[0] if coordinators else None
-            else:
-                self._coordinator = None
 
             if not self._coordinator:
 
@@ -548,6 +521,10 @@ class SonosDevice(MediaPlayerDevice):
                     update_media_position |= rel_time is not None and \
                         self._media_position is None
 
+                    # used only if a media is playing
+                    if self.state != STATE_PLAYING:
+                        update_media_position = None
+
                     # position changed?
                     if rel_time is not None and \
                        self._media_position is not None:
@@ -614,10 +591,10 @@ class SonosDevice(MediaPlayerDevice):
                 self._source_name = source_name
 
                 # update state of the whole group
-                # pylint: disable=protected-access
-                for device in [x for x in DEVICES if x._coordinator == self]:
+                for device in [x for x in self.hass.data[DATA_SONOS]
+                               if x.coordinator == self]:
                     if device.entity_id is not self.entity_id:
-                        self.hass.add_job(device.async_update_ha_state)
+                        self.schedule_update_ha_state()
 
                 if self._queue is None and self.entity_id is not None:
                     self._subscribe_to_player_events()
@@ -653,6 +630,8 @@ class SonosDevice(MediaPlayerDevice):
 
     def _format_media_image_url(self, url, fallback_uri):
         if url in ('', 'NOT_IMPLEMENTED', None):
+            if fallback_uri in ('', 'NOT_IMPLEMENTED', None):
+                return None
             return 'http://{host}:{port}/getaa?s=1&u={uri}'.format(
                 host=self._player.ip_address,
                 port=1400,
@@ -703,7 +682,7 @@ class SonosDevice(MediaPlayerDevice):
                 self._player_volume_muted = \
                     event.variables['mute'].get('Master') == '1'
 
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
         if next_track_image_url:
             self.preload_media_image_url(next_track_image_url)
@@ -942,34 +921,95 @@ class SonosDevice(MediaPlayerDevice):
             else:
                 self._player.play_uri(media_id)
 
-    def group_players(self):
-        """Group all players under this coordinator."""
-        if self._coordinator:
-            self._coordinator.group_players()
-        else:
-            self._player.partymode()
+    def join(self, master):
+        """Join the player to a group."""
+        coord = [device.soco_device for device in self.hass.data[DATA_SONOS]
+                 if device.entity_id == master]
 
-    @only_if_coordinator
+        if coord and master != self.entity_id:
+            self._player.join(coord[0])
+        else:
+            _LOGGER.error("Master not found %s", master)
+
     def unjoin(self):
         """Unjoin the player from a group."""
         self._player.unjoin()
 
-    @only_if_coordinator
-    def snapshot(self):
+    def snapshot(self, with_group=True):
         """Snapshot the player."""
         self.soco_snapshot.snapshot()
 
-    @only_if_coordinator
-    def restore(self):
-        """Restore snapshot for the player."""
-        self.soco_snapshot.restore(True)
+        if with_group:
+            self._snapshot_group = self._player.group
+            if self._coordinator:
+                self._coordinator.snapshot(False)
+        else:
+            self._snapshot_group = None
 
-    @only_if_coordinator
+    def restore(self, with_group=True):
+        """Restore snapshot for the player."""
+        from soco.exceptions import SoCoException
+        try:
+            # need catch exception if a coordinator is going to slave.
+            # this state will recover with group part.
+            self.soco_snapshot.restore(True)
+        except (TypeError, SoCoException):
+            _LOGGER.debug("Error on restore %s", self.entity_id)
+
+        # restore groups
+        if with_group and self._snapshot_group:
+            old = self._snapshot_group
+            actual = self._player.group
+
+            ##
+            # Master have not change, update group
+            if old.coordinator == actual.coordinator:
+                if self._player is not old.coordinator:
+                    # restore state of the groups
+                    self._coordinator.restore(False)
+                remove = actual.members - old.members
+                add = old.members - actual.members
+
+                # remove new members
+                for soco_dev in list(remove):
+                    soco_dev.unjoin()
+
+                # add old members
+                for soco_dev in list(add):
+                    soco_dev.join(old.coordinator)
+                return
+
+            ##
+            # old is allready master, rejoin
+            if old.coordinator.group.coordinator == old.coordinator:
+                self._player.join(old.coordinator)
+                return
+
+            ##
+            # restore old master, update group
+            old.coordinator.unjoin()
+            coordinator = _get_entity_from_soco(self.hass, old.coordinator)
+            coordinator.restore(False)
+
+            for s_dev in list(old.members):
+                if s_dev != old.coordinator:
+                    s_dev.join(old.coordinator)
+
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
-        self._player.set_sleep_timer(sleep_time)
+        if self._coordinator:
+            self._coordinator.set_sleep_timer(sleep_time)
+        else:
+            self._player.set_sleep_timer(sleep_time)
 
-    @only_if_coordinator
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
-        self._player.set_sleep_timer(None)
+        if self._coordinator:
+            self._coordinator.set_sleep_timer(None)
+        else:
+            self._player.set_sleep_timer(None)
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        return {ATTR_IS_COORDINATOR: self.is_coordinator}

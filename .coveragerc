@@ -46,6 +46,9 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
+    homeassistant/components/lutron.py
+    homeassistant/components/*/lutron.py
+
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
@@ -164,10 +167,12 @@ omit =
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/gpslogger.py
     homeassistant/components/device_tracker/icloud.py
+    homeassistant/components/device_tracker/linksys_ap.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ping.py
+    homeassistant/components/device_tracker/sky_hub.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/swisscom.py
     homeassistant/components/device_tracker/thomson.py
@@ -374,6 +379,7 @@ omit =
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
     homeassistant/components/thingspeak.py
+    homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
     homeassistant/components/weather/bom.py

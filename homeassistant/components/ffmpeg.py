@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==1.0"]
+REQUIREMENTS = ["ha-ffmpeg==1.2"]
 
 _LOGGER = logging.getLogger(__name__)
 

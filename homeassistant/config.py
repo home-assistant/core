@@ -99,7 +99,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Required(CONF_CUSTOMIZE, default=[]): customize.CUSTOMIZE_SCHEMA,
+    vol.Optional(CONF_CUSTOMIZE, default=[]): customize.CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -285,7 +285,9 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    customize.set_customize(hass, CONF_CORE, config.get(CONF_CUSTOMIZE))
+    merged_customize = merge_packages_customize(
+        config[CONF_CUSTOMIZE], config[CONF_PACKAGES])
+    customize.set_customize(hass, CONF_CORE, merged_customize)
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -384,6 +386,8 @@ def merge_packages_config(config, packages):
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
+            if comp_name == CONF_CORE:
+                continue
             component = get_component(comp_name)
 
             if component is None:
@@ -436,3 +440,17 @@ def merge_packages_config(config, packages):
             config[comp_name] = comp_conf
 
     return config
+
+
+def merge_packages_customize(core_customize, packages):
+    """Merge customize from packages."""
+    schema = vol.Schema({
+        vol.Optional(CONF_CORE): vol.Schema({
+            CONF_CUSTOMIZE: customize.CUSTOMIZE_SCHEMA}),
+    }, extra=vol.ALLOW_EXTRA)
+
+    cust = list(core_customize)
+    for pkg in packages.values():
+        conf = schema(pkg)
+        cust.extend(conf.get(CONF_CORE, {}).get(CONF_CUSTOMIZE, []))
+    return cust
