@@ -634,6 +634,7 @@ tikteck==0.4
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.notify.twilio_call
 # homeassistant.components.notify.twilio_sms
 twilio==5.4.0
 
