@@ -228,28 +228,27 @@ class DarkSkySensor(Entity):
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
-        else:
-            if self.forecast_day > 0 or (
-                    self.type in ['daily_summary',
-                                  'temperature_min',
-                                  'temperature_max',
-                                  'apparent_temperature_min',
-                                  'apparent_temperature_max',
-                                  'precip_intensity_max']):
-                self.forecast_data.update_daily()
-                daily = self.forecast_data.data_daily
-                if self.type == 'daily_summary':
-                    self._state = getattr(daily, 'summary', '')
-                else:
-                    if hasattr(daily, 'data'):
-                        self._state = self.get_state(
-                            daily.data[self.forecast_day])
-                    else:
-                        self._state = 0
+        elif self.forecast_day > 0 or (
+                self.type in ['daily_summary',
+                              'temperature_min',
+                              'temperature_max',
+                              'apparent_temperature_min',
+                              'apparent_temperature_max',
+                              'precip_intensity_max']):
+            self.forecast_data.update_daily()
+            daily = self.forecast_data.data_daily
+            if self.type == 'daily_summary':
+                self._state = getattr(daily, 'summary', '')
             else:
-                self.forecast_data.update_currently()
-                currently = self.forecast_data.data_currently
-                self._state = self.get_state(currently)
+                if hasattr(daily, 'data'):
+                    self._state = self.get_state(
+                        daily.data[self.forecast_day])
+                else:
+                    self._state = 0
+        else:
+            self.forecast_data.update_currently()
+            currently = self.forecast_data.data_currently
+            self._state = self.get_state(currently)
 
     def get_state(self, data):
         """
