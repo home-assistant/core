@@ -86,8 +86,7 @@ def devices_from_config(domain_config, hass=None):
             entity_type = entity_type_for_device_id(device_id)
         entity_class = entity_class_for_type(entity_type)
 
-        device_config = domain_config[CONF_DEVICE_DEFAULTS]
-        device_config.update(**config)
+        device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
