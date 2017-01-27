@@ -201,29 +201,16 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def __init__(self, value):
         """Initialize the Z-Wave switch device."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
         self._node = value.node
         self._state = None
         self._notification = None
         self._lock_status = None
-        dispatcher.connect(
-            self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         self.update_properties()
 
-    def _value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.update_properties()
-            self.schedule_update_ha_state()
-
     def update_properties(self):
-        """Callback on data change for the registered node/value pair."""
+        """Callback on data changes for node values."""
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_ALARM).values():
             if value.label != "Access Control":

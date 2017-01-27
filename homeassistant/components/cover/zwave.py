@@ -53,8 +53,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, value):
         """Initialize the zwave rollershutter."""
         import libopenzwave
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         # pylint: disable=no-member
         self._lozwmgr = libopenzwave.PyManager()
@@ -62,8 +60,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._node = value.node
         self._current_position = None
         self._workaround = None
-        dispatcher.connect(
-            self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         if (value.node.manufacturer_id.strip() and
                 value.node.product_id.strip()):
             specific_sensor_key = (int(value.node.manufacturer_id, 16),
@@ -74,16 +70,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                     _LOGGER.debug("Controller without positioning feedback")
                     self._workaround = 1
 
-    def value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.update_properties()
-            self.schedule_update_ha_state()
-
     def update_properties(self):
-        """Callback on data change for the registered node/value pair."""
+        """Callback on data changes for node values."""
         # Position value
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
@@ -160,24 +148,12 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def __init__(self, value):
         """Initialize the zwave garage door."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-        self._state = value.data
-        dispatcher.connect(
-            self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
-
-    def value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self._state = value.data
-            self.schedule_update_ha_state()
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._state
+        return not self._value.data
 
     def close_cover(self):
         """Close the garage door."""
