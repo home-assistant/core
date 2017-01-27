@@ -52,8 +52,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     def __init__(self, value, temp_unit):
         """Initialize the Z-Wave climate device."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._index = value.index
         self._node = value.node
@@ -71,9 +69,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
         self.update_properties()
-        # register listener
-        dispatcher.connect(
-            self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         # Make sure that we have values for the key before converting to int
         if (value.node.manufacturer_id.strip() and
                 value.node.product_id.strip()):
@@ -85,16 +80,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                                   " workaround")
                     self._zxt_120 = 1
 
-    def value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.update_properties()
-            self.schedule_update_ha_state()
-
     def update_properties(self):
-        """Callback on data change for the registered node/value pair."""
+        """Callback on data changes for node values."""
         # Operation Mode
         for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_MODE).values():
