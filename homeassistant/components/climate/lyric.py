@@ -20,12 +20,15 @@ from homeassistant.const import (
 DEPENDENCIES = ['lyric']
 _LOGGER = logging.getLogger(__name__)
 
+CONF_FAN = 'fan'
+DEFAULT_FAN = True
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SCAN_INTERVAL):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_FAN, default=DEFAULT_FAN): vol.Boolean
 })
 
-STATE_ECO = 'eco'
 STATE_HEAT_COOL = 'heat-cool'
 
 
@@ -38,8 +41,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     temp_unit = hass.config.units.temperature_unit
 
+    has_fan = config.get(CONF_FAN)
+
     add_devices(
-        [LyricThermostat(location, device, temp_unit)
+        [LyricThermostat(location, device, temp_unit, has_fan)
          for location, device in hass.data[DATA_LYRIC].thermostats()],
         True
     )
@@ -48,12 +53,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class LyricThermostat(ClimateDevice):
     """Representation of a Lyric thermostat."""
 
-    def __init__(self, location, device, temp_unit):
+    def __init__(self, location, device, temp_unit, has_fan):
         """Initialize the thermostat."""
         self._unit = temp_unit
         self.location = location
         self.device = device
-        self._fan_list = [STATE_ON, STATE_AUTO]
 
         # Not all lyric devices support cooling and heating remove unused
         self._operation_list = [STATE_OFF]
@@ -68,10 +72,9 @@ class LyricThermostat(ClimateDevice):
         if self.device.can_heat and self.device.can_cool:
             self._operation_list.append(STATE_AUTO)
  
-        self._operation_list.append(STATE_ECO)
-
         # feature of device
-        self._has_fan = False#self.device.has_fan
+        self._has_fan = has_fan
+        self._fan_list = self.device.settings["fan"]["allowedModes"]
 
         # data attributes
         self._away = None
@@ -81,11 +84,11 @@ class LyricThermostat(ClimateDevice):
         self._target_temperature = None
         self._temperature = None
         self._temperature_scale = None
+        self._target_temp_heat = None
+        self._target_temp_cool = None
+        self._dualSetpoint = None
         self._mode = None
         self._fan = None
-        self._eco_temperature = None
-        self._is_locked = None
-        self._locked_temperature = None
         self._min_temperature = None
         self._max_temperature = None
 
@@ -117,32 +120,24 @@ class LyricThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._mode != STATE_HEAT_COOL and not self.is_away_mode_on:
+        if not self._dualSetpoint:
             return self._target_temperature
         else:
             return None
 
     @property
     def target_temperature_low(self):
-        """Return the lower bound temperature we try to reach."""
-        if (self.is_away_mode_on or self._mode == STATE_ECO) and \
-                self._eco_temperature[0]:
-            # eco_temperature is always a low, high tuple
-            return self._eco_temperature[0]
-        if self._mode == STATE_HEAT_COOL:
-            return self._target_temperature[0]
+        """Return the upper bound temperature we try to reach."""
+        if self._dualSetpoint:
+            return self._target_temp_cool
         else:
             return None
 
     @property
     def target_temperature_high(self):
         """Return the upper bound temperature we try to reach."""
-        if (self.is_away_mode_on or self._mode == STATE_ECO) and \
-                self._eco_temperature[1]:
-            # eco_temperature is always a low, high tuple
-            return self._eco_temperature[1]
-        if self._mode == STATE_HEAT_COOL:
-            return self._target_temperature[1]
+        if self._dualSetpoint:
+            return self._target_temp_heat
         else:
             return None
 
@@ -155,7 +150,7 @@ class LyricThermostat(ClimateDevice):
         """Set new target temperature."""
         target_temp_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
         target_temp_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-        if self._mode == STATE_HEAT_COOL:
+        if self._dualSetpoint:
             if target_temp_low is not None and target_temp_high is not None:
                 temp = (target_temp_low, target_temp_high)
         else:
@@ -181,18 +176,18 @@ class LyricThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        #self.structure.away = True
+        #self.device.away = True
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        #self.structure.away = False
+        #self.device.away = False
 
     @property
     def current_fan_mode(self):
         """Return whether the fan is on."""
         if self._has_fan:
             # Return whether the fan is on
-            return STATE_ON if self._fan else STATE_AUTO
+            return self._fan
         else:
             # No Fan available so disable slider
             return None
@@ -203,8 +198,8 @@ class LyricThermostat(ClimateDevice):
         return self._fan_list
 
     def set_fan_mode(self, fan):
-        """Turn fan on/off."""
-        #self.device.fan = fan.lower()
+        """Set fan state."""
+        self.device.fan = fan
 
     @property
     def min_temp(self):
@@ -222,13 +217,13 @@ class LyricThermostat(ClimateDevice):
         self._name = self.device.name
         self._humidity = self.device.indoorHumidity
         self._temperature = self.device.indoorTemperature
-        _LOGGER.debug(self.device.operationMode)
-        _LOGGER.debug(self.device.operationMode.lower())        
         self._mode = self.device.operationMode.lower()
         self._target_temperature = self.device.temperatureSetpoint
-        self._fan = False
+        self._target_temp_heat = self.device.heatSetpoint
+        self._target_temp_cool = self.device.coolSetpoint
+        self._dualSetpoint = self.device.hasDualSetpointStatus
+        self._fan = self.device.settings["fan"]["changeableValues"]["mode"]
         self._away = self.device.away
-        self._eco_temperature = [16, 28]
         self._min_temperature = self.device.minSetpoint
         self._max_temperature = self.device.maxSetpoint
         if self.device.units == 'Celsius':
