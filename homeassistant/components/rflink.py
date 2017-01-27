@@ -45,7 +45,10 @@ CONF_DEVICES = 'devices'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_NEW_DEVICES_GROUP = 'new_devices_group'
+CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
+
+DEFAULT_SIGNAL_REPETITIONS = 1
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -54,6 +57,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
         vol.Optional(CONF_IGNORE_DEVICES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+        vol.Optional(CONF_SIGNAL_REPETITIONS,
+                     default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -179,7 +186,8 @@ class RflinkDevice(Entity):
     _state = STATE_UNKNOWN
 
     def __init__(self, device_id, hass, name=None,
-                 aliasses=None, fire_event=False):
+                 aliasses=None, fire_event=False,
+                 signal_repetitions=DEFAULT_SIGNAL_REPETITIONS):
         """Initialize the device."""
         self.hass = hass
 
@@ -197,6 +205,7 @@ class RflinkDevice(Entity):
             self._aliasses = []
 
         self._should_fire_event = fire_event
+        self._signal_repetitions = signal_repetitions
 
     def handle_event(self, event):
         """Handle incoming event for device type."""
@@ -264,8 +273,8 @@ class RflinkCommand(RflinkDevice):
         cls._wait_ack = wait_ack
 
     @asyncio.coroutine
-    def _async_send_command(self, command, *args):
-        """Send a command for device to Rflink gateway."""
+    def _async_handle_command(self, command, *args):
+        """Do bookkeeping for command, send it to rflink and update state."""
         if command == "turn_on":
             cmd = 'on'
             self._state = True
@@ -279,6 +288,21 @@ class RflinkCommand(RflinkDevice):
             cmd = str(int(args[0] / 17))
             self._state = True
 
+        for _ in range(self._signal_repetitions):
+            yield from self._async_send_command(cmd)
+
+        # Update state of entity
+        yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def _async_send_command(self, cmd):
+        """Send a command for device to Rflink gateway."""
+
+        _LOGGER.debug(
+            'sending command: %s to rflink device: %s',
+            cmd,
+            self._device_id)
+
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
             # the command has been send out in the ether.
@@ -291,11 +315,6 @@ class RflinkCommand(RflinkDevice):
             return self.hass.loop.run_in_executor(
                 None, ft.partial(
                     self._protocol.send_command, self._device_id, cmd))
-
-        # Update state of entity to represent the desired state even though we
-        # do not have a confirmation yet the command has been successfully sent
-        # by rflink.
-        yield from self.async_update_ha_state()
 
 
 class SwitchableRflinkDevice(RflinkCommand):
@@ -312,9 +331,9 @@ class SwitchableRflinkDevice(RflinkCommand):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self._async_send_command("turn_on")
+        yield from self._async_handle_command("turn_on")
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self._async_send_command("turn_off")
+        yield from self._async_handle_command("turn_off")
