@@ -263,6 +263,10 @@ class RflinkCommand(RflinkDevice):
 
     """
 
+    # keep repetition tasks to cancel if state is changed before repetitions
+    # are sent
+    _repetition_tasks = None
+
     @classmethod
     def set_rflink_protocol(cls, protocol, wait_ack):
         """Set the Rflink asyncio protocol as a class variable."""
@@ -285,8 +289,21 @@ class RflinkCommand(RflinkDevice):
             cmd = str(int(args[0] / 17))
             self._state = True
 
-        for _ in range(self._signal_repetitions):
-            yield from self._async_send_command(cmd)
+        # cancel any outstanding tasks from the previous state change
+        if self._repetition_tasks:
+            for task in self._repetition_tasks:
+                task.cancel()
+
+        # send initial command and queue repetitions
+        # this allows the entity state to be updated quickly and not having to
+        # wait for all repetitions to be sent
+        yield from self._async_send_command(cmd)
+
+        self._repetition_tasks = []
+        if self._signal_repetitions > 1:
+            for _ in range(self._signal_repetitions - 1):
+                self._repetition_tasks.append(
+                    self.hass.loop.create_task(self._async_send_command(cmd)))
 
         # Update state of entity
         yield from self.async_update_ha_state()
@@ -312,10 +329,6 @@ class RflinkCommand(RflinkDevice):
             return self.hass.loop.run_in_executor(
                 None, ft.partial(
                     self._protocol.send_command, self._device_id, cmd))
-
-        # give away control to allow repetitions of simultanious switched
-        # entities to alternate
-        yield from asyncio.sleep(0)
 
 
 class SwitchableRflinkDevice(RflinkCommand):

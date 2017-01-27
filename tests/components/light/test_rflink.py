@@ -313,3 +313,42 @@ def test_signal_repetitions_alternation(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[1][0][0] == 'protocol_0_1'
     assert protocol.send_command_ack.call_args_list[2][0][0] == 'protocol_0_0'
     assert protocol.send_command_ack.call_args_list[3][0][0] == 'protocol_0_1'
+
+
+@asyncio.coroutine
+def test_signal_repetitions_cancelling(hass, monkeypatch):
+    """Cancel outstanding repetitions when state changed."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'signal_repetitions': 3,
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, protocol = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {ATTR_ENTITY_ID: 'light.test'}))
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
+                                 {ATTR_ENTITY_ID: 'light.test'}))
+
+    yield from hass.async_block_till_done()
+
+    print(protocol.send_command_ack.call_args_list)
+    assert protocol.send_command_ack.call_args_list[0][0][1] == 'off'
+    assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
+    assert protocol.send_command_ack.call_args_list[2][0][1] == 'on'
+    assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
