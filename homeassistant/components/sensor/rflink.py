@@ -16,8 +16,6 @@ from homeassistant.components.rflink import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM)
 
-from . import DOMAIN as PLATFORM
-
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,9 +111,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
-
-    # used for matching bus events
-    platform = PLATFORM
 
     def __init__(self, device_id, hass, sensor_type,
                  unit_of_measurement, **kwargs):

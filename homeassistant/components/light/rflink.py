@@ -16,8 +16,6 @@ from homeassistant.components.rflink import (
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
-from . import DOMAIN as PLATFORM
-
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -129,11 +127,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class RflinkLight(SwitchableRflinkDevice, Light):
     """Representation of a Rflink light."""
 
-    # used for matching bus events
-    platform = PLATFORM
+    pass
 
 
-class DimmableRflinkLight(RflinkLight):
+class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that support dimming."""
 
     _brightness = 255

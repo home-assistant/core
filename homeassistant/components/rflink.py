@@ -121,21 +121,27 @@ def async_setup(hass, config):
             _LOGGER.debug('unhandled event of type: %s', event_type)
             return
 
-        # propagate event to every entity matching the device id
+        # lookup entities who registered this device id as device id or alias
         event_id = event.get('id', None)
-        for entity in hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]:
-            _LOGGER.debug('passing event to %s', entity.name)
-            entity.handle_event(event)
+        entities = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
 
-            # put switch/light command onto bus for user to subscribe to
-            if event_type == EVENT_KEY_COMMAND:
-                hass.bus.fire(EVENT_BUTTON_PRESSED, {
-                    ATTR_ENTITY_ID: entity.name,
-                    ATTR_STATE: event[EVENT_KEY_COMMAND],
-                })
+        if entities:
+            # propagate event to every entity matching the device id
+            for entity in entities:
+                _LOGGER.debug('passing event to %s', entities)
+                entity.handle_event(event)
+
+                # put switch/light command onto bus for user to subscribe to
+                if event_type == EVENT_KEY_COMMAND:
+                    hass.bus.fire(EVENT_BUTTON_PRESSED, {
+                        ATTR_ENTITY_ID: entity.name,
+                        ATTR_STATE: event[EVENT_KEY_COMMAND],
+                    })
         else:
             if event_id in hass.data[DATA_KNOWN_DEVICES]:
                 return
+
+            _LOGGER.debug('device_id not known, adding new device')
 
             # if device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
@@ -169,60 +175,6 @@ def async_setup(hass, config):
 
     # whoo
     return True
-
-
-class RflinkCommand(Entity):
-    """'Singleton' class to make Rflink command interface available to
-    entities.
-
-    This class is to be inherited by every Entity class that is actionable
-    (switches/lights). It exposes the Rflink command interface for these
-    entities.
-
-    The Rflink interface is managed as a class level and set during setup (and
-    reset on reconnect).
-
-    """
-
-    @classmethod
-    def set_rflink_protocol(cls, protocol, wait_ack):
-        """Set the Rflink asyncio protocol as a class variable."""
-        cls._protocol = protocol
-        cls._wait_ack = wait_ack
-
-    @asyncio.coroutine
-    def _async_send_command(self, command, *args):
-        """Send a command for device to Rflink gateway."""
-        if command == "turn_on":
-            cmd = 'on'
-            self._state = True
-
-        elif command == 'turn_off':
-            cmd = 'off'
-            self._state = False
-
-        elif command == 'dim':
-            # convert brightness to rflink dim level
-            cmd = str(int(args[0] / 17))
-            self._state = True
-
-        if self._wait_ack:
-            # Puts command on outgoing buffer then waits for Rflink to confirm
-            # the command has been send out in the ether.
-            yield from self._protocol.send_command_ack(self._device_id, cmd)
-        else:
-            # Puts command on outgoing buffer and returns straight away.
-            # Rflink protocol/transport handles asynchronous writing of buffer
-            # to serial/tcp device. Does not wait for command send
-            # confirmation.
-            return self.hass.loop.run_in_executor(
-                None, ft.partial(
-                    self._protocol.send_command, self._device_id, cmd))
-
-        # Update state of entity to represent the desired state even though we
-        # do not have a confirmation yet the command has been successfully sent
-        # by rflink.
-        yield from self.async_update_ha_state()
 
 
 class RflinkDevice(Entity):
@@ -289,7 +241,60 @@ class RflinkDevice(Entity):
         return self._state is STATE_UNKNOWN
 
 
-class SwitchableRflinkDevice(RflinkDevice, RflinkCommand):
+class RflinkCommand(RflinkDevice):
+    """Singleton class to make Rflink command interface available to entities.
+
+    This class is to be inherited by every Entity class that is actionable
+    (switches/lights). It exposes the Rflink command interface for these
+    entities.
+
+    The Rflink interface is managed as a class level and set during setup (and
+    reset on reconnect).
+
+    """
+
+    @classmethod
+    def set_rflink_protocol(cls, protocol, wait_ack):
+        """Set the Rflink asyncio protocol as a class variable."""
+        cls._protocol = protocol
+        cls._wait_ack = wait_ack
+
+    @asyncio.coroutine
+    def _async_send_command(self, command, *args):
+        """Send a command for device to Rflink gateway."""
+        if command == "turn_on":
+            cmd = 'on'
+            self._state = True
+
+        elif command == 'turn_off':
+            cmd = 'off'
+            self._state = False
+
+        elif command == 'dim':
+            # convert brightness to rflink dim level
+            cmd = str(int(args[0] / 17))
+            self._state = True
+
+        if self._wait_ack:
+            # Puts command on outgoing buffer then waits for Rflink to confirm
+            # the command has been send out in the ether.
+            yield from self._protocol.send_command_ack(self._device_id, cmd)
+        else:
+            # Puts command on outgoing buffer and returns straight away.
+            # Rflink protocol/transport handles asynchronous writing of buffer
+            # to serial/tcp device. Does not wait for command send
+            # confirmation.
+            return self.hass.loop.run_in_executor(
+                None, ft.partial(
+                    self._protocol.send_command, self._device_id, cmd))
+
+        # Update state of entity to represent the desired state even though we
+        # do not have a confirmation yet the command has been successfully sent
+        # by rflink.
+        yield from self.async_update_ha_state()
+
+
+class SwitchableRflinkDevice(RflinkCommand):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
     def _handle_event(self, event):

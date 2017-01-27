@@ -154,7 +154,7 @@ def test_new_light_group(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, create, _ = yield from mock_rflink(
+    event_callback, _, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
@@ -188,7 +188,7 @@ def test_firing_bus_event(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, create, _ = yield from mock_rflink(
+    event_callback, _, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     calls = []

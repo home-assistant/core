@@ -13,8 +13,6 @@ from homeassistant.components.rflink import (
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 
-from . import DOMAIN as PLATFORM
-
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,5 +53,4 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class RflinkSwitch(SwitchableRflinkDevice, SwitchDevice):
     """Representation of a Rflink switch."""
 
-    # used for matching bus events
-    platform = PLATFORM
+    pass
