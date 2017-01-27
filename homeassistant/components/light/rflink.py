@@ -22,6 +22,7 @@ DEPENDENCIES = ['rflink']
 _LOGGER = logging.getLogger(__name__)
 
 TYPE_DIMMABLE = 'dimmable'
+TYPE_SWITCHABLE = 'switchable'
 
 
 PLATFORM_SCHEMA = vol.Schema({
@@ -36,7 +37,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_TYPE): vol.Any(TYPE_DIMMABLE),
+            vol.Optional(CONF_TYPE): vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE),
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -68,6 +69,7 @@ def entity_class_for_type(entity_type):
     """
     entity_device_mapping = {
         TYPE_DIMMABLE: DimmableRflinkLight,
+        TYPE_SWITCHABLE: RflinkLight,
     }
 
     return entity_device_mapping.get(entity_type, RflinkLight)

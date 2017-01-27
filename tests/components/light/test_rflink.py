@@ -33,6 +33,10 @@ CONFIG = {
                 'name': 'dim_test',
                 'type': 'dimmable',
             },
+            'switchable_0_0': {
+                'name': 'switch_test',
+                'type': 'switchable',
+            }
         },
     },
 }
