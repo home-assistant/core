@@ -1,0 +1,128 @@
+"""
+This provides a climate component for the ESP8266 based thermostat sold by Open
+Energy Monitor: https://shop.openenergymonitor.com/wifi-mqtt-relay-thermostat/
+"""
+import logging
+
+import voluptuous as vol
+
+# Import the device class from the component that you want to support
+from homeassistant.components.climate import (
+    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, ATTR_TEMPERATURE)
+from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_PORT, TEMP_CELSIUS)
+import homeassistant.helpers.config_validation as cv
+
+# Home Assistant depends on 3rd party packages for API specific code.
+REQUIREMENTS = ['oemthermostat']
+
+_LOGGER = logging.getLogger(__name__)
+
+# Local configs
+CONF_NAME = 'name'
+CONF_TARGET_TEMP = 'target_temp'
+CONF_AWAY_TEMP = 'away_temp'
+
+# Validation of the user's configuration
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(
+        CONF_PORT, default=80): cv.port,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_AWAY_TEMP, default=14): vol.Coerce(float)
+})
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    from oemthermostat import Thermostat
+
+    # Assign configuration variables. The configuration check takes care they
+    # are present.
+    name = config.get(CONF_NAME)
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    target_temp = config.get(CONF_TARGET_TEMP)
+    away_temp = config.get(CONF_AWAY_TEMP)
+
+    therm = Thermostat(host, port=port,
+                       username=username, password=password)
+
+    if target_temp:
+        therm.setpoint = target_temp
+
+    # Add devices
+    add_devices((ThermostatDevice(hass, therm, name, away_temp), ))
+
+
+class ThermostatDevice(ClimateDevice):
+
+    def __init__(self, hass, thermostat, name, away_temp):
+        self._name = name
+        self.hass = hass
+
+        # Away mode stuff
+        self._away = False
+        self._away_temp = away_temp
+        self._prev_temp = thermostat.setpoint
+
+        self.thermostat = thermostat
+        # Set the thermostat mode to manual
+        self.thermostat.mode = 2
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def temperature_unit(self):
+        """The unit of measurement used by the platform."""
+        return TEMP_CELSIUS
+
+    @property
+    def current_operation(self):
+        """Return current operation i.e. heat, cool, idle."""
+        if self.thermostat.state:
+            return STATE_HEAT
+        else:
+            return STATE_IDLE
+
+    @property
+    def current_temperature(self):
+        """Return the current temperature."""
+        return self.thermostat.temperature
+
+    @property
+    def target_temperature(self):
+        """Return the temperature we try to reach."""
+        return self.thermostat.setpoint
+
+    def set_temperature(self, **kwargs):
+        # If we are setting the temp, then we don't want away mode anymore.
+        self.turn_away_mode_off()
+
+        temp = kwargs.get(ATTR_TEMPERATURE)
+        self.thermostat.setpoint = temp
+
+    @property
+    def is_away_mode_on(self):
+        """Return true if away mode is on."""
+        return self._away
+
+    def turn_away_mode_on(self):
+        """Turn away mode on."""
+        if not self._away:
+            self._prev_temp = self.thermostat.setpoint
+
+        self.thermostat.setpoint = self._away_temp
+        self._away = True
+
+    def turn_away_mode_off(self):
+        """Turn away mode off."""
+        if self._away:
+            self.thermostat.setpoint = self._prev_temp
+
+        self._away = False
