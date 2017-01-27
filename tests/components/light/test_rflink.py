@@ -205,4 +205,4 @@ def test_firing_bus_event(hass, monkeypatch):
     })
     yield from hass.async_block_till_done()
 
-    assert calls[0].data == {'state': 'off', 'entity_id': 'test'}
+    assert calls[0].data == {'state': 'off', 'entity_id': 'light.test'}

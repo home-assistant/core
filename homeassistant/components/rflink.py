@@ -131,12 +131,12 @@ def async_setup(hass, config):
                 # put switch/light command onto bus for user to subscribe to
                 if event_type == EVENT_KEY_COMMAND:
                     hass.bus.fire(EVENT_BUTTON_PRESSED, {
-                        ATTR_ENTITY_ID: entity.name,
+                        ATTR_ENTITY_ID: entity.entity_id,
                         ATTR_STATE: event[EVENT_KEY_COMMAND],
                     })
                     _LOGGER.debug(
                         'fired bus event for %s: %s',
-                        entity.name,
+                        entity.entity_id,
                         event[EVENT_KEY_COMMAND])
         else:
             _LOGGER.debug('device_id not known, adding new device')
