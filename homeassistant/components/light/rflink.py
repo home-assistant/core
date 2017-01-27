@@ -41,8 +41,7 @@ PLATFORM_SCHEMA = vol.Schema({
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_SIGNAL_REPETITIONS,
-                         default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+            vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
         },
     }),
 })

@@ -222,19 +222,26 @@ def test_signal_repetitions(hass, monkeypatch):
         },
         DOMAIN: {
             'platform': 'rflink',
+            'device_defaults': {
+                'signal_repetitions': 3,
+            },
             'devices': {
                 'protocol_0_0': {
                     'name': 'test',
                     'signal_repetitions': 2,
+                },
+                'protocol_0_1': {
+                    'name': 'test1',
                 },
             },
         },
     }
 
     # setup mocking rflink module
-    _, _, protocol = yield from mock_rflink(
+    event_callback, _, protocol = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
+    # test if signal repetition is performed according to configuration
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: 'light.test'}))
@@ -242,6 +249,29 @@ def test_signal_repetitions(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_count == 2
+
+    # test if default apply to configured devcies
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {ATTR_ENTITY_ID: 'light.test1'}))
+
+    yield from hass.async_block_till_done()
+
+    assert protocol.send_command_ack.call_count == 5
+
+    # test if device defaults apply to newly created devices
+    event_callback({
+        'id': 'protocol_0_2',
+        'command': 'off',
+    })
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
+                                 {ATTR_ENTITY_ID: 'light.protocol_0_2'}))
+
+    yield from hass.async_block_till_done()
+
+    assert protocol.send_command_ack.call_count == 8
 
 
 @asyncio.coroutine
