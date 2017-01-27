@@ -29,7 +29,8 @@ import functools as ft
 import logging
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
+    STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
@@ -55,10 +56,13 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EVENT = 'event'
+ATTR_STATE = 'state'
 
 DATA_KNOWN_DEVICES = 'rflink_known_device_ids'
 DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
 DATA_DEVICE_REGISTER = 'rflink_device_register'
+
+EVENT_BUTTON_PRESSED = 'button_pressed'
 
 EVENT_KEY_ID = 'id'
 EVENT_KEY_SENSOR = 'sensor'
@@ -122,6 +126,13 @@ def async_setup(hass, config):
         for entity in hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]:
             _LOGGER.debug('passing event to %s', entity.name)
             entity.handle_event(event)
+
+            # put switch/light command onto bus for user to subscribe to
+            if event_type == EVENT_KEY_COMMAND:
+                hass.bus.fire(EVENT_BUTTON_PRESSED, {
+                    ATTR_ENTITY_ID: entity.name,
+                    ATTR_STATE: event[EVENT_KEY_COMMAND],
+                })
         else:
             if event_id in hass.data[DATA_KNOWN_DEVICES]:
                 return

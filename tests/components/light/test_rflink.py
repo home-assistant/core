@@ -8,8 +8,10 @@ control of Rflink switch devices.
 import asyncio
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
+from homeassistant.components.rflink import EVENT_BUTTON_PRESSED
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+from homeassistant.core import callback
 
 from ..test_rflink import mock_rflink
 
@@ -165,3 +167,42 @@ def test_new_light_group(hass, monkeypatch):
     # make sure new device is added to correct group
     group = hass.states.get('group.new_rflink_lights')
     assert group.attributes.get('entity_id') == ('light.protocol_0_0',)
+
+
+@asyncio.coroutine
+def test_firing_bus_event(hass, monkeypatch):
+    """Incoming Rflink command events should be put on the HA event bus."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'aliasses': ['test_alias_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, create, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    calls = []
+
+    @callback
+    def listener(event):
+        calls.append(event)
+    hass.bus.async_listen_once(EVENT_BUTTON_PRESSED, listener)
+
+    # test event for new unconfigured sensor
+    yield from event_callback({
+        'id': 'protocol_0_0',
+        'command': 'off',
+    })
+    yield from hass.async_block_till_done()
+
+    assert calls[0].data == {'state': 'off', 'entity_id': 'test'}
