@@ -28,21 +28,24 @@ SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the demo light platform."""
     add_devices_callback([
-        DemoLight("Bed Light", False, effect_list=LIGHT_EFFECT_LIST,
+        DemoLight("Bed Light", False, False, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),
-        DemoLight("Ceiling Lights", True, LIGHT_COLORS[0], LIGHT_TEMPS[1]),
-        DemoLight("Kitchen Lights", True, LIGHT_COLORS[1], LIGHT_TEMPS[0])
+        DemoLight("Ceiling Lights", True, True,
+                  LIGHT_COLORS[0], LIGHT_TEMPS[1]),
+        DemoLight("Kitchen Lights", True, True,
+                  LIGHT_COLORS[1], LIGHT_TEMPS[0])
     ])
 
 
 class DemoLight(Light):
-    """Represenation of a demo light."""
+    """Representation of a demo light."""
 
-    def __init__(
-            self, name, state, rgb=None, ct=None, brightness=180,
-            xy_color=(.5, .5), white=200, effect_list=None, effect=None):
+    def __init__(self, name, state, available=False, rgb=None, ct=None,
+                 brightness=180, xy_color=(.5, .5), white=200,
+                 effect_list=None, effect=None):
         """Initialize the light."""
         self._name = name
+        self._available = available
         self._state = state
         self._rgb = rgb
         self._ct = ct or random.choice(LIGHT_TEMPS)
@@ -53,61 +56,66 @@ class DemoLight(Light):
         self._effect = effect
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed for a demo light."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the light if any."""
         return self._name
 
     @property
-    def brightness(self):
+    def available(self) -> bool:
+        """Return availability."""
+        return self._available
+
+    @property
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
     @property
-    def xy_color(self):
+    def xy_color(self) -> tuple:
         """Return the XY color value [float, float]."""
         return self._xy_color
 
     @property
-    def rgb_color(self):
+    def rgb_color(self) -> tuple:
         """Return the RBG color value."""
         return self._rgb
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int:
         """Return the CT color temperature."""
         return self._ct
 
     @property
-    def white_value(self):
+    def white_value(self) -> int:
         """Return the white value of this light between 0..255."""
         return self._white
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list:
         """Return the list of supported effects."""
         return self._effect_list
 
     @property
-    def effect(self):
+    def effect(self) -> str:
         """Return the current effect."""
         return self._effect
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
         return self._state
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_DEMO
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn the light on."""
         self._state = True
 
@@ -129,9 +137,14 @@ class DemoLight(Light):
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
 
+        # For non-polling lights it is necessary to schedule an update
+        # after making a change, here just to give an example.
         self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         self._state = False
+
+        # For non-polling lights it is necessary to schedule an update
+        # after making a change, here just to give an example.
         self.schedule_update_ha_state()
