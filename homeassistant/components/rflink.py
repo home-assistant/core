@@ -170,6 +170,54 @@ def async_setup(hass, config):
     return True
 
 
+class RflinkCommand(Entity):
+    """'Singleton' class to make Rflink command interface available to
+    entities.
+
+    This class is to be inherited by every Entity class that is actionable
+    (switches/lights). It exposes the Rflink command interface for these
+    entities.
+
+    The Rflink interface is managed as a class level and set during setup (and
+    reset on reconnect).
+
+    """
+
+    @classmethod
+    def set_rflink_protocol(cls, protocol):
+        """Set the Rflink asyncio protocol as a class variable."""
+        cls._protocol = protocol
+
+    def _send_command(self, command, *args):
+        """Send a command for this device to Rflink gateway."""
+        if command == "turn_on":
+            cmd = 'on'
+            self._state = True
+
+        elif command == 'turn_off':
+            cmd = 'off'
+            self._state = False
+
+        elif command == 'dim':
+            # convert brightness to rflink dim level
+            cmd = str(int(args[0] / 17))
+            self._state = True
+
+        # send protocol, device id, switch nr and command to rflink
+        self.hass.bus.fire(
+            RFLINK_EVENT['send_command'],
+            {
+                ATTR_ENTITY_ID: self._device_id,
+                ATTR_COMMAND: cmd,
+            }
+        )
+
+        # Update state of entity to represent the desired state even though we
+        # do not have a confirmation yet the command has been successfully sent
+        # by rflink.
+        self.update_ha_state()
+
+
 class RflinkDevice(Entity):
     """Represents a Rflink device.
 
@@ -251,37 +299,8 @@ class RflinkDevice(Entity):
         """Assume device state until first device event sets state."""
         return self._state is STATE_UNKNOWN
 
-    def _send_command(self, command, *args):
-        """Send a command for this device to Rflink gateway."""
-        if command == "turn_on":
-            cmd = 'on'
-            self._state = True
 
-        elif command == 'turn_off':
-            cmd = 'off'
-            self._state = False
-
-        elif command == 'dim':
-            # convert brightness to rflink dim level
-            cmd = str(int(args[0] / 17))
-            self._state = True
-
-        # send protocol, device id, switch nr and command to rflink
-        self.hass.bus.fire(
-            RFLINK_EVENT['send_command'],
-            {
-                ATTR_ENTITY_ID: self._device_id,
-                ATTR_COMMAND: cmd,
-            }
-        )
-
-        # Update state of entity to represent the desired state even though we
-        # do not have a confirmation yet the command has been successfully sent
-        # by rflink.
-        self.update_ha_state()
-
-
-class SwitchableRflinkDevice(RflinkDevice):
+class SwitchableRflinkDevice(RflinkDevice, RflinkCommand):
     """Rflink entity which can switch on/off (eg: light, switch)."""
 
     def _handle_event(self, event):
