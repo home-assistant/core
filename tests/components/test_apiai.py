@@ -30,6 +30,10 @@ REQUEST_TIMESTAMP = "2017-01-21T17:54:18.952Z"
 CONTEXT_NAME = "78a5db95-b7d6-4d50-9c9b-2fc73a5e34c3_id_dialog_context"
 MAX_RESPONSE_TIME = 5  # https://docs.api.ai/docs/webhook
 
+# An unknown action takes 8s to return. Request timeout should be bigger to
+# allow the test to finish
+REQUEST_TIMEOUT = 10
+
 # pylint: disable=invalid-name
 hass = None
 calls = []
@@ -49,6 +53,7 @@ def setUpModule():
 
     @callback
     def mock_service(call):
+        """Mock action call."""
         calls.append(call)
 
     hass.services.register("test", "apiai", mock_service)
@@ -87,7 +92,17 @@ def setUpModule():
                         "entity_id": "switch.test",
                     }
                 },
-                "TooLong": {
+                "TooLongAsync": {
+                    "speech": "Too long intent",
+                    "async_action": True,
+                    "action": {
+                        "service": "notify.undefined",
+                        "data_template": {
+                            "message": "nothing"
+                        }
+                    }
+                },
+                "TooLongSyncWillFail": {
                     "speech": "Too long intent",
                     "action": {
                         "service": "notify.undefined",
@@ -109,9 +124,9 @@ def tearDownModule():
     hass.stop()
 
 
-def _intent_req(data={}):
-    return requests.post(INTENTS_API_URL, data=json.dumps(data), timeout=5,
-                         headers=HA_HEADERS)
+def _intent_req(data):
+    return requests.post(INTENTS_API_URL, data=json.dumps(data),
+                         timeout=REQUEST_TIMEOUT, headers=HA_HEADERS)
 
 
 class TestApiai(unittest.TestCase):
@@ -374,7 +389,11 @@ class TestApiai(unittest.TestCase):
         self.assertEqual("You are both home, you silly", text)
 
     def test_intent_request_calling_service(self):
-        """Test a request for calling a service."""
+        """Test a request for calling a service.
+
+        If this request is done async the test could finish before the action
+        has been executed. Hard to test because it will be a race condition.
+        """
         data = {
             "id": REQUEST_ID,
             "timestamp": REQUEST_TIMESTAMP,
@@ -467,7 +486,7 @@ class TestApiai(unittest.TestCase):
         self.assertEqual(
             "You have not defined an action in your api.ai intent.", text)
 
-    def test_intent_with_no_unknown_action(self):
+    def test_intent_with_unknown_action(self):
         """Test a intent with an action not defined in the conf."""
         data = {
             "id": REQUEST_ID,
@@ -513,8 +532,8 @@ class TestApiai(unittest.TestCase):
             "Intent 'unknown' is not yet configured within Home Assistant.",
             text)
 
-    def test_response_time(self):
-        """Test response time. Should not exceed 5s."""
+    def test_response_time_async_action(self):
+        """Test response time executing action async. Should not exceed 5s."""
         data = {
             "id": REQUEST_ID,
             "timestamp": REQUEST_TIMESTAMP,
@@ -522,7 +541,7 @@ class TestApiai(unittest.TestCase):
                 "source": "agent",
                 "resolvedQuery": "too long",
                 "speech": "",
-                "action": "TooLong",
+                "action": "TooLongAsync",
                 "actionIncomplete": False,
                 "parameters": {},
                 "contexts": [],
@@ -554,4 +573,48 @@ class TestApiai(unittest.TestCase):
         _intent_req(data)
         req_end_time = datetime.now()
         request_time = (req_end_time - req_start_time).total_seconds()
+
         self.assertLess(request_time, MAX_RESPONSE_TIME)
+
+    def test_response_time_sync_action(self):
+        """Test response time of unkown action sync. Will exceed 5s."""
+        data = {
+            "id": REQUEST_ID,
+            "timestamp": REQUEST_TIMESTAMP,
+            "result": {
+                "source": "agent",
+                "resolvedQuery": "too long",
+                "speech": "",
+                "action": "TooLongSyncWillFail",
+                "actionIncomplete": False,
+                "parameters": {},
+                "contexts": [],
+                "metadata": {
+                    "intentId": INTENT_ID,
+                    "webhookUsed": "true",
+                    "webhookForSlotFillingUsed": "false",
+                    "intentName": INTENT_NAME
+                },
+                "fulfillment": {
+                    "speech": "",
+                    "messages": [
+                        {
+                            "type": 0,
+                            "speech": ""
+                        }
+                    ]
+                },
+                "score": 1
+            },
+            "status": {
+                "code": 200,
+                "errorType": "success"
+            },
+            "sessionId": SESSION_ID,
+            "originalRequest": None
+        }
+        req_start_time = datetime.now()
+        _intent_req(data)
+        req_end_time = datetime.now()
+        request_time = (req_end_time - req_start_time).total_seconds()
+        self.assertGreater(request_time, MAX_RESPONSE_TIME)

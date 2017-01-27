@@ -18,9 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 
 INTENTS_API_ENDPOINT = '/api/apiai'
 
-CONF_ACTION = 'action'
 CONF_INTENTS = 'intents'
 CONF_SPEECH = 'speech'
+CONF_ACTION = 'action'
+CONF_ASYNC_ACTION = 'async_action'
+
+DEFAULT_CONF_ASYNC_ACTION = False
 
 DOMAIN = 'apiai'
 DEPENDENCIES = ['http']
@@ -29,8 +32,10 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: {
         CONF_INTENTS: {
             cv.string: {
+                vol.Optional(CONF_SPEECH): cv.template,
                 vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
-                vol.Optional(CONF_SPEECH): cv.template
+                vol.Optional(CONF_ASYNC_ACTION,
+                             default=DEFAULT_CONF_ASYNC_ACTION): cv.boolean
             }
         }
     }
@@ -117,11 +122,18 @@ class ApiaiIntentsView(HomeAssistantView):
 
         speech = config.get(CONF_SPEECH)
         action = config.get(CONF_ACTION)
+        async_action = config.get(CONF_ASYNC_ACTION)
 
         if action is not None:
-            # We can wait for the action to be executed
             # API.AI expects a response in less than 5s
-            self.hass.async_add_job(action.async_run(response.parameters))
+            if async_action:
+                # Do not wait for the action to be executed.
+                # Needed if the action will take longer than 5s to execute
+                self.hass.async_add_job(action.async_run(response.parameters))
+            else:
+                # Wait for the action to be executed so we can use results to
+                # render the answer
+                yield from action.async_run(response.parameters)
 
         # pylint: disable=unsubscriptable-object
         if speech is not None:
