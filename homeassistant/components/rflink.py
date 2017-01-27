@@ -31,6 +31,7 @@ import logging
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
@@ -100,7 +101,7 @@ def async_setup(hass, config):
     # allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
-    @asyncio.coroutine
+    @callback
     def event_callback(event):
         """Handle incoming rflink events.
 
@@ -142,7 +143,8 @@ def async_setup(hass, config):
 
             # if device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
-                yield from hass.data[DATA_DEVICE_REGISTER][event_type](event)
+                hass.async_run_job(
+                    hass.data[DATA_DEVICE_REGISTER][event_type], event)
 
     # when connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN][CONF_HOST]

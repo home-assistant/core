@@ -45,7 +45,7 @@ def test_default_setup(hass, monkeypatch):
     assert config_sensor.attributes['unit_of_measurement'] == '°C'
 
     # test event for config sensor
-    yield from event_callback({
+    event_callback({
         'id': 'test',
         'sensor': 'temperature',
         'value': 1,
@@ -56,7 +56,7 @@ def test_default_setup(hass, monkeypatch):
     assert hass.states.get('sensor.test').state == '1'
 
     # test event for new unconfigured sensor
-    yield from event_callback({
+    event_callback({
         'id': 'test2',
         'sensor': 'temperature',
         'value': 0,
@@ -90,7 +90,7 @@ def test_new_sensors_group(hass, monkeypatch):
         hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
-    yield from event_callback({
+    event_callback({
         'id': 'test',
         'sensor': 'temperature',
         'value': 0,
