@@ -111,7 +111,7 @@ def async_setup(hass, config):
 
         """
         event_type = identify_event_type(event)
-        _LOGGER.debug('event type %s', event_type)
+        _LOGGER.debug('event of type %s: %s', event_type, event)
 
         # don't propagate non entity events (eg: version string, ack response)
         if event_type not in hass.data[DATA_ENTITY_LOOKUP]:
