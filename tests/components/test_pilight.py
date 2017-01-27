@@ -137,7 +137,7 @@ class TestPilight(unittest.TestCase):
             self.hass.block_till_done()
             error_log_call = mock_pilight_error.call_args_list[-1]
             service_data['protocol'] = [service_data['protocol']]
-            self.assertTrue(str(service_data) in str(error_log_call))
+            self.assertIn(str(service_data), str(error_log_call))
 
     @patch('pilight.pilight.Client', PilightDaemonSim)
     @patch('homeassistant.components.pilight._LOGGER.error')
