@@ -75,8 +75,15 @@ Polymer({
   },
 
   fitMap: function () {
-    var bounds = new window.L.latLngBounds(
-      this._mapItems.map(function (item) { return item.getLatLng(); }));
+    var bounds;
+
+    if (this._mapItems.length === 0) {
+      bounds = new window.L.latLngBounds(
+        [window.L.latLng(this.locationGPS.latitude, this.locationGPS.longitude)]);
+    } else {
+      bounds = new window.L.latLngBounds(
+        this._mapItems.map(function (item) { return item.getLatLng(); }));
+    }
 
     this._map.fitBounds(bounds.pad(0.5));
   },
