@@ -63,14 +63,20 @@ class UbusDeviceScanner:
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
 
+        self._request_id = 1
         self.url = 'http://{}/ubus'.format(host)
-        self.session_id = None  # lazy init, will be fetched on first error
+        self.session_id = "00000000000000000000000000000000"
+
+    @property
+    def request_id(self):
+        self._request_id += 1
+        return self._request_id
+
 
     def login(self):
         """Login and fetch the session id."""
         _LOGGER.debug("Fetching the session id..")
-        self.session_id = _get_session_id(self.url,
-                                          self.username, self.password)
+        self.session_id = self._get_session_id(self.username, self.password)
         _LOGGER.debug("Got session: %s", self.session_id)
 
     def update(self, see):
@@ -113,18 +119,20 @@ class UbusDeviceScanner:
         clients = []
 
         try:
-            ifaces = _req_json_rpc(self.url, self.session_id,
-                                   "call", "iwinfo", "devices")
+            ifaces = self._req_json_rpc("call", "iwinfo", "devices")
         except UbusException as ex:
             _LOGGER.error("Unable to fetch interfaces: %s", ex)
             self.login()  # try to renew the session
             return clients
 
+        if not ifaces:
+            _LOGGER.warning("Unable to find any interfaces")
+            return clients
+
         _LOGGER.debug("Found %s ifaces: %s", len(ifaces), ifaces)
         for iface in ifaces["devices"]:
-            devices = _req_json_rpc(self.url, self.session_id,
-                                    "call", "iwinfo", "assoclist",
-                                    device=iface)
+            devices = self._req_json_rpc("call", "iwinfo",
+                                         "assoclist", device=iface)
             if "results" in devices:
                 for dev in devices["results"]:
                     # _LOGGER.debug("device: %s", dev)
@@ -146,8 +154,7 @@ class UbusDeviceScanner:
         leases = []
         for ip_version in ["ipv4leases", "ipv6leases"]:
             try:
-                lease_res = _req_json_rpc(self.url, self.session_id,
-                                          "call", "dhcp", ip_version)
+                lease_res = self._req_json_rpc("call", "dhcp", ip_version)
             except UbusException as ex:
                 _LOGGER.error("Unable to fetch leases: %s", ex)
                 self.login()  # try to renew the session
@@ -164,84 +171,84 @@ class UbusDeviceScanner:
         return leases
 
 
-def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
-    """Perform one JSON RPC operation."""
-    data = {"jsonrpc": "2.0",
-            "id": 1,
-            "method": rpcmethod,
-            "params": [session_id,
-                       subsystem,
-                       method,
-                       params]}
-    data_json = json.dumps(data)
-    _LOGGER.debug("> %s (%s)", data["method"], data["params"])
+    def _req_json_rpc(self, rpcmethod, subsystem, method, **params):
+        """Perform one JSON RPC operation."""
+        data = {"jsonrpc": "2.0",
+                "id": str(self.request_id),
+                "method": rpcmethod,
+                "params": [self.session_id,
+                           subsystem,
+                           method,
+                           params]}
+        data_json = json.dumps(data)
+        _LOGGER.debug("> %s (%s)", data["method"], data["params"])
 
-    try:
-        res = requests.post(url, data=data_json, timeout=5)
+        try:
+            res = requests.post(self.url, data=data_json, timeout=5)
 
-    except requests.exceptions.Timeout:
-        _LOGGER.error("Got got timeout when doing a request on %s", url)
-        return
+        except requests.exceptions.Timeout:
+            _LOGGER.error("Got a timeout when doing a request on %s", self.url)
+            return
 
-    _LOGGER.debug("< %s", res.text)
+        _LOGGER.debug("< %s", res.text)
 
-    if res.status_code != 200:
-        _LOGGER.error("Got invalid status for the call: %s", res.raw)
-        return
+        if res.status_code != 200:
+            _LOGGER.error("Got invalid status for the call: %s", res.raw)
+            return
 
-    response = res.json()
+        response = res.json()
 
-    if rpcmethod == "call":
-        if "error" in response:
-            _LOGGER.error("Got error from ubus for call %s(%s): %s",
-                          data["method"], data["params"], response["error"])
-            raise UbusException(response["error"])
+        if rpcmethod == "call":
+            if "error" in response:
+                _LOGGER.error("Got error from ubus for call %s(%s): %s",
+                              data["method"], data["params"], response["error"])
+                raise UbusException(response["error"])
 
-        if "result" not in response:
-            _LOGGER.error("Ubus reply has no result dict: %s", response)
-            raise UbusException("Got no result: %s" % response)
+            if "result" not in response:
+                _LOGGER.error("Ubus reply has no result dict: %s", response)
+                raise UbusException("Got no result: %s" % response)
 
-        retcode = response["result"][0]
-        if retcode != UbusStatus.UBUS_STATUS_OK:
-            _LOGGER.error("Got error from ubus: %s", UbusStatus(retcode))
-            raise UbusException("Got ubus error: %s" % UbusStatus(retcode))
+            retcode = response["result"][0]
+            if retcode != UbusStatus.UBUS_STATUS_OK:
+                _LOGGER.error("Got error from ubus: %s", UbusStatus(retcode))
+                raise UbusException("Got ubus error: %s" % UbusStatus(retcode))
 
-        res = response["result"][1]
-        return res
-    else:
-        return response["result"]
+            res = response["result"][1]
+            return res
+        else:
+            return response["result"]
 
 
-def _get_session_id(url, username, password):
-    """Get the authentication token for the given host+username+password."""
-    res = _req_json_rpc(url, "00000000000000000000000000000000", 'call',
-                        'session', 'login', username=username,
-                        password=password)
+    def _get_session_id(self, username, password):
+        """Get the authentication token for the given host+username+password."""
+        res = self._req_json_rpc('call',
+                            'session', 'login', username=username,
+                            password=password)
 
-    # example session
-    # note, sessions do not seem to expire..
-    # {'ubus_rpc_session': '95533928ec0bde5603c408c0eaa314d3',
-    # 'acls': {'uci': {'dhcp': ['read']},
-    #          'ubus': {'iwinfo': ['devices', 'assoclist'],
-    #          'session': ['access', 'login'],
-    #          'dhcp': ['ipv4leases', 'ipv6leases']},
-    # 'access-group': {'hass': ['read'], 'unauthenticated': ['read']}},
-    # 'expires': 300, 'timeout': 300, 'data': {'username': 'hass'}}
+        # example session
+        # note, sessions do not seem to expire..
+        # {'ubus_rpc_session': '95533928ec0bde5603c408c0eaa314d3',
+        # 'acls': {'uci': {'dhcp': ['read']},
+        #          'ubus': {'iwinfo': ['devices', 'assoclist'],
+        #          'session': ['access', 'login'],
+        #          'dhcp': ['ipv4leases', 'ipv6leases']},
+        # 'access-group': {'hass': ['read'], 'unauthenticated': ['read']}},
+        # 'expires': 300, 'timeout': 300, 'data': {'username': 'hass'}}
 
-    _LOGGER.debug("Got session, verifying required permissions: %s", res)
-    if "acls" not in res:
-        raise UbusException("Session does not have acls: %s" % res)
+        _LOGGER.debug("Got session, verifying required permissions: %s", res)
+        if "acls" not in res:
+            raise UbusException("Session does not have acls: %s" % res)
 
-    if not res["acls"]["ubus"]:
-        raise UbusException("Session does not have ubus acl: %s" % res)
+        if not res["acls"]["ubus"]:
+            raise UbusException("Session does not have ubus acl: %s" % res)
 
-    ubus_acls = res["acls"]["ubus"]
-    if not ubus_acls.keys() & {'dhcp', 'iwinfo'}:
-        raise UbusException("ACL 'dhcp' or 'iwinfo' missing: %s" % res)
+        ubus_acls = res["acls"]["ubus"]
+        if not ubus_acls.keys() & {'dhcp', 'iwinfo'}:
+            raise UbusException("ACL 'dhcp' or 'iwinfo' missing: %s" % res)
 
-    _LOGGER.debug("Got necessary permissions, we're good to go!")
+        _LOGGER.debug("Got necessary permissions, we're good to go!")
 
-    return res["ubus_rpc_session"]
+        return res["ubus_rpc_session"]
 
 
 def setup_scanner(hass, config, see):
