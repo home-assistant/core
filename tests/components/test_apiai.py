@@ -32,7 +32,7 @@ MAX_RESPONSE_TIME = 5  # https://docs.api.ai/docs/webhook
 
 # An unknown action takes 8s to return. Request timeout should be bigger to
 # allow the test to finish
-REQUEST_TIMEOUT = 10
+REQUEST_TIMEOUT = 15
 
 # pylint: disable=invalid-name
 hass = None
