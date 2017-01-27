@@ -11,9 +11,9 @@ from homeassistant.components import group
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
-    ATTR_EVENT, CONF_ALIASSES, CONF_DEVICES, CONF_IGNORE_DEVICES,
-    CONF_NEW_DEVICES_GROUP, DATA_KNOWN_DEVICES, DOMAIN, EVENT_KEY_ID,
-    RFLINK_EVENT, SwitchableRflinkDevice, cv, vol)
+    CONF_ALIASSES, CONF_DEVICES, CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP,
+    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DATA_KNOWN_DEVICES, DOMAIN,
+    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
 from . import DOMAIN as PLATFORM
@@ -77,11 +77,17 @@ def devices_from_config(domain_config, hass=None):
             entity_type = entity_type_for_device_id(device_id)
         entity_class = entity_class_for_type(entity_type)
 
-        devices.append(entity_class(device_id, hass, **config))
+        device = entity_class(device_id, hass, **config)
+        devices.append(device)
 
         # now we know
         device_ids = [device_id] + config[CONF_ALIASSES]
         hass.data[DATA_KNOWN_DEVICES].extend(device_ids)
+        # register entity (and aliasses) to listen to incoming rflink events
+        for _id in config[CONF_ALIASSES] + [device_id]:
+            hass.data[DATA_ENTITY_LOOKUP][
+                EVENT_KEY_COMMAND][_id].append(device)
+
     return devices
 
 
@@ -99,13 +105,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         new_devices_group = None
 
     @asyncio.coroutine
-    def add_new_device(ha_event):
+    def add_new_device(event):
         """Check if device is known, otherwise add to list of known devices."""
-        event = ha_event.data[ATTR_EVENT]
         device_id = event[EVENT_KEY_ID]
-
-        if device_id in hass.data[DATA_KNOWN_DEVICES]:
-            return
 
         entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
@@ -114,14 +116,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device = entity_class(device_id, hass)
         yield from async_add_devices([device])
         # make sure the event is processed by the new entity
-        device.match_event(event)
+        device.handle_event(event)
 
         # maybe add to new devices group
         if new_devices_group:
             yield from new_devices_group.async_update_tracked_entity_ids(
                 list(new_devices_group.tracking) + [device.entity_id])
 
-    hass.bus.async_listen(RFLINK_EVENT[PLATFORM], add_new_device)
+    hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
 class RflinkLight(SwitchableRflinkDevice, Light):

@@ -112,20 +112,23 @@ def async_setup(hass, config):
         event_type = identify_event_type(event)
         _LOGGER.debug('event type %s', event_type)
 
-        # propagate event to every entity matching the device id
+        # don't propagate non entity events (eg: version string, ack response)
         if event_type not in hass.data[DATA_ENTITY_LOOKUP]:
             _LOGGER.debug('unhandled event of type: %s', event_type)
             return
 
+        # propagate event to every entity matching the device id
         event_id = event.get('id', None)
         for entity in hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]:
+            _LOGGER.debug('passing event to %s', entity.name)
             entity.handle_event(event)
+        else:
+            if event_id in hass.data[DATA_KNOWN_DEVICES]:
+                return
 
-        if event_id in hass.data[DATA_KNOWN_DEVICES]:
-            return
-
-        # if device is not yet known, register with platform
-        yield from hass.data[DATA_DEVICE_REGISTER][event_type](event)
+            # if device is not yet known, register with platform (if loaded)
+            if event_type in hass.data[DATA_DEVICE_REGISTER]:
+                yield from hass.data[DATA_DEVICE_REGISTER][event_type](event)
 
     # when connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN][CONF_HOST]
@@ -239,20 +242,6 @@ class RflinkDevice(Entity):
             self._aliasses = aliasses
         else:
             self._aliasses = []
-
-    def match_event(self, event):
-        """Match and handle incoming events.
-
-        Match incoming event to this device id or any of its aliasses
-        (including wildcards).
-
-        """
-        device_id = event.get('id', None)
-
-        match = device_id == self._device_id
-        match_alias = device_id in self._aliasses
-        if match or match_alias:
-            self.handle_event(event)
 
     def handle_event(self, event):
         """Handle incoming event for device type."""

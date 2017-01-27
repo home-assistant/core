@@ -55,7 +55,7 @@ def test_default_setup(hass, monkeypatch):
     # incoming events for its name and aliasses
 
     # mock incoming command event for this device
-    event_callback({
+    yield from event_callback({
         'id': 'protocol_0_0',
         'command': 'on',
     })
@@ -67,7 +67,7 @@ def test_default_setup(hass, monkeypatch):
     assert 'assumed_state' not in light_after_first_command.attributes
 
     # mock incoming command event for this device
-    event_callback({
+    yield from event_callback({
         'id': 'protocol_0_0',
         'command': 'off',
     })
@@ -77,7 +77,7 @@ def test_default_setup(hass, monkeypatch):
 
     # test following aliasses
     # mock incoming command event for this device alias
-    event_callback({
+    yield from event_callback({
         'id': 'test_alias_0_0',
         'command': 'on',
     })
@@ -86,7 +86,7 @@ def test_default_setup(hass, monkeypatch):
     assert hass.states.get('light.test').state == 'on'
 
     # test event for new unconfigured sensor
-    event_callback({
+    yield from event_callback({
         'id': 'protocol2_0_1',
         'command': 'on',
     })
@@ -112,7 +112,7 @@ def test_default_setup(hass, monkeypatch):
 
     # protocols supporting dimming should send dim commands
     # create dimmable entity
-    event_callback({
+    yield from event_callback({
         'id': 'newkaku_0_1',
         'command': 'off',
     })
@@ -156,7 +156,7 @@ def test_new_light_group(hass, monkeypatch):
         hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
-    event_callback({
+    yield from event_callback({
         'id': 'protocol_0_0',
         'command': 'off',
     })

@@ -62,7 +62,7 @@ def test_version_banner(hass, monkeypatch):
     event_callback, create, protocol = yield from mock_rflink(
         hass, config, domain, monkeypatch)
 
-    event_callback({
+    yield from event_callback({
         'hardware': 'Nodo RadioFrequencyLink',
         'firmware': 'RFLink Gateway',
         'version': '1.1',

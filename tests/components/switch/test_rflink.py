@@ -50,7 +50,7 @@ def test_default_setup(hass, monkeypatch):
     # incoming events for its name and aliasses
 
     # mock incoming command event for this device
-    event_callback({
+    yield from event_callback({
         'id': 'protocol_0_0',
         'command': 'on',
     })
@@ -62,7 +62,7 @@ def test_default_setup(hass, monkeypatch):
     assert 'assumed_state' not in switch_after_first_command.attributes
 
     # mock incoming command event for this device
-    event_callback({
+    yield from event_callback({
         'id': 'protocol_0_0',
         'command': 'off',
     })
@@ -72,7 +72,7 @@ def test_default_setup(hass, monkeypatch):
 
     # test following aliasses
     # mock incoming command event for this device alias
-    event_callback({
+    yield from event_callback({
         'id': 'test_alias_0_0',
         'command': 'on',
     })
