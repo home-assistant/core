@@ -59,6 +59,7 @@ astral==1.3.3
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.hydroquebec
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
