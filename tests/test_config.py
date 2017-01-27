@@ -542,4 +542,5 @@ def test_merge_customize(hass):
     yield from entity.async_update_ha_state()
 
     state = hass.states.get('b.b')
-    assert 'friendly_name' in state.attributes
+    assert state is not None
+    assert state.attributes['friendly_name'] == 'BB'
