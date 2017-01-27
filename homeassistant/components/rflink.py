@@ -133,6 +133,10 @@ def async_setup(hass, config):
                         ATTR_ENTITY_ID: entity.name,
                         ATTR_STATE: event[EVENT_KEY_COMMAND],
                     })
+                    _LOGGER.debug(
+                        'fired bus event for %s: %s',
+                        entity.name,
+                        event[EVENT_KEY_COMMAND])
         else:
             _LOGGER.debug('device_id not known, adding new device')
 
