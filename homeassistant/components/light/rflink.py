@@ -120,7 +120,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_type = entity_type_for_device_id(event[EVENT_KEY_ID])
         entity_class = entity_class_for_type(entity_type)
 
-        device = entity_class(device_id, hass)
+        device_config = config[CONF_DEVICE_DEFAULTS]
+        device = entity_class(device_id, hass, **device_config)
         yield from async_add_devices([device])
 
         # register entity to listen to incoming rflink events
