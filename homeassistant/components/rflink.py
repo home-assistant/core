@@ -24,6 +24,7 @@ maintained in this file.
 
 """
 import asyncio
+from collections import defaultdict
 import functools as ft
 import logging
 
@@ -53,19 +54,15 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-RFLINK_EVENT = {
-    'light': 'rflink_switch_event_received',
-    'sensor': 'rflink_sensor_event_received',
-    'switch': 'rflink_switch_event_received',
-    'send_command': 'rflink_send_command',
-}
-
 ATTR_EVENT = 'event'
 
 DATA_KNOWN_DEVICES = 'rflink_known_device_ids'
+DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
+DATA_DEVICE_REGISTER = 'rflink_device_register'
 
 EVENT_KEY_ID = 'id'
 EVENT_KEY_SENSOR = 'sensor'
+EVENT_KEY_COMMAND = 'command'
 EVENT_KEY_UNIT = 'unit'
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,10 +74,10 @@ def identify_event_type(event):
     Async friendly.
 
     """
-    if 'command' in event:
-        return 'light'
-    elif 'sensor' in event:
-        return 'sensor'
+    if EVENT_KEY_COMMAND in event:
+        return EVENT_KEY_COMMAND
+    elif EVENT_KEY_SENSOR in event:
+        return EVENT_KEY_SENSOR
     else:
         return 'unknown'
 
@@ -93,6 +90,17 @@ def async_setup(hass, config):
     # initialize list of known devices
     hass.data[DATA_KNOWN_DEVICES] = []
 
+    # allow entities to register themselves by device_id to be looked up when
+    # new rflink events arrive to be handled
+    hass.data[DATA_ENTITY_LOOKUP] = {
+        EVENT_KEY_COMMAND: defaultdict(list),
+        EVENT_KEY_SENSOR: defaultdict(list),
+    }
+
+    # allow platform to specify function to register new unknown devices
+    hass.data[DATA_DEVICE_REGISTER] = {}
+
+    @asyncio.coroutine
     def event_callback(event):
         """Handle incoming rflink events.
 
@@ -102,13 +110,22 @@ def async_setup(hass, config):
 
         """
         event_type = identify_event_type(event)
-        _LOGGER.info('event type %s', event_type)
+        _LOGGER.debug('event type %s', event_type)
 
-        # fire bus event for event type
-        if event_type in RFLINK_EVENT:
-            hass.bus.fire(RFLINK_EVENT[event_type], {ATTR_EVENT: event})
-        else:
+        # propagate event to every entity matching the device id
+        if event_type not in hass.data[DATA_ENTITY_LOOKUP]:
             _LOGGER.debug('unhandled event of type: %s', event_type)
+            return
+
+        event_id = event.get('id', None)
+        for entity in hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]:
+            entity.handle_event(event)
+
+        if event_id in hass.data[DATA_KNOWN_DEVICES]:
+            return
+
+        # if device is not yet known, register with platform
+        yield from hass.data[DATA_DEVICE_REGISTER][event_type](event)
 
     # when connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN][CONF_HOST]
@@ -119,7 +136,6 @@ def async_setup(hass, config):
     # (string or None) if serial or tcp mode should be used
 
     # initiate serial/tcp connection to Rflink gateway
-    print(port, host)
     connection = create_rflink_connection(
         port=port,
         host=host,
@@ -223,10 +239,6 @@ class RflinkDevice(Entity):
             self._aliasses = aliasses
         else:
             self._aliasses = []
-
-        # listen to component domain specific messages
-        hass.bus.async_listen(RFLINK_EVENT[self.platform], lambda event:
-                              self.match_event(event.data[ATTR_EVENT]))
 
     def match_event(self, event):
         """Match and handle incoming events.
