@@ -127,17 +127,6 @@ def async_setup(hass, config):
             for entity in entities:
                 _LOGGER.debug('passing event to %s', entities)
                 entity.handle_event(event)
-
-                # put switch/light command onto bus for user to subscribe to
-                if event_type == EVENT_KEY_COMMAND:
-                    hass.bus.fire(EVENT_BUTTON_PRESSED, {
-                        ATTR_ENTITY_ID: entity.entity_id,
-                        ATTR_STATE: event[EVENT_KEY_COMMAND],
-                    })
-                    _LOGGER.debug(
-                        'fired bus event for %s: %s',
-                        entity.entity_id,
-                        event[EVENT_KEY_COMMAND])
         else:
             _LOGGER.debug('device_id not known, adding new device')
 
@@ -212,6 +201,17 @@ class RflinkDevice(Entity):
 
         # propagate changes through ha
         self.hass.async_add_job(self.async_update_ha_state())
+
+        # put command onto bus for user to subscribe to
+        if identify_event_type(event) == EVENT_KEY_COMMAND:
+            self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
+                ATTR_ENTITY_ID: self.entity_id,
+                ATTR_STATE: event[EVENT_KEY_COMMAND],
+            })
+            _LOGGER.debug(
+                'fired bus event for %s: %s',
+                self.entity_id,
+                event[EVENT_KEY_COMMAND])
 
     def _handle_event(self, event):
         """Platform specific event handler."""
