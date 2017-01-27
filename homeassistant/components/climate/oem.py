@@ -3,6 +3,9 @@ OpenEnergyMonitor Thermostat Support.
 
 This provides a climate component for the ESP8266 based thermostat sold by
 OpenEnergyMonitor.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.openenergymonitor/
 """
 import logging
 
@@ -12,7 +15,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, ATTR_TEMPERATURE)
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_PORT, TEMP_CELSIUS)
+                                 CONF_PORT, TEMP_CELSIUS, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 # Home Assistant depends on 3rd party packages for API specific code.
@@ -21,13 +24,13 @@ REQUIREMENTS = ['oemthermostat==1.0']
 _LOGGER = logging.getLogger(__name__)
 
 # Local configs
-CONF_NAME = 'name'
 CONF_TARGET_TEMP = 'target_temp'
 CONF_AWAY_TEMP = 'away_temp'
 
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(
         CONF_PORT, default=80): cv.port,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -58,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         therm.setpoint = target_temp
 
     # Add devices
-    add_devices((ThermostatDevice(hass, therm, name, away_temp), ))
+    add_devices((ThermostatDevice(hass, therm, name, away_temp), ), True)
 
 
 class ThermostatDevice(ClimateDevice):
@@ -95,7 +98,7 @@ class ThermostatDevice(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation i.e. heat, cool, idle."""
-        if self.thermostat.state:
+        if self._state:
             return STATE_HEAT
         else:
             return STATE_IDLE
@@ -103,12 +106,12 @@ class ThermostatDevice(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return self.thermostat.temperature
+        return self._temperature
 
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        return self.thermostat.setpoint
+        return self._setpoint
 
     def set_temperature(self, **kwargs):
         """Change the setpoint of the thermostat."""
@@ -126,7 +129,7 @@ class ThermostatDevice(ClimateDevice):
     def turn_away_mode_on(self):
         """Turn away mode on."""
         if not self._away:
-            self._prev_temp = self.thermostat.setpoint
+            self._prev_temp = self._setpoint
 
         self.thermostat.setpoint = self._away_temp
         self._away = True
@@ -137,3 +140,9 @@ class ThermostatDevice(ClimateDevice):
             self.thermostat.setpoint = self._prev_temp
 
         self._away = False
+
+    def update(self):
+        """Update local state"""
+        self._setpoint = self.thermostat.setpoint
+        self._temperature = self.thermostat.temperature
+        self._state = self.thermostat.state
