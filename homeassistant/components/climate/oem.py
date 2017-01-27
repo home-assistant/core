@@ -1,6 +1,8 @@
 """
-This provides a climate component for the ESP8266 based thermostat sold by Open
-Energy Monitor: https://shop.openenergymonitor.com/wifi-mqtt-relay-thermostat/
+OpenEnergyMonitor Thermostat Support.
+
+This provides a climate component for the ESP8266 based thermostat sold by
+OpenEnergyMonitor.
 """
 import logging
 
@@ -14,7 +16,7 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 import homeassistant.helpers.config_validation as cv
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['oemthermostat']
+REQUIREMENTS = ['oemthermostat==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup oemthermostat."""
     from oemthermostat import Thermostat
 
     # Assign configuration variables. The configuration check takes care they
@@ -59,8 +62,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ThermostatDevice(ClimateDevice):
+    """
+    Interface class for the oemthermostat module and HA.
+    """
 
     def __init__(self, hass, thermostat, name, away_temp):
+        """
+        Constructor
+        """
         self._name = name
         self.hass = hass
 
@@ -75,6 +84,7 @@ class ThermostatDevice(ClimateDevice):
 
     @property
     def name(self):
+        """Name of this Thermostat"""
         return self._name
 
     @property
@@ -101,6 +111,7 @@ class ThermostatDevice(ClimateDevice):
         return self.thermostat.setpoint
 
     def set_temperature(self, **kwargs):
+        """Change the setpoint of the thermostat."""
         # If we are setting the temp, then we don't want away mode anymore.
         self.turn_away_mode_off()
 
