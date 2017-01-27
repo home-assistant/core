@@ -136,7 +136,8 @@ class DimmableRflinkLight(RflinkLight):
 
     _brightness = 255
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_BRIGHTNESS in kwargs:
             # rflink only support 16 brightness levels
@@ -144,12 +145,12 @@ class DimmableRflinkLight(RflinkLight):
 
         # if receiver supports dimming this will turn on the light
         # at the requested dim level
-        self._send_command('dim', self._brightness)
+        yield from self._async_send_command('dim', self._brightness)
 
         # if the receiving device does not support dimlevel this
         # will ensure it is turned on when full brightness is set
         if self._brightness == 255:
-            self._send_command("turn_on")
+            yield from self._async_send_command("turn_on")
 
     @property
     def brightness(self):

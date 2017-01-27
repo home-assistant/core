@@ -24,11 +24,11 @@ maintained in this file.
 
 """
 import asyncio
+import functools as ft
 import logging
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
-    STATE_UNKNOWN)
+    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
@@ -61,7 +61,6 @@ RFLINK_EVENT = {
 }
 
 ATTR_EVENT = 'event'
-ATTR_COMMAND = 'command'
 
 DATA_KNOWN_DEVICES = 'rflink_known_device_ids'
 
@@ -129,42 +128,14 @@ def async_setup(hass, config):
         ignore=config[DOMAIN][CONF_IGNORE_DEVICES]
     )
     transport, protocol = yield from connection
+
+    # bind protocol to command class to allow entities to send commands
+    RflinkCommand.set_rflink_protocol(
+        protocol, config[DOMAIN][CONF_WAIT_FOR_ACK])
+
     # handle shutdown of rflink asyncio transport
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                lambda x: transport.close())
-
-    # provide channel for sending commands to rflink gateway
-    @asyncio.coroutine
-    def send_command_ack(event):
-        """Send command to rflink gateway via asyncio transport/protocol.
-
-        Puts command on outgoing buffer then waits for Rflink to confirm
-        the command has been send out in the ether.
-
-        """
-        yield from protocol.send_command_ack(
-            event.data[ATTR_ENTITY_ID],
-            event.data[ATTR_COMMAND],
-        )
-
-    def send_command(event):
-        """Send command to rflink gateway via asyncio transport/protocol.
-
-        Puts command on outgoing buffer and returns straight away.
-        Rflink protocol/transport handles asynchronous writing of buffer
-        to serial/tcp device. Does not wait for command send
-        confirmation.
-
-        """
-        protocol.send_command(
-            event.data[ATTR_ENTITY_ID],
-            event.data[ATTR_COMMAND],
-        )
-
-    if config[DOMAIN][CONF_WAIT_FOR_ACK]:
-        hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command_ack)
-    else:
-        hass.bus.async_listen(RFLINK_EVENT['send_command'], send_command)
 
     # whoo
     return True
@@ -184,12 +155,14 @@ class RflinkCommand(Entity):
     """
 
     @classmethod
-    def set_rflink_protocol(cls, protocol):
+    def set_rflink_protocol(cls, protocol, wait_ack):
         """Set the Rflink asyncio protocol as a class variable."""
         cls._protocol = protocol
+        cls._wait_ack = wait_ack
 
-    def _send_command(self, command, *args):
-        """Send a command for this device to Rflink gateway."""
+    @asyncio.coroutine
+    def _async_send_command(self, command, *args):
+        """Send a command for device to Rflink gateway."""
         if command == "turn_on":
             cmd = 'on'
             self._state = True
@@ -203,19 +176,23 @@ class RflinkCommand(Entity):
             cmd = str(int(args[0] / 17))
             self._state = True
 
-        # send protocol, device id, switch nr and command to rflink
-        self.hass.bus.fire(
-            RFLINK_EVENT['send_command'],
-            {
-                ATTR_ENTITY_ID: self._device_id,
-                ATTR_COMMAND: cmd,
-            }
-        )
+        if self._wait_ack:
+            # Puts command on outgoing buffer then waits for Rflink to confirm
+            # the command has been send out in the ether.
+            yield from self._protocol.send_command_ack(self._device_id, cmd)
+        else:
+            # Puts command on outgoing buffer and returns straight away.
+            # Rflink protocol/transport handles asynchronous writing of buffer
+            # to serial/tcp device. Does not wait for command send
+            # confirmation.
+            return self.hass.loop.run_in_executor(
+                None, ft.partial(
+                    self._protocol.send_command, self._device_id, cmd))
 
         # Update state of entity to represent the desired state even though we
         # do not have a confirmation yet the command has been successfully sent
         # by rflink.
-        self.update_ha_state()
+        yield from self.async_update_ha_state()
 
 
 class RflinkDevice(Entity):
@@ -311,10 +288,12 @@ class SwitchableRflinkDevice(RflinkDevice, RflinkCommand):
         elif command == 'off':
             self._state = False
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._send_command("turn_on")
+        yield from self._async_send_command("turn_on")
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self._send_command("turn_off")
+        yield from self._async_send_command("turn_off")
