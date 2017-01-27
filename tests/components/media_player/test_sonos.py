@@ -251,7 +251,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         device_master = mock.MagicMock()
         device_master.entity_id = "media_player.test"
-        device_master.soco_device = device
+        device_master.soco_device = mock.MagicMock()
         self.hass.data[sonos.DATA_SONOS].append(device_master)
 
         join_mock.return_value = True
