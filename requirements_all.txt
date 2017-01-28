@@ -564,7 +564,7 @@ pyzabbix==0.7.4
 radiotherm==1.2
 
 # homeassistant.components.rflink
-rflink==0.0.20
+rflink==0.0.23
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
