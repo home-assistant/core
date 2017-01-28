@@ -84,7 +84,8 @@ class SmartPlugSwitch(SwitchDevice):
     def update(self):
         """Update the TP-Link switch's state."""
         try:
-            self._state = self.smartplug.state == self.SWITCH_STATE_ON
+            self._state = self.smartplug.state == \
+                self.smartplug.SWITCH_STATE_ON
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
