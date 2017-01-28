@@ -9,6 +9,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import hashlib
+from random import SystemRandom
 
 import aiohttp
 from aiohttp import web
@@ -34,6 +35,8 @@ STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
+
+_RND = SystemRandom()
 
 
 @asyncio.coroutine
@@ -90,7 +93,7 @@ class Camera(Entity):
         """Initialize a camera."""
         self.is_streaming = False
         self._access_token = hashlib.sha256(
-            str.encode(str(id(self)))).hexdigest()
+            str.encode(str(_RND.random()))).hexdigest()
 
     @property
     def access_token(self):
@@ -223,7 +226,8 @@ class CameraView(HomeAssistantView):
         camera = self.entities.get(entity_id)
 
         if camera is None:
-            return web.Response(status=404)
+            status = 404 if request[KEY_AUTHENTICATED] else 401
+            return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == camera.access_token)

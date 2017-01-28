@@ -10,6 +10,7 @@ import functools as ft
 import hashlib
 import logging
 import os
+from random import SystemRandom
 
 from aiohttp import web
 import async_timeout
@@ -32,6 +33,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
 _LOGGER = logging.getLogger(__name__)
+_RND = SystemRandom()
 
 DOMAIN = 'media_player'
 DEPENDENCIES = ['http']
@@ -399,7 +401,8 @@ class MediaPlayerDevice(Entity):
     @property
     def access_token(self):
         """Access token for this media player."""
-        return str(id(self))
+        return hashlib.sha256(
+            str.encode(str(_RND.random()))).hexdigest()
 
     @property
     def volume_level(self):
@@ -895,7 +898,8 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.entities.get(entity_id)
         if player is None:
-            return web.Response(status=404)
+            status = 404 if request[KEY_AUTHENTICATED] else 401
+            return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == player.access_token)
