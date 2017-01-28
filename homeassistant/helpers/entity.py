@@ -11,7 +11,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, DOMAIN as CORE_DOMAIN
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async import (
@@ -242,7 +242,7 @@ class Entity(object):
                             end - start)
 
         # Overwrite properties that have been set in the config file.
-        attr.update(get_overrides(self.hass, self.entity_id))
+        attr.update(get_overrides(self.hass, CORE_DOMAIN, self.entity_id))
 
         # Remove hidden property if false so it won't show up.
         if not attr.get(ATTR_HIDDEN, True):
