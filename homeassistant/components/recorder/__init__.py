@@ -62,28 +62,31 @@ _INSTANCE = None  # type: Any
 _LOGGER = logging.getLogger(__name__)
 
 # These classes will be populated during setup()
-# pylint: disable=invalid-name,no-member
-Session = None  # pylint: disable=no-member
+# Session is a scoped_session, in the same thread Session() stays the same
+Session = None  # pylint: disable=invalid-name
 
 
 # pylint: disable=invalid-sequence-index
-def execute(q: QueryType) -> List[Any]:
+def execute(qry: QueryType) -> List[Any]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
     """
     import sqlalchemy.exc
+    session = Session()
     try:
         for _ in range(0, RETRIES):
             try:
                 return [
                     row for row in
-                    (row.to_native() for row in q)
+                    (row.to_native() for row in qry)
                     if row is not None]
-            except sqlalchemy.exc.SQLAlchemyError as e:
-                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+            except sqlalchemy.exc.SQLAlchemyError as err:
+                session.rollback()
+                log_error(err, retry_wait=QUERY_RETRY_WAIT)
     finally:
-        Session.close()
+        session.commit()
+        session.close()
     return []
 
 
@@ -101,9 +104,13 @@ def run_information(point_in_time: Optional[datetime]=None):
             start=_INSTANCE.recording_start,
             closed_incorrect=False)
 
-    return query('RecorderRuns').filter(
-        (recorder_runs.start < point_in_time) &
-        (recorder_runs.end > point_in_time)).first()
+    try:
+        return query('RecorderRuns').filter(
+            (recorder_runs.start < point_in_time) &
+            (recorder_runs.end > point_in_time)).first()
+    finally:
+        Session().commit()
+        Session().close()
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -132,7 +139,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def query(model_name: Union[str, Any], *args) -> QueryType:
     """Helper to return a query handle."""
     _verify_instance()
-
+    # pylint: disable=no-member
     if isinstance(model_name, str):
         return Session.query(get_model(model_name), *args)
     return Session.query(model_name, *args)
@@ -148,17 +155,14 @@ def get_model(model_name: str) -> Any:
         return None
 
 
-def log_error(e: Exception, retry_wait: Optional[float]=0,
-              rollback: Optional[bool]=True,
+def log_error(err: Exception, retry_wait: Optional[float]=0,
               message: Optional[str]="Error during query: %s") -> None:
     """Log about SQLAlchemy errors in a sane manner."""
     import sqlalchemy.exc
-    if not isinstance(e, sqlalchemy.exc.OperationalError):
-        _LOGGER.exception(str(e))
+    if not isinstance(err, sqlalchemy.exc.OperationalError):
+        _LOGGER.exception(err)
     else:
-        _LOGGER.error(message, str(e))
-    if rollback:
-        Session.rollback()
+        _LOGGER.error(message, err)
     if retry_wait:
         _LOGGER.info("Retrying in %s seconds", retry_wait)
         time.sleep(retry_wait)
@@ -204,8 +208,8 @@ class Recorder(threading.Thread):
                 self._setup_connection()
                 self._setup_run()
                 break
-            except sqlalchemy.exc.SQLAlchemyError as e:
-                log_error(e, retry_wait=CONNECT_RETRY_WAIT, rollback=False,
+            except sqlalchemy.exc.SQLAlchemyError as err:
+                log_error(err, retry_wait=CONNECT_RETRY_WAIT,
                           message="Error during connection setup: %s")
 
         if self.purge_days is not None:
@@ -251,14 +255,16 @@ class Recorder(threading.Thread):
                     continue
 
             dbevent = Events.from_event(event)
-            self._commit(dbevent)
+            self._commit(dbevent, False)
+            event_id = dbevent.event_id
+            Session().close()
 
             if event.event_type != EVENT_STATE_CHANGED:
                 self.queue.task_done()
                 continue
 
             dbstate = States.from_event(event)
-            dbstate.event_id = dbevent.event_id
+            dbstate.event_id = event_id
             self._commit(dbstate)
 
             self.queue.task_done()
@@ -286,7 +292,7 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        global Session  # pylint: disable=global-statement
+        global Session  # pylint: disable=invalid-name,global-statement
 
         import homeassistant.components.recorder.models as models
         from sqlalchemy import create_engine
@@ -383,7 +389,7 @@ class Recorder(threading.Thread):
 
     def _close_connection(self):
         """Close the connection."""
-        global Session  # pylint: disable=global-statement
+        global Session  # pylint: disable=invalid-name,global-statement
         self.engine.dispose()
         self.engine = None
         Session = None
@@ -396,7 +402,7 @@ class Recorder(threading.Thread):
             run.end = self.recording_start
             _LOGGER.warning("Ended unfinished session (id=%s from %s)",
                             run.run_id, run.start)
-            Session.add(run)
+            Session.add(run)  # pylint: disable= no-member
 
             _LOGGER.warning("Found unfinished sessions")
 
@@ -441,7 +447,8 @@ class Recorder(threading.Thread):
         if self._commit(_purge_events):
             _LOGGER.info("Purged events created before %s", purge_before)
 
-        Session.expire_all()
+        # Removed due to closing sessions everywhere
+        # Session.expire_all()
 
         # Execute sqlite vacuum command to free up space on disk
         if self.engine.driver == 'sqlite':
@@ -449,7 +456,7 @@ class Recorder(threading.Thread):
             self.engine.execute("VACUUM")
 
     @staticmethod
-    def _commit(work):
+    def _commit(work, close_session: Optional[bool]=True):
         """Commit & retry work: Either a model or in a function."""
         import sqlalchemy.exc
         session = Session()
@@ -460,9 +467,14 @@ class Recorder(threading.Thread):
                 else:
                     session.add(work)
                 session.commit()
+                if close_session:
+                    session.close()
                 return True
-            except sqlalchemy.exc.OperationalError as e:
-                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+            except sqlalchemy.exc.OperationalError as err:
+                session.rollback()
+                log_error(err, retry_wait=QUERY_RETRY_WAIT)
+        if close_session:
+            session.close()
         return False
 
 
