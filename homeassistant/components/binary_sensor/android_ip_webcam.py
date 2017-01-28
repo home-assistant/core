@@ -6,7 +6,7 @@ https://home-assistant.io/components/binary_sensor.android_ip_webcam/
 """
 import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.android_ip_webcam import (SENSOR_KEY_MAP,
                                                         DATA_IP_WEBCAM)
 
