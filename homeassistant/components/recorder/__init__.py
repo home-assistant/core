@@ -28,7 +28,7 @@ import homeassistant.util.dt as dt_util
 
 DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.1.4']
+REQUIREMENTS = ['sqlalchemy==1.1.5']
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'

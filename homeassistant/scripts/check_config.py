@@ -27,7 +27,9 @@ MOCKS = {
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
     'except': ("homeassistant.bootstrap.async_log_exception",
-               bootstrap.async_log_exception)
+               bootstrap.async_log_exception),
+    'package_error': ("homeassistant.config._log_pkg_error",
+                      config_util._log_pkg_error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
@@ -146,7 +148,7 @@ def run(script_args: List) -> int:
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
 
-    return 0
+    return len(res['except'])
 
 
 def check(config_path):
@@ -213,6 +215,15 @@ def check(config_path):
         MOCKS['except'][1](ex, domain, config, hass)
         res['except'][domain] = config.get(domain, config)
 
+    def mock_package_error(  # pylint: disable=unused-variable
+            package, component, config, message):
+        """Mock config_util._log_pkg_error."""
+        MOCKS['package_error'][1](package, component, config, message)
+
+        pkg_key = 'homeassistant.packages.{}'.format(package)
+        res['except'][pkg_key] = config.get('homeassistant', {}) \
+            .get('packages', {}).get(package)
+
     # Patches to skip functions
     for sil in SILENCE:
         PATCHES[sil] = patch(sil)
@@ -247,25 +258,24 @@ def check(config_path):
     return res
 
 
+def line_info(obj, **kwargs):
+    """Display line config source."""
+    if hasattr(obj, '__config_file__'):
+        return color('cyan', "[source {}:{}]"
+                     .format(obj.__config_file__, obj.__line__ or '?'),
+                     **kwargs)
+    return '?'
+
+
 def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """Display a dict.
 
     A friendly version of print yaml.yaml.dump(config).
     """
-    def line_src(this):
-        """Display line config source."""
-        if hasattr(this, '__config_file__'):
-            return color('cyan', "[source {}:{}]"
-                         .format(this.__config_file__, this.__line__ or '?'),
-                         **kwargs)
-        return ''
-
     def sort_dict_key(val):
         """Return the dict key for sorting."""
-        skey = str.lower(val[0])
-        if str(skey) == 'platform':
-            skey = '0'
-        return skey
+        key = str.lower(val[0])
+        return '0' if key == 'platform' else key
 
     indent_str = indent_count * ' '
     if listi or isinstance(layer, list):
@@ -273,7 +283,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     if isinstance(layer, Dict):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, dict) or isinstance(value, list):
-                print(indent_str, key + ':', line_src(value))
+                print(indent_str, key + ':', line_info(value, **kwargs))
                 dump_dict(value, indent_count + 2)
             else:
                 print(indent_str, key + ':', value)

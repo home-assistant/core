@@ -71,10 +71,11 @@ _ARP_REGEX = re.compile(
 
 _IP_NEIGH_CMD = 'ip neigh'
 _IP_NEIGH_REGEX = re.compile(
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
-    r'\w+\s' +
-    r'\w+\s' +
-    r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s' +
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3}|'
+    r'([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{0,4}(:[0-9a-fA-F]{1,4}){1,7})\s'
+    r'\w+\s'
+    r'\w+\s'
+    r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
     r'(?P<status>(\w+))')
 
 _NVRAM_CMD = 'nvram get client_info_tmp'
@@ -323,6 +324,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         else:
             for lease in result.leases:
+                if lease.startswith(b'duid '):
+                    continue
                 match = _LEASES_REGEX.search(lease.decode('utf-8'))
 
                 if not match:

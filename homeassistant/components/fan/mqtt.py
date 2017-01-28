@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MED, SPEED_MEDIUM,
+from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH, FanEntity,
                                           SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
                                           SPEED_OFF, ATTR_SPEED)
@@ -64,11 +64,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OSCILLATION_OFF,
                  default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_LOW_SPEED, default=SPEED_LOW): cv.string,
-    vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MED): cv.string,
+    vol.Optional(CONF_PAYLOAD_MEDIUM_SPEED, default=SPEED_MEDIUM): cv.string,
     vol.Optional(CONF_PAYLOAD_HIGH_SPEED, default=SPEED_HIGH): cv.string,
     vol.Optional(CONF_SPEED_LIST,
                  default=[SPEED_OFF, SPEED_LOW,
-                          SPEED_MED, SPEED_HIGH]): cv.ensure_list,
+                          SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
 })
 
@@ -162,7 +162,7 @@ class MqttFan(FanEntity):
             if payload == self._payload[SPEED_LOW]:
                 self._speed = SPEED_LOW
             elif payload == self._payload[SPEED_MEDIUM]:
-                self._speed = SPEED_MED
+                self._speed = SPEED_MEDIUM
             elif payload == self._payload[SPEED_HIGH]:
                 self._speed = SPEED_HIGH
             self.update_ha_state()
@@ -235,11 +235,12 @@ class MqttFan(FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    def turn_on(self, speed: str=SPEED_MED) -> None:
+    def turn_on(self, speed: str=None) -> None:
         """Turn on the entity."""
         mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
                      self._payload[STATE_ON], self._qos, self._retain)
-        self.set_speed(speed)
+        if speed:
+            self.set_speed(speed)
 
     def turn_off(self) -> None:
         """Turn off the entity."""
@@ -252,7 +253,7 @@ class MqttFan(FanEntity):
             mqtt_payload = SPEED_OFF
             if speed == SPEED_LOW:
                 mqtt_payload = self._payload[SPEED_LOW]
-            elif speed == SPEED_MED:
+            elif speed == SPEED_MEDIUM:
                 mqtt_payload = self._payload[SPEED_MEDIUM]
             elif speed == SPEED_HIGH:
                 mqtt_payload = self._payload[SPEED_HIGH]
@@ -265,9 +266,12 @@ class MqttFan(FanEntity):
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
-        if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
+        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None:
             self._oscillation = oscillating
+            payload = self._payload[OSCILLATE_ON_PAYLOAD]
+            if oscillating is False:
+                payload = self._payload[OSCILLATE_OFF_PAYLOAD]
             mqtt.publish(self._hass,
                          self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-                         self._oscillation, self._qos, self._retain)
+                         payload, self._qos, self._retain)
             self.update_ha_state()

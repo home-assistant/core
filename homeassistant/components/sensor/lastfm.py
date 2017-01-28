@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylast==1.6.0']
+REQUIREMENTS = ['pylast==1.7.0']
 
 CONF_USERS = 'users'
 

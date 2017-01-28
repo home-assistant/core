@@ -5,9 +5,11 @@ from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.bootstrap import setup_component
 from homeassistant.exceptions import HomeAssistantError
+import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import (
+    get_test_home_assistant, get_test_instance_port, assert_setup_component)
 
 
 class TestSetupImageProcessing(object):
@@ -52,6 +54,10 @@ class TestImageProcessing(object):
     def setup_method(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+        setup_component(
+            self.hass, http.DOMAIN,
+            {http.DOMAIN: {http.CONF_SERVER_PORT: get_test_instance_port()}})
 
         config = {
             ip.DOMAIN: {
@@ -207,3 +213,64 @@ class TestImageProcessingAlpr(object):
         assert event_data[0]['plate'] == 'AC3829'
         assert event_data[0]['confidence'] == 98.3
         assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
+
+
+class TestImageProcessingFaceIdentify(object):
+    """Test class for image processing."""
+
+    def setup_method(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+
+        config = {
+            ip.DOMAIN: {
+                'platform': 'demo'
+            },
+            'camera': {
+                'platform': 'demo'
+            },
+        }
+
+        with patch('homeassistant.components.image_processing.demo.'
+                   'DemoImageProcessingFaceIdentify.should_poll',
+                   new_callable=PropertyMock(return_value=False)):
+            setup_component(self.hass, ip.DOMAIN, config)
+
+        state = self.hass.states.get('camera.demo_camera')
+        self.url = "{0}{1}".format(
+            self.hass.config.api.base_url,
+            state.attributes.get(ATTR_ENTITY_PICTURE))
+
+        self.face_events = []
+
+        @callback
+        def mock_face_event(event):
+            """Mock event."""
+            self.face_events.append(event)
+
+        self.hass.bus.listen('identify_face', mock_face_event)
+
+    def teardown_method(self):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    def test_face_event_call(self, aioclient_mock):
+        """Setup and scan a picture and test faces from event."""
+        aioclient_mock.get(self.url, content=b'image')
+
+        ip.scan(self.hass, entity_id='image_processing.demo_face_identify')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('image_processing.demo_face_identify')
+
+        assert len(self.face_events) == 2
+        assert state.state == 'Hans'
+        assert state.attributes['total_faces'] == 4
+
+        event_data = [event.data for event in self.face_events if
+                      event.data.get('name') == 'Hans']
+        assert len(event_data) == 1
+        assert event_data[0]['name'] == 'Hans'
+        assert event_data[0]['confidence'] == 98.34
+        assert event_data[0]['entity_id'] == \
+            'image_processing.demo_face_identify'
