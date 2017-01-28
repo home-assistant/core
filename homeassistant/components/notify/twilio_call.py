@@ -15,7 +15,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["twilio==5.4.0"]
+REQUIREMENTS = ["twilio==5.7.0"]
 
 
 CONF_ACCOUNT_SID = "account_sid"
