@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.android_ip_webcam/
 """
 import logging
 
-from homeassistant.components.android_ip_webcam import (SENSOR_KEY_MAP,
+from homeassistant.components.android_ip_webcam import (KEY_MAP,
                                                         DATA_IP_WEBCAM)
 from homeassistant.helpers.entity import Entity
 
@@ -42,7 +42,7 @@ class IPWebcamSensor(Entity):
         self.variable = variable
 
         # device specific
-        self._mapped_name = SENSOR_KEY_MAP.get(self.variable, self.variable)
+        self._mapped_name = KEY_MAP.get(self.variable, self.variable)
         self._name = '{} {}'.format(self._device.name, self._mapped_name)
         self._state = None
         self._unit = None
@@ -65,11 +65,14 @@ class IPWebcamSensor(Entity):
     def update(self):
         """Retrieve latest state."""
         self._device.update()
-        container = self._device.sensor_data.get(self.variable)
-        self._unit = container.get('unit', self._unit)
-        data_point = container.get('data', [[0, [0.0]]])
-        if data_point and data_point[0]:
-            self._state = data_point[0][-1][0]
+        if self.variable in ('audio_connections', 'video_connections'):
+            self._state = self._device.status_data.get(self.variable)
+        else:
+            container = self._device.sensor_data.get(self.variable)
+            self._unit = container.get('unit', self._unit)
+            data_point = container.get('data', [[0, [0.0]]])
+            if data_point and data_point[0]:
+                self._state = data_point[0][-1][0]
 
     @property
     def device_state_attributes(self):

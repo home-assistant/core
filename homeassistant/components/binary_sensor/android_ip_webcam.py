@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.android_ip_webcam/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.android_ip_webcam import (SENSOR_KEY_MAP,
+from homeassistant.components.android_ip_webcam import (KEY_MAP,
                                                         DATA_IP_WEBCAM)
 
 DEPENDENCIES = ['android_ip_webcam']
@@ -33,7 +33,7 @@ class IPWebcamBinarySensor(BinarySensorDevice):
         """Initialize the sensor."""
         self._device = device
         self.variable = variable
-        self._mapped_name = SENSOR_KEY_MAP.get(self.variable, self.variable)
+        self._mapped_name = KEY_MAP.get(self.variable, self.variable)
         self._name = '{} {}'.format(self._device.name, self._mapped_name)
 
     @property

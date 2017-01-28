@@ -30,10 +30,14 @@ DEFAULT_TIMEOUT = 10
 ATTR_VID_CONNS = 'Video Connections'
 ATTR_AUD_CONNS = 'Audio Connections'
 
-STATUS_KEY_MAP = {
+KEY_MAP = {
+    'audio_connections': 'Audio Connections',
     'adet_limit': 'Audio Trigger Limit',
     'antibanding': 'Anti-banding',
     'audio_only': 'Audio Only',
+    'battery_level': 'Battery Level',
+    'battery_temp': 'Battery Temperature',
+    'battery_voltage': 'Battery Voltage',
     'coloreffect': 'Color Effect',
     'exposure': 'Exposure Level',
     'exposure_lock': 'Exposure Lock',
@@ -48,8 +52,12 @@ STATUS_KEY_MAP = {
     'ip_address': 'IPv4 Address',
     'ipv6_address': 'IPv6 Address',
     'ivideon_streaming': 'Ivideon Streaming',
+    'light': 'Light Level',
     'mirror_flip': 'Mirror Flip',
+    'motion': 'Motion',
+    'motion_active': 'Motion Active',
     'motion_detect': 'Motion Detection',
+    'motion_event': 'Motion Event',
     'motion_limit': 'Motion Limit',
     'night_vision': 'Night Vision',
     'night_vision_average': 'Night Vision Average',
@@ -57,9 +65,15 @@ STATUS_KEY_MAP = {
     'orientation': 'Orientation',
     'overlay': 'Overlay',
     'photo_size': 'Photo Size',
+    'pressure': 'Pressure',
+    'proximity': 'Proximity',
     'quality': 'Quality',
     'scenemode': 'Scene Mode',
+    'sound': 'Sound',
+    'sound_event': 'Sound Event',
+    'sound_timeout': 'Sound Timeout',
     'torch': 'Torch',
+    'video_connections': 'Video Connections',
     'video_chunk_len': 'Video Chunk Length',
     'video_recording': 'Video Recording',
     'video_size': 'Video Size',
@@ -68,29 +82,13 @@ STATUS_KEY_MAP = {
     'zoom': 'Zoom'
 }
 
-SENSOR_KEY_MAP = {
-    'battery_level': 'Battery Level',
-    'battery_temp': 'Battery Temperature',
-    'battery_voltage': 'Battery Voltage',
-    'light': 'Light Level',
-    'motion': 'Motion',
-    'motion_event': 'Motion Event',
-    'motion_active': 'Motion Active',
-    'pressure': 'Pressure',
-    'proximity': 'Proximity',
-    'sound': 'Sound',
-    'sound_event': 'Sound Event',
-    'sound_timeout': 'Sound Timeout'
-}
+SWITCHES = ['exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision',
+            'overlay', 'quality', 'torch', 'video_chunk_len',
+            'whitebalance_lock']
 
-SWITCHES = ['audio_only', 'exposure_lock', 'ffc',
-            'focus', 'focus_homing', 'gps_active', 'idle',
-            'ivideon_streaming', 'motion_detect', 'night_vision',
-            'overlay', 'torch', 'video_recording', 'whitebalance_lock']
-
-SENSORS = ['battery_level', 'battery_temp', 'battery_voltage',
-           'light', 'motion', 'pressure', 'proximity', 'sound', 'sound_event',
-           'sound_timeout']
+SENSORS = ['audio_connections', 'battery_level', 'battery_temp',
+           'battery_voltage', 'light', 'motion', 'pressure', 'proximity',
+           'sound', 'sound_event', 'sound_timeout', 'video_connections']
 
 CONF_MOTION_BINARY_SENSOR = 'motion_binary_sensor'
 
@@ -135,8 +133,8 @@ def setup(hass, config):
     sensor_config = conf.get(CONF_SENSORS, [])
     discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
-    # switch_config = conf.get(CONF_SWITCHES, [])
-    # discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
+    switch_config = conf.get(CONF_SWITCHES, [])
+    discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
 
     return True
 
@@ -169,6 +167,8 @@ class IPWebcam(object):
 
         if self.username is not None and self.password is not None:
             auth_tuple = (self.username, self.password)
+
+        print('URL', url)
 
         try:
             response = requests.get(url, timeout=DEFAULT_TIMEOUT,
@@ -215,13 +215,29 @@ class IPWebcam(object):
             if val == 'on' or val == 'off':
                 val = (val == 'on')
 
-            state_attr[STATUS_KEY_MAP.get(key, key)] = val
+            state_attr[KEY_MAP.get(key, key)] = val
         return state_attr
 
     @property
     def enabled_sensors(self):
         """Return the enabled sensors."""
         return list(self.sensor_data.keys())
+
+    @property
+    def current_settings(self):
+        """Return a dictionary of the current settings."""
+        settings = {}
+        for (key, val) in self.status_data.get('curvals').items():
+            try:
+                val = float(val)
+            except ValueError:
+                val = val
+
+            if val == 'on' or val == 'off':
+                val = (val == 'on')
+
+            settings[key] = val
+        return settings
 
     def change_setting(self, key, val):
         """Change a setting."""
