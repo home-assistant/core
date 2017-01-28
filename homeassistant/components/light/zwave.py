@@ -17,6 +17,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
     color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
     color_rgb_to_rgbw, color_rgbw_to_rgb
+from homeassistant.helpers import customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,13 +55,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-    customize = hass.data['zwave_customize']
     name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
-    node_config = customize.get(name, {})
+    node_config = customize.get_overrides(hass, zwave.DOMAIN, name)
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
-    _LOGGER.debug('customize=%s name=%s node_config=%s CONF_REFRESH_VALUE=%s'
-                  ' CONF_REFRESH_DELAY=%s', customize, name, node_config,
+    _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
+                  ' CONF_REFRESH_DELAY=%s', name, node_config,
                   refresh, delay)
     if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return

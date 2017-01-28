@@ -1,5 +1,7 @@
 """Test the customize helper."""
 import homeassistant.helpers.customize as customize
+from voluptuous import MultipleInvalid
+import pytest
 
 
 class MockHass(object):
@@ -17,8 +19,9 @@ class TestHelpersCustomize(object):
         self.hass = MockHass()
 
     def _get_overrides(self, overrides):
-        customize.set_customize(self.hass, overrides)
-        return customize.get_overrides(self.hass, self.entity_id)
+        test_domain = 'test.domain'
+        customize.set_customize(self.hass, test_domain, overrides)
+        return customize.get_overrides(self.hass, test_domain, self.entity_id)
 
     def test_override_single_value(self):
         """Test entity customization through configuration."""
@@ -75,7 +78,7 @@ class TestHelpersCustomize(object):
             'key3': 'valueDomain'}
 
     def test_override_deep_dict(self):
-        """Test we can overwrite hidden property to True."""
+        """Test we can deep-overwrite a dict."""
         result = self._get_overrides(
             [{'entity_id': [self.entity_id],
               'test': {'key1': 'value1', 'key2': 'value2'}},
@@ -85,3 +88,32 @@ class TestHelpersCustomize(object):
             'key1': 'value1',
             'key2': 'value22',
             'key3': 'value3'}
+
+    def test_schema_bad_schema(self):
+        """Test bad customize schemas."""
+        for value in (
+                {'test.test': 10},
+                {'test.test': ['hello']},
+                {'entity_id': {'a': 'b'}},
+                {'entity_id': 10},
+                [{'test.test': 'value'}],
+        ):
+            with pytest.raises(
+                MultipleInvalid,
+                message="{} should have raised MultipleInvalid".format(
+                    value)):
+                customize.CUSTOMIZE_SCHEMA(value)
+
+    def test_get_customize_schema_allow_extra(self):
+        """Test schema with ALLOW_EXTRA."""
+        for value in (
+                {'test.test': {'hidden': True}},
+                {'test.test': {'key': ['value1', 'value2']}},
+                [{'entity_id': 'id1', 'key': 'value'}],
+        ):
+            customize.CUSTOMIZE_SCHEMA(value)
+
+    def test_get_customize_schema_csv(self):
+        """Test schema with comma separated entity IDs."""
+        assert [{'entity_id': ['id1', 'id2', 'id3']}] == \
+            customize.CUSTOMIZE_SCHEMA([{'entity_id': 'id1,ID2 , id3'}])
