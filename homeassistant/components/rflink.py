@@ -296,11 +296,7 @@ class RflinkCommand(RflinkDevice):
         # send initial command and queue repetitions
         # this allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
-        yield from self._async_send_command(cmd, 0)
-
-        if self._signal_repetitions > 1:
-            self._repetition_task = self.hass.loop.create_task(
-                self._async_send_command(cmd, self._signal_repetitions - 1))
+        yield from self._async_send_command(cmd, self._signal_repetitions)
 
         # Update state of entity
         yield from self.async_update_ha_state()
@@ -309,10 +305,8 @@ class RflinkCommand(RflinkDevice):
     def _async_send_command(self, cmd, repetitions):
         """Send a command for device to Rflink gateway."""
 
-        _LOGGER.debug(
-            'sending command: %s to rflink device: %s',
-            cmd,
-            self._device_id)
+        _LOGGER.debug('sending command: %s to rflink device: %s',
+                      cmd, self._device_id)
 
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
@@ -323,9 +317,8 @@ class RflinkCommand(RflinkDevice):
             # Rflink protocol/transport handles asynchronous writing of buffer
             # to serial/tcp device. Does not wait for command send
             # confirmation.
-            return self.hass.loop.run_in_executor(
-                None, ft.partial(
-                    self._protocol.send_command, self._device_id, cmd))
+            self.hass.loop.run_in_executor(None, ft.partial(
+                self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:
             self._repetition_task = self.hass.loop.create_task(
