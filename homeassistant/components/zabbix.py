@@ -18,7 +18,7 @@ REQUIREMENTS = ['pyzabbix==0.7.4']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SSL = False
-DEFAULT_PATH = "zabbix"
+DEFAULT_PATH = 'zabbix'
 
 DOMAIN = 'zabbix'
 

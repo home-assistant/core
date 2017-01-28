@@ -1,8 +1,8 @@
 """
 Support for Tado Smart Thermostat.
 
-Device tracker platform that supports presence detection.
-The detection is based on geofencing enabled devices used with Tado.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.tado/
 """
 import logging
 from datetime import timedelta
@@ -17,14 +17,13 @@ import voluptuous as vol
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
-from homeassistant.components.device_tracker import \
-    DOMAIN, PLATFORM_SCHEMA, DeviceScanner
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
-
 _LOGGER = logging.getLogger(__name__)
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
