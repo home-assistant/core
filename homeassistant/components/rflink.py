@@ -165,7 +165,6 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def connect():
         """Setup connection and hook it into HA for reconnect/shutdown."""
-
         _LOGGER.info('initiating Rflink connection')
 
         # rflink create_rflink_connection decides based on the value of host
@@ -347,7 +346,6 @@ class RflinkCommand(RflinkDevice):
         switch) changes the state.
 
         """
-
         # cancel any outstanding tasks from the previous state change
         if self._repetition_task:
             self._repetition_task.cancel()
