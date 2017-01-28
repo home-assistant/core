@@ -6,14 +6,17 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/camera/
 """
 import asyncio
+import collections
 from datetime import timedelta
 import logging
 import hashlib
+from random import SystemRandom
 
 import aiohttp
 from aiohttp import web
 import async_timeout
 
+from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -21,6 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
+from homeassistant.helpers.event import async_track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +38,9 @@ STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
+
+TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
+_RND = SystemRandom()
 
 
 @asyncio.coroutine
@@ -80,6 +87,15 @@ def async_setup(hass, config):
     hass.http.register_view(CameraMjpegStream(component.entities))
 
     yield from component.async_setup(config)
+
+    @callback
+    def update_tokens(time):
+        """Update tokens of the entities."""
+        for entity in component.entities.values():
+            entity.async_update_token()
+            hass.async_add_job(entity.async_update_ha_state())
+
+    async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
     return True
 
 
@@ -89,13 +105,8 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
-        self._access_token = hashlib.sha256(
-            str.encode(str(id(self)))).hexdigest()
-
-    @property
-    def access_token(self):
-        """Access token for this camera."""
-        return self._access_token
+        self.access_tokens = collections.deque([], 2)
+        self.async_update_token()
 
     @property
     def should_poll(self):
@@ -105,7 +116,7 @@ class Camera(Entity):
     @property
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
-        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_token)
+        return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
 
     @property
     def is_recording(self):
@@ -196,7 +207,7 @@ class Camera(Entity):
     def state_attributes(self):
         """Camera state attributes."""
         attr = {
-            'access_token': self.access_token,
+            'access_token': self.access_tokens[-1],
         }
 
         if self.model:
@@ -206,6 +217,13 @@ class Camera(Entity):
             attr['brand'] = self.brand
 
         return attr
+
+    @callback
+    def async_update_token(self):
+        """Update the used token."""
+        self.access_tokens.append(
+            hashlib.sha256(
+                _RND.getrandbits(256).to_bytes(32, 'little')).hexdigest())
 
 
 class CameraView(HomeAssistantView):
@@ -223,10 +241,11 @@ class CameraView(HomeAssistantView):
         camera = self.entities.get(entity_id)
 
         if camera is None:
-            return web.Response(status=404)
+            status = 404 if request[KEY_AUTHENTICATED] else 401
+            return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
-                         request.GET.get('token') == camera.access_token)
+                         request.GET.get('token') in camera.access_tokens)
 
         if not authenticated:
             return web.Response(status=401)
