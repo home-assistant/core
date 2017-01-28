@@ -8,13 +8,17 @@ https://home-assistant.io/components/demo/
 from homeassistant.components.image_processing import ImageProcessingEntity
 from homeassistant.components.image_processing.openalpr_local import (
     ImageProcessingAlprEntity)
+from homeassistant.components.image_processing.microsoft_face_identify import (
+    ImageProcessingFaceIdentifyEntity)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the demo image_processing platform."""
     add_devices([
         DemoImageProcessing('camera.demo_camera', "Demo"),
-        DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr")
+        DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
+        DemoImageProcessingFaceIdentify(
+            'camera.demo_camera', "Demo Face Identify")
     ])
 
 
@@ -82,3 +86,39 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
         }
 
         self.process_plates(demo_data, 1)
+
+
+class DemoImageProcessingFaceIdentify(ImageProcessingFaceIdentifyEntity):
+    """Demo face identify image processing entity."""
+
+    def __init__(self, camera_entity, name):
+        """Initialize demo alpr."""
+        super().__init__()
+
+        self._name = name
+        self._camera = camera_entity
+
+    @property
+    def camera_entity(self):
+        """Return camera entity id from process pictures."""
+        return self._camera
+
+    @property
+    def confidence(self):
+        """Return minimum confidence for send events."""
+        return 80
+
+    @property
+    def name(self):
+        """Return the name of the entity."""
+        return self._name
+
+    def process_image(self, image):
+        """Process image."""
+        demo_data = {
+            'Hans': 98.34,
+            'Helena': 82.53,
+            'Luna': 62.53,
+        }
+
+        self.process_faces(demo_data, 4)

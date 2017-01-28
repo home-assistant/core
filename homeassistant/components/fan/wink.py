@@ -32,7 +32,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
         """Initialize the fan."""
         WinkDevice.__init__(self, wink, hass)
 
-    def set_drection(self: ToggleEntity, direction: str) -> None:
+    def set_direction(self: ToggleEntity, direction: str) -> None:
         """Set the direction of the fan."""
         self.wink.set_fan_direction(direction)
 

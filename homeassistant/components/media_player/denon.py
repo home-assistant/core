@@ -150,7 +150,7 @@ class DenonDevice(MediaPlayerDevice):
             answer_codes = ["NSE0", "NSE1X", "NSE2X", "NSE3X", "NSE4", "NSE5",
                             "NSE6", "NSE7", "NSE8"]
             for line in self.telnet_request(telnet, 'NSE', all_lines=True):
-                self._mediainfo += line[len(answer_codes.pop()):] + '\n'
+                self._mediainfo += line[len(answer_codes.pop(0)):] + '\n'
         else:
             self._mediainfo = self.source
 

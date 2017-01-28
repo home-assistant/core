@@ -17,6 +17,7 @@ DEPENDENCIES = ['homematic']
 SENSOR_TYPES_CLASS = {
     "Remote": None,
     "ShutterContact": "opening",
+    "MaxShutterContact": "opening",
     "IPShutterContact": "opening",
     "Smoke": "smoke",
     "SmokeV2": "smoke",

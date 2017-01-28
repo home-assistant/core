@@ -31,28 +31,30 @@ ATTR_PLATES = 'plates'
 ATTR_VEHICLES = 'vehicles'
 
 OPENALPR_REGIONS = [
-    'us',
-    'eu',
     'au',
     'auwide',
+    'br',
+    'eu',
+    'fr',
     'gb',
     'kr',
+    'kr2',
     'mx',
     'sg',
+    'us',
+    'vn2'
 ]
+
 
 CONF_REGION = 'region'
 CONF_ALPR_BIN = 'alp_bin'
 
 DEFAULT_BINARY = 'alpr'
-DEFAULT_CONFIDENCE = 80
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGION):
         vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
     vol.Optional(CONF_ALPR_BIN, default=DEFAULT_BINARY): cv.string,
-    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 
@@ -78,11 +80,6 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         """Initialize base alpr entity."""
         self.plates = {}  # last scan data
         self.vehicles = 0  # vehicles count
-
-    @property
-    def confidence(self):
-        """Return minimum confidence for send events."""
-        return None
 
     @property
     def state(self):

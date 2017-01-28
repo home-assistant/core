@@ -26,25 +26,26 @@ _LOGGER = logging.getLogger(__name__)
 OPENALPR_API_URL = "https://api.openalpr.com/v1/recognize"
 
 OPENALPR_REGIONS = [
-    'us',
-    'eu',
     'au',
     'auwide',
+    'br',
+    'eu',
+    'fr',
     'gb',
     'kr',
+    'kr2',
     'mx',
     'sg',
+    'us',
+    'vn2'
 ]
 
 CONF_REGION = 'region'
-DEFAULT_CONFIDENCE = 80
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_REGION):
         vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
-    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 

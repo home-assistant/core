@@ -51,3 +51,14 @@ toggle:
     entity_id:
       description: Name(s) of the entities to toggle
       exampl: 'fan.living_room'
+
+set_direction:
+  description: Set the fan rotation direction
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to toggle
+      exampl: 'fan.living_room'
+    direction:
+      description: The direction to rotate
+      example: 'left'
