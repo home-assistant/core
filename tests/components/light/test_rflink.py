@@ -280,7 +280,7 @@ def test_signal_repetitions(hass, monkeypatch):
 
 @asyncio.coroutine
 def test_signal_repetitions_alternation(hass, monkeypatch):
-    """Simultaniously switching entities must alternate repetitions."""
+    """Simultaneously switching entities must alternate repetitions."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
