@@ -11,10 +11,10 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, customize
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, CONF_CUSTOMIZE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -150,9 +150,9 @@ CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_INSTANCE, default=0x00): vol.Coerce(int)
 })
 
-CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_POLLING_INTENSITY):
-        vol.All(cv.positive_int),
+_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
+    vol.Required(CONF_ENTITY_ID): cv.match_all,
+    vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
@@ -164,8 +164,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_CUSTOMIZE, default={}):
-            vol.Schema({cv.string: CUSTOMIZE_SCHEMA}),
+        vol.Optional(CONF_CUSTOMIZE, default=[]):
+            vol.All(customize.CUSTOMIZE_SCHEMA,
+                    [_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY]),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
@@ -268,8 +269,7 @@ def setup(hass, config):
 
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
-    hass.data['zwave_customize'] = config[DOMAIN].get(CONF_CUSTOMIZE)
-    customize = hass.data['zwave_customize']
+    customize.set_customize(hass, DOMAIN, config[DOMAIN].get(CONF_CUSTOMIZE))
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
 
     # Setup options
@@ -349,7 +349,7 @@ def setup(hass, config):
                           value.genre)
             name = "{}.{}".format(component, object_id(value))
 
-            node_config = customize.get(name, {})
+            node_config = customize.get_overrides(hass, DOMAIN, name)
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info("Ignoring device %s", name)
