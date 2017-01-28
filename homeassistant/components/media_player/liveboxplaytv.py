@@ -22,7 +22,6 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['liveboxplaytv==1.4.1']
 
-_CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Livebox Play TV'
@@ -50,15 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
 
-    if host is None:
-        _LOGGER.error("No Orange Livebox TV found in configuration file "
-                      "or with discovery")
-        return False
-
-    # Only act if we are not already configuring this host
-    if host in _CONFIGURING:
-        return
-
     add_devices([LiveboxPlayTvDevice(host, port, name)], True)
 
 
@@ -73,7 +63,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._muted = False
         # Assume that the TV is in Play mode
         self._name = name
-        self._playing = True
         self._current_source = None
         self._state = STATE_UNKNOWN
         self._channel_list = {}
@@ -190,13 +179,11 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
 
     def media_play(self):
         """Send play command."""
-        self._playing = True
         self._state = STATE_PLAYING
         self._client.play()
 
     def media_pause(self):
         """Send media pause command to media player."""
-        self._playing = False
         self._state = STATE_PAUSED
         self._client.pause()
 
