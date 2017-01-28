@@ -32,7 +32,7 @@ CONFIG = {
 def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink sensor component."""
     # setup mocking rflink module
-    event_callback, create, _ = yield from mock_rflink(
+    event_callback, create, _, _ = yield from mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
@@ -86,7 +86,7 @@ def test_new_sensors_group(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, _, _ = yield from mock_rflink(
+    event_callback, _, _, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor

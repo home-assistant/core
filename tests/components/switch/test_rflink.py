@@ -35,7 +35,7 @@ CONFIG = {
 def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink switch component."""
     # setup mocking rflink module
-    event_callback, create, protocol = yield from mock_rflink(
+    event_callback, create, protocol, _ = yield from mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed

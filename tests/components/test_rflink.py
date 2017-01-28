@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import Mock
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from tests.common import assert_setup_component
 
@@ -40,7 +41,12 @@ def mock_rflink(hass, config, domain, monkeypatch):
     event_callback = mock_create.call_args_list[0][1]['event_callback']
     assert event_callback
 
-    return event_callback, mock_create, protocol
+    print(mock_create.call_args_list)
+    disconnect_callback = mock_create.call_args_list[
+        0][1]['disconnect_callback']
+    print(disconnect_callback)
+
+    return event_callback, mock_create, protocol, disconnect_callback
 
 
 @asyncio.coroutine
@@ -59,7 +65,7 @@ def test_version_banner(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, _, _ = yield from mock_rflink(
+    event_callback, _, _, _ = yield from mock_rflink(
         hass, config, domain, monkeypatch)
 
     event_callback({
@@ -91,7 +97,7 @@ def test_send_no_wait(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    _, _, protocol = yield from mock_rflink(
+    _, _, protocol, _ = yield from mock_rflink(
         hass, config, domain, monkeypatch)
 
     hass.async_add_job(
@@ -100,3 +106,26 @@ def test_send_no_wait(hass, monkeypatch):
     yield from hass.async_block_till_done()
     assert protocol.send_command.call_args_list[0][0][0] == 'protocol_0_0'
     assert protocol.send_command.call_args_list[0][0][1] == 'off'
+
+
+@asyncio.coroutine
+def test_reconnecting(hass, monkeypatch):
+    """An unexpected disconnect should cause a reconnect."""
+    domain = 'sensor'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+            CONF_RECONNECT_INTERVAL: 0,
+        },
+        domain: {
+            'platform': 'rflink',
+        },
+    }
+
+    # setup mocking rflink module
+    _, _, _, disconnect_callback = yield from mock_rflink(
+        hass, config, domain, monkeypatch)
+
+    assert disconnect_callback
+
+    disconnect_callback(None)

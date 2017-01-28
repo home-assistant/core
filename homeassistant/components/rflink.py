@@ -31,12 +31,13 @@ import logging
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
-from homeassistant.core import callback
+from homeassistant.core import CoreState, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 import voluptuous as vol
 
-REQUIREMENTS = ['rflink==0.0.19']
+REQUIREMENTS = ['rflink==0.0.20']
 
 DOMAIN = 'rflink'
 
@@ -46,16 +47,20 @@ CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_NEW_DEVICES_GROUP = 'new_devices_group'
+CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
 DEFAULT_SIGNAL_REPETITIONS = 1
+DEFAULT_RECONNECT_INTERVAL = 10
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
         vol.Optional(CONF_HOST, default=None): cv.string,
         vol.Optional(CONF_WAIT_FOR_ACK, default=True): cv.boolean,
+        vol.Optional(CONF_RECONNECT_INTERVAL,
+                     default=DEFAULT_RECONNECT_INTERVAL): int,
         vol.Optional(CONF_IGNORE_DEVICES, default=[]):
             vol.All(cv.ensure_list, [cv.string]),
     }),
@@ -145,26 +150,45 @@ def async_setup(hass, config):
     # tcp port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 
-    # rflink create_rflink_connection decides based on the value of host
-    # (string or None) if serial or tcp mode should be used
+    @callback
+    @Throttle(config[DOMAIN][CONF_RECONNECT_INTERVAL])
+    def reconnect(exc):
+        """Task to reconnect after connection has been unexpectedly lost."""
 
-    # initiate serial/tcp connection to Rflink gateway
-    connection = create_rflink_connection(
-        port=port,
-        host=host,
-        event_callback=event_callback,
-        loop=hass.loop,
-        ignore=config[DOMAIN][CONF_IGNORE_DEVICES]
-    )
-    transport, protocol = yield from connection
+        # if HA is not stopping, initiate new connection
+        if hass.state != CoreState.stopping:
+            hass.async_add_job(connect())
 
-    # bind protocol to command class to allow entities to send commands
-    RflinkCommand.set_rflink_protocol(
-        protocol, config[DOMAIN][CONF_WAIT_FOR_ACK])
+    @asyncio.coroutine
+    def connect():
+        """Setup connection and hook it into HA for reconnect/shutdown."""
 
-    # handle shutdown of rflink asyncio transport
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               lambda x: transport.close())
+        _LOGGER.info('initiation Rflink connection')
+
+        # rflink create_rflink_connection decides based on the value of host
+        # (string or None) if serial or tcp mode should be used
+
+        # initiate serial/tcp connection to Rflink gateway
+        connection = create_rflink_connection(
+            port=port,
+            host=host,
+            event_callback=event_callback,
+            disconnect_callback=reconnect,
+            loop=hass.loop,
+            ignore=config[DOMAIN][CONF_IGNORE_DEVICES]
+        )
+        transport, protocol = yield from connection
+
+        # bind protocol to command class to allow entities to send commands
+        RflinkCommand.set_rflink_protocol(
+            protocol, config[DOMAIN][CONF_WAIT_FOR_ACK])
+
+        # handle shutdown of rflink asyncio transport
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   lambda x: transport.close())
+
+    # make initial connection
+    yield from connect()
 
     # whoo
     return True

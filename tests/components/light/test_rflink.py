@@ -46,7 +46,7 @@ CONFIG = {
 def test_default_setup(hass, monkeypatch):
     """Test all basic functionality of the rflink switch component."""
     # setup mocking rflink module
-    event_callback, create, protocol = yield from mock_rflink(
+    event_callback, create, protocol, _ = yield from mock_rflink(
         hass, CONFIG, DOMAIN, monkeypatch)
 
     # make sure arguments are passed
@@ -156,7 +156,7 @@ def test_new_light_group(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, _, _ = yield from mock_rflink(
+    event_callback, _, _, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     # test event for new unconfigured sensor
@@ -191,7 +191,7 @@ def test_firing_bus_event(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, _, _ = yield from mock_rflink(
+    event_callback, _, _, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     calls = []
@@ -236,7 +236,7 @@ def test_signal_repetitions(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    event_callback, _, protocol = yield from mock_rflink(
+    event_callback, _, protocol, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     # test if signal repetition is performed according to configuration
@@ -295,7 +295,7 @@ def test_signal_repetitions_alternation(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    _, _, protocol = yield from mock_rflink(
+    _, _, protocol, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     hass.async_add_job(
@@ -332,7 +332,7 @@ def test_signal_repetitions_cancelling(hass, monkeypatch):
     }
 
     # setup mocking rflink module
-    _, _, protocol = yield from mock_rflink(
+    _, _, protocol, _ = yield from mock_rflink(
         hass, config, DOMAIN, monkeypatch)
 
     hass.async_add_job(
