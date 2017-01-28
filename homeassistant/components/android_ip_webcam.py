@@ -116,7 +116,7 @@ SWITCHES = ['exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision',
 
 SENSORS = ['audio_connections', 'battery_level', 'battery_temp',
            'battery_voltage', 'light', 'motion', 'pressure', 'proximity',
-           'sound', 'sound_event', 'sound_timeout', 'video_connections']
+           'sound', 'video_connections']
 
 CONF_MOTION_BINARY_SENSOR = 'motion_binary_sensor'
 
