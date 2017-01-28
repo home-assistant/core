@@ -110,8 +110,9 @@ ICON_MAP = {
     'whitebalance_lock': 'mdi:white-balance-auto'
 }
 
-SWITCHES = ['exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision',
-            'overlay', 'quality', 'torch', 'video_chunk_len',
+SWITCHES = ['audio_only', 'exposure_lock', 'ffc', 'focus',
+            'focus_homing', 'gps_active', 'idle', 'ivideon_streaming',
+            'motion_detect', 'night_vision', 'overlay', 'torch',
             'whitebalance_lock']
 
 SENSORS = ['audio_connections', 'battery_level', 'battery_temp',
