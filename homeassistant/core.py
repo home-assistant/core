@@ -12,6 +12,7 @@ import logging
 import os
 import re
 import signal
+import subprocess
 import sys
 import threading
 
@@ -333,6 +334,9 @@ class HomeAssistant(object):
     @callback
     def _async_restart_handler(self, *args):
         """Restart Home Assistant."""
+        if subprocess.call([sys.argv[0], '--script', 'check_config']):
+            _LOGGER.error("check_config failed. Not restarting.")
+            return
         self.exit_code = RESTART_EXIT_CODE
         self.loop.create_task(self.async_stop())
 

@@ -148,7 +148,7 @@ def run(script_args: List) -> int:
             print(' -', skey + ':', sval, color('cyan', '[from:', flatsecret
                                                 .get(skey, 'keyring') + ']'))
 
-    return len(res['except'])
+    return len(res['except']) + len(res['except_global'])
 
 
 def check(config_path):
@@ -157,6 +157,7 @@ def check(config_path):
         'yaml_files': OrderedDict(),  # yaml_files loaded
         'secrets': OrderedDict(),  # secret cache and secrets loaded
         'except': OrderedDict(),  # exceptions raised (with config)
+        'except_global': [],  # global raised exceptions.
         'components': OrderedDict(),  # successful components
         'secret_cache': OrderedDict(),
     }
@@ -247,6 +248,7 @@ def check(config_path):
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))
+        res['except_global'].append(err)
     finally:
         # Stop all patches
         for pat in PATCHES.values():
