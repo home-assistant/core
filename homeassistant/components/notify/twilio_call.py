@@ -42,57 +42,6 @@ def get_service(hass, config, discovery_info=None):
                                          config[CONF_FROM_NUMBER])
 
 
-def is_validurl(url):
-    """Check if the passed url is valid using dperini regex."""
-    import re
-
-    ip_middle_oct = r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5]))"
-    ip_last_oct = r"(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))"
-
-    regex = re.compile(
-        r"^"
-        # protocol identifier
-        r"(?:(?:https?|ftp)://)"
-        # user:pass authentication
-        r"(?:\S+(?::\S*)?@)?"
-        r"(?:"
-        r"(?P<private_ip>"
-        # IP address exclusion
-        # private & local networks
-        r"(?:(?:10|127)" + ip_middle_oct + u"{2}" + ip_last_oct + u")|"
-        r"(?:(?:169\.254|192\.168)" + ip_middle_oct + ip_last_oct + u")|"
-        r"(?:172\.(?:1[6-9]|2\d|3[0-1])" + ip_middle_oct + ip_last_oct + u"))"
-        r"|"
-        # IP address dotted notation octets
-        # excludes loopback network 0.0.0.0
-        # excludes reserved space >= 224.0.0.0
-        # excludes network & broadcast addresses
-        # (first & last IP address of each class)
-        r"(?P<public_ip>"
-        r"(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])"
-        r"" + ip_middle_oct + u"{2}"
-        r"" + ip_last_oct + u")"
-        r"|"
-        # host name
-        r"(?:(?:[a-z\u00a1-\uffff0-9]-?)*[a-z\u00a1-\uffff0-9]+)"
-        # domain name
-        r"(?:\.(?:[a-z\u00a1-\uffff0-9]-?)*[a-z\u00a1-\uffff0-9]+)*"
-        # TLD identifier
-        r"(?:\.(?:[a-z\u00a1-\uffff]{2,}))"
-        r")"
-        # port number
-        r"(?::\d{2,5})?"
-        # resource path
-        r"(?:/\S*)?"
-        # query string
-        r"(?:\?\S*)?"
-        r"$",
-        re.UNICODE | re.IGNORECASE
-    )
-
-    return regex.match(url)
-
-
 class TwilioCallNotificationService(BaseNotificationService):
     """Implement the notification service for the Twilio Call service."""
 
@@ -103,19 +52,24 @@ class TwilioCallNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Call to specified target users."""
+        from twilio import TwilioRestException
+
         targets = kwargs.get(ATTR_TARGET)
 
         if not targets:
             _LOGGER.info("At least 1 target is required")
             return
 
-        if is_validurl(message):
+        if message.startswith("http://"):
             twimlet_url = message
         else:
             twimlet_url = 'http://twimlets.com/message?Message='
             twimlet_url += urllib.parse.quote(message, safe='')
 
         for target in targets:
-            self.client.calls.create(to=target,
-                                     url=twimlet_url,
-                                     from_=self.from_number)
+            try:
+                self.client.calls.create(to=target,
+                                         url=twimlet_url,
+                                         from_=self.from_number)
+            except TwilioRestException as exc:
+                _LOGGER.error(exc)
