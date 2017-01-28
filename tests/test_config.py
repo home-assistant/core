@@ -234,25 +234,6 @@ class TestConfig(unittest.TestCase):
 
         assert state.attributes['hidden']
 
-    def test_entity_customization_comma_separated(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: [
-                      {'entity_id': 'test.not_test,test,test.not_t*',
-                       'key1': 'value1'},
-                      {'entity_id': 'test.test,not_test,test.not_t*',
-                       'key2': 'value2'},
-                      {'entity_id': 'test.not_test,not_test,test.t*',
-                       'key3': 'value3'}]}
-
-        state = self._compute_state(config)
-
-        assert state.attributes['key1'] == 'value1'
-        assert state.attributes['key2'] == 'value2'
-        assert state.attributes['key3'] == 'value3'
-
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
     def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
