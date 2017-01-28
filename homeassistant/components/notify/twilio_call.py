@@ -59,7 +59,7 @@ class TwilioCallNotificationService(BaseNotificationService):
             _LOGGER.info("At least 1 target is required")
             return
 
-        if message.startswith("http://"):
+        if message.startswith(("http://", "https://")):
             twimlet_url = message
         else:
             twimlet_url = "http://twimlets.com/message?Message="
