@@ -153,13 +153,13 @@ def async_setup(hass, config):
     @callback
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
-        _LOGGER.warning('disconnected from Rflink, reconnecting')
 
         # reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
 
         # if HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
+            _LOGGER.warning('disconnected from Rflink, reconnecting')
             hass.async_add_job(connect)
 
     @asyncio.coroutine
