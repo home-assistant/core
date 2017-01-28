@@ -1,10 +1,8 @@
 """
 Support for Sky Hub.
 
-# Example configuration.yaml entry
-device_tracker:
-  - platform: sky_hub
-    host: 192.168.1.254
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.sky_hub/
 """
 import logging
 import re
@@ -20,12 +18,10 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 _LOGGER = logging.getLogger(__name__)
-
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
@@ -45,7 +41,7 @@ class SkyHubDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialise the scanner."""
-        _LOGGER.info('Initialising Sky Hub')
+        _LOGGER.info("Initialising Sky Hub")
         self.host = config.get(CONF_HOST, '192.168.1.254')
 
         self.lock = threading.Lock()
@@ -86,7 +82,7 @@ class SkyHubDeviceScanner(DeviceScanner):
             return False
 
         with self.lock:
-            _LOGGER.info('Scanning')
+            _LOGGER.info("Scanning")
 
             data = _get_skyhub_data(self.url)
 

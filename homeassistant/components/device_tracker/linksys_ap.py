@@ -14,11 +14,10 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-                                 CONF_VERIFY_SSL)
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
@@ -59,7 +58,7 @@ class LinksysAPDeviceScanner(object):
         # Check if the access point is accessible
         response = self._make_request()
         if not response.status_code == 200:
-            raise ConnectionError('Cannot connect to Linksys Access Point')
+            raise ConnectionError("Cannot connect to Linksys Access Point")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -83,7 +82,7 @@ class LinksysAPDeviceScanner(object):
         from bs4 import BeautifulSoup as BS
 
         with self.lock:
-            _LOGGER.info('Checking Linksys AP')
+            _LOGGER.info("Checking Linksys AP")
 
             self.last_results = []
             for interface in range(INTERFACES):

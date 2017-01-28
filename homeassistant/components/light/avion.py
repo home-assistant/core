@@ -55,7 +55,7 @@ class AvionLight(Light):
 
         self._name = device['name']
         self._address = device['address']
-        self._key = device["key"]
+        self._key = device['key']
         self._brightness = 255
         self._state = False
         self._switch = avion.avion(self._address, self._key)
