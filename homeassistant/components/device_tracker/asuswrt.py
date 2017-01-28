@@ -76,6 +76,7 @@ _IP_NEIGH_REGEX = re.compile(
     r'\w+\s'
     r'\w+\s'
     r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
+    r'\s?(router)?'
     r'(?P<status>(\w+))')
 
 _NVRAM_CMD = 'nvram get client_info_tmp'
