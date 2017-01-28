@@ -153,7 +153,6 @@ def async_setup(hass, config):
     @callback
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
-
         # reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
 
