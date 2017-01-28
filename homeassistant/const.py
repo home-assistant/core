@@ -10,9 +10,9 @@ REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
-PROJECT_LICENSE = 'MIT License'
+PROJECT_LICENSE = 'Apache License 2.0'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2016, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2013, {}'.format(PROJECT_AUTHOR)
 PROJECT_URL = 'https://home-assistant.io/'
 PROJECT_EMAIL = 'hello@home-assistant.io'
 PROJECT_DESCRIPTION = ('Open-source home automation platform '
@@ -25,7 +25,7 @@ PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
 PROJECT_CLASSIFIERS = [
     'Intended Audience :: End Users/Desktop',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
     'Programming Language :: Python :: 3.4',
     'Topic :: Home Automation'
