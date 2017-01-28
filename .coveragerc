@@ -272,6 +272,7 @@ omit =
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/telstra.py
     homeassistant/components/notify/twilio_sms.py
+    homeassistant/components/notify/twilio_call.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
