@@ -1,5 +1,5 @@
 """
-Support for IP Webcam, an Android app that turns a device into a webcam.
+Support for IP Webcam, an Android app that acts as a full-featured webcam.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/android_ip_webcam/
@@ -96,7 +96,7 @@ def setup(hass, config):
     """Setup the IP Webcam component."""
     conf = config[DOMAIN]
     host = conf[CONF_HOST]
-    hass.data[DATA_IP_WEBCAM][host] = {'status': {}, 'sensors': {}}
+    hass.data[DATA_IP_WEBCAM][host] = IPWebcam(conf)
 
     binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
     discovery.load_platform(hass, 'binary_sensor', DOMAIN,
@@ -116,13 +116,14 @@ def setup(hass, config):
 class IPWebcam(Entity):
     """The Android device running IP Webcam."""
 
-    def __init__(self, name, host, username, port, password):
+    def __init__(self, config):
         """Initialize the data oject."""
-        self._name = name
-        self._host = host
-        self._port = port
-        self._username = username
-        self._password = password
+        self._config = config
+        self._name = self._config.get(CONF_NAME)
+        self._host = self._config.get(CONF_HOST)
+        self._port = self._config.get(CONF_PORT)
+        self._username = self._config.get(CONF_USERNAME)
+        self._password = self._config.get(CONF_PASSWORD)
         self._status_data = None
         self._sensor_data = None
         self._sensor_updated_at = datetime.utcnow()
