@@ -77,6 +77,11 @@ class EQ3BTSmartThermostat(ClimateDevice):
         self._thermostat = eq3.Thermostat(_mac)
 
     @property
+    def available(self) -> bool:
+        """Return if thermostat is available."""
+        return self.current_operation != STATE_UNKNOWN
+
+    @property
     def name(self):
         """Return the name of the device."""
         return self._name
