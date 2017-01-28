@@ -12,12 +12,10 @@ import aiohttp
 import async_timeout
 import requests
 from requests.auth import HTTPBasicAuth
-import voluptuous as vol
 
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_stream)
-from homeassistant.helpers import config_validation as cv
 from homeassistant.components import android_ip_webcam
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 DEPENDENCIES = ['android_ip_webcam']
+
 
 @asyncio.coroutine
 # pylint: disable=unused-argument
@@ -58,10 +57,10 @@ class IPWebcamCamera(Camera):
         super(IPWebcamCamera, self).__init__()
         self._device = device
         self._name = self._device.name
-        self._username = self._device._username
-        self._password = self._device._password
-        self._mjpeg_url = '{}/{}'.format(self._device._base_url, 'video')
-        self._still_image_url = '{}/{}'.format(self._device._base_url,
+        self._username = self._device.username
+        self._password = self._device.password
+        self._mjpeg_url = '{}/{}'.format(self._device.base_url, 'video')
+        self._still_image_url = '{}/{}'.format(self._device.base_url,
                                                'photo.jpg')
 
         self._auth = None
@@ -72,7 +71,6 @@ class IPWebcamCamera(Camera):
     @asyncio.coroutine
     def async_camera_image(self):
         """Return a still image response from the camera."""
-
         websession = async_get_clientsession(self.hass)
         response = None
         try:
@@ -109,7 +107,6 @@ class IPWebcamCamera(Camera):
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-
         # connect to stream
         websession = async_get_clientsession(self.hass)
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)

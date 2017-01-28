@@ -149,11 +149,11 @@ class IPWebcam(object):
     def __init__(self, config):
         """Initialize the data oject."""
         self._config = config
-        self._name = self._config.get(CONF_NAME)
-        self._host = self._config.get(CONF_HOST)
-        self._port = self._config.get(CONF_PORT)
-        self._username = self._config.get(CONF_USERNAME)
-        self._password = self._config.get(CONF_PASSWORD)
+        self.name = self._config.get(CONF_NAME)
+        self.host = self._config.get(CONF_HOST)
+        self.port = self._config.get(CONF_PORT)
+        self.username = self._config.get(CONF_USERNAME)
+        self.password = self._config.get(CONF_PASSWORD)
         self.status_data = None
         self.sensor_data = None
         # Let's get the data for the last 15 seconds since it's the first start
@@ -163,7 +163,7 @@ class IPWebcam(object):
     @property
     def _base_url(self):
         """Return the base url for endpoints."""
-        return 'http://{}:{}'.format(self._host, self._port)
+        return 'http://{}:{}'.format(self.host, self.port)
 
     def _request(self, path, resp='xml'):
         """Make the actual request and return the parsed response."""
@@ -171,8 +171,8 @@ class IPWebcam(object):
 
         auth_tuple = ()
 
-        if self._username is not None and self._password is not None:
-            auth_tuple = (self._username, self._password)
+        if self.username is not None and self.password is not None:
+            auth_tuple = (self.username, self.password)
 
         try:
             response = requests.get(url, timeout=DEFAULT_TIMEOUT,
@@ -207,7 +207,7 @@ class IPWebcam(object):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._name
+        return self.name
 
     @property
     def device_state_attributes(self):
