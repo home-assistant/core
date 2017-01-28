@@ -199,8 +199,6 @@ class IPWebcam(object):
         if self.username is not None and self.password is not None:
             auth_tuple = (self.username, self.password)
 
-        print('URL', url)
-
         resp = 'json' if '.json' in path else 'xml'
 
         try:
