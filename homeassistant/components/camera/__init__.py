@@ -93,7 +93,7 @@ def async_setup(hass, config):
         """Update tokens of the entities."""
         for entity in component.entities.values():
             entity.async_update_token()
-            entity.schedule_update_ha_state(True)
+            hass.async_add_job(entity.async_update_ha_state())
 
     async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
     return True
@@ -222,7 +222,8 @@ class Camera(Entity):
     def async_update_token(self):
         """Update the used token."""
         self.access_tokens.append(
-            hashlib.sha256(str.encode(str(_RND.random()))).hexdigest())
+            hashlib.sha256(
+                _RND.getrandbits(256).to_bytes(32, 'little')).hexdigest())
 
 
 class CameraView(HomeAssistantView):

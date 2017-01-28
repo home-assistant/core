@@ -405,7 +405,7 @@ class MediaPlayerDevice(Entity):
         """Access token for this media player."""
         if self._access_token is None:
             self._access_token = hashlib.sha256(
-                str.encode(str(_RND.random()))).hexdigest()
+                _RND.getrandbits(256).to_bytes(32, 'little')).hexdigest()
         return self._access_token
 
     @property
