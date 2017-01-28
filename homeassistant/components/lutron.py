@@ -1,9 +1,9 @@
 """
 Component for interacting with a Lutron RadioRA 2 system.
 
-Uses pylutron (http://github.com/thecynic/pylutron).
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/lutron/
 """
-
 import logging
 
 from homeassistant.helpers import discovery
@@ -13,7 +13,7 @@ from homeassistant.loader import get_component
 REQUIREMENTS = ['https://github.com/thecynic/pylutron/archive/v0.1.0.zip#'
                 'pylutron==0.1.0']
 
-DOMAIN = "lutron"
+DOMAIN = 'lutron'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ def setup(hass, base_config):
     )
     hass.data[LUTRON_CONTROLLER].load_xml_db()
     hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info("Connected to Main Repeater @ %s", config['lutron_host'])
+    _LOGGER.info("Connected to Main Repeater at %s", config['lutron_host'])
 
     group = get_component('group')
 
