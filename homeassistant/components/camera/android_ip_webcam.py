@@ -1,8 +1,8 @@
 """
-Support for IP Cameras.
+Support for IP Webcam, an Android app that acts as a full-featured webcam.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.mjpeg/
+https://home-assistant.io/components/camera.android_ip_webcam/
 """
 import asyncio
 import logging
@@ -11,41 +11,31 @@ from contextlib import closing
 import aiohttp
 import async_timeout
 import requests
-from requests.auth import HTTPBasicAuth, HTTPDigestAuth
+from requests.auth import HTTPBasicAuth
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
-    HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_stream)
 from homeassistant.helpers import config_validation as cv
+from homeassistant.components import android_ip_webcam
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MJPEG_URL = 'mjpeg_url'
-CONF_STILL_IMAGE_URL = 'still_image_url'
-CONTENT_TYPE_HEADER = 'Content-Type'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
-DEFAULT_NAME = 'Mjpeg Camera'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MJPEG_URL): cv.url,
-    vol.Optional(CONF_STILL_IMAGE_URL): cv.url,
-    vol.Optional(CONF_AUTHENTICATION, default=HTTP_BASIC_AUTHENTICATION):
-        vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-})
-
+DEPENDENCIES = ['android_ip_webcam']
 
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a MJPEG IP Camera."""
-    yield from async_add_devices([MjpegCamera(hass, config)])
+    """Setup an IP Webcam Camera."""
+    if discovery_info is None:
+        return
+    devices = hass.data[android_ip_webcam.DATA_IP_WEBCAM]
+    cameras = [IPWebcamCamera(hass, device)
+               for key, device in devices.items()]
+    yield from async_add_devices(cameras, True)
 
 
 def extract_image_from_mjpeg(stream):
@@ -60,35 +50,28 @@ def extract_image_from_mjpeg(stream):
             return jpg
 
 
-class MjpegCamera(Camera):
+class IPWebcamCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
-    def __init__(self, hass, device_info):
-        """Initialize a MJPEG camera."""
-        super().__init__()
-        self._name = device_info.get(CONF_NAME)
-        self._authentication = device_info.get(CONF_AUTHENTICATION)
-        self._username = device_info.get(CONF_USERNAME)
-        self._password = device_info.get(CONF_PASSWORD)
-        self._mjpeg_url = device_info[CONF_MJPEG_URL]
-        self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
+    def __init__(self, hass, device):
+        """Initialize a IP Webcam camera."""
+        super(IPWebcamCamera, self).__init__()
+        self._device = device
+        self._name = self._device.name
+        self._username = self._device._username
+        self._password = self._device._password
+        self._mjpeg_url = '{}/{}'.format(self._device._base_url, 'video')
+        self._still_image_url = '{}/{}'.format(self._device._base_url,
+                                               'photo.jpg')
 
         self._auth = None
         if self._username and self._password:
-            if self._authentication == HTTP_BASIC_AUTHENTICATION:
-                self._auth = aiohttp.BasicAuth(
-                    self._username, password=self._password
-                )
+            self._auth = aiohttp.BasicAuth(self._username,
+                                           password=self._password)
 
     @asyncio.coroutine
     def async_camera_image(self):
         """Return a still image response from the camera."""
-        # DigestAuth is not supported
-        if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
-           self._still_image_url is None:
-            image = yield from self.hass.loop.run_in_executor(
-                None, self.camera_image)
-            return image
 
         websession = async_get_clientsession(self.hass)
         response = None
@@ -114,10 +97,7 @@ class MjpegCamera(Camera):
     def camera_image(self):
         """Return a still image response from the camera."""
         if self._username and self._password:
-            if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-                auth = HTTPDigestAuth(self._username, self._password)
-            else:
-                auth = HTTPBasicAuth(self._username, self._password)
+            auth = HTTPBasicAuth(self._username, self._password)
             req = requests.get(
                 self._mjpeg_url, auth=auth, stream=True, timeout=10)
         else:
@@ -129,10 +109,6 @@ class MjpegCamera(Camera):
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
-        # aiohttp don't support DigestAuth -> Fallback
-        if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-            yield from super().handle_async_mjpeg_stream(request)
-            return
 
         # connect to stream
         websession = async_get_clientsession(self.hass)
@@ -144,3 +120,12 @@ class MjpegCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._device.device_state_attributes
+
+    def update(self):
+        """Update the state."""
+        self._device.update()

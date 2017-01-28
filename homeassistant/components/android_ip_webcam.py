@@ -49,7 +49,8 @@ STATUS_KEY_MAP = {
     'focusmode': 'Focus Mode',
     'gps_active': 'GPS Active',
     'idle': 'Idle',
-    'ip_address': 'IP Address',
+    'ip_address': 'IPv4 Address',
+    'ipv6_address': 'IPv6 Address',
     'ivideon_streaming': 'Ivideon Streaming',
     'mirror_flip': 'Mirror Flip',
     'motion_detect': 'Motion Detection',
@@ -96,24 +97,27 @@ def setup(hass, config):
     """Setup the IP Webcam component."""
     conf = config[DOMAIN]
     host = conf[CONF_HOST]
+    ip_webcam = hass.data.get(DATA_IP_WEBCAM)
+    if ip_webcam is None:
+        hass.data[DATA_IP_WEBCAM] = {}
     hass.data[DATA_IP_WEBCAM][host] = IPWebcam(conf)
 
-    binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN,
-                            binary_sensor_config, config)
+    # binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
+    # discovery.load_platform(hass, 'binary_sensor', DOMAIN,
+    #                         binary_sensor_config, config)
 
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
-    sensor_config = conf.get(CONF_SENSORS, {})
-    discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
+    # sensor_config = conf.get(CONF_SENSORS, {})
+    # discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
-    switch_config = conf.get(CONF_SWITCHES, {})
-    discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
+    # switch_config = conf.get(CONF_SWITCHES, {})
+    # discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
 
     return True
 
 
-class IPWebcam(Entity):
+class IPWebcam(object):
     """The Android device running IP Webcam."""
 
     def __init__(self, config):
@@ -185,17 +189,22 @@ class IPWebcam(Entity):
         state_attr = {}
         state_attr[ATTR_VID_CONNS] = self._status_data.get('video_connections')
         state_attr[ATTR_AUD_CONNS] = self._status_data.get('audio_connections')
-        for (key, val) in self._status_data.get('curvals'):
-            if val == 'on' or val == 'off':
-                val = (val == 'on')
-
+        for (key, val) in self._status_data.get('curvals').items():
             try:
                 val = float(val)
             except ValueError:
                 val = val
 
-            state_attr[STATUS_KEY_MAP[key]] = val
+            if val == 'on' or val == 'off':
+                val = (val == 'on')
+
+            state_attr[STATUS_KEY_MAP.get(key, key)] = val
         return state_attr
+
+    @property
+    def enabled_sensors(self):
+        """Return the enabled sensors."""
+        return list(self._sensor_data.keys())
 
     def change_setting(self, key, val):
         """Change a setting."""
