@@ -391,6 +391,8 @@ def async_setup(hass, config):
 class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
+    _access_token = None
+
     # pylint: disable=no-self-use
     # Implement these for your media player
     @property
@@ -401,8 +403,10 @@ class MediaPlayerDevice(Entity):
     @property
     def access_token(self):
         """Access token for this media player."""
-        return hashlib.sha256(
-            str.encode(str(_RND.random()))).hexdigest()
+        if self._access_token is None:
+            self._access_token = hashlib.sha256(
+                str.encode(str(_RND.random()))).hexdigest()
+        return self._access_token
 
     @property
     def volume_level(self):
