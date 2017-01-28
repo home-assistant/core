@@ -70,6 +70,15 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
+def isdevice(value):
+    """Validate that value is a real device."""
+    try:
+        os.stat(value)
+        return str(value)
+    except OSError:
+        raise vol.Invalid('No device at {} found'.format(value))
+
+
 def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
@@ -376,6 +385,8 @@ def ordered_dict(value_validator, key_validator=match_all):
         """Validate ordered dict."""
         config = OrderedDict()
 
+        if not isinstance(value, dict):
+            raise vol.Invalid('Value {} is not a dictionary'.format(value))
         for key, val in value.items():
             v_res = item_validator({key: val})
             config.update(v_res)
@@ -383,6 +394,13 @@ def ordered_dict(value_validator, key_validator=match_all):
         return config
 
     return validator
+
+
+def ensure_list_csv(value: Any) -> Sequence:
+    """Ensure that input is a list or make one from comma-separated string."""
+    if isinstance(value, str):
+        return [member.strip() for member in value.split(',')]
+    return ensure_list(value)
 
 
 # Validator helpers

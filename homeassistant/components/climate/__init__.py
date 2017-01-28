@@ -32,6 +32,7 @@ SERVICE_SET_AWAY_MODE = "set_away_mode"
 SERVICE_SET_AUX_HEAT = "set_aux_heat"
 SERVICE_SET_TEMPERATURE = "set_temperature"
 SERVICE_SET_FAN_MODE = "set_fan_mode"
+SERVICE_SET_HOLD_MODE = "set_hold_mode"
 SERVICE_SET_OPERATION_MODE = "set_operation_mode"
 SERVICE_SET_SWING_MODE = "set_swing_mode"
 SERVICE_SET_HUMIDITY = "set_humidity"
@@ -56,6 +57,7 @@ ATTR_CURRENT_HUMIDITY = "current_humidity"
 ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
+ATTR_HOLD_MODE = "hold_mode"
 ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 ATTR_SWING_MODE = "swing_mode"
@@ -93,6 +95,10 @@ SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_FAN_MODE): cv.string,
 })
+SET_HOLD_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_HOLD_MODE): cv.string,
+})
 SET_OPERATION_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OPERATION_MODE): cv.string,
@@ -116,7 +122,21 @@ def set_away_mode(hass, away_mode, entity_id=None):
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
 
+    _LOGGER.warning(
+        'This service has been deprecated; use climate.set_hold_mode')
     hass.services.call(DOMAIN, SERVICE_SET_AWAY_MODE, data)
+
+
+def set_hold_mode(hass, hold_mode, entity_id=None):
+    """Set new hold mode."""
+    data = {
+        ATTR_HOLD_MODE: hold_mode
+    }
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_HOLD_MODE, data)
 
 
 def set_aux_heat(hass, aux_heat, entity_id=None):
@@ -229,6 +249,8 @@ def async_setup(hass, config):
                 SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
             return
 
+        _LOGGER.warning(
+            'This service has been deprecated; use climate.set_hold_mode')
         for climate in target_climate:
             if away_mode:
                 yield from climate.async_turn_away_mode_on()
@@ -241,6 +263,23 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_SET_AWAY_MODE, async_away_mode_set_service,
         descriptions.get(SERVICE_SET_AWAY_MODE),
         schema=SET_AWAY_MODE_SCHEMA)
+
+    @asyncio.coroutine
+    def async_hold_mode_set_service(service):
+        """Set hold mode on target climate devices."""
+        target_climate = component.async_extract_from_service(service)
+
+        hold_mode = service.data.get(ATTR_HOLD_MODE)
+
+        for climate in target_climate:
+            yield from climate.async_set_hold_mode(hold_mode)
+
+        yield from _async_update_climate(target_climate)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_HOLD_MODE, async_hold_mode_set_service,
+        descriptions.get(SERVICE_SET_HOLD_MODE),
+        schema=SET_HOLD_MODE_SCHEMA)
 
     @asyncio.coroutine
     def async_aux_heat_set_service(service):
@@ -446,6 +485,10 @@ class ClimateDevice(Entity):
             if self.operation_list:
                 data[ATTR_OPERATION_LIST] = self.operation_list
 
+        is_hold = self.current_hold_mode
+        if is_hold is not None:
+            data[ATTR_HOLD_MODE] = is_hold
+
         swing_mode = self.current_swing_mode
         if swing_mode is not None:
             data[ATTR_SWING_MODE] = swing_mode
@@ -515,6 +558,11 @@ class ClimateDevice(Entity):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
+        return None
+
+    @property
+    def current_hold_mode(self):
+        """Return the current hold mode, e.g., home, away, temp."""
         return None
 
     @property
@@ -625,6 +673,18 @@ class ClimateDevice(Entity):
         """
         return self.hass.loop.run_in_executor(
             None, self.turn_away_mode_off)
+
+    def set_hold_mode(self, hold_mode):
+        """Set new target hold mode."""
+        raise NotImplementedError()
+
+    def async_set_hold_mode(self, hold_mode):
+        """Set new target hold mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.set_hold_mode, hold_mode)
 
     def turn_aux_heat_on(self):
         """Turn auxillary heater on."""

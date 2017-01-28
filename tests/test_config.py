@@ -170,16 +170,17 @@ class TestConfig(unittest.TestCase):
                 os.path.join(CONFIG_DIR, 'non_existing_dir/'), False))
         self.assertTrue(mock_print.called)
 
+    # pylint: disable=no-self-use
     def test_core_config_schema(self):
         """Test core config schema."""
         for value in (
-            {CONF_UNIT_SYSTEM: 'K'},
-            {'time_zone': 'non-exist'},
-            {'latitude': '91'},
-            {'longitude': -181},
-            {'customize': 'bla'},
-            {'customize': {'invalid_entity_id': {}}},
-            {'customize': {'light.sensor': 100}},
+                {CONF_UNIT_SYSTEM: 'K'},
+                {'time_zone': 'non-exist'},
+                {'latitude': '91'},
+                {'longitude': -181},
+                {'customize': 'bla'},
+                {'customize': {'light.sensor': 100}},
+                {'customize': {'entity_id': []}},
         ):
             with pytest.raises(MultipleInvalid):
                 config_util.CORE_CONFIG_SCHEMA(value)
@@ -196,13 +197,7 @@ class TestConfig(unittest.TestCase):
             },
         })
 
-    def test_entity_customization(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
-
+    def _compute_state(self, config):
         run_coroutine_threadsafe(
             config_util.async_process_ha_core_config(self.hass, config),
             self.hass.loop).result()
@@ -214,7 +209,28 @@ class TestConfig(unittest.TestCase):
 
         self.hass.block_till_done()
 
-        state = self.hass.states.get('test.test')
+        return self.hass.states.get('test.test')
+
+    def test_entity_customization_false(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {
+                      'test.test': {'hidden': False}}}
+
+        state = self._compute_state(config)
+
+        assert 'hidden' not in state.attributes
+
+    def test_entity_customization(self):
+        """Test entity customization through configuration."""
+        config = {CONF_LATITUDE: 50,
+                  CONF_LONGITUDE: 50,
+                  CONF_NAME: 'Test',
+                  CONF_CUSTOMIZE: {'test.test': {'hidden': True}}}
+
+        state = self._compute_state(config)
 
         assert state.attributes['hidden']
 
@@ -229,6 +245,7 @@ class TestConfig(unittest.TestCase):
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
+            # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
             self.hass.config.path = mock.Mock()
@@ -258,6 +275,7 @@ class TestConfig(unittest.TestCase):
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
+            # pylint: disable=no-member
             opened_file.readline.return_value = ha_version
 
             self.hass.config.path = mock.Mock()
@@ -436,7 +454,6 @@ def test_merge_type_mismatch(merge_log_err):
 def test_merge_once_only(merge_log_err):
     """Test if we have a merge for a comp that may occur only once."""
     packages = {
-        'pack_1': {'homeassistant': {}},
         'pack_2': {
             'mqtt': {},
             'api': {},  # No config schema
@@ -447,7 +464,7 @@ def test_merge_once_only(merge_log_err):
         'mqtt': {}, 'api': {}
     }
     config_util.merge_packages_config(config, packages)
-    assert merge_log_err.call_count == 3
+    assert merge_log_err.call_count == 2
     assert len(config) == 3
 
 
@@ -482,3 +499,29 @@ def test_merge_duplicate_keys(merge_log_err):
     assert merge_log_err.call_count == 1
     assert len(config) == 2
     assert len(config['input_select']) == 1
+
+
+@pytest.mark.asyncio
+def test_merge_customize(hass):
+    """Test loading core config onto hass object."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        'customize': {'a.a': {'friendly_name': 'A'}},
+        'packages': {'pkg1': {'homeassistant': {'customize': {
+            'b.b': {'friendly_name': 'BB'}}}}},
+    }
+    yield from config_util.async_process_ha_core_config(hass, core_config)
+
+    entity = Entity()
+    entity.entity_id = 'b.b'
+    entity.hass = hass
+    yield from entity.async_update_ha_state()
+
+    state = hass.states.get('b.b')
+    assert state is not None
+    assert state.attributes['friendly_name'] == 'BB'

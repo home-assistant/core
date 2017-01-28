@@ -190,6 +190,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             return
 
         active_child = self._child_state
+        if active_child is None:
+            # No child to call service on
+            return
+
         service_data[ATTR_ENTITY_ID] = active_child.entity_id
 
         self.hass.services.call(DOMAIN, service_name, service_data,

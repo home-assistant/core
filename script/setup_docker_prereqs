@@ -35,7 +35,7 @@ echo "deb http://download.telldus.com/debian/ stable main" >> /etc/apt/sources.l
 wget -qO - http://download.telldus.se/debian/telldus-public.key | apt-key add -
 
 # Add jessie-backports
-echo "deb http://httpredir.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
+echo "deb http://deb.debian.org/debian jessie-backports main" >> /etc/apt/sources.list
 
 # Install packages
 apt-get update
@@ -49,6 +49,9 @@ cp -R /usr/src/app/build/python-openzwave/openzwave/config /usr/local/share/pyth
 
 # Build and install libcec
 script/build_libcec
+
+# Install phantomjs
+script/install_phantomjs
 
 # Remove packages
 apt-get remove -y --purge ${PACKAGES_DEV[@]}

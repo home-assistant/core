@@ -133,17 +133,70 @@ homematic:
   reconnect:
     description: Reconnect to all Homematic Hubs.
 
-openalpr:
-  scan:
-    description: Scan immediately a device.
+microsoft_face:
+  create_group:
+    description: Create a new person group.
 
     fields:
-      entity_id:
-        description: Name(s) of entities to scan
-        example: 'openalpr.garage'
+      name:
+        description: Name of the group
+        example: 'family'
 
-  restart:
-    description: Restart ffmpeg process of device.
+  delete_group:
+    description: Delete a new person group.
+
+    fields:
+      name:
+        description: Name of the group
+        example: 'family'
+
+  train_group:
+    description: Train a person group.
+
+    fields:
+      group:
+        description: Name of the group
+        example: 'family'
+
+  create_person:
+    description: Create a new person in the group.
+
+    fields:
+      name:
+        description: Name of the person
+        example: 'Hans'
+
+      group:
+        description: Name of the group
+        example: 'family'
+
+  delete_person:
+    description: Delete a person in the group.
+
+    fields:
+      name:
+        description: Name of the person
+        example: 'Hans'
+
+      group:
+        description: Name of the group
+        example: 'family'
+
+  face_person:
+    description: Add a new picture to a person.
+
+    fields:
+      person:
+        description: Name of the person
+        example: 'Hans'
+
+      group:
+        description: Name of the group
+        example: 'family'
+
+      camera_entity:
+        description: Camera to take a picture
+        example: camera.door
 
 verisure:
   capture_smartcam:
@@ -153,3 +206,58 @@ verisure:
       device_serial:
         description: The serial number of the smartcam you want to capture an image from.
         example: '2DEU AT5Z'
+
+hdmi_cec:
+  send_command:
+    description: Sends CEC command into HDMI CEC capable adapter.
+
+    fields:
+      raw:
+        description: 'Raw CEC command in format "00:00:00:00" where first two digits are source and destination, second byte is command and optional other bytes are command parameters. If raw command specified, other params are ignored.'
+        example: '"10:36"'
+
+      src:
+        desctiption: 'Source of command. Could be decimal number or string with hexadeximal notation: "0x10".'
+        example: '12 or "0xc"'
+
+      dst:
+        description: 'Destination for command. Could be decimal number or string with hexadeximal notation: "0x10".'
+        example: '5 or "0x5"'
+
+      cmd:
+        description: 'Command itself. Could be decimal number or string with hexadeximal notation: "0x10".'
+        example: '144 or "0x90"'
+
+      att:
+        description: Optional parameters.
+        example: [0, 2]
+
+  update:
+    description: Update devices state from network.
+
+  volume:
+    description: Increase or decrease volume of system.
+
+    fields:
+      up:
+        description: Increases volume x levels.
+        example: 3
+      down:
+        description: Decreases volume x levels.
+        example: 3
+      mute:
+        description: Mutes audio system. Value should be on, off or toggle.
+        example: "toggle"
+
+  select_device:
+    description: Select HDMI device.
+    fields:
+      device:
+        description: Addres of device to select. Can be entity_id, physical address or alias from confuguration.
+        example: '"switch.hdmi_1" or "1.1.0.0" or "01:10"'
+
+  power_on:
+    description: Power on all devices which supports it.
+
+  standby:
+    description: Standby all devices which supports it.

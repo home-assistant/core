@@ -8,15 +8,16 @@ matrix:
       env: TOXENV=requirements
     - python: "3.4.2"
       env: TOXENV=lint
-    - python: "3.5"
-      env: TOXENV=typing
+    # - python: "3.5"
+    #   env: TOXENV=typing
     - python: "3.5"
       env: TOXENV=py35
     - python: "3.6"
       env: TOXENV=py36
-  allow_failures:
-    - python: "3.5"
-      env: TOXENV=typing
+  # allow_failures:
+  #   - python: "3.5"
+  #     env: TOXENV=typing
+
 cache:
   directories:
     - $HOME/.cache/pip
