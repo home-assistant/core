@@ -44,6 +44,7 @@ class IPWebcamSettingsSwitch(SwitchDevice):
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
         self._name = '{} {}'.format(self._device.name, self._mapped_name)
         self._state = False
+        self.update()
 
     @property
     def name(self):

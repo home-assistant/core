@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/android_ip_webcam/
 """
 import logging
+from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 import requests
 
@@ -12,9 +13,11 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
+import homeassistant.util.dt as dt_util
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
                                  CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
                                  CONF_SWITCHES)
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +143,8 @@ CONFIG_SCHEMA = vol.Schema({
 ALLOWED_ORIENTATIONS = ['landscape', 'upsidedown', 'portrait',
                         'upsidedown_portrait']
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
+
 
 def setup(hass, config):
     """Setup the IP Webcam component."""
@@ -177,6 +182,7 @@ class IPWebcam(object):
         self.password = self._config.get(CONF_PASSWORD)
         self.status_data = None
         self.sensor_data = None
+        self._sensor_updated_at = (datetime.now() - timedelta(seconds=5))
         self.update()
 
     @property
@@ -184,7 +190,7 @@ class IPWebcam(object):
         """Return the base url for endpoints."""
         return 'http://{}:{}'.format(self.host, self.port)
 
-    def _request(self, path, resp='xml'):
+    def _request(self, path):
         """Make the actual request and return the parsed response."""
         url = '{}{}'.format(self.base_url, path)
 
@@ -194,6 +200,8 @@ class IPWebcam(object):
             auth_tuple = (self.username, self.password)
 
         print('URL', url)
+
+        resp = 'json' if '.json' in path else 'xml'
 
         try:
             response = requests.get(url, timeout=DEFAULT_TIMEOUT,
@@ -207,18 +215,14 @@ class IPWebcam(object):
         except requests.exceptions.RequestException:
             return {'device_state': 'offline'}
 
-    def update_status(self):
-        """Get updated status information from IP Webcam."""
-        return self._request('/status.json?show_avail=1', resp='json')
-
-    def update_sensors(self):
-        """Get updated sensor information from IP Webcam."""
-        return self._request('/sensors.json', resp='json')
-
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch the latest data from IP Webcam."""
-        self.status_data = self.update_status()
-        self.sensor_data = self.update_sensors()
+        self.status_data = self._request('/status.json')
+
+        utime = int(dt_util.as_timestamp(self._sensor_updated_at) * 1000)
+        self.sensor_data = self._request('/sensors.json?from={}'.format(utime))
+        self._sensor_updated_at = datetime.now()
 
     @property
     def name(self):

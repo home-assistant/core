@@ -46,6 +46,7 @@ class IPWebcamSensor(Entity):
         self._name = '{} {}'.format(self._device.name, self._mapped_name)
         self._state = None
         self._unit = None
+        self.update()
 
     @property
     def name(self):
@@ -67,6 +68,7 @@ class IPWebcamSensor(Entity):
         self._device.update()
         if self.variable in ('audio_connections', 'video_connections'):
             self._state = self._device.status_data.get(self.variable)
+            self._unit = 'Connections'
         else:
             container = self._device.sensor_data.get(self.variable)
             self._unit = container.get('unit', self._unit)
