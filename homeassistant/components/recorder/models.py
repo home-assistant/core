@@ -27,7 +27,7 @@ class Events(Base):  # type: ignore
     event_type = Column(String(32), index=True)
     event_data = Column(Text)
     origin = Column(String(32))
-    time_fired = Column(DateTime(timezone=True))
+    time_fired = Column(DateTime(timezone=True), index=True)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     @staticmethod

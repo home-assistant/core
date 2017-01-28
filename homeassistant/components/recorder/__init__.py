@@ -305,7 +305,36 @@ class Recorder(threading.Thread):
         models.Base.metadata.create_all(self.engine)
         session_factory = sessionmaker(bind=self.engine)
         Session = scoped_session(session_factory)
+        self._migrate_schema()
         self.db_ready.set()
+
+    def _migrate_schema(self):
+        """Perform operations to bring schema up to date."""
+        import homeassistant.components.recorder.models as models
+        from sqlalchemy import Index, Table
+        from sqlalchemy.engine import reflection
+        inspector = reflection.Inspector.from_engine(self.engine)
+
+        def ensure_column_index(table_name, column_name):
+            """Ensure index exists on table column."""
+            indexes = inspector.get_indexes(table_name)
+            for index in indexes:
+                if index['column_names'] == [column_name]:
+                    # Index already exists
+                    return
+
+            # Index needs to be created
+            table = Table(table_name, models.Base.metadata)
+            index_name = "_".join(("ix", table_name, column_name))
+            index = Index(index_name, getattr(table.c, column_name))
+            _LOGGER.info("Creating index for table %s column %s",
+                         table_name, column_name)
+            self._commit(lambda _: index.create(self.engine))
+            _LOGGER.info("Index creation complete for table %s column %s",
+                         table_name, column_name)
+
+        # Update Schema for v0.38
+        ensure_column_index("events", "time_fired")
 
     def _close_connection(self):
         """Close the connection."""
