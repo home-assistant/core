@@ -7,7 +7,6 @@ https://home-assistant.io/components/notify.twilio_call/
 import logging
 import urllib
 
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -63,8 +62,8 @@ class TwilioCallNotificationService(BaseNotificationService):
         if message.startswith("http://"):
             twimlet_url = message
         else:
-            twimlet_url = 'http://twimlets.com/message?Message='
-            twimlet_url += urllib.parse.quote(message, safe='')
+            twimlet_url = "http://twimlets.com/message?Message="
+            twimlet_url += urllib.parse.quote(message, safe="")
 
         for target in targets:
             try:
