@@ -34,6 +34,7 @@ CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
+CONF_FORCE_UPDATE = 'force_update'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -42,9 +43,11 @@ DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 2
+DEFAULT_CONF_FORCE_UPDATE = False
 DOMAIN = 'zwave'
 
 NETWORK = None
+ZWAVE_CUSTOMIZE = None
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
 # value type, genre type, specific device class).
@@ -156,7 +159,9 @@ CUSTOMIZE_SCHEMA = vol.Schema({
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-        cv.positive_int
+        cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_CONF_FORCE_UPDATE):
+        cv.boolean
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -282,6 +287,8 @@ def setup(hass, config):
     options.lock()
 
     NETWORK = ZWaveNetwork(options, autostart=False)
+    global ZWAVE_CUSTOMIZE
+    ZWAVE_CUSTOMIZE = customize
 
     if use_debug:
         def log_all(signal, value=None):
@@ -599,7 +606,6 @@ def setup(hass, config):
 
     return True
 
-
 class ZWaveDeviceEntity:
     """Representation of a Z-Wave node entity."""
 
@@ -607,6 +613,19 @@ class ZWaveDeviceEntity:
         """Initialize the z-Wave device."""
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
+
+        global ZWAVE_CUSTOMIZE
+        customize = ZWAVE_CUSTOMIZE
+        self._force_update = DEFAULT_CONF_FORCE_UPDATE
+        if customize is not None:
+            name = '{}.{}'.format(domain, self._object_id())
+            node_config = customize.get(name, {})
+            force_update = node_config.get(CONF_FORCE_UPDATE)
+            _LOGGER.debug('customize=%s name=%s node_config=%s CONF_FORCE_UPDATE=%s',
+                         customize, name, node_config, force_update)
+            if force_update is not None:
+                _LOGGER.debug('Setting force_update=%s on zwave node=%s', force_update, name)
+                self._force_update = force_update
 
     @property
     def should_poll(self):
@@ -655,3 +674,15 @@ class ZWaveDeviceEntity:
             attrs[ATTR_LOCATION] = location
 
         return attrs
+
+    @property
+    def force_update(self):
+        """Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+
+        This is controlled by a customization entry in the config for this entity
+        """
+        return self._force_update
+
