@@ -159,11 +159,6 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         # at the requested dim level
         yield from self._async_handle_command('dim', self._brightness)
 
-        # if the receiving device does not support dimlevel this
-        # will ensure it is turned on when full brightness is set
-        if self._brightness == 255:
-            yield from self._async_handle_command("turn_on")
-
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""

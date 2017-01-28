@@ -130,8 +130,6 @@ def test_default_setup(hass, monkeypatch):
 
     # dimmable should send highest dim level when turning on
     assert protocol.send_command_ack.call_args_list[2][0][1] == '15'
-    # and send on command for fallback
-    assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
 
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
@@ -141,7 +139,7 @@ def test_default_setup(hass, monkeypatch):
                                  }))
     yield from hass.async_block_till_done()
 
-    assert protocol.send_command_ack.call_args_list[4][0][1] == '7'
+    assert protocol.send_command_ack.call_args_list[3][0][1] == '7'
 
 
 @asyncio.coroutine
