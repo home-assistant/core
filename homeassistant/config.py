@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    CONF_ENTITY_ID, __version__)
+    __version__)
 from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
@@ -21,7 +21,7 @@ from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.helpers.customize import set_customize
+from homeassistant.helpers import customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,27 +86,6 @@ tts:
 """
 
 
-CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): vol.All(
-        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
-}, extra=vol.ALLOW_EXTRA)
-
-
-def _convert_old_config(inp: Any) -> List:
-    if not isinstance(inp, dict):
-        return cv.ensure_list(inp)
-    if CONF_ENTITY_ID in inp:
-        return [inp]  # sigle entry
-    res = []
-
-    inp = vol.Schema({cv.match_all: dict})(inp)
-    for key, val in inp.items():
-        val = dict(val)
-        val[CONF_ENTITY_ID] = key
-        res.append(val)
-    return res
-
-
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
         {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
@@ -120,8 +99,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Optional(CONF_CUSTOMIZE, default=[]): vol.All(
-        _convert_old_config, [CUSTOMIZE_SCHEMA_ENTRY]),
+    vol.Optional(CONF_CUSTOMIZE, default=[]): customize.CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -280,6 +258,7 @@ def async_process_ha_core_config(hass, config):
 
     This method is a coroutine.
     """
+    print(CORE_CONFIG_SCHEMA)
     config = CORE_CONFIG_SCHEMA(config)
     hac = hass.config
 
@@ -306,9 +285,9 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    customize = merge_packages_customize(
+    merged_customize = merge_packages_customize(
         config[CONF_CUSTOMIZE], config[CONF_PACKAGES])
-    set_customize(hass, customize)
+    customize.set_customize(hass, CONF_CORE, merged_customize)
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -463,15 +442,14 @@ def merge_packages_config(config, packages):
     return config
 
 
-def merge_packages_customize(customize, packages):
+def merge_packages_customize(core_customize, packages):
     """Merge customize from packages."""
     schema = vol.Schema({
         vol.Optional(CONF_CORE): vol.Schema({
-            CONF_CUSTOMIZE: vol.All(
-                _convert_old_config, [CUSTOMIZE_SCHEMA_ENTRY])})
+            CONF_CUSTOMIZE: customize.CUSTOMIZE_SCHEMA}),
     }, extra=vol.ALLOW_EXTRA)
 
-    cust = list(customize)
+    cust = list(core_customize)
     for pkg in packages.values():
         conf = schema(pkg)
         cust.extend(conf.get(CONF_CORE, {}).get(CONF_CUSTOMIZE, []))
