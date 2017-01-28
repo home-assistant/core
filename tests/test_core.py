@@ -724,6 +724,7 @@ class TestConfig(unittest.TestCase):
         expected = {
             'latitude': None,
             'longitude': None,
+            'elevation': None,
             CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
             'location_name': None,
             'time_zone': 'UTC',

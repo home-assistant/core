@@ -38,15 +38,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             setup_light(device_id, conf_lights[device_id], insteonhub, hass,
                         add_devices)
 
-    linked = insteonhub.get_linked()
+    else:
+        linked = insteonhub.get_linked()
 
-    for device_id in linked:
-        if (linked[device_id]['cat_type'] == 'dimmer' and
-                device_id not in conf_lights):
-            request_configuration(device_id,
-                                  insteonhub,
-                                  linked[device_id]['model_name'] + ' ' +
-                                  linked[device_id]['sku'], hass, add_devices)
+        for device_id in linked:
+            if (linked[device_id]['cat_type'] == 'dimmer' and
+                    device_id not in conf_lights):
+                request_configuration(device_id,
+                                      insteonhub,
+                                      linked[device_id]['model_name'] + ' ' +
+                                      linked[device_id]['sku'],
+                                      hass, add_devices)
 
 
 def request_configuration(device_id, insteonhub, model, hass,

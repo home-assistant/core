@@ -1,5 +1,4 @@
-"""
-Support for Dutch Smart Meter Requirements.
+"""Support for Dutch Smart Meter Requirements.
 
 Also known as: Smartmeter or P1 port.
 
@@ -24,23 +23,27 @@ DSMR version the Entities for this component are create during bootstrap.
 Another loop (DSMR class) is setup which reads the telegram queue,
 stores/caches the latest telegram and notifies the Entities that the telegram
 has been updated.
+
 """
 import asyncio
 from datetime import timedelta
+from functools import partial
 import logging
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
+from homeassistant.core import CoreState
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dsmr_parser==0.4']
+REQUIREMENTS = ['dsmr_parser==0.6']
 
 CONF_DSMR_VERSION = 'dsmr_version'
+CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 
 DEFAULT_DSMR_VERSION = '2.2'
 DEFAULT_PORT = '/dev/ttyUSB0'
@@ -51,11 +54,14 @@ ICON_POWER = 'mdi:flash'
 
 # Smart meter sends telegram every 10 seconds
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+RECONNECT_INTERVAL = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+    vol.Optional(CONF_HOST, default=None): cv.string,
     vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
         cv.string, vol.In(['4', '2.2'])),
+    vol.Optional(CONF_RECONNECT_INTERVAL, default=30): int,
 })
 
 
@@ -66,7 +72,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.protocol import create_dsmr_reader
+    from dsmr_parser.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+    import serial
 
     dsmr_version = config[CONF_DSMR_VERSION]
 
@@ -105,15 +112,55 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device.telegram = telegram
             hass.async_add_job(device.async_update_ha_state)
 
-    # Creates a asyncio.Protocol for reading DSMR telegrams from serial
+    # Creates a asyncio.Protocol factory for reading DSMR telegrams from serial
     # and calls update_entities_telegram to update entities on arrival
-    dsmr = create_dsmr_reader(config[CONF_PORT], config[CONF_DSMR_VERSION],
-                              update_entities_telegram, loop=hass.loop)
+    if config[CONF_HOST]:
+        reader_factory = partial(create_tcp_dsmr_reader,
+                                 config[CONF_HOST],
+                                 config[CONF_PORT],
+                                 config[CONF_DSMR_VERSION],
+                                 update_entities_telegram,
+                                 loop=hass.loop)
+    else:
+        reader_factory = partial(create_dsmr_reader,
+                                 config[CONF_PORT],
+                                 config[CONF_DSMR_VERSION],
+                                 update_entities_telegram,
+                                 loop=hass.loop)
 
-    # Start DSMR asycnio.Protocol reader
-    transport, _ = yield from hass.loop.create_task(dsmr)
+    @asyncio.coroutine
+    def connect_and_reconnect():
+        """Connect to DSMR and keep reconnecting until HA stops."""
+        while hass.state != CoreState.stopping:
+            # Start DSMR asycnio.Protocol reader
+            try:
+                transport, protocol = yield from hass.loop.create_task(
+                    reader_factory())
+            except (serial.serialutil.SerialException, ConnectionRefusedError,
+                    TimeoutError):
+                # log any error while establishing connection and drop to retry
+                # connection wait
+                _LOGGER.exception('error connecting to DSMR')
+                transport = None
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, transport.close)
+            if transport:
+                # register listener to close transport on HA shutdown
+                stop_listerer = hass.bus.async_listen_once(
+                    EVENT_HOMEASSISTANT_STOP, transport.close)
+
+                # wait for reader to close
+                yield from protocol.wait_closed()
+
+            if hass.state != CoreState.stopping:
+                if transport:
+                    # remove listerer
+                    stop_listerer()
+
+                # throttle reconnect attempts
+                yield from asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
+                                         loop=hass.loop)
+
+    hass.loop.create_task(connect_and_reconnect())
 
 
 class DSMREntity(Entity):
@@ -187,6 +234,7 @@ class DerivativeDSMREntity(DSMREntity):
     Gas readings are only reported per hour and don't offer a rate only
     the current meter reading. This entity converts subsequents readings
     into a hourly rate.
+
     """
 
     _previous_reading = None
@@ -202,10 +250,11 @@ class DerivativeDSMREntity(DSMREntity):
     def async_update(self):
         """Recalculate hourly rate if timestamp has changed.
 
-        DSMR updates gas meter reading every hour. Along with the
-        new value a timestamp is provided for the reading. Test
-        if the last known timestamp differs from the current one
-        then calculate a new rate for the previous hour.
+        DSMR updates gas meter reading every hour. Along with the new
+        value a timestamp is provided for the reading. Test if the last
+        known timestamp differs from the current one then calculate a
+        new rate for the previous hour.
+
         """
         # check if the timestamp for the object differs from the previous one
         timestamp = self.get_dsmr_object_attr('datetime')

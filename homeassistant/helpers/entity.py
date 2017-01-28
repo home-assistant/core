@@ -4,21 +4,19 @@ import logging
 import functools as ft
 from timeit import default_timer as timer
 
-from typing import Any, Optional, List, Dict
+from typing import Optional, List
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_ENTITY_PICTURE)
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, DOMAIN as CORE_DOMAIN
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
-
-# Entity attributes that we will overwrite
-_OVERWRITE = {}  # type: Dict[str, Any]
+from homeassistant.helpers.customize import get_overrides
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,16 +53,6 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
 
     return ensure_unique_string(
         entity_id_format.format(slugify(name)), current_ids)
-
-
-def set_customize(customize: Dict[str, Any]) -> None:
-    """Overwrite all current customize settings.
-
-    Async friendly.
-    """
-    global _OVERWRITE
-
-    _OVERWRITE = {key.lower(): val for key, val in customize.items()}
 
 
 class Entity(object):
@@ -254,7 +242,7 @@ class Entity(object):
                             end - start)
 
         # Overwrite properties that have been set in the config file.
-        attr.update(_OVERWRITE.get(self.entity_id, {}))
+        attr.update(get_overrides(self.hass, CORE_DOMAIN, self.entity_id))
 
         # Remove hidden property if false so it won't show up.
         if not attr.get(ATTR_HIDDEN, True):
@@ -278,7 +266,7 @@ class Entity(object):
             self.entity_id, state, attr, self.force_update)
 
     def schedule_update_ha_state(self, force_refresh=False):
-        """Shedule a update ha state change task.
+        """Schedule a update ha state change task.
 
         That is only needed on executor to not block.
         """
@@ -297,7 +285,7 @@ class Entity(object):
 
     @asyncio.coroutine
     def async_remove(self) -> None:
-        """Remove entitiy from async HASS.
+        """Remove entity from async HASS.
 
         This method must be run in the event loop.
         """

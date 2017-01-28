@@ -17,8 +17,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.2.zip'
-    '#roku==3.1.2']
+    'https://github.com/bah2830/python-roku/archive/3.1.3.zip'
+    '#roku==3.1.3']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
@@ -69,10 +69,10 @@ class RokuDevice(MediaPlayerDevice):
         from roku import Roku
 
         self.roku = Roku(host)
-        self.roku_name = None
         self.ip_address = host
         self.channels = []
         self.current_app = None
+        self.device_info = {}
 
         self.update()
 
@@ -81,7 +81,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.roku_name = "roku_" + self.roku.device_info.sernum
+            self.device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -106,7 +106,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.roku_name
+        return self.device_info.userdevicename
 
     @property
     def state(self):
@@ -114,7 +114,8 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is None:
             return STATE_UNKNOWN
 
-        if self.current_app.name in ["Power Saver", "Default screensaver"]:
+        if (self.current_app.name == "Power Saver" or
+                self.current_app.is_screensaver):
             return STATE_IDLE
         elif self.current_app.name == "Roku":
             return STATE_HOME

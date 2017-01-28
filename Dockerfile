@@ -7,7 +7,7 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 # Copy build scripts
-COPY script/setup_docker_prereqs script/build_python_openzwave script/build_libcec script/
+COPY script/setup_docker_prereqs script/build_python_openzwave script/build_libcec script/install_phantomjs script/
 RUN script/setup_docker_prereqs
 
 # Install hass component dependencies

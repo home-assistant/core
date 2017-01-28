@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.3.0']
+REQUIREMENTS = ['denonavr==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,9 @@ KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY_MEDIA | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_VOLUME_SET
+
+SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
     SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
@@ -167,7 +169,10 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def supported_media_commands(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_DENON
+        if self._current_source in self._receiver.netaudio_func_list:
+            return SUPPORT_DENON | SUPPORT_MEDIA_MODES
+        else:
+            return SUPPORT_DENON
 
     @property
     def media_content_id(self):
@@ -190,7 +195,7 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self._power == "ON":
+        if self._current_source in self._receiver.playing_func_list:
             return self._media_image_url
         else:
             return None
@@ -198,7 +203,9 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self._title is not None:
+        if self._current_source not in self._receiver.playing_func_list:
+            return self._current_source
+        elif self._title is not None:
             return self._title
         else:
             return self._frequency

@@ -10,7 +10,6 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,18 +47,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([ZWaveAlarmSensor(value)])
 
 
-class ZWaveSensor(zwave.ZWaveDeviceEntity, Entity):
+class ZWaveSensor(zwave.ZWaveDeviceEntity):
     """Representation of a Z-Wave sensor."""
 
-    def __init__(self, sensor_value):
+    def __init__(self, value):
         """Initialize the sensor."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
-        zwave.ZWaveDeviceEntity.__init__(self, sensor_value, DOMAIN)
-
-        dispatcher.connect(
-            self.value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
     @property
     def state(self):
@@ -70,13 +63,6 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity, Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
         return self._value.units
-
-    def value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.schedule_update_ha_state()
 
 
 class ZWaveMultilevelSensor(ZWaveSensor):

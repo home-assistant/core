@@ -10,6 +10,7 @@ import functools as ft
 import hashlib
 import logging
 import os
+from random import SystemRandom
 
 from aiohttp import web
 import async_timeout
@@ -32,6 +33,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
 
 _LOGGER = logging.getLogger(__name__)
+_RND = SystemRandom()
 
 DOMAIN = 'media_player'
 DEPENDENCIES = ['http']
@@ -389,6 +391,8 @@ def async_setup(hass, config):
 class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
+    _access_token = None
+
     # pylint: disable=no-self-use
     # Implement these for your media player
     @property
@@ -399,7 +403,10 @@ class MediaPlayerDevice(Entity):
     @property
     def access_token(self):
         """Access token for this media player."""
-        return str(id(self))
+        if self._access_token is None:
+            self._access_token = hashlib.sha256(
+                _RND.getrandbits(256).to_bytes(32, 'little')).hexdigest()
+        return self._access_token
 
     @property
     def volume_level(self):
@@ -757,6 +764,7 @@ class MediaPlayerDevice(Entity):
         if hasattr(self, 'volume_up'):
             # pylint: disable=no-member
             yield from self.hass.loop.run_in_executor(None, self.volume_up)
+            return
 
         if self.volume_level < 1:
             yield from self.async_set_volume_level(
@@ -771,6 +779,7 @@ class MediaPlayerDevice(Entity):
         if hasattr(self, 'volume_down'):
             # pylint: disable=no-member
             yield from self.hass.loop.run_in_executor(None, self.volume_down)
+            return
 
         if self.volume_level > 0:
             yield from self.async_set_volume_level(
@@ -893,7 +902,8 @@ class MediaPlayerImageView(HomeAssistantView):
         """Start a get request."""
         player = self.entities.get(entity_id)
         if player is None:
-            return web.Response(status=404)
+            status = 404 if request[KEY_AUTHENTICATED] else 401
+            return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
                          request.GET.get('token') == player.access_token)

@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.loader import get_component
@@ -142,7 +142,12 @@ class NetAtmoSensor(Entity):
     def update(self):
         """Get the latest data from NetAtmo API and updates the states."""
         self.netatmo_data.update()
-        data = self.netatmo_data.data[self.module_name]
+        data = self.netatmo_data.data.get(self.module_name)
+
+        if data is None:
+            _LOGGER.warning("No data found for %s", self.module_name)
+            self._state = STATE_UNKNOWN
+            return
 
         if self.type == 'temperature':
             self._state = round(data['Temperature'], 1)
