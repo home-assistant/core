@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/android_ip_webcam/
 """
 import logging
-from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 import requests
 
@@ -13,7 +12,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-import homeassistant.util.dt as dt_util
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
                                  CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
                                  CONF_SWITCHES)
@@ -91,8 +89,8 @@ SWITCHES = ['audio_only', 'exposure_lock', 'ffc',
             'overlay', 'torch', 'video_recording', 'whitebalance_lock']
 
 SENSORS = ['battery_level', 'battery_temp', 'battery_voltage',
-           'light', 'motion', 'motion_event', 'pressure', 'proximity',
-           'sound', 'sound_event', 'sound_timeout']
+           'light', 'motion', 'pressure', 'proximity', 'sound', 'sound_event',
+           'sound_timeout']
 
 CONF_MOTION_BINARY_SENSOR = 'motion_binary_sensor'
 
@@ -134,10 +132,10 @@ def setup(hass, config):
 
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
-    # sensor_config = conf.get(CONF_SENSORS, {})
-    # discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
+    sensor_config = conf.get(CONF_SENSORS, [])
+    discovery.load_platform(hass, 'sensor', DOMAIN, sensor_config, config)
 
-    # switch_config = conf.get(CONF_SWITCHES, {})
+    # switch_config = conf.get(CONF_SWITCHES, [])
     # discovery.load_platform(hass, 'switch', DOMAIN, switch_config, config)
 
     return True
@@ -149,25 +147,23 @@ class IPWebcam(object):
     def __init__(self, config):
         """Initialize the data oject."""
         self._config = config
-        self.name = self._config.get(CONF_NAME)
+        self._name = self._config.get(CONF_NAME)
         self.host = self._config.get(CONF_HOST)
         self.port = self._config.get(CONF_PORT)
         self.username = self._config.get(CONF_USERNAME)
         self.password = self._config.get(CONF_PASSWORD)
         self.status_data = None
         self.sensor_data = None
-        # Let's get the data for the last 15 seconds since it's the first start
-        self._sensor_updated_at = (datetime.now() - timedelta(seconds=15))
         self.update()
 
     @property
-    def _base_url(self):
+    def base_url(self):
         """Return the base url for endpoints."""
         return 'http://{}:{}'.format(self.host, self.port)
 
     def _request(self, path, resp='xml'):
         """Make the actual request and return the parsed response."""
-        url = '{}{}'.format(self._base_url, path)
+        url = '{}{}'.format(self.base_url, path)
 
         auth_tuple = ()
 
@@ -178,8 +174,7 @@ class IPWebcam(object):
             response = requests.get(url, timeout=DEFAULT_TIMEOUT,
                                     auth=auth_tuple)
             if resp == 'xml':
-                root = ET.fromstring(response.text)
-                return root
+                return ET.fromstring(response.text)
             elif resp == 'json':
                 return response.json()
         except requests.exceptions.HTTPError:
@@ -193,11 +188,7 @@ class IPWebcam(object):
 
     def update_sensors(self):
         """Get updated sensor information from IP Webcam."""
-        unix_time = int((dt_util.as_timestamp(self._sensor_updated_at)*1000))
-        url = '/sensors.json?from={}'.format(unix_time)
-        response = self._request(url, resp='json')
-        self._sensor_updated_at = datetime.now()
-        return response
+        return self._request('/sensors.json', resp='json')
 
     def update(self):
         """Fetch the latest data from IP Webcam."""
@@ -207,7 +198,7 @@ class IPWebcam(object):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.name
+        return self._name
 
     @property
     def device_state_attributes(self):
