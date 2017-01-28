@@ -244,6 +244,7 @@ def test_signal_repetitions(hass, monkeypatch):
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: 'light.test'}))
 
+    # wait for commands and repetitions to finish
     yield from hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_count == 2
@@ -253,6 +254,7 @@ def test_signal_repetitions(hass, monkeypatch):
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: 'light.test1'}))
 
+    # wait for commands and repetitions to finish
     yield from hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_count == 5
@@ -263,10 +265,14 @@ def test_signal_repetitions(hass, monkeypatch):
         'command': 'off',
     })
 
+    # make sure entity is created before setting state
+    yield from hass.async_block_till_done()
+
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF,
                                  {ATTR_ENTITY_ID: 'light.protocol_0_2'}))
 
+    # wait for commands and repetitions to finish
     yield from hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_count == 8

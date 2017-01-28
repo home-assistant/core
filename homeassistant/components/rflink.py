@@ -36,7 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
 
-REQUIREMENTS = ['rflink==0.0.22']
+REQUIREMENTS = ['rflink==0.0.23']
 
 DOMAIN = 'rflink'
 
@@ -316,6 +316,8 @@ class RflinkCommand(RflinkDevice):
     @asyncio.coroutine
     def _async_handle_command(self, command, *args):
         """Do bookkeeping for command, send it to rflink and update state."""
+        self.cancel_queued_send_commands()
+
         if command == "turn_on":
             cmd = 'on'
             self._state = True
@@ -329,10 +331,6 @@ class RflinkCommand(RflinkDevice):
             cmd = str(int(args[0] / 17))
             self._state = True
 
-        # cancel any outstanding tasks from the previous state change
-        if self._repetition_task:
-            self._repetition_task.cancel()
-
         # send initial command and queue repetitions
         # this allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
@@ -341,10 +339,22 @@ class RflinkCommand(RflinkDevice):
         # Update state of entity
         yield from self.async_update_ha_state()
 
+    def cancel_queued_send_commands(self):
+        """Cancel queued signal repetition commands.
+
+        For example when user changed state while repetitions are still
+        queued for broadcast. Or when a incoming Rflink command (remote
+        switch) changes the state.
+
+        """
+
+        # cancel any outstanding tasks from the previous state change
+        if self._repetition_task:
+            self._repetition_task.cancel()
+
     @asyncio.coroutine
     def _async_send_command(self, cmd, repetitions):
         """Send a command for device to Rflink gateway."""
-
         _LOGGER.debug('sending command: %s to rflink device: %s',
                       cmd, self._device_id)
 
@@ -370,6 +380,8 @@ class SwitchableRflinkDevice(RflinkCommand):
 
     def _handle_event(self, event):
         """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
         command = event['command']
         if command == 'on':
             self._state = True
