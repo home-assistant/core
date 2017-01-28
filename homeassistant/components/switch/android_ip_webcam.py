@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.android_ip_webcam/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.android_ip_webcam import (KEY_MAP,
+from homeassistant.components.android_ip_webcam import (KEY_MAP, ICON_MAP,
                                                         DATA_IP_WEBCAM)
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,3 +84,8 @@ class IPWebcamSettingsSwitch(SwitchDevice):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._device.device_state_attributes
+
+    @property
+    def icon(self):
+        """Return the icon for the switch."""
+        return ICON_MAP.get(self._setting, 'mdi:flash')

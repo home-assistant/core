@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.android_ip_webcam/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.android_ip_webcam import (KEY_MAP,
+from homeassistant.components.android_ip_webcam import (KEY_MAP, ICON_MAP,
                                                         DATA_IP_WEBCAM)
 
 DEPENDENCIES = ['android_ip_webcam']
@@ -35,6 +35,7 @@ class IPWebcamBinarySensor(BinarySensorDevice):
         self.variable = variable
         self._mapped_name = KEY_MAP.get(self.variable, self.variable)
         self._name = '{} {}'.format(self._device.name, self._mapped_name)
+        self._state = None
 
     @property
     def name(self):
@@ -44,10 +45,16 @@ class IPWebcamBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """True if the binary sensor is on."""
-        container = self._device.sensor_data.get(self.variable)
-        data_point = container.get('data', [[0, [0.0]]])
-        return data_point[0][-1][0] == 1.0
+        return self._state
 
     def update(self):
         """Retrieve latest state."""
         self._device.update()
+        container = self._device.sensor_data.get(self.variable)
+        data_point = container.get('data', [[0, [0.0]]])
+        self._state = data_point[0][-1][0] == 1.0
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        return 'mdi:run' if self._state else 'mdi:walk'

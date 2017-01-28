@@ -6,7 +6,7 @@ https://home-assistant.io/components/sensor.android_ip_webcam/
 """
 import logging
 
-from homeassistant.components.android_ip_webcam import (KEY_MAP,
+from homeassistant.components.android_ip_webcam import (KEY_MAP, ICON_MAP,
                                                         DATA_IP_WEBCAM)
 from homeassistant.helpers.entity import Entity
 
@@ -78,3 +78,19 @@ class IPWebcamSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._device.device_state_attributes
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        if self.variable == 'battery_level':
+            rounded_level = round(int(self._state), -1)
+            returning_icon = 'mdi:battery'
+            if rounded_level < 10:
+                returning_icon = 'mdi:battery-outline'
+            elif self._state == 100:
+                returning_icon = 'mdi:battery'
+            else:
+                returning_icon = 'mdi:battery-{}'.format(str(rounded_level))
+
+            return returning_icon
+        return ICON_MAP.get(self.variable, 'mdi:eye')

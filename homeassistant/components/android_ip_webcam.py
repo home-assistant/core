@@ -82,6 +82,31 @@ KEY_MAP = {
     'zoom': 'Zoom'
 }
 
+ICON_MAP = {
+    'audio_connections': 'mdi:speaker',
+    'battery_level': 'mdi:battery',
+    'battery_temp': 'mdi:thermometer',
+    'battery_voltage': 'mdi:battery-charging-100',
+    'exposure_lock': 'mdi:camera',
+    'ffc': 'mdi:camera-front-variant',
+    'focus': 'mdi:image-filter-center-focus',
+    'gps_active': 'mdi:crosshairs-gps',
+    'light': 'mdi:flashlight',
+    'motion': 'mdi:run',
+    'night_vision': 'mdi:weather-night',
+    'overlay': 'mdi:monitor',
+    'pressure': 'mdi:gauge',
+    'proximity': 'mdi:map-marker-radius',
+    'quality': 'mdi:quality-high',
+    'sound': 'mdi:speaker',
+    'sound_event': 'mdi:speaker',
+    'sound_timeout': 'mdi:speaker',
+    'torch': 'mdi:white-balance-sunny',
+    'video_chunk_len': 'mdi:video',
+    'video_connections': 'mdi:eye',
+    'whitebalance_lock': 'mdi:white-balance-auto'
+}
+
 SWITCHES = ['exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision',
             'overlay', 'quality', 'torch', 'video_chunk_len',
             'whitebalance_lock']
