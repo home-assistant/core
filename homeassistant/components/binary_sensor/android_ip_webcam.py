@@ -4,12 +4,10 @@ Support for IP Webcam binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.android_ip_webcam/
 """
-from itertools import chain
 import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.components.android_ip_webcam import (STATUS_KEY_MAP,
+from homeassistant.components.android_ip_webcam import (SENSOR_KEY_MAP,
                                                         DATA_IP_WEBCAM)
 
 DEPENDENCIES = ['android_ip_webcam']
@@ -24,14 +22,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     ip_webcam = hass.data[DATA_IP_WEBCAM]
 
-    sensors = []
-    for host, device in ip_webcam.items():
-        conditions = discovery_info.get(CONF_MONITORED_CONDITIONS,
-                                        device.enabled_sensors)
-        for sensor in conditions:
-            sensors.append(IPWebcamBinarySensor(device, sensor))
-
-    add_devices(sensors, True)
+    for device in ip_webcam.values():
+        add_devices([IPWebcamBinarySensor(device, 'motion_active')], True)
 
 
 class IPWebcamBinarySensor(BinarySensorDevice):
@@ -41,9 +33,8 @@ class IPWebcamBinarySensor(BinarySensorDevice):
         """Initialize the sensor."""
         self._device = device
         self.variable = variable
-        self._name = '{} {}'.format(self._device.name,
-                                    self.variable.replace('_', ' '))
-        self._state = None
+        self._mapped_name = SENSOR_KEY_MAP.get(self.variable, self.variable)
+        self._name = '{} {}'.format(self._device.name, self._mapped_name)
 
     @property
     def name(self):
@@ -53,9 +44,10 @@ class IPWebcamBinarySensor(BinarySensorDevice):
     @property
     def is_on(self):
         """True if the binary sensor is on."""
-        return self._state
+        container = self._device.sensor_data.get(self.variable)
+        data_point = container.get('data', [[0, [0.0]]])
+        return data_point[0][-1][0] == 1.0
 
     def update(self):
         """Retrieve latest state."""
-        mapped_key = STATUS_KEY_MAP.get(self.variable)
-        self._state = self.device.device_state_attributes.get(mapped_key)
+        self._device.update()

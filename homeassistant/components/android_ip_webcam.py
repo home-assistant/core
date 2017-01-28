@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/android_ip_webcam/
 """
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 import requests
 
@@ -13,12 +13,10 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
-                                 CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_BINARY_SENSORS, CONF_SENSORS,
-                                 CONF_SWITCHES, CONF_MONITORED_CONDITIONS)
+                                 CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
+                                 CONF_SWITCHES)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,9 +70,33 @@ STATUS_KEY_MAP = {
     'zoom': 'Zoom'
 }
 
-SENSOR_SCHEMA = vol.Schema({
-    vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
-})
+SENSOR_KEY_MAP = {
+    'battery_level': 'Battery Level',
+    'battery_temp': 'Battery Temperature',
+    'battery_voltage': 'Battery Voltage',
+    'light': 'Light Level',
+    'motion': 'Motion',
+    'motion_event': 'Motion Event',
+    'motion_active': 'Motion Active',
+    'pressure': 'Pressure',
+    'proximity': 'Proximity',
+    'sound': 'Sound',
+    'sound_event': 'Sound Event',
+    'sound_timeout': 'Sound Timeout'
+}
+
+SWITCHES = ['audio_only', 'exposure_lock', 'ffc',
+            'focus', 'focus_homing', 'gps_active', 'idle',
+            'ivideon_streaming', 'motion_detect', 'night_vision',
+            'overlay', 'torch', 'video_recording', 'whitebalance_lock']
+
+SENSORS = ['battery_level', 'battery_temp', 'battery_voltage',
+           'light', 'motion', 'motion_event', 'pressure', 'proximity',
+           'sound', 'sound_event', 'sound_timeout']
+
+CONF_MOTION_BINARY_SENSOR = 'motion_binary_sensor'
+
+DEFAULT_MOTION_BINARY_SENSOR = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -83,9 +105,14 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_SWITCHES): SENSOR_SCHEMA,
-        vol.Optional(CONF_SENSORS): SENSOR_SCHEMA,
-        vol.Optional(CONF_BINARY_SENSORS): SENSOR_SCHEMA
+        vol.Optional(CONF_SWITCHES,
+                     default=SWITCHES): vol.All(cv.ensure_list,
+                                                [vol.In(SWITCHES)]),
+        vol.Optional(CONF_SENSORS,
+                     default=SENSORS): vol.All(cv.ensure_list,
+                                               [vol.In(SENSORS)]),
+        vol.Optional(CONF_MOTION_BINARY_SENSOR,
+                     default=DEFAULT_MOTION_BINARY_SENSOR): bool
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -102,9 +129,8 @@ def setup(hass, config):
         hass.data[DATA_IP_WEBCAM] = {}
     hass.data[DATA_IP_WEBCAM][host] = IPWebcam(conf)
 
-    # binary_sensor_config = conf.get(CONF_BINARY_SENSORS, {})
-    # discovery.load_platform(hass, 'binary_sensor', DOMAIN,
-    #                         binary_sensor_config, config)
+    if conf.get(CONF_MOTION_BINARY_SENSOR, False) is True:
+        discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
@@ -128,9 +154,10 @@ class IPWebcam(object):
         self._port = self._config.get(CONF_PORT)
         self._username = self._config.get(CONF_USERNAME)
         self._password = self._config.get(CONF_PASSWORD)
-        self._status_data = None
-        self._sensor_data = None
-        self._sensor_updated_at = datetime.utcnow()
+        self.status_data = None
+        self.sensor_data = None
+        # Let's get the data for the last 15 seconds since it's the first start
+        self._sensor_updated_at = (datetime.now() - timedelta(seconds=15))
         self.update()
 
     @property
@@ -152,7 +179,6 @@ class IPWebcam(object):
                                     auth=auth_tuple)
             if resp == 'xml':
                 root = ET.fromstring(response.text)
-                print('GOT XML', root)
                 return root
             elif resp == 'json':
                 return response.json()
@@ -167,16 +193,16 @@ class IPWebcam(object):
 
     def update_sensors(self):
         """Get updated sensor information from IP Webcam."""
-        unix_time = dt_util.as_timestamp(self._sensor_updated_at)
+        unix_time = int((dt_util.as_timestamp(self._sensor_updated_at)*1000))
         url = '/sensors.json?from={}'.format(unix_time)
         response = self._request(url, resp='json')
-        self._sensor_updated_at = datetime.utcnow()
+        self._sensor_updated_at = datetime.now()
         return response
 
     def update(self):
         """Fetch the latest data from IP Webcam."""
-        self._status_data = self.update_status()
-        self._sensor_data = self.update_sensors()
+        self.status_data = self.update_status()
+        self.sensor_data = self.update_sensors()
 
     @property
     def name(self):
@@ -187,9 +213,9 @@ class IPWebcam(object):
     def device_state_attributes(self):
         """Return the state attributes."""
         state_attr = {}
-        state_attr[ATTR_VID_CONNS] = self._status_data.get('video_connections')
-        state_attr[ATTR_AUD_CONNS] = self._status_data.get('audio_connections')
-        for (key, val) in self._status_data.get('curvals').items():
+        state_attr[ATTR_VID_CONNS] = self.status_data.get('video_connections')
+        state_attr[ATTR_AUD_CONNS] = self.status_data.get('audio_connections')
+        for (key, val) in self.status_data.get('curvals').items():
             try:
                 val = float(val)
             except ValueError:
@@ -204,7 +230,7 @@ class IPWebcam(object):
     @property
     def enabled_sensors(self):
         """Return the enabled sensors."""
-        return list(self._sensor_data.keys())
+        return list(self.sensor_data.keys())
 
     def change_setting(self, key, val):
         """Change a setting."""
