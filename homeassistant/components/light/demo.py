@@ -28,7 +28,7 @@ SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the demo light platform."""
     add_devices_callback([
-        DemoLight("Bed Light", False, False, effect_list=LIGHT_EFFECT_LIST,
+        DemoLight("Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),
         DemoLight("Ceiling Lights", True, True,
                   LIGHT_COLORS[0], LIGHT_TEMPS[1]),
@@ -45,8 +45,8 @@ class DemoLight(Light):
                  effect_list=None, effect=None):
         """Initialize the light."""
         self._name = name
-        self._available = available
         self._state = state
+        self._available = available
         self._rgb = rgb
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._brightness = brightness
