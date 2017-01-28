@@ -9,7 +9,8 @@ import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.components.android_ip_webcam import DATA_IP_WEBCAM
+from homeassistant.components.android_ip_webcam import (STATUS_KEY_MAP,
+                                                        DATA_IP_WEBCAM)
 
 DEPENDENCIES = ['android_ip_webcam']
 
@@ -50,15 +51,11 @@ class IPWebcamBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
-
-    @property
     def is_on(self):
         """True if the binary sensor is on."""
         return self._state
 
     def update(self):
         """Retrieve latest state."""
-        self._state = bool(getattr(self.device._status_data, self.variable))
+        mapped_key = STATUS_KEY_MAP.get(self.variable)
+        self._state = self.device.device_state_attributes.get(mapped_key)
