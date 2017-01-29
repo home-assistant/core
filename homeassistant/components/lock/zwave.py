@@ -21,10 +21,20 @@ ATTR_NOTIFICATION = 'notification'
 ATTR_LOCK_STATUS = 'lock_status'
 ATTR_CODE_SLOT = 'code_slot'
 ATTR_USERCODE = 'usercode'
+CONFIG_ADVANCED = 'Advanced'
 
 SERVICE_SET_USERCODE = 'set_usercode'
 SERVICE_GET_USERCODE = 'get_usercode'
 SERVICE_CLEAR_USERCODE = 'clear_usercode'
+
+POLYCONTROL = 0x10E
+DANALOCK_V2_BTZE = 0x2
+POLYCONTROL_DANALOCK_V2_BTZE_LOCK = (POLYCONTROL, DANALOCK_V2_BTZE)
+WORKAROUND_V2BTZE = 'v2btze'
+
+DEVICE_MAPPINGS = {
+    POLYCONTROL_DANALOCK_V2_BTZE_LOCK: WORKAROUND_V2BTZE
+}
 
 LOCK_NOTIFICATION = {
     1: 'Manual Lock',
@@ -110,7 +120,7 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave switches."""
+    """Find and return Z-Wave locks."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 
@@ -197,29 +207,64 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
-    """Representation of a Z-Wave switch."""
+    """Representation of a Z-Wave Lock."""
 
     def __init__(self, value):
-        """Initialize the Z-Wave switch device."""
+        """Initialize the Z-Wave lock device."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-
         self._node = value.node
         self._state = None
         self._notification = None
         self._lock_status = None
+        self._v2btze = None
+
+        # Enable appropriate workaround flags for our device
+        # Make sure that we have values for the key before converting to int
+        if (value.node.manufacturer_id.strip() and
+                value.node.product_id.strip()):
+            specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                                   int(value.node.product_id, 16))
+            if specific_sensor_key in DEVICE_MAPPINGS:
+                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_V2BTZE:
+                    self._v2btze = 1
+                    _LOGGER.debug("Polycontrol Danalock v2 BTZE "
+                                  "workaround enabled")
         self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
         for value in self._node.get_values(
+                class_id=zwave.const.COMMAND_CLASS_DOOR_LOCK).values():
+            if value.type != zwave.const.TYPE_BOOL:
+                continue
+            if value.genre != zwave.const.GENRE_USER:
+                continue
+            self._state = value.data
+            _LOGGER.debug('Lock state set from Bool value and'
+                          ' is %s', value.data)
+            break
+
+        for value in self._node.get_values(
                 class_id=zwave.const.COMMAND_CLASS_ALARM).values():
             if value.label != "Access Control":
                 continue
             self._notification = LOCK_NOTIFICATION.get(value.data)
-            if self._notification:
-                self._state = LOCK_STATUS.get(value.data)
-                _LOGGER.debug('Lock state set from Access Control value and'
-                              ' is %s', value.data)
+            notification_data = value.data
+            if self._v2btze:
+                for value in (self._node.get_values(
+                        class_id=zwave.const.COMMAND_CLASS_CONFIGURATION)
+                              .values()):
+                    _LOGGER.debug('4')
+                    if value.index != 12:
+                        _LOGGER.debug('5')
+                        continue
+                    _LOGGER.debug('6, %s', value.data)
+                    if value.data == CONFIG_ADVANCED:
+                        self._state = LOCK_STATUS.get(notification_data)
+                        _LOGGER.debug('Lock state set from Access Control '
+                                      'value and is %s', notification_data)
+                    break
+
             break
 
         for value in self._node.get_values(
@@ -227,10 +272,6 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             if value.label != "Alarm Type":
                 continue
             alarm_type = LOCK_ALARM_TYPE.get(value.data)
-            if alarm_type:
-                self._state = LOCK_STATUS.get(value.data)
-                _LOGGER.debug('Lock state set from Alarm Type value and'
-                              ' is %s', value.data)
             break
 
         for value in self._node.get_values(
@@ -254,18 +295,6 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 break
             if alarm_type != 0:
                 self._lock_status = LOCK_ALARM_TYPE.get(alarm_type)
-                break
-
-        if not self._notification and not self._lock_status:
-            for value in self._node.get_values(
-                    class_id=zwave.const.COMMAND_CLASS_DOOR_LOCK).values():
-                if value.type != zwave.const.TYPE_BOOL:
-                    continue
-                if value.genre != zwave.const.GENRE_USER:
-                    continue
-                self._state = value.data
-                _LOGGER.debug('Lock state set from Bool value and'
-                              ' is %s', value.data)
                 break
 
     @property
