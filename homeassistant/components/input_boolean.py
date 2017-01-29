@@ -72,7 +72,7 @@ def async_setup(hass, config):
     entities = []
 
     @asyncio.coroutine
-    def restore_last_state(entity_id):
+    def async_restore_last_state(entity_id):
         """Restore the last known state for entity_id from recorder."""
         last_state = yield from hass.loop.run_in_executor(None, history.last_known_state, entity_id)
         if last_state == STATE_ON:
@@ -91,7 +91,7 @@ def async_setup(hass, config):
 
         state = cfg.get(CONF_INITIAL)
         if cfg.get(CONF_RESTORE) == 'startup':
-            hass.loop.create_task(restore_last_state(ENTITY_ID_FORMAT.format(object_id)))
+            hass.loop.create_task(async_restore_last_state(ENTITY_ID_FORMAT.format(object_id)))
 
         entities.append(InputBoolean(object_id, name, state, icon))
 
