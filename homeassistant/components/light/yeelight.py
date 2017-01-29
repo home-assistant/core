@@ -23,7 +23,7 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.1.0']
+REQUIREMENTS = ['yeelight==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -184,7 +184,7 @@ class YeelightLight(Light):
                 if btype == yeelight.BulbType.Color:
                     self._supported_features |= SUPPORT_YEELIGHT_RGB
                 self._available = True
-            except (yeelight.BulbException, socket.error, OSError) as ex:
+            except yeelight.BulbException as ex:
                 self._available = False
                 _LOGGER.error("Failed to connect to bulb %s, %s: %s",
                               self._ipaddr, self._name, ex)
@@ -217,7 +217,9 @@ class YeelightLight(Light):
             self._rgb = self._get_rgb_from_properties()
 
             self._available = True
-        except (yeelight.BulbException, socket.timeout):
+        except yeelight.BulbException as ex:
+            if self._available:  # just inform once
+                _LOGGER.error("Unable to update bulb status: %s", ex)
             self._available = False
 
     @_cmd
