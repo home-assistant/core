@@ -61,17 +61,14 @@ class TestImageProcessing(object):
 
         config = {
             ip.DOMAIN: {
-                'platform': 'demo'
+                'platform': 'test'
             },
             'camera': {
                 'platform': 'demo'
             },
         }
 
-        with patch('homeassistant.components.image_processing.demo.'
-                   'DemoImageProcessing.should_poll',
-                   new_callable=PropertyMock(return_value=False)):
-            setup_component(self.hass, ip.DOMAIN, config)
+        setup_component(self.hass, ip.DOMAIN, config)
 
         state = self.hass.states.get('camera.demo_camera')
         self.url = "{0}{1}".format(
@@ -84,33 +81,32 @@ class TestImageProcessing(object):
 
     @patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
            autospec=True, return_value=b'Test')
-    @patch('homeassistant.components.image_processing.demo.'
-           'DemoImageProcessing.process_image', autospec=True)
-    def test_get_image_from_camera(self, mock_process, mock_camera):
+    def test_get_image_from_camera(self, mock_camera):
         """Grab a image from camera entity."""
         self.hass.start()
 
-        ip.scan(self.hass, entity_id='image_processing.demo')
+        ip.scan(self.hass, entity_id='image_processing.test')
         self.hass.block_till_done()
 
-        assert mock_camera.called
-        assert mock_process.called
+        state = self.hass.states.get('image_processing.test')
 
-        assert mock_process.call_args[0][1] == b'Test'
+        assert mock_camera.called
+        assert state.state == '1'
+        assert state.attributes['image'] == b'Test'
 
     @patch('homeassistant.components.camera.async_get_image',
            side_effect=HomeAssistantError())
-    @patch('homeassistant.components.image_processing.demo.'
-           'DemoImageProcessing.process_image', autospec=True)
-    def test_get_image_without_exists_camera(self, mock_process, mock_image):
+    def test_get_image_without_exists_camera(self, mock_image):
         """Try to get image without exists camera."""
         self.hass.states.remove('camera.demo_camera')
 
-        ip.scan(self.hass, entity_id='image_processing.demo')
+        ip.scan(self.hass, entity_id='image_processing.test')
         self.hass.block_till_done()
 
+        state = self.hass.states.get('image_processing.test')
+
         assert mock_image.called
-        assert not mock_process.called
+        assert state.state == '0'
 
 
 class TestImageProcessingAlpr(object):
