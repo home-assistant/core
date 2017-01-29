@@ -72,8 +72,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             params += 1
 
     if params != 2:
-        raise _LOGGER.error('You must provide exactly 2 of the following:' +
-                            ' start, end, duration')
+        _LOGGER.error('You must provide exactly 2 of the following:'
+                      + ' start, end, duration')
+        return False
 
     for template in [start, end, duration]:
         if template is not None:
@@ -269,8 +270,8 @@ class HistoryStatsHelper:
     @staticmethod
     def pretty_ratio(value, period):
         """Format the ratio of value / period duration."""
-        if len(period) != 2:
-            return
+        if len(period) != 2 or period[0] == period[1]:
+            return '0,0' + UNIT_RATIO
 
         ratio = 3600 * 100 * value / (period[1] - period[0])
         return str(round(ratio, 1)) + UNIT_RATIO
