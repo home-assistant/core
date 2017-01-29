@@ -303,9 +303,10 @@ class YeelightLight(Light):
         self.set_brightness(brightness, duration)
         self.set_flash(flash)
 
-        # saving current settings to the bulb if not flashing
-        if (brightness or colortemp or rgb) and self.config[CONF_SAVE_ON_CHANGE]:
-            self.set_default()
+        # save the current state if we had a manual change.
+        if self.config[CONF_SAVE_ON_CHANGE]:
+            if brightness or colortemp or rgb:
+                self.set_default()
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
