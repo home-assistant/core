@@ -371,8 +371,7 @@ class HomeAssistant(object):
     @callback
     def _async_restart_handler(self, *args):
         """Restart Home Assistant."""
-        if self.services.has_service('persistent_notification', 'create'):
-            self.loop.create_task(self._notify('Checking config...'))
+        self.loop.create_task(self._notify('Checking config...'))
         self.loop.create_task(self._async_check_config_and_restart())
 
 
