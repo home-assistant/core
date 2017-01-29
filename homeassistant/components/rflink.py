@@ -36,7 +36,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import voluptuous as vol
 
-REQUIREMENTS = ['rflink==0.0.23']
+REQUIREMENTS = ['rflink==0.0.24']
 
 DOMAIN = 'rflink'
 
