@@ -194,7 +194,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
         return SUPPORT_BRIGHTNESS
 
 
-class HybridRflinkLight(DimmableRflinkLight):
+class HybridRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -209,6 +209,8 @@ class HybridRflinkLight(DimmableRflinkLight):
     Which results in a nice house disco :)
 
     """
+
+    _brightness = 255
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -225,3 +227,13 @@ class HybridRflinkLight(DimmableRflinkLight):
         # will ensure it is turned on when full brightness is set
         if self._brightness == 255:
             yield from self._async_handle_command("turn_on")
+
+    @property
+    def brightness(self):
+        """Return the brightness of this light between 0..255."""
+        return self._brightness
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
