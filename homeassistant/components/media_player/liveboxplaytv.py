@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['liveboxplaytv==1.4.4']
+REQUIREMENTS = ['liveboxplaytv==1.4.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +75,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         """Retrieve the latest data."""
         import requests
         try:
-            self._state = STATE_PLAYING if self._client.is_on else STATE_OFF
+            self._state = self.refresh_state()
             # Update current channel
             channel = self._client.get_current_channel()
             if channel is not None:
@@ -144,6 +144,17 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         for channel in self._client.get_channels():
             new_channel_list[int(channel['index'])] = channel['name']
         self._channel_list = new_channel_list
+
+    def refresh_state(self):
+        """Refresh the current media state."""
+        state = self._client.media_state
+        if state == 'PLAY':
+            return STATE_PLAYING
+        elif state == 'PAUSE':
+            return STATE_PAUSED
+        else:
+            return STATE_ON if self._client.is_on else STATE_OFF
+        return STATE_UNKNOWN
 
     def turn_off(self):
         """Turn off media player."""
