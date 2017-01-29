@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/demo/
 """
 
-from homeassistant.components.image_processing import ImageProcessingEntity
 from homeassistant.components.image_processing.openalpr_local import (
     ImageProcessingAlprEntity)
 from homeassistant.components.image_processing.microsoft_face_identify import (
