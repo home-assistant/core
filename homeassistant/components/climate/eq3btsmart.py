@@ -76,7 +76,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
-        return self.current_operation
+        return self.current_operation is not None
 
     @property
     def name(self):
