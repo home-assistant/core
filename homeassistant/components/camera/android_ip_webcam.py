@@ -37,18 +37,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(cameras, True)
 
 
-def extract_image_from_mjpeg(stream):
-    """Take in a MJPEG stream object, return the jpg from it."""
-    data = b''
-    for chunk in stream:
-        data += chunk
-        jpg_start = data.find(b'\xff\xd8')
-        jpg_end = data.find(b'\xff\xd9')
-        if jpg_start != -1 and jpg_end != -1:
-            jpg = data[jpg_start:jpg_end + 2]
-            return jpg
-
-
 class IPWebcamCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
@@ -92,18 +80,6 @@ class IPWebcamCamera(Camera):
             if response is not None:
                 yield from response.release()
 
-    def camera_image(self):
-        """Return a still image response from the camera."""
-        if self._username and self._password:
-            auth = HTTPBasicAuth(self._username, self._password)
-            req = requests.get(
-                self._mjpeg_url, auth=auth, stream=True, timeout=10)
-        else:
-            req = requests.get(self._mjpeg_url, stream=True, timeout=10)
-
-        with closing(req) as response:
-            return extract_image_from_mjpeg(response.iter_content(102400))
-
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
@@ -122,7 +98,3 @@ class IPWebcamCamera(Camera):
     def device_state_attributes(self):
         """Return the state attributes."""
         return self._device.device_state_attributes
-
-    def update(self):
-        """Update the state."""
-        self._device.update()
