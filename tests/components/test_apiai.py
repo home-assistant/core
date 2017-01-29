@@ -1,7 +1,6 @@
 """The tests for the APIAI component."""
 # pylint: disable=protected-access
 import json
-from datetime import datetime
 import unittest
 
 import requests
