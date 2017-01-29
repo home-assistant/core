@@ -16,6 +16,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import EventOrigin, State
 from homeassistant.remote import JSONEncoder
+from .mqtt import EVENT_MQTT_MESSAGE_RECEIVED
 
 DOMAIN = "mqtt_eventstream"
 DEPENDENCIES = ['mqtt']
@@ -43,6 +44,9 @@ def setup(hass, config):
         if event.origin != EventOrigin.local:
             return
         if event.event_type == EVENT_TIME_CHANGED:
+            return
+        # filter out event from mqtt component about received messages
+        if event.event_type == EVENT_MQTT_MESSAGE_RECEIVED:
             return
 
         # Filter out the events that were triggered by publishing
