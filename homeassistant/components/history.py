@@ -53,6 +53,26 @@ def last_5_states(entity_id):
         ).order_by(states.state_id.desc()).limit(5))
 
 
+def last_known_state(entity_id):
+    """Return the last known state for entity_id."""
+    entity_id = entity_id.lower()
+
+    states = recorder.get_model('States')
+    query = recorder.query('States').filter(
+            (states.entity_id == entity_id) &
+            (states.last_changed == states.last_updated)
+    )
+    states = (
+        state for state in recorder.execute(
+         query.order_by(states.state_id.desc()).limit(1))
+        if not state.attributes.get(ATTR_HIDDEN, False)
+    )
+    try:
+        return next(states).state
+    except StopIteration:
+        return None
+
+
 def get_significant_states(start_time, end_time=None, entity_id=None,
                            filters=None):
     """
