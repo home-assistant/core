@@ -23,21 +23,24 @@ _LOGGER = logging.getLogger(__name__)
 
 TYPE_DIMMABLE = 'dimmable'
 TYPE_SWITCHABLE = 'switchable'
+TYPE_HYBRID = 'hybrid'
 
-
+DEVICE_DEFAULTS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS,
+                 default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+})
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_NEW_DEVICES_GROUP, default=None): cv.string,
     vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_DEVICE_DEFAULTS, default={}): vol.Schema({
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_SIGNAL_REPETITIONS,
-                     default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
-    }),
+    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
+    DEVICE_DEFAULTS_SCHEMA,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_TYPE): vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE),
+            vol.Optional(CONF_TYPE):
+                vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID),
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -54,7 +57,9 @@ def entity_type_for_device_id(device_id):
 
     """
     entity_type_mapping = {
-        'newkaku': TYPE_DIMMABLE,
+        # KlikAanKlikUit support both dimmers and on/off switches on the same
+        # protocol
+        'newkaku': TYPE_HYBRID,
     }
     protocol = device_id.split('_')[0]
     return entity_type_mapping.get(protocol, None)
@@ -67,8 +72,14 @@ def entity_class_for_type(entity_type):
 
     """
     entity_device_mapping = {
+        # sends only 'dim' commands not compatible with on/off switches
         TYPE_DIMMABLE: DimmableRflinkLight,
+        # sends only 'on/off' commands not advices with dimmers and signal
+        # repetition
         TYPE_SWITCHABLE: RflinkLight,
+        # sends 'dim' and 'on' command to support both dimmers and on/off
+        # switches. Not compatible with signal repetition.
+        TYPE_HYBRID: HybridRflinkLight,
     }
 
     return entity_device_mapping.get(entity_type, RflinkLight)
@@ -80,12 +91,26 @@ def devices_from_config(domain_config, hass=None):
     for device_id, config in domain_config[CONF_DEVICES].items():
         # determine which kind of entity to create
         if CONF_TYPE in config:
+            # remove type from config to not pass it as and argument to entity
+            # instantiation
             entity_type = config.pop(CONF_TYPE)
         else:
             entity_type = entity_type_for_device_id(device_id)
         entity_class = entity_class_for_type(entity_type)
 
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
+
+        is_hybrid = entity_class is HybridRflinkLight
+
+        # make user aware this can cause problems
+        repetitions_enabled = device_config[CONF_SIGNAL_REPETITIONS] != 1
+        if is_hybrid and repetitions_enabled:
+            _LOGGER.warning(
+                "Hybrid type for %s not compatible with signal "
+                "repetitions. Please set 'dimmable' or 'switchable' "
+                "type explicity in configuration.",
+                device_id)
+
         device = entity_class(device_id, hass, **device_config)
         devices.append(device)
 
@@ -155,8 +180,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
             # rflink only support 16 brightness levels
             self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
 
-        # if receiver supports dimming this will turn on the light
-        # at the requested dim level
+        # turn on light at the requested dim level
         yield from self._async_handle_command('dim', self._brightness)
 
     @property
@@ -168,3 +192,36 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
+
+
+class HybridRflinkLight(DimmableRflinkLight):
+    """Rflink light device that sends out both dim and on/off commands.
+
+    Used for protocols which support lights that are not exclusively on/off
+    style. For example KlikAanKlikUit supports both on/off and dimmable light
+    switches using the same protocol. This type allows unconfigured
+    KlikAanKlikUit devices to support dimming without breaking support for
+    on/off switches.
+
+    This type is not compatible with signal repetitions as the 'dim' and 'on'
+    command are send sequential and multiple 'on' commands to a dimmable
+    device can cause the dimmer to switch into a pulsating brightness mode.
+    Which results in a nice house disco :)
+
+    """
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the device on and set dim level."""
+        if ATTR_BRIGHTNESS in kwargs:
+            # rflink only support 16 brightness levels
+            self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
+
+        # if receiver supports dimming this will turn on the light
+        # at the requested dim level
+        yield from self._async_handle_command('dim', self._brightness)
+
+        # if the receiving device does not support dimlevel this
+        # will ensure it is turned on when full brightness is set
+        if self._brightness == 255:
+            yield from self._async_handle_command("turn_on")

@@ -116,8 +116,7 @@ def test_default_setup(hass, monkeypatch):
     assert hass.states.get('light.test').state == 'on'
     assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
 
-    # protocols supporting dimming should send dim commands
-    # create dimmable entity
+    # protocols supporting dimming and on/off should create hybrid light entity
     event_callback({
         'id': 'newkaku_0_1',
         'command': 'off',
@@ -131,6 +130,9 @@ def test_default_setup(hass, monkeypatch):
     # dimmable should send highest dim level when turning on
     assert protocol.send_command_ack.call_args_list[2][0][1] == '15'
 
+    # and send on command for fallback
+    assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
+
     hass.async_add_job(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
                                  {
@@ -139,7 +141,17 @@ def test_default_setup(hass, monkeypatch):
                                  }))
     yield from hass.async_block_till_done()
 
-    assert protocol.send_command_ack.call_args_list[3][0][1] == '7'
+    assert protocol.send_command_ack.call_args_list[4][0][1] == '7'
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_ON,
+                                 {
+                                     ATTR_ENTITY_ID: 'light.dim_test',
+                                     ATTR_BRIGHTNESS: 128,
+                                 }))
+    yield from hass.async_block_till_done()
+
+    assert protocol.send_command_ack.call_args_list[5][0][1] == '7'
 
 
 @asyncio.coroutine
@@ -231,6 +243,9 @@ def test_signal_repetitions(hass, monkeypatch):
                 'protocol_0_1': {
                     'name': 'test1',
                 },
+                'newkaku_0_1': {
+                    'type': 'hybrid',
+                }
             },
         },
     }
