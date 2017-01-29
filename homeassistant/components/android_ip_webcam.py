@@ -7,8 +7,8 @@ https://home-assistant.io/components/android_ip_webcam/
 import logging
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
-import requests
 from urllib.parse import quote
+import requests
 
 import voluptuous as vol
 
