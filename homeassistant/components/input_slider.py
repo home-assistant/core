@@ -10,10 +10,12 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME)
+    ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_RESTORE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components import history
+
 
 DOMAIN = 'input_slider'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -59,6 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_MIN): vol.Coerce(float),
             vol.Required(CONF_MAX): vol.Coerce(float),
             vol.Optional(CONF_INITIAL): vol.Coerce(float),
+            vol.Optional(CONF_RESTORE): cv.string,
             vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
                                                         vol.Range(min=1e-3)),
             vol.Optional(CONF_ICON): cv.icon,
@@ -83,14 +86,28 @@ def async_setup(hass, config):
 
     entities = []
 
+    @asyncio.coroutine
+    def async_restore_last_state(entity_id):
+        """Restore the last known state for entity_id from recorder."""
+        last_state = yield from hass.loop.run_in_executor(None, history.last_known_state, entity_id)
+        if last_state:
+            _LOGGER.debug("Restoring state '" + str(last_state) + "' of " + str(entity_id))
+            yield from hass.services.async_call(DOMAIN, SERVICE_SELECT_VALUE, {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_VALUE: last_state,
+            })
+
     for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
-        state = cfg.get(CONF_INITIAL, minimum)
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
+
+        state = cfg.get(CONF_INITIAL, minimum)
+        if cfg.get(CONF_RESTORE) == 'startup':
+            hass.loop.create_task(async_restore_last_state(ENTITY_ID_FORMAT.format(object_id)))
 
         entities.append(InputSlider(object_id, name, state, minimum, maximum,
                                     step, icon, unit))
