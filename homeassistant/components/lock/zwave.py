@@ -254,11 +254,8 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 for value in (self._node.get_values(
                         class_id=zwave.const.COMMAND_CLASS_CONFIGURATION)
                               .values()):
-                    _LOGGER.debug('4')
                     if value.index != 12:
-                        _LOGGER.debug('5')
                         continue
-                    _LOGGER.debug('6, %s', value.data)
                     if value.data == CONFIG_ADVANCED:
                         self._state = LOCK_STATUS.get(notification_data)
                         _LOGGER.debug('Lock state set from Access Control '
