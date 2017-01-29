@@ -15,40 +15,10 @@ from homeassistant.components.image_processing.microsoft_face_identify import (
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the demo image_processing platform."""
     add_devices([
-        DemoImageProcessing('camera.demo_camera', "Demo"),
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
         DemoImageProcessingFaceIdentify(
             'camera.demo_camera', "Demo Face Identify")
     ])
-
-
-class DemoImageProcessing(ImageProcessingEntity):
-    """Demo alpr image processing entity."""
-
-    def __init__(self, camera_entity, name):
-        """Initialize demo alpr."""
-        self._name = name
-        self._camera = camera_entity
-        self._count = 0
-
-    @property
-    def camera_entity(self):
-        """Return camera entity id from process pictures."""
-        return self._camera
-
-    @property
-    def name(self):
-        """Return the name of the entity."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._count
-
-    def process_image(self, image):
-        """Process image."""
-        self._count += 1
 
 
 class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
