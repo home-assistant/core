@@ -96,9 +96,9 @@ def async_setup(hass, config):
                 "Restoring state '"+str(last_state)+"' of "+str(entity_id))
             yield from hass.services.async_call(
                 DOMAIN, SERVICE_SELECT_VALUE, {
-                ATTR_ENTITY_ID: entity_id,
-                ATTR_VALUE: last_state,
-            })
+                 ATTR_ENTITY_ID: entity_id,
+                 ATTR_VALUE: last_state,
+                })
 
     for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME)
