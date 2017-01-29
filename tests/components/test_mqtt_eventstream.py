@@ -158,7 +158,6 @@ class TestMqttEventStream(unittest.TestCase):
         instances are crossconfigured for the same mqtt topics.
 
         """
-
         self.assertTrue(self.add_eventstream(pub_topic='bar'))
         self.hass.block_till_done()
 
