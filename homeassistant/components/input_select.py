@@ -9,10 +9,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, CONF_RESTORE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components import history
 
 
 DOMAIN = 'input_select'
@@ -62,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_OPTIONS):
                 vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
             vol.Optional(CONF_INITIAL): cv.string,
+            vol.Optional(CONF_RESTORE): cv.string,
             vol.Optional(CONF_ICON): cv.icon,
         }, _cv_input_select)})
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -96,11 +98,26 @@ def async_setup(hass, config):
 
     entities = []
 
+    @asyncio.coroutine
+    def async_restore_last_state(entity_id):
+        """Restore the last known state for entity_id from recorder."""
+        last_state = yield from hass.loop.run_in_executor(None, history.last_known_state, entity_id)
+        if last_state:
+            _LOGGER.debug("Restoring state '" + str(last_state) + "' of " + str(entity_id))
+            yield from hass.services.async_call(DOMAIN, SERVICE_SELECT_OPTION, {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_OPTION: last_state,
+            })
+
     for object_id, cfg in config[DOMAIN].items():
         name = cfg.get(CONF_NAME)
         options = cfg.get(CONF_OPTIONS)
-        state = cfg.get(CONF_INITIAL, options[0])
         icon = cfg.get(CONF_ICON)
+
+        state = cfg.get(CONF_INITIAL, options[0])
+        if cfg.get(CONF_RESTORE) == 'startup':
+            hass.loop.create_task(async_restore_last_state(ENTITY_ID_FORMAT.format(object_id)))
+
         entities.append(InputSelect(object_id, name, state, options, icon))
 
     if not entities:
