@@ -77,11 +77,13 @@ def async_setup(hass, config):
         last_state = yield from hass.loop.run_in_executor(
             None, history.last_known_state, entity_id)
         if last_state == STATE_ON:
-            _LOGGER.debug("Restoring state '"+str(last_state)+"' of "+str(entity_id))
+            _LOGGER.debug(
+                "Restoring state '"+str(last_state)+"' of "+str(entity_id))
             yield from hass.services.async_call(
                 DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
         elif last_state == STATE_OFF:
-            _LOGGER.debug("Restoring state '"+str(last_state)+"' of "+str(entity_id))
+            _LOGGER.debug(
+                "Restoring state '"+str(last_state)+"' of "+str(entity_id))
             yield from hass.services.async_call(
                 DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
 
