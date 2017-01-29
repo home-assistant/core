@@ -243,12 +243,6 @@ def async_setup(hass, config):
 
         away_mode = service.data.get(ATTR_AWAY_MODE)
 
-        if away_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_AWAY_MODE, ATTR_AWAY_MODE)
-            return
-
         _LOGGER.warning(
             'This service has been deprecated; use climate.set_hold_mode')
         for climate in target_climate:
@@ -287,12 +281,6 @@ def async_setup(hass, config):
         target_climate = component.async_extract_from_service(service)
 
         aux_heat = service.data.get(ATTR_AUX_HEAT)
-
-        if aux_heat is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_AUX_HEAT, ATTR_AUX_HEAT)
-            return
 
         for climate in target_climate:
             if aux_heat:
@@ -340,12 +328,6 @@ def async_setup(hass, config):
 
         humidity = service.data.get(ATTR_HUMIDITY)
 
-        if humidity is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_HUMIDITY, ATTR_HUMIDITY)
-            return
-
         for climate in target_climate:
             yield from climate.async_set_humidity(humidity)
 
@@ -362,12 +344,6 @@ def async_setup(hass, config):
         target_climate = component.async_extract_from_service(service)
 
         fan = service.data.get(ATTR_FAN_MODE)
-
-        if fan is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_FAN_MODE, ATTR_FAN_MODE)
-            return
 
         for climate in target_climate:
             yield from climate.async_set_fan_mode(fan)
@@ -386,12 +362,6 @@ def async_setup(hass, config):
 
         operation_mode = service.data.get(ATTR_OPERATION_MODE)
 
-        if operation_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_OPERATION_MODE, ATTR_OPERATION_MODE)
-            return
-
         for climate in target_climate:
             yield from climate.async_set_operation_mode(operation_mode)
 
@@ -408,12 +378,6 @@ def async_setup(hass, config):
         target_climate = component.async_extract_from_service(service)
 
         swing_mode = service.data.get(ATTR_SWING_MODE)
-
-        if swing_mode is None:
-            _LOGGER.error(
-                "Received call to %s without attribute %s",
-                SERVICE_SET_SWING_MODE, ATTR_SWING_MODE)
-            return
 
         for climate in target_climate:
             yield from climate.async_set_swing_mode(swing_mode)
