@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 import requests
+from urllib.parse import quote
 
 import voluptuous as vol
 
@@ -107,11 +108,12 @@ ICON_MAP = {
     'torch': 'mdi:white-balance-sunny',
     'video_chunk_len': 'mdi:video',
     'video_connections': 'mdi:eye',
+    'video_recording': 'mdi:record-rec',
     'whitebalance_lock': 'mdi:white-balance-auto'
 }
 
 SWITCHES = ['exposure_lock', 'ffc', 'focus', 'gps_active', 'night_vision',
-            'overlay', 'torch', 'whitebalance_lock']
+            'overlay', 'torch', 'whitebalance_lock', 'video_recording']
 
 SENSORS = ['audio_connections', 'battery_level', 'battery_temp',
            'battery_voltage', 'light', 'motion', 'pressure', 'proximity',
@@ -200,6 +202,9 @@ class IPWebcam(object):
 
         resp = 'json' if '.json' in path else 'xml'
 
+        if '/startvideo' in path or '/stopvideo' in path:
+            resp = 'json'
+
         try:
             response = requests.get(url, timeout=DEFAULT_TIMEOUT,
                                     auth=auth_tuple)
@@ -281,6 +286,13 @@ class IPWebcam(object):
     def focus(self, activate=True):
         """Enable/disable camera focus."""
         path = '/focus' if activate else '/nofocus'
+        return self._request(path)
+
+    def record(self, record=True, tag=None):
+        """Enable/disable recording."""
+        path = '/startvideo?force=1' if record else '/stopvideo?force=1'
+        if record and tag is not None:
+            path = '/startvideo?force=1&tag={}'.format(quote(tag))
         return self._request(path)
 
     def set_front_facing_camera(self, activate=True):

@@ -67,6 +67,8 @@ class IPWebcamSettingsSwitch(SwitchDevice):
             self._device.torch(activate=True)
         elif self._setting is 'focus':
             self._device.focus(activate=True)
+        elif self._setting is 'video_recording':
+            self._device.record(record=True)
         else:
             self._device.change_setting(self._setting, True)
         self._state = True
@@ -77,6 +79,8 @@ class IPWebcamSettingsSwitch(SwitchDevice):
             self._device.torch(activate=False)
         elif self._setting is 'focus':
             self._device.focus(activate=False)
+        elif self._setting is 'video_recording':
+            self._device.record(record=False)
         else:
             self._device.change_setting(self._setting, False)
         self._state = False
