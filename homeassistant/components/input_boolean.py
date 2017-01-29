@@ -6,15 +6,16 @@ at https://home-assistant.io/components/input_boolean/
 """
 import asyncio
 import logging
-
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, STATE_ON)
+    ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, CONF_RESTORE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_TOGGLE, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components import history
+
 
 DOMAIN = 'input_boolean'
 
@@ -37,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
+            vol.Optional(CONF_RESTORE): cv.string,
         }, None)
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -69,13 +71,27 @@ def async_setup(hass, config):
 
     entities = []
 
+    @asyncio.coroutine
+    def restore_last_state(entity_id):
+        """Restore the last known state for entity_id from recorder."""
+        last_state = yield from hass.loop.run_in_executor(None, history.last_known_state, entity_id)
+        if last_state == STATE_ON:
+            _LOGGER.debug("Restoring state '" + str(last_state) + "' of " + str(entity_id))
+            yield from hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id})
+        elif last_state == STATE_OFF:
+            _LOGGER.debug("Restoring state '" + str(last_state) + "' of " + str(entity_id))
+            yield from hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id})
+
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:
             cfg = DEFAULT_CONFIG
 
         name = cfg.get(CONF_NAME)
-        state = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
+
+        state = cfg.get(CONF_INITIAL)
+        if cfg.get(CONF_RESTORE) == 'startup':
+            hass.loop.create_task(restore_last_state(ENTITY_ID_FORMAT.format(object_id)))
 
         entities.append(InputBoolean(object_id, name, state, icon))
 
