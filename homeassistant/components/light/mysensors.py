@@ -151,8 +151,14 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
             rgb = list(new_rgb)
         if rgb is None:
             return
-        if new_white is not None and hex_template == '%02x%02x%02x%02x':
-            rgb.append(new_white)
+        if hex_template == '%02x%02x%02x%02x':
+            if new_white is not None:
+                rgb.append(new_white)
+            elif white is not None:
+                rgb.append(white)
+            else:
+                _LOGGER.error('White value is not updated for RGBW light')
+                return
         hex_color = hex_template % tuple(rgb)
         if len(rgb) > 3:
             white = rgb.pop()
@@ -236,11 +242,20 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         """Update the controller with values from RGB or RGBW child."""
         set_req = self.gateway.const.SetReq
         value = self._values[self.value_type]
+        if len(value) != 6 and len(value) != 8:
+            _LOGGER.error(
+                'Wrong value %s for %s', value, set_req(self.value_type).name)
+            return
         color_list = rgb_hex_to_rgb_list(value)
         if set_req.V_LIGHT not in self._values and \
                 set_req.V_DIMMER not in self._values:
             self._state = max(color_list) > 0
         if len(color_list) > 3:
+            if set_req.V_RGBW != self.value_type:
+                _LOGGER.error(
+                    'Wrong value %s for %s',
+                    value, set_req(self.value_type).name)
+                return
             self._white = color_list.pop()
         self._rgb = color_list
 
