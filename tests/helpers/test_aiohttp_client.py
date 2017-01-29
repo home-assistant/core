@@ -4,7 +4,8 @@ import unittest
 import aiohttp
 
 import homeassistant.helpers.aiohttp_client as client
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 from tests.common import get_test_home_assistant
 
@@ -79,3 +80,19 @@ class TestHelpersAiohttpClient(unittest.TestCase):
         assert isinstance(
             self.hass.data[client.DATA_CONNECTOR_NOTVERIFY],
             aiohttp.TCPConnector)
+
+    def test_get_clientsession_cleanup(self):
+        """Test init clientsession with ssl."""
+        run_callback_threadsafe(self.hass.loop, client.async_get_clientsession,
+                                self.hass).result()
+
+        assert isinstance(
+            self.hass.data[client.DATA_CLIENTSESSION], aiohttp.ClientSession)
+        assert isinstance(
+            self.hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
+
+        run_coroutine_threadsafe(
+            client.async_cleanup_websession(self.hass)).result()
+
+        assert self.hass.data[client.DATA_CLIENTSESSION].closed()
+        assert self.hass.data[client.DATA_CONNECTOR].closed()
