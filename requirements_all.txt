@@ -667,7 +667,7 @@ yahoo-finance==1.4.0
 yahooweather==0.8
 
 # homeassistant.components.light.yeelight
-yeelight==0.1.0
+yeelight==0.2.1
 
 # homeassistant.components.light.zengge
 zengge==0.2
