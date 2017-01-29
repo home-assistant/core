@@ -473,6 +473,9 @@ class Recorder(threading.Thread):
             except sqlalchemy.exc.OperationalError as err:
                 session.rollback()
                 log_error(err, retry_wait=QUERY_RETRY_WAIT)
+            except UnicodeEncodeError as err:
+                log_error(err)
+                return False
         if close_session:
             session.close()
         return False
