@@ -383,13 +383,3 @@ class Thermostat(ClimateDevice):
             return default
         else:
             return 'nextTransition'
-
-    # Sleep mode isn't used in UI yet:
-
-    # def turn_sleep_mode_on(self):
-    #     """ Turns sleep mode on. """
-    #     self.data.ecobee.set_climate_hold(self.thermostat_index, "sleep")
-
-    # def turn_sleep_mode_off(self):
-    #     """ Turns sleep mode off. """
-    #     self.data.ecobee.resume_program(self.thermostat_index)
