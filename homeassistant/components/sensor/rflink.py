@@ -14,7 +14,8 @@ from homeassistant.components.rflink import (
     DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT,
     RflinkDevice, cv, vol)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM,
+    CONF_UNIT_OF_MEASUREMENT)
 
 DEPENDENCIES = ['rflink']
 
@@ -35,6 +36,7 @@ PLATFORM_SCHEMA = vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
         },
@@ -58,8 +60,9 @@ def devices_from_config(domain_config, hass=None):
     """Parse config and add rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
-            config[CONF_SENSOR_TYPE])
+        if not config[ATTR_UNIT_OF_MEASUREMENT]:
+            config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
+                config[CONF_SENSOR_TYPE])
         device = RflinkSensor(device_id, hass, **config)
         devices.append(device)
 
