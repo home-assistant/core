@@ -110,11 +110,11 @@ if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
 fi
 
 # Remove packages
+echo "Removing dev packages"
 apt-get remove -y --purge ${PACKAGES_DEV[@]}
 apt-get -y --purge autoremove
 
 # Cleanup
-echo "Removing dev packages"
 apt-get clean
 rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* build/
 
