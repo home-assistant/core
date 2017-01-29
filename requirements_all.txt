@@ -564,7 +564,7 @@ pyzabbix==0.7.4
 radiotherm==1.2
 
 # homeassistant.components.switch.rpi_rf
-# rpi-rf==0.9.5
+# rpi-rf==0.9.6
 
 # homeassistant.components.media_player.yamaha
 rxv==0.4.0
@@ -635,8 +635,9 @@ tikteck==0.4
 # homeassistant.components.switch.transmission
 transmissionrpc==0.11
 
+# homeassistant.components.notify.twilio_call
 # homeassistant.components.notify.twilio_sms
-twilio==5.4.0
+twilio==5.7.0
 
 # homeassistant.components.sensor.uber
 uber_rides==0.2.7
