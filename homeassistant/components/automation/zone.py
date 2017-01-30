@@ -48,7 +48,7 @@ def async_trigger(hass, config, action):
         to_match = condition.zone(hass, zone_state, to_s)
 
         #
-        #  If zone is "zone.*", trigger automation when entering or leaving
+        #  If zone is "*", trigger automation when entering or leaving
         #
         if zone_entity_id == MATCH_ALL and from_s.state != to_s.state:
             if event == EVENT_ENTER and to_s.state != STATE_NOT_HOME or \
