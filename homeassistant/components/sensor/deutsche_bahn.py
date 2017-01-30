@@ -65,7 +65,7 @@ class DeutscheBahnSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         connections = self.data.connections[0]
         connections['next'] = self.data.connections[1]['departure']
