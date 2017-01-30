@@ -17,5 +17,4 @@ yarn install
 # Install bower web components. Allow to download the components as root since the user in docker is root.
 ./node_modules/.bin/bower install --allow-root
 
-yarn run setup_js_dev
 cd ../../../../..
