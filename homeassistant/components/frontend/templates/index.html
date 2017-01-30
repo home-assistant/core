@@ -28,47 +28,31 @@
         font-weight: 300;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
+        margin: 0;
+        padding: 0;
       }
 
-      #ha-init-skeleton {
-        display: -webkit-flex;
-        display: flex;
-        -webkit-flex-direction: column;
-        -webkit-justify-content: center;
-        -webkit-align-items: center;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        text-align: center;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        margin-bottom: 83px;
-        font-family: Roboto, sans-serif;
-        font-size: 0pt;
+      #ha-init-skeleton::before {
+        display: block;
+        content: "";
+        height: 48px;
+        background-color: #03A9F4;
+      }
+
+      #ha-init-skeleton .message {
         transition: font-size 2s;
+        font-size: 0;
+        padding: 24px;
       }
 
-      #ha-init-skeleton paper-spinner {
-        height: 28px;
-        margin-top: 16px;
+      #ha-init-skeleton.error .message {
+        font-size: 16px;
       }
 
       #ha-init-skeleton a {
         color: #03A9F4;
         text-decoration: none;
         font-weight: bold;
-      }
-
-      #ha-init-skeleton.error {
-        font-size: 16px;
-      }
-
-      #ha-init-skeleton.error img,
-      #ha-init-skeleton.error paper-spinner {
-        display: none;
       }
     </style>
     <script>
@@ -83,9 +67,9 @@
   </head>
   <body>
     <div id='ha-init-skeleton'>
-      <img src='/static/icons/favicon-192x192.png' height='192'>
-      <paper-spinner active></paper-spinner>
-      Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
+      <div class='message'>
+        Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
+      </div>
     </div>
     <home-assistant icons='{{ icons }}'></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
