@@ -44,3 +44,14 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
     def turn_off(self):
         """Turn the device off."""
         self.wink.set_state(False)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        try:
+            event = self.wink.last_event()
+        except AttributeError:
+            event = None
+        return {
+            'last_event': event
+        }
