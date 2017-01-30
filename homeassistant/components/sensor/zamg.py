@@ -112,7 +112,7 @@ class ZamgSensor(Entity):
         return SENSOR_TYPES[self.variable][1]
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,

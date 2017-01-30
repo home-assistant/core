@@ -98,7 +98,7 @@ class GpsdSensor(Entity):
             return STATE_UNKNOWN
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the GPS."""
         return {
             ATTR_LATITUDE: self.agps_thread.data_stream.lat,
