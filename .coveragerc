@@ -138,6 +138,7 @@ omit =
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
+    homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
