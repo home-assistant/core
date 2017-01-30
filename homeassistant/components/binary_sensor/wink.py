@@ -51,6 +51,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for gang in pywink.get_gangs():
         add_devices([WinkGang(gang, hass)])
 
+    for door_bell_sensor in pywink.get_door_bells():
+        add_devices([WinkBinarySensorDevice(door_bell_sensor, hass)])
+
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     """Representation of a Wink binary sensor."""

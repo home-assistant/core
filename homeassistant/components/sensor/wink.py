@@ -27,6 +27,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for eggtray in pywink.get_eggtrays():
         add_devices([WinkSensorDevice(eggtray, hass)])
 
+    for tank in pywink.get_propane_tanks():
+        add_devices([WinkSensorDevice(tank, hass)])
+
     for piggy_bank in pywink.get_piggy_banks():
         try:
             if piggy_bank.capability() in SENSOR_TYPES:
