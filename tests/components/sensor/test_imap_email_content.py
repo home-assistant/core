@@ -46,8 +46,8 @@ class EmailContentSensor(unittest.TestCase):
     def test_allowed_sender(self):
         """Test emails from allowed sender."""
         test_message = email.message.Message()
-        test_message['From'] = "sender@test.com"
-        test_message['Subject'] = "Test"
+        test_message['From'] = 'sender@test.com'
+        test_message['Subject'] = 'Test'
         test_message['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message.set_payload("Test Message")
 
@@ -58,19 +58,20 @@ class EmailContentSensor(unittest.TestCase):
             ["sender@test.com"],
             None)
 
-        sensor.entity_id = "sensor.emailtest"
+        sensor.entity_id = 'sensor.emailtest'
         sensor.update()
         self.assertEqual("Test Message", sensor.state)
-        self.assertEqual("sender@test.com", sensor.state_attributes["from"])
-        self.assertEqual("Test", sensor.state_attributes["subject"])
+        self.assertEqual('sender@test.com',
+                         sensor.device_state_attributes['from'])
+        self.assertEqual('Test', sensor.device_state_attributes['subject'])
         self.assertEqual(datetime.datetime(2016, 1, 1, 12, 44, 57),
-                         sensor.state_attributes["date"])
+                         sensor.device_state_attributes['date'])
 
     def test_multi_part_with_text(self):
         """Test multi part emails."""
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = "Link"
-        msg['From'] = "sender@test.com"
+        msg['Subject'] = 'Link'
+        msg['From'] = 'sender@test.com'
 
         text = "Test Message"
         html = "<html><head></head><body>Test Message</body></html>"
@@ -82,11 +83,8 @@ class EmailContentSensor(unittest.TestCase):
         msg.attach(htmlPart)
 
         sensor = imap_email_content.EmailContentSensor(
-            self.hass,
-            FakeEMailReader(deque([msg])),
-            "test_emails_sensor",
-            ["sender@test.com"],
-            None)
+            self.hass,  FakeEMailReader(deque([msg])), 'test_emails_sensor',
+            ['sender@test.com'], None)
 
         sensor.entity_id = "sensor.emailtest"
         sensor.update()
@@ -107,11 +105,11 @@ class EmailContentSensor(unittest.TestCase):
         sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([msg])),
-            "test_emails_sensor",
-            ["sender@test.com"],
+            'test_emails_sensor',
+            ['sender@test.com'],
             None)
 
-        sensor.entity_id = "sensor.emailtest"
+        sensor.entity_id = 'sensor.emailtest'
         sensor.update()
         self.assertEqual(
             "<html><head></head><body>Test Message</body></html>",
@@ -120,8 +118,8 @@ class EmailContentSensor(unittest.TestCase):
     def test_multi_part_only_other_text(self):
         """Test multi part emails with only other text."""
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = "Link"
-        msg['From'] = "sender@test.com"
+        msg['Subject'] = 'Link'
+        msg['From'] = 'sender@test.com'
 
         other = "Test Message"
 
@@ -130,13 +128,10 @@ class EmailContentSensor(unittest.TestCase):
         msg.attach(htmlPart)
 
         sensor = imap_email_content.EmailContentSensor(
-            self.hass,
-            FakeEMailReader(deque([msg])),
-            "test_emails_sensor",
-            ["sender@test.com"],
-            None)
+            self.hass, FakeEMailReader(deque([msg])), 'test_emails_sensor',
+            ['sender@test.com'], None)
 
-        sensor.entity_id = "sensor.emailtest"
+        sensor.entity_id = 'sensor.emailtest'
         sensor.update()
         self.assertEqual("Test Message", sensor.state)
 
@@ -145,14 +140,14 @@ class EmailContentSensor(unittest.TestCase):
         states = []
 
         test_message1 = email.message.Message()
-        test_message1['From'] = "sender@test.com"
-        test_message1['Subject'] = "Test"
+        test_message1['From'] = 'sender@test.com'
+        test_message1['Subject'] = 'Test'
         test_message1['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message1.set_payload("Test Message")
 
         test_message2 = email.message.Message()
-        test_message2['From'] = "sender@test.com"
-        test_message2['Subject'] = "Test 2"
+        test_message2['From'] = 'sender@test.com'
+        test_message2['Subject'] = 'Test 2'
         test_message2['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message2.set_payload("Test Message 2")
 
@@ -164,18 +159,14 @@ class EmailContentSensor(unittest.TestCase):
                 states_received.set()
 
         track_state_change(
-            self.hass,
-            ["sensor.emailtest"],
-            state_changed_listener)
+            self.hass, ['sensor.emailtest'], state_changed_listener)
 
         sensor = imap_email_content.EmailContentSensor(
             self.hass,
             FakeEMailReader(deque([test_message1, test_message2])),
-            "test_emails_sensor",
-            ["sender@test.com"],
-            None)
+            'test_emails_sensor', ['sender@test.com'], None)
 
-        sensor.entity_id = "sensor.emailtest"
+        sensor.entity_id = 'sensor.emailtest'
         sensor.update()
 
         self.hass.block_till_done()
@@ -189,39 +180,34 @@ class EmailContentSensor(unittest.TestCase):
     def test_sender_not_allowed(self):
         """Test not whitelisted emails."""
         test_message = email.message.Message()
-        test_message['From'] = "sender@test.com"
-        test_message['Subject'] = "Test"
+        test_message['From'] = 'sender@test.com'
+        test_message['Subject'] = 'Test'
         test_message['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message.set_payload("Test Message")
 
         sensor = imap_email_content.EmailContentSensor(
-            self.hass,
-            FakeEMailReader(deque([test_message])),
-            "test_emails_sensor",
-            ["other@test.com"],
-            None)
+            self.hass, FakeEMailReader(deque([test_message])),
+            'test_emails_sensor', ['other@test.com'], None)
 
-        sensor.entity_id = "sensor.emailtest"
+        sensor.entity_id = 'sensor.emailtest'
         sensor.update()
         self.assertEqual(None, sensor.state)
 
     def test_template(self):
         """Test value template."""
         test_message = email.message.Message()
-        test_message['From'] = "sender@test.com"
-        test_message['Subject'] = "Test"
+        test_message['From'] = 'sender@test.com'
+        test_message['Subject'] = 'Test'
         test_message['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message.set_payload("Test Message")
 
         sensor = imap_email_content.EmailContentSensor(
-            self.hass,
-            FakeEMailReader(deque([test_message])),
-            "test_emails_sensor",
-            ["sender@test.com"],
+            self.hass, FakeEMailReader(deque([test_message])),
+            'test_emails_sensor', ['sender@test.com'],
             Template("{{ subject }} from {{ from }} with message {{ body }}",
                      self.hass))
 
-        sensor.entity_id = "sensor.emailtest"
+        sensor.entity_id = 'sensor.emailtest'
         sensor.update()
         self.assertEqual(
             "Test from sender@test.com with message Test Message",
