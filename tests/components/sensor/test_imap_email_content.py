@@ -129,7 +129,7 @@ class EmailContentSensor(unittest.TestCase):
 
         sensor = imap_email_content.EmailContentSensor(
             self.hass, FakeEMailReader(deque([msg])), 'test_emails_sensor',
-            ['sender@test.com'],None)
+            ['sender@test.com'], None)
 
         sensor.entity_id = 'sensor.emailtest'
         sensor.update()
