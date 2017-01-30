@@ -100,7 +100,7 @@ def async_setup(hass, config):
             if service.service == SERVICE_START:
                 tasks.append(device.async_start_ffmpeg())
             elif service.service == SERVICE_STOP:
-                tasks.append(device.async_shutdown_ffmpeg())
+                tasks.append(device.async_stop_ffmpeg())
             else:
                 tasks.append(device.async_restart_ffmpeg())
 
@@ -194,7 +194,12 @@ class FFmpegManager(object):
 
 
 class FFmpegBase(Entity):
-    """Interface object for services."""
+    """Interface object for ffmpeg."""
+
+    def __init__(self, initial_state=True):
+        """Initialize ffmpeg base object."""
+        self.ffmpeg = None
+        self.initial_state = initial_state
 
     @property
     def available(self):
@@ -205,16 +210,6 @@ class FFmpegBase(Entity):
     def should_poll(self):
         """Return True if entity has to be polled for state."""
         return False
-
-    @property
-    def ffmpeg(self):
-        """Return ffmpeg process object."""
-        return None
-
-    @property
-    def initial_state(self):
-        """Return if process start on HOMEASSISTANT_START."""
-        return True
 
     def async_start_ffmpeg(self):
         """Start a ffmpeg process.

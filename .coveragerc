@@ -116,7 +116,6 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
-    homeassistant/components/ffmpeg.py
     homeassistant/components/*/ffmpeg.py
 
     homeassistant/components/zoneminder.py

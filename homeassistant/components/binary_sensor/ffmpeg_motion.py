@@ -6,7 +6,6 @@ https://home-assistant.io/components/binary_sensor.ffmpeg_motion/
 """
 import asyncio
 import logging
-import os
 
 import voluptuous as vol
 
@@ -69,10 +68,11 @@ class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
 
     def __init__(self, hass, config):
         """Constructor for binary sensor noise detection."""
+        super().__init__(config.get(CONF_INITIAL_STATE))
+
         self._state = False
         self._config = config
         self._name = config.get(CONF_NAME)
-        self.initial_state = config.get(CONF_INITIAL_STATE)
 
     @callback
     def _async_callback(self, state):
