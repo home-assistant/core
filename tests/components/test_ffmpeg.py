@@ -8,7 +8,7 @@ from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
+    get_test_home_assistant, assert_setup_component, mock_coro)
 
 
 class MockFFmpegDev(ffmpeg.FFmpegBase):
@@ -82,6 +82,8 @@ class TestFFmpegSetup(object):
 
         assert self.hass.bus.async_listen_once.called
         assert self.hass.bus.async_listen_once.call_count == 2
+        assert len(manager.entities) == 1
+        assert manager.entities[0] == ffmpeg_dev
 
     def test_setup_component_test_register_no_startup(self):
         """Setup ffmpeg component test register without startup."""
@@ -98,6 +100,8 @@ class TestFFmpegSetup(object):
 
         assert self.hass.bus.async_listen_once.called
         assert self.hass.bus.async_listen_once.call_count == 1
+        assert len(manager.entities) == 1
+        assert manager.entities[0] == ffmpeg_dev
 
     def test_setup_component_test_servcie_start(self):
         """Setup ffmpeg component test service start."""
