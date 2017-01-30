@@ -10,6 +10,9 @@
           href='/static/icons/favicon-apple-180x180.png'>
     <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
     <link rel='preload' href='{{ core_url }}' as='script'/>
+    <link rel='prefetch' href='/static/fonts/roboto/Roboto-Regular.ttf'>
+    <link rel='prefetch' href='/static/fonts/roboto/Roboto-Light.ttf'>
+    <link rel='prefetch' href='/static/fonts/roboto/Roboto-Medium.ttf'>
     {% for panel in panels.values() -%}
       <link rel='prefetch' href='{{ panel.url }}'>
     {% endfor -%}
