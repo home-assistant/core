@@ -54,7 +54,8 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CUSTOM, default={}): vol.Schema({
         cv.slug: {
             vol.Required('key'): vol.All(str, vol.Length(min=13, max=13)),
-            vol.Required('unit'): str
+            vol.Required('unit'): str,
+            vol.Optional('factor', default=1): vol.Coerce(float),
         }})
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
@@ -63,16 +64,18 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
 
-    # Combine sensor_defs from the library and custom config
+    # sensor_defs from the library
     sensor_defs = dict(zip(SENSOR_OPTIONS, [
-        (pysma.KEY_CURRENT_CONSUMPTION_W, 'W'),
-        (pysma.KEY_CURRENT_POWER_W, 'W'),
-        (pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kW/h'),
-        (pysma.KEY_TOTAL_YIELD_KWH, 'kW/h')]))
+        (pysma.KEY_CURRENT_CONSUMPTION_W, 'W', 1),
+        (pysma.KEY_CURRENT_POWER_W, 'W', 1),
+        (pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kW/h', 1000),
+        (pysma.KEY_TOTAL_YIELD_KWH, 'kW/h', 1000)]))
+
+    # sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
         if name in sensor_defs:
             _LOGGER.warning("Custom sensor %s replace built-in sensor", name)
-        sensor_defs[name] = (prop['key'], prop['unit'])
+        sensor_defs[name] = (prop['key'], prop['unit'], prop['factor'])
 
     # Prepare all HASS sensor entities
     hass_sensors = []
@@ -121,7 +124,9 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         if values is None:
             backoff = 3
             return
+        values = [0 if val is None else val for val in values]
         res = dict(zip(names_to_query, values))
+        res = {key: val // sensor_defs[key][2] for key, val in res.items()}
         _LOGGER.debug("Update sensors %s %s %s", keys_to_query, values, res)
         tasks = []
         for sensor in hass_sensors:
@@ -141,7 +146,7 @@ class SMAsensor(Entity):
     def __init__(self, sensor_name, attr, sensor_defs):
         """Initialize the sensor."""
         self._name = sensor_name
-        self._key, self._unit_of_measurement = sensor_defs[sensor_name]
+        self._key, self._unit_of_measurement, _ = sensor_defs[sensor_name]
         self._state = None
         self._sensor_defs = sensor_defs
         self._attr = {att: "" for att in attr}
@@ -176,10 +181,10 @@ class SMAsensor(Entity):
         update = False
 
         for key, val in self._attr.items():
-            if val.partition(' ')[0] != key_values[key]:
+            newval = '{} {}'.format(key_values[key], self._sensor_defs[key][1])
+            if val != newval:
                 update = True
-                self._attr[key] = '{} {}'.format(key_values[key],
-                                                 self._sensor_defs[key][1])
+                self._attr[key] = newval
 
         new_state = key_values[self._name]
         if new_state != self._state:
