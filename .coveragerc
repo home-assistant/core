@@ -325,6 +325,7 @@ omit =
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py
+    homeassistant/components/sensor/openevse.py
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/pi_hole.py
