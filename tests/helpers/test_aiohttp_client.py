@@ -100,6 +100,25 @@ class TestHelpersAiohttpClient(unittest.TestCase):
         assert self.hass.data[client.DATA_CLIENTSESSION].closed
         assert self.hass.data[client.DATA_CONNECTOR].closed
 
+    def test_get_clientsession_cleanup_without_ssl(self):
+        """Test init clientsession with ssl."""
+        run_callback_threadsafe(self.hass.loop, client.async_get_clientsession,
+                                self.hass, False).result()
+
+        assert isinstance(
+            self.hass.data[client.DATA_CLIENTSESSION_NOTVERIFY],
+            aiohttp.ClientSession)
+        assert isinstance(
+            self.hass.data[client.DATA_CONNECTOR_NOTVERIFY],
+            aiohttp.TCPConnector)
+
+        run_coroutine_threadsafe(
+            client.async_cleanup_websession(self.hass), self.hass.loop
+        ).result()
+
+        assert self.hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
+        assert self.hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
+
 
 @asyncio.coroutine
 def test_fetching_url(aioclient_mock, hass, test_client):
