@@ -277,6 +277,7 @@ omit =
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/remote/harmony.py
+    homeassistant/components/remote/itach.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/amcrest.py
     homeassistant/components/sensor/arest.py
