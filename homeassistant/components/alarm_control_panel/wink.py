@@ -24,8 +24,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for camera in pywink.get_cameras():
-        if camera.object_id() + camera.name() not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkCameraDevice(camera, hass)])
+        # get_cameras returns multiple device types. Only add those that aren't sensors.
+        try:
+            camera.capability()
+        except AttributeError:
+            if camera.object_id() + camera.name() not in hass.data[DOMAIN]['unique_ids']:
+                add_devices([WinkCameraDevice(camera, hass)])
 
 
 class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
