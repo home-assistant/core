@@ -74,9 +74,12 @@ class NetatmoCamera(Camera):
             if self._localurl:
                 response = requests.get('{0}/live/snapshot_720.jpg'.format(
                     self._localurl), timeout=10)
-            else:
+            elif self._vpnurl:
                 response = requests.get('{0}/live/snapshot_720.jpg'.format(
                     self._vpnurl), timeout=10, verify=False)
+            else:
+                self._data.update()
+                return None
         except requests.exceptions.RequestException as error:
             _LOGGER.error('Welcome VPN url changed: %s', error)
             self._data.update()
