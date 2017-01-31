@@ -1,4 +1,5 @@
 """The tests for the Universal Media player platform."""
+import asyncio
 from copy import copy
 import unittest
 
@@ -257,6 +258,7 @@ class TestMediaPlayer(unittest.TestCase):
         bad_config = {'platform': 'universal'}
         entities = []
 
+        @asyncio.coroutine
         def add_devices(new_entities):
             """Add devices to list."""
             for dev in new_entities:
