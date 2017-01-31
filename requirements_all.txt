@@ -453,7 +453,7 @@ pyicloud==0.9.1
 pyiss==1.0.1
 
 # homeassistant.components.remote.itach
-pyitachip2ir==0.0.4
+pyitachip2ir==0.0.5
 
 # homeassistant.components.sensor.lastfm
 pylast==1.7.0

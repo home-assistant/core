@@ -29,7 +29,7 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 import homeassistant.components.remote as remote
 from homeassistant.components.remote import ATTR_COMMAND
 
-REQUIREMENTS = ['pyitachip2ir==0.0.4']
+REQUIREMENTS = ['pyitachip2ir==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
