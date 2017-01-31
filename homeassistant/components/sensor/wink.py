@@ -21,20 +21,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for sensor in pywink.get_sensors():
-        if sensor.object_id() + sensor.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = sensor.object_id() + sensor.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             if sensor.capability() in SENSOR_TYPES:
                 add_devices([WinkSensorDevice(sensor, hass)])
 
     for eggtray in pywink.get_eggtrays():
-        if eggtray.object_id() + eggtray.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = eggtray.object_id() + eggtray.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkSensorDevice(eggtray, hass)])
 
     for tank in pywink.get_propane_tanks():
-        if tank.object_id() + tank.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = tank.object_id() + tank.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkSensorDevice(tank, hass)])
 
     for piggy_bank in pywink.get_piggy_banks():
-        if piggy_bank.object_id() + piggy_bank.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = piggy_bank.object_id() + piggy_bank.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             try:
                 if piggy_bank.capability() in SENSOR_TYPES:
                     add_devices([WinkSensorDevice(piggy_bank, hass)])

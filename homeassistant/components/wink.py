@@ -119,7 +119,7 @@ def setup(hass, config):
     hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
 
     def pull_new_devices(call):
-        """Query API for new devices added to users Wink account since startup."""
+        """Pull new devices added to users Wink account since startup."""
         _LOGGER.info("Getting new devices from Wink API.")
         for component in WINK_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -185,7 +185,8 @@ class WinkDevice(Entity):
         if self._battery:
             attributes[ATTR_BATTERY_LEVEL] = self._battery_level
         if self._manufacturer_device_model:
-            attributes["manufacturer_device_model"] = self._manufacturer_device_model
+            _model = self._manufacturer_device_model
+            attributes["manufacturer_device_model"] = _model
         if self._manufacturer_device_id:
             attributes["manufacturer_device_id"] = self._manufacturer_device_id
         if self._device_manufacturer:

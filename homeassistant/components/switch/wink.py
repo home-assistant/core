@@ -16,16 +16,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for switch in pywink.get_switches():
-        if switch.object_id() + switch.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = switch.object_id() + switch.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_powerstrips():
-        if switch.object_id() + switch.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = switch.object_id() + switch.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_sirens():
-        if switch.object_id() + switch.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = switch.object_id() + switch.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(switch, hass)])
     for sprinkler in pywink.get_sprinklers():
-        if sprinkler.object_id() + sprinkler.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = sprinkler.object_id() + sprinkler.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(sprinkler, hass)])
 
 

@@ -14,8 +14,6 @@ from homeassistant.components.wink import WinkDevice, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'wink'
-
 SPEED_LOWEST = "lowest"
 SPEED_AUTO = "auto"
 
