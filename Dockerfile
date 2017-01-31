@@ -1,6 +1,12 @@
 FROM python:3.5
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
+# Uncomment any of the following lines to disable the installation.
+#ENV INSTALL_TELLSTICK no
+#ENV INSTALL_OPENALPR no
+#ENV INSTALL_FFMPEG no
+#ENV INSTALL_PHANTOMJS no
+
 VOLUME /config
 
 RUN mkdir -p /usr/src/app
