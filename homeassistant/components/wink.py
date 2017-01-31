@@ -181,13 +181,41 @@ class WinkDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        attributes = {}
         if self._battery:
-            return {
-                ATTR_BATTERY_LEVEL: self._battery_level,
-            }
+            attributes[ATTR_BATTERY_LEVEL] = self._battery_level
+        if self._manufacturer_device_model:
+            attributes["manufacturer_device_model"] = self._manufacturer_device_model
+        if self._manufacturer_device_id:
+            attributes["manufacturer_device_id"] = self._manufacturer_device_id
+        if self._device_manufacturer:
+            attributes["device_manufacturer"] = self._device_manufacturer
+        if self._model_name:
+            attributes["model_name"] = self._model_name
+        return attributes
 
     @property
     def _battery_level(self):
         """Return the battery level."""
         if self.wink.battery_level() is not None:
             return self.wink.battery_level() * 100
+
+    @property
+    def _manufacturer_device_model(self):
+        """Return the manufacturer device model."""
+        return self.wink.manufacturer_device_model()
+
+    @property
+    def _manufacturer_device_id(self):
+        """Return the manufacturer device id."""
+        return self.wink.manufacturer_device_id()
+
+    @property
+    def _device_manufacturer(self):
+        """Return the device manufacturer."""
+        return self.wink.device_manufacturer()
+
+    @property
+    def _model_name(self):
+        """Return the model name."""
+        return self.wink.model_name()
