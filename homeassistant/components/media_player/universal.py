@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config[CONF_ATTRS]
     )
 
-    add_devices([player])
+    yield from async_add_devices([player])
 
 
 def validate_config(config):
@@ -185,7 +185,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @asyncio.coroutine
     def _async_call_service(self, service_name, service_data=None,
-                      allow_override=False):
+                            allow_override=False):
         """Call either a specified or active child's service."""
         if service_data is None:
             service_data = {}
