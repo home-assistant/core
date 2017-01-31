@@ -96,7 +96,7 @@ class GenericThermostat(ClimateDevice):
 
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
-            self._update_temp(sensor_state)
+            self._async_update_temp(sensor_state)
 
     @property
     def should_poll(self):
@@ -135,9 +135,7 @@ class GenericThermostat(ClimateDevice):
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
-        """Set new target temperature.
-
-        """
+        """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
