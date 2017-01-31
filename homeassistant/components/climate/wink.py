@@ -16,6 +16,7 @@ from homeassistant.const import (
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wink']
+DOMAIN = 'wink'
 
 STATE_AUX = 'aux'
 STATE_ECO = 'eco'
@@ -31,10 +32,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink thermostat."""
     import pywink
     temp_unit = hass.config.units.temperature_unit
-    add_devices(WinkThermostat(thermostat, hass, temp_unit)
-                for thermostat in pywink.get_thermostats())
-    add_devices(WinkThermostat(ac_unit, hass, temp_unit)
-                for ac_unit in pywink.get_air_conditioners())
+    for climate in pywink.get_thermostats():
+        if climate.object_id() + climate.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkThermostat(climate, hass, temp_unit)])
 
 
 # pylint: disable=abstract-method,too-many-public-methods, too-many-branches
@@ -333,99 +333,3 @@ class WinkThermostat(WinkDevice, ClimateDevice):
             return_value = maximum
         return return_value
 
-
-class WinkAC(WinkDevice):
-    """Representation of a Wink air conditioner."""
-
-    def __init__(self, wink, hass, temp_unit):
-        """Initialize the Wink device."""
-        super().__init__(wink, hass)
-        wink = get_component('wink')
-        self._config_temp_unit = temp_unit
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        # The Wink API always returns temp in Celsius
-        return TEMP_CELSIUS
-
-    @property
-    def device_state_attributes(self):
-        """Return the optional state attributes."""
-        data = {}
-        target_temp_high = self.target_temperature_high
-        target_temp_low = self.target_temperature_low
-        if target_temp_high is not None:
-            data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
-                self.target_temperature_high)
-        if target_temp_low is not None:
-            data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
-                self.target_temperature_low)
-        data["total_consumption"] = self.wink.toatl_consumption()
-        data["schedule_enabled"] = self.wink.toatl_consumption()
-
-        return data
-
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        return self.wink.current_temperature()
-
-    @property
-    def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        if not self.wink.is_on():
-            current_op = STATE_OFF
-        elif self.wink.current_mode() == 'cool_only':
-            current_op = STATE_COOL
-        elif self.wink.current_mode() == 'auto_eco':
-            current_op = STATE_ECO
-        elif self.wink.current_mode() == 'fan_only':
-            current_op = STATE_FAN
-        else:
-            current_op = STATE_UNKNOWN
-        return current_op
-
-    @property
-    def operation_list(self):
-        """List of available operation modes."""
-        op_list = ['off']
-        modes = self.wink.modes()
-        if 'cool_only' in modes:
-            op_list.append(STATE_COOL)
-        if 'auto_eco' in modes:
-            op_list.append(STATE_ECO)
-        if 'fan_eco' in modes:
-            op_list.append(STATE_FAN)
-        return op_list
-
-    def set_temperature(self, **kwargs):
-        """Set new target temperature."""
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        self.wink.set_temperature(target_temp)
-
-    def set_operation_mode(self, operation_mode):
-        """Set operation mode."""
-        if operation_mode == STATE_COOL:
-            self.wink.set_operation_mode('cool_only')
-        elif operation_mode == STATE_ECO:
-            self.wink.set_operation_mode('auto_eco')
-        elif operation_mode == STATE_OFF:
-            self.wink.set_operation_mode('off')
-        elif operation_mode == STATE_FAN:
-            self.wink.set_operation_mode('fan_only')
-
-    @property
-    def target_temperature(self):
-        """Return the temperature we try to reach."""
-        return self.wink.current_max_set_point()
-
-    @property
-    def target_temperature_low(self):
-        """Only supports cool."""
-        return None
-
-    @property
-    def target_temperature_high(self):
-        """Only supports cool."""
-        return None

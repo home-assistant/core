@@ -9,16 +9,19 @@ from homeassistant.components.cover import CoverDevice
 from homeassistant.components.wink import WinkDevice
 
 DEPENDENCIES = ['wink']
+DOMAIN = 'wink'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink cover platform."""
     import pywink
 
-    add_devices(WinkCoverDevice(shade, hass) for shade in
-                pywink.get_shades())
-    add_devices(WinkCoverDevice(door, hass) for door in
-                pywink.get_garage_doors())
+    for shade in pywink.get_shades():
+        if shade.object_id() + shade.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkCoverDevice(shade, hass)])
+    for door in pywink.get_garage_doors():
+        if door.object_id() + door.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkCoverDevice(door, hass)])
 
 
 class WinkCoverDevice(WinkDevice, CoverDevice):

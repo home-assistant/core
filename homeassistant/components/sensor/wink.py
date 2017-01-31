@@ -12,6 +12,8 @@ from homeassistant.components.wink import WinkDevice
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wink']
+DOMAIN = 'wink'
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 
@@ -21,21 +23,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for sensor in pywink.get_sensors():
-        if sensor.capability() in SENSOR_TYPES:
-            add_devices([WinkSensorDevice(sensor, hass)])
+        if sensor.object_id() + sensor.name() not in hass.data[DOMAIN]['unique_ids']:
+            if sensor.capability() in SENSOR_TYPES:
+                add_devices([WinkSensorDevice(sensor, hass)])
 
     for eggtray in pywink.get_eggtrays():
-        add_devices([WinkSensorDevice(eggtray, hass)])
+        if eggtray.object_id() + eggtray.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkSensorDevice(eggtray, hass)])
 
     for tank in pywink.get_propane_tanks():
-        add_devices([WinkSensorDevice(tank, hass)])
+        if tank.object_id() + tank.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkSensorDevice(tank, hass)])
 
     for piggy_bank in pywink.get_piggy_banks():
-        try:
-            if piggy_bank.capability() in SENSOR_TYPES:
-                add_devices([WinkSensorDevice(piggy_bank, hass)])
-        except AttributeError:
-            logging.getLogger(__name__).info("Device is not a sensor")
+        if piggy_bank.object_id() + piggy_bank.name() not in hass.data[DOMAIN]['unique_ids']:
+            try:
+                if piggy_bank.capability() in SENSOR_TYPES:
+                    add_devices([WinkSensorDevice(piggy_bank, hass)])
+            except AttributeError:
+                _LOGGER.info("Device is not a sensor")
 
 
 class WinkSensorDevice(WinkDevice, Entity):

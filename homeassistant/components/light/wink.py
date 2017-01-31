@@ -15,6 +15,7 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 
 DEPENDENCIES = ['wink']
+DOMAIN = 'wink'
 
 SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
@@ -23,7 +24,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink lights."""
     import pywink
 
-    add_devices(WinkLight(light, hass) for light in pywink.get_light_bulbs())
+    for light in pywink.get_light_bulbs():
+        if light.object_id() + light.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):

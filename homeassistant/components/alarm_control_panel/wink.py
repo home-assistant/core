@@ -15,6 +15,8 @@ from homeassistant.components.wink import WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'wink'
+
 DEPENDENCIES = ['wink']
 STATE_ALARM_PRIVACY = 'Private'
 
@@ -24,7 +26,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for camera in pywink.get_cameras():
-        add_devices([WinkCameraDevice(camera, hass)])
+        if camera.object_id() + camera.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkCameraDevice(camera, hass)])
 
 
 class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):

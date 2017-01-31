@@ -9,6 +9,7 @@ from homeassistant.components.wink import WinkDevice
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['wink']
+DOMAIN = 'wink'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -16,13 +17,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for switch in pywink.get_switches():
-        add_devices([WinkToggleDevice(switch, hass)])
+        if switch.object_id() + switch.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_powerstrips():
-        add_devices([WinkToggleDevice(switch, hass)])
+        if switch.object_id() + switch.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkToggleDevice(switch, hass)])
     for switch in pywink.get_sirens():
-        add_devices([WinkToggleDevice(switch, hass)])
+        if switch.object_id() + switch.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkToggleDevice(switch, hass)])
     for sprinkler in pywink.get_sprinklers():
-        add_devices([WinkToggleDevice(sprinkler, hass)])
+        if sprinkler.object_id() + sprinkler.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkToggleDevice(sprinkler, hass)])
 
 
 class WinkToggleDevice(WinkDevice, ToggleEntity):

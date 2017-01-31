@@ -14,6 +14,8 @@ from homeassistant.components.wink import WinkDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'wink'
+
 SPEED_LOWEST = "lowest"
 SPEED_AUTO = "auto"
 
@@ -22,7 +24,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink platform."""
     import pywink
 
-    add_devices(WinkFanDevice(fan, hass) for fan in pywink.get_fans())
+    for fan in pywink.get_fans():
+        if fan.object_id() + fan.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkFanDevice(fan, hass)])
 
 
 class WinkFanDevice(WinkDevice, FanEntity):

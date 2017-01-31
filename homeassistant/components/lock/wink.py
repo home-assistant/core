@@ -9,13 +9,16 @@ from homeassistant.components.lock import LockDevice
 from homeassistant.components.wink import WinkDevice
 
 DEPENDENCIES = ['wink']
+DOMAIN = 'wink'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink platform."""
     import pywink
 
-    add_devices(WinkLockDevice(lock, hass) for lock in pywink.get_locks())
+    for lock in pywink.get_locks():
+        if lock.object_id() + lock.name() not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkLockDevice(lock, hass)])
 
 
 class WinkLockDevice(WinkDevice, LockDevice):
