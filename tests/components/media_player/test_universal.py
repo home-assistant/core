@@ -555,7 +555,7 @@ class TestMediaPlayer(unittest.TestCase):
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         run_coroutine_threadsafe(
-            ump.async_turn_off()
+            ump.async_turn_off(),
             self.hass.loop).result()
         self.assertEqual(0, len(self.mock_mp_1.service_calls['turn_off']))
         self.assertEqual(0, len(self.mock_mp_2.service_calls['turn_off']))
@@ -574,70 +574,70 @@ class TestMediaPlayer(unittest.TestCase):
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         run_coroutine_threadsafe(
-            ump.async_turn_off()
+            ump.async_turn_off(),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['turn_off']))
 
         run_coroutine_threadsafe(
-            ump.async_turn_on()
+            ump.async_turn_on(),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['turn_on']))
 
         run_coroutine_threadsafe(
-            ump.async_mute_volume(True)
+            ump.async_mute_volume(True),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['mute_volume']))
 
         run_coroutine_threadsafe(
-            ump.async_set_volume_level(0.5)
+            ump.async_set_volume_level(0.5),
             self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['set_volume_level']))
 
         run_coroutine_threadsafe(
-            ump.async_media_play()
+            ump.async_media_play(),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['media_play']))
 
         run_coroutine_threadsafe(
-            ump.async_media_pause()
+            ump.async_media_pause(),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['media_pause']))
 
         run_coroutine_threadsafe(
-            ump.async_media_previous_track()
+            ump.async_media_previous_track(),
             self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_previous_track']))
 
         run_coroutine_threadsafe(
-            ump.async_media_next_track()
+            ump.async_media_next_track(),
             self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_next_track']))
 
         run_coroutine_threadsafe(
-            ump.async_media_seek(100)
+            ump.async_media_seek(100),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['media_seek']))
 
         run_coroutine_threadsafe(
-            ump.async_play_media('movie', 'batman')
+            ump.async_play_media('movie', 'batman'),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['play_media']))
 
         run_coroutine_threadsafe(
-            ump.async_volume_up()
+            ump.async_volume_up(),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['volume_up']))
 
         run_coroutine_threadsafe(
-            ump.async_volume_down()
+            ump.async_volume_down(),
             self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['volume_down']))
 
         run_coroutine_threadsafe(
-            ump.async_media_play_pause()
+            ump.async_media_play_pause(),
             self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_play_pause']))
