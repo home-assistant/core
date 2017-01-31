@@ -524,6 +524,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         """
         return self._async_call_service(SERVICE_CLEAR_PLAYLIST)
 
+    @asyncio.coroutine
     def async_update(self):
         """Update state in HA."""
         for child_name in self._children:
