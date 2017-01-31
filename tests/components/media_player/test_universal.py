@@ -262,10 +262,14 @@ class TestMediaPlayer(unittest.TestCase):
             for dev in new_entities:
                 entities.append(dev)
 
-        universal.setup_platform(self.hass, bad_config, add_devices)
+        run_coroutine_threadsafe(
+            universal.async_setup_platform(self.hass, bad_config, add_devices),
+            self.hass.loop).result()
         self.assertEqual(0, len(entities))
 
-        universal.setup_platform(self.hass, config, add_devices)
+        run_coroutine_threadsafe(
+            universal.async_setup_platform(self.hass, config, add_devices),
+            self.hass.loop).result()
         self.assertEqual(1, len(entities))
         self.assertEqual('test', entities[0].name)
 
