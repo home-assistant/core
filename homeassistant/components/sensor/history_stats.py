@@ -39,10 +39,10 @@ UNIT = 'h'
 UNIT_RATIO = '%'
 ICON = 'mdi:chart-line'
 
-PRINT_START = 'from'
-PRINT_END = 'to'
-PRINT_VALUE = 'value'
-PRINT_RATIO = 'ratio'
+ATTR_START = 'from'
+ATTR_END = 'to'
+ATTR_VALUE = 'value'
+ATTR_RATIO = 'ratio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -138,15 +138,15 @@ class HistoryStatsSensor(Entity):
         return True
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         start_timestamp, end_timestamp = self._period
         hsh = HistoryStatsHelper
         return {
-            PRINT_VALUE: hsh.pretty_duration(self.value),
-            PRINT_RATIO: hsh.pretty_ratio(self.value, self._period),
-            PRINT_START: hsh.pretty_datetime(start_timestamp),
-            PRINT_END: hsh.pretty_datetime(end_timestamp),
+            ATTR_VALUE: hsh.pretty_duration(self.value),
+            ATTR_RATIO: hsh.pretty_ratio(self.value, self._period),
+            ATTR_START: hsh.pretty_datetime(start_timestamp),
+            ATTR_END: hsh.pretty_datetime(end_timestamp),
         }
 
     @property
@@ -249,7 +249,7 @@ class HistoryStatsHelper:
     def pretty_datetime(timestamp):
         """Format a timestamp to a formatted datetime in the local timezone."""
         return dt_util.as_local(dt_util.utc_from_timestamp(timestamp)) \
-            .strftime('%Y/%m/%d %H:%M:%S')
+            .strftime('%Y-%m-%d %H:%M:%S')
 
     @staticmethod
     def pretty_duration(hours):
