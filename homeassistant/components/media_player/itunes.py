@@ -438,13 +438,13 @@ class AirPlayDevice(MediaPlayerDevice):
     def turn_on(self):
         """Select AirPlay."""
         self.update_state({"selected": True})
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, True)
         self.update_state(response)
 
     def turn_off(self):
         """Deselect AirPlay."""
         self.update_state({"selected": False})
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         response = self.client.toggle_airplay_device(self._id, False)
         self.update_state(response)
