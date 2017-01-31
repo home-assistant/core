@@ -36,32 +36,39 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for sensor in pywink.get_sensors():
-        if sensor.object_id() + sensor.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = sensor.object_id() + sensor.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             if sensor.capability() in SENSOR_TYPES:
                 add_devices([WinkBinarySensorDevice(sensor, hass)])
 
     for key in pywink.get_keys():
-        if key.object_id() + key.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = key.object_id() + key.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkBinarySensorDevice(key, hass)])
 
     for sensor in pywink.get_smoke_and_co_detectors():
-        if sensor.object_id() + sensor.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = sensor.object_id() + sensor.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkSmokeDetector(sensor, hass)])
 
     for hub in pywink.get_hubs():
-        if hub.object_id() + hub.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = hub.object_id() + hub.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkHub(hub, hass)])
 
     for remote in pywink.get_remotes():
-        if remote.object_id() + remote.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = remote.object_id() + remote.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkRemote(remote, hass)])
 
     for button in pywink.get_buttons():
-        if button.object_id() + button.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = button.object_id() + button.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkButton(button, hass)])
 
     for gang in pywink.get_gangs():
-        if gang.object_id() + gang.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = gang.object_id() + gang.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkGang(gang, hass)])
 
     for door_bell_sensor in pywink.get_door_bells():
@@ -70,7 +77,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkBinarySensorDevice(door_bell_sensor, hass)])
 
     for camera_sensor in pywink.get_cameras():
-        if camera_sensor.object_id() + camera_sensor.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = camera_sensor.object_id() + camera_sensor.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             try:
                 if camera_sensor.capability() in SENSOR_TYPES:
                     add_devices([WinkBinarySensorDevice(camera_sensor, hass)])
@@ -172,6 +180,7 @@ class WinkButton(WinkBinarySensorDevice):
             'pressed': self.wink.pressed(),
             'long_pressed': self.wink.long_pressed()
         }
+
 
 class WinkGang(WinkBinarySensorDevice):
     """Representation of a Wink Relay gang."""

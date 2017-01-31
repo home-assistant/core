@@ -35,10 +35,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
     temp_unit = hass.config.units.temperature_unit
     for climate in pywink.get_thermostats():
-        if climate.object_id() + climate.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = climate.object_id() + climate.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkThermostat(climate, hass, temp_unit)])
     for climate in pywink.get_air_conditioners():
-        if climate.object_id() + climate.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = climate.object_id() + climate.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkAC(climate, hass, temp_unit)])
 
 
@@ -435,6 +437,7 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def current_fan_mode(self):
+        """Return the current fan mode."""
         speed = self.wink.current_fan_speed()
         if speed <= 0.3 and speed >= 0.0:
             return SPEED_LOWEST

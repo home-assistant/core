@@ -143,7 +143,8 @@ class WinkDevice(Entity):
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['entities'].append(self)
-        hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() + self.wink.name())
+        hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
+                                               self.wink.name())
 
     def _pubnub_update(self, message):
         try:

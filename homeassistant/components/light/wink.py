@@ -24,7 +24,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for light in pywink.get_light_bulbs():
-        if light.object_id() + light.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = light.object_id() + light.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkLight(light, hass)])
 
 
