@@ -66,7 +66,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkGang(gang, hass)])
 
     for door_bell_sensor in pywink.get_door_bells():
-        if door_bell_sensor.object_id() + door_bell_sensor.name() not in hass.data[DOMAIN]['unique_ids']:
+        _id = door_bell_sensor.object_id() + door_bell_sensor.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkBinarySensorDevice(door_bell_sensor, hass)])
 
     for camera_sensor in pywink.get_cameras():
@@ -84,8 +85,14 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
         super().__init__(wink, hass)
-        self._unit_of_measurement = self.wink.unit()
-        self.capability = self.wink.capability()
+        try: 
+            self._unit_of_measurement = self.wink.unit()
+        except AttributeError:
+            self._unit_of_measurement = None
+        try:
+            self.capability = self.wink.capability()
+        except AttributeError:
+            self.capability = None
 
     @property
     def is_on(self):
@@ -98,8 +105,12 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
         return SENSOR_TYPES.get(self.capability)
 
 
-class WinkSmokeDetector(WinkDevice, BinarySensorDevice, Entity):
+class WinkSmokeDetector(WinkBinarySensorDevice):
     """Representation of a Wink Smoke detector."""
+
+    def __init__(self, wink, hass):
+        """Initialize the Wink binary sensor."""
+        super().__init__(wink, hass)
 
     @property
     def device_state_attributes(self):
@@ -109,12 +120,12 @@ class WinkSmokeDetector(WinkDevice, BinarySensorDevice, Entity):
         }
 
 
-class WinkHub(WinkDevice, BinarySensorDevice, Entity):
+class WinkHub(WinkBinarySensorDevice):
     """Representation of a Wink Hub."""
 
-    def __init(self, wink, hass):
-        """Initialize the hub sensor."""
-        WinkDevice.__init__(self, wink, hass)
+    def __init__(self, wink, hass):
+        """Initialize the Wink binary sensor."""
+        super().__init__(wink, hass)
 
     @property
     def device_state_attributes(self):
@@ -125,12 +136,12 @@ class WinkHub(WinkDevice, BinarySensorDevice, Entity):
         }
 
 
-class WinkRemote(WinkDevice, BinarySensorDevice, Entity):
+class WinkRemote(WinkBinarySensorDevice):
     """Representation of a Wink Lutron Connected bulb remote."""
 
-    def __init(self, wink, hass):
-        """Initialize the hub sensor."""
-        WinkDevice.__init__(self, wink, hass)
+    def __init__(self, wink, hass):
+        """Initialize the Wink binary sensor."""
+        super().__init__(wink, hass)
 
     @property
     def device_state_attributes(self):
@@ -143,12 +154,12 @@ class WinkRemote(WinkDevice, BinarySensorDevice, Entity):
         }
 
 
-class WinkButton(WinkDevice, BinarySensorDevice, Entity):
+class WinkButton(WinkBinarySensorDevice):
     """Representation of a Wink Relay button."""
 
-    def __init(self, wink, hass):
-        """Initialize the hub sensor."""
-        WinkDevice.__init__(self, wink, hass)
+    def __init__(self, wink, hass):
+        """Initialize the Wink binary sensor."""
+        super().__init__(wink, hass)
 
     @property
     def device_state_attributes(self):
@@ -158,12 +169,12 @@ class WinkButton(WinkDevice, BinarySensorDevice, Entity):
             'long_pressed': self.wink.long_pressed()
         }
 
-class WinkGang(WinkDevice, BinarySensorDevice, Entity):
+class WinkGang(WinkBinarySensorDevice):
     """Representation of a Wink Relay gang."""
 
-    def __init(self, wink, hass):
-        """Initialize the gang sensor."""
-        WinkDevice.__init__(self, wink, hass)
+    def __init__(self, wink, hass):
+        """Initialize the Wink binary sensor."""
+        super().__init__(wink, hass)
 
     @property
     def is_on(self):
