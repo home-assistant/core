@@ -1,0 +1,255 @@
+"""
+Support for functionality to interact with Frontier Silicon Devices (Medion, Hama, Auna,...) devices.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.frontier_silicon/
+"""
+import logging
+
+import asyncio
+import requests
+import voluptuous as vol
+
+from homeassistant.components.media_player import (SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_PLAY, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA )
+from homeassistant.const import (
+    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_NAME, CONF_PASSWORD)
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['fsapi==0.0.2']
+
+_LOGGER = logging.getLogger(__name__)
+
+SUPPORT_FRONTIER_SILICON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |  SUPPORT_VOLUME_STEP | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
+
+DEFAULT_HOST = '192.168.1.11'
+DEFAULT_PORT = 80
+DEFAULT_PASSWORD = '1234'
+DEVICE_URL = 'http://{0}:{1}/device'
+
+FRONTIER_SILICON_CONFIG_FILE = 'frontier_silicon.conf'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
+})
+
+
+# pylint: disable=unused-argument
+#def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+    """Setup the Frontier Silicon platform."""
+    
+    if discovery_info is not None:
+         yield from async_add_entities([FrontierSiliconDevice(discovery_info, DEFAULT_PASSWORD)], update_before_add=True)
+         return True
+
+    host = config.get(CONF_HOST)
+    port = config.get(CONF_PORT)
+    password = config.get(CONF_PASSWORD)
+
+    try:
+        if host and port and password :
+            yield from async_add_entities([FrontierSiliconDevice(DEVICE_URL.format(host, port), password)], update_before_add=True)
+            _LOGGER.info('Frontier Silicon device %s:%s -> %s', host, port, password)
+            return True
+        else:
+            _LOGGER.warning('Frontier Silicon device missing config parameter %s:%s -> %s', host, port, password)
+    except requests.exceptions.RequestException:
+        _LOGGER.error('Could not connect to Frontier Silicon device at %s:%s -> %s', host, port, password)
+
+
+class FrontierSiliconDevice(MediaPlayerDevice):
+    """Representation of a Frontier Silicon device on the network."""
+
+    def __init__(self, device_url, password):
+        """Initialize the Frontier Silicon API device."""
+        
+        self._device_url = device_url
+        self._password = password
+        self._state = STATE_UNKNOWN
+
+        self._name = None 
+        self._title = None
+        self._mute = None
+        self._source = None 
+        self._source_list = None
+        self._media_image_url = None
+
+    def get_fs(self):
+        from fsapi import FSAPI
+
+        return FSAPI(self._device_url, self._password)
+
+    ##################################  properties ##########################
+    @property
+    def should_poll(self):
+        """Device should be polled."""
+        return True
+
+    @property
+    def name(self):
+        """Return the device name."""
+        return self._name
+
+    @property
+    def media_title(self):
+        """Title of current playing media."""
+        return self._title
+
+    @property
+    def supported_media_commands(self):
+        """Flag of media commands that are supported."""
+        return SUPPORT_FRONTIER_SILICON
+
+    @property
+    def state(self):
+        """Return the state of the player."""
+        return self._state
+
+    # source
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return self._source_list
+
+    @property
+    def source(self):
+        """Name of the current input source."""
+        return self._source
+
+    @property
+    def media_image_url(self):
+        """Image url of current playing media."""
+        return self._media_image_url
+
+    ############################### async actions ########################################
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Get the latest date and update device state."""
+        
+        fs = self.get_fs()
+
+        if not self._name:
+           self._name = fs.friendly_name
+       
+        if not self._source_list:
+           self._source_list = fs.mode_list
+        
+
+        title = ''
+        artist = fs.play_info_artist
+        album = fs.play_info_album
+        info_name = fs.play_info_name
+        info_text = fs.play_info_text
+
+        if artist:
+           title += artist
+        if album:
+           title += ' ('+album+')'
+        if info_name:
+           if title:
+              title += ' - '
+           title += info_name
+        if info_text:
+           title += ': ' + info_text
+
+        self._title = title 
+
+        status = fs.play_status
+        self._state = {
+            'playing': STATE_PLAYING,
+            'paused': STATE_PAUSED,
+            'stopped': STATE_OFF,
+            'unknown': STATE_UNKNOWN,
+            None: STATE_OFF,
+        }.get(status, STATE_UNKNOWN)
+
+        #self._source = fs.mode 
+        self._mute = fs.mute 
+        self._media_image_url = fs.play_info_graphics
+
+    #################### actions #####################
+
+    # power control
+    @asyncio.coroutine
+    def async_turn_on(self):
+        """Turn on the device."""
+        self.get_fs().power = True
+
+    @asyncio.coroutine
+    def async_turn_off(self):
+        """Turn off the device."""
+        self.get_fs().power = False
+    
+    @asyncio.coroutine
+    def async_media_play(self):
+        """Send play command."""
+        self.get_fs().play()
+
+    @asyncio.coroutine
+    def async_media_pause(self):
+        """Send pause command."""
+        self.get_fs().pause()
+
+    @asyncio.coroutine
+    def async_media_play_pause(self):
+        """Send play/pause command."""
+        if 'playing' in self._state:
+           self.get_fs().pause()
+        else:
+           self.get_fs().play()
+
+    @asyncio.coroutine
+    def async_media_stop(self):
+        """Send play/pause command."""
+        self.get_fs().pause()
+
+    @asyncio.coroutine
+    def async_media_previous_track(self):
+        """Send previous track command (results in rewind)."""
+        self.get_fs().prev()
+
+    @asyncio.coroutine
+    def async_media_next_track(self):
+        """Send next track command (results in fast-forward)."""
+        self.get_fs().next()
+    
+    # mute
+    @property
+    def is_volume_muted(self):
+        """Boolean if volume is currently muted."""
+        return self._mute
+    
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
+        """Send mute command."""
+        self.get_fs().mute = mute
+
+    # volume
+    @asyncio.coroutine
+    def async_volume_up(self):
+        """Send volume up command."""
+        currentVolume = self.get_fs().volume
+        self.get_fs().volume = (currentVolume + 1)
+
+    @asyncio.coroutine
+    def async_volume_down(self):
+        """Send volume down command."""
+        currentVolume = self.get_fs().volume
+        self.get_fs().volume = (currentVolume - 1)
+
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
+        """Set volume command."""
+        self.get_fs().volume = volume
+
+    def select_source(self, source):
+        """Select input source."""
+        self.get_fs().mode = source
