@@ -350,11 +350,11 @@ class HomeAssistant(object):
             'check_config',
             stdout=asyncio.subprocess.PIPE)
         # Wait for the subprocess exit
+        (stdout_data, dummy) = yield from proc.communicate()
         result = yield from proc.wait()
         if result:
             _LOGGER.error("check_config failed. Not restarting.")
-            content = yield from proc.stdout.read()
-            content = str(content, 'utf-8')
+            content = str(stdout_data, 'utf-8')
             # Print content to stdout so that it will have the colored
             # pretty-printed error.
             print(content)
