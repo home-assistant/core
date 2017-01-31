@@ -5,7 +5,7 @@ This provides a climate component for the ESP8266 based thermostat sold by
 OpenEnergyMonitor.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.openenergymonitor/
+https://home-assistant.io/components/climate.oem/
 """
 import logging
 
@@ -19,7 +19,7 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 import homeassistant.helpers.config_validation as cv
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['oemthermostat==1.0']
+REQUIREMENTS = ['oemthermostat==1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ CONF_AWAY_TEMP = 'away_temp'
 # Validation of the user's configuration
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
     vol.Optional(
         CONF_PORT, default=80): cv.port,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -68,7 +68,7 @@ class ThermostatDevice(ClimateDevice):
     """Interface class for the oemthermostat module and HA."""
 
     def __init__(self, hass, thermostat, name, away_temp):
-        """Constructor."""
+        """Initialize the device."""
         self._name = name
         self.hass = hass
 
