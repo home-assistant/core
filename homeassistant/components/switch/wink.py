@@ -5,11 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.wink/
 """
 
-from homeassistant.components.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.helpers.entity import ToggleEntity
 
 DEPENDENCIES = ['wink']
-DOMAIN = 'wink'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -35,7 +34,7 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
 
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
-        WinkDevice.__init__(self, wink, hass)
+        super().__init__(wink, hass)
 
     @property
     def is_on(self):

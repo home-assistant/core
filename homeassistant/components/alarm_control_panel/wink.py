@@ -11,11 +11,9 @@ from homeassistant.const import (STATE_UNKNOWN,
                                  STATE_ALARM_DISARMED,
                                  STATE_ALARM_ARMED_HOME,
                                  STATE_ALARM_ARMED_AWAY)
-from homeassistant.components.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'wink'
 
 DEPENDENCIES = ['wink']
 STATE_ALARM_PRIVACY = 'Private'
@@ -35,7 +33,7 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
 
     def __init__(self, wink, hass):
         """Initialize the Wink alarm."""
-        WinkDevice.__init__(self, wink, hass)
+        super().__init__(wink, hass)
 
     @property
     def state(self):

@@ -4,7 +4,7 @@ Support for Wink thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
-from homeassistant.components.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
     ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
@@ -13,10 +13,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     TEMP_CELSIUS, STATE_ON,
     STATE_OFF, STATE_UNKNOWN)
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['wink']
-DOMAIN = 'wink'
 
 STATE_AUX = 'aux'
 STATE_ECO = 'eco'
@@ -51,7 +49,6 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     def __init__(self, wink, hass, temp_unit):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
-        wink = get_component('wink')
         self._config_temp_unit = temp_unit
 
     @property
@@ -347,7 +344,6 @@ class WinkAC(WinkDevice, ClimateDevice):
     def __init__(self, wink, hass, temp_unit):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
-        wink = get_component('wink')
         self._config_temp_unit = temp_unit
 
     @property

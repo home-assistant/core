@@ -87,7 +87,11 @@ def setup(hass, config):
         password = config[DOMAIN][CONF_PASSWORD]
         payload = {'username': email, 'password': password}
         token_response = requests.post(CONF_TOKEN_URL, data=payload)
-        token = token_response.text.split(':')[1].split()[0].rstrip('<br')
+        try:
+            token = token_response.text.split(':')[1].split()[0].rstrip('<br')
+        except IndexError:
+            _LOGGER.error("Error getting token. Please check email/password.")
+            return False
         pywink.set_bearer_token(token)
 
     hass.data[DOMAIN] = {}

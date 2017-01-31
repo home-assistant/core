@@ -7,13 +7,12 @@ at https://home-assistant.io/components/binary_sensor.wink/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.sensor.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['wink']
-DOMAIN = 'wink'
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {

@@ -6,10 +6,9 @@ https://home-assistant.io/components/lock.wink/
 """
 
 from homeassistant.components.lock import LockDevice
-from homeassistant.components.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
-DOMAIN = 'wink'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -26,7 +25,7 @@ class WinkLockDevice(WinkDevice, LockDevice):
 
     def __init__(self, wink, hass):
         """Initialize the lock."""
-        WinkDevice.__init__(self, wink, hass)
+        super().__init__(wink, hass)
 
     @property
     def is_locked(self):

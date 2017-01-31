@@ -6,10 +6,9 @@ https://home-assistant.io/components/cover.wink/
 """
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
-DOMAIN = 'wink'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -29,7 +28,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
 
     def __init__(self, wink, hass):
         """Initialize the cover."""
-        WinkDevice.__init__(self, wink, hass)
+        super().__init__(wink, hass)
 
     def close_cover(self):
         """Close the shade."""

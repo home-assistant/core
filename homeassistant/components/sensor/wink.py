@@ -8,11 +8,9 @@ import logging
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.wink import WinkDevice
-from homeassistant.loader import get_component
+from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
-DOMAIN = 'wink'
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
@@ -50,7 +48,6 @@ class WinkSensorDevice(WinkDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
-        wink = get_component('wink')
         self.capability = self.wink.capability()
         if self.wink.unit() == '°':
             self._unit_of_measurement = TEMP_CELSIUS
