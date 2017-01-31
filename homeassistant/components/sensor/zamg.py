@@ -30,15 +30,8 @@ CONF_STATION_ID = 'station_id'
 
 DEFAULT_NAME = 'zamg'
 
-# Data source only updates once per hour, so throttle to 30 min to have
-# reasonably recent data
+# Data source updates once per hour, so we do nothing if it's been less time
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
-
-VALID_STATION_IDS = (
-    '11010', '11012', '11022', '11035', '11036', '11101', '11121', '11126',
-    '11130', '11150', '11155', '11157', '11171', '11190', '11204', '11240',
-    '11244', '11265', '11331', '11343', '11389'
-)
 
 SENSOR_TYPES = {
     ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', 'LDstat hPa', float),
@@ -63,8 +56,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_STATION_ID):
-        vol.All(cv.string, vol.In(VALID_STATION_IDS)),
+    vol.Required(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -72,10 +64,15 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZAMG sensor platform."""
     station_id = config.get(CONF_STATION_ID)
-    name = config.get(CONF_NAME)
+    name = config.get(CONF_NAME, DEFAULT_NAME)
 
     logger = logging.getLogger(__name__)
     probe = ZamgData(station_id=station_id, logger=logger)
+    try:
+        probe.update()
+    except ValueError as err:
+        logger.error("Received error from ZAMG: %s", err)
+        return False
 
     sensors = [ZamgSensor(probe, variable, name)
                for variable in config[CONF_MONITORED_CONDITIONS]]
@@ -126,10 +123,6 @@ class ZamgData(object):
     """The class for handling the data retrieval."""
 
     API_URL = 'http://www.zamg.ac.at/ogd/'
-    API_FIELDS = {
-        v[2]: (k, v[3])
-        for k, v in SENSOR_TYPES.items()
-    }
     API_HEADERS = {
         'User-Agent': '{} {}'.format('home-assistant.zamg/', __version__),
     }
@@ -177,14 +170,20 @@ class ZamgData(object):
         data = (line for line in content.split('\n'))
         reader = csv.DictReader(data, delimiter=';', quotechar='"')
         for row in reader:
-            if row.get("Station", None) == self._station_id:
+            if row.get('Station') == self._station_id:
+                api_fields = {col_heading: (standard_name, dtype)
+                              for standard_name, (_, _, col_heading, dtype)
+                              in SENSOR_TYPES.items()}
                 self.data = {
-                    self.API_FIELDS.get(k)[0]:
-                        self.API_FIELDS.get(k)[1](v.replace(',', '.'))
-                    for k, v in row.items()
-                    if v and k in self.API_FIELDS
-                }
+                    api_fields.get(col_heading)[0]:
+                        api_fields.get(col_heading)[1](v.replace(',', '.'))
+                    for col_heading, v in row.items()
+                    if col_heading in self.API_FIELDS and v}
                 break
+        else:
+            raise ValueError('No weather data for station {}'
+                             .format(self._station_id))
+
 
     def get_data(self, variable):
         """Generic accessor for data."""
