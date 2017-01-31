@@ -621,10 +621,12 @@ class ZWaveDeviceEntity:
             name = '{}.{}'.format(domain, self._object_id())
             node_config = customize.get(name, {})
             force_update = node_config.get(CONF_FORCE_UPDATE)
-            _LOGGER.debug('customize=%s name=%s node_config=%s CONF_FORCE_UPDATE=%s',
-                         customize, name, node_config, force_update)
+            _LOGGER.debug("customize=%s name=%s node_config=%s "
+                          "CONF_FORCE_UPDATE=%s", customize, name,
+                          node_config, force_update)
             if force_update is not None:
-                _LOGGER.debug('Setting force_update=%s on zwave node=%s', force_update, name)
+                _LOGGER.debug('Setting force_update=%s on zwave node=%s',
+                              force_update, name)
                 self._force_update = force_update
 
     @property
@@ -682,7 +684,6 @@ class ZWaveDeviceEntity:
         If True, a state change will be triggered anytime the state property is
         updated, not just when the value changes.
 
-        This is controlled by a customization entry in the config for this entity
+        This is controlled by a customization entry in the config file
         """
         return self._force_update
-
