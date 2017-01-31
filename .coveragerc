@@ -129,6 +129,7 @@ omit =
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
+    homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py
