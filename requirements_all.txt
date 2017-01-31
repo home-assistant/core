@@ -554,9 +554,6 @@ pywebpush==0.6.1
 # homeassistant.components.wemo
 pywemo==0.4.11
 
-# homeassistant.components.light.yeelight
-pyyeelight==1.0-beta
-
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
@@ -684,6 +681,9 @@ yahoo-finance==1.4.0
 
 # homeassistant.components.sensor.yweather
 yahooweather==0.8
+
+# homeassistant.components.light.yeelight
+yeelight==0.2.1
 
 # homeassistant.components.light.zengge
 zengge==0.2
