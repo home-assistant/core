@@ -620,7 +620,7 @@ steamodd==4.21
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.1.13
+tellduslive==0.3.0
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.1
