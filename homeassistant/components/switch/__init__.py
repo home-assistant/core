@@ -59,7 +59,8 @@ def is_on(hass, entity_id=None):
 
 def turn_on(hass, entity_id=None):
     """Turn all or specified switch on."""
-    run_callback_threadsafe(hass.loop, async_turn_on, entity_id).result()
+    run_callback_threadsafe(
+        hass.loop, async_turn_on, hass, entity_id).result()
 
 
 @callback
@@ -71,7 +72,8 @@ def async_turn_on(hass, entity_id=None):
 
 def turn_off(hass, entity_id=None):
     """Turn all or specified switch off."""
-    run_callback_threadsafe(hass.loop, async_turn_off, entity_id).result()
+    run_callback_threadsafe(
+        hass.loop, async_turn_off, hass, entity_id).result()
 
 
 @callback
