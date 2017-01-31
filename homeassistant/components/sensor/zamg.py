@@ -6,8 +6,9 @@ https://home-assistant.io/components/sensor.zamg/
 """
 import csv
 import logging
-from datetime import timedelta
+from datetime import datetime, timedelta
 
+import pytz
 import requests
 import voluptuous as vol
 
@@ -31,7 +32,7 @@ DEFAULT_NAME = 'zamg'
 
 # Data source only updates once per hour, so throttle to 30 min to have
 # reasonably recent data
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 VALID_STATION_IDS = (
     '11010', '11012', '11022', '11035', '11036', '11101', '11121', '11126',
@@ -117,8 +118,7 @@ class ZamgSensor(Entity):
         return {
             ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.probe.get_data('station_name'),
-            ATTR_UPDATED: '{} {}'.format(self.probe.get_data('update_date'),
-                                         self.probe.get_data('update_time')),
+            ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
 
 
@@ -140,9 +140,21 @@ class ZamgData(object):
         self._station_id = station_id
         self.data = {}
 
+    @property
+    def last_update(self):
+        """Return the timestamp of the most recent data."""
+        date, time = self.data.get('update_date'), self.data.get('update_time')
+        if date is not None and time is not None:
+            return datetime.strptime(date + time, '%d-%m-%Y%H:%M').replace(
+                tzinfo=pytz.timezone('Europe/Vienna'))
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from ZAMG."""
+        if self.last_update and (self.last_update + timedelta(hours=1) >
+                                 datetime.utcnow().replace(tzinfo=pytz.utc)):
+            return  # Not time to update yet; data is only hourly
+
         try:
             response = requests.get(
                 self.API_URL, headers=self.API_HEADERS, timeout=15)
