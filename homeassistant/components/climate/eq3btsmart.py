@@ -10,14 +10,14 @@ import voluptuous as vol
 
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, PRECISION_HALVES,
-    STATE_UNKNOWN, STATE_AUTO, STATE_ON, STATE_OFF,
+    STATE_AUTO, STATE_ON, STATE_OFF,
 )
 from homeassistant.const import (
     CONF_MAC, TEMP_CELSIUS, CONF_DEVICES, ATTR_TEMPERATURE)
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-eq3bt==0.1.4']
+REQUIREMENTS = ['python-eq3bt==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,15 +61,12 @@ class EQ3BTSmartThermostat(ClimateDevice):
         # we want to avoid name clash with this module..
         import eq3bt as eq3
 
-        self.modes = {None: STATE_UNKNOWN,  # When not yet connected.
-                      eq3.Mode.Unknown: STATE_UNKNOWN,
-                      eq3.Mode.Auto: STATE_AUTO,
-                      # away handled separately, here just for reverse mapping
-                      eq3.Mode.Away: STATE_AWAY,
+        self.modes = {eq3.Mode.Open: STATE_ON,
                       eq3.Mode.Closed: STATE_OFF,
-                      eq3.Mode.Open: STATE_ON,
+                      eq3.Mode.Auto: STATE_AUTO,
                       eq3.Mode.Manual: STATE_MANUAL,
-                      eq3.Mode.Boost: STATE_BOOST}
+                      eq3.Mode.Boost: STATE_BOOST,
+                      eq3.Mode.Away: STATE_AWAY}
 
         self.reverse_modes = {v: k for k, v in self.modes.items()}
 
@@ -79,7 +76,7 @@ class EQ3BTSmartThermostat(ClimateDevice):
     @property
     def available(self) -> bool:
         """Return if thermostat is available."""
-        return self.current_operation != STATE_UNKNOWN
+        return self.current_operation is not None
 
     @property
     def name(self):
@@ -116,6 +113,8 @@ class EQ3BTSmartThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Current mode."""
+        if self._thermostat.mode < 0:
+            return None
         return self.modes[self._thermostat.mode]
 
     @property
