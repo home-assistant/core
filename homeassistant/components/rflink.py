@@ -53,6 +53,12 @@ CONF_WAIT_FOR_ACK = 'wait_for_ack'
 DEFAULT_SIGNAL_REPETITIONS = 1
 DEFAULT_RECONNECT_INTERVAL = 10
 
+DEVICE_DEFAULTS_SCHEMA = vol.Schema({
+    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
+    vol.Optional(CONF_SIGNAL_REPETITIONS,
+                 default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
+})
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): vol.Any(cv.port, cv.string),
