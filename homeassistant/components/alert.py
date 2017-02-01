@@ -19,7 +19,6 @@ from homeassistant.const import (CONF_ENTITY_ID, STATE_IDLE, CONF_NAME,
                                  SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import service, event
-from homeassistant.util import slugify
 from homeassistant.util.async import run_callback_threadsafe
 import homeassistant.helpers.config_validation as cv
 
@@ -34,9 +33,8 @@ CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
 
 ALERT_SCHEMA = vol.Schema({
-    # pylint: disable=no-value-for-parameter
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_ENTITY_ID): cv.string,
+    vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
     vol.Required(CONF_CAN_ACK, default=True): cv.boolean,
@@ -45,7 +43,7 @@ ALERT_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        cv.string: ALERT_SCHEMA,
+        cv.slug: ALERT_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -155,8 +153,8 @@ def async_setup(hass, config):
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
-    def __init__(self, hass, entity_id, name, entity, state, repeat,
-                 skip_first, notifiers, can_ack):
+    def __init__(self, hass, entity_id, name, watched_entity_id, state,
+                 repeat, skip_first, notifiers, can_ack):
         """Initialize the alert."""
         self.hass = hass
         self._name = name
@@ -171,9 +169,9 @@ class Alert(ToggleEntity):
         self._firing = False
         self._ack = False
         self._cancel = None
-        self.entity_id = ENTITY_ID_FORMAT.format(slugify(entity_id))
+        self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
 
-        event.async_track_state_change(hass, entity,
+        event.async_track_state_change(hass, watched_entity_id,
                                        self.watched_entity_change)
 
     @property
