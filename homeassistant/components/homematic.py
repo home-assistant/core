@@ -778,7 +778,7 @@ class HMDevice(Entity):
                 have_change = True
 
         # If available it has changed
-        if attribute is 'UNREACH':
+        if attribute == 'UNREACH':
             self._available = bool(value)
             have_change = True
 
