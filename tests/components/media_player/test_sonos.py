@@ -314,4 +314,4 @@ class TestSonosMediaPlayer(unittest.TestCase):
         device._snapshot_coordinator.soco_device = SoCoMock('192.0.2.17')
         device.restore()
         self.assertEqual(restoreMock.call_count, 1)
-        self.assertEqual(restoreMock.call_args, mock.call(True))
+        self.assertEqual(restoreMock.call_args, mock.call(False))
