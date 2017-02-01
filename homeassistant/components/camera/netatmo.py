@@ -9,6 +9,7 @@ import logging
 import requests
 import voluptuous as vol
 
+from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.components.netatmo import CameraData
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
@@ -20,7 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
-CONF_VERIFY_SSL = 'verify_ssl'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
