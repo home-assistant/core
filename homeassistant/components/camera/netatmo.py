@@ -20,8 +20,10 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
+CONF_VERIFY_SSL = 'verify_ssl'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_HOME): cv.string,
     vol.Optional(CONF_CAMERAS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
@@ -33,6 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup access to Netatmo cameras."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME)
+    verify_ssl = config.get(CONF_VERIFY_SSL, True)
     import lnetatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
@@ -42,7 +45,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if config[CONF_CAMERAS] != [] and \
                    camera_name not in config[CONF_CAMERAS]:
                     continue
-            add_devices([NetatmoCamera(data, camera_name, home, camera_type)])
+            add_devices([NetatmoCamera(data, camera_name, home,
+                                       camera_type, verify_ssl)])
     except lnetatmo.NoDevice:
         return None
 
@@ -50,11 +54,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
-    def __init__(self, data, camera_name, home, camera_type):
+    def __init__(self, data, camera_name, home, camera_type, verify_ssl):
         """Setup for access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
+        self._verify_ssl = verify_ssl
         if home:
             self._name = home + ' / ' + camera_name
         else:
@@ -76,12 +81,15 @@ class NetatmoCamera(Camera):
                     self._localurl), timeout=10)
             elif self._vpnurl:
                 response = requests.get('{0}/live/snapshot_720.jpg'.format(
-                    self._vpnurl), timeout=10, verify=False)
+                    self._vpnurl), timeout=10, verify=self._verify_ssl)
             else:
+                _LOGGER.error('Welcome VPN url is None')
                 self._data.update()
+                (self._vpnurl, self._localurl) = \
+                    self._data.camera_data.cameraUrls(camera=self._camera_name)
                 return None
         except requests.exceptions.RequestException as error:
-            _LOGGER.error('Welcome VPN url changed: %s', error)
+            _LOGGER.error('Welcome url changed: %s', error)
             self._data.update()
             (self._vpnurl, self._localurl) = \
                 self._data.camera_data.cameraUrls(camera=self._camera_name)
