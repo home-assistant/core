@@ -628,13 +628,13 @@ class HMHub(Entity):
         """Return the icon to use in the frontend, if any."""
         return "mdi:gradient"
 
-    def _update_hub(self):
+    def _update_hub(self, now):
         """Retrieve latest state."""
         state = self._homematic.getServiceMessages(self._name)
         self._state = STATE_UNKNOWN if state is None else len(state)
         self.schedule_update_ha_state()
 
-    def _update_variables(self):
+    def _update_variables(self, now):
         """Retrive all variable data and update hmvariable states."""
         variables = self._homematic.getAllSystemVariables(self._name)
         if variables is None:
