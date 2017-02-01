@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant
 
 REQUIREMENTS = ['jsonrpc-async==0.2']
 
@@ -110,6 +111,7 @@ class KodiDevice(MediaPlayerDevice):
         self._properties = None
         self._item = None
         self._app_properties = None
+
 
     @property
     def name(self):
@@ -377,3 +379,29 @@ class KodiDevice(MediaPlayerDevice):
         else:
             return self._server.Player.Open(
                 {"item": {"file": str(media_id)}})
+            
+    def add_song_to_playlist(self, song_id):
+        """Set volume level, range 0..1.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self._server.Playist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
+    
+    def artists(self):
+        yield from self._server.AudioLibrary.GetArtists()
+    
+    @asyncio.coroutine
+    def async_get_artists(self):
+        out  = self.artists()
+        for ar in out:
+            print(ar)
+            
+        return out
+    
+if __name__ == '__main__':
+    kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
+    
+    art = kodi.async_get_artists()
+    for ar in art:
+        print(ar)
+    

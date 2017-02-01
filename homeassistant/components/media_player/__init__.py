@@ -54,6 +54,7 @@ CONTENT_TYPE_HEADER = 'Content-Type'
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
+SERVICE_GET_ARTISTS = 'get_artists'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -159,6 +160,7 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+    SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
 }
 
 ATTR_TO_PROPERTY = [
