@@ -321,7 +321,7 @@ def setup(hass, config):
 
     def _service_handle_value(service):
         """Set value on homematic variable."""
-        entity_ids = service.data[ATTR_PROXY]
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
         name = service.data[ATTR_NAME]
         value = service.data[ATTR_VALUE]
 
@@ -655,12 +655,15 @@ class HMHub(Entity):
 
     def hm_set_variable(self, name, value):
         """Set variable on homematic controller."""
+        if name not in self._variables:
+            _LOGGER.error("Variable %s not found on %s", name, self.name)
+            return
         old_value = self._variables.get(name)
         if isinstance(old_value, bool):
             value = cv.boolean(value)
         else:
             value = float(value)
-        self._homematic.setSystemVariable(self._name, name, value)
+        self._homematic.setSystemVariable(self.name, name, value)
 
         self._variables.update({name: value})
         self.schedule_update_ha_state()
