@@ -92,7 +92,8 @@ class UPCDeviceScanner(DeviceScanner):
         raw = yield from self._async_ws_function(CMD_DEVICES)
 
         try:
-            xml_root = ET.fromstring(raw)
+            xml_root = yield from self.hass.loop.run_in_executor(
+                None, ET.fromstring, raw)
             return [mac.text for mac in xml_root.iter('MACAddr')]
         except (ET.ParseError, TypeError):
             _LOGGER.warning("Can't read device from %s", self.host)
