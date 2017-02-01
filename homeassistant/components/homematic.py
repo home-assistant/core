@@ -597,10 +597,12 @@ class HMHub(Entity):
 
         # load data
         track_time_interval(hass, self._update_hub, SCAN_INTERVAL_HUB)
+        self._update_hub(None)
 
         if self._use_variables:
             track_time_interval(
                 hass, self._update_variables, SCAN_INTERVAL_VARIABLES)
+            self._update_variables(None)
 
     @property
     def name(self):
