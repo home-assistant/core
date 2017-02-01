@@ -1,5 +1,5 @@
 #!/bin/bash
-# Sets up phantomjs to be used with Home Assistant.
+# Sets up phantomjs.
 
 # Stop on errors
 set -e
