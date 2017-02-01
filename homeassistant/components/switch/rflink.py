@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.rflink import (
     CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
-    CONF_SIGNAL_REPETITIONS, DATA_ENTITY_LOOKUP, DEFAULT_SIGNAL_REPETITIONS,
+    CONF_SIGNAL_REPETITIONS, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
     DOMAIN, EVENT_KEY_COMMAND, SwitchableRflinkDevice, cv, vol)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
@@ -21,11 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_DEVICE_DEFAULTS, default={}): vol.Schema({
-        vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-        vol.Optional(CONF_SIGNAL_REPETITIONS,
-                     default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
-    }),
+    vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
+    DEVICE_DEFAULTS_SCHEMA,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
