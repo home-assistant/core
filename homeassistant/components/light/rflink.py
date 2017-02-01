@@ -13,8 +13,8 @@ from homeassistant.components.light import (
 from homeassistant.components.rflink import (
     CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
     CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP, CONF_SIGNAL_REPETITIONS,
-    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DEFAULT_SIGNAL_REPETITIONS,
-    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
+    DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA, DOMAIN,
+    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
 
 DEPENDENCIES = ['rflink']
@@ -25,11 +25,6 @@ TYPE_DIMMABLE = 'dimmable'
 TYPE_SWITCHABLE = 'switchable'
 TYPE_HYBRID = 'hybrid'
 
-DEVICE_DEFAULTS_SCHEMA = vol.Schema({
-    vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-    vol.Optional(CONF_SIGNAL_REPETITIONS,
-                 default=DEFAULT_SIGNAL_REPETITIONS): vol.Coerce(int),
-})
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
     vol.Optional(CONF_NEW_DEVICES_GROUP, default=None): cv.string,
