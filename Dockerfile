@@ -5,6 +5,8 @@ MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 #ENV INSTALL_TELLSTICK no
 #ENV INSTALL_OPENALPR no
 #ENV INSTALL_FFMPEG no
+#ENV INSTALL_OPENZWAVE no
+#ENV INSTALL_LIBCEC no
 #ENV INSTALL_PHANTOMJS no
 
 VOLUME /config
@@ -13,8 +15,8 @@ RUN mkdir -p /usr/src/app
 WORKDIR /usr/src/app
 
 # Copy build scripts
-COPY script/setup_docker_prereqs script/build_python_openzwave script/build_libcec script/install_phantomjs script/
-RUN script/setup_docker_prereqs
+COPY virtualization/Docker/ virtualization/Docker/
+RUN virtualization/Docker/setup_docker_prereqs
 
 # Install hass component dependencies
 COPY requirements_all.txt requirements_all.txt
