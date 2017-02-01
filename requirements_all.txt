@@ -414,6 +414,9 @@ pyasn1-modules==0.0.8
 # homeassistant.components.notify.xmpp
 pyasn1==0.2.1
 
+# homeassistant.components.media_player.apple_tv
+pyatv==0.0.1
+
 # homeassistant.components.device_tracker.bbox
 # homeassistant.components.sensor.bbox
 pybbox==0.0.5-alpha
