@@ -342,18 +342,20 @@ class SonosDevice(MediaPlayerDevice):
 
         if is_available:
 
-            if self._player.group.coordinator != self._player:
+            # set group coordinator
+            if self._player.is_coordinator:
+                self._coordinator = None
+            else:
                 try:
                     self._coordinator = _get_entity_from_soco(
                         self.hass, self._player.group.coordinator)
+
+                    # protect for loop
+                    if not self._coordinator.is_coordinator:
+                        # pylint: disable=protected-access
+                        self._coordinator._coordinator = None
                 except ValueError:
                     self._coordinator = None
-            else:
-                self._coordinator = None
-
-            if self._coordinator == self:
-                _LOGGER.warning("Coordinator loop on: %s", self.unique_id)
-                self._coordinator = None
 
             track_info = None
             if self._last_avtransport_event:
@@ -957,7 +959,7 @@ class SonosDevice(MediaPlayerDevice):
         try:
             # need catch exception if a coordinator is going to slave.
             # this state will recover with group part.
-            self.soco_snapshot.restore(True)
+            self.soco_snapshot.restore(False)
         except (TypeError, SoCoException):
             _LOGGER.debug("Error on restore %s", self.entity_id)
 
