@@ -1,5 +1,5 @@
 #!/bin/sh
-# Sets up and builds libcec to be used with Home Assistant.
+# Sets up libcec.
 # Dependencies that need to be installed:
 # apt-get install cmake libudev-dev libxrandr-dev swig
 
