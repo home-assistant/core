@@ -523,10 +523,6 @@ class SonosDevice(MediaPlayerDevice):
                     update_media_position |= rel_time is not None and \
                         self._media_position is None
 
-                    # used only if a media is playing
-                    if self.state != STATE_PLAYING:
-                        update_media_position = None
-
                     # position changed?
                     if rel_time is not None and \
                        self._media_position is not None:
@@ -541,7 +537,7 @@ class SonosDevice(MediaPlayerDevice):
                         update_media_position = \
                             abs(calculated_position - rel_time) > 1.5
 
-                    if update_media_position:
+                    if update_media_position and self.state == STATE_PLAYING:
                         media_position = rel_time
                         media_position_updated_at = utcnow()
                     else:
@@ -830,7 +826,7 @@ class SonosDevice(MediaPlayerDevice):
         """List of available input sources."""
         model_name = self._speaker_info['model_name']
 
-        sources = self._favorite_sources
+        sources = self._favorite_sources.copy()
 
         if 'PLAY:5' in model_name:
             sources += [SUPPORT_SOURCE_LINEIN]
