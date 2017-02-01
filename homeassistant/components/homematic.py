@@ -778,8 +778,8 @@ class HMDevice(Entity):
                 have_change = True
 
         # If available it has changed
-        if attribute == 'UNREACH':
-            self._available = bool(value)
+        if self._available != self._hmdevice.UNREACH:
+            self._available = self._hmdevice.UNREACH
             have_change = True
 
         # If it has changed data point, update HA
@@ -790,7 +790,7 @@ class HMDevice(Entity):
 
     def _subscribe_homematic_events(self):
         """Subscribe all required events to handle job."""
-        channels_to_sub = {0: True}  # add channel 0 for UNREACH
+        channels_to_sub = {}
 
         # Push data to channels_to_sub from hmdevice metadata
         for metadata in (self._hmdevice.SENSORNODE, self._hmdevice.BINARYNODE,
