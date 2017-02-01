@@ -1,43 +1,49 @@
 """
-Control an itach ip2ir gateway using libitachip2ir.
+Support for iTach IR Devices.
 
-Requires a command file with Philips Pronto learned hex formats.
-
-Example command file:
-
-OFF
-0000 006d 0022 0002 0157 00ac 0015 0016 0015 0016 0015 0041 0015
-
-ON
-0000 006d 0022 0002 0157 00ac 0015 0016 0015 0016 0041 0015 0015
-
-Example configuration.yaml section:
-remote living_room:
-  - platform: itach
-    name: Living Room
-    mac: 000C1E023FDC
-    ip: itach023fdc
-    port: 4998
-    devices:
-      - { name: TV,  connaddr: 2, file: Samsung_TV.txt }
-      - { name: DVD, connaddr: 3, file: LG_BR.txt }
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/remote.itach/
 """
 
 import logging
 
-from homeassistant.const import DEVICE_DEFAULT_NAME
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 import homeassistant.components.remote as remote
-from homeassistant.components.remote import ATTR_COMMAND
+from homeassistant.const import (
+    DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
+    CONF_DEVICES, CONF_FILENAME)
+from homeassistant.components.remote import (
+    PLATFORM_SCHEMA, ATTR_COMMAND)
 
 REQUIREMENTS = ['pyitachip2ir==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAC = 'mac'
-CONF_IP = 'ip'
-CONF_PORT = 'port'
-CONF_FILE = 'file'
-CONF_DEVICES = 'devices'
+DEFAULT_PORT = 4998
+CONNECT_TIMEOUT = 5000
+
+CONF_MODADDR = 'modaddr'
+CONF_CONNADDR = 'connaddr'
+CONF_COMMANDS = 'commands'
+CONF_DATA = 'data'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MAC, default=None): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_MODADDR): vol.Coerce(int),
+        vol.Required(CONF_CONNADDR): vol.Coerce(int),
+        vol.Optional(CONF_FILENAME): cv.string,
+        vol.Optional(CONF_COMMANDS): vol.All(cv.ensure_list, [{
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_DATA): cv.string
+        }])
+    }])
+})
 
 
 # pylint: disable=unused-argument
@@ -45,17 +51,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ITach connection and devices."""
     import pyitachip2ir
     itachip2ir = pyitachip2ir.ITachIP2IR(
-        config.get(CONF_MAC), config.get(CONF_IP), int(config.get(CONF_PORT)))
+        config.get(CONF_MAC), config.get(CONF_HOST),
+        int(config.get(CONF_PORT)))
+
+    if not itachip2ir.ready(CONNECT_TIMEOUT):
+        _LOGGER.error("Unable to find iTach")
+        return False
+
     devices = []
     for data in config.get(CONF_DEVICES):
-        name = data['name']
-        modaddr = int(data.get('modaddr', 1))
-        connaddr = int(data.get('connaddr', 1))
-        cmddata = open(
-            hass.config.config_dir + "/" + data.get('file'), "r").read()
+        name = data.get(CONF_NAME)
+        modaddr = int(data.get(CONF_MODADDR, 1))
+        connaddr = int(data.get(CONF_CONNADDR, 1))
+        if CONF_FILENAME in data:
+            cmddata = open(
+                hass.config.config_dir + "/" + data.get(CONF_FILENAME), "r"
+            ).read()
+        elif CONF_COMMANDS in data:
+            cmddata = ""
+            for cmd in data.get(CONF_COMMANDS):
+                cmddata += cmd[CONF_NAME] + "\n" + cmd[CONF_DATA] + "\n"
+            print(":"+cmddata+":")
         itachip2ir.addDevice(name, modaddr, connaddr, cmddata)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_devices(devices, True)
+    return True
 
 
 class ITachIP2IRRemote(remote.RemoteDevice):
