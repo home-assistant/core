@@ -229,8 +229,7 @@ class QNAPSensor(Entity):
 
     def update(self):
         """Get the latest data for the states."""
-        if self._api is not None:
-            self._api.update()
+        self._api.update()
 
 
 class QNAPCPUSensor(QNAPSensor):
