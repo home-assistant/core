@@ -384,7 +384,7 @@ pushbullet.py==0.10.0
 pushetta==1.0.15
 
 # homeassistant.components.sensor.waqi
-pwaqi==1.3
+pwaqi==1.4
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
