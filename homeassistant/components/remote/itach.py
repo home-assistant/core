@@ -30,7 +30,7 @@ CONF_COMMANDS = 'commands'
 CONF_DATA = 'data'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAC, default=None): cv.string,
+    vol.Optional(CONF_MAC): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [{
