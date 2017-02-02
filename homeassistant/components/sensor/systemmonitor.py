@@ -40,7 +40,9 @@ SENSOR_TYPES = {
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last Boot', '', 'mdi:clock'],
     'since_last_boot': ['Since Last Boot', '', 'mdi:clock'],
-    'load': ['Average Load', '', 'mdi:memory']
+    'load_1m': ['Average Load (1m)', '', 'mdi:memory'],
+    'load_5m': ['Average Load (5m)', '', 'mdi:memory'],
+    'load_15m': ['Average Load (15m)', '', 'mdi:memory']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -166,5 +168,10 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'since_last_boot':
             self._state = dt_util.utcnow() - dt_util.utc_from_timestamp(
                 psutil.boot_time())
-        elif self.type == 'load':
-            self._state = '{:.1f}, {:.1f}, {:.1f}'.format(*os.getloadavg())
+        elif self.type == 'load_1m':
+            self._state = os.getloadavg()[0]
+        elif self.type == 'load_5m':
+            self._state = os.getloadavg()[1]
+        elif self.type == 'load_15m':
+            self._state = os.getloadavg()[2]
+            
