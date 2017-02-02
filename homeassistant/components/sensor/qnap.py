@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL,
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, EVENT_HOMEASSISTANT_START)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -97,67 +97,60 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the QNAP NAS sensor."""
-    # pylint: disable=too-many-locals
-    def run_setup(event):
-        """Wait until HASS is fully initialized before creating sensors."""
-        api = QNAPStatsAPI(config)
-        api.update()
+    api = QNAPStatsAPI(config)
+    api.update()
 
-        sensors = []
+    sensors = []
 
-        # Basic sensors
-        for variable in config[CONF_MONITORED_CONDITIONS]:
-            if variable in _HEALTH_MON_COND:
-                sensors.append(QNAPHealthStatus(api, variable,
-                                                _HEALTH_MON_COND[variable]))
-            if variable in _CPU_MON_COND:
-                sensors.append(QNAPCPUSensor(api, variable,
-                                             _CPU_MON_COND[variable]))
-            if variable in _MEMORY_MON_COND:
-                sensors.append(QNAPMemorySensor(api, variable,
-                                                _MEMORY_MON_COND[variable]))
+    # Basic sensors
+    for variable in config[CONF_MONITORED_CONDITIONS]:
+        if variable in _HEALTH_MON_COND:
+            sensors.append(QNAPHealthStatus(api, variable,
+                                            _HEALTH_MON_COND[variable]))
+        if variable in _CPU_MON_COND:
+            sensors.append(QNAPCPUSensor(api, variable,
+                                         _CPU_MON_COND[variable]))
+        if variable in _MEMORY_MON_COND:
+            sensors.append(QNAPMemorySensor(api, variable,
+                                            _MEMORY_MON_COND[variable]))
 
-        # Network sensors
-        nics = config[CONF_NICS]
-        if nics is None:
-            nics = api.data["system_stats"]["nics"].keys()
+    # Network sensors
+    nics = config[CONF_NICS]
+    if nics is None:
+        nics = api.data["system_stats"]["nics"].keys()
 
-        for nic in nics:
-            sensors += [QNAPNetworkSensor(api, variable,
-                                          _NETWORK_MON_COND[variable], nic)
-                        for variable in config[CONF_MONITORED_CONDITIONS]
-                        if variable in _NETWORK_MON_COND]
+    for nic in nics:
+        sensors += [QNAPNetworkSensor(api, variable,
+                                      _NETWORK_MON_COND[variable], nic)
+                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    if variable in _NETWORK_MON_COND]
 
-        # Drive sensors
-        drives = config[CONF_DRIVES]
-        if drives is None:
-            drives = api.data["smart_drive_health"].keys()
+    # Drive sensors
+    drives = config[CONF_DRIVES]
+    if drives is None:
+        drives = api.data["smart_drive_health"].keys()
 
-        for drive in drives:
-            sensors += [QNAPDriveSensor(api, variable,
-                                        _DRIVE_MON_COND[variable], drive)
-                        for variable in config[CONF_MONITORED_CONDITIONS]
-                        if variable in _DRIVE_MON_COND]
+    for drive in drives:
+        sensors += [QNAPDriveSensor(api, variable,
+                                    _DRIVE_MON_COND[variable], drive)
+                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    if variable in _DRIVE_MON_COND]
 
-        # Volume sensors
-        volumes = config[CONF_VOLUMES]
-        if volumes is None:
-            volumes = api.data["volumes"].keys()
+    # Volume sensors
+    volumes = config[CONF_VOLUMES]
+    if volumes is None:
+        volumes = api.data["volumes"].keys()
 
-        for volume in volumes:
-            sensors += [QNAPVolumeSensor(api, variable,
-                                         _VOLUME_MON_COND[variable], volume)
-                        for variable in config[CONF_MONITORED_CONDITIONS]
-                        if variable in _VOLUME_MON_COND]
+    for volume in volumes:
+        sensors += [QNAPVolumeSensor(api, variable,
+                                     _VOLUME_MON_COND[variable], volume)
+                    for variable in config[CONF_MONITORED_CONDITIONS]
+                    if variable in _VOLUME_MON_COND]
 
-        add_devices(sensors)
-
-    # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
-
-    return True
+    add_devices(sensors)
 
 
 def round_nicely(number):
