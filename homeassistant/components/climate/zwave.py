@@ -223,10 +223,10 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     # ZXT-120 responds only to whole int
                     value.data = round(temperature, 0)
                     self._target_temperature = temperature
-                    self.update_ha_state()
+                    self.schedule_update_ha_state()
                 else:
                     value.data = temperature
-                    self.update_ha_state()
+                    self.schedule_update_ha_state()
                 break
 
     def set_fan_mode(self, fan):
