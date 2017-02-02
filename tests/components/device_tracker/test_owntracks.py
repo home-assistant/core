@@ -377,7 +377,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         message = REGION_ENTER_MESSAGE.copy()
         message['desc'] = "inner 2"
         self.send_message(EVENT_TOPIC, message)
-        self.assert_location_state('inner_2')
+        self.assert_location_state('inner 2')
 
         message = REGION_LEAVE_MESSAGE.copy()
         message['desc'] = "inner 2"
