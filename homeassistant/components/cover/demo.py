@@ -149,7 +149,7 @@ class DemoCover(CoverDevice):
 
         if self._position in (100, 0, self._set_position):
             self.stop_cover()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def _listen_cover_tilt(self):
         """Listen for changes in cover tilt."""
@@ -167,4 +167,4 @@ class DemoCover(CoverDevice):
         if self._tilt_position in (100, 0, self._set_tilt_position):
             self.stop_cover_tilt()
 
-        self.update_ha_state()
+        self.schedule_update_ha_state()
