@@ -1,10 +1,12 @@
 """The tests for the MQTT eventstream component."""
+from collections import namedtuple
 import json
 import unittest
 from unittest.mock import ANY, patch
 
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
+import homeassistant.components.mqtt as mqtt
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
 from homeassistant.remote import JSONEncoder
@@ -146,3 +148,44 @@ class TestMqttEventStream(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
+
+    @patch('homeassistant.components.mqtt.publish')
+    def test_mqtt_received_event(self, mock_pub):
+        """Don't filter events from the mqtt component about received message.
+
+        Mqtt component sends an event if a message is received. Also
+        messages that originate from an incoming eventstream.
+        Broadcasting these messages result in an infinite loop if two HA
+        instances are crossconfigured for the same mqtt topics.
+
+        """
+        SUB_TOPIC = 'from_slaves'
+        self.assertTrue(
+            self.add_eventstream(
+                pub_topic='bar',
+                sub_topic=SUB_TOPIC))
+        self.hass.block_till_done()
+
+        # Reset the mock because it will have already gotten calls for the
+        # mqtt_eventstream state change on initialization, etc.
+        mock_pub.reset_mock()
+
+        # Use MQTT component message handler to simulate firing message
+        # received event.
+        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
+        message = MQTTMessage(SUB_TOPIC, 1, 'Hello World!'.encode('utf-8'))
+        mqtt.MQTT._mqtt_on_message(self, None, {'hass': self.hass}, message)
+
+        self.hass.block_till_done()
+
+        # 'normal' incoming mqtt messages should be broadcasted
+        self.assertEqual(mock_pub.call_count, 0)
+
+        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
+        message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
+        mqtt.MQTT._mqtt_on_message(self, None, {'hass': self.hass}, message)
+
+        self.hass.block_till_done()
+
+        # but event from the event stream not
+        self.assertEqual(mock_pub.call_count, 1)
