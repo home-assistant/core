@@ -73,7 +73,6 @@ def execute(qry: QueryType) -> List[Any]:
     This method also retries a few times in the case of stale connections.
     """
     import sqlalchemy.exc
-    session = Session()
     try:
         for _ in range(0, RETRIES):
             try:
@@ -82,11 +81,9 @@ def execute(qry: QueryType) -> List[Any]:
                     (row.to_native() for row in qry)
                     if row is not None]
             except sqlalchemy.exc.SQLAlchemyError as err:
-                session.rollback()
                 log_error(err, retry_wait=QUERY_RETRY_WAIT)
     finally:
-        session.commit()
-        session.close()
+        Session().close()
     return []
 
 
@@ -109,7 +106,6 @@ def run_information(point_in_time: Optional[datetime]=None):
             (recorder_runs.start < point_in_time) &
             (recorder_runs.end > point_in_time)).first()
     finally:
-        Session().commit()
         Session().close()
 
 
@@ -139,10 +135,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def query(model_name: Union[str, Any], *args) -> QueryType:
     """Helper to return a query handle."""
     _verify_instance()
-    # pylint: disable=no-member
+
     if isinstance(model_name, str):
-        return Session.query(get_model(model_name), *args)
-    return Session.query(model_name, *args)
+        return Session().query(get_model(model_name), *args)
+    return Session().query(model_name, *args)
 
 
 def get_model(model_name: str) -> Any:
@@ -160,7 +156,7 @@ def log_error(err: Exception, retry_wait: Optional[float]=0,
     """Log about SQLAlchemy errors in a sane manner."""
     import sqlalchemy.exc
     if not isinstance(err, sqlalchemy.exc.OperationalError):
-        _LOGGER.exception(err)
+        _LOGGER.exception(str(err))
     else:
         _LOGGER.error(message, err)
     if retry_wait:
@@ -256,15 +252,14 @@ class Recorder(threading.Thread):
 
             dbevent = Events.from_event(event)
             self._commit(dbevent, False)
-            event_id = dbevent.event_id
-            Session().close()
 
             if event.event_type != EVENT_STATE_CHANGED:
+                Session().close()
                 self.queue.task_done()
                 continue
 
             dbstate = States.from_event(event)
-            dbstate.event_id = event_id
+            dbstate.event_id = dbevent.event_id
             self._commit(dbstate)
 
             self.queue.task_done()
@@ -304,7 +299,8 @@ class Recorder(threading.Thread):
             self.engine = create_engine(
                 'sqlite://',
                 connect_args={'check_same_thread': False},
-                poolclass=StaticPool)
+                poolclass=StaticPool,
+                pool_reset_on_return=None)
         else:
             self.engine = create_engine(self.db_url, echo=False)
 
@@ -402,7 +398,7 @@ class Recorder(threading.Thread):
             run.end = self.recording_start
             _LOGGER.warning("Ended unfinished session (id=%s from %s)",
                             run.run_id, run.start)
-            Session.add(run)  # pylint: disable= no-member
+            Session().add(run)
 
             _LOGGER.warning("Found unfinished sessions")
 
@@ -446,9 +442,6 @@ class Recorder(threading.Thread):
 
         if self._commit(_purge_events):
             _LOGGER.info("Purged events created before %s", purge_before)
-
-        # Removed due to closing sessions everywhere
-        # Session.expire_all()
 
         # Execute sqlite vacuum command to free up space on disk
         if self.engine.driver == 'sqlite':
