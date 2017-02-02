@@ -64,9 +64,9 @@ class NukiLock(LockDevice):
     def lock(self, **kwargs):
         """Lock the device."""
         self._nuki_lock.lock()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         self._nuki_lock.unlock()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
