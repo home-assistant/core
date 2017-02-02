@@ -45,8 +45,8 @@ class NukiLock(LockDevice):
     def __init__(self, nuki_lock):
         """Initialize the lock."""
         self._nuki_lock = nuki_lock
-        self._locked = None
-        self._name = None
+        self._locked = nuki_lock.is_locked
+        self._name = nuki_lock.name
 
     @property
     def name(self):
