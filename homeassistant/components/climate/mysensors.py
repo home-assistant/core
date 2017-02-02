@@ -135,7 +135,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # optimistically assume that switch has changed state
                 self._values[value_type] = value
-                self.update_ha_state()
+                self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
@@ -145,7 +145,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_SPEED] = fan
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
@@ -156,7 +156,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
