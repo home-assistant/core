@@ -36,7 +36,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MQTT binary sensor."""
+    """Set up the MQTT binary sensor."""
+    if discovery_info is not None:
+        _LOGGER.info(
+            "New MQTT binary sensor detected: %s", discovery_info[CONF_NAME])
+        config = discovery_info
+
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass

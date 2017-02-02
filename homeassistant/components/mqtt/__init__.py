@@ -36,6 +36,7 @@ REQUIREMENTS = ['paho-mqtt==1.2']
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
 CONF_CLIENT_ID = 'client_id'
+CONF_DISCOVERY = 'discovery'
 CONF_KEEPALIVE = 'keepalive'
 CONF_CERTIFICATE = 'certificate'
 CONF_CLIENT_KEY = 'client_key'
@@ -111,7 +112,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_DISCOVERY): valid_subscribe_topic,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -213,6 +215,21 @@ def _setup_server(hass, config):
     return success and broker_config
 
 
+def _setup_discovery(hass, config):
+    """Try to start the discovery of MQTT devices."""
+    conf = config.get(DOMAIN, {})
+
+    discovery = prepare_setup_platform(hass, config, DOMAIN, 'discovery')
+
+    if discovery is None:
+        _LOGGER.error("Unable to load MQTT discovery")
+        return None
+
+    success = discovery.start(hass, conf.get(CONF_DISCOVERY))
+
+    return success
+
+
 def setup(hass, config):
     """Start the MQTT protocol service."""
     conf = config.get(DOMAIN, {})
@@ -244,6 +261,8 @@ def setup(hass, config):
             err += " (Broker configuration required.)"
         _LOGGER.error(err)
         return False
+
+    discovery_in_conf = CONF_DISCOVERY in conf
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
     if certificate is None and 19999 < port < 30000 and \
@@ -300,6 +319,9 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service,
                            descriptions.get(SERVICE_PUBLISH),
                            schema=MQTT_PUBLISH_SCHEMA)
+
+    if discovery_in_conf:
+        _setup_discovery(hass, config)
 
     return True
 
