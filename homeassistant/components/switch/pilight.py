@@ -33,7 +33,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Optional('off'): cv.positive_int,
     vol.Optional(CONF_UNIT): cv.positive_int,
     vol.Optional(CONF_UNITCODE): cv.positive_int,
-    vol.Optional(CONF_ID): cv.positive_int,
+    vol.Optional(CONF_ID): vol.Any(cv.positive_int, cv.string),
     vol.Optional(CONF_STATE): cv.string,
     vol.Optional(CONF_SYSTEMCODE): cv.positive_int,
 }, extra=vol.ALLOW_EXTRA)

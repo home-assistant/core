@@ -17,7 +17,7 @@ import voluptuous as vol
 
 DOMAIN = 'tellduslive'
 
-REQUIREMENTS = ['tellduslive==0.1.13']
+REQUIREMENTS = ['tellduslive==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,8 +133,8 @@ class TelldusLiveClient(object):
             if device.device_id in known_ids:
                 continue
             if device.is_sensor:
-                for item_id in device.items:
-                    discover((device.device_id,) + item_id,
+                for item in device.items:
+                    discover((device.device_id, item.name, item.scale),
                              'sensor')
             else:
                 discover(device.device_id,
@@ -145,8 +145,7 @@ class TelldusLiveClient(object):
 
     def device(self, device_id):
         """Return device representation."""
-        import tellduslive
-        return tellduslive.Device(self._client, device_id)
+        return self._client.device(device_id)
 
     def is_available(self, device_id):
         """Return device availability."""
@@ -221,5 +220,5 @@ class TelldusLiveEntity(Entity):
     @property
     def _last_updated(self):
         """Return the last update of a device."""
-        return str(datetime.fromtimestamp(self.device.last_updated)) \
-            if self.device.last_updated else None
+        return str(datetime.fromtimestamp(self.device.lastUpdated)) \
+            if self.device.lastUpdated else None
