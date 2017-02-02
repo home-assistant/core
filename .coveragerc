@@ -330,6 +330,7 @@ omit =
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pvoutput.py
+    homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
