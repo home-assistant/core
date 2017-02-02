@@ -39,7 +39,7 @@ aiohttp_cors==0.5.0
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
-amcrest==1.1.3
+amcrest==1.1.4
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -444,7 +444,7 @@ pyharmony==1.0.12
 pyhik==0.0.7
 
 # homeassistant.components.homematic
-pyhomematic==0.1.20
+pyhomematic==0.1.21
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
@@ -620,7 +620,7 @@ steamodd==4.21
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.1.13
+tellduslive==0.3.0
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.1
