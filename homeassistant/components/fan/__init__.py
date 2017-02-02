@@ -16,7 +16,7 @@ from homeassistant.components import group
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TOGGLE,
                                  SERVICE_TURN_OFF, ATTR_ENTITY_ID,
-                                 STATE_UNKNOWN, SERVICE_TOGGLE)
+                                 STATE_UNKNOWN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
