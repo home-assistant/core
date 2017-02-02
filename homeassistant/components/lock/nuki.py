@@ -4,13 +4,14 @@ Nuki.io lock platform.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.nuki/
 """
-import logging
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
-import voluptuous as vol
 from datetime import timedelta
+import logging
+import voluptuous as vol
+
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_TOKEN)
+from homeassistant.util import Throttle
+import homeassistant.helpers.config_validation as cv
 
 
 REQUIREMENTS = ['pynuki==1.1']
@@ -55,7 +56,7 @@ class NukiLock(LockDevice):
         """Return true if lock is locked."""
         return self._nuki_lock.is_locked
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
+    @Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update the nuki lock properties."""
         self._nuki_lock.update()
