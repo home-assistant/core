@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.0.0', 'pubnubsub-handler==1.0.0']
+REQUIREMENTS = ['python-wink==1.1.0', 'pubnubsub-handler==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,11 +87,16 @@ def setup(hass, config):
         password = config[DOMAIN][CONF_PASSWORD]
         payload = {'username': email, 'password': password}
         token_response = requests.post(CONF_TOKEN_URL, data=payload)
-        token = token_response.text.split(':')[1].split()[0].rstrip('<br')
+        try:
+            token = token_response.text.split(':')[1].split()[0].rstrip('<br')
+        except IndexError:
+            _LOGGER.error("Error getting token. Please check email/password.")
+            return False
         pywink.set_bearer_token(token)
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['entities'] = []
+    hass.data[DOMAIN]['unique_ids'] = []
     hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
         pywink.get_subscription_key(),
         pywink.wink_api_fetch)
@@ -113,6 +118,13 @@ def setup(hass, config):
             entity.update_ha_state(True)
     hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
 
+    def pull_new_devices(call):
+        """Pull new devices added to users Wink account since startup."""
+        _LOGGER.info("Getting new devices from Wink API.")
+        for component in WINK_COMPONENTS:
+            discovery.load_platform(hass, component, DOMAIN, {}, config)
+    hass.services.register(DOMAIN, 'Add new devices', pull_new_devices)
+
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
@@ -131,6 +143,8 @@ class WinkDevice(Entity):
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['entities'].append(self)
+        hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
+                                               self.wink.name())
 
     def _pubnub_update(self, message):
         try:
@@ -168,13 +182,42 @@ class WinkDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
+        attributes = {}
         if self._battery:
-            return {
-                ATTR_BATTERY_LEVEL: self._battery_level,
-            }
+            attributes[ATTR_BATTERY_LEVEL] = self._battery_level
+        if self._manufacturer_device_model:
+            _model = self._manufacturer_device_model
+            attributes["manufacturer_device_model"] = _model
+        if self._manufacturer_device_id:
+            attributes["manufacturer_device_id"] = self._manufacturer_device_id
+        if self._device_manufacturer:
+            attributes["device_manufacturer"] = self._device_manufacturer
+        if self._model_name:
+            attributes["model_name"] = self._model_name
+        return attributes
 
     @property
     def _battery_level(self):
         """Return the battery level."""
         if self.wink.battery_level() is not None:
             return self.wink.battery_level() * 100
+
+    @property
+    def _manufacturer_device_model(self):
+        """Return the manufacturer device model."""
+        return self.wink.manufacturer_device_model()
+
+    @property
+    def _manufacturer_device_id(self):
+        """Return the manufacturer device id."""
+        return self.wink.manufacturer_device_id()
+
+    @property
+    def _device_manufacturer(self):
+        """Return the device manufacturer."""
+        return self.wink.device_manufacturer()
+
+    @property
+    def _model_name(self):
+        """Return the model name."""
+        return self.wink.model_name()

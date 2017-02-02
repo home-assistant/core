@@ -6,7 +6,7 @@ https://home-assistant.io/components/cover.wink/
 """
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.components.wink import WinkDevice
+from homeassistant.components.wink import WinkDevice, DOMAIN
 
 DEPENDENCIES = ['wink']
 
@@ -15,10 +15,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Wink cover platform."""
     import pywink
 
-    add_devices(WinkCoverDevice(shade, hass) for shade in
-                pywink.get_shades())
-    add_devices(WinkCoverDevice(door, hass) for door in
-                pywink.get_garage_doors())
+    for shade in pywink.get_shades():
+        _id = shade.object_id() + shade.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkCoverDevice(shade, hass)])
+    for door in pywink.get_garage_doors():
+        _id = door.object_id() + door.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkCoverDevice(door, hass)])
 
 
 class WinkCoverDevice(WinkDevice, CoverDevice):
@@ -26,7 +30,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
 
     def __init__(self, wink, hass):
         """Initialize the cover."""
-        WinkDevice.__init__(self, wink, hass)
+        super().__init__(wink, hass)
 
     def close_cover(self):
         """Close the shade."""
