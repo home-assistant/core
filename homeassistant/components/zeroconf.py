@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['api']
 DOMAIN = 'zeroconf'
 
-REQUIREMENTS = ['zeroconf==0.17.6']
+REQUIREMENTS = ['zeroconf==0.17.7']
 
 ZEROCONF_TYPE = '_home-assistant._tcp.local.'
 
