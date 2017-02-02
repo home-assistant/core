@@ -190,7 +190,7 @@ def setup_scanner(hass, config, see):
             return
         # OwnTracks uses - at the start of a beacon zone
         # to switch on 'hold mode' - ignore this
-        location = slugify(data['desc'].lstrip("-"))
+        location = data['desc'].lstrip("-")
         if location.lower() == 'home':
             location = STATE_HOME
 
@@ -198,7 +198,7 @@ def setup_scanner(hass, config, see):
 
         def enter_event():
             """Execute enter event."""
-            zone = hass.states.get("zone.{}".format(location))
+            zone = hass.states.get("zone.{}".format(slugify(location)))
             with LOCK:
                 if zone is None and data.get('t') == 'b':
                     # Not a HA zone, and a beacon so assume mobile
@@ -227,7 +227,8 @@ def setup_scanner(hass, config, see):
 
                 if new_region:
                     # Exit to previous region
-                    zone = hass.states.get("zone.{}".format(new_region))
+                    zone = hass.states.get(
+                        "zone.{}".format(slugify(new_region)))
                     _set_gps_from_zone(kwargs, new_region, zone)
                     _LOGGER.info("Exit to %s", new_region)
                     see(**kwargs)
