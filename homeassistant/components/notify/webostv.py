@@ -11,16 +11,18 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     BaseNotificationService, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_HOST
+from homeassistant.const import (CONF_FILENAME, CONF_HOST)
 
-REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv/archive/v0.1.2.zip'
-                '#pylgtv==0.1.2']
+REQUIREMENTS = ['https://github.com/pschmitt/pylgtv/archive/v0.1.3.zip'
+                '#pylgtv==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
+WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string
 })
 
 
@@ -29,7 +31,8 @@ def get_service(hass, config, discovery_info=None):
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
 
-    client = WebOsClient(config.get(CONF_HOST))
+    path = hass.config.path(config.get(CONF_FILENAME))
+    client = WebOsClient(config.get(CONF_HOST), key_file_path=path)
 
     try:
         client.register()
