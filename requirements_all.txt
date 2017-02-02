@@ -319,7 +319,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.sensor.miflora
-miflora==0.1.14
+miflora==0.1.15
 
 # homeassistant.components.sensor.usps
 myusps==1.0.2
