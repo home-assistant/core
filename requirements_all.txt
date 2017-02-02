@@ -470,6 +470,9 @@ pynetgear==0.3.3
 # homeassistant.components.switch.netio
 pynetio==0.1.6
 
+# homeassistant.components.lock.nuki
+pynuki==1.1
+
 # homeassistant.components.sensor.nut
 pynut2==2.1.2
 
