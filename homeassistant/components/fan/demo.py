@@ -68,17 +68,17 @@ class DemoFan(FanEntity):
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         self._speed = speed
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         self.direction = direction
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
         self.oscillating = oscillating
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def current_direction(self) -> str:
