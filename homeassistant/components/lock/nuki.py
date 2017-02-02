@@ -14,7 +14,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pynuki==1.1']
+REQUIREMENTS = ['pynuki==1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
