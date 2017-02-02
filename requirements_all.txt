@@ -412,7 +412,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.7.6
+pychromecast==0.8.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -692,4 +692,4 @@ yeelight==0.2.1
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.17.6
+zeroconf==0.17.7
