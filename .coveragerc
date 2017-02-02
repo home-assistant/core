@@ -209,6 +209,7 @@ omit =
     homeassistant/components/light/piglow.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/lock/nuki.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
