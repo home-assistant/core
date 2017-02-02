@@ -12,8 +12,7 @@ import voluptuous as vol
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, STATE_TEMPERATURE_HOLD,
-    STATE_HOME_HOLD, STATE_AWAY_HOLD)
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
@@ -300,11 +299,11 @@ class Thermostat(ClimateDevice):
 
         if hold == hold_mode:
             return
-        elif hold_mode == STATE_AWAY_HOLD:
+        elif hold_mode == 'away':
             self.turn_away_mode_on()
-        elif hold_mode == STATE_HOME_HOLD:
+        elif hold_mode == 'home':
             self.turn_home_mode_on()
-        elif hold_mode == STATE_TEMPERATURE_HOLD:
+        elif hold_mode == 'temp':
             self.set_temp_hold(int(self.current_temperature))
         else:
             self.data.ecobee.resume_program(self.thermostat_index)
