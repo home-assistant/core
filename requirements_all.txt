@@ -51,6 +51,7 @@ apcaccess==0.0.4
 apns2==0.1.1
 
 # homeassistant.components.sun
+# homeassistant.components.sensor.moon
 astral==1.3.3
 
 # homeassistant.components.light.avion
