@@ -11,7 +11,7 @@ from datetime import timedelta
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL,
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
     CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -85,7 +85,7 @@ _MONITORED_CONDITIONS = list(_HEALTH_MON_COND.keys()) + \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PROTOCOL, default='http'): vol.In(['http', 'https']),
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -170,8 +170,9 @@ class QNAPStatsAPI(object):
         """Initialize the API wrapper."""
         from qnapstats import QNAPStats
 
+        protocol = "https" if config.get(CONF_SSL) else "http"
         self._api = QNAPStats(
-            config.get(CONF_PROTOCOL) + "://" + config.get(CONF_HOST),
+            protocol + "://" + config.get(CONF_HOST),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD))
