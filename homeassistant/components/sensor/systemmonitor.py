@@ -174,4 +174,3 @@ class SystemMonitorSensor(Entity):
             self._state = os.getloadavg()[1]
         elif self.type == 'load_15m':
             self._state = os.getloadavg()[2]
-            
