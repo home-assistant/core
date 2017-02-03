@@ -206,8 +206,6 @@ class IPWebcam(object):
         if '/startvideo' in path or '/stopvideo' in path:
             resp = 'json'
 
-        print('GET', url, 'AUTH', auth, 'RESP', resp)
-
         response = None
 
         data = None
@@ -264,7 +262,6 @@ class IPWebcam(object):
             aud_conns = 'audio_connections'
             state_attr[ATTR_VID_CONNS] = self.status_data.get(vid_conns)
             state_attr[ATTR_AUD_CONNS] = self.status_data.get(aud_conns)
-            print('Self.status_data', self.status_data)
             for (key, val) in self.status_data.get('curvals', {}).items():
                 try:
                     val = float(val)
@@ -287,7 +284,6 @@ class IPWebcam(object):
         """Return a dictionary of the current settings."""
         settings = {}
         if self.status_data is not None:
-            print('Self.status_data', self.status_data)
             for (key, val) in self.status_data.get('curvals', {}).items():
                 try:
                     val = float(val)
