@@ -323,6 +323,7 @@ def datetime(value):
 
     return datetime_val
 
+
 def date(value):
     """Validate time."""
     date_val = dt_util.parse_date(value)
@@ -331,6 +332,7 @@ def date(value):
         raise vol.Invalid('Invalid date specified: {}'.format(value))
 
     return date_val
+
 
 def time_zone(value):
     """Validate timezone."""
