@@ -180,6 +180,11 @@ class Alert(ToggleEntity):
         return self._name
 
     @property
+    def should_poll(self):
+        """HASS need not poll these entities."""
+        return False
+
+    @property
     def state(self):
         """Return the alert status."""
         if self._firing:
