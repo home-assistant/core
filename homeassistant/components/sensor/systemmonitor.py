@@ -16,33 +16,33 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.0.1']
+REQUIREMENTS = ['psutil==5.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
-    'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
-    'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
     'disk_free': ['Disk Free', 'GiB', 'mdi:harddisk'],
-    'memory_use_percent': ['RAM Use', '%', 'mdi:memory'],
-    'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
-    'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
-    'processor_use': ['CPU Use', '%', 'mdi:memory'],
-    'process': ['Process', ' ', 'mdi:memory'],
-    'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
-    'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
-    'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
-    'network_out': ['Sent', 'MiB', 'mdi:server-network'],
-    'network_in': ['Received', 'MiB', 'mdi:server-network'],
-    'packets_out': ['Packets sent', ' ', 'mdi:server-network'],
-    'packets_in': ['Packets received', ' ', 'mdi:server-network'],
+    'disk_use': ['Disk Use', 'GiB', 'mdi:harddisk'],
+    'disk_use_percent': ['Disk Use', '%', 'mdi:harddisk'],
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last Boot', '', 'mdi:clock'],
-    'since_last_boot': ['Since Last Boot', '', 'mdi:clock'],
+    'load_15m': ['Average Load (15m)', '', 'mdi:memory'],
     'load_1m': ['Average Load (1m)', '', 'mdi:memory'],
     'load_5m': ['Average Load (5m)', '', 'mdi:memory'],
-    'load_15m': ['Average Load (15m)', '', 'mdi:memory']
+    'memory_free': ['RAM Free', 'MiB', 'mdi:memory'],
+    'memory_use': ['RAM Use', 'MiB', 'mdi:memory'],
+    'memory_use_percent': ['RAM Use', '%', 'mdi:memory'],
+    'network_in': ['Received', 'MiB', 'mdi:server-network'],
+    'network_out': ['Sent', 'MiB', 'mdi:server-network'],
+    'packets_in': ['Packets received', ' ', 'mdi:server-network'],
+    'packets_out': ['Packets sent', ' ', 'mdi:server-network'],
+    'process': ['Process', ' ', 'mdi:memory'],
+    'processor_use': ['CPU Use', '%', 'mdi:memory'],
+    'since_last_boot': ['Since Last Boot', '', 'mdi:clock'],
+    'swap_free': ['Swap Free', 'GiB', 'mdi:harddisk'],
+    'swap_use': ['Swap Use', 'GiB', 'mdi:harddisk'],
+    'swap_use_percent': ['Swap Use', '%', 'mdi:harddisk'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
