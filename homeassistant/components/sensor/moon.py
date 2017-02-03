@@ -23,13 +23,6 @@ DEFAULT_NAME = 'Moon'
 
 ICON = 'mdi:brightness-3'
 
-MOON_PHASES = {
-    0: 'New moon',
-    7: 'First quarter',
-    14: 'Full moon',
-    21: 'Last quarter',
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
