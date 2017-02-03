@@ -312,6 +312,9 @@ liffylights==0.9.4
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.2
 
+# homeassistant.components.media_player.liveboxplaytv
+liveboxplaytv==1.4.7
+
 # homeassistant.components.notify.matrix
 matrix-client==0.0.5
 
