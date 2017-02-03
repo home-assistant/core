@@ -7,6 +7,7 @@ https://home-assistant.io/components/media_player.liveboxplaytv/
 import logging
 from datetime import timedelta
 
+import requests
 import voluptuous as vol
 
 import homeassistant.util as util
@@ -73,7 +74,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data."""
-        import requests
         try:
             self._state = self.refresh_state()
             # Update current channel
