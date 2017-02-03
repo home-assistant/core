@@ -328,10 +328,9 @@ def date(value):
     date_val = dt_util.parse_date(value)
 
     if date_val is None:
-        raise vol.Invalid('Invalid time specified: {}'.format(value))
+        raise vol.Invalid('Invalid date specified: {}'.format(value))
 
     return date_val
-
 
 def time_zone(value):
     """Validate timezone."""
