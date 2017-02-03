@@ -243,10 +243,11 @@ class IPWebcam(object):
     @asyncio.coroutine
     def async_update(self):
         """Fetch the latest data from IP Webcam."""
-        self.status_data = self._request('/status.json')
+        self.status_data = yield from self._request('/status.json')
 
         utime = int(dt_util.as_timestamp(self._sensor_updated_at) * 1000)
-        self.sensor_data = self._request('/sensors.json?from={}'.format(utime))
+        sensor_url = '/sensors.json?from={}'
+        self.sensor_data = yield from self._request(sensor_url.format(utime))
         self._sensor_updated_at = datetime.now()
 
     @property
@@ -259,8 +260,10 @@ class IPWebcam(object):
         """Return the state attributes."""
         state_attr = {}
         if self.status_data is not None:
-            state_attr[ATTR_VID_CONNS] = self.status_data.get('video_connections')
-            state_attr[ATTR_AUD_CONNS] = self.status_data.get('audio_connections')
+            vid_conns = 'video_connections'
+            aud_conns = 'audio_connections'
+            state_attr[ATTR_VID_CONNS] = self.status_data.get(vid_conns)
+            state_attr[ATTR_AUD_CONNS] = self.status_data.get(aud_conns)
             print('Self.status_data', self.status_data)
             for (key, val) in self.status_data.get('curvals', {}).items():
                 try:
@@ -297,58 +300,71 @@ class IPWebcam(object):
                 settings[key] = val
             return settings
 
-    def change_setting(self, key, val):
+    @asyncio.coroutine
+    def async_change_setting(self, key, val):
         """Change a setting."""
         if isinstance(val, bool):
             payload = 'on' if val else 'off'
         else:
             payload = val
-        return self._request('/settings/{}?set={}'.format(key, payload))
+        data = yield from self._request('/settings/{}?set={}'.format(key,
+                                                                     payload))
+        return data
 
     def torch(self, activate=True):
         """Enable/disable the torch."""
         path = '/enabletorch' if activate else '/disabletorch'
-        return self._request(path)
+        data = yield from self._request(path)
+        return data
 
     def focus(self, activate=True):
         """Enable/disable camera focus."""
         path = '/focus' if activate else '/nofocus'
-        return self._request(path)
+        data = yield from self._request(path)
+        return data
 
     def record(self, record=True, tag=None):
         """Enable/disable recording."""
         path = '/startvideo?force=1' if record else '/stopvideo?force=1'
         if record and tag is not None:
             path = '/startvideo?force=1&tag={}'.format(quote(tag))
-        return self._request(path)
+        data = yield from self._request(path)
+        return data
 
     def set_front_facing_camera(self, activate=True):
         """Enable/disable the front-facing camera."""
-        return self.change_setting('ffc', activate)
+        data = yield from self.async_change_setting('ffc', activate)
+        return data
 
     def set_night_vision(self, activate=True):
         """Enable/disable night vision."""
-        return self.change_setting('night_vision', activate)
+        data = yield from self.async_change_setting('night_vision', activate)
+        return data
 
     def set_overlay(self, activate=True):
         """Enable/disable the video overlay."""
-        return self.change_setting('overlay', activate)
+        data = yield from self.async_change_setting('overlay', activate)
+        return data
 
     def set_gps_active(self, activate=True):
         """Enable/disable GPS."""
-        return self.change_setting('gps_active', activate)
+        data = yield from self.async_change_setting('gps_active', activate)
+        return data
 
     def set_quality(self, quality: int=100):
         """Set the video quality."""
-        return self.change_setting('quality', quality)
+        data = yield from self.async_change_setting('quality', quality)
+        return data
 
     def set_orientation(self, orientation: str='landscape'):
         """Set the video orientation."""
         if orientation not in ALLOWED_ORIENTATIONS:
             _LOGGER.debug('%s is not a valid orientation', orientation)
             return False
-        return self.change_setting('orientation', orientation)
+        data = yield from self.async_change_setting('orientation', orientation)
+        return data
 
     def set_zoom(self, zoom: int):
         """Set the zoom level."""
-        return self._request('/settings/ptz?zoom={}'.format(zoom))
+        data = yield from self._request('/settings/ptz?zoom={}'.format(zoom))
+        return data
