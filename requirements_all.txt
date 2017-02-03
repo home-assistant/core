@@ -492,7 +492,7 @@ pynx584==0.4
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.6.0
+pyowm==2.6.1
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
