@@ -334,7 +334,7 @@ neurio==0.3.1
 oauth2client==3.0.0
 
 # homeassistant.components.sensor.openevse
-openevsewifi==0.2
+openevsewifi==0.4
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
