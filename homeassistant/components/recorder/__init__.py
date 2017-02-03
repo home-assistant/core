@@ -305,10 +305,10 @@ class Recorder(threading.Thread):
         models.Base.metadata.create_all(self.engine)
         session_factory = sessionmaker(bind=self.engine)
         Session = scoped_session(session_factory)
-        self._check_schema()
+        self._migrate_schema()
         self.db_ready.set()
 
-    def _check_schema(self):
+    def _migrate_schema(self):
         """Check if the schema needs to be upgraded."""
         import homeassistant.components.recorder.models as models
         schema_changes = models.SchemaChanges
@@ -328,12 +328,12 @@ class Recorder(threading.Thread):
             new_version = version + 1
             _LOGGER.info(
                 "Upgrading recorder db schema to version %d", new_version)
-            self._migrate_schema(new_version)
+            self._apply_update(new_version)
             self._commit(schema_changes(schema_version=new_version))
             _LOGGER.info(
                 "Upgraded recorder db schema to version %d", new_version)
 
-    def _migrate_schema(self, new_version):
+    def _apply_update(self, new_version):
         """Perform operations to bring schema up to date."""
         from sqlalchemy import Index, Table
         import homeassistant.components.recorder.models as models
