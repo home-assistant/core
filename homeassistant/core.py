@@ -331,14 +331,6 @@ class HomeAssistant(object):
         self.loop.create_task(self.async_stop())
 
     @asyncio.coroutine
-    def _notify(self, message):
-        data = {'message': message,
-                'title': 'Restarting',
-                'notification_id': '{}.restart'.format(DOMAIN)}
-        yield from self.services.async_call(
-            'persistent_notification', 'create', data)
-
-    @asyncio.coroutine
     def _async_check_config_and_restart(self):
         """Restart Home Assistant if config is valid.
 
@@ -354,24 +346,23 @@ class HomeAssistant(object):
         result = yield from proc.wait()
         if result:
             _LOGGER.error("check_config failed. Not restarting.")
-            content = str(stdout_data, 'utf-8')
-            # Print content to stdout so that it will have the colored
-            # pretty-printed error.
-            print(content)
+            content = re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
             # Put error cleaned from color codes in the error log so it
             # will be visible at the UI.
-            _LOGGER.error(re.sub(r'\033\[[^m]*m', '', content))
-            yield from self._notify('Restart failed')
+            _LOGGER.error(content)
+            yield from self.services.async_call(
+                'persistent_notification', 'create', {
+                    'message': 'Config error. See dev-info panel for details.',
+                    'title': 'Restarting',
+                    'notification_id': '{}.restart'.format(DOMAIN)})
             return
+
         self.exit_code = RESTART_EXIT_CODE
-        # This notification is unlikely to arrive before HA is stopped.
-        yield from self._notify('Config validated')
         yield from self.async_stop()
 
     @callback
     def _async_restart_handler(self, *args):
         """Restart Home Assistant."""
-        self.loop.create_task(self._notify('Checking config...'))
         self.loop.create_task(self._async_check_config_and_restart())
 
 
