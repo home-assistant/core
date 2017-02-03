@@ -203,6 +203,10 @@ http://github.com/technicalpickles/python-nest/archive/e6c9d56a8df455d4d77463898
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
 
+# homeassistant.components.media_player.webostv
+# homeassistant.components.notify.webostv
+https://github.com/TheRealLink/pylgtv/archive/v0.1.3.zip#pylgtv==0.1.3
+
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
@@ -246,10 +250,6 @@ https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a8
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
 https://github.com/nkgilley/python-join-api/archive/3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1
-
-# homeassistant.components.media_player.webostv
-# homeassistant.components.notify.webostv
-https://github.com/pschmitt/pylgtv/archive/v0.1.3.zip#pylgtv==0.1.3
 
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
