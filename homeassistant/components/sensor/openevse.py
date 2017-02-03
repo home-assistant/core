@@ -18,7 +18,7 @@ from homeassistant.const import CONF_MONITORED_VARIABLES
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['openevsewifi==0.2']
+REQUIREMENTS = ['openevsewifi==0.4']
 SENSOR_TYPES = {
     'status': ['Charging Status', None],
     'charge_time': ['Charge Time Elapsed', 'minutes'],
@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the OpenEVSE sensor."""
-    from openevsewifi import openevsewifi
+    import openevsewifi
 
     host = config.get(CONF_HOST)
     monitored_variables = config.get(CONF_MONITORED_VARIABLES)
