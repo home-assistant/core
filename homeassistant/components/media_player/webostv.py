@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     customize = config.get(CONF_CUSTOMIZE)
-    config = config.get(CONF_FILENAME)
+    config = hass.config.path(config.get(CONF_FILENAME))
     setup_tv(host, mac, name, customize, config, hass, add_devices)
 
 
