@@ -39,7 +39,7 @@ aiohttp_cors==0.5.0
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
-amcrest==1.1.3
+amcrest==1.1.4
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -319,7 +319,7 @@ messagebird==1.2.0
 mficlient==0.3.0
 
 # homeassistant.components.sensor.miflora
-miflora==0.1.14
+miflora==0.1.15
 
 # homeassistant.components.sensor.usps
 myusps==1.0.2
@@ -332,6 +332,9 @@ neurio==0.3.1
 
 # homeassistant.components.google
 oauth2client==3.0.0
+
+# homeassistant.components.sensor.openevse
+openevsewifi==0.4
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
@@ -384,7 +387,7 @@ pushbullet.py==0.10.0
 pushetta==1.0.15
 
 # homeassistant.components.sensor.waqi
-pwaqi==1.3
+pwaqi==1.4
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
@@ -396,7 +399,7 @@ pyCEC==0.4.12
 pyHS100==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.15.0
+pyRFXtrx==0.16.1
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -412,7 +415,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.7.6
+pychromecast==0.8.0
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
@@ -444,7 +447,7 @@ pyharmony==1.0.12
 pyhik==0.0.7
 
 # homeassistant.components.homematic
-pyhomematic==0.1.20
+pyhomematic==0.1.21
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
@@ -469,6 +472,9 @@ pynetgear==0.3.3
 
 # homeassistant.components.switch.netio
 pynetio==0.1.6
+
+# homeassistant.components.lock.nuki
+pynuki==1.2
 
 # homeassistant.components.sensor.nut
 pynut2==2.1.2
@@ -498,7 +504,7 @@ pysnmp==4.3.2
 python-digitalocean==1.10.1
 
 # homeassistant.components.climate.eq3btsmart
-# python-eq3bt==0.1.4
+# python-eq3bt==0.1.5
 
 # homeassistant.components.sensor.darksky
 python-forecastio==1.3.5
@@ -534,7 +540,7 @@ python-twitch==1.3.0
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.0.0
+python-wink==1.1.0
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -554,14 +560,17 @@ pywebpush==0.6.1
 # homeassistant.components.wemo
 pywemo==0.4.11
 
-# homeassistant.components.light.yeelight
-pyyeelight==1.0-beta
-
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
+# homeassistant.components.sensor.qnap
+qnapstats==0.2.1
+
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
+
+# homeassistant.components.rflink
+rflink==0.0.24
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
@@ -588,7 +597,7 @@ sense-hat==2.2.0
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.notify.slack
-slacker==0.9.30
+slacker==0.9.40
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
@@ -620,7 +629,7 @@ steamodd==4.21
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.1.13
+tellduslive==0.3.0
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.1
@@ -685,8 +694,11 @@ yahoo-finance==1.4.0
 # homeassistant.components.sensor.yweather
 yahooweather==0.8
 
+# homeassistant.components.light.yeelight
+yeelight==0.2.1
+
 # homeassistant.components.light.zengge
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.17.6
+zeroconf==0.17.7

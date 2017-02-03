@@ -1,4 +1,5 @@
 """The tests for the Universal Media player platform."""
+import asyncio
 from copy import copy
 import unittest
 
@@ -9,6 +10,7 @@ import homeassistant.components.input_slider as input_slider
 import homeassistant.components.input_select as input_select
 import homeassistant.components.media_player as media_player
 import homeassistant.components.media_player.universal as universal
+from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import mock_service, get_test_home_assistant
 
@@ -256,15 +258,20 @@ class TestMediaPlayer(unittest.TestCase):
         bad_config = {'platform': 'universal'}
         entities = []
 
+        @asyncio.coroutine
         def add_devices(new_entities):
             """Add devices to list."""
             for dev in new_entities:
                 entities.append(dev)
 
-        universal.setup_platform(self.hass, bad_config, add_devices)
+        run_coroutine_threadsafe(
+            universal.async_setup_platform(self.hass, bad_config, add_devices),
+            self.hass.loop).result()
         self.assertEqual(0, len(entities))
 
-        universal.setup_platform(self.hass, config, add_devices)
+        run_coroutine_threadsafe(
+            universal.async_setup_platform(self.hass, config, add_devices),
+            self.hass.loop).result()
         self.assertEqual(1, len(entities))
         self.assertEqual('test', entities[0].name)
 
@@ -305,25 +312,25 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertEqual(None, ump._child_state)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(self.mock_mp_1.entity_id,
                          ump._child_state.entity_id)
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(self.mock_mp_1.entity_id,
                          ump._child_state.entity_id)
 
         self.mock_mp_1._state = STATE_OFF
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(self.mock_mp_2.entity_id,
                          ump._child_state.entity_id)
 
@@ -352,13 +359,13 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertTrue(ump.state, STATE_OFF)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(STATE_PLAYING, ump.state)
 
     def test_state_with_children_and_attrs(self):
@@ -368,21 +375,21 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertEqual(STATE_OFF, ump.state)
 
         self.hass.states.set(self.mock_state_switch_id, STATE_ON)
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(STATE_ON, ump.state)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(STATE_PLAYING, ump.state)
 
         self.hass.states.set(self.mock_state_switch_id, STATE_OFF)
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(STATE_OFF, ump.state)
 
     def test_volume_level(self):
@@ -392,18 +399,18 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertEqual(None, ump.volume_level)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(0, ump.volume_level)
 
         self.mock_mp_1._volume_level = 1
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(1, ump.volume_level)
 
     def test_media_image_url(self):
@@ -414,14 +421,14 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertEqual(None, ump.media_image_url)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1._media_image_url = TEST_URL
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         # mock_mp_1 will convert the url to the api proxy url. This test
         # ensures ump passes through the same url without an additional proxy.
         self.assertEqual(self.mock_mp_1.entity_picture, ump.entity_picture)
@@ -433,18 +440,18 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertFalse(ump.is_volume_muted)
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertFalse(ump.is_volume_muted)
 
         self.mock_mp_1._is_volume_muted = True
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertTrue(ump.is_volume_muted)
 
     def test_source_list_children_and_attr(self):
@@ -502,14 +509,14 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.assertEqual(0, ump.supported_media_commands)
 
         self.mock_mp_1._supported_media_commands = 512
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(512, ump.supported_media_commands)
 
     def test_supported_media_commands_children_and_cmds(self):
@@ -526,11 +533,11 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         check_flags = universal.SUPPORT_TURN_ON | universal.SUPPORT_TURN_OFF \
             | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE \
@@ -545,15 +552,17 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_1._state = STATE_OFF
         self.mock_mp_1.update_ha_state()
         self.mock_mp_2._state = STATE_OFF
         self.mock_mp_2.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        ump.turn_off()
+        run_coroutine_threadsafe(
+            ump.async_turn_off(),
+            self.hass.loop).result()
         self.assertEqual(0, len(self.mock_mp_1.service_calls['turn_off']))
         self.assertEqual(0, len(self.mock_mp_2.service_calls['turn_off']))
 
@@ -564,60 +573,90 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        ump.turn_off()
+        run_coroutine_threadsafe(
+            ump.async_turn_off(),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['turn_off']))
 
-        ump.turn_on()
+        run_coroutine_threadsafe(
+            ump.async_turn_on(),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['turn_on']))
 
-        ump.mute_volume(True)
+        run_coroutine_threadsafe(
+            ump.async_mute_volume(True),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['mute_volume']))
 
-        ump.set_volume_level(0.5)
+        run_coroutine_threadsafe(
+            ump.async_set_volume_level(0.5),
+            self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['set_volume_level']))
 
-        ump.media_play()
+        run_coroutine_threadsafe(
+            ump.async_media_play(),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['media_play']))
 
-        ump.media_pause()
+        run_coroutine_threadsafe(
+            ump.async_media_pause(),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['media_pause']))
 
-        ump.media_previous_track()
+        run_coroutine_threadsafe(
+            ump.async_media_previous_track(),
+            self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_previous_track']))
 
-        ump.media_next_track()
+        run_coroutine_threadsafe(
+            ump.async_media_next_track(),
+            self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_next_track']))
 
-        ump.media_seek(100)
+        run_coroutine_threadsafe(
+            ump.async_media_seek(100),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['media_seek']))
 
-        ump.play_media('movie', 'batman')
+        run_coroutine_threadsafe(
+            ump.async_play_media('movie', 'batman'),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['play_media']))
 
-        ump.volume_up()
+        run_coroutine_threadsafe(
+            ump.async_volume_up(),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['volume_up']))
 
-        ump.volume_down()
+        run_coroutine_threadsafe(
+            ump.async_volume_down(),
+            self.hass.loop).result()
         self.assertEqual(1, len(self.mock_mp_2.service_calls['volume_down']))
 
-        ump.media_play_pause()
+        run_coroutine_threadsafe(
+            ump.async_media_play_pause(),
+            self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['media_play_pause']))
 
-        ump.select_source('dvd')
+        run_coroutine_threadsafe(
+            ump.async_select_source('dvd'),
+            self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['select_source']))
 
-        ump.clear_playlist()
+        run_coroutine_threadsafe(
+            ump.async_clear_playlist(),
+            self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['clear_playlist']))
 
@@ -632,11 +671,11 @@ class TestMediaPlayer(unittest.TestCase):
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_2._state = STATE_PLAYING
         self.mock_mp_2.update_ha_state()
-        ump.update()
+        run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        ump.turn_off()
+        run_coroutine_threadsafe(ump.async_turn_off(), self.hass.loop).result()
         self.assertEqual(1, len(service))

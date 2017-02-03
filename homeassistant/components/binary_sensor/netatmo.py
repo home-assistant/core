@@ -26,8 +26,6 @@ WELCOME_SENSOR_TYPES = {
     "Someone known": "motion",
     "Someone unknown": "motion",
     "Motion": "motion",
-    "Tag Vibration": 'vibration',
-    "Tag Open": 'opening'
 }
 PRESENCE_SENSOR_TYPES = {
     "Outdoor motion": "motion",
@@ -35,11 +33,16 @@ PRESENCE_SENSOR_TYPES = {
     "Outdoor animal": "motion",
     "Outdoor vehicle": "motion"
 }
+TAG_SENSOR_TYPES = {
+    "Tag Vibration": 'vibration',
+    "Tag Open": 'opening'
+}
 
 CONF_HOME = 'home'
 CONF_CAMERAS = 'cameras'
 CONF_WELCOME_SENSORS = 'welcome_sensors'
 CONF_PRESENCE_SENSORS = 'presence_sensors'
+CONF_TAG_SENSORS = 'tag_sensors'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOME): cv.string,
@@ -78,6 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         CONF_WELCOME_SENSORS, WELCOME_SENSOR_TYPES)
     presence_sensors = config.get(
         CONF_PRESENCE_SENSORS, PRESENCE_SENSOR_TYPES)
+    tag_sensors = config.get(CONF_TAG_SENSORS, TAG_SENSOR_TYPES)
 
     for camera_name in data.get_camera_names():
         camera_type = data.get_camera_type(camera=camera_name, home=home)
@@ -103,13 +107,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                  variable)])
 
         for module_name in data.get_module_names(camera_name):
-            for variable in welcome_sensors:
-                if variable in ('Tag Vibration', 'Tag Open'):
-                    add_devices([NetatmoBinarySensor(data, camera_name,
-                                                     module_name, home,
-                                                     timeout, offset,
-                                                     camera_type,
-                                                     variable)])
+            for variable in tag_sensors:
+                camera_type = None
+                add_devices([NetatmoBinarySensor(data, camera_name,
+                                                 module_name, home,
+                                                 timeout, offset,
+                                                 camera_type,
+                                                 variable)])
 
 
 class NetatmoBinarySensor(BinarySensorDevice):
@@ -157,7 +161,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
         elif self._cameratype == "NOC":
             return PRESENCE_SENSOR_TYPES.get(self._sensor_name)
         else:
-            return None
+            return TAG_SENSOR_TYPES.get(self._sensor_name)
 
     @property
     def is_on(self):
@@ -184,8 +188,6 @@ class NetatmoBinarySensor(BinarySensorDevice):
                     self._data.camera_data.motionDetected(self._home,
                                                           self._camera_name,
                                                           self._timeout*60)
-            else:
-                return None
         elif self._cameratype == "NOC":
             if self._sensor_name == "Outdoor motion":
                 self._state =\
@@ -206,9 +208,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
                     self._data.camera_data.carDetected(self._home,
                                                        self._camera_name,
                                                        self._offset)
-            else:
-                return None
-        elif self._sensor_name == "Tag Vibration":
+        if self._sensor_name == "Tag Vibration":
             self._state =\
                 self._data.camera_data.moduleMotionDetected(self._home,
                                                             self._module_name,

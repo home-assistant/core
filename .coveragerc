@@ -116,9 +116,6 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
-    homeassistant/components/ffmpeg.py
-    homeassistant/components/*/ffmpeg.py
-
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
 
@@ -132,6 +129,7 @@ omit =
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
+    homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py
@@ -141,6 +139,7 @@ omit =
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
+    homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
@@ -210,6 +209,7 @@ omit =
     homeassistant/components/light/piglow.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/lock/nuki.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
@@ -325,11 +325,13 @@ omit =
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py
+    homeassistant/components/sensor/openevse.py
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pvoutput.py
+    homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py

@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for thermostat in target_thermostats:
             thermostat.set_fan_min_on_time(str(fan_min_on_time))
 
-            thermostat.update_ha_state(True)
+            thermostat.schedule_update_ha_state(True)
 
     def resume_program_set_service(service):
         """Resume the program on the target thermostats."""
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for thermostat in target_thermostats:
             thermostat.resume_program(resume_all)
 
-            thermostat.update_ha_state(True)
+            thermostat.schedule_update_ha_state(True)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -382,13 +382,3 @@ class Thermostat(ClimateDevice):
             return default
         else:
             return 'nextTransition'
-
-    # Sleep mode isn't used in UI yet:
-
-    # def turn_sleep_mode_on(self):
-    #     """ Turns sleep mode on. """
-    #     self.data.ecobee.set_climate_hold(self.thermostat_index, "sleep")
-
-    # def turn_sleep_mode_off(self):
-    #     """ Turns sleep mode off. """
-    #     self.data.ecobee.resume_program(self.thermostat_index)

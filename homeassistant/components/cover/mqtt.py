@@ -151,7 +151,7 @@ class MqttCover(CoverDevice):
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Move the cover down."""
@@ -160,7 +160,7 @@ class MqttCover(CoverDevice):
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = True
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the device."""

@@ -99,8 +99,12 @@ homematic:
 
     fields:
       entity_id:
-        description: Name(s) of entities to set value
-        example: 'homematic.my_variable'
+        description: Name(s) of homematic central to set value
+        example: 'homematic.ccu2'
+
+      name:
+        description: Name of the varaible to set
+        example: 'testvariable'
 
       value:
         description: New value
@@ -207,6 +211,31 @@ verisure:
         description: The serial number of the smartcam you want to capture an image from.
         example: '2DEU AT5Z'
 
+alert:
+  turn_off:
+    description: Silence alert's notifications.
+
+    fields:
+      entity_id:
+        description: Name of the alert to silence.
+        example: 'alert.garage_door_open'
+
+  turn_on:
+    description: Reset alert's notifications.
+
+    fields:
+      entity_id:
+        description: Name of the alert to reset.
+        example: 'alert.garage_door_open'
+
+  toggle:
+    description: Toggle alert's notifications.
+
+    fields:
+      entity_id:
+        description: Name of the alert to toggle.
+        example: 'alert.garage_door_open'
+
 hdmi_cec:
   send_command:
     description: Sends CEC command into HDMI CEC capable adapter.
@@ -261,3 +290,25 @@ hdmi_cec:
 
   standby:
     description: Standby all devices which supports it.
+
+ffmpeg:
+  start:
+    description: Send a start command to a ffmpeg based sensor.
+    fields:
+      entity_id:
+        description: Name(s) of entites that will start. Platform dependent.
+        example: 'binary_sensor.ffmpeg_noise'
+
+  stop:
+    description: Send a stop command to a ffmpeg based sensor.
+    fields:
+      entity_id:
+        description: Name(s) of entites that will stop. Platform dependent.
+        example: 'binary_sensor.ffmpeg_noise'
+
+  restart:
+    description: Send a restart command to a ffmpeg based sensor.
+    fields:
+      entity_id:
+        description: Name(s) of entites that will restart. Platform dependent.
+        example: 'binary_sensor.ffmpeg_noise'

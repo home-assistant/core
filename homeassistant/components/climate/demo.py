@@ -135,27 +135,27 @@ class DemoClimate(ClimateDevice):
            kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_humidity(self, humidity):
         """Set new target temperature."""
         self._target_humidity = humidity
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_swing_mode(self, swing_mode):
         """Set new target temperature."""
         self._current_swing_mode = swing_mode
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
         self._current_fan_mode = fan
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self._current_operation = operation_mode
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def current_swing_mode(self):
@@ -170,24 +170,24 @@ class DemoClimate(ClimateDevice):
     def turn_away_mode_on(self):
         """Turn away mode on."""
         self._away = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_hold_mode(self, hold):
         """Update hold mode on."""
         self._hold = hold
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
         """Turn away auxillary heater on."""
         self._aux = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
         self._aux = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

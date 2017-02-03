@@ -59,11 +59,9 @@ DEFAULT_ALLOW_HUE_GROUPS = True
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_ALLOW_UNREACHABLE,
-                 default=DEFAULT_ALLOW_UNREACHABLE): cv.boolean,
-    vol.Optional(CONF_FILENAME, default=PHUE_CONFIG_FILE): cv.string,
-    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE,
-                 default=DEFAULT_ALLOW_IN_EMULATED_HUE): cv.boolean,
+    vol.Optional(CONF_ALLOW_UNREACHABLE): cv.boolean,
+    vol.Optional(CONF_FILENAME): cv.string,
+    vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
 })
@@ -98,9 +96,11 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Hue lights."""
     # Default needed in case of discovery
-    filename = config.get(CONF_FILENAME)
-    allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE)
-    allow_in_emulated_hue = config.get(CONF_ALLOW_IN_EMULATED_HUE)
+    filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
+    allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE,
+                                   DEFAULT_ALLOW_UNREACHABLE)
+    allow_in_emulated_hue = config.get(CONF_ALLOW_IN_EMULATED_HUE,
+                                       DEFAULT_ALLOW_IN_EMULATED_HUE)
     allow_hue_groups = config.get(CONF_ALLOW_HUE_GROUPS)
 
     if discovery_info is not None:
@@ -200,7 +200,8 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         for light_id, info in api_lights.items():
             if light_id not in lights:
-                lights[light_id] = HueLight(int(light_id), info,
+                lights[light_id] = HueLight(hass,
+                                            int(light_id), info,
                                             bridge, update_lights,
                                             bridge_type, allow_unreachable,
                                             allow_in_emulated_hue)
@@ -218,6 +219,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
             if lightgroup_id not in lightgroups:
                 lightgroups[lightgroup_id] = HueLight(
+                    hass,
                     int(lightgroup_id), info, bridge, update_lights,
                     bridge_type, allow_unreachable, allow_in_emulated_hue,
                     True)
@@ -280,10 +282,11 @@ def request_configuration(host, hass, add_devices, filename,
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, light_id, info, bridge, update_lights,
+    def __init__(self, hass, light_id, info, bridge, update_lights,
                  bridge_type, allow_unreachable, allow_in_emulated_hue,
                  is_group=False):
         """Initialize the light."""
+        self.hass = hass
         self.light_id = light_id
         self.info = info
         self.bridge = bridge

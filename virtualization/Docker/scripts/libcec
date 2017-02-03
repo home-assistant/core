@@ -1,5 +1,5 @@
 #!/bin/sh
-# Sets up and builds libcec to be used with Home Assistant.
+# Sets up libcec.
 # Dependencies that need to be installed:
 # apt-get install cmake libudev-dev libxrandr-dev swig
 
@@ -11,7 +11,6 @@ PYTHON_LIBDIR=$(python -c 'from distutils import sysconfig; print(sysconfig.get_
 PYTHON_LDLIBRARY=$(python -c 'from distutils import sysconfig; print(sysconfig.get_config_var("LDLIBRARY"))')
 PYTHON_LIBRARY="${PYTHON_LIBDIR}/${PYTHON_LDLIBRARY}"
 PYTHON_INCLUDE_DIR=$(python -c 'from distutils import sysconfig; print(sysconfig.get_python_inc())')
-PYTHON_SITE_DIR=$(python -c 'from distutils import sysconfig; print(sysconfig.get_python_lib(prefix=""))')
 
 cd "$(dirname "$0")/.."
 mkdir -p build && cd build
@@ -34,12 +33,6 @@ git submodule update --init src/platform
     make install
 )
 
-# Fix upstream install hardcoded Debian path.
-# See: https://github.com/Pulse-Eight/libcec/issues/288
-sed -i \
-    -e '/DESTINATION/s:lib/python${PYTHON_VERSION}/dist-packages:${PYTHON_SITE_DIR}:' \
-    src/libcec/cmake/CheckPlatformSupport.cmake
-
 # Build libcec
 (
     mkdir -p build && cd build
@@ -47,7 +40,6 @@ sed -i \
     cmake \
         -DPYTHON_LIBRARY="${PYTHON_LIBRARY}" \
         -DPYTHON_INCLUDE_DIR="${PYTHON_INCLUDE_DIR}" \
-        -DPYTHON_SITE_DIR="${PYTHON_SITE_DIR}" \
         ..
     make
     make install
