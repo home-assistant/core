@@ -3,6 +3,7 @@
 import json
 from datetime import datetime, timedelta
 import unittest
+from unittest.mock import patch, call
 
 import pytest
 from homeassistant.core import callback
@@ -189,6 +190,29 @@ class TestRecorder(unittest.TestCase):
         # we should have all of our states still
         self.assertEqual(states.count(), 5)
         self.assertEqual(events.count(), 5)
+
+    def test_schema_no_recheck(self):
+        """Test that schema is not double-checked when up-to-date."""
+        with patch.object(recorder._INSTANCE, '_apply_update') as update, \
+                patch.object(recorder._INSTANCE, '_inspect_schema_version') \
+                as inspect:
+            recorder._INSTANCE._migrate_schema()
+            self.assertEqual(update.call_count, 0)
+            self.assertEqual(inspect.call_count, 0)
+
+    def test_invalid_update(self):
+        """Test that an invalid new version raises an exception."""
+        with self.assertRaises(ValueError):
+            recorder._INSTANCE._apply_update(-1)
+
+    def test_schema_update_calls(self):
+        """Test that schema migrations occurr in correct order."""
+        test_version = recorder.models.SchemaChanges(schema_version=0)
+        self.session.add(test_version)
+        with patch.object(recorder._INSTANCE, '_apply_update') as update:
+            recorder._INSTANCE._migrate_schema()
+            update.assert_has_calls([call(version+1) for version in range(
+                0, recorder.models.SCHEMA_VERSION)])
 
 
 @pytest.fixture
