@@ -191,18 +191,22 @@ class Thermostat(ClimateDevice):
                 int(event['endDate'][0:4])-int(event['startDate'][0:4]) <= 1)
                or event['type'] == 'autoAway'
                for event in events):
+            # away hold is auto away or a temporary hold from away climate
             hold = 'away'
         elif any(event['holdClimateRef'] == 'away' and
                  int(event['endDate'][0:4])-int(event['startDate'][0:4]) > 1
                  for event in events):
+            # a permanent away is not considered a hold, but away_mode
             hold = None
         elif any(event['holdClimateRef'] == 'home' or
                  event['type'] == 'autoHome'
                  for event in events):
+            # home mode is auto home or any home hold
             hold = 'home'
         elif any(event['type'] == 'hold' and event['running']
                  for event in events):
             hold = 'temp'
+            # temperature hold is any other hold not based on climate
         else:
             hold = None
         return hold
@@ -290,6 +294,7 @@ class Thermostat(ClimateDevice):
         hold = self.current_hold_mode
 
         if hold == hold_mode:
+            # no change, so no action required
             return
         elif hold_mode == 'away':
             self.data.ecobee.set_climate_hold(self.thermostat_index,
@@ -372,7 +377,8 @@ class Thermostat(ClimateDevice):
         default = self.thermostat['settings']['holdAction']
         if default == 'nextTransition':
             return default
-        elif default == 'indefinite':
-            return default
+        # add further conditions if other hold durations should be
+        # supported; note that this should not include 'indefinite'
+        # as an indefinite away hold is interpreted as away_mode
         else:
             return 'nextTransition'
