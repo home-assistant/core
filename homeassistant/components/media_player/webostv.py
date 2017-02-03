@@ -108,7 +108,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
             # Not registered, request configuration.
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
             request_configuration(
-                host, mac, name, customize, hass, add_devices)
+                host, mac, name, customize, config, hass, add_devices)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -121,7 +121,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
 
 
 def request_configuration(
-        host, mac, name, customize, hass, add_devices):
+        host, mac, name, customize, config, hass, add_devices):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -134,7 +134,7 @@ def request_configuration(
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_tv(host, mac, name, customize, hass, add_devices)
+        setup_tv(host, mac, name, customize, config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, name, lgtv_configuration_callback,
