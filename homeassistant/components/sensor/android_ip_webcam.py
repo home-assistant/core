@@ -66,7 +66,8 @@ class IPWebcamSensor(Entity):
     def update(self):
         """Retrieve latest state."""
         self._device.async_update()
-        if self._device.status_data is not None and self._device.sensor_data is not None:
+        if (self._device.status_data is not None and
+                self._device.sensor_data is not None):
             if self.variable in ('audio_connections', 'video_connections'):
                 self._state = self._device.status_data.get(self.variable)
                 self._unit = 'Connections'
