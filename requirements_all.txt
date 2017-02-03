@@ -547,7 +547,7 @@ python-twitch==1.3.0
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.1.0
+python-wink==1.1.1
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
