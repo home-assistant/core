@@ -50,10 +50,11 @@ class IPWebcamBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        self._device.update()
-        container = self._device.sensor_data.get(self.variable)
-        data_point = container.get('data', [[0, [0.0]]])
-        self._state = data_point[0][-1][0] == 1.0
+        self._device.async_update()
+        if self._device.status_data is not None:
+            container = self._device.sensor_data.get(self.variable)
+            data_point = container.get('data', [[0, [0.0]]])
+            self._state = data_point[0][-1][0] == 1.0
 
     @property
     def icon(self):

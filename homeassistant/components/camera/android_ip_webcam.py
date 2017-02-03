@@ -6,12 +6,9 @@ https://home-assistant.io/components/camera.android_ip_webcam/
 """
 import asyncio
 import logging
-from contextlib import closing
 
 import aiohttp
 import async_timeout
-import requests
-from requests.auth import HTTPBasicAuth
 
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 from homeassistant.helpers.aiohttp_client import (

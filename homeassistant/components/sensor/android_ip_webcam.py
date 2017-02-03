@@ -65,16 +65,17 @@ class IPWebcamSensor(Entity):
 
     def update(self):
         """Retrieve latest state."""
-        self._device.update()
-        if self.variable in ('audio_connections', 'video_connections'):
-            self._state = self._device.status_data.get(self.variable)
-            self._unit = 'Connections'
-        else:
-            container = self._device.sensor_data.get(self.variable)
-            self._unit = container.get('unit', self._unit)
-            data_point = container.get('data', [[0, [0.0]]])
-            if data_point and data_point[0]:
-                self._state = data_point[0][-1][0]
+        self._device.async_update()
+        if self._device.status_data is not None and self._device.sensor_data is not None:
+            if self.variable in ('audio_connections', 'video_connections'):
+                self._state = self._device.status_data.get(self.variable)
+                self._unit = 'Connections'
+            else:
+                container = self._device.sensor_data.get(self.variable)
+                self._unit = container.get('unit', self._unit)
+                data_point = container.get('data', [[0, [0.0]]])
+                if data_point and data_point[0]:
+                    self._state = data_point[0][-1][0]
 
     @property
     def device_state_attributes(self):
@@ -84,7 +85,7 @@ class IPWebcamSensor(Entity):
     @property
     def icon(self):
         """Return the icon for the sensor."""
-        if self.variable == 'battery_level':
+        if self.variable == 'battery_level' and self._state is not None:
             rounded_level = round(int(self._state), -1)
             returning_icon = 'mdi:battery'
             if rounded_level < 10:

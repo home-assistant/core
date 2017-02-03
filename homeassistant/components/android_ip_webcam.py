@@ -4,21 +4,23 @@ Support for IP Webcam, an Android app that acts as a full-featured webcam.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/android_ip_webcam/
 """
+import asyncio
 import logging
 from datetime import datetime, timedelta
 import xml.etree.ElementTree as ET
 from urllib.parse import quote
-import requests
+import aiohttp
+import async_timeout
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT,
                                  CONF_USERNAME, CONF_PASSWORD, CONF_SENSORS,
                                  CONF_SWITCHES)
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -144,8 +146,6 @@ CONFIG_SCHEMA = vol.Schema({
 ALLOWED_ORIENTATIONS = ['landscape', 'upsidedown', 'portrait',
                         'upsidedown_portrait']
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
-
 
 def setup(hass, config):
     """Setup the IP Webcam component."""
@@ -154,7 +154,7 @@ def setup(hass, config):
     ip_webcam = hass.data.get(DATA_IP_WEBCAM)
     if ip_webcam is None:
         hass.data[DATA_IP_WEBCAM] = {}
-    hass.data[DATA_IP_WEBCAM][host] = IPWebcam(conf)
+    hass.data[DATA_IP_WEBCAM][host] = IPWebcam(hass, conf)
 
     if conf.get(CONF_MOTION_BINARY_SENSOR, False) is True:
         discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
@@ -173,8 +173,10 @@ def setup(hass, config):
 class IPWebcam(object):
     """The Android device running IP Webcam."""
 
-    def __init__(self, config):
+    def __init__(self, hass, config):
         """Initialize the data oject."""
+        self.hass = hass
+        self.websession = async_get_clientsession(hass)
         self._config = config
         self._name = self._config.get(CONF_NAME)
         self.host = self._config.get(CONF_HOST)
@@ -184,41 +186,62 @@ class IPWebcam(object):
         self.status_data = None
         self.sensor_data = None
         self._sensor_updated_at = (datetime.now() - timedelta(seconds=5))
-        self.update()
+        self.async_update()
 
     @property
     def base_url(self):
         """Return the base url for endpoints."""
         return 'http://{}:{}'.format(self.host, self.port)
 
+    @asyncio.coroutine
     def _request(self, path):
         """Make the actual request and return the parsed response."""
         url = '{}{}'.format(self.base_url, path)
 
-        auth_tuple = ()
-
-        if self.username is not None and self.password is not None:
-            auth_tuple = (self.username, self.password)
+        auth = None if self.username is None else aiohttp.BasicAuth(
+            self.username, self.password)
 
         resp = 'json' if '.json' in path else 'xml'
 
         if '/startvideo' in path or '/stopvideo' in path:
             resp = 'json'
 
-        try:
-            response = requests.get(url, timeout=DEFAULT_TIMEOUT,
-                                    auth=auth_tuple)
-            if resp == 'xml':
-                return ET.fromstring(response.text)
-            elif resp == 'json':
-                return response.json()
-        except requests.exceptions.HTTPError:
-            return {'device_state': 'error'}
-        except requests.exceptions.RequestException:
-            return {'device_state': 'offline'}
+        print('GET', url, 'AUTH', auth, 'RESP', resp)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+        response = None
+
+        data = None
+
+        try:
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                response = yield from self.websession.get(url, auth=auth)
+
+                if response.status == 200:
+                    if resp == 'xml':
+                        data = yield from response.text()
+                    elif resp == 'json':
+                        data = yield from response.json()
+        except (asyncio.TimeoutError,
+                aiohttp.errors.ClientError,
+                aiohttp.errors.ClientDisconnectedError) as error:
+            _LOGGER.error('Failed to communicate with IP Webcam: %s',
+                          type(error))
+            return False
+        finally:
+            if response is not None:
+                yield from response.release()
+
+        try:
+            if resp == 'xml':
+                return ET.fromstring(data)
+            else:
+                return data
+        except AttributeError:
+            _LOGGER.error("Received invalid response: %s", data)
+            return False
+
+    @asyncio.coroutine
+    def async_update(self):
         """Fetch the latest data from IP Webcam."""
         self.status_data = self._request('/status.json')
 
@@ -235,19 +258,21 @@ class IPWebcam(object):
     def device_state_attributes(self):
         """Return the state attributes."""
         state_attr = {}
-        state_attr[ATTR_VID_CONNS] = self.status_data.get('video_connections')
-        state_attr[ATTR_AUD_CONNS] = self.status_data.get('audio_connections')
-        for (key, val) in self.status_data.get('curvals').items():
-            try:
-                val = float(val)
-            except ValueError:
-                val = val
+        if self.status_data is not None:
+            state_attr[ATTR_VID_CONNS] = self.status_data.get('video_connections')
+            state_attr[ATTR_AUD_CONNS] = self.status_data.get('audio_connections')
+            print('Self.status_data', self.status_data)
+            for (key, val) in self.status_data.get('curvals', {}).items():
+                try:
+                    val = float(val)
+                except ValueError:
+                    val = val
 
-            if val == 'on' or val == 'off':
-                val = (val == 'on')
+                if val == 'on' or val == 'off':
+                    val = (val == 'on')
 
-            state_attr[KEY_MAP.get(key, key)] = val
-        return state_attr
+                state_attr[KEY_MAP.get(key, key)] = val
+            return state_attr
 
     @property
     def enabled_sensors(self):
@@ -258,17 +283,19 @@ class IPWebcam(object):
     def current_settings(self):
         """Return a dictionary of the current settings."""
         settings = {}
-        for (key, val) in self.status_data.get('curvals').items():
-            try:
-                val = float(val)
-            except ValueError:
-                val = val
+        if self.status_data is not None:
+            print('Self.status_data', self.status_data)
+            for (key, val) in self.status_data.get('curvals', {}).items():
+                try:
+                    val = float(val)
+                except ValueError:
+                    val = val
 
-            if val == 'on' or val == 'off':
-                val = (val == 'on')
+                if val == 'on' or val == 'off':
+                    val = (val == 'on')
 
-            settings[key] = val
-        return settings
+                settings[key] = val
+            return settings
 
     def change_setting(self, key, val):
         """Change a setting."""

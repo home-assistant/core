@@ -53,8 +53,9 @@ class IPWebcamSettingsSwitch(SwitchDevice):
 
     def update(self):
         """Get the updated status of the switch."""
-        self._device.update()
-        self._state = self._device.current_settings.get(self._setting)
+        self._device.async_update()
+        if self._device.status_data is not None:
+            self._state = self._device.current_settings.get(self._setting)
 
     @property
     def is_on(self):
