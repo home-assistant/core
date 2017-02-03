@@ -32,6 +32,7 @@ SENSOR_TYPES = {
     'weather': ['Condition', None],
     'temperature': ['Temperature', None],
     'wind_speed': ['Wind speed', 'm/s'],
+    'wind_bearing': ['Wind bearing', '°'],
     'humidity': ['Humidity', '%'],
     'pressure': ['Pressure', 'mbar'],
     'clouds': ['Cloud coverage', '%'],
@@ -64,9 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     owm = OWM(config.get(CONF_API_KEY))
 
     if not owm:
-        _LOGGER.error(
-            "Connection error "
-            "Please check your settings for OpenWeatherMap")
+        _LOGGER.error("Unable to connect to OpenWeatherMap")
         return False
 
     data = WeatherData(owm, forecast, hass.config.latitude,
@@ -130,8 +129,7 @@ class OpenWeatherMapSensor(Entity):
             self._state = data.get_detailed_status()
         elif self.type == 'temperature':
             if self.temp_unit == TEMP_CELSIUS:
-                self._state = round(data.get_temperature('celsius')['temp'],
-                                    1)
+                self._state = round(data.get_temperature('celsius')['temp'], 1)
             elif self.temp_unit == TEMP_FAHRENHEIT:
                 self._state = round(data.get_temperature('fahrenheit')['temp'],
                                     1)
@@ -139,6 +137,8 @@ class OpenWeatherMapSensor(Entity):
                 self._state = round(data.get_temperature()['temp'], 1)
         elif self.type == 'wind_speed':
             self._state = round(data.get_wind()['speed'], 1)
+        elif self.type == 'wind_bearing':
+            self._state = round(data.get_wind()['deg'], 1)
         elif self.type == 'humidity':
             self._state = round(data.get_humidity(), 1)
         elif self.type == 'pressure':
