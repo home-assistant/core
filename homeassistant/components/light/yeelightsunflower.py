@@ -8,15 +8,16 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import (Light,
-                                            ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-                                            ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-                                            ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP,
+                                            ATTR_RGB_COLOR,
+                                            ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS,
+                                            SUPPORT_RGB_COLOR,
                                             PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['yeelightsunflower>=0.0.1']
-SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_COLOR_TEMP)
+SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,10 +71,9 @@ class SunflowerBulb(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 0-255).
-        Note that Yeelight Sunflower's brightness is 0-100
+        """Brightness of the light (an integer in the range 1-255).
         """
-        return self._light.brightness / 100 * 255
+        return self._light.brightness
 
     @property
     def rgb_color(self):
@@ -87,14 +87,18 @@ class SunflowerBulb(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        if not kwargs:
-            self._light.turn_on()
-        elif ATTR_RGB_COLOR in kwargs:
+        # self._light.brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+        self._light.turn_on()
+
+        if ATTR_RGB_COLOR in kwargs:
             rgb = kwargs[ATTR_RGB_COLOR]
             self._light.set_rgb_color(rgb[0], rgb[1], rgb[2])
-        elif ATTR_BRIGHTNESS in kwargs:
-            bright = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            # self._rgb = [rgb[0], rgb[1], rgb[2]]
+
+        if ATTR_BRIGHTNESS in kwargs:
+            bright = int(kwargs[ATTR_BRIGHTNESS] * 100 / 255)
             self._light.set_brightness(bright)
+            # self._bright = kwargs[ATTR_BRIGHTNESS]
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
