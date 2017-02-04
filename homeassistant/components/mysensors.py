@@ -81,15 +81,35 @@ def has_all_unique_files(value):
     return value
 
 
+def is_persistence_file(value):
+    """Validate that persistence file path ends in either .pickle or .json."""
+    if value.endswith(('.json', '.pickle')):
+        return value
+    else:
+        raise vol.Invalid(
+            '{} does not end in either `.json` or `.pickle`'.format(value))
+
+
+def is_serial_port(value):
+    """Validate that value is a serial port."""
+    import serial.tools.list_ports as list_ports
+    ports = [port[0] for port in list_ports.comports()]
+    if value in ports:
+        return value
+    else:
+        raise vol.Invalid(
+            '{} is not a serial port'.format(value))
+
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_GATEWAYS): vol.All(
             cv.ensure_list, has_all_unique_files,
             [{
                 vol.Required(CONF_DEVICE):
-                    vol.Any(cv.isdevice, MQTT_COMPONENT, is_socket_address),
+                    vol.Any(MQTT_COMPONENT, is_socket_address, is_serial_port),
                 vol.Optional(CONF_PERSISTENCE_FILE):
-                    vol.All(cv.string, has_parent_dir),
+                    vol.All(cv.string, is_persistence_file, has_parent_dir),
                 vol.Optional(
                     CONF_BAUD_RATE,
                     default=DEFAULT_BAUD_RATE): cv.positive_int,
