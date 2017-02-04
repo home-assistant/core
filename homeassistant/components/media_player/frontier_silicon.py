@@ -244,3 +244,4 @@ class FSAPIDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         self.get_fs().mode = source
+
