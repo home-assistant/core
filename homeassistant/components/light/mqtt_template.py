@@ -284,3 +284,16 @@ class MqttTemplate(Light):
 
         if self._optimistic:
             self.schedule_update_ha_state()
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        features = 0
+        if self._brightness is not None:
+            features = features | SUPPORT_BRIGHTNESS
+        if self._rgb is not None:
+            features = features | SUPPORT_RGB_COLOR
+        if self._effect_list is not None:
+            features = features | SUPPORT_EFFECT
+
+        return features
