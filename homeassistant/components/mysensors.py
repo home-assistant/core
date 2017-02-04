@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.mysensors/
 import logging
 import os
 import socket
+import sys
 
 import voluptuous as vol
 
@@ -91,14 +92,16 @@ def is_persistence_file(value):
 
 
 def is_serial_port(value):
-    """Validate that value is a serial port."""
-    import serial.tools.list_ports as list_ports
-    ports = [port[0] for port in list_ports.comports()]
-    if value in ports:
-        return value
+    """Validate that value is a windows serial port or a unix device."""
+    if sys.platform.startswith('win'):
+        ports = ['COM{}'.format(idx + 1) for idx in range(256)]
+        if value in ports:
+            return value
+        else:
+            raise vol.Invalid(
+                '{} is not a serial port'.format(value))
     else:
-        raise vol.Invalid(
-            '{} is not a serial port'.format(value))
+        return cv.isdevice(value)
 
 
 CONFIG_SCHEMA = vol.Schema({
