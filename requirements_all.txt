@@ -708,4 +708,4 @@ yeelight==0.2.1
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.17.7
+zeroconf==0.18.0
