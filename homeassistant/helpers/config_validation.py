@@ -325,7 +325,7 @@ def datetime(value):
 
 
 def date(value):
-    """Validate time."""
+    """Validate date."""
     date_val = dt_util.parse_date(value)
 
     if date_val is None:
@@ -484,10 +484,11 @@ TEMPLATE_CONDITION_SCHEMA = vol.Schema({
 
 TIME_CONDITION_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_CONDITION): 'time',
+    'day': date,
     'before': time,
     'after': time,
     'weekday': weekdays,
-}), has_at_least_one_key('before', 'after', 'weekday'))
+}), has_at_least_one_key('day','before', 'after', 'weekday'))
 
 ZONE_CONDITION_SCHEMA = vol.Schema({
     vol.Required(CONF_CONDITION): 'zone',
