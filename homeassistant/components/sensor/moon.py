@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['astral==1.3.3']
+REQUIREMENTS = ['astral==1.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
