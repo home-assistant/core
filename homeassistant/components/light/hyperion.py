@@ -28,7 +28,9 @@ SUPPORT_HYPERION = SUPPORT_RGB_COLOR
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR): cv.ensure_list,
+    vol.Optional(CONF_DEFAULT_COLOR, default=DEFAULT_COLOR):
+    vol.All(list, vol.Length(min=3, max=3),
+            [vol.All(vol.Coerce(int), vol.Range(min=0, max=255))]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
