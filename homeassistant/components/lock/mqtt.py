@@ -82,10 +82,10 @@ class MqttLock(LockDevice):
                     payload)
             if payload == self._payload_lock:
                 self._state = True
-                self.update_ha_state()
+                self.schedule_update_ha_state()
             elif payload == self._payload_unlock:
                 self._state = False
-                self.update_ha_state()
+                self.schedule_update_ha_state()
 
         if self._state_topic is None:
             # Force into optimistic mode.
@@ -121,7 +121,7 @@ class MqttLock(LockDevice):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
@@ -130,4 +130,4 @@ class MqttLock(LockDevice):
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()
