@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices(
                 [FSAPIDevice(DEVICE_URL.format(host, port), password)],
                 update_before_add=True)
-            _LOGGER.info('FSAPI device %s:%s -> %s', host, port, password)
+            _LOGGER.debug('FSAPI device %s:%s -> %s', host, port, password)
             return True
         else:
             _LOGGER.warning('FSAPI device missing config param %s:%s -> %s',
@@ -245,3 +245,4 @@ class FSAPIDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         self.get_fs().mode = source
+
