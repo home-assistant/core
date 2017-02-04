@@ -268,7 +268,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 class_id=zwave.const.COMMAND_CLASS_ALARM).values():
             if value.label != "Alarm Type":
                 continue
-            alarm_type = LOCK_ALARM_TYPE.get(value.data)
+            alarm_type = value.data
             break
 
         for value in self._node.get_values(
