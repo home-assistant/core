@@ -12,28 +12,32 @@ from homeassistant.const import (CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pykwb==0.0.1']
+REQUIREMENTS = ['pykwb==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 23
 DEFAULT_TYPE = 'tcp'
+DEFAULT_RAW = 'off'
 
 MODE_SERIAL = 0
 MODE_TCP = 1
 
-CONF_TYPE = "type"
+CONF_TYPE = 'type'
+CONF_RAW = 'raw'
 
 SERIAL_SCHEMA = {
     vol.Required(CONF_PORT): cv.string,
     vol.Required(CONF_TYPE): 'serial',
+    vol.Optional(CONF_TYPE): 'raw',
 }
 
 ETHERNET_SCHEMA = {
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_PORT): cv.positive_int,
     vol.Required(CONF_TYPE): 'tcp',
+    vol.Optional(CONF_TYPE): 'raw',
 }
 
 
@@ -43,6 +47,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     type = config.get(CONF_TYPE)
+    raw = config.get(CONF_RAW)
+    
+    if (raw == 'on'):
+        raw = True
 
     from pykwb import kwb
 
@@ -57,7 +65,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors=[]
     for sensor in easyfire.get_sensors():
-        sensors.append(KWBSensor(easyfire, sensor))
+        if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW) or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
+            sensors.append(KWBSensor(easyfire, sensor))
 
     add_devices(sensors)
 

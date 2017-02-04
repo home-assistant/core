@@ -462,6 +462,9 @@ pyicloud==0.9.1
 # homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
+# homeassistant.components.sensor.kwb
+pykwb==0.0.4
+
 # homeassistant.components.sensor.lastfm
 pylast==1.7.0
 
