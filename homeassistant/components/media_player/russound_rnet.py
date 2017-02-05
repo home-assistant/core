@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.russound_rnet/
 """
 
 import logging
-import time
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -77,10 +76,11 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     def __init__(self, hass, russ, sources, zone_id, extra):
         """Initialise the Russound RNET device.
-        Note: now uses the Russound device directly to obtain the state and volume level, and therefore we no longer
+
+        Note: now uses the Russound device directly to obtain the state and
+        volume level, and therefore we no longer
         have properties in this class for these to variables.
         """
-
         self._name = extra['name']
         self._russ = russ
         self._sources = sources
@@ -105,10 +105,13 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     @property
     def source(self):
-        """Get the currently selected source"""
-        index = self._russ.get_source('1', self._zone_id)  # Returns 0 based index for source
-        # Possibility exists that user has defined list of all sources. If a source is set externally that is beyond
-        # the defined list then an exception will be thrown.  In this case fore it to the first element in sources.
+        """Get the currently selected source."""
+        # Returns 0 based index for source.
+        index = self._russ.get_source('1', self._zone_id)
+        # Possibility exists that user has defined list of all sources.
+        # If a source is set externally that is beyond the defined list then
+        # an exception will be thrown.
+        # In this case fore it to the first element in sources.
         try:
             return self._sources[index]
         except IndexError:
@@ -117,13 +120,17 @@ class RussoundRNETDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1).
-        Value is returned based on a range (0..100).  Therefore float divide by 100 to get to the required range.
+
+        Value is returned based on a range (0..100).
+        Therefore float divide by 100 to get to the required range.
         """
         return self._russ.get_volume('1', self._zone_id) / 100.0
 
     def set_volume_level(self, volume):
         """Set volume level.  Volume has a range (0..1).
-        Translate this to a range of (0..100) as expected expected by _russ.set_volume()
+
+        Translate this to a range of (0..100) as expected expected
+        by _russ.set_volume()
         """
         self._russ.set_volume('1', self._zone_id, volume * 100)
 
@@ -143,7 +150,8 @@ class RussoundRNETDevice(MediaPlayerDevice):
         """Set the input source."""
         if source in self._sources:
             index = self._sources.index(source)
-            self._russ.set_source('1', self._zone_id, index)  # 0 based value for source
+            # 0 based value for source
+            self._russ.set_source('1', self._zone_id, index)
 
     @property
     def source_list(self):
