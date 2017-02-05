@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pres.S_TEMP: [set_req.V_TEMP],
             pres.S_HUM: [set_req.V_HUM],
             pres.S_BARO: [set_req.V_PRESSURE, set_req.V_FORECAST],
-            pres.S_WIND: [set_req.V_WIND, set_req.V_GUST],
+            pres.S_WIND: [set_req.V_WIND, set_req.V_GUST, set_req.V_DIRECTION],
             pres.S_RAIN: [set_req.V_RAIN, set_req.V_RAINRATE],
             pres.S_UV: [set_req.V_UV],
             pres.S_WEIGHT: [set_req.V_WEIGHT, set_req.V_IMPEDANCE],
@@ -106,6 +106,7 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity."""
+        pres = self.gateway.const.Presentation
         set_req = self.gateway.const.SetReq
         unit_map = {
             set_req.V_TEMP: (TEMP_CELSIUS
@@ -113,13 +114,14 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
             set_req.V_HUM: '%',
             set_req.V_DIMMER: '%',
             set_req.V_LIGHT_LEVEL: '%',
+            set_req.V_DIRECTION: '°',
             set_req.V_WEIGHT: 'kg',
             set_req.V_DISTANCE: 'm',
             set_req.V_IMPEDANCE: 'ohm',
             set_req.V_WATT: 'W',
             set_req.V_KWH: 'kWh',
             set_req.V_FLOW: 'm',
-            set_req.V_VOLUME: 'm3',
+            set_req.V_VOLUME: 'm³',
             set_req.V_VOLTAGE: 'V',
             set_req.V_CURRENT: 'A',
         }
@@ -127,7 +129,11 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
             if set_req.V_UNIT_PREFIX in self._values:
                 return self._values[
                     set_req.V_UNIT_PREFIX]
-            unit_map.update({set_req.V_PERCENTAGE: '%'})
+            unit_map.update({
+                set_req.V_PERCENTAGE: '%',
+                set_req.V_LEVEL: {
+                    pres.S_SOUND: 'dB', pres.S_VIBRATION: 'Hz',
+                    pres.S_LIGHT_LEVEL: 'lux'}})
         if float(self.gateway.protocol_version) >= 2.0:
             unit_map.update({
                 set_req.V_ORP: 'mV',
@@ -135,4 +141,7 @@ class MySensorsSensor(mysensors.MySensorsDeviceEntity, Entity):
                 set_req.V_VAR: 'var',
                 set_req.V_VA: 'VA',
             })
-        return unit_map.get(self.value_type)
+        unit = unit_map.get(self.value_type)
+        if isinstance(unit, dict):
+            unit = unit.get(self.child_type)
+        return unit
