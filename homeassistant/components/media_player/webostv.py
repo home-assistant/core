@@ -20,13 +20,13 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_MAC, CONF_CUSTOMIZE, STATE_OFF,
     STATE_PLAYING, STATE_PAUSED,
-    STATE_UNKNOWN, CONF_NAME)
+    STATE_UNKNOWN, CONF_NAME, CONF_FILENAME)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
-                '/archive/v0.1.2.zip'
-                '#pylgtv==0.1.2',
+                '/archive/v0.1.3.zip'
+                '#pylgtv==0.1.3',
                 'websockets==3.2',
                 'wakeonlan==0.2.2']
 
@@ -36,6 +36,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SOURCES = 'sources'
 
 DEFAULT_NAME = 'LG webOS Smart TV'
+
+WEBOSTV_CONFIG_FILE = 'webostv.conf'
 
 SUPPORT_WEBOSTV = SUPPORT_TURN_OFF | \
     SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
@@ -55,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_MAC): cv.string,
     vol.Optional(CONF_CUSTOMIZE, default={}): CUSTOMIZE_SCHEMA,
+    vol.Optional(CONF_FILENAME, default=WEBOSTV_CONFIG_FILE): cv.string
 })
 
 
@@ -77,16 +80,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     mac = config.get(CONF_MAC)
     name = config.get(CONF_NAME)
     customize = config.get(CONF_CUSTOMIZE)
-    setup_tv(host, mac, name, customize, hass, add_devices)
+    config = hass.config.path(config.get(CONF_FILENAME))
+    setup_tv(host, mac, name, customize, config, hass, add_devices)
 
 
-def setup_tv(host, mac, name, customize, hass, add_devices):
+def setup_tv(host, mac, name, customize, config, hass, add_devices):
     """Setup a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
     from websockets.exceptions import ConnectionClosed
 
-    client = WebOsClient(host)
+    client = WebOsClient(host, config)
 
     if not client.is_registered():
         if host in _CONFIGURING:
@@ -104,7 +108,7 @@ def setup_tv(host, mac, name, customize, hass, add_devices):
             # Not registered, request configuration.
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
             request_configuration(
-                host, mac, name, customize, hass, add_devices)
+                host, mac, name, customize, config, hass, add_devices)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -113,11 +117,11 @@ def setup_tv(host, mac, name, customize, hass, add_devices):
         configurator = get_component('configurator')
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, mac, name, customize)], True)
+    add_devices([LgWebOSDevice(host, mac, name, customize, config)], True)
 
 
 def request_configuration(
-        host, mac, name, customize, hass, add_devices):
+        host, mac, name, customize, config, hass, add_devices):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -130,7 +134,7 @@ def request_configuration(
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
-        setup_tv(host, mac, name, customize, hass, add_devices)
+        setup_tv(host, mac, name, customize, config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, name, lgtv_configuration_callback,
@@ -143,11 +147,11 @@ def request_configuration(
 class LgWebOSDevice(MediaPlayerDevice):
     """Representation of a LG WebOS TV."""
 
-    def __init__(self, host, mac, name, customize):
+    def __init__(self, host, mac, name, customize, config):
         """Initialize the webos device."""
         from pylgtv import WebOsClient
         from wakeonlan import wol
-        self._client = WebOsClient(host)
+        self._client = WebOsClient(host, config)
         self._wol = wol
         self._mac = mac
         self._customize = customize
