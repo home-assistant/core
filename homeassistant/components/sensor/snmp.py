@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pysnmp==4.3.2']
+REQUIREMENTS = ['pysnmp==4.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SNMP sensor."""
+    """Set up the SNMP sensor."""
     from pysnmp.hlapi import (getCmd, CommunityData, SnmpEngine,
                               UdpTransportTarget, ContextData, ObjectType,
                               ObjectIdentity)
@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                ObjectType(ObjectIdentity(baseoid))))
 
     if errindication:
-        _LOGGER.error('Please check the details in the configuration file')
+        _LOGGER.error("Please check the details in the configuration file")
         return False
     else:
         data = SnmpData(host, port, community, baseoid)
@@ -128,7 +128,7 @@ class SnmpData(object):
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)
         elif errstatus:
-            _LOGGER.error('SNMP error: %s at %s', errstatus.prettyPrint(),
+            _LOGGER.error("SNMP error: %s at %s", errstatus.prettyPrint(),
                           errindex and restable[-1][int(errindex) - 1] or '?')
         else:
             for resrow in restable:
