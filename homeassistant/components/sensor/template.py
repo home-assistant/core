@@ -52,7 +52,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         state_template.hass = hass
 
-        if icon_template:
+        if icon_template is not None:
             icon_template.hass = hass
 
         sensors.append(
