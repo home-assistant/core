@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import email.utils
+from email.mime.application import MIMEApplication
 
 import voluptuous as vol
 
@@ -179,9 +180,16 @@ def _build_multipart_msg(message, images):
         body_text.append('<img src="cid:{}"><br>'.format(cid))
         try:
             with open(atch_name, 'rb') as attachment_file:
-                attachment = MIMEImage(attachment_file.read())
-                msg.attach(attachment)
-                attachment.add_header('Content-ID', '<{}>'.format(cid))
+                file_bytes = attachment_file.read()
+                try:
+                    attachment = MIMEImage(file_bytes)
+                    msg.attach(attachment)
+                    attachment.add_header('Content-ID', '<{}>'.format(cid))
+                except TypeError:
+                    _LOGGER.warning('Attachment %s has an unkown MIME type. Falling back to file', atch_name)
+                    attachment = MIMEApplication(file_bytes, Name=atch_name)
+                    attachment['Content-Disposition'] = ('attachment; filename="%s"' % atch_name)
+                    msg.attach(attachment)
         except FileNotFoundError:
             _LOGGER.warning('Attachment %s not found. Skipping',
                             atch_name)
