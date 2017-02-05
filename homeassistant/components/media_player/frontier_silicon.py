@@ -47,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the Frontier Silicon platform."""
-
     if discovery_info is not None:
         yield from async_add_entities(
             [FrontierSiliconDevice(discovery_info, DEFAULT_PASSWORD)],
@@ -90,7 +89,7 @@ class FrontierSiliconDevice(MediaPlayerDevice):
         self._media_image_url = None
 
     def get_fs(self):
-        ''' Create a fsapi session'''
+        """ Create a fsapi session."""
         from fsapi import FSAPI
 
         return FSAPI(self._device_url, self._password)
