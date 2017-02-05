@@ -8,14 +8,12 @@ import asyncio
 import json
 import logging
 
-from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.mqtt import DOMAIN
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_SENSOR_CLASS,
-    CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF, CONF_PLATFORM)
-from homeassistant.components.mqtt import CONF_STATE_TOPIC, CONF_QOS
+    CONF_FRIENDLY_NAME, CONF_NAME, CONF_PLATFORM)
+from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.binary_sensor.mqtt import (
     DEFAULT_PAYLOAD_OFF, DEFAULT_PAYLOAD_ON)
 
