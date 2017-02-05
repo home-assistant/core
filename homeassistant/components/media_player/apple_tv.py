@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.apple_tv/
 """
 import asyncio
 import logging
+import hashlib
 
 import voluptuous as vol
 
@@ -80,6 +81,7 @@ class AppleTvDevice(MediaPlayerDevice):
         self._atv = atv
         self._playing = None
         self._artwork = None
+        self._artwork_hash = None
 
     @property
     def name(self):
@@ -114,7 +116,10 @@ class AppleTvDevice(MediaPlayerDevice):
 
             if self._should_download_artwork(playing):
                 self._artwork = None
+                self._artwork_hash = None
                 self._artwork = yield from self._atv.metadata.artwork()
+                if self._artwork:
+                    self._artwork_hash = hashlib.md5(self._artwork).hexdigest()
 
             self._playing = playing
         except exceptions.AuthenticationError as ex:
@@ -164,7 +169,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def media_image(self):
         """Artwork for what is currently playing."""
-        return self._artwork, 'image/png'
+        return self._artwork, 'image/png', self._artwork_hash
 
     @property
     def media_title(self):
