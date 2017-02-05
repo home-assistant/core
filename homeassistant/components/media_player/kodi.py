@@ -387,21 +387,13 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self._server.Playist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
     
-    def artists(self):
-        yield from self._server.AudioLibrary.GetArtists()
-    
     @asyncio.coroutine
     def async_get_artists(self):
-        out  = self.artists()
-        for ar in out:
-            print(ar)
-            
-        return out
+        return (yield from self._server.AudioLibrary.GetArtists())
     
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    art = kodi.async_get_artists()
-    for ar in art:
-        print(ar)
+    test = asyncio.get_event_loop().run_until_complete(kodi.async_get_artists())
+    print(test['artists'])
     
