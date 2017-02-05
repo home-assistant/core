@@ -186,9 +186,12 @@ def _build_multipart_msg(message, images):
                     msg.attach(attachment)
                     attachment.add_header('Content-ID', '<{}>'.format(cid))
                 except TypeError:
-                    _LOGGER.warning('Attachment %s has an unkown MIME type. Falling back to file', atch_name)
+                    _LOGGER.warning('Attachment %s has an unkown MIME type.'
+                                    ' Falling back to file', atch_name)
                     attachment = MIMEApplication(file_bytes, Name=atch_name)
-                    attachment['Content-Disposition'] = ('attachment; filename="%s"' % atch_name)
+                    attachment['Content-Disposition'] = ('attachment; '
+                                                         'filename="%s"' %
+                                                         atch_name)
                     msg.attach(attachment)
         except FileNotFoundError:
             _LOGGER.warning('Attachment %s not found. Skipping',
