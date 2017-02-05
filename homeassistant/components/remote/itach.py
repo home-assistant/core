@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.components.remote as remote
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
-    CONF_DEVICES, CONF_FILENAME)
+    CONF_DEVICES)
 from homeassistant.components.remote import (
     PLATFORM_SCHEMA, ATTR_COMMAND)
 
@@ -37,8 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_MODADDR): vol.Coerce(int),
         vol.Required(CONF_CONNADDR): vol.Coerce(int),
-        vol.Optional(CONF_FILENAME): cv.string,
-        vol.Optional(CONF_COMMANDS): vol.All(cv.ensure_list, [{
+        vol.Required(CONF_COMMANDS): vol.All(cv.ensure_list, [{
             vol.Required(CONF_NAME): cv.string,
             vol.Required(CONF_DATA): cv.string
         }])
@@ -63,15 +62,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = data.get(CONF_NAME)
         modaddr = int(data.get(CONF_MODADDR, 1))
         connaddr = int(data.get(CONF_CONNADDR, 1))
-        if CONF_FILENAME in data:
-            cmddata = open(
-                hass.config.config_dir + "/" + data.get(CONF_FILENAME), "r"
-            ).read()
-        elif CONF_COMMANDS in data:
-            cmddata = ""
-            for cmd in data.get(CONF_COMMANDS):
-                cmddata += cmd[CONF_NAME] + "\n" + cmd[CONF_DATA] + "\n"
-            print(":"+cmddata+":")
+        cmddata = ""
+        for cmd in data.get(CONF_COMMANDS):
+            cmddata += cmd[CONF_NAME] + "\n" + cmd[CONF_DATA] + "\n"
         itachip2ir.addDevice(name, modaddr, connaddr, cmddata)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_devices(devices, True)
