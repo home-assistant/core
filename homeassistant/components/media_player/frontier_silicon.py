@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.frontier_silicon/
 """
 import logging
 
-import asyncio
 import requests
 import voluptuous as vol
 
@@ -43,11 +42,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-argument
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Frontier Silicon platform."""
     if discovery_info is not None:
-        yield from async_add_entities(
+        add_devices(
             [FrontierSiliconDevice(discovery_info, DEFAULT_PASSWORD)],
             update_before_add=True)
         return True
@@ -58,7 +56,7 @@ def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
 
     try:
         if host and port and password:
-            yield from async_add_entities(
+            add_devices(
                 [FrontierSiliconDevice(DEVICE_URL.format(host, port), password)],
                 update_before_add=True)
             _LOGGER.info('FSAPI device %s:%s -> %s', host, port, password)
@@ -87,9 +85,8 @@ class FrontierSiliconDevice(MediaPlayerDevice):
         self._source_list = None
         self._media_image_url = None
 
-    @asyncio.coroutine
     def get_fs(self):
-        """Create a fsapi session."""
+        """ Create a fsapi session."""
         from fsapi import FSAPI
 
         return FSAPI(self._device_url, self._password)
@@ -138,10 +135,9 @@ class FrontierSiliconDevice(MediaPlayerDevice):
 
     # Async actions
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Get the latest date and update device state."""
-        fs_device = yield from self.get_fs()
+        fs_device = self.get_fs()
 
         if not self._name:
             self._name = fs_device.friendly_name
@@ -184,56 +180,40 @@ class FrontierSiliconDevice(MediaPlayerDevice):
     # Management actions
 
     # power control
-    @asyncio.coroutine
-    def async_turn_on(self):
+    def turn_on(self):
         """Turn on the device."""
-        fs_device = yield from self.get_fs()
-        fs_device.power = True
+        self.get_fs().power = True
 
-    @asyncio.coroutine
-    def async_turn_off(self):
+    def turn_off(self):
         """Turn off the device."""
-        fs_device = yield from self.get_fs()
-        fs_device.power = False
+        self.get_fs().power = False
 
-    @asyncio.coroutine
-    def async_media_play(self):
+    def media_play(self):
         """Send play command."""
-        fs_device = yield from self.get_fs()
-        fs_device.play()
+        self.get_fs().play()
 
-    @asyncio.coroutine
-    def async_media_pause(self):
+    def media_pause(self):
         """Send pause command."""
-        fs_device = yield from self.get_fs()
-        fs_device.pause()
+        self.get_fs().pause()
 
-    @asyncio.coroutine
-    def async_media_play_pause(self):
+    def media_play_pause(self):
         """Send play/pause command."""
-        fs_device = yield from self.get_fs()
         if 'playing' in self._state:
-            fs_device.pause()
+            self.get_fs().pause()
         else:
-            fs_device.play()
+            self.get_fs().play()
 
-    @asyncio.coroutine
-    def async_media_stop(self):
+    def media_stop(self):
         """Send play/pause command."""
-        fs_device = yield from self.get_fs()
-        fs_device.pause()
+        self.get_fs().pause()
 
-    @asyncio.coroutine
-    def async_media_previous_track(self):
+    def media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        fs_device = yield from self.get_fs()
-        fs_device.prev()
+        self.get_fs().prev()
 
-    @asyncio.coroutine
-    def async_media_next_track(self):
+    def media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        fs_device = yield from self.get_fs()
-        fs_device.next()
+        self.get_fs().next()
 
     # mute
     @property
@@ -241,35 +221,27 @@ class FrontierSiliconDevice(MediaPlayerDevice):
         """Boolean if volume is currently muted."""
         return self._mute
 
-    @asyncio.coroutine
-    def async_mute_volume(self, mute):
+    def mute_volume(self, mute):
         """Send mute command."""
-        fs_device = yield from self.get_fs()
-        fs_device.mute = mute
+        self.get_fs().mute = mute
 
     # volume
-    @asyncio.coroutine
-    def async_volume_up(self):
+    def volume_up(self):
         """Send volume up command."""
-        fs_device = yield from self.get_fs()
+        fs_device = self.get_fs()
         current_volume = fs_device.volume
         fs_device.volume = (current_volume + 1)
 
-    @asyncio.coroutine
-    def async_volume_down(self):
+    def volume_down(self):
         """Send volume down command."""
-        fs_device = yield from self.get_fs()
+        fs_device = self.get_fs()
         current_volume = fs_device.volume
         fs_device.volume = (current_volume - 1)
 
-    @asyncio.coroutine
-    def async_set_volume_level(self, volume):
+    def set_volume_level(self, volume):
         """Set volume command."""
-        fs_device = yield from self.get_fs()
-        fs_device.volume = volume
+        self.get_fs().volume = volume
 
-    @asyncio.coroutine
-    def async_select_source(self, source):
+    def select_source(self, source):
         """Select input source."""
-        fs_device = yield from self.get_fs()
-        fs_device.mode = source
+        self.get_fs().mode = source
