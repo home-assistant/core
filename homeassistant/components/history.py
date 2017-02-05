@@ -64,7 +64,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None,
     """
     entity_ids = (entity_id.lower(), ) if entity_id is not None else None
     states = recorder.get_model('States')
-    query = recorder.query('States').filter(
+    query = recorder.query(states).filter(
         (states.domain.in_(SIGNIFICANT_DOMAINS) |
          (states.last_changed == states.last_updated)) &
         (states.last_updated > start_time))

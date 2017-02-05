@@ -24,7 +24,6 @@ class TestRecorder(unittest.TestCase):
             recorder.DOMAIN: {recorder.CONF_DB_URL: db_uri}})
         self.hass.start()
         recorder._verify_instance()
-        self.session = recorder.Session()
         recorder._INSTANCE.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -42,26 +41,25 @@ class TestRecorder(unittest.TestCase):
         self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        for event_id in range(5):
-            if event_id < 3:
-                timestamp = five_days_ago
-                state = 'purgeme'
-            else:
-                timestamp = now
-                state = 'dontpurgeme'
+        with recorder.session_scope() as session:
+            for event_id in range(5):
+                if event_id < 3:
+                    timestamp = five_days_ago
+                    state = 'purgeme'
+                else:
+                    timestamp = now
+                    state = 'dontpurgeme'
 
-            self.session.add(recorder.get_model('States')(
-                entity_id='test.recorder2',
-                domain='sensor',
-                state=state,
-                attributes=json.dumps(attributes),
-                last_changed=timestamp,
-                last_updated=timestamp,
-                created=timestamp,
-                event_id=event_id + 1000
-            ))
-
-        self.session.commit()
+                session.add(recorder.get_model('States')(
+                    entity_id='test.recorder2',
+                    domain='sensor',
+                    state=state,
+                    attributes=json.dumps(attributes),
+                    last_changed=timestamp,
+                    last_updated=timestamp,
+                    created=timestamp,
+                    event_id=event_id + 1000
+                ))
 
     def _add_test_events(self):
         """Add a few events for testing."""
@@ -71,21 +69,23 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
-        for event_id in range(5):
-            if event_id < 2:
-                timestamp = five_days_ago
-                event_type = 'EVENT_TEST_PURGE'
-            else:
-                timestamp = now
-                event_type = 'EVENT_TEST'
 
-            self.session.add(recorder.get_model('Events')(
-                event_type=event_type,
-                event_data=json.dumps(event_data),
-                origin='LOCAL',
-                created=timestamp,
-                time_fired=timestamp,
-            ))
+        with recorder.session_scope() as session:
+            for event_id in range(5):
+                if event_id < 2:
+                    timestamp = five_days_ago
+                    event_type = 'EVENT_TEST_PURGE'
+                else:
+                    timestamp = now
+                    event_type = 'EVENT_TEST'
+
+                session.add(recorder.get_model('Events')(
+                    event_type=event_type,
+                    event_data=json.dumps(event_data),
+                    origin='LOCAL',
+                    created=timestamp,
+                    time_fired=timestamp,
+                ))
 
     def test_saving_state(self):
         """Test saving and restoring a state."""
@@ -205,14 +205,15 @@ class TestRecorder(unittest.TestCase):
         with self.assertRaises(ValueError):
             recorder._INSTANCE._apply_update(-1)
 
-    def test_schema_update_calls(self):
+    def test_schema_update_calls(self):  # pylint: disable=no-self-use
         """Test that schema migrations occurr in correct order."""
         test_version = recorder.models.SchemaChanges(schema_version=0)
-        self.session.add(test_version)
-        with patch.object(recorder._INSTANCE, '_apply_update') as update:
-            recorder._INSTANCE._migrate_schema()
-            update.assert_has_calls([call(version+1) for version in range(
-                0, recorder.models.SCHEMA_VERSION)])
+        with recorder.session_scope() as session:
+            session.add(test_version)
+            with patch.object(recorder._INSTANCE, '_apply_update') as update:
+                recorder._INSTANCE._migrate_schema()
+                update.assert_has_calls([call(version+1) for version in range(
+                    0, recorder.models.SCHEMA_VERSION)])
 
 
 @pytest.fixture
@@ -301,3 +302,15 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     assert len(states) == 1
     assert hass.states.get('test.ok') == states[0]
     assert hass.states.get('test.ok').state == 'state2'
+
+
+def test_recorder_errors_exceptions(hass_recorder): \
+        # pylint: disable=redefined-outer-name
+    """Test session_scope and get_model errors."""
+    assert recorder.get_model('dont-exist') is None
+
+    hass_recorder({})
+    with pytest.raises(Exception) as err:
+        with recorder.session_scope() as session:
+            session.execute('select * from notthere')
+    assert 'no such table' in str(err.value)
