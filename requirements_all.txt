@@ -505,7 +505,7 @@ pysma==0.1.3
 
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
-pysnmp==4.3.2
+pysnmp==4.3.3
 
 # homeassistant.components.digital_ocean
 python-digitalocean==1.10.1
