@@ -94,7 +94,7 @@ def is_persistence_file(value):
 def is_serial_port(value):
     """Validate that value is a windows serial port or a unix device."""
     if sys.platform.startswith('win'):
-        ports = ['COM{}'.format(idx + 1) for idx in range(256)]
+        ports = ('COM{}'.format(idx + 1) for idx in range(256))
         if value in ports:
             return value
         else:
