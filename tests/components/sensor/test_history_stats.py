@@ -33,7 +33,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_id',
                 'state': 'on',
                 'start': '{{ now().replace(hour=0)'
-                         + '.replace(minute=0).replace(second=0) }}',
+                         '.replace(minute=0).replace(second=0) }}',
                 'duration': '{{ 3600 * 2 + 60 }}',
                 'name': 'Test',
             }
@@ -197,6 +197,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.assertEqual(self.hass.states.get('sensor.test'), None)
 
     def test_no_recorder(self):
+        """Test Exception when the recorder is not started."""
         config = {
             'history': {
             },
@@ -205,7 +206,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_id',
                 'state': 'on',
                 'start': '{{ now().replace(hour=0)'
-                         + '.replace(minute=0).replace(second=0) }}',
+                         '.replace(minute=0).replace(second=0) }}',
                 'duration': '{{ 3600 * 2 + 60 }}',
                 'name': 'Test',
             }
