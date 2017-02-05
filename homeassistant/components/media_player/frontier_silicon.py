@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Frontier Silicon platform."""
     if discovery_info is not None:
         add_devices(
-            [FrontierSiliconDevice(discovery_info, DEFAULT_PASSWORD)],
+            [FSAPIDevice(discovery_info, DEFAULT_PASSWORD)],
             update_before_add=True)
         return True
 
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         if host and port and password:
             add_devices(
-                [FrontierSiliconDevice(DEVICE_URL.format(host, port), password)],
+                [FSAPIDevice(DEVICE_URL.format(host, port), password)],
                 update_before_add=True)
             _LOGGER.info('FSAPI device %s:%s -> %s', host, port, password)
             return True
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       host, port, password)
 
 
-class FrontierSiliconDevice(MediaPlayerDevice):
+class FSAPIDevice(MediaPlayerDevice):
     """Representation of a Frontier Silicon device on the network."""
 
     def __init__(self, device_url, password):
@@ -86,7 +86,7 @@ class FrontierSiliconDevice(MediaPlayerDevice):
         self._media_image_url = None
 
     def get_fs(self):
-        """ Create a fsapi session."""
+        """Create a fsapi session."""
         from fsapi import FSAPI
 
         return FSAPI(self._device_url, self._password)
