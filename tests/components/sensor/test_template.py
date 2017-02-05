@@ -52,7 +52,7 @@ class TestTemplateSensor:
                             'value_template': "State",
                             'icon_template':
                                 "{% if states.sensor.test_state.state %}"
-                                    "mdi:check"
+                                "mdi:check"
                                 "{% endif %}"
                         }
                     }
