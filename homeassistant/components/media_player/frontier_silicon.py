@@ -45,8 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 # def setup_platform(hass, config, add_devices, discovery_info=None):
 @asyncio.coroutine
-def async_setup_platform(hass, config,
-                         async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Setup the Frontier Silicon platform."""
 
     if discovery_info is not None:
@@ -62,8 +61,8 @@ def async_setup_platform(hass, config,
     try:
         if host and port and password:
             yield from async_add_entities(
-              [FrontierSiliconDevice(DEVICE_URL.format(host, port), password)],
-              update_before_add=True)
+                [FrontierSiliconDevice(DEVICE_URL.format(host, port), password)],
+                update_before_add=True)
             _LOGGER.info('FSAPI device %s:%s -> %s', host, port, password)
             return True
         else:
@@ -79,7 +78,6 @@ class FrontierSiliconDevice(MediaPlayerDevice):
 
     def __init__(self, device_url, password):
         """Initialize the Frontier Silicon API device."""
-
         self._device_url = device_url
         self._password = password
         self._state = STATE_UNKNOWN
@@ -92,6 +90,7 @@ class FrontierSiliconDevice(MediaPlayerDevice):
         self._media_image_url = None
 
     def get_fs(self):
+        ''' Create a fsapi session'''
         from fsapi import FSAPI
 
         return FSAPI(self._device_url, self._password)
@@ -143,7 +142,6 @@ class FrontierSiliconDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest date and update device state."""
-
         fs_device = self.get_fs()
 
         if not self._name:
