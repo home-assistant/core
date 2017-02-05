@@ -112,7 +112,8 @@ def _parse_skyhub_response(data_str):
     """Parse the Sky Hub data format."""
     pattmatch = re.search('attach_dev = \'(.*)\'', data_str)
     if pattmatch is None:
-        raise IOError("Error: Impossible to fetch data from Sky Hub. Try to reboot the rooter.")
+        raise IOError('Error: Impossible to fetch data from' +
+                      ' Sky Hub. Try to reboot the rooter.')
     patt = pattmatch.group(1)
 
     dev = [patt1.split(',') for patt1 in patt.split('<lf>')]
