@@ -314,6 +314,7 @@ omit =
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
+    homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
