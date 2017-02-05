@@ -121,12 +121,12 @@ class MqttLight(Light):
         self._state = False
         self._supported_features = 0
         self._supported_features |= (
-            topic[CONF_RGB_STATE_TOPIC] is not None and SUPPORT_RGB_COLOR)
+            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_RGB_COLOR)
         self._supported_features |= (
-            topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None and
+            topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
             SUPPORT_BRIGHTNESS)
         self._supported_features |= (
-            topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None and
+            topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
             SUPPORT_COLOR_TEMP)
 
         for key, tpl in list(templates.items()):
