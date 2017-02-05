@@ -91,7 +91,7 @@ class FrontierSiliconDevice(MediaPlayerDevice):
     def get_fs(self):
         """Create a fsapi session."""
         from fsapi import FSAPI
-        
+
         return FSAPI(self._device_url, self._password)
 
     # Properties
