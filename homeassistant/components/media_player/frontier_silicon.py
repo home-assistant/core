@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fsapi==0.0.5']
+REQUIREMENTS = ['fsapi==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
