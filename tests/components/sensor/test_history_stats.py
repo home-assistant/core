@@ -8,7 +8,6 @@ import homeassistant.components.recorder as recorder
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.bootstrap import setup_component
-from homeassistant.components.sensor.history_stats import HistoryStatsHelper
 from tests.common import get_test_home_assistant
 
 
@@ -33,8 +32,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'platform': 'history_stats',
                 'entity_id': 'binary_sensor.test_id',
                 'state': 'on',
-                'start': '{{ _TODAY_ }}',
-                'duration': '{{ _ONE_HOUR_ * 2 + _ONE_MINUTE_}}',
+                'start': '{{ now().replace(hour=0)'
+                         + '.replace(minute=0).replace(second=0) }}',
+                'duration': '{{ 3600 * 2 + 60 }}',
                 'name': 'Test',
             }
         }
@@ -58,8 +58,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_id',
                 'name': 'Test',
                 'state': 'on',
-                'start': '{{ _NOW_ - _ONE_HOUR_ }}',
-                'end': '{{ _NOW_ }}',
+                'start': '{{ as_timestamp(now()) - 3600 }}',
+                'end': '{{ now() }}',
             }
         }
 
@@ -81,8 +81,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.assertEqual(state['state'], '0.5')
         self.assertEqual(state['attributes']['ratio'], '50.0%')
 
-    def test_not_timestamp(self):
-        """Test Exception when value is not a timestamp."""
+    def test_wrong_start(self):
+        """Test Exception when start value is not a timestamp or a date."""
         self.init_recorder()
         config = {
             'history': {
@@ -100,6 +100,45 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.assertRaises(TypeError,
                           setup_component(self.hass, 'sensor', config))
 
+    def test_wrong_end(self):
+        """Test Exception when end value is not a timestamp or a date."""
+        self.init_recorder()
+        config = {
+            'history': {
+            },
+            'sensor': {
+                'platform': 'history_stats',
+                'entity_id': 'binary_sensor.test_id',
+                'name': 'Test',
+                'state': 'on',
+                'start': '{{ now() }}',
+                'end': '{{ TEST }}',
+            }
+        }
+
+        self.assertRaises(TypeError,
+                          setup_component(self.hass, 'sensor', config))
+
+    def test_wrong_duration(self):
+        """Test Exception when duration value is not a number."""
+        self.init_recorder()
+
+        config = {
+            'history': {
+            },
+            'sensor': {
+                'platform': 'history_stats',
+                'entity_id': 'binary_sensor.test_id',
+                'name': 'Test',
+                'state': 'on',
+                'start': '{{ as_timestamp(now()) - 24 * 3600 }}',
+                'duration': '{{ now() }}',
+            }
+        }
+
+        self.assertRaises(TypeError,
+                          setup_component(self.hass, 'sensor', config))
+
     def test_bad_template(self):
         """Test Exception when the template cannot be parsed."""
         self.init_recorder()
@@ -111,8 +150,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_id',
                 'name': 'Test',
                 'state': 'on',
-                'start': '{{ _TODAY_ }',
-                'end': '{{ _NOW_ }}',
+                'end': '{{ x - 12 }}',  # <= x in undefined
+                'duration': '{{ 3600 }}',
             }
         }
 
@@ -130,7 +169,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_id',
                 'name': 'Test',
                 'state': 'on',
-                'start': '{{ _NOW_ }}',
+                'start': '{{ now() }}',
             }
         }
 
@@ -148,64 +187,34 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'entity_id': 'binary_sensor.test_id',
                 'name': 'Test',
                 'state': 'on',
-                'start': '{{ _NOW_ - _ONE_HOUR_}}',
-                'end': '{{ _NOW_ }}',
-                'duration': '{{ _ONE_HOUR_ }}',
+                'start': '{{ as_timestamp(now()) - 3600 }}',
+                'end': '{{ now() }}',
+                'duration': '{{ 3600 }}',
             }
         }
 
         setup_component(self.hass, 'sensor', config)
         self.assertEqual(self.hass.states.get('sensor.test'), None)
 
-    def test_template_parsing(self):
-        """Test template parsing."""
-        h = HistoryStatsHelper
-        expressions = [
-            '_THIS_MINUTE_',
-            '_THIS_HOUR_',
-            '_TODAY_',
-            '_THIS_WEEK_',
-            '_THIS_MONTH_',
-            '_THIS_YEAR_',
-            '_ONE_MINUTE_',
-            '_ONE_HOUR_',
-            '_ONE_DAY_',
-            '_ONE_WEEK_',
-        ]
+    def test_no_recorder(self):
+        config = {
+            'history': {
+            },
+            'sensor': {
+                'platform': 'history_stats',
+                'entity_id': 'binary_sensor.test_id',
+                'state': 'on',
+                'start': '{{ now().replace(hour=0)'
+                         + '.replace(minute=0).replace(second=0) }}',
+                'duration': '{{ 3600 * 2 + 60 }}',
+                'name': 'Test',
+            }
+        }
 
-        expected = [
-            'as_timestamp(now().replace(second=0))',
-            'as_timestamp(now().replace(second=0).replace(minute=0))',
-            'as_timestamp(now().replace(second=0).replace(minute=0).'
-            'replace(hour=0))',
-            'as_timestamp(now().replace(second=0).replace(minute=0).'
-            'replace(hour=0)) - now().weekday() * 86400',
-            'as_timestamp(now().replace(second=0).replace(minute=0).'
-            'replace(hour=0).replace(day=1))',
-            'as_timestamp(now().replace(second=0).replace(minute=0).'
-            'replace(hour=0).replace(day=1).replace(month=1))',
-            '60',
-            '3600',
-            '86400',
-            '604800',
-        ]
-
-        unchanged = [
-            'now()',
-            'as_timestamp(now())',
-            'as_timestamp(now().replace(second=0)) + 3600'
-            '_NOT_A_VALID__ALIAS',
-        ]
-
-        # Check that parsed expression = expected
-        for i, expr in enumerate(expressions):
-            result = h.parse_time_expr(expr)
-            self.assertTrue(result == expected[i])
-
-        # Check that parsing doesn't alter real functions
-        for i, expr in enumerate(unchanged):
-            result = h.parse_time_expr(expr)
-            self.assertTrue(result == expr)
+        with patch('homeassistant.components.recorder.Recorder.'
+                   '_setup_connection', return_value=False):
+            self.assertRaises(Exception,
+                              setup_component(self.hass, 'sensor', config))
 
     def init_recorder(self):
         """Initialize the recorder."""
