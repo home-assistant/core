@@ -709,3 +709,6 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.18.0
+
+# homeassistant.components.media_player.frontier_silicon
+fsapi==0.0.7
