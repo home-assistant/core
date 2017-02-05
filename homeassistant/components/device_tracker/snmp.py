@@ -7,6 +7,8 @@ https://home-assistant.io/components/device_tracker.snmp/
 import binascii
 import logging
 import threading
+import re
+
 from datetime import timedelta
 
 import voluptuous as vol
@@ -126,7 +128,22 @@ class SnmpScanner(DeviceScanner):
         for resrow in restable:
             for _, val in resrow:
                 mac = binascii.hexlify(val.asOctets()).decode('utf-8')
-                _LOGGER.debug('Found mac %s', mac)
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
+
+                if re.match(
+                        '^' + '[\\:\\-]'.join(['([0-9a-f]{2})']*6) + '$', mac):
+
+                    _LOGGER.debug('Found encoded mac %s', mac)
+
+                elif re.match(
+                        '^' + '[\\:\\-]'.join(['([0-9a-f]{2})']*6) + '$',
+                        str(val)):
+
+                    mac = str(val)
+                    _LOGGER.debug('Found decoded mac %s', mac)
+
+                else:
+                    _LOGGER.debug('Cannot decode mac %s', mac)
+
                 devices.append({'mac': mac})
         return devices
