@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fsapi==0.0.6']
+REQUIREMENTS = ['fsapi==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -176,7 +176,7 @@ class FrontierSiliconDevice(MediaPlayerDevice):
             None: STATE_OFF,
         }.get(status, STATE_UNKNOWN)
 
-        self._source = str(fs_device.mode)
+        self._source = fs_device.mode
         self._mute = fs_device.mute
         self._media_image_url = fs_device.play_info_graphics
 
