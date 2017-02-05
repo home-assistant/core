@@ -301,8 +301,13 @@ class HueLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this Hue light."""
-        return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.light_id))
+        id = self.info.get('uniqueid')
+
+        if id is None:
+            type = self.info.get('type', 'Group' if self.is_group else 'Light')
+            id = '{}.{}.{}'.format(self.name, type, self.light_id)
+
+        return '{}.{}'.format(self.__class__, id)
 
     @property
     def name(self):
