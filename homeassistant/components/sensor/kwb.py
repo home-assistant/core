@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.kwb/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_PORT)
@@ -42,29 +43,29 @@ ETHERNET_SCHEMA = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the KWB component."""
+
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    connection_type = config.get(CONF_TYPE)
+    type = config.get(CONF_TYPE)
     raw = config.get(CONF_RAW)
-
-    if raw == 'on':
+    
+    if (raw == 'on'):
         raw = True
 
     from pykwb import kwb
 
     _LOGGER.info('KWB: initializing')
 
-    if connection_type == 'serial':
+    if (type == 'serial'):
         easyfire = kwb.KWBEasyfire(MODE_SERIAL, "", 0, port)
-    elif connection_type == 'tcp':
+    elif (type == 'tcp'):
         easyfire = kwb.KWBEasyfire(MODE_TCP, host, port)
     else:
         return False
 
-    sensors = []
+    sensors=[]
     for sensor in easyfire.get_sensors():
-        if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW)
-                or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
+        if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW) or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
             sensors.append(KWBSensor(easyfire, sensor))
 
     add_devices(sensors)
@@ -79,6 +80,7 @@ class KWBSensor(Entity):
 
     def __init__(self, easyfire, sensor):
         """Initialize the KWB sensor."""
+
         self._easyfire = easyfire
         self._sensor = sensor
         self._client_name = "KWB"
