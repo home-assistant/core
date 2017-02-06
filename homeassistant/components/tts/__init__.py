@@ -16,7 +16,6 @@ import io
 
 from aiohttp import web
 import voluptuous as vol
-import mutagen
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.bootstrap import async_prepare_setup_platform
@@ -437,6 +436,8 @@ def write_tags(filename, data, engine, provider,
     if provider.default_options is not None:
         if provider.default_options.get('voice') is not None:
             artist = provider.default_options.get('voice')
+
+    import mutagen
 
     tts_file = mutagen.File(data_bytes, easy=True)
     if tts_file is not None:
