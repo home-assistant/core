@@ -23,8 +23,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
-        max_gps_accuracy = discovery_info.get(
-            mysensors.CONF_MAX_GPS_ACCURACY, 0.0)
 
         for child in node.children.values():
             position = child.values.get(set_req.V_POSITION)
@@ -48,7 +46,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 dev_id=slugify(name),
                 host_name=name,
                 gps=(latitude, longitude),
-                gps_accuracy=max_gps_accuracy,
                 battery=node.battery_level,
                 attributes=attr
             )
