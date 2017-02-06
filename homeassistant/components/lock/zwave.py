@@ -49,7 +49,7 @@ LOCK_NOTIFICATION = {
 
 LOCK_ALARM_TYPE = {
     9: 'Deadbolt Jammed',
-    18: 'Locked with Keypad by user',
+    18: 'Locked with Keypad by user ',
     19: 'Unlocked with Keypad by user ',
     21: 'Manually Locked by',
     22: 'Manually Unlocked by Key or Inside thumb turn',
