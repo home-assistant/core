@@ -941,7 +941,15 @@ class SonosDevice(MediaPlayerDevice):
 
     def snapshot(self, with_group=True):
         """Snapshot the player."""
-        self.soco_snapshot.snapshot()
+        from soco.exceptions import SoCoException
+        try:
+            self.soco_snapshot.is_playing_queue = False
+            self.soco_snapshot.is_coordinator = False
+            self.soco_snapshot.snapshot()
+        except SoCoException:
+            _LOGGER.debug("Error on snapshot %s", self.entity_id)
+            self._snapshot_group = None
+            return
 
         if with_group:
             self._snapshot_group = self._player.group
