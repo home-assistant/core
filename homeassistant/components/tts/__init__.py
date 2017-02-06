@@ -419,7 +419,8 @@ class SpeechManager(object):
         content, _ = mimetypes.guess_type(filename)
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
-    def _write_tags(self, filename, data, engine, provider, message, language,
+    @staticmethod
+    def _write_tags(filename, data, engine, provider, message, language,
                     options):
         """Write ID3 tags to file.
 
