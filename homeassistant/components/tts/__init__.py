@@ -301,7 +301,7 @@ class SpeechManager(object):
         # is file store in file cache
         elif use_cache and key in self.file_cache:
             filename = self.file_cache[key]
-            self.hass.async_add_job(self.async_file_to_mem(key))
+            yield from self.async_file_to_mem(key)
         # load speech from provider into memory
         else:
             filename = yield from self.async_get_tts_audio(
@@ -328,7 +328,7 @@ class SpeechManager(object):
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
-        data = write_tags(
+        data = self._write_tags(
             filename, data, engine, provider, message, language, options)
 
         # save to memory
@@ -420,36 +420,36 @@ class SpeechManager(object):
         content, _ = mimetypes.guess_type(filename)
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
+    def _write_tags(self, filename, data, engine, provider, message, language,
+                    options):
+        """Write ID3 tags to file.
 
-@callback
-def write_tags(filename, data, engine, provider,
-               message, language, options):
-    """Write ID3 tags to file."""
-    data_bytes = io.BytesIO()
+        Async friendly.
+        """
+        import mutagen
 
-    data_bytes.write(data)
-    data_bytes.seek(0)
+        data_bytes = io.BytesIO()
+        data_bytes.write(data)
+        data_bytes.seek(0)
 
-    artist = language
+        artist = language
 
-    if options is not None:
-        if options.get('voice') is not None:
-            artist = options.get('voice')
+        if options is not None:
+            if options.get('voice') is not None:
+                artist = options.get('voice')
 
-    album = engine
+        album = engine
 
-    if hasattr(provider, 'provider_name'):
-        album = provider.provider_name
+        if hasattr(provider, 'provider_name'):
+            album = provider.provider_name
 
-    import mutagen
-
-    tts_file = mutagen.File(data_bytes, easy=True)
-    if tts_file is not None:
-        tts_file.tags['artist'] = artist
-        tts_file.tags['album'] = album
-        tts_file.tags['title'] = message
-        tts_file.save(data_bytes)
-    return data_bytes.getvalue()
+        tts_file = mutagen.File(data_bytes, easy=True)
+        if tts_file is not None:
+            tts_file.tags['artist'] = artist
+            tts_file.tags['album'] = album
+            tts_file.tags['title'] = message
+            tts_file.save(data_bytes)
+        return data_bytes.getvalue()
 
 
 class Provider(object):
