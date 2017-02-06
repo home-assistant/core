@@ -74,7 +74,7 @@ SCHEMA_SERVICE_SAY = vol.Schema({
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 
-REQUIREMENTS = ["pytaglib==1.4.0"]
+REQUIREMENTS = ["mutagen==1.36.2"]
 
 
 @asyncio.coroutine
@@ -325,13 +325,8 @@ class SpeechManager(object):
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
-        data = yield from self.hass.loop.run_in_executor(None,
-                                                         write_tags(filename,
-                                                                    data,
-                                                                    provider,
-                                                                    message,
-                                                                    language,
-                                                                    options))
+        data = yield from write_tags(filename, data, provider, message,
+                                     language, options)
 
         # save to memory
         self._async_store_to_memcache(key, filename, data)
@@ -423,26 +418,23 @@ class SpeechManager(object):
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
 
+@asyncio.coroutine
 def write_tags(filename, data, provider, message, language, options):
     """Write ID3 tags to file."""
-    import tempfile
-    import taglib
+    import mutagen
+    import io
 
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        voice_file = os.path.join(tmpdirname, filename)
-        with open(voice_file, 'wb') as speech:
-            speech.write(data)
+    data_bytes = io.BytesIO()
 
-        options = options or provider.default_options
+    data_bytes.write(data)
+    data_bytes.seek(0)
 
-        tts = taglib.File(voice_file)  # pylint: disable=no-member
-        tts.tags['ARTIST'] = [options.get('voice', language)]
-        tts.tags['ALBUM'] = [provider.provider_name]
-        tts.tags['TITLE'] = [message]
-        tts.save()
-
-        with open(voice_file, 'rb') as speech:
-            return speech.read()
+    tts = mutagen.File(data_bytes, easy=True)
+    tts.tags['artist'] = options.get('voice', language)
+    tts.tags['album'] = provider.provider_name
+    tts.tags['title'] = message
+    tts.save(data_bytes)
+    return data_bytes.getvalue()
 
 
 class Provider(object):

@@ -328,6 +328,9 @@ mficlient==0.3.0
 # homeassistant.components.sensor.miflora
 miflora==0.1.15
 
+# homeassistant.components.tts
+mutagen==1.36.2
+
 # homeassistant.components.sensor.usps
 myusps==1.0.2
 
@@ -506,9 +509,6 @@ pysma==0.1.3
 # homeassistant.components.device_tracker.snmp
 # homeassistant.components.sensor.snmp
 pysnmp==4.3.3
-
-# homeassistant.components.tts
-pytaglib==1.4.0
 
 # homeassistant.components.digital_ocean
 python-digitalocean==1.10.1
