@@ -429,11 +429,21 @@ def write_tags(filename, data, provider, message, language, options):
     data_bytes.write(data)
     data_bytes.seek(0)
 
-    tts = mutagen.File(data_bytes, easy=True)
-    tts.tags['artist'] = options.get('voice', language)
-    tts.tags['album'] = provider.provider_name
-    tts.tags['title'] = message
-    tts.save(data_bytes)
+    artist = language
+    if options is not None:
+        if options.get('voice') is not None:
+            artist = options.get('voice')
+
+    if provider.default_options is not None:
+        if provider.default_options.get('voice') is not None:
+            artist = provider.default_options.get('voice')
+
+    tts_file = mutagen.File(data_bytes, easy=True)
+    if tts_file is not None:
+        tts_file.tags['artist'] = artist
+        tts_file.tags['album'] = provider.provider_name
+        tts_file.tags['title'] = message
+        tts_file.save(data_bytes)
     return data_bytes.getvalue()
 
 
