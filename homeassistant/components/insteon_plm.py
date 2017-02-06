@@ -46,6 +46,8 @@ def async_setup(hass, config):
         device=port, loop=hass.loop,
         update_callback=async_insteonplm_update_callback)
 
+    hass.data['insteon_plm'] = plm
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, plm.close)
 
     return True
