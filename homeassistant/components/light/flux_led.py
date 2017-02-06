@@ -121,7 +121,7 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._bulb.getWarmWhite255()
+        return self._bulb.brightness
 
     @property
     def rgb_color(self):
