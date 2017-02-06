@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['samsungctl==0.6.0']
+REQUIREMENTS = ['samsungctl==0.6.0', 'websocket-client>=0.40.0']
 
 _LOGGER = logging.getLogger(__name__)
 
