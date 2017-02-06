@@ -428,8 +428,7 @@ class SpeechManager(object):
         """
         import mutagen
 
-        data_bytes = io.BytesIO()
-        data_bytes.write(data)
+        data_bytes = io.BytesIO(data)
         data_bytes.seek(0)
 
         artist = language
@@ -443,7 +442,7 @@ class SpeechManager(object):
         if hasattr(provider, 'provider_name'):
             album = provider.provider_name
 
-        tts_file = mutagen.File(data_bytes, easy=True)
+        tts_file = mutagen.File(fileobj=data_bytes, easy=True)
         if tts_file is not None:
             tts_file.tags['artist'] = artist
             tts_file.tags['album'] = album
