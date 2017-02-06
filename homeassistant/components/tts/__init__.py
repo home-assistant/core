@@ -279,6 +279,8 @@ class SpeechManager(object):
                 language))
 
         # options
+        if provider.default_options and options:
+            options = provider.default_options.copy().update(options)
         options = options or provider.default_options
         if options is not None:
             invalid_opts = [opt_name for opt_name in options.keys()
@@ -326,8 +328,8 @@ class SpeechManager(object):
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
-        data = yield from write_tags(filename, data, engine, provider,
-                                     message, language, options)
+        data = write_tags(
+            filename, data, engine, provider, message, language, options)
 
         # save to memory
         self._async_store_to_memcache(key, filename, data)
@@ -430,10 +432,6 @@ def write_tags(filename, data, engine, provider,
 
     artist = language
 
-    if provider.default_options is not None:
-        if provider.default_options.get('voice') is not None:
-            artist = provider.default_options.get('voice')
-
     if options is not None:
         if options.get('voice') is not None:
             artist = options.get('voice')
@@ -458,6 +456,7 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
+    provider_name = None
 
     @property
     def default_language(self):
