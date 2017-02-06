@@ -45,18 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 })
 
-DEFAULT_MODE = 'rgbw'
-DEFAULT_PROTOCOL = None
-
-# provide lookup tables based on discovery device type
-MODE_LOOKUP = {
-    # I only have one device to test (Arilux al-lc03) and it
-    # has this type. My best guess is it only support rgb as
-    # the MagicHome app also sees it as rgb only.
-    'AK001-ZJ100': 'rgb',
-}
-PROTOCOL_LOOKUP = {}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Flux lights."""
@@ -77,13 +65,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         device = {}
+        # discovery_info: ip address,device id,device type
         device['ipaddr'] = discovery_info[0]
         device['name'] = discovery_info[1]
-        device_type = discovery_info[2]
-        device[CONF_PROTOCOL] = PROTOCOL_LOOKUP.get(device_type,
-                                                    DEFAULT_PROTOCOL)
-        device[ATTR_MODE] = MODE_LOOKUP.get(device_type,
-                                            DEFAULT_MODE)
+        # As we don't know protocol and mode set to none to autodetect.
+        device[CONF_PROTOCOL] = None
+        device[ATTR_MODE] = None
+
         light = FluxLight(device)
         if light.is_valid:
             lights.append(light)
@@ -124,10 +112,20 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self.is_valid = True
         self._bulb = None
+
         try:
             self._bulb = flux_led.WifiLedBulb(self._ipaddr)
             if self._protocol:
                 self._bulb.setProtocol(self._protocol)
+
+            # After bulb object is created the status is updated. We can
+            # now set the correct mode if it was not explicitly defined.
+            if not self._mode:
+                if self._bulb.rgbwcapable:
+                    self._mode = MODE_RGBW
+                else:
+                    self._mode = MODE_RGB
+
         except socket.error:
             self.is_valid = False
             _LOGGER.error(
