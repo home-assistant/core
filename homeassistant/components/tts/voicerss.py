@@ -95,6 +95,7 @@ class VoiceRSSProvider(Provider):
         self.hass = hass
         self._extension = conf[CONF_CODEC]
         self._lang = conf[CONF_LANG]
+        self.provider_name = 'VoiceRSS'
 
         self._form_data = {
             'key': conf[CONF_API_KEY],

@@ -138,6 +138,7 @@ class AmazonPollyProvider(Provider):
         self.supported_langs = supported_languages
         self.all_voices = all_voices
         self.default_voice = self.config.get(CONF_VOICE)
+        self.provider_name = 'Amazon Polly'
 
     @property
     def supported_languages(self):

@@ -58,6 +58,7 @@ class GoogleProvider(Provider):
                            "AppleWebKit/537.36 (KHTML, like Gecko) "
                            "Chrome/47.0.2526.106 Safari/537.36")
         }
+        self.provider_name = 'Google'
 
     @property
     def default_language(self):

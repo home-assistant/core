@@ -82,6 +82,7 @@ class YandexSpeechKitProvider(Provider):
         self._language = conf.get(CONF_LANG)
         self._emotion = conf.get(CONF_EMOTION)
         self._speed = str(conf.get(CONF_SPEED))
+        self.provider_name = 'YandexTTS'
 
     @property
     def default_language(self):

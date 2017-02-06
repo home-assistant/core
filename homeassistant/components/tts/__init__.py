@@ -74,6 +74,7 @@ SCHEMA_SERVICE_SAY = vol.Schema({
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 
+REQUIREMENTS = ["pytaglib==1.4.0"]
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -323,6 +324,9 @@ class SpeechManager(object):
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
+        data = yield from self.async_write_id3_tags(filename, data, provider,
+                                                    message, language, options)
+
         # save to memory
         self._async_store_to_memcache(key, filename, data)
 
@@ -411,6 +415,29 @@ class SpeechManager(object):
 
         content, _ = mimetypes.guess_type(filename)
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
+
+    @asyncio.coroutine
+    def async_write_id3_tags(self, filename, data, provider, message,
+                             language, options):
+        """Write ID3 tags to file."""
+        import tempfile
+        import taglib
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            voice_file = os.path.join(tmpdirname, filename)
+            with open(voice_file, 'wb') as speech:
+                speech.write(data)
+
+            options = options or provider.default_options
+
+            tts = taglib.File(voice_file)
+            tts.tags['ARTIST'] = [options.get('voice', language)]
+            tts.tags['ALBUM'] = [provider.provider_name]
+            tts.tags['TITLE'] = [message]
+            tts.save()
+
+            with open(voice_file, 'rb') as speech:
+                return speech.read()
 
 
 class Provider(object):

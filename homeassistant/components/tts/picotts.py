@@ -38,6 +38,7 @@ class PicoProvider(Provider):
     def __init__(self, lang):
         """Initialize Pico TTS provider."""
         self._lang = lang
+        self.provider_name = 'PicoTTS'
 
     @property
     def default_language(self):
