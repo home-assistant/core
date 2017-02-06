@@ -12,9 +12,11 @@ import logging
 import mimetypes
 import os
 import re
+import io
 
 from aiohttp import web
 import voluptuous as vol
+import mutagen
 
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.bootstrap import async_prepare_setup_platform
@@ -418,13 +420,10 @@ class SpeechManager(object):
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
 
-@asyncio.coroutine
+@callback
 def write_tags(filename, data, engine, provider,
                message, language, options):
     """Write ID3 tags to file."""
-    import mutagen
-    import io
-
     data_bytes = io.BytesIO()
 
     data_bytes.write(data)
