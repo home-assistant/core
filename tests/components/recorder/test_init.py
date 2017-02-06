@@ -3,7 +3,7 @@
 import json
 from datetime import datetime, timedelta
 import unittest
-from unittest.mock import patch, call
+from unittest.mock import patch, call, MagicMock
 
 import pytest
 from homeassistant.core import callback
@@ -221,7 +221,7 @@ def hass_recorder():
     """HASS fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
-    def setup_recorder(config):
+    def setup_recorder(config={}):
         """Setup with params."""
         db_uri = 'sqlite://'  # In memory DB
         conf = {recorder.CONF_DB_URL: db_uri}
@@ -307,10 +307,56 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
 def test_recorder_errors_exceptions(hass_recorder): \
         # pylint: disable=redefined-outer-name
     """Test session_scope and get_model errors."""
+    # Model cannot be resolved
     assert recorder.get_model('dont-exist') is None
 
-    hass_recorder({})
-    with pytest.raises(Exception) as err:
+    # Verify the instance fails before setup
+    with pytest.raises(RuntimeError):
+        recorder._verify_instance()
+
+    # Setup the recorder
+    hass_recorder()
+
+    recorder._verify_instance()
+
+    # Verify session scope raises (and prints) an exception
+    with patch('homeassistant.components.recorder._LOGGER.error') as e_mock, \
+            pytest.raises(Exception) as err:
         with recorder.session_scope() as session:
             session.execute('select * from notthere')
+    assert e_mock.call_count == 1
+    assert recorder.ERROR_QUERY[:-4] in e_mock.call_args[0][0]
     assert 'no such table' in str(err.value)
+
+
+def test_recorder_bad_commit(hass_recorder):
+    """Bad _commit should retry 3 times."""
+    hass_recorder()
+
+    def work(session):
+        """Bad work."""
+        session.execute('select * from notthere')
+
+    with patch('homeassistant.components.recorder.time.sleep') as e_mock, \
+            recorder.session_scope() as session:
+        res = recorder._INSTANCE._commit(session, work)
+    assert res is False
+    assert e_mock.call_count == 3
+
+
+def test_recorder_bad_execute(hass_recorder):
+    """Bad execute, retry 3 times."""
+    hass_recorder()
+
+    def to_native():
+        """Rasie exception."""
+        from sqlalchemy.exc import SQLAlchemyError
+        raise SQLAlchemyError()
+
+    mck1 = MagicMock()
+    mck1.to_native = to_native
+
+    with patch('homeassistant.components.recorder.time.sleep') as e_mock:
+        res = recorder.execute((mck1,))
+    assert res == []
+    assert e_mock.call_count == 3
