@@ -325,8 +325,8 @@ class SpeechManager(object):
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
-        data = yield from write_tags(filename, data, provider, message,
-                                     language, options)
+        data = yield from write_tags(filename, data, engine, provider,
+                                     message, language, options)
 
         # save to memory
         self._async_store_to_memcache(key, filename, data)
@@ -419,7 +419,8 @@ class SpeechManager(object):
 
 
 @asyncio.coroutine
-def write_tags(filename, data, provider, message, language, options):
+def write_tags(filename, data, engine, provider,
+               message, language, options):
     """Write ID3 tags to file."""
     import mutagen
     import io
@@ -441,7 +442,7 @@ def write_tags(filename, data, provider, message, language, options):
     tts_file = mutagen.File(data_bytes, easy=True)
     if tts_file is not None:
         tts_file.tags['artist'] = artist
-        tts_file.tags['album'] = provider.provider_name
+        tts_file.tags['album'] = provider.provider_name or engine
         tts_file.tags['title'] = message
         tts_file.save(data_bytes)
     return data_bytes.getvalue()
