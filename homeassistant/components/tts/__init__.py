@@ -31,6 +31,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'tts'
 DEPENDENCIES = ['http']
+REQUIREMENTS = ["mutagen==1.36.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,8 +75,6 @@ SCHEMA_SERVICE_SAY = vol.Schema({
 })
 
 SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
-
-REQUIREMENTS = ["mutagen==1.36.2"]
 
 
 @asyncio.coroutine
