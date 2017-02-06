@@ -29,10 +29,13 @@ DOMAIN = 'flux_led'
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                     SUPPORT_RGB_COLOR)
 
+MODE_RGB = 'rgb'
+MODE_RGBW = 'rgbw'
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(ATTR_MODE, default='rgbw'):
-        vol.All(cv.string, vol.In(['rgbw', 'rgb'])),
+    vol.Optional(ATTR_MODE, default=MODE_RGBW):
+        vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
     vol.Optional(CONF_PROTOCOL, default=None):
         vol.All(cv.string, vol.In(['ledenet'])),
 })
@@ -42,13 +45,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 })
 
+DEFAULT_MODE = 'rgbw'
+DEFAULT_PROTOCOL = None
+
+# provide lookup tables based on discovery device type
+MODE_LOOKUP = {
+    # I only have one device to test (Arilux al-lc03) and it
+    # has this type. My best guess is it only support rgb as
+    # the MagicHome app also sees it as rgb only.
+    'AK001-ZJ100': 'rgb',
+}
+PROTOCOL_LOOKUP = {}
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Flux lights."""
     import flux_led
     lights = []
     light_ips = []
-    for ipaddr, device_config in config[CONF_DEVICES].items():
+
+    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
         device = {}
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
@@ -59,7 +75,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(light)
             light_ips.append(ipaddr)
 
-    if not config[CONF_AUTOMATIC_ADD]:
+    if discovery_info:
+        device = {}
+        device['ipaddr'] = discovery_info[0]
+        device['name'] = discovery_info[1]
+        device_type = discovery_info[2]
+        device[CONF_PROTOCOL] = PROTOCOL_LOOKUP.get(device_type,
+                                                    DEFAULT_PROTOCOL)
+        device[ATTR_MODE] = MODE_LOOKUP.get(device_type,
+                                            DEFAULT_MODE)
+        light = FluxLight(device)
+        if light.is_valid:
+            lights.append(light)
+            light_ips.append(device['ipaddr'])
+
+    if not config.get(CONF_AUTOMATIC_ADD, False):
         add_devices(lights)
         return
 

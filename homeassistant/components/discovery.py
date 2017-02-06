@@ -39,6 +39,7 @@ SERVICE_HANDLERS = {
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
+    'flux_led': ('light', 'flux_led'),
 }
 
 CONFIG_SCHEMA = vol.Schema({
