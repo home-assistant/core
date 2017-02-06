@@ -429,20 +429,26 @@ def write_tags(filename, data, engine, provider,
     data_bytes.seek(0)
 
     artist = language
-    if options is not None:
-        if options.get('voice') is not None:
-            artist = options.get('voice')
 
     if provider.default_options is not None:
         if provider.default_options.get('voice') is not None:
             artist = provider.default_options.get('voice')
+
+    if options is not None:
+        if options.get('voice') is not None:
+            artist = options.get('voice')
+
+    album = engine
+
+    if hasattr(provider, 'provider_name'):
+        album = provider.provider_name
 
     import mutagen
 
     tts_file = mutagen.File(data_bytes, easy=True)
     if tts_file is not None:
         tts_file.tags['artist'] = artist
-        tts_file.tags['album'] = provider.provider_name or engine
+        tts_file.tags['album'] = album
         tts_file.tags['title'] = message
         tts_file.save(data_bytes)
     return data_bytes.getvalue()
