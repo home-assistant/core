@@ -302,7 +302,7 @@ class SpeechManager(object):
         # is file store in file cache
         elif use_cache and key in self.file_cache:
             filename = self.file_cache[key]
-            yield from self.async_file_to_mem(key)
+            self.hass.async_add_job(self.async_file_to_mem(key))
         # load speech from provider into memory
         else:
             filename = yield from self.async_get_tts_audio(
