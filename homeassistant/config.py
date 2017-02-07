@@ -458,7 +458,7 @@ def merge_packages_customize(core_customize, packages):
 
 
 @asyncio.coroutine
-def async_check_ha_config_file(hass, persistent_id):
+def async_check_ha_config_file(hass):
     """Check if HA config file valid.
 
     This method is a coroutine.
@@ -480,5 +480,5 @@ def async_check_ha_config_file(hass, persistent_id):
         _LOGGER.error(content)
         yield from pn.async_create(
             hass, 'Config error. See dev-info panel for details.',
-            "Config validating", persistent_id)
+            "Config validating", "{0}.check_config".format(CONF_CORE))
         raise HomeAssistantError("Invalid config")

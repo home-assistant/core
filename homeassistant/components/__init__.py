@@ -154,8 +154,7 @@ def async_setup(hass, config):
             return hass.async_stop_handler()
 
         try:
-            yield from conf_util.async_check_ha_config_file(
-                hass, "{0}.{1}".format(ha.DOMAIN, call.service))
+            yield from conf_util.async_check_ha_config_file(hass)
         except HomeAssistantError:
             return
 
