@@ -3,7 +3,9 @@ import asyncio
 from collections import OrderedDict
 import logging
 import os
+import re
 import shutil
+import sys
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
 
@@ -453,3 +455,31 @@ def merge_packages_customize(core_customize, packages):
         conf = schema(pkg)
         cust.extend(conf.get(CONF_CORE, {}).get(CONF_CUSTOMIZE, []))
     return cust
+
+
+@asyncio.coroutine
+def async_check_ha_config_file(hass, persistent_id):
+    """Check if HA config file valid.
+
+    This method is a coroutine.
+    """
+    import homeassistant.components.persistent_notification as pn
+
+    proc = yield from asyncio.create_subprocess_exec(
+        sys.argv[0],
+        '--script',
+        'check_config',
+        stdout=asyncio.subprocess.PIPE)
+    # Wait for the subprocess exit
+    (stdout_data, dummy) = yield from proc.communicate()
+    result = yield from proc.wait()
+    if result:
+        _LOGGER.error("check_config failed. Not restarting.")
+        content = re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+        # Put error cleaned from color codes in the error log so it
+        # will be visible at the UI.
+        _LOGGER.error(content)
+        yield from pn.async_create(
+            hass, 'Config error. See dev-info panel for details.',
+            "Config validating", persistent_id)
+        raise HomeAssistantError("Invalid config")
