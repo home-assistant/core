@@ -66,25 +66,24 @@ class MailgunNotificationService(BaseNotificationService):
         self._recipient = recipient
 
     def initialize_client(self):
-        """ Initialize the connection to Mailgun. """
+        """Initialize the connection to Mailgun."""
         from pymailgun import Client
         self._client = Client(self._token, self._domain, self._sandbox)
-        _LOGGER.info('MAILGUN SANDBOX: {}'.format(self._sandbox))
-        _LOGGER.info('MAILGUN DOMAIN: {}'.format(self._client.domain))
+        _LOGGER.debug('Mailgun domain: %s', self._client.domain)
         self._domain = self._client.domain
         if not self._sender:
             self._sender = DEFAULT_SENDER.format(domain=self._domain)
 
     def connection_is_valid(self):
-        """ Check whether the provided credentials are valid. """
+        """Check whether the provided credentials are valid."""
         from pymailgun import (MailgunCredentialsError, MailgunDomainError)
         try:
             self.initialize_client()
         except MailgunCredentialsError:
             _LOGGER.exception('Invalid credentials')
             return False
-        except MailgunDomainError as e:
-            _LOGGER.exception(e)
+        except MailgunDomainError as mailgun_error:
+            _LOGGER.exception(mailgun_error)
             return False
         return True
 
@@ -104,6 +103,6 @@ class MailgunNotificationService(BaseNotificationService):
                                           subject=subject,
                                           text=message,
                                           files=files)
-            _LOGGER.debug('Message sent: {}'.format(resp))
-        except MailgunError as e:
-            _LOGGER.exception('Failed to send message: {}'.format(e))
+            _LOGGER.debug('Message sent: %s', resp)
+        except MailgunError as mailgun_error:
+            _LOGGER.exception('Failed to send message: %s', mailgun_error)
