@@ -55,7 +55,7 @@ def async_start(hass, discovery_topic, hass_config):
                 discovery_topic, component, object_id)
 
         yield from async_load_platform(
-           hass, component, DOMAIN, payload, hass_config)
+            hass, component, DOMAIN, payload, hass_config)
 
     mqtt.async_subscribe(hass, discovery_topic + '/#',
                          async_device_message_received, 0)
