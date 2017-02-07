@@ -257,6 +257,8 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
+        if provider.provider_name is None:
+            provider.provider_name = engine
         self.providers[engine] = provider
 
     @asyncio.coroutine
@@ -328,7 +330,7 @@ class SpeechManager(object):
         filename = ("{}.{}".format(key, extension)).lower()
 
         data = self.write_tags(
-            filename, data, engine, provider, message, language, options)
+            filename, data, provider, message, language, options)
 
         # save to memory
         self._async_store_to_memcache(key, filename, data)
@@ -420,8 +422,7 @@ class SpeechManager(object):
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
     @staticmethod
-    def write_tags(filename, data, engine, provider, message, language,
-                    options):
+    def write_tags(filename, data, provider, message, language, options):
         """Write ID3 tags to file.
 
         Async friendly.
@@ -432,16 +433,12 @@ class SpeechManager(object):
         data_bytes.name = filename
         data_bytes.seek(0)
 
+        album = provider.provider_name
         artist = language
 
         if options is not None:
             if options.get('voice') is not None:
                 artist = options.get('voice')
-
-        album = engine
-
-        if hasattr(provider, 'provider_name'):
-            album = provider.provider_name
 
         tts_file = mutagen.File(data_bytes, easy=True)
         if tts_file is not None:
