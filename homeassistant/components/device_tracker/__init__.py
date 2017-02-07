@@ -139,13 +139,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     @asyncio.coroutine
-    def async_setup_platform(p_type, p_config=None, disc_info=None):
+    def async_setup_platform(p_type, p_config, disc_info=None):
         """Setup a device tracker platform."""
-        if p_config is None:
-            p_config = {}
-        if disc_info is None:
-            disc_info = {}
-
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
         if platform is None:
@@ -202,7 +197,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
         """Callback to load a platform."""
-        yield from async_setup_platform(platform, disc_info=info)
+        yield from async_setup_platform(platform, {}, disc_info=info)
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
