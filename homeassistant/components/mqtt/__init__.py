@@ -4,7 +4,6 @@ Support for MQTT message handling.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
-import asyncio
 import logging
 import os
 import socket
@@ -12,6 +11,7 @@ import time
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.bootstrap import prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
@@ -36,6 +36,8 @@ REQUIREMENTS = ['paho-mqtt==1.2']
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
 CONF_CLIENT_ID = 'client_id'
+CONF_DISCOVERY = 'discovery'
+CONF_DISCOVERY_PREFIX = 'discovery_prefix'
 CONF_KEEPALIVE = 'keepalive'
 CONF_CERTIFICATE = 'certificate'
 CONF_CLIENT_KEY = 'client_key'
@@ -58,6 +60,8 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
+DEFAULT_DISCOVERY = False
+DEFAULT_DISCOVERY_PREFIX = 'homeassistant'
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -70,7 +74,8 @@ MAX_RECONNECT_WAIT = 300  # seconds
 
 def valid_subscribe_topic(value, invalid_chars='\0'):
     """Validate that we can subscribe using this MQTT topic."""
-    if isinstance(value, str) and all(c not in value for c in invalid_chars):
+    value = cv.string(value)
+    if all(c not in value for c in invalid_chars):
         return vol.Length(min=1, max=65535)(value)
     raise vol.Invalid('Invalid MQTT topic name')
 
@@ -78,6 +83,11 @@ def valid_subscribe_topic(value, invalid_chars='\0'):
 def valid_publish_topic(value):
     """Validate that we can publish using this MQTT topic."""
     return valid_subscribe_topic(value, invalid_chars='#+\0')
+
+
+def valid_discovery_topic(value):
+    """Validate a discovery topic."""
+    return valid_subscribe_topic(value, invalid_chars='#+\0/')
 
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
@@ -111,7 +121,10 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
-        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA
+        vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
+        vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        vol.Optional(CONF_DISCOVERY_PREFIX,
+                     default=DEFAULT_DISCOVERY_PREFIX): valid_discovery_topic,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -170,15 +183,16 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-def async_subscribe(hass, topic, callback, qos=DEFAULT_QOS):
+@callback
+def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
     """Subscribe to an MQTT topic."""
-    @asyncio.coroutine
+    @callback
     def mqtt_topic_subscriber(event):
         """Match subscribed MQTT topic."""
         if not _match_topic(topic, event.data[ATTR_TOPIC]):
             return
 
-        hass.async_run_job(callback, event.data[ATTR_TOPIC],
+        hass.async_run_job(msg_callback, event.data[ATTR_TOPIC],
                            event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
 
     async_remove = hass.bus.async_listen(EVENT_MQTT_MESSAGE_RECEIVED,
@@ -211,6 +225,21 @@ def _setup_server(hass, config):
     success, broker_config = server.start(hass, conf.get(CONF_EMBEDDED))
 
     return success and broker_config
+
+
+def _setup_discovery(hass, config):
+    """Try to start the discovery of MQTT devices."""
+    conf = config.get(DOMAIN, {})
+
+    discovery = prepare_setup_platform(hass, config, DOMAIN, 'discovery')
+
+    if discovery is None:
+        _LOGGER.error("Unable to load MQTT discovery")
+        return None
+
+    success = discovery.start(hass, conf[CONF_DISCOVERY_PREFIX], config)
+
+    return success
 
 
 def setup(hass, config):
@@ -300,6 +329,9 @@ def setup(hass, config):
     hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service,
                            descriptions.get(SERVICE_PUBLISH),
                            schema=MQTT_PUBLISH_SCHEMA)
+
+    if conf.get(CONF_DISCOVERY):
+        _setup_discovery(hass, config)
 
     return True
 
