@@ -96,7 +96,6 @@ def run(script_args: List) -> int:
         domain_info = args.info.split(',')
 
     res = check(config_path)
-
     if args.files:
         print(color(C_HEAD, 'yaml files'), '(used /',
               color('red', 'not used') + ')')
@@ -247,6 +246,7 @@ def check(config_path):
         res['secret_cache'] = dict(yaml.__SECRET_CACHE)
     except Exception as err:  # pylint: disable=broad-except
         print(color('red', 'Fatal error while loading config:'), str(err))
+        res['except'].setdefault(ERROR_STR, []).append(err)
     finally:
         # Stop all patches
         for pat in PATCHES.values():
