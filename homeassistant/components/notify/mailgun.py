@@ -31,6 +31,7 @@ DEFAULT_SENDER = 'hass@{domain}'
 # Default sandbox value
 DEFAULT_SANDBOX = False
 
+# pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_RECIPIENT): vol.Email(),
