@@ -478,7 +478,7 @@ def async_check_ha_config_file(hass):
         # Put error cleaned from color codes in the error log so it
         # will be visible at the UI.
         _LOGGER.error(content)
-        yield from pn.async_create(
-            hass, 'Config error. See dev-info panel for details.',
+        pn.async_create(
+            hass, "Config error. See dev-info panel for details.",
             "Config validating", "{0}.check_config".format(CONF_CORE))
         raise HomeAssistantError("Invalid config")
