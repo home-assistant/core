@@ -48,7 +48,7 @@ def get_device_component_mapping(value):
         manufacturer_id = int(value.node.manufacturer_id, 16)
         product_type = int(value.node.product_type, 16)
         return DEVICE_COMPONENT_MAPPING.get(
-            (manufacturer_id, product_type, value.command_class), None)
+            (manufacturer_id, product_type, value.command_class))
 
     return None
 
@@ -62,6 +62,6 @@ def get_device_mapping(value):
         product_type = int(value.node.product_type, 16)
         product_id = int(value.node.product_id, 16)
         return DEVICE_MAPPINGS.get(
-            (manufacturer_id, product_type, product_id, value.index), None)
+            (manufacturer_id, product_type, product_id, value.index))
 
     return None
