@@ -68,7 +68,9 @@ class DemoLight(Light):
     @property
     def available(self) -> bool:
         """Return availability."""
-        return self._available
+        # This demo light is always available, but well-behaving components
+        # should implement this to inform Home Assistant accordingly.
+        return True
 
     @property
     def brightness(self) -> int:
@@ -137,14 +139,14 @@ class DemoLight(Light):
         if ATTR_EFFECT in kwargs:
             self._effect = kwargs[ATTR_EFFECT]
 
-        # For non-polling lights it is necessary to schedule an update
-        # after making a change, here just to give an example.
+        # As we have disabled polling, we need to inform
+        # Home Assistant about updates in our state ourselves.
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs) -> None:
         """Turn the light off."""
         self._state = False
 
-        # For non-polling lights it is necessary to schedule an update
-        # after making a change, here just to give an example.
+        # As we have disabled polling, we need to inform
+        # Home Assistant about updates in our state ourselves.
         self.schedule_update_ha_state()
