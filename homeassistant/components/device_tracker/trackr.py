@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config: dict, see):
+def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Validate the configuration and return a TrackR scanner."""
     TrackRDeviceScanner(hass, config, see)
     return True
