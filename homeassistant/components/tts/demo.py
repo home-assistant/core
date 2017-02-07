@@ -32,7 +32,7 @@ class DemoProvider(Provider):
     def __init__(self, lang):
         """Initialize demo provider."""
         self._lang = lang
-        self.provider_name = 'Demo'
+        self.name = 'Demo'
 
     @property
     def default_language(self):

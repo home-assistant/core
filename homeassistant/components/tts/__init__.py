@@ -257,8 +257,8 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
-        if provider.provider_name is None:
-            provider.provider_name = engine
+        if provider.name is None:
+            provider.name = engine
         self.providers[engine] = provider
 
     @asyncio.coroutine
@@ -433,19 +433,23 @@ class SpeechManager(object):
         data_bytes.name = filename
         data_bytes.seek(0)
 
-        album = provider.provider_name
+        album = provider.name
         artist = language
 
         if options is not None:
             if options.get('voice') is not None:
                 artist = options.get('voice')
 
-        tts_file = mutagen.File(data_bytes, easy=True)
-        if tts_file is not None:
-            tts_file.tags['artist'] = artist
-            tts_file.tags['album'] = album
-            tts_file.tags['title'] = message
-            tts_file.save(data_bytes)
+        try:
+            tts_file = mutagen.File(data_bytes, easy=True)
+            if tts_file is not None:
+                tts_file.tags['artist'] = artist
+                tts_file.tags['album'] = album
+                tts_file.tags['title'] = message
+                tts_file.save(data_bytes)
+        except mutagen.MutagenError as err:
+            _LOGGER.error("ID3 tag error: %s", err)
+
         return data_bytes.getvalue()
 
 
@@ -453,7 +457,7 @@ class Provider(object):
     """Represent a single provider."""
 
     hass = None
-    provider_name = None
+    name = None
 
     @property
     def default_language(self):

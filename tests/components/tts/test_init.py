@@ -2,7 +2,7 @@
 import ctypes
 import os
 import shutil
-from unittest.mock import patch, PropertyMock, MagicMock
+from unittest.mock import patch, PropertyMock
 
 import requests
 
@@ -341,12 +341,10 @@ class TestTTS(object):
         assert len(calls) == 1
         req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
         _, demo_data = self.demo_provider.get_tts_audio("bla", 'en')
-        prov_mock = MagicMock()
-        prov_mock.provider_name = 'Demo'
         demo_data = tts.SpeechManager.write_tags(
             "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3",
-            demo_data, prov_mock, "I person is on front of your door.",
-            'en', None)
+            demo_data, self.demo_provider,
+            "I person is on front of your door.", 'en', None)
         assert req.status_code == 200
         assert req.content == demo_data
 
@@ -374,12 +372,10 @@ class TestTTS(object):
         assert len(calls) == 1
         req = requests.get(calls[0].data[ATTR_MEDIA_CONTENT_ID])
         _, demo_data = self.demo_provider.get_tts_audio("bla", "de")
-        prov_mock = MagicMock()
-        prov_mock.provider_name = 'Demo'
         demo_data = tts.SpeechManager.write_tags(
             "265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3",
-            demo_data, prov_mock, "I person is on front of your door.",
-            'de', None)
+            demo_data, self.demo_provider,
+            "I person is on front of your door.", 'de', None)
         assert req.status_code == 200
         assert req.content == demo_data
 
