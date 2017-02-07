@@ -71,6 +71,9 @@ class SunflowerBulb(Light):
     @property
     def brightness(self):
         """HA brightness is 0-255; Yeelight Sunflower's brightness is 0-100."""
+        """Brightness of the light (an integer in the range 0-255).
+        Note that Yeelight Sunflower's brightness is 0-100
+        """
         return self._light.brightness / 100 * 255
 
     @property
