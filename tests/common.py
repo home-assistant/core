@@ -26,6 +26,7 @@ from homeassistant.components import sun, mqtt
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
+from homeassistant.util.async import run_callback_threadsafe
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -147,13 +148,20 @@ def mock_service(hass, domain, service):
     return calls
 
 
-def fire_mqtt_message(hass, topic, payload, qos=0):
+@ha.callback
+def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
-    hass.bus.fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
+    hass.bus.async_fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
         mqtt.ATTR_TOPIC: topic,
         mqtt.ATTR_PAYLOAD: payload,
         mqtt.ATTR_QOS: qos,
     })
+
+
+def fire_mqtt_message(hass, topic, payload, qos=0):
+    """Fire the MQTT message."""
+    run_callback_threadsafe(
+        hass.loop, async_fire_mqtt_message, hass, topic, payload, qos).result()
 
 
 def fire_time_changed(hass, time):
