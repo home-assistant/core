@@ -304,7 +304,8 @@ class HueLight(Light):
         lid = self.info.get('uniqueid')
 
         if lid is None:
-            ltype = self.info.get('type', 'Group' if self.is_group else 'Light')
+            default_type = 'Group' if self.is_group else 'Light'
+            ltype = self.info.get('type', default_type)
             lid = '{}.{}.{}'.format(self.name, ltype, self.light_id)
 
         return '{}.{}'.format(self.__class__, lid)
