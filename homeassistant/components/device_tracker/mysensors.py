@@ -9,6 +9,8 @@ import logging
 from homeassistant.components import mysensors
 from homeassistant.util import slugify
 
+DEPENDENCIES = ['mysensors']
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -51,8 +53,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             )
 
     gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
-    if not gateways:
-        return
+
     for gateway in gateways:
         gateway.platform_callbacks.append(mysensors_callback)
 
