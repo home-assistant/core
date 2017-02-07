@@ -200,8 +200,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         for light_id, info in api_lights.items():
             if light_id not in lights:
-                lights[light_id] = HueLight(hass,
-                                            int(light_id), info,
+                lights[light_id] = HueLight(int(light_id), info,
                                             bridge, update_lights,
                                             bridge_type, allow_unreachable,
                                             allow_in_emulated_hue)
@@ -219,7 +218,6 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
             if lightgroup_id not in lightgroups:
                 lightgroups[lightgroup_id] = HueLight(
-                    hass,
                     int(lightgroup_id), info, bridge, update_lights,
                     bridge_type, allow_unreachable, allow_in_emulated_hue,
                     True)
@@ -282,11 +280,10 @@ def request_configuration(host, hass, add_devices, filename,
 class HueLight(Light):
     """Representation of a Hue light."""
 
-    def __init__(self, hass, light_id, info, bridge, update_lights,
+    def __init__(self, light_id, info, bridge, update_lights,
                  bridge_type, allow_unreachable, allow_in_emulated_hue,
                  is_group=False):
         """Initialize the light."""
-        self.hass = hass
         self.light_id = light_id
         self.info = info
         self.bridge = bridge
@@ -304,8 +301,14 @@ class HueLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this Hue light."""
-        return "{}.{}".format(
-            self.__class__, self.info.get('uniqueid', self.name))
+        lid = self.info.get('uniqueid')
+
+        if lid is None:
+            default_type = 'Group' if self.is_group else 'Light'
+            ltype = self.info.get('type', default_type)
+            lid = '{}.{}.{}'.format(self.name, ltype, self.light_id)
+
+        return '{}.{}'.format(self.__class__, lid)
 
     @property
     def name(self):
