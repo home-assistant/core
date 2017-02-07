@@ -305,7 +305,7 @@ class HueLight(Light):
 
         if lid is None:
             ltype = self.info.get('type', 'Group' if self.is_group else 'Light')
-            lid = '{}.{}.{}'.format(self.name, type, self.light_id)
+            lid = '{}.{}.{}'.format(self.name, ltype, self.light_id)
 
         return '{}.{}'.format(self.__class__, lid)
 
