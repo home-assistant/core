@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
 from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +105,7 @@ ALARM_TYPE_STD = [
 SET_USERCODE_SCHEMA = vol.Schema({
     vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-    vol.Required(ATTR_USERCODE): vol.Coerce(int),
+    vol.Required(ATTR_USERCODE): cv.string,
 })
 
 GET_USERCODE_SCHEMA = vol.Schema({
