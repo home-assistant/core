@@ -388,6 +388,11 @@ def mock_coro(return_value=None):
     return coro
 
 
+def mock_generator(return_value=None):
+    """Helper method to return a coro generator that returns a value."""
+    return mock_coro(return_value)()
+
+
 @contextmanager
 def assert_setup_component(count, domain=None):
     """Collect valid configuration from setup_component.

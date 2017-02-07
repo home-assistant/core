@@ -14,9 +14,10 @@ from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
-    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
+    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
+    SERVICE_HOMEASSISTANT_RESTART, RESTART_EXIT_CODE)
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_generator
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -219,6 +220,39 @@ class TestHomeAssistant(unittest.TestCase):
         """Try to add a job with None as function."""
         with pytest.raises(ValueError):
             self.hass.add_job(None, 'test_arg')
+
+    @patch('asyncio.create_subprocess_exec')
+    def test_restart(self, mock_create):
+        """Check that restart propagates to stop."""
+        process_mock = MagicMock()
+        attrs = {
+            'communicate.return_value': mock_generator(('output', 'error')),
+            'wait.return_value': mock_generator(0)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_generator(process_mock)
+
+        self.hass.start()
+        with patch.object(self.hass, 'async_stop') as mock_stop:
+            self.hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+            mock_stop.assert_called_once_with()
+        self.assertEqual(RESTART_EXIT_CODE, self.hass.exit_code)
+
+    @patch('asyncio.create_subprocess_exec')
+    def test_restart_bad_config(self, mock_create):
+        """Check that restart with a bad config doesn't propagate to stop."""
+        process_mock = MagicMock()
+        attrs = {
+            'communicate.return_value':
+                mock_generator((r'\033[hellom'.encode('utf-8'), 'error')),
+            'wait.return_value': mock_generator(1)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_generator(process_mock)
+
+        self.hass.start()
+        with patch.object(self.hass, 'async_stop') as mock_stop:
+            self.hass.services.call(ha.DOMAIN, SERVICE_HOMEASSISTANT_RESTART)
+            mock_stop.assert_not_called()
+        self.assertEqual(None, self.hass.exit_code)
 
 
 class TestEvent(unittest.TestCase):
