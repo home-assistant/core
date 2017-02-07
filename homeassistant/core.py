@@ -26,8 +26,7 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, SERVICE_HOMEASSISTANT_STOP,
-    RESTART_EXIT_CODE, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (

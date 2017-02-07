@@ -14,8 +14,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
-    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
-    SERVICE_HOMEASSISTANT_RESTART, RESTART_EXIT_CODE)
+    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
 
 from tests.common import get_test_home_assistant
 
