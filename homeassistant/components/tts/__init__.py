@@ -443,9 +443,9 @@ class SpeechManager(object):
         try:
             tts_file = mutagen.File(data_bytes, easy=True)
             if tts_file is not None:
-                tts_file.tags['artist'] = artist
-                tts_file.tags['album'] = album
-                tts_file.tags['title'] = message
+                tts_file['artist'] = artist
+                tts_file['album'] = album
+                tts_file['title'] = message
                 tts_file.save(data_bytes)
         except mutagen.MutagenError as err:
             _LOGGER.error("ID3 tag error: %s", err)
