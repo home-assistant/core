@@ -329,7 +329,7 @@ def setup(hass, config):
                            descriptions.get(SERVICE_PUBLISH),
                            schema=MQTT_PUBLISH_SCHEMA)
 
-    if conf[CONF_DISCOVERY]:
+    if conf.get(CONF_DISCOVERY):
         _setup_discovery(hass, config)
 
     return True

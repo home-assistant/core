@@ -161,7 +161,7 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0):
 def fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
     run_callback_threadsafe(
-        hass.loop, async_fire_mqtt_message, topic, payload, qos).result()
+        hass.loop, async_fire_mqtt_message, hass, topic, payload, qos).result()
 
 
 def fire_time_changed(hass, time):
