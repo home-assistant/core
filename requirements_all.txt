@@ -415,7 +415,7 @@ pyRFXtrx==0.16.1
 pyasn1-modules==0.0.8
 
 # homeassistant.components.notify.xmpp
-pyasn1==0.2.1
+pyasn1==0.2.2
 
 # homeassistant.components.media_player.apple_tv
 pyatv==0.0.1
