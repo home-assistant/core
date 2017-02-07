@@ -9,14 +9,14 @@ import voluptuous as vol
 
 from homeassistant.components.light import (Light,
                                             ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-                                            ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-                                            ATTR_COLOR_TEMP, SUPPORT_COLOR_TEMP,
+                                            ATTR_BRIGHTNESS,
+                                            SUPPORT_BRIGHTNESS,
                                             PLATFORM_SCHEMA)
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelightsunflower>=0.0.1']
-SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_COLOR_TEMP)
+REQUIREMENTS = ['yeelightsunflower==0.0.1']
+SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +30,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Yeelight Sunflower Light platform."""
     import yeelightsunflower
 
-    # Assign configuration variables. The configuration check takes care they are
-    # present.
+    # Assign configuration variables.
+    # The configuration check takes care they are present.
     host = config.get(CONF_HOST)
 
     # Setup connection with Yeelight Sunflower hub
@@ -70,9 +70,7 @@ class SunflowerBulb(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 0-255).
-        Note that Yeelight Sunflower's brightness is 0-100
-        """
+        """HA brightness is 0-255; Yeelight Sunflower's brightness is 0-100."""
         return self._light.brightness / 100 * 255
 
     @property
@@ -86,15 +84,21 @@ class SunflowerBulb(Light):
         return SUPPORT_YEELIGHT_SUNFLOWER
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
+        """Instruct the light to turn on, optionally set colour/brightness."""
+        # when no arguments, just turn light on (full brightness)
         if not kwargs:
             self._light.turn_on()
-        elif ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs[ATTR_RGB_COLOR]
-            self._light.set_rgb_color(rgb[0], rgb[1], rgb[2])
-        elif ATTR_BRIGHTNESS in kwargs:
-            bright = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
-            self._light.set_brightness(bright)
+        else:
+            if ATTR_RGB_COLOR in kwargs and ATTR_BRIGHTNESS in kwargs:
+                rgb = kwargs[ATTR_RGB_COLOR]
+                bright = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+                self._light.set_all(rgb[0], rgb[1], rgb[2], bright)
+            elif ATTR_RGB_COLOR in kwargs:
+                rgb = kwargs[ATTR_RGB_COLOR]
+                self._light.set_rgb_color(rgb[0], rgb[1], rgb[2])
+            elif ATTR_BRIGHTNESS in kwargs:
+                bright = int(kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+                self._light.set_brightness(bright)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
