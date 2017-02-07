@@ -316,8 +316,8 @@ class BraviaTVDevice(MediaPlayerDevice):
         return self._muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_BRAVIA
 
     @property

@@ -286,6 +286,9 @@ ATTR_STATE = 'state'
 
 ATTR_OPTION = 'option'
 
+# Bitfield of supported component features for the entity
+ATTR_SUPPORTED_FEATURES = 'supported_features'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
