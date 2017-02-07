@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
 })
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the MQTT tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]

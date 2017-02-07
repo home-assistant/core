@@ -235,6 +235,9 @@ def setup(hass, config):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     discovery.load_platform(
+        hass, 'device_tracker', DOMAIN, {}, config)
+
+    discovery.load_platform(
         hass, 'notify', DOMAIN, {CONF_NAME: DOMAIN}, config)
 
     return True
