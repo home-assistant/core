@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA,
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
+    SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, MediaPlayerDevice,
+    PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
     CONF_NAME, EVENT_HOMEASSISTANT_STOP)
@@ -166,6 +166,11 @@ class AppleTvDevice(MediaPlayerDevice):
         if state == STATE_PLAYING or state == STATE_PAUSED:
             return dt_util.utcnow()
 
+    @asyncio.coroutine
+    def async_play_media(self, media_type, media_id, **kwargs):
+        """Send the play_media command to the media player."""
+        yield from self._atv.remote_control.play_url(media_id, 0)
+
     @property
     def media_image(self):
         """Artwork for what is currently playing."""
@@ -185,7 +190,10 @@ class AppleTvDevice(MediaPlayerDevice):
             if self.state != STATE_IDLE:
                 return SUPPORT_PAUSE | SUPPORT_PLAY | \
                     SUPPORT_SEEK | SUPPORT_STOP | \
-                    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+                    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | \
+                    SUPPORT_PLAY_MEDIA
+            else:
+                return SUPPORT_PLAY_MEDIA
 
     def async_media_play_pause(self):
         """Pause media on media player.
