@@ -327,7 +327,7 @@ class SpeechManager(object):
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
-        data = self._write_tags(
+        data = self.write_tags(
             filename, data, engine, provider, message, language, options)
 
         # save to memory
@@ -420,7 +420,7 @@ class SpeechManager(object):
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
     @staticmethod
-    def _write_tags(filename, data, engine, provider, message, language,
+    def write_tags(filename, data, engine, provider, message, language,
                     options):
         """Write ID3 tags to file.
 
