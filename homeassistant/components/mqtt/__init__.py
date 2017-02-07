@@ -89,6 +89,7 @@ def valid_discovery_topic(value):
     """Validate a discovery topic."""
     return valid_subscribe_topic(value, invalid_chars='#+\0/')
 
+
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
