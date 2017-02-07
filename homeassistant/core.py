@@ -26,7 +26,8 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, SERVICE_HOMEASSISTANT_STOP,
+    RESTART_EXIT_CODE, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
@@ -136,7 +137,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(self._async_stop_handler)
+            self.loop.call_soon(self.async_stop_handler)
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -154,13 +155,13 @@ class HomeAssistant(object):
         if sys.platform != 'win32':
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGTERM, self._async_stop_handler)
+                    signal.SIGTERM, self.async_stop_handler)
             except ValueError:
                 _LOGGER.warning("Could not bind to SIGTERM")
 
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGHUP, self._async_restart_handler)
+                    signal.SIGHUP, self.async_restart_handler)
             except ValueError:
                 _LOGGER.warning("Could not bind to SIGHUP")
 
@@ -299,6 +300,18 @@ class HomeAssistant(object):
             yield from handler.async_close(blocking=True)
 
         self.loop.stop()
+
+    @callback
+    def async_stop_handler(self, *args):
+        """Stop Home Assistant."""
+        self.exit_code = 0
+        self.loop.create_task(self.async_stop())
+
+    @callback
+    def async_restart_handler(self, *args):
+        """Stop Home Assistant."""
+        self.exit_code = RESTART_EXIT_CODE
+        self.loop.create_task(self.async_stop())
 
     # pylint: disable=no-self-use
     @callback

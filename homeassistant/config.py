@@ -474,7 +474,6 @@ def async_check_ha_config_file(hass, persistent_id):
     (stdout_data, dummy) = yield from proc.communicate()
     result = yield from proc.wait()
     if result:
-        _LOGGER.error("check_config failed. Not restarting.")
         content = re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
         # Put error cleaned from color codes in the error log so it
         # will be visible at the UI.

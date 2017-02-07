@@ -18,8 +18,7 @@ from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.loader import get_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
-    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART,
-    RESTART_EXIT_CODE)
+    SERVICE_HOMEASSISTANT_STOP, SERVICE_HOMEASSISTANT_RESTART)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -152,9 +151,7 @@ def async_setup(hass, config):
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.exit_code = 0
-            hass.loop.create_task(hass.async_stop())
-            return
+            return hass.async_stop_handler()
 
         try:
             yield from conf_util.async_check_ha_config_file(
@@ -163,8 +160,7 @@ def async_setup(hass, config):
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.exit_code = RESTART_EXIT_CODE
-            hass.loop.create_task(hass.async_stop())
+            hass.async_restart_handler()
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)
