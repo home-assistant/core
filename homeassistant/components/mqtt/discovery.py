@@ -14,8 +14,6 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_NAME, CONF_PLATFORM)
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
-from homeassistant.components.binary_sensor.mqtt import (
-    DEFAULT_PAYLOAD_OFF, DEFAULT_PAYLOAD_ON)
 
 _LOGGER = logging.getLogger(__name__)
 
