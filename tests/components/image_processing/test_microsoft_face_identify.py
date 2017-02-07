@@ -135,7 +135,7 @@ class TestMicrosoftFaceIdentify(object):
             """Mock event."""
             face_events.append(event)
 
-        self.hass.bus.listen('identify_face', mock_face_event)
+        self.hass.bus.listen('image_processing.detect_face', mock_face_event)
 
         aioclient_mock.get(url, content=b'image')
 
