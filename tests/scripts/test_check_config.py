@@ -101,7 +101,13 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir('platform.yaml'))
             change_yaml_files(res)
             self.assertDictEqual(
-                {'mqtt': {'keepalive': 60, 'port': 1883, 'protocol': '3.1.1'},
+                {'mqtt': {
+                    'keepalive': 60,
+                    'port': 1883,
+                    'protocol': '3.1.1',
+                    'discovery': False,
+                    'discovery_prefix': 'homeassistant',
+                },
                  'light': []},
                 res['components']
             )
