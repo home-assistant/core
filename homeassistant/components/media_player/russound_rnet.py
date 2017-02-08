@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
             add_devices([RussoundRNETDevice(
-                hass, russ, sources, zone_id, extra)])
+                hass, russ, sources, zone_id, extra)], True)
     else:
         _LOGGER.error('Not connected to %s:%s', host, port)
 
@@ -114,7 +114,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     @property
     def state(self):
-        """Return the state of the device. directly from the device."""
+        """Return the state of the device."""
         return self._state
 
     @property
