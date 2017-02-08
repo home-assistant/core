@@ -97,8 +97,8 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
         return list(self._sources.keys())
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return DUNEHD_PLAYER_SUPPORT
 
     def volume_up(self):

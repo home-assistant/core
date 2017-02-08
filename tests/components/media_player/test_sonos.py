@@ -52,6 +52,10 @@ class SoCoMock():
         """Clear the sleep timer."""
         return
 
+    def get_sonos_favorites(self):
+        """Get favorites list from sonos."""
+        return {'favorites': []}
+
     def get_speaker_info(self, force):
         """Return a dict with various data points about the speaker."""
         return {'serial_number': 'B8-E9-37-BO-OC-BA:2',

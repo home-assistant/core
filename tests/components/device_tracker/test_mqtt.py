@@ -33,7 +33,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
     def test_ensure_device_tracker_platform_validation(self): \
             # pylint: disable=invalid-name
         """Test if platform validation was done."""
-        def mock_setup_scanner(hass, config, see):
+        def mock_setup_scanner(hass, config, see, discovery_info=None):
             """Check that Qos was added by validation."""
             self.assertTrue('qos' in config)
 

@@ -106,7 +106,7 @@ class TestMicrosoftFaceIdentify(object):
     @patch('homeassistant.components.image_processing.microsoft_face_identify.'
            'MicrosoftFaceIdentifyEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
-    def test_openalpr_process_image(self, poll_mock, aioclient_mock):
+    def test_ms_identify_process_image(self, poll_mock, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
         aioclient_mock.get(
             mf.FACE_API_URL.format("persongroups"),
@@ -135,7 +135,7 @@ class TestMicrosoftFaceIdentify(object):
             """Mock event."""
             face_events.append(event)
 
-        self.hass.bus.listen('identify_face', mock_face_event)
+        self.hass.bus.listen('image_processing.detect_face', mock_face_event)
 
         aioclient_mock.get(url, content=b'image')
 

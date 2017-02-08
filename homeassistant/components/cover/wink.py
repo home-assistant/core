@@ -40,13 +40,17 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
         """Open the shade."""
         self.wink.set_state(1)
 
+    def set_cover_position(self, position, **kwargs):
+        """Move the roller shutter to a specific position."""
+        self.wink.set_state(float(position)/100)
+
+    @property
+    def current_cover_position(self):
+        """Return the current position of roller shutter."""
+        return int(self.wink.state()*100)
+
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         state = self.wink.state()
-        if state == 0:
-            return True
-        elif state == 1:
-            return False
-        else:
-            return None
+        return bool(state == 0)

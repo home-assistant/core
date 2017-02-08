@@ -35,7 +35,6 @@ ENTITY_ID_ALL_LIGHTS = group.ENTITY_ID_FORMAT.format('all_lights')
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 
 # Bitfield of features supported by the light entity
-ATTR_SUPPORTED_FEATURES = 'supported_features'
 SUPPORT_BRIGHTNESS = 1
 SUPPORT_COLOR_TEMP = 2
 SUPPORT_EFFECT = 4
@@ -85,7 +84,6 @@ PROP_TO_ATTR = {
     'white_value': ATTR_WHITE_VALUE,
     'effect_list': ATTR_EFFECT_LIST,
     'effect': ATTR_EFFECT,
-    'supported_features': ATTR_SUPPORTED_FEATURES,
 }
 
 # Service call validation schemas
@@ -364,8 +362,6 @@ class Light(ToggleEntity):
                 data[ATTR_RGB_COLOR] = color_util.color_xy_brightness_to_RGB(
                     data[ATTR_XY_COLOR][0], data[ATTR_XY_COLOR][1],
                     data[ATTR_BRIGHTNESS])
-        else:
-            data[ATTR_SUPPORTED_FEATURES] = self.supported_features
 
         return data
 
