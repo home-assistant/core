@@ -21,6 +21,7 @@ from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from . import const
+from . import workaround
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
