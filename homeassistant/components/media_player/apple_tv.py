@@ -21,7 +21,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.0.1']
+REQUIREMENTS = ['pyatv==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,17 +44,21 @@ def async_setup_platform(hass, config, async_add_entities,
     """Setup the Apple TV platform."""
     import pyatv
 
+    if discovery_info is not None:
+        name = discovery_info['name']
+        host = discovery_info['host']
+        login_id = discovery_info['hsgid']
+    else:
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        login_id = config.get(CONF_LOGIN_ID)
+
     if DATA_APPLE_TV not in hass.data:
         hass.data[DATA_APPLE_TV] = []
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    login_id = config.get(CONF_LOGIN_ID)
-
-    key = '{}:{}'.format(host, name)
-    if key in hass.data[DATA_APPLE_TV]:
+    if host in hass.data[DATA_APPLE_TV]:
         return False
-    hass.data[DATA_APPLE_TV].append(key)
+    hass.data[DATA_APPLE_TV].append(host)
 
     details = pyatv.AppleTVDevice(name, host, login_id)
     atv = pyatv.connect_to_apple_tv(details, hass.loop)
