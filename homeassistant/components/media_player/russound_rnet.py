@@ -75,16 +75,38 @@ class RussoundRNETDevice(MediaPlayerDevice):
     """Representation of a Russound RNET device."""
 
     def __init__(self, hass, russ, sources, zone_id, extra):
-        """Initialise the Russound RNET device.
-
-        Note: now uses the Russound device directly to obtain the state and
-        volume level, and therefore we no longer
-        have properties in this class for these to variables.
-        """
+        """Initialise the Russound RNET device."""
         self._name = extra['name']
         self._russ = russ
         self._sources = sources
         self._zone_id = zone_id
+
+        self._state = None
+        self._volume = None
+        self._source = None
+
+        self.update()
+
+    def update(self):
+        """Retrieve latest state."""
+
+        if self._russ.get_power('1', self._zone_id) == 0:
+            self._state = STATE_OFF
+        else:
+            self._state = STATE_ON
+
+        self._volume = self._russ.get_volume('1', self._zone_id) / 100.0
+
+        # Returns 0 based index for source.
+        index = self._russ.get_source('1', self._zone_id)
+        # Possibility exists that user has defined list of all sources.
+        # If a source is set externally that is beyond the defined list then
+        # an exception will be thrown.
+        # In this case return and unknown source (None)
+        try:
+            self._source = self._sources[index]
+        except IndexError:
+            self._source = None
 
     @property
     def name(self):
@@ -94,9 +116,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device. directly from the device."""
-        if self._russ.get_power('1', self._zone_id) == 0:
-            return STATE_OFF
-        return STATE_ON
+        return self._state
 
     @property
     def supported_media_commands(self):
@@ -106,16 +126,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
     @property
     def source(self):
         """Get the currently selected source."""
-        # Returns 0 based index for source.
-        index = self._russ.get_source('1', self._zone_id)
-        # Possibility exists that user has defined list of all sources.
-        # If a source is set externally that is beyond the defined list then
-        # an exception will be thrown.
-        # In this case fore it to the first element in sources.
-        try:
-            return self._sources[index]
-        except IndexError:
-            return self._sources[0]
+        return self._source
 
     @property
     def volume_level(self):
@@ -124,7 +135,7 @@ class RussoundRNETDevice(MediaPlayerDevice):
         Value is returned based on a range (0..100).
         Therefore float divide by 100 to get to the required range.
         """
-        return self._russ.get_volume('1', self._zone_id) / 100.0
+        return self._volume
 
     def set_volume_level(self, volume):
         """Set volume level.  Volume has a range (0..1).
