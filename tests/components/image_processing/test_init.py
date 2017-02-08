@@ -268,7 +268,7 @@ class TestImageProcessingFace(object):
         assert len(event_data) == 1
         assert event_data[0]['name'] == 'Hans'
         assert event_data[0]['confidence'] == 98.34
-        assert event_data[0]['gender'] == 'men'
+        assert event_data[0]['gender'] == 'male'
         assert event_data[0]['entity_id'] == \
             'image_processing.demo_face'
 
@@ -293,6 +293,6 @@ class TestImageProcessingFace(object):
         assert len(event_data) == 1
         assert event_data[0]['name'] == 'Hans'
         assert event_data[0]['confidence'] == 98.34
-        assert event_data[0]['gender'] == 'men'
+        assert event_data[0]['gender'] == 'male'
         assert event_data[0]['entity_id'] == \
             'image_processing.demo_face'

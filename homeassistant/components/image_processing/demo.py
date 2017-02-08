@@ -89,12 +89,12 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
                 ATTR_CONFIDENCE: 98.34,
                 ATTR_NAME: 'Hans',
                 ATTR_AGE: 16.0,
-                ATTR_GENDER: 'men',
+                ATTR_GENDER: 'male',
             },
             {
                 ATTR_NAME: 'Helena',
                 ATTR_AGE: 28.0,
-                ATTR_GENDER: 'women',
+                ATTR_GENDER: 'female',
             },
             {
                 ATTR_CONFIDENCE: 62.53,
