@@ -85,8 +85,6 @@ class RussoundRNETDevice(MediaPlayerDevice):
         self._volume = None
         self._source = None
 
-        self.update()
-
     def update(self):
         """Retrieve latest state."""
         if self._russ.get_power('1', self._zone_id) == 0:
