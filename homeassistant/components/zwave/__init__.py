@@ -347,7 +347,14 @@ def setup(hass, config):
                           "Genre=%s", node.node_id,
                           node.generic, node.specific,
                           value.command_class, value.type,
-                          value.genre)
+                          value.genre, component)
+            workaround_component = workaround.get_device_component_mapping(
+                value)
+            if workaround_component and workaround_component != component:
+                _LOGGER.debug("Using %s instead of %s",
+                              workaround_component, component)
+                component = workaround_component
+
             name = "{}.{}".format(component, object_id(value))
 
             node_config = customize.get_overrides(hass, DOMAIN, name)
