@@ -181,9 +181,9 @@ class YamahaDevice(MediaPlayerDevice):
         return self._source_list
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
-        supported_commands = SUPPORT_YAMAHA
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        supported_features = SUPPORT_YAMAHA
 
         supports = self._playback_support
         mapping = {'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
@@ -193,8 +193,8 @@ class YamahaDevice(MediaPlayerDevice):
                    'skip_r': SUPPORT_PREVIOUS_TRACK}
         for attr, feature in mapping.items():
             if getattr(supports, attr, False):
-                supported_commands |= feature
-        return supported_commands
+                supported_features |= feature
+        return supported_features
 
     def turn_off(self):
         """Turn off media player."""
