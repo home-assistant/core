@@ -26,8 +26,7 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE,
-    SERVICE_HOMEASSISTANT_RESTART, SERVICE_HOMEASSISTANT_STOP, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
@@ -137,7 +136,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(self._async_stop_handler)
+            self.loop.create_task(self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -149,26 +148,23 @@ class HomeAssistant(object):
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-
         self.state = CoreState.starting
-
-        # Register the restart/stop event
-        self.services.async_register(
-            DOMAIN, SERVICE_HOMEASSISTANT_STOP, self._async_stop_handler)
-        self.services.async_register(
-            DOMAIN, SERVICE_HOMEASSISTANT_RESTART, self._async_restart_handler)
 
         # Setup signal handling
         if sys.platform != 'win32':
+            def _async_signal_handle(exit_code):
+                """Wrap signal handling."""
+                self.async_add_job(self.async_stop(exit_code))
+
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGTERM, self._async_stop_handler)
+                    signal.SIGTERM, _async_signal_handle, 0)
             except ValueError:
                 _LOGGER.warning("Could not bind to SIGTERM")
 
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGHUP, self._async_restart_handler)
+                    signal.SIGHUP, _async_signal_handle, RESTART_EXIT_CODE)
             except ValueError:
                 _LOGGER.warning("Could not bind to SIGHUP")
 
@@ -283,7 +279,7 @@ class HomeAssistant(object):
         run_coroutine_threadsafe(self.async_stop(), self.loop)
 
     @asyncio.coroutine
-    def async_stop(self) -> None:
+    def async_stop(self, exit_code=0) -> None:
         """Stop Home Assistant and shuts down all threads.
 
         This method is a coroutine.
@@ -306,6 +302,7 @@ class HomeAssistant(object):
             logging.getLogger('').removeHandler(handler)
             yield from handler.async_close(blocking=True)
 
+        self.exit_code = exit_code
         self.loop.stop()
 
     # pylint: disable=no-self-use
@@ -323,47 +320,6 @@ class HomeAssistant(object):
                                   exception.__traceback__)
 
         _LOGGER.error("Error doing job: %s", context['message'], **kwargs)
-
-    @callback
-    def _async_stop_handler(self, *args):
-        """Stop Home Assistant."""
-        self.exit_code = 0
-        self.loop.create_task(self.async_stop())
-
-    @asyncio.coroutine
-    def _async_check_config_and_restart(self):
-        """Restart Home Assistant if config is valid.
-
-        This method is a coroutine.
-        """
-        proc = yield from asyncio.create_subprocess_exec(
-            sys.argv[0],
-            '--script',
-            'check_config',
-            stdout=asyncio.subprocess.PIPE)
-        # Wait for the subprocess exit
-        (stdout_data, dummy) = yield from proc.communicate()
-        result = yield from proc.wait()
-        if result:
-            _LOGGER.error("check_config failed. Not restarting.")
-            content = re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
-            # Put error cleaned from color codes in the error log so it
-            # will be visible at the UI.
-            _LOGGER.error(content)
-            yield from self.services.async_call(
-                'persistent_notification', 'create', {
-                    'message': 'Config error. See dev-info panel for details.',
-                    'title': 'Restarting',
-                    'notification_id': '{}.restart'.format(DOMAIN)})
-            return
-
-        self.exit_code = RESTART_EXIT_CODE
-        yield from self.async_stop()
-
-    @callback
-    def _async_restart_handler(self, *args):
-        """Restart Home Assistant."""
-        self.loop.create_task(self._async_check_config_and_restart())
 
 
 class EventOrigin(enum.Enum):
