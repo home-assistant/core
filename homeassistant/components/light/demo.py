@@ -46,7 +46,6 @@ class DemoLight(Light):
         """Initialize the light."""
         self._name = name
         self._state = state
-        self._available = available
         self._rgb = rgb
         self._ct = ct or random.choice(LIGHT_TEMPS)
         self._brightness = brightness
