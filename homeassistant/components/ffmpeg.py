@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==1.2"]
+REQUIREMENTS = ["ha-ffmpeg==1.4"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +103,13 @@ def async_setup(hass, config):
                 tasks.append(device.async_stop_ffmpeg())
             else:
                 tasks.append(device.async_restart_ffmpeg())
+
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
+
+        tasks.clear()
+        for device in devices:
+            tasks.append(device.async_update_ha_state())
 
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
