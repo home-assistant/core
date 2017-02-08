@@ -118,7 +118,8 @@ class BinarySensorTemplate(BinarySensorDevice):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning(ex)
+                _LOGGER.warning('Could not render template %s, the state is unknown.',
+                                self._name)
                 return
             _LOGGER.error(ex)
             self._state = False
