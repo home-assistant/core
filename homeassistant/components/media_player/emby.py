@@ -309,8 +309,8 @@ class EmbyClient(MediaPlayerDevice):
             return self.now_playing_item['IndexNumber']
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self.supports_remote_control:
             return SUPPORT_EMBY
         else:

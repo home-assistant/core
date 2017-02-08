@@ -77,7 +77,6 @@ ATTR_MEDIA_CHANNEL = 'media_channel'
 ATTR_MEDIA_PLAYLIST = 'media_playlist'
 ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
-ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
@@ -183,7 +182,6 @@ ATTR_TO_PROPERTY = [
     ATTR_MEDIA_PLAYLIST,
     ATTR_APP_ID,
     ATTR_APP_NAME,
-    ATTR_SUPPORTED_MEDIA_COMMANDS,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
 ]
@@ -523,7 +521,39 @@ class MediaPlayerDevice(Entity):
 
     @property
     def supported_media_commands(self):
-        """Flag media commands that are supported."""
+        """Flag media commands that are supported.
+
+        DEPRECATED: Included for temporary custom platform compatibility.
+        """
+        return None
+
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        # Begin temporary transition logic
+
+        if self.supported_media_commands is not None:
+            # If this platform is still using supported_media_commands, issue
+            # a logger warning once with instructions on how to fix it.
+            if not getattr(self, '_supported_features_warned', False):
+                def show_warning():
+                    """Show a deprecation warning in the log for this class."""
+                    import inspect
+                    _LOGGER.warning(
+                        "supported_media_commands is deprecated. Please "
+                        "rename supported_media_commands to "
+                        "supported_features in '%s' to ensure future support.",
+                        inspect.getfile(self.__class__))
+                # This is a temporary attribute. We don't want to pollute
+                # __init__ so it can be easily removed.
+                # pylint: disable=attribute-defined-outside-init
+                self._supported_features_warned = True
+                self.hass.add_job(show_warning)
+
+            # Return the old property
+            return self.supported_media_commands
+
+        # End temporary transition logic
         return 0
 
     def turn_on(self):
@@ -686,57 +716,57 @@ class MediaPlayerDevice(Entity):
     @property
     def support_play(self):
         """Boolean if play is supported."""
-        return bool(self.supported_media_commands & SUPPORT_PLAY)
+        return bool(self.supported_features & SUPPORT_PLAY)
 
     @property
     def support_pause(self):
         """Boolean if pause is supported."""
-        return bool(self.supported_media_commands & SUPPORT_PAUSE)
+        return bool(self.supported_features & SUPPORT_PAUSE)
 
     @property
     def support_stop(self):
         """Boolean if stop is supported."""
-        return bool(self.supported_media_commands & SUPPORT_STOP)
+        return bool(self.supported_features & SUPPORT_STOP)
 
     @property
     def support_seek(self):
         """Boolean if seek is supported."""
-        return bool(self.supported_media_commands & SUPPORT_SEEK)
+        return bool(self.supported_features & SUPPORT_SEEK)
 
     @property
     def support_volume_set(self):
         """Boolean if setting volume is supported."""
-        return bool(self.supported_media_commands & SUPPORT_VOLUME_SET)
+        return bool(self.supported_features & SUPPORT_VOLUME_SET)
 
     @property
     def support_volume_mute(self):
         """Boolean if muting volume is supported."""
-        return bool(self.supported_media_commands & SUPPORT_VOLUME_MUTE)
+        return bool(self.supported_features & SUPPORT_VOLUME_MUTE)
 
     @property
     def support_previous_track(self):
         """Boolean if previous track command supported."""
-        return bool(self.supported_media_commands & SUPPORT_PREVIOUS_TRACK)
+        return bool(self.supported_features & SUPPORT_PREVIOUS_TRACK)
 
     @property
     def support_next_track(self):
         """Boolean if next track command supported."""
-        return bool(self.supported_media_commands & SUPPORT_NEXT_TRACK)
+        return bool(self.supported_features & SUPPORT_NEXT_TRACK)
 
     @property
     def support_play_media(self):
         """Boolean if play media command supported."""
-        return bool(self.supported_media_commands & SUPPORT_PLAY_MEDIA)
+        return bool(self.supported_features & SUPPORT_PLAY_MEDIA)
 
     @property
     def support_select_source(self):
         """Boolean if select source command supported."""
-        return bool(self.supported_media_commands & SUPPORT_SELECT_SOURCE)
+        return bool(self.supported_features & SUPPORT_SELECT_SOURCE)
 
     @property
     def support_clear_playlist(self):
         """Boolean if clear playlist command supported."""
-        return bool(self.supported_media_commands & SUPPORT_CLEAR_PLAYLIST)
+        return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
 
     def toggle(self):
         """Toggle the power on the media player."""
@@ -821,14 +851,12 @@ class MediaPlayerDevice(Entity):
     def state_attributes(self):
         """Return the state attributes."""
         if self.state == STATE_OFF:
-            state_attr = {
-                ATTR_SUPPORTED_MEDIA_COMMANDS: self.supported_media_commands,
-            }
-        else:
-            state_attr = {
-                attr: getattr(self, attr) for attr
-                in ATTR_TO_PROPERTY if getattr(self, attr) is not None
-            }
+            return None
+
+        state_attr = {
+            attr: getattr(self, attr) for attr
+            in ATTR_TO_PROPERTY if getattr(self, attr) is not None
+        }
 
         return state_attr
 

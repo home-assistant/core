@@ -184,8 +184,8 @@ class AppleTvDevice(MediaPlayerDevice):
             return title if title else "No title"
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self._playing is not None:
             if self.state != STATE_IDLE:
                 return SUPPORT_PAUSE | SUPPORT_PLAY | \
