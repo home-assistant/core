@@ -107,6 +107,13 @@ def async_setup(hass, config):
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
 
+        tasks.clear()
+        for device in devices:
+            tasks.append(device.async_update_ha_state())
+
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
+
     hass.services.async_register(
         DOMAIN, SERVICE_START, async_service_handle,
         descriptions[DOMAIN].get(SERVICE_START), schema=SERVICE_FFMPEG_SCHEMA)
