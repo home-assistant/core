@@ -150,8 +150,8 @@ class TestMicrosoftFaceDetect(object):
         state = self.hass.states.get('image_processing.test_local')
 
         assert len(face_events) == 1
-        assert state.attributes.get('total_faces') == 2
-        assert state.state == '2'
+        assert state.attributes.get('total_faces') == 1
+        assert state.state == '1'
 
         assert face_events[0].data['age'] == 71.0
         assert face_events[0].data['gender'] == 'male'
