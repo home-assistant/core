@@ -356,7 +356,6 @@ def setup(hass, config):
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-
             node_config = customize.get_overrides(hass, DOMAIN, name)
 
             if node_config.get(CONF_IGNORED):
