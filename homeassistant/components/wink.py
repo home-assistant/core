@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.1.0', 'pubnubsub-handler==1.0.0']
+REQUIREMENTS = ['python-wink==1.1.1', 'pubnubsub-handler==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

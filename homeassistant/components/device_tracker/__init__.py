@@ -158,10 +158,11 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                     None, platform.get_scanner, hass, {DOMAIN: p_config})
             elif hasattr(platform, 'async_setup_scanner'):
                 setup = yield from platform.async_setup_scanner(
-                    hass, p_config, tracker.async_see)
+                    hass, p_config, tracker.async_see, disc_info)
             elif hasattr(platform, 'setup_scanner'):
                 setup = yield from hass.loop.run_in_executor(
-                    None, platform.setup_scanner, hass, p_config, tracker.see)
+                    None, platform.setup_scanner, hass, p_config, tracker.see,
+                    disc_info)
             else:
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
@@ -192,6 +193,13 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     discovery.async_listen(
         hass, DISCOVERY_PLATFORMS.keys(), async_device_tracker_discovered)
+
+    @asyncio.coroutine
+    def async_platform_discovered(platform, info):
+        """Callback to load a platform."""
+        yield from async_setup_platform(platform, {}, disc_info=info)
+
+    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
 
     # Clean up stale devices
     async_track_utc_time_change(

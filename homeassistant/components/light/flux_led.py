@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.12']
+REQUIREMENTS = ['flux_led==0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +121,7 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._bulb.getWarmWhite255()
+        return self._bulb.brightness
 
     @property
     def rgb_color(self):
