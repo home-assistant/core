@@ -1,4 +1,4 @@
-"""The tests for the microsoft face identify platform."""
+"""The tests for the microsoft face detect platform."""
 from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
@@ -11,7 +11,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
 
 
-class TestMicrosoftFaceIdentifySetup(object):
+class TestMicrosoftFaceDetectSetup(object):
     """Test class for image processing."""
 
     def setup_method(self):
@@ -28,11 +28,11 @@ class TestMicrosoftFaceIdentifySetup(object):
         """Setup platform with one entity."""
         config = {
             ip.DOMAIN: {
-                'platform': 'microsoft_face_identify',
+                'platform': 'microsoft_face_detect',
                 'source': {
                     'entity_id': 'camera.demo_camera'
                 },
-                'group': 'Test Group1',
+                'attributes': ['age', 'gender'],
             },
             'camera': {
                 'platform': 'demo'
@@ -54,12 +54,11 @@ class TestMicrosoftFaceIdentifySetup(object):
         """Setup platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
-                'platform': 'microsoft_face_identify',
+                'platform': 'microsoft_face_detect',
                 'source': {
                     'entity_id': 'camera.demo_camera',
                     'name': 'test local'
                 },
-                'group': 'Test Group1',
             },
             'camera': {
                 'platform': 'demo'
@@ -75,7 +74,7 @@ class TestMicrosoftFaceIdentifySetup(object):
         assert self.hass.states.get('image_processing.test_local')
 
 
-class TestMicrosoftFaceIdentify(object):
+class TestMicrosoftFaceDetect(object):
     """Test class for image processing."""
 
     def setup_method(self):
@@ -84,12 +83,12 @@ class TestMicrosoftFaceIdentify(object):
 
         self.config = {
             ip.DOMAIN: {
-                'platform': 'microsoft_face_identify',
+                'platform': 'microsoft_face_detect',
                 'source': {
                     'entity_id': 'camera.demo_camera',
                     'name': 'test local'
                 },
-                'group': 'Test Group1',
+                'attributes': ['age', 'gender'],
             },
             'camera': {
                 'platform': 'demo'
@@ -103,10 +102,10 @@ class TestMicrosoftFaceIdentify(object):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.components.image_processing.microsoft_face_identify.'
-           'MicrosoftFaceIdentifyEntity.should_poll',
+    @patch('homeassistant.components.image_processing.microsoft_face_detect.'
+           'MicrosoftFaceDetectEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
-    def test_ms_identify_process_image(self, poll_mock, aioclient_mock):
+    def test_ms_detect_process_image(self, poll_mock, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
         aioclient_mock.get(
             mf.FACE_API_URL.format("persongroups"),
@@ -141,11 +140,8 @@ class TestMicrosoftFaceIdentify(object):
 
         aioclient_mock.post(
             mf.FACE_API_URL.format("detect"),
-            text=load_fixture('microsoft_face_detect.json')
-        )
-        aioclient_mock.post(
-            mf.FACE_API_URL.format("identify"),
-            text=load_fixture('microsoft_face_identify.json')
+            text=load_fixture('microsoft_face_detect.json'),
+            params={'returnFaceAttributes': "age,gender"}
         )
 
         ip.scan(self.hass, entity_id='image_processing.test_local')
@@ -154,10 +150,10 @@ class TestMicrosoftFaceIdentify(object):
         state = self.hass.states.get('image_processing.test_local')
 
         assert len(face_events) == 1
-        assert state.attributes.get('total_faces') == 2
-        assert state.state == 'David'
+        assert state.attributes.get('total_faces') == 1
+        assert state.state == '1'
 
-        assert face_events[0].data['name'] == 'David'
-        assert face_events[0].data['confidence'] == float(92)
+        assert face_events[0].data['age'] == 71.0
+        assert face_events[0].data['gender'] == 'male'
         assert face_events[0].data['entity_id'] == \
             'image_processing.test_local'

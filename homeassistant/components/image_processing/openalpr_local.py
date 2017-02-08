@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
 
-EVENT_FOUND_PLATE = 'found_plate'
+EVENT_FOUND_PLATE = 'image_processing.found_plate'
 
 ATTR_PLATE = 'plate'
 ATTR_PLATES = 'plates'
