@@ -121,5 +121,5 @@ class BinarySensorTemplate(BinarySensorDevice):
                 _LOGGER.warning('Could not render template %s, the state is unknown.',
                                 self._name)
                 return
-            _LOGGER.error(ex)
+            _LOGGER.error('Could not render template %s: %s', self._name, ex)
             self._state = False
