@@ -89,7 +89,6 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     def update(self):
         """Retrieve latest state."""
-
         if self._russ.get_power('1', self._zone_id) == 0:
             self._state = STATE_OFF
         else:
