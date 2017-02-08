@@ -47,7 +47,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.home_id  = config[CONF_HOME_ID]
+        self.home_id = config[CONF_HOME_ID]
 
         self.tadoapiurl = 'https://my.tado.com/api/v2' \
                           '/homes/{}/mobileDevices' \
@@ -91,8 +91,8 @@ class TadoDeviceScanner(DeviceScanner):
         _LOGGER.debug("Requesting Tado")
 
         last_results = []
-        response     = None
-        tado_json    = None
+        response = None
+        tado_json = None
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -123,7 +123,7 @@ class TadoDeviceScanner(DeviceScanner):
         for mobile_device in tado_json:
             if 'location' in mobile_device:
                 if mobile_device['location']['atHome']:
-                    device_id   = mobile_device['id']
+                    device_id = mobile_device['id']
                     device_name = mobile_device['name']
                     last_results.append(Device(device_id, device_name))
 
