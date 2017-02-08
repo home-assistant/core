@@ -27,7 +27,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._volume_level = 0
         self._is_volume_muted = False
         self._media_title = None
-        self._supported_media_commands = 0
+        self._supported_features = 0
         self._source = None
         self._tracks = 12
         self._media_image_url = None
@@ -91,9 +91,9 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         return self._is_volume_muted
 
     @property
-    def supported_media_commands(self):
-        """Supported media commands flag."""
-        return self._supported_media_commands
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return self._supported_features
 
     @property
     def media_image_url(self):
@@ -502,7 +502,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.hass.states.set(self.mock_mute_switch_id, STATE_ON)
         self.assertTrue(ump.is_volume_muted)
 
-    def test_supported_media_commands_children_only(self):
+    def test_supported_features_children_only(self):
         """Test supported media commands with only children."""
         config = self.config_children_only
         universal.validate_config(config)
@@ -511,15 +511,15 @@ class TestMediaPlayer(unittest.TestCase):
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
-        self.assertEqual(0, ump.supported_media_commands)
+        self.assertEqual(0, ump.supported_features)
 
-        self.mock_mp_1._supported_media_commands = 512
+        self.mock_mp_1._supported_features = 512
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1.update_ha_state()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
-        self.assertEqual(512, ump.supported_media_commands)
+        self.assertEqual(512, ump.supported_features)
 
-    def test_supported_media_commands_children_and_cmds(self):
+    def test_supported_features_children_and_cmds(self):
         """Test supported media commands with children and attrs."""
         config = self.config_children_and_attr
         universal.validate_config(config)
@@ -543,7 +543,7 @@ class TestMediaPlayer(unittest.TestCase):
             | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE \
             | universal.SUPPORT_SELECT_SOURCE
 
-        self.assertEqual(check_flags, ump.supported_media_commands)
+        self.assertEqual(check_flags, ump.supported_features)
 
     def test_service_call_no_active_child(self):
         """Test a service call to children with no active child."""

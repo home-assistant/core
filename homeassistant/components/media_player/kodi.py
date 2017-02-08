@@ -228,14 +228,14 @@ class KodiDevice(MediaPlayerDevice):
                 self._item.get('label', self._item.get('file', 'unknown')))
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
-        supported_media_commands = SUPPORT_KODI
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        supported_features = SUPPORT_KODI
 
         if self._turn_off_action in TURN_OFF_ACTION:
-            supported_media_commands |= SUPPORT_TURN_OFF
+            supported_features |= SUPPORT_TURN_OFF
 
-        return supported_media_commands
+        return supported_features
 
     @asyncio.coroutine
     def async_turn_off(self):

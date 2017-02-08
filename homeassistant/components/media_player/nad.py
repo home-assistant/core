@@ -136,8 +136,8 @@ class NAD(MediaPlayerDevice):
         return self._mute
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_NAD
 
     def turn_off(self):

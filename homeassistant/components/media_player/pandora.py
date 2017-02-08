@@ -158,8 +158,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self.schedule_update_ha_state()
 
     @property
-    def supported_media_commands(self):
-        """Show what this supports."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return PANDORA_SUPPORT
 
     @property
