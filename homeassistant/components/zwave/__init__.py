@@ -350,7 +350,7 @@ def setup(hass, config):
                           value.genre, component)
             workaround_component = workaround.get_device_component_mapping(
                 value)
-            if workaround_component != component:
+            if workaround_component and workaround_component != component:
                 _LOGGER.debug("Using %s instead of %s",
                               workaround_component, component)
                 component = workaround_component
