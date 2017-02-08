@@ -344,7 +344,7 @@ def setup(hass, config):
             _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
                           "Specific_command_class=%s, "
                           "Command_class=%s, Value type=%s, "
-                          "Genre=%s", node.node_id,
+                          "Genre=%s as %s", node.node_id,
                           node.generic, node.specific,
                           value.command_class, value.type,
                           value.genre, component)
