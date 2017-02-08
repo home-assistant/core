@@ -178,7 +178,7 @@ class HueOneLightChangeView(HomeAssistantView):
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if entity.domain == "light":
-            if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
+            if entity_features & SUPPORT_BRIGHTNESS:
                 if brightness is not None:
                     data[ATTR_BRIGHTNESS] = brightness
 
@@ -193,7 +193,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a media player, convert to volume
         elif entity.domain == "media_player":
-            if entity_features & SUPPORT_VOLUME_SET == SUPPORT_VOLUME_SET:
+            if entity_features & SUPPORT_VOLUME_SET:
                 if brightness is not None:
                     turn_on_needed = True
                     domain = entity.domain
@@ -211,7 +211,7 @@ class HueOneLightChangeView(HomeAssistantView):
 
         # If the requested entity is a fan, convert to speed
         elif entity.domain == "fan":
-            if (entity_features & SUPPORT_SET_SPEED) == SUPPORT_SET_SPEED:
+            if entity_features & SUPPORT_SET_SPEED:
                 if brightness is not None:
                     domain = entity.domain
                     # Convert 0-100 to a fan speed
@@ -283,7 +283,7 @@ def parse_hue_api_put_light_body(request_json, entity):
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if entity.domain == "light":
-            if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
+            if entity_features & SUPPORT_BRIGHTNESS:
                 report_brightness = True
                 result = (brightness > 0)
 
@@ -312,7 +312,7 @@ def get_entity_state(config, entity):
         entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if entity.domain == "light":
-            if (entity_features & SUPPORT_BRIGHTNESS) == SUPPORT_BRIGHTNESS:
+            if entity_features & SUPPORT_BRIGHTNESS:
                 pass
 
         elif entity.domain == "media_player":
