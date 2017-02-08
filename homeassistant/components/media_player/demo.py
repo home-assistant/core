@@ -155,8 +155,8 @@ class DemoYoutubePlayer(AbstractDemoPlayer):
         return "YouTube"
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return YOUTUBE_PLAYER_SUPPORT
 
     @property
@@ -269,8 +269,8 @@ class DemoMusicPlayer(AbstractDemoPlayer):
         return self._cur_track + 1
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         support = MUSIC_PLAYER_SUPPORT
 
         if self._cur_track > 0:
@@ -364,8 +364,8 @@ class DemoTVShowPlayer(AbstractDemoPlayer):
         return self._source
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         support = NETFLIX_PLAYER_SUPPORT
 
         if self._cur_episode > 1:

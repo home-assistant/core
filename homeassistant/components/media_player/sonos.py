@@ -761,10 +761,10 @@ class SonosDevice(MediaPlayerDevice):
             return self._media_title
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self._coordinator:
-            return self._coordinator.supported_media_commands
+            return self._coordinator.supported_features
 
         supported = SUPPORT_SONOS
 

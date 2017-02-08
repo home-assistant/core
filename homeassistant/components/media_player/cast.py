@@ -226,8 +226,8 @@ class CastDevice(MediaPlayerDevice):
         return self.cast.app_display_name
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CAST
 
     @property
