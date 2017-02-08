@@ -291,13 +291,13 @@ class FluxLight(Light):
         self.previous_brightness = self.brightness
 
         # flux_led support integer delay from 1-30 seconds
-        transition = kwargs[ATTR_TRANSITION]
-        transition_time = min(int(transition), MAX_TRANSITION_TIME.seconds)
+        transition = timedelta(seconds=kwargs[ATTR_TRANSITION])
+        transition_time = min(transition, MAX_TRANSITION_TIME)
         if transition != transition_time:
             _LOGGER.warning('Requested transition time (%ss) '
                             'exceeds supported maximum (%ss)',
                             transition, transition_time)
-        transition_speed = utils.delayToSpeed(transition_time)
+        transition_speed = utils.delayToSpeed(transition_time.seconds)
 
         # set a custom color pattern (see set_color_transition for details)
         self._bulb.setCustomPattern(
