@@ -21,6 +21,7 @@ from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from . import const
+from . import workaround
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
@@ -343,12 +344,18 @@ def setup(hass, config):
             _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
                           "Specific_command_class=%s, "
                           "Command_class=%s, Value type=%s, "
-                          "Genre=%s", node.node_id,
+                          "Genre=%s as %s", node.node_id,
                           node.generic, node.specific,
                           value.command_class, value.type,
-                          value.genre)
-            name = "{}.{}".format(component, object_id(value))
+                          value.genre, component)
+            workaround_component = workaround.get_device_component_mapping(
+                value)
+            if workaround_component != component:
+                _LOGGER.debug("Using %s instead of %s",
+                              workaround_component, component)
+                component = workaround_component
 
+            name = "{}.{}".format(component, object_id(value))
             node_config = customize.get_overrides(hass, DOMAIN, name)
 
             if node_config.get(CONF_IGNORED):

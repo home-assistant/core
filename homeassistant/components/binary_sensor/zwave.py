@@ -9,28 +9,13 @@ import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
+from homeassistant.components.zwave import workaround
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
-
-PHILIO = 0x013c
-PHILIO_SLIM_SENSOR = 0x0002
-PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
-PHILIO_3_IN_1_SENSOR_GEN_4 = 0x000d
-PHILIO_3_IN_1_SENSOR_GEN_4_MOTION = (PHILIO, PHILIO_3_IN_1_SENSOR_GEN_4, 0)
-WENZHOU = 0x0118
-WENZHOU_SLIM_SENSOR_MOTION = (WENZHOU, PHILIO_SLIM_SENSOR, 0)
-
-WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
-
-DEVICE_MAPPINGS = {
-    PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
-    PHILIO_3_IN_1_SENSOR_GEN_4_MOTION: WORKAROUND_NO_OFF_EVENT,
-    WENZHOU_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -42,23 +27,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     value.set_change_verified(False)
 
-    # Make sure that we have values for the key before converting to int
-    if (value.node.manufacturer_id.strip() and
-            value.node.product_id.strip()):
-        specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                               int(value.node.product_id, 16),
-                               value.index)
+    device_mapping = workaround.get_device_mapping(value)
+    if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
+        # Default the multiplier to 4
+        re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
+        add_devices([
+            ZWaveTriggerSensor(value, "motion",
+                               hass, re_arm_multiplier * 8)
+        ])
+        return
 
-        if specific_sensor_key in DEVICE_MAPPINGS:
-            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
-                # Default the multiplier to 4
-                re_arm_multiplier = (zwave.get_config_value(value.node,
-                                                            9) or 4)
-                add_devices([
-                    ZWaveTriggerSensor(value, "motion",
-                                       hass, re_arm_multiplier * 8)
-                ])
-                return
+    if workaround.get_device_component_mapping(value) == DOMAIN:
+        add_devices([ZWaveBinarySensor(value, None)])
+        return
 
     if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value, None)])
