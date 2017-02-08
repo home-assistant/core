@@ -31,12 +31,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOME_ID):  cv.string
 })
 
+
 def get_scanner(hass, config):
     """Return a Tado scanner."""
     scanner = TadoDeviceScanner(hass, config[DOMAIN])
     return scanner if scanner.success_init else None
 
+
 Device = namedtuple("Device", ["mac", "name"])
+
 
 class TadoDeviceScanner(DeviceScanner):
     """This class gets geofenced devices from Tado."""
