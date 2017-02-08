@@ -40,6 +40,7 @@ SERVICE_HANDLERS = {
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
     'flux_led': ('light', 'flux_led'),
+    'apple_tv': ('media_player', 'apple_tv'),
 }
 
 CONFIG_SCHEMA = vol.Schema({
