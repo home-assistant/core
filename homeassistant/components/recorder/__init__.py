@@ -118,10 +118,12 @@ def run_information(point_in_time: Optional[datetime]=None):
             start=_INSTANCE.recording_start,
             closed_incorrect=False)
 
-    with session_scope():
-        return query('RecorderRuns').filter(
+    with session_scope() as session:
+        res = query(recorder_runs).filter(
             (recorder_runs.start < point_in_time) &
             (recorder_runs.end > point_in_time)).first()
+        session.expunge(res)
+        return res
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
