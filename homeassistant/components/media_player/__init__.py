@@ -536,16 +536,19 @@ class MediaPlayerDevice(Entity):
             # If this platform is still using supported_media_commands, issue
             # a logger warning once with instructions on how to fix it.
             if not getattr(self, '_supported_features_warned', False):
-                import inspect
-                _LOGGER.warning(
-                    "supported_media_commands is deprecated. Please rename "
-                    "supported_media_commands to supported_features in '%s' "
-                    "to ensure continued support.",
-                    inspect.getfile(self.__class__))
+                def show_warning():
+                    """Show a deprecation warning in the log for this class."""
+                    import inspect
+                    _LOGGER.warning(
+                        "supported_media_commands is deprecated. Please "
+                        "rename supported_media_commands to "
+                        "supported_features in '%s' to ensure future support.",
+                        inspect.getfile(self.__class__))
                 # This is a temporary attribute. We don't want to pollute
                 # __init__ so it can be easily removed.
                 # pylint: disable=attribute-defined-outside-init
                 self._supported_features_warned = True
+                self.hass.add_job(show_warning)
 
             # Return the old property
             return self.supported_media_commands
