@@ -206,7 +206,6 @@ class FluxLight(Light):
 
     def set_color_transition(self, **kwargs):
         """Set a color transition for light."""
-
         from flux_led import utils
 
         to_rgb = list(kwargs.get(ATTR_RGB_COLOR))
@@ -268,7 +267,6 @@ class FluxLight(Light):
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
-
         # Cancel scheduled callback of fading action.
         if self.transition_stop_handle:
             self.transition_stop_handle.cancel()
@@ -280,7 +278,6 @@ class FluxLight(Light):
 
     def turn_off_transition(self, **kwargs):
         """Turn of light by fading to black."""
-
         from flux_led import utils
 
         # Remember the current color, this is used later when
