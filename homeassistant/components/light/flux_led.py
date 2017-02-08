@@ -4,20 +4,19 @@ Support for Flux lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.flux_led/
 """
-# from functools import partial
+from datetime import timedelta
+from functools import partial
 import logging
-import socket
 import random
-import time
+import socket
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_DEVICES, CONF_NAME, CONF_PROTOCOL)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_RANDOM,
-    SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, Light,
-    PLATFORM_SCHEMA, SUPPORT_TRANSITION, ATTR_TRANSITION)
+    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    EFFECT_RANDOM, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
+from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['flux_led==0.13']
@@ -35,6 +34,8 @@ SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
 
+TRANSITION_TYPE = 'gradual'
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(ATTR_MODE, default=MODE_RGBW):
@@ -47,6 +48,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 })
+
+# maximum possible transition time
+MAX_TRANSITION_TIME = timedelta(seconds=30)
+
+STOP_EXTRA_DELAY = timedelta(seconds=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -107,7 +113,7 @@ class FluxLight(Light):
 
     previous_color_rgb = None
     previous_brightness = None
-    # transition_stop_handle = None
+    transition_stop_handle = None
 
     def __init__(self, device, hass=None):
         """Initialize the light."""
@@ -170,10 +176,9 @@ class FluxLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-
-        # # Cancel scheduled callback of fading action.
-        # if self.transition_stop_handle:
-        #     self.transition_stop_handle.cancel()
+        # Cancel scheduled callback of fading action.
+        if self.transition_stop_handle:
+            self.transition_stop_handle.cancel()
 
         # If light was previously faded to black, restore previous color.
         if self.previous_brightness or self.previous_color_rgb:
@@ -186,8 +191,8 @@ class FluxLight(Light):
             # if light is not on assume the user wants
             # to transition from black to the new color
             if not self.is_on:
-                self._bulb.setRgb(0, 0, 0)
                 self._bulb.turnOn()
+                self._bulb.setRgb(0, 0, 0)
 
             self.set_color_transition(**kwargs)
         else:
@@ -204,50 +209,45 @@ class FluxLight(Light):
 
         from flux_led import utils
 
-        # flux_led support integer delay from 1-30 seconds
-        delay_seconds = int(kwargs[ATTR_TRANSITION])
-        transition_time = utils.delayToSpeed(delay_seconds)
+        to_rgb = list(kwargs.get(ATTR_RGB_COLOR))
 
-        to_rgb = kwargs.get(ATTR_RGB_COLOR)
-        transition_type = 'gradual'
+        # flux_led support integer delay from 1-30 seconds
+        transition = timedelta(seconds=kwargs[ATTR_TRANSITION])
+        transition_time = min(transition, MAX_TRANSITION_TIME)
+        if transition != transition_time:
+            _LOGGER.warning('Requested transition time (%ss) '
+                            'exceeds supported maximum (%ss)',
+                            transition, transition_time)
+        transition_speed = utils.delayToSpeed(transition_time.seconds)
 
         # Flux led support transitioning between 16 colors and repeats
         # the cycle after completion. Fading starts with the current color.
         # This fills the entire transition cycle with the 'to' color. This
         # gives us enough time to execute a transition stop after a delay.
-        color_list = [to_rgb] * 16
+        # Set a custom color pattern function into the led controller and
+        # execute it.
+        self._bulb.setCustomPattern(
+            [to_rgb] * 16,
+            transition_speed,
+            TRANSITION_TYPE
+        )
 
         # Function to stop transition by turning light on to desired color.
         kwargs_no_transition = kwargs.copy()
         del kwargs_no_transition['transition']
-        # stop_transition = partial(self.turn_on, **kwargs_no_transition)
+        stop_transition = partial(self.turn_on, **kwargs_no_transition)
 
-        # # Schedule a callback to turn on the bulb at the requested color,
-        # # effectively cancelling the custom color pattern. Since the color
-        # # pattern continuously cycles between 16 of the same color this is
-        # # strictly not needed, but it the nice thing to do
-        # self.transition_stop_handle = self.hass.loop.call_later(
-        #     delay_seconds,
-        #     stop_transition
-        # )
-
-        # Set a custom color pattern function into the led controller and
-        # execute it.
-        self._bulb.setCustomPattern(
-            color_list,
-            transition_time,
-            transition_type
+        # Schedule a callback to turn on the bulb at the requested color,
+        # effectively cancelling the custom color pattern. Since the color
+        # pattern continuously cycles between 16 of the same color this is
+        # strictly not needed, but it the nice thing to do
+        self.transition_stop_handle = self.hass.loop.call_later(
+            (transition_time + STOP_EXTRA_DELAY).seconds,
+            stop_transition
         )
-
-        # Wait for transition to finish and call turn_on again without
-        # transition argument to stop the custom pattern function as set
-        # the current state of the entity.
-        time.sleep(delay_seconds)
-        self.turn_on(**kwargs_no_transition)
 
     def set_color(self, **kwargs):
         """Set the color for light."""
-
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
@@ -269,9 +269,9 @@ class FluxLight(Light):
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
 
-        # # Cancel scheduled callback of fading action.
-        # if self.transition_stop_handle:
-        #     self.transition_stop_handle.cancel()
+        # Cancel scheduled callback of fading action.
+        if self.transition_stop_handle:
+            self.transition_stop_handle.cancel()
 
         if ATTR_TRANSITION in kwargs:
             self.turn_off_transition(**kwargs)
@@ -291,30 +291,27 @@ class FluxLight(Light):
         self.previous_brightness = self.brightness
 
         # flux_led support integer delay from 1-30 seconds
-        delay_seconds = int(kwargs[ATTR_TRANSITION])
-        transition_time = utils.delayToSpeed(delay_seconds)
-        color_list = [[0, 0, 0]] * 16
-        transition_type = 'gradual'
+        transition = kwargs[ATTR_TRANSITION]
+        transition_time = min(int(transition), MAX_TRANSITION_TIME.seconds)
+        if transition != transition_time:
+            _LOGGER.warning('Requested transition time (%ss) '
+                            'exceeds supported maximum (%ss)',
+                            transition, transition_time)
+        transition_speed = utils.delayToSpeed(transition_time)
 
-        # # turn off after transition has expired
-        # # (see turn_no_transition for details)
-        # self.transition_stop_handle = self.hass.loop.call_later(
-        #     delay_seconds,
-        #     self.turn_off
-        # )
-
-        # set a custom color pattern (see turn_no_transition for details)
+        # set a custom color pattern (see set_color_transition for details)
         self._bulb.setCustomPattern(
-            color_list,
-            transition_time,
-            transition_type
+            [[0, 0, 0]] * 16,
+            transition_speed,
+            TRANSITION_TYPE
         )
 
-        # Wait for transition to finish and run turn_of again without
-        # transition argument stop the custom pattern and set current
-        # state to off.
-        time.sleep(delay_seconds)
-        self.turn_off()
+        # turn off after transition has expired
+        # (see turn_no_transition for details)
+        self.transition_stop_handle = self.hass.loop.call_later(
+            (transition_time + STOP_EXTRA_DELAY).seconds,
+            self.turn_off
+        )
 
     def update(self):
         """Synchronize state with bulb."""
