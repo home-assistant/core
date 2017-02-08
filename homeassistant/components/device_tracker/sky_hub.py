@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
-    """Return a Sky Hub 5 scanner if successful."""
+    """Return a Sky Hub scanner if successful."""
     scanner = SkyHubDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
@@ -113,7 +113,7 @@ def _parse_skyhub_response(data_str):
     pattmatch = re.search('attach_dev = \'(.*)\'', data_str)
     if pattmatch is None:
         raise IOError('Error: Impossible to fetch data from' +
-                      ' Sky Hub. Try to reboot the rooter.')
+                      ' Sky Hub. Try to reboot the router.')
     patt = pattmatch.group(1)
 
     dev = [patt1.split(',') for patt1 in patt.split('<lf>')]
