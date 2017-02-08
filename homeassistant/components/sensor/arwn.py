@@ -66,6 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not sensors:
             return
 
+        if isinstance(sensors, ArwnSensor):
+            sensors = (sensors, )
+
         if 'timestamp' in event:
             del event['timestamp']
 
