@@ -68,8 +68,8 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_defs = dict(zip(SENSOR_OPTIONS, [
         (pysma.KEY_CURRENT_CONSUMPTION_W, 'W', 1),
         (pysma.KEY_CURRENT_POWER_W, 'W', 1),
-        (pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kW/h', 1000),
-        (pysma.KEY_TOTAL_YIELD_KWH, 'kW/h', 1000)]))
+        (pysma.KEY_TOTAL_CONSUMPTION_KWH, 'kWh', 1000),
+        (pysma.KEY_TOTAL_YIELD_KWH, 'kWh', 1000)]))
 
     # sensor_defs from the custom config
     for name, prop in config[CONF_CUSTOM].items():
