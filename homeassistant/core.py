@@ -136,7 +136,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.call_soon(self.async_stop_handler)
+            self.loop.create_task(self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -152,15 +152,19 @@ class HomeAssistant(object):
 
         # Setup signal handling
         if sys.platform != 'win32':
+            def _async_signal_handle(exit_code):
+                """Wrap signal handling."""
+                self.async_add_job(self.async_stop(exit_code))
+
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGTERM, self.async_stop_handler)
+                    signal.SIGTERM, _async_signal_handle, 0)
             except ValueError:
                 _LOGGER.warning("Could not bind to SIGTERM")
 
             try:
                 self.loop.add_signal_handler(
-                    signal.SIGHUP, self.async_restart_handler)
+                    signal.SIGHUP, _async_signal_handle, RESTART_EXIT_CODE)
             except ValueError:
                 _LOGGER.warning("Could not bind to SIGHUP")
 
@@ -275,7 +279,7 @@ class HomeAssistant(object):
         run_coroutine_threadsafe(self.async_stop(), self.loop)
 
     @asyncio.coroutine
-    def async_stop(self) -> None:
+    def async_stop(self, exit_code=0) -> None:
         """Stop Home Assistant and shuts down all threads.
 
         This method is a coroutine.
@@ -298,19 +302,8 @@ class HomeAssistant(object):
             logging.getLogger('').removeHandler(handler)
             yield from handler.async_close(blocking=True)
 
+        self.exit_code = exit_code
         self.loop.stop()
-
-    @callback
-    def async_stop_handler(self, *args):
-        """Stop Home Assistant."""
-        self.exit_code = 0
-        self.loop.create_task(self.async_stop())
-
-    @callback
-    def async_restart_handler(self, *args):
-        """Stop Home Assistant."""
-        self.exit_code = RESTART_EXIT_CODE
-        self.loop.create_task(self.async_stop())
 
     # pylint: disable=no-self-use
     @callback

@@ -152,14 +152,16 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_error.called
         assert mock_process.called is False
 
-    @patch('homeassistant.core.HomeAssistant.async_stop_handler')
+    @patch('homeassistant.core.HomeAssistant.async_stop',
+           return_value=mock_coro()())
     def test_stop_homeassistant(self, mock_stop):
         """Test stop service."""
         comps.stop(self.hass)
         self.hass.block_till_done()
         assert mock_stop.called
 
-    @patch('homeassistant.core.HomeAssistant.async_restart_handler')
+    @patch('homeassistant.core.HomeAssistant.async_stop',
+           return_value=mock_coro()())
     @patch('homeassistant.config.async_check_ha_config_file',
            return_value=mock_coro()())
     def test_restart_homeassistant(self, mock_check, mock_restart):
@@ -169,7 +171,8 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_restart.called
         assert mock_check.called
 
-    @patch('homeassistant.core.HomeAssistant.async_restart_handler')
+    @patch('homeassistant.core.HomeAssistant.async_stop',
+           return_value=mock_coro()())
     @patch('homeassistant.config.async_check_ha_config_file',
            side_effect=HomeAssistantError("Test error"))
     def test_restart_homeassistant_wrong_conf(self, mock_check, mock_restart):
@@ -179,10 +182,13 @@ class TestComponentsCore(unittest.TestCase):
         assert mock_check.called
         assert not mock_restart.called
 
+    @patch('homeassistant.core.HomeAssistant.async_stop',
+           return_value=mock_coro()())
     @patch('homeassistant.config.async_check_ha_config_file',
            return_value=mock_coro()())
-    def test_check_config(self, mock_check):
+    def test_check_config(self, mock_check, mock_stop):
         """Test stop service."""
         comps.check_config(self.hass)
         self.hass.block_till_done()
         assert mock_check.called
+        assert not mock_stop.called
