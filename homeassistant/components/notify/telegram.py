@@ -109,7 +109,7 @@ class TelegramNotificationService(BaseNotificationService):
         elif data is not None and ATTR_DOCUMENT in data:
             return self.send_document(data.get(ATTR_DOCUMENT))
         elif data is not None and ATTR_KEYBOARD in data:
-            keys = data.get(ATTR_KEYBOARD, None)
+            keys = data.get(ATTR_KEYBOARD)
             keys = keys if isinstance(keys, list) else [keys]
             return self.send_keyboard(message, keys)
 
@@ -127,7 +127,6 @@ class TelegramNotificationService(BaseNotificationService):
                                  parse_mode=parse_mode)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message")
-            return
 
     def send_keyboard(self, message, keys):
         """Display keyboard."""
@@ -140,7 +139,6 @@ class TelegramNotificationService(BaseNotificationService):
                                  reply_markup=keyboard)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message")
-            return
 
     def send_photo(self, data):
         """Send a photo."""
@@ -159,7 +157,6 @@ class TelegramNotificationService(BaseNotificationService):
                                photo=photo, caption=caption)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending photo")
-            return
 
     def send_document(self, data):
         """Send a document."""
@@ -178,7 +175,6 @@ class TelegramNotificationService(BaseNotificationService):
                                   document=document, caption=caption)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending document")
-            return
 
     def send_location(self, gps):
         """Send a location."""
@@ -192,4 +188,3 @@ class TelegramNotificationService(BaseNotificationService):
                                   latitude=latitude, longitude=longitude)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending location")
-            return
