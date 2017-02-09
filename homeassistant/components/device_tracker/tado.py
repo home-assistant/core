@@ -15,7 +15,7 @@ import async_timeout
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_HOME_ID
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
