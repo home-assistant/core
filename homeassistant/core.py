@@ -18,7 +18,6 @@ from time import monotonic
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
-from async_timeout import timeout
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -405,7 +404,7 @@ class EventBus(object):
         listeners = get(MATCH_ALL, []) + get(event_type, [])
 
         event = Event(event_type, event_data, origin)
-
+        print(event)
         if event_type != EVENT_TIME_CHANGED:
             _LOGGER.info("Bus:Handling %s", event)
 
@@ -1081,39 +1080,36 @@ class Config(object):
 
 def _async_create_timer(hass):
     """Create a timer that will start on HOMEASSISTANT_START."""
-    stop_event = asyncio.Event(loop=hass.loop)
+    handle = None
 
-    @asyncio.coroutine
+    @callback
+    def fire_time_event(nxt):
+        """Fire next time event."""
+        nonlocal handle
+
+        hass.bus.async_fire(EVENT_TIME_CHANGED,
+                            {ATTR_NOW: dt_util.utcnow()})
+        nxt += 1
+        slp_seconds = nxt - monotonic()
+
+        if slp_seconds < 0:
+            _LOGGER.error('Timer got out of sync. Resetting')
+            nxt = monotonic() + 1
+            slp_seconds = 1
+
+        handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
+
+    @callback
     def start_timer(event):
         """Create an async timer."""
         _LOGGER.info("Timer:starting")
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
-        nxt = monotonic()
-
-        while not stop_event.is_set():
-            try:
-                nxt += 1
-                hass.bus.async_fire(EVENT_TIME_CHANGED,
-                                    {ATTR_NOW: dt_util.utcnow()})
-                slp_seconds = nxt - monotonic()
-
-                if slp_seconds < 0:
-                    _LOGGER.error('Timer got out of sync. Resetting')
-                    nxt = monotonic() + 1
-                    slp_seconds = 1
-
-                with timeout(slp_seconds, loop=hass.loop):
-                    yield from stop_event.wait()
-            except asyncio.TimeoutError:
-                # Raised when timeout expires
-                pass
-            except ShuttingDown:
-                # Raised when calling async_fire while HA is shutting down
-                break
+        fire_time_event(monotonic())
 
     @callback
     def stop_timer(event):
         """Stop the timer."""
-        stop_event.set()
+        if handle is not None:
+            handle.cancel()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_timer)

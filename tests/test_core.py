@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, sentinel
 from datetime import datetime, timedelta
 
 import pytz
@@ -14,9 +14,10 @@ from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
-    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM)
+    __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
+    ATTR_NOW, EVENT_TIME_CHANGED)
 
-from tests.common import get_test_home_assistant, mock_coro
+from tests.common import get_test_home_assistant
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -736,56 +737,35 @@ class TestConfig(unittest.TestCase):
         self.assertEqual(expected, self.config.as_dict())
 
 
-@patch('homeassistant.core.asyncio.Event')
-@patch('homeassistant.core.dt_util.utcnow')
 @patch('homeassistant.core.monotonic')
-@patch('homeassistant.core.timeout')
-def test_create_timer(mock_timeout, mock_monotonic, mock_utcnow, mock_event,
-                      event_loop):
-    """Test create timer fires correctly."""
+def test_create_timer(mock_monotonic, loop):
+    """Test create timer."""
     hass = MagicMock()
-    event = mock_event()
-    event.wait = mock_coro()
+    funcs = []
+    orig_callback = ha.callback
 
-    ha._async_create_timer(hass)
+    def mock_callback(func):
+        funcs.append(func)
+        return orig_callback(func)
+
+    with patch.object(ha, 'callback', mock_callback):
+        ha._async_create_timer(hass)
+
+        assert len(funcs) == 3
+        fire_time_event, start_timer, stop_timer = funcs
+
     assert len(hass.bus.async_listen_once.mock_calls) == 1
-    start_timer = hass.bus.async_listen_once.mock_calls[0][1][1]
 
-    event.is_set.side_effect = False, False, True
-    # This will sleep from 10.3 -> 11.2 and 11.4 -> 12.2
-    mock_monotonic.side_effect = 10.2, 10.3, 11.4, 12.2
-    event_loop.run_until_complete(start_timer(None))
+    mock_monotonic.side_effect = 10.2, 10.3
 
-    assert len(mock_timeout.mock_calls) == 6
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=sentinel.mock_date):
+        start_timer(None)
 
-    first_sleep = mock_timeout.mock_calls[0][1][0]
-    assert abs(0.9 - first_sleep) < 0.01
+    assert len(hass.bus.async_listen_once.mock_calls) == 2
+    assert len(hass.bus.async_fire.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 1
 
-    second_sleep = mock_timeout.mock_calls[3][1][0]
-    assert abs(0.8 - second_sleep) < 0.01
-
-
-@patch('homeassistant.core.asyncio.Event')
-@patch('homeassistant.core.dt_util.utcnow')
-@patch('homeassistant.core.monotonic')
-@patch('homeassistant.core.timeout')
-def test_timer_reset(mock_timeout, mock_monotonic, mock_utcnow, mock_event,
-                     event_loop):
-    """Test create timer fires correctly."""
-    hass = MagicMock()
-    event = mock_event()
-    event.wait = mock_coro()
-
-    ha._async_create_timer(hass)
-    assert len(hass.bus.async_listen_once.mock_calls) == 1
-    start_timer = hass.bus.async_listen_once.mock_calls[0][1][1]
-
-    event.is_set.side_effect = False, True
-    # This will sleep from 10.3 -> 11.2 and 11.4 -> 12.2
-    mock_monotonic.side_effect = 10.2, 12.3, 12.3, 12.2
-    event_loop.run_until_complete(start_timer(None))
-
-    assert len(mock_timeout.mock_calls) == 3
-
-    first_sleep = mock_timeout.mock_calls[0][1][0]
-    assert first_sleep == 1
+    event_type, event_data = hass.bus.async_fire.mock_calls[0][1]
+    assert event_type == EVENT_TIME_CHANGED
+    assert event_data[ATTR_NOW] is sentinel.mock_date
