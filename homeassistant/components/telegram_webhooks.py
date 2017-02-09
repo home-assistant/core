@@ -67,10 +67,10 @@ def setup(hass, config):
         _LOGGER.debug("telegram webhook status: %s", current_status)
         handler_url = hass.config.api.base_url + CONF_HANDLER_URL
         if current_status and current_status['url'] != handler_url:
-            if bot.setWebhook(config[CONF_API_URL]):
+            if bot.setWebhook(handler_url):
                 _LOGGER.info("set new telegram webhook %s", handler_url)
             else:
-                _LOGGER.error("setting telegram webhook failed %s", handler_url)
+                _LOGGER.error("set telegram webhook failed %s", handler_url)
 
     hass.http.register_view(BotPushReceiver(config[CONF_USER_ID],
                                             config[CONF_TRUSTED_NETWORKS]))
@@ -87,8 +87,8 @@ class BotPushReceiver(HomeAssistantView):
     def __init__(self, user_id_array, trusted_networks):
         """Initialize users allowed to send messages to bot."""
         self.trusted_networks = trusted_networks
-        self.users = dict([(user_id, dev_id)
-                           for (dev_id, user_id) in user_id_array.items()])
+        self.users = {user_id: dev_id for dev_id, user_id in
+                      user_id_array.items()}
         _LOGGER.debug("users allowed: %s", self.users)
 
     @asyncio.coroutine
