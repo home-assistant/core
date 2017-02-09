@@ -11,7 +11,8 @@ from ipaddress import ip_network
 
 import voluptuous as vol
 
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED
+from homeassistant.const import (
+    HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY
@@ -20,6 +21,8 @@ from homeassistant.components.http.util import get_real_ip
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['python-telegram-bot==5.3.0']
+
+EVENT_TELEGRAM_COMMAND = 'telegram.command'
 
 CONF_USER_ID = 'user_id'
 CONF_API_URL = 'api_url'
@@ -31,6 +34,9 @@ DEFAULT_TRUSTED_NETWORKS = [
     ip_network('149.154.167.208/28'),
     ip_network('149.154.167.224/29'),
     ip_network('149.154.167.232/31')]
+ATTR_COMMAND = 'command'
+ATTR_USER_ID = 'user_id'
+ATTR_ARGS = 'args'
 
 DEPENDENCIES = ['http']
 DOMAIN = 'telegram_webhooks'
@@ -90,9 +96,7 @@ class BotPushReceiver(HomeAssistantView):
     def post(self, request):
         """Accept the POST from telegram."""
         real_ip = get_real_ip(request)
-        try:
-            assert any([real_ip in net for net in self.trusted_networks])
-        except AssertionError:
+        if not any([real_ip in net for net in self.trusted_networks]):
             _LOGGER.warning("Access denied from %s", real_ip)
             return self.json_message('Access denied', HTTP_UNAUTHORIZED)
 
@@ -115,9 +119,11 @@ class BotPushReceiver(HomeAssistantView):
             _LOGGER.warning('no command')
             return self.json({})
 
-        request.app['hass'].states.async_set('{}.command'.format(DOMAIN),
-                                             data['text'], force_update=True)
-        request.app['hass'].states.async_set('{}.user_id'.format(DOMAIN),
-                                             data['from']['id'],
-                                             force_update=True)
+        pieces = data['text'].split(' ')
+
+        request.app['hass'].bus.async_fire(EVENT_TELEGRAM_COMMAND, {
+            ATTR_COMMAND: pieces[0],
+            ATTR_ARGS: " ".join(pieces[1:]),
+            ATTR_USER_ID: data['from']['id'],
+            })
         return self.json({})
