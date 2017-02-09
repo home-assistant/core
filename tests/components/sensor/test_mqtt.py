@@ -22,7 +22,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_setting_sensor_value_via_mqtt_message(self):
         """Test the setting of the value via MQTT."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'mqtt',
@@ -42,7 +42,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
         """Test the setting of the value via MQTT with JSON playload."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'mqtt',

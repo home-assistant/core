@@ -265,6 +265,10 @@ def test_get_config(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
+
+    if 'components' in msg['result']:
+        msg['result']['components'] = set(msg['result']['components'])
+
     assert msg['result'] == hass.config.as_dict()
 
 

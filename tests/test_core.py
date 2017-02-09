@@ -728,7 +728,7 @@ class TestConfig(unittest.TestCase):
             CONF_UNIT_SYSTEM: METRIC_SYSTEM.as_dict(),
             'location_name': None,
             'time_zone': 'UTC',
-            'components': [],
+            'components': set(),
             'config_dir': '/tmp/ha-config',
             'version': __version__,
         }
