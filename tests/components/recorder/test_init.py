@@ -387,11 +387,10 @@ class TestMigrateRecorder(BaseTestRecorder):
 
     def test_schema_update_calls(self):  # pylint: disable=no-self-use
         """Test that schema migrations occurr in correct order."""
-        with recorder.session_scope() as session:
-            with patch.object(recorder._INSTANCE, '_apply_update') as update:
-                recorder._INSTANCE._migrate_schema()
-                update.assert_has_calls([call(version+1) for version in range(
-                    0, recorder.models.SCHEMA_VERSION)])
+        with patch.object(recorder._INSTANCE, '_apply_update') as update:
+            recorder._INSTANCE._migrate_schema()
+            update.assert_has_calls([call(version+1) for version in range(
+                0, recorder.models.SCHEMA_VERSION)])
 
     def test_schema_migrate(self):  # pylint: disable=no-self-use
         """Test the full schema migration logic.
