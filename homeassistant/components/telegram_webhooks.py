@@ -108,7 +108,7 @@ class BotPushReceiver(HomeAssistantView):
 
             if data['text'][0] != '/':
                 _LOGGER.warning('no command')
-                return self.json_message('Invalid command', HTTP_BAD_REQUEST)
+                return self.json({})
         except (ValueError, IndexError):
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
