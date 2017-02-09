@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
 from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ LOCK_NOTIFICATION = {
 
 LOCK_ALARM_TYPE = {
     9: 'Deadbolt Jammed',
-    18: 'Locked with Keypad by user',
+    18: 'Locked with Keypad by user ',
     19: 'Unlocked with Keypad by user ',
     21: 'Manually Locked by',
     22: 'Manually Unlocked by Key or Inside thumb turn',
@@ -104,7 +105,7 @@ ALARM_TYPE_STD = [
 SET_USERCODE_SCHEMA = vol.Schema({
     vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-    vol.Required(ATTR_USERCODE): vol.Coerce(int),
+    vol.Required(ATTR_USERCODE): cv.string,
 })
 
 GET_USERCODE_SCHEMA = vol.Schema({
@@ -268,7 +269,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 class_id=zwave.const.COMMAND_CLASS_ALARM).values():
             if value.label != "Alarm Type":
                 continue
-            alarm_type = LOCK_ALARM_TYPE.get(value.data)
+            alarm_type = value.data
             break
 
         for value in self._node.get_values(
