@@ -31,7 +31,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_HOME_ID):  cv.string
+    vol.Optional(CONF_HOME_ID): cv.string
 })
 
 
