@@ -25,7 +25,6 @@ REQUIREMENTS = ['python-telegram-bot==5.3.0']
 EVENT_TELEGRAM_COMMAND = 'telegram.command'
 
 CONF_USER_ID = 'user_id'
-CONF_API_URL = 'api_url'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 DEFAULT_TRUSTED_NETWORKS = [
     ip_network('149.154.167.197/32'),
@@ -40,11 +39,11 @@ ATTR_ARGS = 'args'
 
 DEPENDENCIES = ['http']
 DOMAIN = 'telegram_webhooks'
+CONF_HANDLER_URL = '/api/telegram_webhooks'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY, default=''): cv.string,
-        vol.Optional(CONF_API_URL, default=''): cv.string,
         vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
             vol.All(cv.ensure_list, [ip_network]),
         vol.Required(CONF_USER_ID): {cv.string: cv.positive_int},
@@ -55,26 +54,26 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Setup the telegram_webhooks component.
 
-    register webhook if API_KEY and API_URL specified
+    register webhook if API_KEY is specified
     register /api/telegram_webhooks as web service for telegram bot
     """
     import telegram
 
     config = config[DOMAIN]
 
-    if config.get(CONF_API_KEY, '') and config.get(CONF_API_URL, ''):
+    if config.get(CONF_API_KEY, ''):
         bot = telegram.Bot(config[CONF_API_KEY])
         current_status = bot.getWebhookInfo()
         _LOGGER.debug("telegram webhook status: %s", current_status)
-        if current_status and current_status['url'] != config[CONF_API_URL]:
+        handler_url = hass.config.api.base_url + CONF_HANDLER_URL
+        if current_status and current_status['url'] != handler_url:
             if bot.setWebhook(config[CONF_API_URL]):
-                _LOGGER.info("set new telegram webhook")
+                _LOGGER.info("set new telegram webhook %s", handler_url)
             else:
-                _LOGGER.error("telegram webhook failed")
+                _LOGGER.error("setting telegram webhook failed %s", handler_url)
 
     hass.http.register_view(BotPushReceiver(config[CONF_USER_ID],
                                             config[CONF_TRUSTED_NETWORKS]))
-    hass.states.set('{}.command'.format(DOMAIN), '')
     return True
 
 
@@ -82,7 +81,7 @@ class BotPushReceiver(HomeAssistantView):
     """Handle pushes from telegram."""
 
     requires_auth = False
-    url = "/api/telegram_webhooks"
+    url = CONF_HANDLER_URL
     name = "telegram_webhooks"
 
     def __init__(self, user_id_array, trusted_networks):
