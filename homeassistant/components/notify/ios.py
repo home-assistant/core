@@ -43,7 +43,7 @@ def get_service(hass, config, discovery_info=None):
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
-        hass.config.components.append("notify.ios")
+        hass.config.components.add("notify.ios")
 
     if not ios.devices_with_push():
         _LOGGER.error(("The notify.ios platform was loaded but no "

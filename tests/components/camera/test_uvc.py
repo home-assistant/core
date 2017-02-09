@@ -19,7 +19,7 @@ class TestUVCSetup(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.http = mock.MagicMock()
-        self.hass.config.components = ['http']
+        self.hass.config.components = set(['http'])
 
     def tearDown(self):
         """Stop everything that was started."""

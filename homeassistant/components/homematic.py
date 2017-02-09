@@ -276,7 +276,6 @@ def setup(hass, config):
     # Stops server when Homeassistant is shutting down
     hass.bus.listen_once(
         EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
-    hass.config.components.append(DOMAIN)
 
     # init homematic hubs
     entity_hubs = []
