@@ -1102,7 +1102,7 @@ def _async_create_timer(hass):
                     nxt = monotonic() + 1
                     slp_seconds = 1
 
-                with timeout(slp_seconds):
+                with timeout(slp_seconds, loop=hass.loop):
                     yield from stop_event.wait()
             except asyncio.TimeoutError:
                 # Raised when timeout expires
