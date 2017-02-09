@@ -11,7 +11,6 @@ import enum
 import logging
 import os
 import re
-import signal
 import sys
 import threading
 
@@ -26,7 +25,7 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, RESTART_EXIT_CODE, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
@@ -149,24 +148,6 @@ class HomeAssistant(object):
         """
         _LOGGER.info("Starting Home Assistant")
         self.state = CoreState.starting
-
-        # Setup signal handling
-        if sys.platform != 'win32':
-            def _async_signal_handle(exit_code):
-                """Wrap signal handling."""
-                self.async_add_job(self.async_stop(exit_code))
-
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGTERM, _async_signal_handle, 0)
-            except ValueError:
-                _LOGGER.warning("Could not bind to SIGTERM")
-
-            try:
-                self.loop.add_signal_handler(
-                    signal.SIGHUP, _async_signal_handle, RESTART_EXIT_CODE)
-            except ValueError:
-                _LOGGER.warning("Could not bind to SIGHUP")
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
