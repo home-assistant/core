@@ -213,6 +213,49 @@ class TestRecorder(BaseTestRecorder):
             recorder._INSTANCE._apply_update(-1)
 
 
+def create_engine_test(*args, **kwargs):
+    """Test version of create_engine that initializes with old schema.
+
+    This simulates an existing db with the old schema.
+    """
+    engine = create_engine(*args, **kwargs)
+    models_original.Base.metadata.create_all(engine)
+    return engine
+
+
+class TestMigrateRecorder(BaseTestRecorder):
+    """Test recorder class that starts with an original schema db."""
+
+    @patch('sqlalchemy.create_engine', new=create_engine_test)
+    @patch('homeassistant.components.recorder.Recorder._migrate_schema')
+    def setUp(self, migrate):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started.
+
+        create_engine is patched to create a db that starts with the old
+        schema.
+
+        _migrate_schema is mocked to ensure it isn't run, so we can test it
+        below.
+        """
+        super().setUp()
+
+    def test_schema_update_calls(self):  # pylint: disable=no-self-use
+        """Test that schema migrations occurr in correct order."""
+        with patch.object(recorder._INSTANCE, '_apply_update') as update:
+            recorder._INSTANCE._migrate_schema()
+            update.assert_has_calls([call(version+1) for version in range(
+                0, recorder.models.SCHEMA_VERSION)])
+
+    def test_schema_migrate(self):  # pylint: disable=no-self-use
+        """Test the full schema migration logic.
+
+        We're just testing that the logic can execute successfully here without
+        throwing exceptions. Maintaining a set of assertions based on schema
+        inspection could quickly become quite cumbersome.
+        """
+        recorder._INSTANCE._migrate_schema()
+
+
 @pytest.fixture
 def hass_recorder():
     """HASS fixture with in-memory recorder."""
@@ -357,46 +400,3 @@ def test_recorder_bad_execute(hass_recorder):
         res = recorder.execute((mck1,))
     assert res == []
     assert e_mock.call_count == 3
-
-
-def create_engine_test(*args, **kwargs):
-    """Test version of create_engine that initializes with old schema.
-
-    This simulates an existing db with the old schema.
-    """
-    engine = create_engine(*args, **kwargs)
-    models_original.Base.metadata.create_all(engine)
-    return engine
-
-
-class TestMigrateRecorder(BaseTestRecorder):
-    """Test recorder class that starts with an original schema db."""
-
-    @patch('sqlalchemy.create_engine', new=create_engine_test)
-    @patch('homeassistant.components.recorder.Recorder._migrate_schema')
-    def setUp(self, migrate):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started.
-
-        create_engine is patched to create a db that starts with the old
-        schema.
-
-        _migrate_schema is mocked to ensure it isn't run, so we can test it
-        below.
-        """
-        super().setUp()
-
-    def test_schema_update_calls(self):  # pylint: disable=no-self-use
-        """Test that schema migrations occurr in correct order."""
-        with patch.object(recorder._INSTANCE, '_apply_update') as update:
-            recorder._INSTANCE._migrate_schema()
-            update.assert_has_calls([call(version+1) for version in range(
-                0, recorder.models.SCHEMA_VERSION)])
-
-    def test_schema_migrate(self):  # pylint: disable=no-self-use
-        """Test the full schema migration logic.
-
-        We're just testing that the logic can execute successfully here without
-        throwing exceptions. Maintaining a set of assertions based on schema
-        inspection could quickly become quite cumbersome.
-        """
-        recorder._INSTANCE._migrate_schema()
