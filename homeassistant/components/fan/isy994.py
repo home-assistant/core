@@ -29,7 +29,7 @@ STATE_TO_VALUE = {}
 for key in VALUE_TO_STATE:
     STATE_TO_VALUE[VALUE_TO_STATE[key]] = key
 
-STATES = [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+STATES = [SPEED_OFF, SPEED_LOW, 'med', SPEED_HIGH]
 
 
 # pylint: disable=unused-argument
