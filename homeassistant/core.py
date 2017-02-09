@@ -404,7 +404,7 @@ class EventBus(object):
         listeners = get(MATCH_ALL, []) + get(event_type, [])
 
         event = Event(event_type, event_data, origin)
-        print(event)
+
         if event_type != EVENT_TIME_CHANGED:
             _LOGGER.info("Bus:Handling %s", event)
 
