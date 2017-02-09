@@ -16,7 +16,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywink
 
     for lock in pywink.get_locks():
-        _id = lock.object_id + lock.name()
+        _id = lock.object_id() + lock.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkLockDevice(lock, hass)])
 
