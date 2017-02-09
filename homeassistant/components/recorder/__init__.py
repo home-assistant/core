@@ -342,7 +342,7 @@ class Recorder(threading.Thread):
 
     def _apply_update(self, new_version):
         """Perform operations to bring schema up to date."""
-        from sqlalchemy import Index, Table
+        from sqlalchemy import Table
         import homeassistant.components.recorder.models as models
 
         if new_version == 1:
