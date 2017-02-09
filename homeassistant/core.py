@@ -405,7 +405,7 @@ class EventBus(object):
         listeners = get(MATCH_ALL, []) + get(event_type, [])
 
         event = Event(event_type, event_data, origin)
-        print(event)
+
         if event_type != EVENT_TIME_CHANGED:
             _LOGGER.info("Bus:Handling %s", event)
 
@@ -809,13 +809,13 @@ class ServiceRegistry(object):
         self._hass = hass
         self._async_unsub_call_event = None
 
-        def gen_unique_id():
+        def _gen_unique_id():
             cur_id = 1
             while True:
                 yield '{}-{}'.format(id(self), cur_id)
                 cur_id += 1
 
-        gen = gen_unique_id()
+        gen = _gen_unique_id()
         self._generate_unique_id = lambda: next(gen)
 
     @property
