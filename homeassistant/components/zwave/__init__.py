@@ -27,6 +27,7 @@ REQUIREMENTS = ['pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+CLASS_ID = 'class_id'
 CONF_AUTOHEAL = 'autoheal'
 CONF_DEBUG = 'debug'
 CONF_POLLING_INTENSITY = 'polling_intensity'
@@ -633,6 +634,47 @@ class ZWaveDeviceEntity(Entity):
         """Called when a value for this entity's node has changed."""
         self.update_properties()
         self.schedule_update_ha_state()
+
+    def _value_handler(self, method=None, class_id=None, index=None,
+                       label=None, data=None, member=None, **kwargs):
+        """Get the values for a given command_class with arguments."""
+        varname = member
+        if class_id is not None:
+            kwargs[CLASS_ID] = class_id
+        _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
+                      ' member=%s, kwargs=%s',
+                      method, class_id, index, label, data, member, kwargs)
+        values = self._value.node.get_values(**kwargs).values()
+        _LOGGER.debug('values=%s', values)
+        if not values:
+            return None
+        for value in values:
+            if index is not None and value.index != index:
+                continue
+            if label is not None:
+                for entry in label:
+                    if entry is not None and value.label != entry:
+                        continue
+            if method == 'set':
+                value.data = data
+                return
+            if data is not None and value.data != data:
+                continue
+            if member is not None:
+                results = getattr(value, varname)
+            else:
+                results = value
+            break
+        _LOGGER.debug('final result=%s', results)
+        return results
+
+    def get_value(self, **kwargs):
+        """Simplifyer to get values."""
+        return self._value_handler(method='get', **kwargs)
+
+    def set_value(self, **kwargs):
+        """Simplifyer to set a value."""
+        return self._value_handler(method='set', **kwargs)
 
     def update_properties(self):
         """Callback on data changes for node values."""
