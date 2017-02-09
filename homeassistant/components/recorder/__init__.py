@@ -89,6 +89,8 @@ def execute(qry: QueryType) -> List[Any]:
 
     This method also retries a few times in the case of stale connections.
     """
+    _verify_instance()
+
     import sqlalchemy.exc
     with session_scope() as session:
         for _ in range(0, RETRIES):
@@ -152,6 +154,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 def query(model_name: Union[str, Any], *args) -> QueryType:
     """Helper to return a query handle."""
     _verify_instance()
+
     if isinstance(model_name, str):
         return _SESSION().query(get_model(model_name), *args)
     return _SESSION().query(model_name, *args)
@@ -481,4 +484,9 @@ def _verify_instance() -> None:
     """Throw error if recorder not initialized."""
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")
+
+    ident = _INSTANCE.hass.loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
     _INSTANCE.block_till_db_ready()
