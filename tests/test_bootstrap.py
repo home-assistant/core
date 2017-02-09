@@ -395,7 +395,7 @@ class TestBootstrap:
         assert loader.get_component('disabled_component') is not None
         assert 'disabled_component' in self.hass.config.components
 
-    @mock.patch('homeassistant.helpers.signal.async_register_signal_handling')
+    @mock.patch('homeassistant.bootstrap.async_register_signal_handling')
     def test_all_work_done_before_start(self, signal_mock):
         """Test all init work done till start."""
         call_order = []
