@@ -1,4 +1,8 @@
-"""Models for SQLAlchemy."""
+"""Models for SQLAlchemy.
+
+This file contains the original models definitions before schema tracking was
+implemented. It is used to test the schema migration logic.
+"""
 
 import json
 from datetime import datetime
