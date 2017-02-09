@@ -53,11 +53,19 @@ class TadoDeviceScanner(DeviceScanner):
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.home_id = config[CONF_HOME_ID]
 
-        self.tadoapiurl = 'https://my.tado.com/api/v2' \
-                          '/homes/{}/mobileDevices' \
-                          '?username={}&password={}'
+        # The Tado device tracker can work with or without a home_id
+        self.home_id = config[CONF_HOME_ID] if CONF_HOME_ID in config else None
+
+        # If there's a home_id, we need a different API URL
+        if self.home_id is None:
+            self.tadoapiurl = 'https://my.tado.com/api/v2/me'
+        else:
+            self.tadoapiurl = 'https://my.tado.com/api/v2' \
+                              '/homes/{home_id}/mobileDevices'
+
+        # The API URL always needs a username and password
+        self.tadoapiurl += '?username={username}&password={password}'
 
         self.websession = async_create_clientsession(
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
@@ -104,9 +112,11 @@ class TadoDeviceScanner(DeviceScanner):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
-                url = self.tadoapiurl.format(
-                    self.home_id, self.username, self.password)
+                url = self.tadoapiurl.format(home_id=self.home_id,
+                                             username=self.username,
+                                             password=self.password)
 
+                # Go get 'em!
                 response = yield from self.websession.get(url)
 
                 # error on Tado webservice
@@ -124,6 +134,11 @@ class TadoDeviceScanner(DeviceScanner):
         finally:
             if response is not None:
                 yield from response.release()
+
+        # Without a home_id, we fetched an URL where the mobile devices can be
+        # found under the mobileDevices key.
+        if 'mobileDevices' in tado_json:
+            tado_json = tado_json['mobileDevices']
 
         # Find devices that have geofencing enabled, and are currently at home.
         for mobile_device in tado_json:
