@@ -67,7 +67,8 @@ def setup(hass, config):
         bot = telegram.Bot(conf[CONF_API_KEY])
         current_status = bot.getWebhookInfo()
         _LOGGER.debug("telegram webhook status: %s", current_status)
-        handler_url = "{0}{1}".format(hass.config.api.base_url, TELEGRAM_HANDLER_URL)
+        handler_url = "{0}{1}".format(hass.config.api.base_url,
+                                      TELEGRAM_HANDLER_URL)
         if current_status and current_status['url'] != handler_url:
             if bot.setWebhook(handler_url):
                 _LOGGER.info("set new telegram webhook %s", handler_url)
