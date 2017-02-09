@@ -5,24 +5,21 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.history_stats/
 """
 
-import asyncio
 import datetime
 import logging
 import math
-import time
 
 import voluptuous as vol
 
 import homeassistant.components.history as history
-import homeassistant.components.recorder as recorder
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_ENTITY_ID, CONF_STATE)
-from homeassistant.core import callback
+from homeassistant.const import (
+    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.event import track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,8 +67,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 
 
 # noinspection PyUnusedLocal
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the History Stats sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     entity_state = config.get(CONF_STATE)
@@ -84,8 +80,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    yield from async_add_devices([HistoryStatsSensor(
-        hass, entity_id, entity_state, start, end, duration, name)], True)
+    add_devices([HistoryStatsSensor(
+        hass, entity_id, entity_state, start, end, duration, name)])
+
     return True
 
 
@@ -108,15 +105,15 @@ class HistoryStatsSensor(Entity):
         self._period = (datetime.datetime.now(), datetime.datetime.now())
         self.value = 0
 
-        # noinspection PyUnusedLocal
-        # pylint: disable=invalid-name
-        @callback
-        def async_stats_sensor_state_listener(entity, old_state, new_state):
-            """Called when the sensor changes state."""
-            hass.async_add_job(self.async_update_ha_state, True)
+        def force_refresh(*args):
+            """Force the component to refresh."""
+            self.schedule_update_ha_state(True)
 
-        async_track_state_change(
-            hass, entity_id, async_stats_sensor_state_listener)
+        # Update value when home assistant starts
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, force_refresh)
+
+        # Update value when tracked entity changes its state
+        track_state_change(hass, entity_id, force_refresh)
 
     @property
     def name(self):
@@ -155,19 +152,15 @@ class HistoryStatsSensor(Entity):
         """Return the icon to use in the frontend, if any."""
         return ICON
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Get the latest data and updates the states."""
         # Parse templates
         self.update_period()
         start, end = self._period
+
         # Convert to UTC
         start = dt_util.as_utc(start)
         end = dt_util.as_utc(end)
-
-        if not HistoryStatsHelper.wait_till_db_ready():
-            _LOGGER.error('Cannot connect to database')
-            return
 
         # Get history between start and end
         history_list = history.state_changes_during_period(
@@ -206,7 +199,7 @@ class HistoryStatsSensor(Entity):
         # Parse start
         if self._start is not None:
             try:
-                start_rendered = self._start.async_render()
+                start_rendered = self._start.render()
             except TemplateError as ex:
                 HistoryStatsHelper.handle_template_exception(ex, 'start')
                 return
@@ -223,7 +216,7 @@ class HistoryStatsSensor(Entity):
         # Parse end
         if self._end is not None:
             try:
-                end_rendered = self._end.async_render()
+                end_rendered = self._end.render()
             except TemplateError as ex:
                 HistoryStatsHelper.handle_template_exception(ex, 'end')
                 return
@@ -240,7 +233,7 @@ class HistoryStatsSensor(Entity):
         # Parse duration
         if self._duration is not None:
             try:
-                duration = math.floor(float(self._duration.async_render()))
+                duration = math.floor(float(self._duration.render()))
             except TemplateError as ex:
                 HistoryStatsHelper.handle_template_exception(ex, 'duration')
                 return
@@ -295,20 +288,3 @@ class HistoryStatsHelper:
             return
         _LOGGER.error('Error parsing template for [' + field + ']')
         _LOGGER.error(ex)
-
-    # noinspection PyProtectedMember
-    # pylint: disable=protected-access
-    @staticmethod
-    def wait_till_db_ready():
-        """Start recorder connection if not done already."""
-        # Without this method, the recorder does not start its connection
-        # itself, resulting in an infinite loop blocking the boot of home
-        # assistant. It may be a nasty bug.
-        if recorder._INSTANCE.db_ready._flag:
-            return True
-        time.sleep(0.5)  # Wait, just in case db is starting
-        if recorder._INSTANCE.db_ready._flag:
-            return True
-        recorder._INSTANCE._setup_connection()  # Force connection
-        time.sleep(0.5)  # Wait a little
-        return recorder._INSTANCE.db_ready._flag
