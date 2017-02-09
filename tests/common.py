@@ -213,7 +213,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 def mock_http_component(hass):
     """Mock the HTTP component."""
     hass.http = MagicMock()
-    hass.config.components.append('http')
+    hass.config.components.add('http')
     hass.http.views = {}
 
     def mock_register_view(view):

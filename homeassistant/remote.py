@@ -312,6 +312,8 @@ class JSONEncoder(json.JSONEncoder):
         """
         if isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, set):
+            return list(obj)
         elif hasattr(obj, 'as_dict'):
             return obj.as_dict()
 
@@ -548,7 +550,13 @@ def get_config(api):
     try:
         req = api(METHOD_GET, URL_API_CONFIG)
 
-        return req.json() if req.status_code == 200 else {}
+        if req.status_code != 200:
+            return {}
+
+        result = req.json()
+        if 'components' in result:
+            result['components'] = set(result['components'])
+        return result
 
     except (HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the JSON
