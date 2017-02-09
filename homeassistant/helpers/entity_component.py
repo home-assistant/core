@@ -151,7 +151,7 @@ class EntityComponent(object):
                     entity_platform.add_entities, discovery_info
                 )
 
-            self.hass.config.components.append(
+            self.hass.config.components.add(
                 '{}.{}'.format(self.domain, platform_type))
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(

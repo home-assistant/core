@@ -99,7 +99,7 @@ class TestLightMQTT(unittest.TestCase):
 
     def test_fail_setup_if_no_command_topic(self):
         """Test if command fails with command topic."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(0):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -112,7 +112,7 @@ class TestLightMQTT(unittest.TestCase):
     def test_no_color_or_brightness_or_color_temp_if_no_topics(self): \
             # pylint: disable=invalid-name
         """Test if there is no color and brightness if no topic."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -157,7 +157,7 @@ class TestLightMQTT(unittest.TestCase):
             'payload_off': 0
         }}
 
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, config)
 
@@ -213,7 +213,7 @@ class TestLightMQTT(unittest.TestCase):
 
     def test_controlling_scale(self):
         """Test the controlling scale."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -276,7 +276,7 @@ class TestLightMQTT(unittest.TestCase):
             'rgb_value_template': '{{ value_json.hello | join(",") }}',
         }}
 
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, config)
 
@@ -316,7 +316,7 @@ class TestLightMQTT(unittest.TestCase):
             'payload_off': 'off'
         }}
 
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, config)
 
@@ -373,7 +373,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status',
         }}
 
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, config)
 
@@ -398,7 +398,7 @@ class TestLightMQTT(unittest.TestCase):
             'state_topic': 'test_light_rgb/status'
         }}
 
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, config)
 

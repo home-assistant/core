@@ -166,7 +166,7 @@ def _async_setup_component(hass: core.HomeAssistant,
             loader.set_component(domain, None)
             return False
 
-        hass.config.components.append(component.DOMAIN)
+        hass.config.components.add(component.DOMAIN)
 
         hass.bus.async_fire(
             EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}

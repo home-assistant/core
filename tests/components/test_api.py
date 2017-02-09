@@ -235,13 +235,17 @@ class TestAPI(unittest.TestCase):
         """Test the return of the configuration."""
         req = requests.get(_url(const.URL_API_CONFIG),
                            headers=HA_HEADERS)
-        self.assertEqual(hass.config.as_dict(), req.json())
+        result = req.json()
+        if 'components' in result:
+            result['components'] = set(result['components'])
+
+        self.assertEqual(hass.config.as_dict(), result)
 
     def test_api_get_components(self):
         """Test the return of the components."""
         req = requests.get(_url(const.URL_API_COMPONENTS),
                            headers=HA_HEADERS)
-        self.assertEqual(hass.config.components, req.json())
+        self.assertEqual(hass.config.components, set(req.json()))
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""

@@ -61,7 +61,7 @@ class TestBootstrap:
     @mock.patch('homeassistant.helpers.signal.async_register_signal_handling')
     def test_from_config_file(self, mock_upgrade, mock_detect, mock_signal):
         """Test with configuration file."""
-        components = ['browser', 'conversation', 'script']
+        components = set(['browser', 'conversation', 'script'])
         files = {
             'config.yaml': ''.join(
                 '{}:\n'.format(comp)
@@ -76,8 +76,8 @@ class TestBootstrap:
                 patch_yaml_files(files, True):
             self.hass = bootstrap.from_config_file('config.yaml')
 
-        components.append('group')
-        assert sorted(components) == sorted(self.hass.config.components)
+        components.add('group')
+        assert components == self.hass.config.components
 
     def test_handle_setup_circular_dependency(self):
         """Test the setup of circular dependencies."""
@@ -91,7 +91,7 @@ class TestBootstrap:
         loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
 
         bootstrap.setup_component(self.hass, 'comp_a')
-        assert ['comp_a'] == self.hass.config.components
+        assert set(['comp_a']) == self.hass.config.components
 
     def test_validate_component_config(self):
         """Test validating component configuration."""
@@ -251,7 +251,7 @@ class TestBootstrap:
 
         thread = threading.Thread(target=setup_component)
         thread.start()
-        self.hass.config.components.append('comp')
+        self.hass.config.components.add('comp')
 
         thread.join()
 
