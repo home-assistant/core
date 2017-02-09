@@ -87,7 +87,6 @@ def login():
 
 def _zm_request(method, api_url, data=None):
     """Perform a Zoneminder request."""
-    import simplejson
     # Since the API uses sessions that expire, sometimes we need to re-auth
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
@@ -105,7 +104,7 @@ def _zm_request(method, api_url, data=None):
 
     try:
         return req.json()
-    except simplejson.scanner.JSONDecodeError:
+    except ValueError:
         _LOGGER.exception('JSON decode exception caught while attempting to '
                           'decode "%s"', req.text)
 
