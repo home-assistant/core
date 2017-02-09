@@ -21,6 +21,9 @@ from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
+# Configuration constant specific for tado
+CONF_HOME_ID = 'home_id'
+
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
