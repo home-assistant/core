@@ -108,8 +108,7 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        with patch.object(loop, 'add_signal_handler'), \
-                patch('homeassistant.core._async_create_timer'):
+        with patch('homeassistant.core._async_create_timer'):
             yield from orig_start()
 
     hass.async_start = mock_async_start

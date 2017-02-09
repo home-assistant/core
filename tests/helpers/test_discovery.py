@@ -155,7 +155,8 @@ class TestHelpersDiscovery:
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
 
-    def test_1st_discovers_2nd_component(self):
+    @patch('homeassistant.bootstrap.async_register_signal_handling')
+    def test_1st_discovers_2nd_component(self, mock_signal):
         """Test that we don't break if one component discovers the other.
 
         If the first component fires a discovery event to setup the

@@ -5,6 +5,7 @@ omit =
     homeassistant/__main__.py
     homeassistant/scripts/*.py
     homeassistant/helpers/typing.py
+    homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
