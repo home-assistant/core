@@ -1047,7 +1047,7 @@ class Config(object):
         self.skip_pip = False  # type: bool
 
         # List of loaded components
-        self.components = []
+        self.components = set()
 
         # Remote.API object pointing at local API
         self.api = None

@@ -57,11 +57,11 @@ class TestMQTT(unittest.TestCase):
 
         with mock.patch('homeassistant.components.mqtt.MQTT',
                         side_effect=socket.error()):
-            self.hass.config.components = []
+            self.hass.config.components = set()
             assert not setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
 
         # Ensure if we dont raise it sets up correctly
-        self.hass.config.components = []
+        self.hass.config.components = set()
         assert setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
 
     @mock.patch('paho.mqtt.client.Client')
@@ -71,13 +71,13 @@ class TestMQTT(unittest.TestCase):
 
         with mock.patch('homeassistant.components.mqtt.server.start',
                         return_value=(True, client_config)) as _start:
-            self.hass.config.components = []
+            self.hass.config.components = set()
             assert setup_component(self.hass, mqtt.DOMAIN,
                                    {mqtt.DOMAIN: {}})
             assert _start.call_count == 1
 
             # Test with `embedded: None`
-            self.hass.config.components = []
+            self.hass.config.components = set()
             assert setup_component(self.hass, mqtt.DOMAIN,
                                    {mqtt.DOMAIN: {'embedded': None}})
             assert _start.call_count == 2  # Another call
@@ -234,7 +234,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         # mock_mqtt_component(self.hass)
 
         with mock.patch('paho.mqtt.client.Client'):
-            self.hass.config.components = []
+            self.hass.config.components = set()
             assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
