@@ -4,11 +4,11 @@ Support for Apple TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.apple_tv/
 """
-import asyncio
-import aiohttp
 import logging
 import hashlib
 
+import asyncio
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
