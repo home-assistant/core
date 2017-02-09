@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, QueryType
@@ -53,15 +54,11 @@ CONFIG_SCHEMA = vol.Schema({
 _INSTANCE = None  # type: Any
 _LOGGER = logging.getLogger(__name__)
 
-# These classes will be populated during setup()
-# scoped_session, in the same thread session_scope() stays the same
-_SESSION = None
-
 
 @contextmanager
 def session_scope():
     """Provide a transactional scope around a series of operations."""
-    session = _SESSION()
+    session = _INSTANCE.get_session()
     try:
         yield session
         session.commit()
@@ -73,15 +70,28 @@ def session_scope():
         session.close()
 
 
+def get_instance() -> None:
+    """Throw error if recorder not initialized."""
+    if _INSTANCE is None:
+        raise RuntimeError("Recorder not initialized.")
+
+    ident = _INSTANCE.hass.loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
+    _wait(_INSTANCE.db_ready, "Database not ready")
+
+    return _INSTANCE
+
+
 # pylint: disable=invalid-sequence-index
 def execute(qry: QueryType) -> List[Any]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
     """
-    _verify_instance()
-
-    import sqlalchemy.exc
+    get_instance()
+    from sqlalchemy.exc import SQLAlchemyError
     with session_scope() as session:
         for _ in range(0, RETRIES):
             try:
@@ -89,7 +99,7 @@ def execute(qry: QueryType) -> List[Any]:
                     row for row in
                     (row.to_native() for row in qry)
                     if row is not None]
-            except sqlalchemy.exc.SQLAlchemyError as err:
+            except SQLAlchemyError as err:
                 _LOGGER.error(ERROR_QUERY, err)
                 session.rollback()
                 time.sleep(QUERY_RETRY_WAIT)
@@ -101,13 +111,13 @@ def run_information(point_in_time: Optional[datetime]=None):
 
     There is also the run that covers point_in_time.
     """
-    _verify_instance()
+    ins = get_instance()
 
     recorder_runs = get_model('RecorderRuns')
-    if point_in_time is None or point_in_time > _INSTANCE.recording_start:
+    if point_in_time is None or point_in_time > ins.recording_start:
         return recorder_runs(
             end=None,
-            start=_INSTANCE.recording_start,
+            start=ins.recording_start,
             closed_incorrect=False)
 
     with session_scope() as session:
@@ -144,11 +154,11 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 def query(model_name: Union[str, Any], *args) -> QueryType:
     """Helper to return a query handle."""
-    _verify_instance()
+    ins = get_instance()
 
     if isinstance(model_name, str):
-        return _SESSION().query(get_model(model_name), *args)
-    return _SESSION().query(model_name, *args)
+        return ins.get_session().query(get_model(model_name), *args)
+    return ins.get_session().query(model_name, *args)
 
 
 def get_model(model_name: str) -> Any:
@@ -175,6 +185,7 @@ class Recorder(threading.Thread):
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_ready = threading.Event()
+        self.start_recording = threading.Event()
         self.engine = None  # type: Any
         self._run = None  # type: Any
 
@@ -185,11 +196,15 @@ class Recorder(threading.Thread):
 
         def start_recording(event):
             """Start recording."""
-            self.start()
+            self.start_recording.set()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_recording)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         hass.bus.listen(MATCH_ALL, self.event_listener)
+
+        self.get_session = None
+
+        self.start()
 
     def run(self):
         """Start processing events to save."""
@@ -205,6 +220,8 @@ class Recorder(threading.Thread):
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
                 time.sleep(CONNECT_RETRY_WAIT)
+
+        _wait(self.start_recording, "Waiting to start recording")
 
         if self.purge_days is not None:
             async_track_time_interval(
@@ -265,10 +282,9 @@ class Recorder(threading.Thread):
     def shutdown(self, event):
         """Tell the recorder to shut down."""
         global _INSTANCE  # pylint: disable=global-statement
-        _INSTANCE = None
-
         self.queue.put(None)
         self.join()
+        _INSTANCE = None
 
     def block_till_done(self):
         """Block till all events processed."""
@@ -276,15 +292,12 @@ class Recorder(threading.Thread):
 
     def block_till_db_ready(self):
         """Block until the database session is ready."""
-        self.db_ready.wait(10)
-        while not self.db_ready.is_set():
-            _LOGGER.warning('Database not ready, waiting another 10 seconds.')
-            self.db_ready.wait(10)
+        _wait(self.db_ready, "Database not ready")
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        global _SESSION  # pylint: disable=invalid-name,global-statement
-        if _SESSION is not None:
+        if self.get_session is not None:
+            _LOGGER.debug("SESSION exist: %s", self.get_session)
             return
 
         import homeassistant.components.recorder.models as models
@@ -304,7 +317,7 @@ class Recorder(threading.Thread):
 
         models.Base.metadata.create_all(self.engine)
         session_factory = sessionmaker(bind=self.engine)
-        _SESSION = scoped_session(session_factory)
+        self.get_session = scoped_session(session_factory)
         self._migrate_schema()
         self.db_ready.set()
 
@@ -388,16 +401,15 @@ class Recorder(threading.Thread):
 
     def _close_connection(self):
         """Close the connection."""
-        global _SESSION  # pylint: disable=invalid-name,global-statement
         self.engine.dispose()
         self.engine = None
-        _SESSION = None
+        self.get_session = None
 
     def _setup_run(self):
         """Log the start of the current run."""
         recorder_runs = get_model('RecorderRuns')
         with session_scope() as session:
-            for run in query('RecorderRuns').filter_by(end=None):
+            for run in query(recorder_runs).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start
                 _LOGGER.warning("Ended unfinished session (id=%s from %s)",
@@ -474,13 +486,14 @@ class Recorder(threading.Thread):
         return False
 
 
-def _verify_instance() -> None:
-    """Throw error if recorder not initialized."""
-    if _INSTANCE is None:
-        raise RuntimeError("Recorder not initialized.")
-
-    ident = _INSTANCE.hass.loop.__dict__.get("_thread_ident")
-    if ident is not None and ident == threading.get_ident():
-        raise RuntimeError('Cannot be called from within the event loop')
-
-    _INSTANCE.block_till_db_ready()
+def _wait(event, message):
+    """Event wait helper."""
+    for retry in (10, 20, 30):
+        event.wait(10)
+        if event.is_set():
+            return
+        msg = message + " ({} seconds)".format(retry)
+        assert msg
+        _LOGGER.warning(msg)
+    if not event.is_set():
+        raise HomeAssistantError(msg)

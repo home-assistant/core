@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT)
-from homeassistant.components import sun, mqtt
+from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
@@ -445,3 +445,13 @@ def assert_setup_component(count, domain=None):
     res_len = 0 if res is None else len(res)
     assert res_len == count, 'setup_component failed, expected {} got {}: {}' \
         .format(count, res_len, res)
+
+
+def init_recorder_component(hass, add_config=None):
+    """Initialize the recorder."""
+    config = dict(add_config) if add_config else {}
+    config[recorder.CONF_DB_URL] = 'sqlite://'  # In memory DB
+    assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
+    assert recorder.DOMAIN in hass.config.components
+    recorder.get_instance().block_till_db_ready()
+    _LOGGER.info("In-memory recorder successfully started")

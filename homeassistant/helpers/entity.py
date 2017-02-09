@@ -190,7 +190,7 @@ class Entity(object):
         ).result()
 
     @asyncio.coroutine
-    def async_update_ha_state(self, force_refresh=False):
+    def async_update_ha_state(self, force_refresh=False, restored=False):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -240,6 +240,8 @@ class Entity(object):
         self._attr_setter('supported_features', int, ATTR_SUPPORTED_FEATURES,
                           attr)
         self._attr_setter('device_class', str, ATTR_DEVICE_CLASS, attr)
+        if restored:
+            attr[ATTR_RESTORED_STATE] = True
 
         end = timer()
 
@@ -288,7 +290,7 @@ class Entity(object):
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
-        """Remove entitiy from HASS."""
+        """Remove entity from HASS."""
         run_coroutine_threadsafe(
             self.async_remove(), self.hass.loop
         ).result()

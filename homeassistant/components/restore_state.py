@@ -12,12 +12,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, split_entity_id
+from homeassistant.core import HomeAssistant
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, ATTR_RESTORED_STATE)
 from homeassistant.components.history import (
     CONF_DOMAINS, CONF_EXCLUDE, CONF_ENTITIES, CONF_INCLUDE,
-    Filters, get_states, last_recorder_run)
+    Filters, get_states, last_recorder_run, recorder)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
@@ -25,15 +25,12 @@ import homeassistant.util.dt as dt_util
 DOMAIN = 'restore_state'
 
 DEPENDENCES = ['recorder']
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.FILTER_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 _LOGGER = logging.getLogger(__name__)
-
-_ALWAYS_OVERWRITE = (
-    'device_tracker', 'input_select', 'input_boolean', 'input_slider',
-    'switch')
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -48,39 +45,28 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
 
-    def restore_states(event):
-        """Restore previous states from the DB."""
-        last_run = last_recorder_run()
-        if last_run is None:
-            _LOGGER.warning("DB contains no last run")
-            return
+    # Wait for the recorder
+    recorder.get_instance()
 
-        last_end_time = last_run.end - timedelta(seconds=1)
-        # Unfortunately the recorder_run model do not return offset-aware time
-        last_end_time = last_end_time.replace(tzinfo=dt_util.UTC)
-        _LOGGER.debug("Last run: %s - %s", last_run.start, last_end_time)
+    last_run = last_recorder_run()
+    if last_run is None:
+        return
 
-        states = get_states(last_end_time, run=last_run, filters=filters)
+    last_end_time = last_run.end - timedelta(seconds=1)
+    # Unfortunately the recorder_run model do not return offset-aware time
+    last_end_time = last_end_time.replace(tzinfo=dt_util.UTC)
+    _LOGGER.debug("Last run: %s - %s", last_run.start, last_end_time)
 
-        for state in states:
-            cur_state = hass.states.get(state.entity_id)
-            domain = split_entity_id(state.entity_id)[0]
-            if cur_state is not None and domain not in _ALWAYS_OVERWRITE:
-                if cur_state.state == state.state:
-                    _LOGGER.debug("Already set %s=%s", state.entity_id,
-                                  cur_state.state)
-                else:
-                    _LOGGER.debug("Already set %s=%s, should be %s",
-                                  state.entity_id, cur_state.state,
-                                  state.state)
+    states = get_states(last_end_time, run=last_run, filters=filters)
 
-                continue
-            _LOGGER.debug("%s restored to %s", state.entity_id, state.state)
-            attributes = dict(state.attributes)
-            attributes[ATTR_RESTORED_STATE] = True
+    # Cache the states
+    hass.data[ATTR_RESTORED_STATE] = {
+        state.entity_id: state for state in states}
 
-            hass.states.set(state.entity_id, state.state, attributes)
+    def remove_cache(event):
+        """Remove the states cache."""
+        del hass.data[ATTR_RESTORED_STATE]
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, restore_states)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, remove_cache)
 
     return True

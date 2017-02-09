@@ -35,22 +35,13 @@ SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 
-def last_5_states(entity_id: str):
-    """Return the last 5 states for entity_id."""
-    entity_id = entity_id.lower()
-
-    states = recorder.get_model('States')
-    return recorder.execute(
-        recorder.query('States').filter(
-            (states.entity_id == entity_id) &
-            (states.last_changed == states.last_updated)
-        ).order_by(states.state_id.desc()).limit(5))
-
-
 def last_recorder_run():
     """Retireve the last closed recorder run from the DB."""
     rec_runs = recorder.get_model('RecorderRuns')
-    return recorder.query(rec_runs).order_by(rec_runs.end.desc()).first()
+    with recorder.session_scope() as session:
+        res = recorder.query(rec_runs).order_by(rec_runs.end.desc()).first()
+        session.expunge(res)
+        return res
 
 
 def get_significant_states(start_time, end_time=None, entity_id=None,
@@ -180,25 +171,11 @@ def setup(hass, config):
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
 
-    hass.http.register_view(Last5StatesView)
+    recorder.get_instance()
     hass.http.register_view(HistoryPeriodView(filters))
     register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True
-
-
-class Last5StatesView(HomeAssistantView):
-    """Handle last 5 state view requests."""
-
-    url = '/api/history/entity/{entity_id}/recent_states'
-    name = 'api:history:entity-recent-states'
-
-    @asyncio.coroutine
-    def get(self, request, entity_id):
-        """Retrieve last 5 states of entity."""
-        result = yield from request.app['hass'].loop.run_in_executor(
-            None, last_5_states, entity_id)
-        return self.json(result)
 
 
 class HistoryPeriodView(HomeAssistantView):

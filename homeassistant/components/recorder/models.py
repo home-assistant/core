@@ -63,7 +63,7 @@ class States(Base):   # type: ignore
     domain = Column(String(64))
     entity_id = Column(String(255))
     state = Column(String(255))
-    attributes = Column(Text, default='{}')
+    attributes = Column(Text)
     event_id = Column(Integer, ForeignKey('events.event_id'))
     last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
     last_updated = Column(DateTime(timezone=True), default=datetime.utcnow)
@@ -86,6 +86,7 @@ class States(Base):   # type: ignore
         if state is None:
             dbstate.state = ''
             dbstate.domain = split_entity_id(entity_id)[0]
+            dbstate.attributes = '{}'
             dbstate.last_changed = event.time_fired
             dbstate.last_updated = event.time_fired
         else:

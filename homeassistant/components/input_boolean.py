@@ -140,6 +140,13 @@ class InputBoolean(ToggleEntity):
         return self._state
 
     @asyncio.coroutine
+    def async_added_to_hass(self, state):
+        """Component added to hass, restore state here."""
+        if state:
+            self._state = state.state == 'on'
+        return state
+
+    @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True

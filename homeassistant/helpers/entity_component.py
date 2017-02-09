@@ -6,8 +6,8 @@ from homeassistant import config as conf_util
 from homeassistant.bootstrap import (
     async_prepare_setup_platform, async_prepare_setup_component)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
-    DEVICE_DEFAULT_NAME)
+    ATTR_ENTITY_ID, ATTR_RESTORED_STATE, CONF_SCAN_INTERVAL,
+    CONF_ENTITY_NAMESPACE, DEVICE_DEFAULT_NAME)
 from homeassistant.core import callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
@@ -202,7 +202,17 @@ class EntityComponent(object):
                 'Invalid entity id: {}'.format(entity.entity_id))
 
         self.entities[entity.entity_id] = entity
-        yield from entity.async_update_ha_state()
+
+        restored = None
+        if ATTR_RESTORED_STATE in self.hass.data:
+            restored = self.hass.data[ATTR_RESTORED_STATE] \
+                .get(entity.entity_id)
+        if hasattr(entity, 'async_added_to_hass'):
+            restored = yield from entity.async_added_to_hass(state=restored)
+        else:
+            restored = None
+
+        yield from entity.async_update_ha_state(restored=restored)
 
         return True
 

@@ -369,3 +369,15 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
+
+    @asyncio.coroutine
+    def async_added_to_hass(self, state):
+        """Component added, restore_state using platforms."""
+        if hasattr(self, 'async_restore_state'):
+            params = {key: state.attr[key] for key in (
+                ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_XY_COLOR,
+                ATTR_COLOR_TEMP, ATTR_COLOR_NAME, ATTR_WHITE_VALUE
+            ) if key in state.attr}
+            params['is_on'] = state.state == STATE_ON
+            # pylint: disable=no-member
+            return (yield from self.async_restore_state(params))
