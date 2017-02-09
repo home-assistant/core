@@ -605,6 +605,21 @@ class TestClimateGenericThermostatAwayModeTemp(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
+    def test_home_heater_on(self):
+        """Test if the heater switches on when hold mode becomes 'home'."""
+        climate.set_hold_mode(self.hass, 'away')
+        self._setup_switch(False)
+        self._setup_sensor(35)
+        self.hass.block_till_done()
+        # Now trigger the temperature
+        climate.set_hold_mode(self.hass, 'home')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
         """Setup the test sensor."""
         self.hass.states.set(ENT_SENSOR, temp, {
