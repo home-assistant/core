@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.apple_tv/
 """
 import asyncio
+import aiohttp
 import logging
 import hashlib
 
@@ -21,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.1.1']
+REQUIREMENTS = ['pyatv==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,6 +129,8 @@ class AppleTvDevice(MediaPlayerDevice):
             self._playing = playing
         except exceptions.AuthenticationError as ex:
             _LOGGER.warning('%s (bad login id?)', str(ex))
+        except aiohttp.errors.ClientOSError as ex:
+            _LOGGER.error('failed to connect to Apple TV (%s)', str(ex))
         except asyncio.TimeoutError:
             _LOGGER.warning('timed out while connecting to Apple TV')
 
