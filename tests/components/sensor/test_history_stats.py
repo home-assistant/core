@@ -36,7 +36,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'state': 'on',
                 'start': '{{ now().replace(hour=0)'
                          '.replace(minute=0).replace(second=0) }}',
-                'duration': '{{ 3600 * 2 + 60 }}',
+                'duration': '02:00',
                 'name': 'Test',
             }
         }
@@ -50,7 +50,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
         """Test the conversion from templates to period."""
         today = Template('{{ now().replace(hour=0).replace(minute=0)'
                          '.replace(second=0) }}', self.hass)
-        duration = Template('{{ 3600 * 2 + 60 }}', self.hass)
+        duration = timedelta(hours=2, minutes=1)
 
         sensor1 = HistoryStatsSensor(
             self.hass, 'test', 'on', today, None, duration, 'test')
@@ -121,41 +121,44 @@ class TestHistoryStatsSensor(unittest.TestCase):
         self.assertEqual(before_update2, sensor2._period)
 
     def test_wrong_duration(self):
-        """Test when duration value is not a number."""
-        start = Template('{{ as_timestamp(now()) - 24 * 3600 }}', self.hass)
-        duration = Template('{{  now() }}', self.hass)
+        """Test when duration value is not a timedelta."""
+        self.init_recorder()
+        config = {
+            'history': {
+            },
+            'sensor': {
+                'platform': 'history_stats',
+                'entity_id': 'binary_sensor.test_id',
+                'name': 'Test',
+                'state': 'on',
+                'start': '{{ now() }}',
+                'duration': 'TEST',
+            }
+        }
 
-        sensor = HistoryStatsSensor(
-            self.hass, 'test', 'on', start, None, duration, 'Test')
-
-        before_update = sensor._period
-        sensor.update_period()
-        self.assertEqual(before_update, sensor._period)
+        setup_component(self.hass, 'sensor', config)
+        self.assertEqual(self.hass.states.get('sensor.test'), None)
+        self.assertRaises(TypeError,
+                          setup_component(self.hass, 'sensor', config))
 
     def test_bad_template(self):
         """Test Exception when the template cannot be parsed."""
         bad = Template('{{ x - 12 }}', self.hass)  # x is undefined
-        good = Template('{{ now() }}', self.hass)
-        good_duration = Template('{{ 3600 }}', self.hass)
+        duration = '01:00'
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, None, good_duration, 'Test')
+            self.hass, 'test', 'on', bad, None, duration, 'Test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, bad, good_duration, 'Test')
-        sensor3 = HistoryStatsSensor(
-            self.hass, 'test', 'on', good, None, bad, 'Test')
+            self.hass, 'test', 'on', None, bad, duration, 'Test')
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
-        before_update3 = sensor3._period
 
         sensor1.update_period()
         sensor2.update_period()
-        sensor3.update_period()
 
         self.assertEqual(before_update1, sensor1._period)
         self.assertEqual(before_update2, sensor2._period)
-        self.assertEqual(before_update3, sensor3._period)
 
     def test_not_enough_arguments(self):
         """Test config when not enough arguments provided."""
@@ -190,7 +193,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 'state': 'on',
                 'start': '{{ as_timestamp(now()) - 3600 }}',
                 'end': '{{ now() }}',
-                'duration': '{{ 3600 }}',
+                'duration': '01:00',
             }
         }
 

@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATE): cv.slug,
     vol.Optional(CONF_START, default=None): cv.template,
     vol.Optional(CONF_END, default=None): cv.template,
-    vol.Optional(CONF_DURATION, default=None): cv.template,
+    vol.Optional(CONF_DURATION, default=None): cv.time_period,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 }), exactly_two_period_keys)
 
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     duration = config.get(CONF_DURATION)
     name = config.get(CONF_NAME)
 
-    for template in [start, end, duration]:
+    for template in [start, end]:
         if template is not None:
             template.hass = hass
 
@@ -194,7 +194,6 @@ class HistoryStatsSensor(Entity):
         """Parse the templates and store a datetime tuple in _period."""
         start = None
         end = None
-        duration = None
 
         # Parse start
         if self._start is not None:
@@ -230,22 +229,11 @@ class HistoryStatsSensor(Entity):
                                   ' or a timestamp.')
                     return
 
-        # Parse duration
-        if self._duration is not None:
-            try:
-                duration = math.floor(float(self._duration.render()))
-            except TemplateError as ex:
-                HistoryStatsHelper.handle_template_exception(ex, 'duration')
-                return
-            except ValueError:
-                _LOGGER.error('PARSING ERROR: duration must be a number')
-                return
-
         # Calculate start or end using the duration
         if start is None:
-            start = end - datetime.timedelta(seconds=duration)
+            start = end - self._duration
         if end is None:
-            end = start + datetime.timedelta(seconds=duration)
+            end = start + self._duration
 
         self._period = start, end
 
