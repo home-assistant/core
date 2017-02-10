@@ -36,8 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     #     node.groups[1].add_association(NETWORK.controller.node_id)
     name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
     node_config = customize.get_overrides(hass, zwave.DOMAIN, name)
-    force_update = True if node_config.get(
-        zwave.CONF_POLLING_INTENSITY) else False
+    force_update = bool(node_config.get(zwave.CONF_POLLING_INTENSITY))
 
     # Generic Device mappings
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
