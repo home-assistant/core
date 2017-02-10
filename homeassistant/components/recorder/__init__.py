@@ -345,15 +345,16 @@ class Recorder(threading.Thread):
 
     def _apply_update(self, new_version):
         """Perform operations to bring schema up to date."""
-        from sqlalchemy import Index, Table
+        from sqlalchemy import Table
         import homeassistant.components.recorder.models as models
 
         if new_version == 1:
             def create_index(table_name, column_name):
                 """Create an index for the specified table and column."""
                 table = Table(table_name, models.Base.metadata)
-                index_name = "_".join(("ix", table_name, column_name))
-                index = Index(index_name, getattr(table.c, column_name))
+                name = "_".join(("ix", table_name, column_name))
+                # Look up the index object that was created from the models
+                index = next(idx for idx in table.indexes if idx.name == name)
                 _LOGGER.debug("Creating index for table %s column %s",
                               table_name, column_name)
                 index.create(self.engine)
