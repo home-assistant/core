@@ -3,6 +3,8 @@ import datetime
 import unittest
 from unittest import mock
 
+from voluptuous import Invalid
+
 from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
@@ -15,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import climate
+from homeassistant.components.climate import generic_thermostat
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -51,13 +54,66 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
                 'climate': config})
 
     def test_valid_conf(self):
-        """Test set up genreic_thermostat with valid config values."""
+        """Test set up generic_thermostat with valid config values."""
         self.assertTrue(setup_component(self.hass, 'climate',
                         {'climate': {
                             'platform': 'generic_thermostat',
                             'name': 'test',
                             'heater': ENT_SWITCH,
                             'target_sensor': ENT_SENSOR}}))
+
+    def test_valid_conf_with_hold_temps(self):
+        """Test set up generic_thermostat with valid hold_temps values."""
+        self.assertTrue(setup_component(self.hass, 'climate',
+                        {'climate': {
+                            'platform': 'generic_thermostat',
+                            'name': 'test',
+                            'hold_temps': {
+                                'away': 18,
+                                'vacation': 9,
+                            },
+                            'heater': ENT_SWITCH,
+                            'target_sensor': ENT_SENSOR}}))
+
+    def test_valid_hold_conf_with_schema(self):
+        """Test a valid config (with hold_temps) with the voluptuous Schema."""
+        # If it works, it should not raise any exception
+        generic_thermostat.PLATFORM_SCHEMA({
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'hold_temps': {
+                'away': 18,
+                'vacation': 9,
+            },
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR
+        })
+
+    def test_invalid_hold_conf_with_schema(self):
+        """Test some invalid configs against the voluptuous Schema."""
+        with self.assertRaises(Invalid):
+            generic_thermostat.PLATFORM_SCHEMA({
+                'platform': 'generic_thermostat',
+                'name': 'test',
+                'hold_temps': {
+                    'away': 12,
+                    'invalid-name': 9,
+                },
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR,
+            })
+
+        with self.assertRaises(Invalid):
+            generic_thermostat.PLATFORM_SCHEMA({
+                'platform': 'generic_thermostat',
+                'name': 'test',
+                'hold_temps': {
+                    # target_temp should be used instead of this hold mode
+                    'home': 9,
+                },
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR,
+            })
 
     def test_setup_with_sensor(self):
         """Test set up heat_control with sensor to trigger update at init."""
@@ -541,7 +597,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
 
 
-class TestClimateGenericThermostatAwayModeTemp(unittest.TestCase):
+class TestClimateGenericThermostatHoldModeTemp(unittest.TestCase):
     """Test the Generic thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
@@ -554,7 +610,9 @@ class TestClimateGenericThermostatAwayModeTemp(unittest.TestCase):
             'tolerance': TOLERANCE,
             'heater': ENT_SWITCH,
             'target_temp': TARGET_TEMP,
-            'away_temp': AWAY_TEMP,
+            'hold_temps': {
+                'away': AWAY_TEMP,
+            },
             'target_sensor': ENT_SENSOR
         }})
 
