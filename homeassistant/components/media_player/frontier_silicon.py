@@ -56,8 +56,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         add_devices(
-                [FSAPIDevice(DEVICE_URL.format(host, port), password)],
-                update_before_add=True)
+            [FSAPIDevice(DEVICE_URL.format(host, port), password)],
+            update_before_add=True)
         _LOGGER.debug('FSAPI device %s:%s -> %s', host, port, password)
         return True
     except requests.exceptions.RequestException:
