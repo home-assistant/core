@@ -646,6 +646,7 @@ class ZWaveDeviceEntity(Entity):
                       method, class_id, index, label, data, member, kwargs)
         values = self._value.node.get_values(**kwargs).values()
         _LOGGER.debug('values=%s', values)
+        results = None
         if not values:
             return None
         for value in values:
