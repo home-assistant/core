@@ -115,7 +115,7 @@ class Script():
 
                 # check if condition allready okay
                 if condition.async_template(
-                       self.hass, wait_template, variables):
+                        self.hass, wait_template, variables):
                     continue
 
                 @callback
