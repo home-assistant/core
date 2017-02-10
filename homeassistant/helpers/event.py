@@ -84,6 +84,26 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
 track_state_change = threaded_listener_factory(async_track_state_change)
 
 
+def async_track_template(hass, template, action, variables=None):
+    """Add a listener that track state changes with template condition."""
+    from . import condition
+
+    if template.hass is None:
+        template.hass = hass
+
+    @callback
+    def template_condition_listener(entity_id, from_s, to_s):
+        """Check if condition is correct and run action."""
+        if condition.async_template(hass, template, variables):
+            hass.async_run_job(action, entity_id, from_s, to_s)
+
+    return async_track_state_change(
+        hass, template.extract_entities(), template_condition_listener)
+
+
+track_template = threaded_listener_factory(async_track_template)
+
+
 def async_track_point_in_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)

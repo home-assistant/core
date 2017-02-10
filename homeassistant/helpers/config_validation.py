@@ -526,7 +526,7 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
 
 _SCRIPT_WAIT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
-    vol.Required("wait"): template,
+    vol.Required("wait_template"): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
 })
 
