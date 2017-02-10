@@ -587,7 +587,7 @@ qnapstats==0.2.1
 radiotherm==1.2
 
 # homeassistant.components.rflink
-rflink==0.0.24
+rflink==0.0.28
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
