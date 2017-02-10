@@ -233,6 +233,20 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(wildcard_runs))
         self.assertEqual(1, len(wildercard_runs))
 
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
         self.hass.states.set('switch.test', 'off')
         self.hass.block_till_done()
 

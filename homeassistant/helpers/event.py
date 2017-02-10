@@ -88,14 +88,21 @@ def async_track_template(hass, template, action, variables=None):
     """Add a listener that track state changes with template condition."""
     from . import condition
 
-    if template.hass is None:
-        template.hass = hass
+    # Local variable to keep track of if the action has already been triggered
+    already_triggered = False
 
     @callback
     def template_condition_listener(entity_id, from_s, to_s):
         """Check if condition is correct and run action."""
-        if condition.async_template(hass, template, variables):
+        nonlocal already_triggered
+        template_result = condition.async_template(hass, template, variables)
+
+        # Check to see if template returns true
+        if template_result and not already_triggered:
+            already_triggered = True
             hass.async_run_job(action, entity_id, from_s, to_s)
+        elif not template_result:
+            already_triggered = False
 
     return async_track_state_change(
         hass, template.extract_entities(), template_condition_listener)

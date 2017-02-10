@@ -120,7 +120,7 @@ class Script():
 
                 @callback
                 def async_script_wait(entity_id, from_s, to_s):
-                    """Called after delay is done."""
+                    """Called after template condition is true."""
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
 
