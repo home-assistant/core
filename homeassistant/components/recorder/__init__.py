@@ -421,8 +421,8 @@ class Recorder(threading.Thread):
 
     def _close_run(self):
         """Save end time for current run."""
-        self._run.end = dt_util.utcnow()
         with session_scope() as session:
+            self._run.end = dt_util.utcnow()
             self._commit(session, self._run)
         self._run = None
 
