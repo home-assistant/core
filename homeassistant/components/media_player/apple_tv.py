@@ -8,6 +8,7 @@ import asyncio
 import logging
 import hashlib
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -17,11 +18,12 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
     CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.1.1']
+REQUIREMENTS = ['pyatv==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +63,8 @@ def async_setup_platform(hass, config, async_add_entities,
     hass.data[DATA_APPLE_TV].append(host)
 
     details = pyatv.AppleTVDevice(name, host, login_id)
-    atv = pyatv.connect_to_apple_tv(details, hass.loop)
+    session = async_get_clientsession(hass)
+    atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
     entity = AppleTvDevice(atv, name)
 
     @asyncio.coroutine
@@ -128,6 +131,8 @@ class AppleTvDevice(MediaPlayerDevice):
             self._playing = playing
         except exceptions.AuthenticationError as ex:
             _LOGGER.warning('%s (bad login id?)', str(ex))
+        except aiohttp.errors.ClientOSError as ex:
+            _LOGGER.error('failed to connect to Apple TV (%s)', str(ex))
         except asyncio.TimeoutError:
             _LOGGER.warning('timed out while connecting to Apple TV')
 

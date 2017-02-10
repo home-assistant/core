@@ -25,7 +25,7 @@ class TestComponentLogbook(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_http_component(self.hass)
-        self.hass.config.components += ['frontend', 'recorder', 'api']
+        self.hass.config.components &= set(['frontend', 'recorder', 'api'])
         with patch('homeassistant.components.logbook.'
                    'register_built_in_panel'):
             assert setup_component(self.hass, logbook.DOMAIN,
