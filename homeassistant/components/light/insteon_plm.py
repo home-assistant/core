@@ -57,9 +57,7 @@ class InsteonPLMDimmerDevice(Light):
         """Return the brightness of this light between 0..255."""
         onlevel = self._plm.get_device_attr(self._address, 'onlevel')
         _LOGGER.info('on level for %s is %s', self._address, onlevel)
-        per = int(onlevel / 255 * 100)
-        _LOGGER.info('per for %s is %s', self._address, per)
-        return per
+        return int(onlevel)
 
     @property
     def is_on(self):
@@ -78,14 +76,13 @@ class InsteonPLMDimmerDevice(Light):
 
     def turn_on(self, **kwargs):
         """Turn device on."""
-        print('turn_on',kwargs)
-        brightness = 100
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = int(kwargs[ATTR_BRIGHTNESS]) / 255 * 100
-        self._plm.turn_on(self._address,brightness)
+            brightness = int(kwargs[ATTR_BRIGHTNESS])
+        else:
+            brightness = 255
+        self._plm.turn_on(self._address, brightness=brightness)
 
     def turn_off(self, **kwargs):
-        print('turn_off',kwargs)
         """Turn device off."""
         self._plm.turn_off(self._address)
 
