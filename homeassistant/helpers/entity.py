@@ -210,26 +210,24 @@ class Entity(object):
 
         start = timer()
 
-        state = self.state
-
-        if state is None:
-            state = STATE_UNKNOWN
-        else:
-            state = str(state)
-
-        attr = self.state_attributes or {}
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            attr.update(device_attr)
-
-        self._attr_setter('unit_of_measurement', str, ATTR_UNIT_OF_MEASUREMENT,
-                          attr)
-
         if not self.available:
             state = STATE_UNAVAILABLE
             attr = {}
+        else:
+            state = self.state
+
+            if state is None:
+                state = STATE_UNKNOWN
+            else:
+                state = str(state)
+
+            attr = self.state_attributes or {}
+            device_attr = self.device_state_attributes
+            if device_attr is not None:
+                attr.update(device_attr)
+
+        self._attr_setter('unit_of_measurement', str, ATTR_UNIT_OF_MEASUREMENT,
+                          attr)
 
         self._attr_setter('name', str, ATTR_FRIENDLY_NAME, attr)
         self._attr_setter('icon', str, ATTR_ICON, attr)
