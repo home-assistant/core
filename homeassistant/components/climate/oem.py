@@ -9,6 +9,7 @@ https://home-assistant.io/components/climate.oem/
 """
 import logging
 
+import requests
 import voluptuous as vol
 
 # Import the device class from the component that you want to support
@@ -31,10 +32,9 @@ CONF_AWAY_TEMP = 'away_temp'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default="Thermostat"): cv.string,
-    vol.Optional(
-        CONF_PORT, default=80): cv.port,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_PORT, default=80): cv.port,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_AWAY_TEMP, default=14): vol.Coerce(float)
 })
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         therm = Thermostat(host, port=port,
                            username=username, password=password)
-    except Exception:
+    except (ValueError, AssertionError, requests.RequestException):
         return False
 
     if target_temp:
