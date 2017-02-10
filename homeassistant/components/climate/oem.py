@@ -54,8 +54,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     target_temp = config.get(CONF_TARGET_TEMP)
     away_temp = config.get(CONF_AWAY_TEMP)
 
-    therm = Thermostat(host, port=port,
-                       username=username, password=password)
+    # If creating the class raises an exception, it failed to connect or
+    # something else went wrong.
+    try:
+        therm = Thermostat(host, port=port,
+                           username=username, password=password)
+    except Exception:
+        return False
 
     if target_temp:
         therm.setpoint = target_temp
