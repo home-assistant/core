@@ -33,6 +33,7 @@ MOCKS = {
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
+    'homeassistant.bootstrap.async_register_signal_handling',
     'homeassistant.core._LOGGER.info',
     'homeassistant.loader._LOGGER.info',
     'homeassistant.bootstrap._LOGGER.info',
