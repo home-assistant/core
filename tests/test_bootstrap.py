@@ -58,7 +58,7 @@ class TestBootstrap:
         autospec=True)
     @mock.patch('homeassistant.util.location.detect_location_info',
                 autospec=True, return_value=None)
-    @mock.patch('homeassistant.helpers.signal.async_register_signal_handling')
+    @mock.patch('homeassistant.bootstrap.async_register_signal_handling')
     def test_from_config_file(self, mock_upgrade, mock_detect, mock_signal):
         """Test with configuration file."""
         components = ['browser', 'conversation', 'script']
@@ -290,7 +290,7 @@ class TestBootstrap:
         assert 'comp' not in self.hass.config.components
 
     @mock.patch('homeassistant.bootstrap.enable_logging')
-    @mock.patch('homeassistant.helpers.signal.async_register_signal_handling')
+    @mock.patch('homeassistant.bootstrap.async_register_signal_handling')
     def test_home_assistant_core_config_validation(self, log_mock, sig_mock):
         """Test if we pass in wrong information for HA conf."""
         # Extensive HA conf validation testing is done in test_config.py
