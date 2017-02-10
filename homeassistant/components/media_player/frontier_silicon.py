@@ -35,7 +35,7 @@ DEFAULT_PASSWORD = '1234'
 DEVICE_URL = 'http://{0}:{1}/device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
 })
@@ -55,17 +55,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     try:
-        if host and port and password:
-            add_devices(
+        add_devices(
                 [FSAPIDevice(DEVICE_URL.format(host, port), password)],
                 update_before_add=True)
-            _LOGGER.debug('FSAPI device %s:%s -> %s', host, port, password)
-            return True
-        else:
-            _LOGGER.warning('FSAPI device missing config param %s:%s -> %s',
-                            host, port, password)
+        _LOGGER.debug('FSAPI device %s:%s -> %s', host, port, password)
+        return True
     except requests.exceptions.RequestException:
-        _LOGGER.error('Could not connect to FSAPI device at %s:%s -> %s',
+        _LOGGER.error('Could not add the FSAPI device at %s:%s -> %s',
                       host, port, password)
 
 
@@ -245,4 +241,3 @@ class FSAPIDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         self.get_fs().mode = source
-
