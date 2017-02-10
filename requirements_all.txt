@@ -352,6 +352,9 @@ neurio==0.3.1
 # homeassistant.components.google
 oauth2client==4.0.0
 
+# homeassistant.components.climate.oem
+oemthermostat==1.1
+
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
 
