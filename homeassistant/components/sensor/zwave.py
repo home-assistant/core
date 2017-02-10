@@ -10,6 +10,7 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.helpers import customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,26 +34,36 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # if 1 in groups and (NETWORK.controller.node_id not in
     #                     groups[1].associations):
     #     node.groups[1].add_association(NETWORK.controller.node_id)
+    name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
+    node_config = customize.get_overrides(hass, zwave.DOMAIN, name)
+    force_update = True if node_config.get(
+        zwave.CONF_POLLING_INTENSITY) else False
 
     # Generic Device mappings
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
-        add_devices([ZWaveMultilevelSensor(value)])
+        add_devices([ZWaveMultilevelSensor(value, force_update)])
 
     elif node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
             value.type == zwave.const.TYPE_DECIMAL:
-        add_devices([ZWaveMultilevelSensor(value)])
+        add_devices([ZWaveMultilevelSensor(value, force_update)])
 
     elif node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
             node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
-        add_devices([ZWaveAlarmSensor(value)])
+        add_devices([ZWaveAlarmSensor(value, force_update)])
 
 
 class ZWaveSensor(zwave.ZWaveDeviceEntity):
     """Representation of a Z-Wave sensor."""
 
-    def __init__(self, value):
+    def __init__(self, value, force_update):
         """Initialize the sensor."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self._force_update = force_update
+
+    @property
+    def force_update(self):
+        """Return force_update."""
+        return self._force_update
 
     @property
     def state(self):
