@@ -167,8 +167,8 @@ class DenonDevice(MediaPlayerDevice):
         return self._source_list
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self._current_source in self._receiver.netaudio_func_list:
             return SUPPORT_DENON | SUPPORT_MEDIA_MODES
         else:

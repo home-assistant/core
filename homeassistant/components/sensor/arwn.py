@@ -35,11 +35,12 @@ def discover_sensors(topic, payload):
             unit = TEMP_CELSIUS
         return ArwnSensor(name, 'temp', unit)
     if domain == 'barometer':
-        return ArwnSensor('Barometer', 'pressure', unit)
+        return ArwnSensor('Barometer', 'pressure', unit,
+                          "mdi:thermometer-lines")
     if domain == 'wind':
-        return (ArwnSensor('Wind Speed', 'speed', unit),
-                ArwnSensor('Wind Gust', 'gust', unit),
-                ArwnSensor('Wind Direction', 'direction', '°'))
+        return (ArwnSensor('Wind Speed', 'speed', unit, "mdi:speedometer"),
+                ArwnSensor('Wind Gust', 'gust', unit, "mdi:speedometer"),
+                ArwnSensor('Wind Direction', 'direction', '°', "mdi:compass"))
 
 
 def _slug(name):
@@ -66,6 +67,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not sensors:
             return
 
+        if isinstance(sensors, ArwnSensor):
+            sensors = (sensors, )
+
         if 'timestamp' in event:
             del event['timestamp']
 
@@ -88,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ArwnSensor(Entity):
     """Representation of an ARWN sensor."""
 
-    def __init__(self, name, state_key, units):
+    def __init__(self, name, state_key, units, icon=None):
         """Initialize the sensor."""
         self.hass = None
         self.entity_id = _slug(name)
@@ -96,6 +100,7 @@ class ArwnSensor(Entity):
         self._state_key = state_key
         self.event = {}
         self._unit_of_measurement = units
+        self._icon = icon
 
     def set_event(self, event):
         """Update the sensor with the most recent event."""
@@ -126,3 +131,11 @@ class ArwnSensor(Entity):
     def should_poll(self):
         """Should we poll."""
         return False
+
+    @property
+    def icon(self):
+        """Icon of device based on its type."""
+        if self._icon:
+            return self._icon
+        else:
+            return super().icon

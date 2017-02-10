@@ -64,7 +64,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None,
     """
     entity_ids = (entity_id.lower(), ) if entity_id is not None else None
     states = recorder.get_model('States')
-    query = recorder.query('States').filter(
+    query = recorder.query(states).filter(
         (states.domain.in_(SIGNIFICANT_DOMAINS) |
          (states.last_changed == states.last_updated)) &
         (states.last_updated > start_time))
@@ -221,12 +221,17 @@ class HistoryPeriodView(HomeAssistantView):
             if datetime is None:
                 return self.json_message('Invalid datetime', HTTP_BAD_REQUEST)
 
+        now = dt_util.utcnow()
+
         one_day = timedelta(days=1)
 
         if datetime:
             start_time = dt_util.as_utc(datetime)
         else:
-            start_time = dt_util.utcnow() - one_day
+            start_time = now - one_day
+
+        if start_time > now:
+            return self.json([])
 
         end_time = start_time + one_day
         entity_id = request.GET.get('filter_entity_id')

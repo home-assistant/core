@@ -43,9 +43,9 @@ class DemoLock(LockDevice):
     def lock(self, **kwargs):
         """Lock the device."""
         self._state = STATE_LOCKED
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         self._state = STATE_UNLOCKED
-        self.update_ha_state()
+        self.schedule_update_ha_state()

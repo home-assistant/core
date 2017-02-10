@@ -199,8 +199,7 @@ class GaradgetCover(CoverDevice):
 
     def _check_state(self, now):
         """Check the state of the service during an operation."""
-        self.update()
-        self.update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def close_cover(self):
         """Close the cover."""

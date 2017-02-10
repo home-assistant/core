@@ -122,8 +122,8 @@ class FireTVDevice(MediaPlayerDevice):
         return True
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_FIRETV
 
     @property
