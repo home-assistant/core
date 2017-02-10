@@ -390,6 +390,7 @@ class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
     _access_token = None
+    _last_bad_image_url = None
 
     # pylint: disable=no-self-use
     # Implement these for your media player
@@ -839,8 +840,7 @@ class MediaPlayerDevice(Entity):
             return None
 
         url = self.media_image_url
-
-        if url is None:
+        if url in (None, self._last_bad_image_url):
             return None
 
         return ENTITY_IMAGE_URL.format(
@@ -866,6 +866,13 @@ class MediaPlayerDevice(Entity):
             _async_fetch_image(self.hass, url), self.hass.loop
         ).result()
 
+    def set_last_bad_image_url(self, url):
+        """Save last bad image url."""
+        should_update = self._last_bad_image_url != url
+        self._last_bad_image_url = url
+        if should_update:
+            self.schedule_update_ha_state()
+
 
 @asyncio.coroutine
 def _async_fetch_image(hass, url):
@@ -876,7 +883,6 @@ def _async_fetch_image(hass, url):
     cache_images = ENTITY_IMAGE_CACHE[ATTR_CACHE_IMAGES]
     cache_urls = ENTITY_IMAGE_CACHE[ATTR_CACHE_URLS]
     cache_maxsize = ENTITY_IMAGE_CACHE[ATTR_CACHE_MAXSIZE]
-
     if url in cache_images:
         return cache_images[url]
 
@@ -939,10 +945,12 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
+        url = player.media_image_url
         data, content_type = yield from _async_fetch_image(
-            request.app['hass'], player.media_image_url)
+            request.app['hass'], url)
 
         if data is None:
+            player.set_last_bad_image_url(url)
             return web.Response(status=500)
 
         return web.Response(body=data, content_type=content_type)
