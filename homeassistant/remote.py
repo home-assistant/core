@@ -133,7 +133,7 @@ class HomeAssistant(ha.HomeAssistant):
         self.loop = loop or asyncio.get_event_loop()
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(self._async_exception_handler)
+        self.loop.set_exception_handler(ha.async_loop_exception_handler)
         self._pending_tasks = []
         self._pending_sheduler = None
 
