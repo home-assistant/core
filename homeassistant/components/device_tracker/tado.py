@@ -13,28 +13,31 @@ import aiohttp
 import async_timeout
 
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+
+# Configuration constant specific for tado
+CONF_HOME_ID = 'home_id'
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_USERNAME): cv.string
+    vol.Optional(CONF_HOME_ID): cv.string
 })
 
 
 def get_scanner(hass, config):
     """Return a Tado scanner."""
     scanner = TadoDeviceScanner(hass, config[DOMAIN])
-
     return scanner if scanner.success_init else None
 
 
@@ -50,8 +53,19 @@ class TadoDeviceScanner(DeviceScanner):
 
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
-        self.tadoapiurl = 'https://my.tado.com/api/v2/me' \
-                          '?username={}&password={}'
+
+        # The Tado device tracker can work with or without a home_id
+        self.home_id = config[CONF_HOME_ID] if CONF_HOME_ID in config else None
+
+        # If there's a home_id, we need a different API URL
+        if self.home_id is None:
+            self.tadoapiurl = 'https://my.tado.com/api/v2/me'
+        else:
+            self.tadoapiurl = 'https://my.tado.com/api/v2' \
+                              '/homes/{home_id}/mobileDevices'
+
+        # The API URL always needs a username and password
+        self.tadoapiurl += '?username={username}&password={password}'
 
         self.websession = async_create_clientsession(
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
@@ -62,7 +76,11 @@ class TadoDeviceScanner(DeviceScanner):
     @asyncio.coroutine
     def async_scan_devices(self):
         """Scan for devices and return a list containing found device ids."""
-        yield from self._update_info()
+        info = self._update_info()
+
+        # Don't yield if we got None
+        if info is not None:
+            yield from info
 
         return [device.mac for device in self.last_results]
 
@@ -87,43 +105,54 @@ class TadoDeviceScanner(DeviceScanner):
         _LOGGER.debug("Requesting Tado")
 
         last_results = []
-
         response = None
-        tadojson = None
+        tado_json = None
+
         try:
-            # get first token
             with async_timeout.timeout(10, loop=self.hass.loop):
-                url = self.tadoapiurl.format(self.username, self.password)
-                response = yield from self.websession.get(
-                    url
-                )
+                # Format the URL here, so we can log the template URL if
+                # anything goes wrong without exposing username and password.
+                url = self.tadoapiurl.format(home_id=self.home_id,
+                                             username=self.username,
+                                             password=self.password)
+
+                # Go get 'em!
+                response = yield from self.websession.get(url)
 
                 # error on Tado webservice
                 if response.status != 200:
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, self.tadoapiurl)
-                    self.token = None
                     return
 
-                tadojson = yield from response.json()
+                tado_json = yield from response.json()
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Can not load Tado data")
+            _LOGGER.error("Cannot load Tado data")
             return False
 
         finally:
             if response is not None:
                 yield from response.release()
 
-        # Find devices that have geofencing enabled, and are currently at home
-        for mobiledevice in tadojson['mobileDevices']:
-            if 'location' in mobiledevice:
-                if mobiledevice['location']['atHome']:
-                    deviceid = mobiledevice['id']
-                    devicename = mobiledevice['name']
-                    last_results.append(Device(deviceid, devicename))
+        # Without a home_id, we fetched an URL where the mobile devices can be
+        # found under the mobileDevices key.
+        if 'mobileDevices' in tado_json:
+            tado_json = tado_json['mobileDevices']
+
+        # Find devices that have geofencing enabled, and are currently at home.
+        for mobile_device in tado_json:
+            if 'location' in mobile_device:
+                if mobile_device['location']['atHome']:
+                    device_id = mobile_device['id']
+                    device_name = mobile_device['name']
+                    last_results.append(Device(device_id, device_name))
 
         self.last_results = last_results
 
-        _LOGGER.info("Tado presence query successful")
+        _LOGGER.info(
+            "Tado presence query successful, %d device(s) at home",
+            len(self.last_results)
+        )
+
         return True
