@@ -895,6 +895,8 @@ def _async_fetch_image(hass, url):
         if response.status == 200:
             content = yield from response.read()
             content_type = response.headers.get(CONTENT_TYPE_HEADER)
+        elif response.status in (400, 404):
+            content_type = True
 
     except asyncio.TimeoutError:
         pass
@@ -904,7 +906,7 @@ def _async_fetch_image(hass, url):
             yield from response.release()
 
     if not content:
-        return (None, None)
+        return (None, content_type)
 
     cache_images[url] = (content, content_type)
     cache_urls.append(url)
@@ -950,7 +952,8 @@ class MediaPlayerImageView(HomeAssistantView):
             request.app['hass'], url)
 
         if data is None:
-            player.set_last_bad_image_url(url)
+            if content_type:
+                player.set_last_bad_image_url(url)
             return web.Response(status=500)
 
         return web.Response(body=data, content_type=content_type)
