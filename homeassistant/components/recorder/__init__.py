@@ -124,7 +124,8 @@ def run_information(point_in_time: Optional[datetime]=None):
         res = query(recorder_runs).filter(
             (recorder_runs.start < point_in_time) &
             (recorder_runs.end > point_in_time)).first()
-        session.expunge(res)
+        if res:
+            session.expunge(res)
         return res
 
 
