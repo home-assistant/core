@@ -365,7 +365,14 @@ def main() -> int:
 
     if args.script is not None:
         from homeassistant import scripts
-        return scripts.run(args.script)
+        # https://github.com/python/asyncio/pull/456
+        # Bug in asyncio throws exception unless loop is closed.
+        import asyncio
+        res = scripts.run(args.script)
+        loop = asyncio.get_event_loop()
+        if loop is not None:
+            loop.close()
+        return res
 
     config_dir = os.path.join(os.getcwd(), args.config)
     ensure_config_path(config_dir)
