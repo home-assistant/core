@@ -13,8 +13,9 @@ import voluptuous as vol
 
 from homeassistant.helpers import discovery, customize
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, CONF_CUSTOMIZE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_ENTITY_ID)
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
+    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    CONF_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -152,6 +153,12 @@ CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_INSTANCE, default=0x00): vol.Coerce(int)
 })
 
+SET_WAKEUP_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE):
+        vol.All(vol.Coerce(int), cv.positive_int),
+})
+
 _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.match_all,
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
@@ -240,6 +247,14 @@ def get_config_value(node, value_index):
         # If we get an runtime error the dict has changed while
         # we was looking for a value, just do it again
         return get_config_value(node, value_index)
+
+
+def _get_wakeup(node):
+    """Return wakeup interval of the node or None if node is not wakable."""
+    if node.can_wake_up():
+        for value_id in node.get_values(class_id=const.COMMAND_CLASS_WAKE_UP):
+            return node.values[value_id].data
+    return None
 
 
 # pylint: disable=R0914
@@ -503,6 +518,19 @@ def setup(hass, config):
         _LOGGER.info("Config parameter %s on Node %s : %s",
                      param, node_id, get_config_value(node, param))
 
+    def set_wakeup(service):
+        """Set wake-up interval of a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        value = service.data.get(const.ATTR_CONFIG_VALUE)
+        if node.can_wake_up():
+            for value_id in node.get_values(
+                    class_id=const.COMMAND_CLASS_WAKE_UP):
+                node.values[value_id].data = value
+                _LOGGER.info("Node %s wake-up set to %d", node_id, value)
+        else:
+            _LOGGER.info("Node %s is not wakeable", node_id)
+
     def change_association(service):
         """Change an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
@@ -598,6 +626,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_CHANGE_ASSOCIATION],
                                schema=CHANGE_ASSOCIATION_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_SET_WAKEUP,
+                               set_wakeup,
+                               descriptions[
+                                   const.SERVICE_SET_WAKEUP],
+                               schema=SET_WAKEUP_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -726,5 +759,9 @@ class ZWaveDeviceEntity(Entity):
 
         if location:
             attrs[ATTR_LOCATION] = location
+
+        wakeup = _get_wakeup(self._value.node)
+        if wakeup:
+            attrs[ATTR_WAKEUP] = wakeup
 
         return attrs
