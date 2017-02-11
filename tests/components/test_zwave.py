@@ -51,7 +51,8 @@ class TestComponentZwave(unittest.TestCase):
             zwave.CONF_POLLING_INTENSITY: 10,
             zwave.CONF_IGNORED: 1,
             zwave.CONF_REFRESH_VALUE: 1,
-            zwave.CONF_REFRESH_DELAY: 10}}})
+            zwave.CONF_REFRESH_DELAY: 10,
+            zwave.CONF_FORCE_UPDATE: True}}})
 
     def test_full_customize_list(self):
         """Test full customize as list."""
@@ -60,7 +61,8 @@ class TestComponentZwave(unittest.TestCase):
             zwave.CONF_POLLING_INTENSITY: 10,
             zwave.CONF_IGNORED: 1,
             zwave.CONF_REFRESH_VALUE: 1,
-            zwave.CONF_REFRESH_DELAY: 10}]})
+            zwave.CONF_REFRESH_DELAY: 10,
+            zwave.CONF_FORCE_UPDATE: True}]})
 
     def test_bad_customize(self):
         """Test customize with extra keys."""

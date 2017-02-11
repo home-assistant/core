@@ -38,6 +38,7 @@ CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
+CONF_FORCE_UPDATE = 'force_update'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -46,6 +47,7 @@ DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 2
+DEFAULT_CONF_FORCE_UPDATE = False
 DOMAIN = 'zwave'
 
 NETWORK = None
@@ -166,7 +168,9 @@ _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-        cv.positive_int
+        cv.positive_int,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_CONF_FORCE_UPDATE):
+        cv.boolean
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -652,6 +656,7 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
+        self._force_update = None
 
         dispatcher.connect(
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -765,3 +770,30 @@ class ZWaveDeviceEntity(Entity):
             attrs[ATTR_WAKEUP] = wakeup
 
         return attrs
+
+    @property
+    def force_update(self):
+        """Return True if state updates should be forced.
+
+        If True, a state change will be triggered anytime the state property is
+        updated, not just when the value changes.
+
+        This is controlled by a customization entry in the config file
+        """
+        if self.hass is None:
+            return DEFAULT_CONF_FORCE_UPDATE
+
+        if self._force_update is not None:
+            return self._force_update
+
+        node_config = customize.get_overrides(self.hass, DOMAIN,
+                                              self.entity_id)
+        force_update = node_config.get(CONF_FORCE_UPDATE)
+        self._force_update = DEFAULT_CONF_FORCE_UPDATE
+        if force_update is not None:
+            self._force_update = force_update
+
+        _LOGGER.debug('Setting force_update=%s on zwave node=%s',
+                      force_update, self.entity_id)
+
+        return self._force_update
