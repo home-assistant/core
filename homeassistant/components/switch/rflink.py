@@ -1,8 +1,8 @@
-"""Support for Rflink switches.
+"""
+Support for Rflink switches.
 
-For more details about this platform, please refer to the documentation
-at https://home-assistant.io/components/switch.rflink/
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.rflink/
 """
 import asyncio
 import logging
@@ -17,7 +17,6 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
-
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
@@ -36,14 +35,14 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def devices_from_config(domain_config, hass=None):
-    """Parse config and add rflink switch devices."""
+    """Parse configuration and add Rflink switch devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         device_config = dict(domain_config[CONF_DEVICE_DEFAULTS], **config)
         device = RflinkSwitch(device_id, hass, **device_config)
         devices.append(device)
 
-        # register entity (and aliasses) to listen to incoming rflink events
+        # Register entity (and aliasses) to listen to incoming rflink events
         for _id in config[CONF_ALIASSES] + [device_id]:
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
@@ -52,7 +51,7 @@ def devices_from_config(domain_config, hass=None):
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Rflink platform."""
+    """Set up the Rflink platform."""
     yield from async_add_devices(devices_from_config(config, hass))
 
 
