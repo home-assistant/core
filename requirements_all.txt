@@ -704,6 +704,9 @@ yahooweather==0.8
 # homeassistant.components.light.yeelight
 yeelight==0.2.1
 
+# homeassistant.components.light.yeelightsunflower
+yeelightsunflower==0.0.1
+
 # homeassistant.components.light.zengge
 zengge==0.2
 
