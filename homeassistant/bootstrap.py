@@ -537,10 +537,6 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     except ImportError:
         pass
 
-    # AsyncHandler allready exists?
-    if hass.data.get(core.DATA_ASYNCHANDLER):
-        return
-
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
@@ -561,7 +557,12 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
         async_handler = AsyncHandler(hass.loop, err_handler)
-        hass.data[core.DATA_ASYNCHANDLER] = async_handler
+
+        @asyncio.coroutine
+        def async_stop_async_handler(event):
+            """Cleanup async handler."""
+            logging.getLogger('').removeHandler(async_handler)
+            yield from async_handler.async_close(blocking=True)
 
         logger = logging.getLogger('')
         logger.addHandler(async_handler)

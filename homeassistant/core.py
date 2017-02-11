@@ -53,8 +53,6 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
-# AsyncHandler for logging
-DATA_ASYNCHANDLER = 'log_asynchandler'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,23 +277,17 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        import homeassistant.helpers.aiohttp_client as aiohttp_client
-
+        # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.async_block_till_done()
+
+        # stage 1
         self.executor.shutdown()
         self.state = CoreState.not_running
-
-        # cleanup connector pool from aiohttp
-        yield from aiohttp_client.async_cleanup_websession(self)
-
-        # cleanup async layer from python logging
-        if self.data.get(DATA_ASYNCHANDLER):
-            handler = self.data.pop(DATA_ASYNCHANDLER)
-            logging.getLogger('').removeHandler(handler)
-            yield from handler.async_close(blocking=True)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+        yield from self.async_block_till_done()
 
         self.exit_code = exit_code
         self.loop.stop()
