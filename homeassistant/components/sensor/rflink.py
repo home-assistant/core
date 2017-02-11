@@ -1,8 +1,8 @@
-"""Support for Rflink sensors.
+"""
+Support for Rflink sensors.
 
-For more details about this platform, please refer to the documentation
-at https://home-assistant.io/components/light.rflink/
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.rflink/
 """
 import asyncio
 from functools import partial
@@ -48,7 +48,6 @@ def lookup_unit_for_sensor_type(sensor_type):
     """Get unit for sensor type.
 
     Async friendly.
-
     """
     from rflink.parser import UNITS, PACKET_FIELDS
     field_abbrev = {v: k for k, v in PACKET_FIELDS.items()}
@@ -57,7 +56,7 @@ def lookup_unit_for_sensor_type(sensor_type):
 
 
 def devices_from_config(domain_config, hass=None):
-    """Parse config and add rflink sensor devices."""
+    """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
         if not config[ATTR_UNIT_OF_MEASUREMENT]:
@@ -66,7 +65,7 @@ def devices_from_config(domain_config, hass=None):
         device = RflinkSensor(device_id, hass, **config)
         devices.append(device)
 
-        # register entity to listen to incoming rflink events
+        # Register entity to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
     return devices
@@ -74,11 +73,10 @@ def devices_from_config(domain_config, hass=None):
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Rflink platform."""
-    # add devices from config
+    """Set up the Rflink platform."""
     yield from async_add_devices(devices_from_config(config, hass))
 
-    # add new (unconfigured) devices to user desired group
+    # Add new (unconfigured) devices to user desired group
     if config[CONF_NEW_DEVICES_GROUP]:
         new_devices_group = yield from group.Group.async_create_group(
             hass, config[CONF_NEW_DEVICES_GROUP], [], True)
@@ -92,17 +90,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         rflinksensor = partial(RflinkSensor, device_id, hass)
         device = rflinksensor(event[EVENT_KEY_SENSOR], event[EVENT_KEY_UNIT])
-        # add device entity
+        # Add device entity
         yield from async_add_devices([device])
 
-        # register entity to listen to incoming rflink events
+        # Register entity to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
 
-        # make sure the event is processed by the new entity
+        # Make sure the event is processed by the new entity
         device.handle_event(event)
 
-        # maybe add to new devices group
+        # Maybe add to new devices group
         if new_devices_group:
             yield from new_devices_group.async_update_tracked_entity_ids(
                 list(new_devices_group.tracking) + [device.entity_id])
@@ -113,8 +111,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class RflinkSensor(RflinkDevice):
     """Representation of a Rflink sensor."""
 
-    def __init__(self, device_id, hass, sensor_type,
-                 unit_of_measurement, **kwargs):
+    def __init__(self, device_id, hass, sensor_type, unit_of_measurement,
+                 **kwargs):
         """Handle sensor specific args and super init."""
         self._sensor_type = sensor_type
         self._unit_of_measurement = unit_of_measurement
