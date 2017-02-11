@@ -24,11 +24,12 @@ def deprecated_substitute(substitute_name):
                 if not warnings.get(module_name):
                     logger = logging.getLogger(module_name)
                     logger.warning(
-                        "{0} is deprecated. Please rename {0} to "
-                        "{1} in '{2}' to ensure future support.".format(
-                            substitute_name, func.__name__,
-                            inspect.getfile(self.__class__)))
+                        "%s is deprecated. Please rename %s to "
+                        "%s in '%s' to ensure future support.",
+                        substitute_name, substitute_name, func.__name__,
+                        inspect.getfile(self.__class__))
                     warnings[module_name] = True
+                    # pylint: disable=protected-access
                     func._deprecated_substitute_warnings = warnings
 
                 # Return the old property
@@ -49,7 +50,7 @@ def get_deprecated(config, new_name, old_name, default=None):
         module_name = inspect.getmodule(inspect.stack()[1][0]).__name__
         logger = logging.getLogger(module_name)
         logger.warning(
-            "{0} is deprecated. Please rename {0} to {1} in your "
-            "configuration file.".format(old_name, new_name))
+            "%s is deprecated. Please rename %s to %s in your "
+            "configuration file.", old_name, old_name, new_name)
         return config.get(old_name)
     return config.get(new_name, default)
