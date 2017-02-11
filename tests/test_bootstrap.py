@@ -71,7 +71,7 @@ class TestBootstrap:
 
         with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
                 mock.patch('os.access', mock.Mock(return_value=True)), \
-                mock.patch('homeassistant.bootstrap.enable_logging',
+                mock.patch('homeassistant.bootstrap.async_enable_logging',
                            mock.Mock(return_value=True)), \
                 patch_yaml_files(files, True):
             self.hass = bootstrap.from_config_file('config.yaml')
@@ -289,7 +289,7 @@ class TestBootstrap:
         assert not bootstrap.setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
-    @mock.patch('homeassistant.bootstrap.enable_logging')
+    @mock.patch('homeassistant.bootstrap.async_enable_logging')
     @mock.patch('homeassistant.bootstrap.async_register_signal_handling')
     def test_home_assistant_core_config_validation(self, log_mock, sig_mock):
         """Test if we pass in wrong information for HA conf."""
