@@ -29,7 +29,7 @@ DEFAULT_DELAY = 0
 
 ATTR_DELAY = 'delay'
 
-SENSOR_CLASS_MAP = {
+DEVICE_CLASS_MAP = {
     'Motion': 'motion',
     'Line Crossing': 'motion',
     'IO Trigger': None,
@@ -201,10 +201,10 @@ class HikvisionBinarySensor(BinarySensorDevice):
         return self._sensor_state()
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         try:
-            return SENSOR_CLASS_MAP[self._sensor]
+            return DEVICE_CLASS_MAP[self._sensor]
         except KeyError:
             # Sensor must be unknown to us, add as generic
             return None

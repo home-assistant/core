@@ -2,12 +2,13 @@
 # pylint: disable=protected-access
 import asyncio
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
 import homeassistant.helpers.entity as entity
 from homeassistant.helpers.customize import set_customize
-from homeassistant.const import ATTR_HIDDEN
+from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
 
 from tests.common import get_test_home_assistant
 
@@ -119,3 +120,13 @@ class TestHelpersEntity(object):
         ent = AsyncEntity()
         ent.update()
         assert len(async_update) == 1
+
+    def test_device_class(self):
+        """Test device class attribute."""
+        state = self.hass.states.get(self.entity.entity_id)
+        assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+        with patch('homeassistant.helpers.entity.Entity.device_class',
+                   new='test_class'):
+            self.entity.update_ha_state()
+        state = self.hass.states.get(self.entity.entity_id)
+        assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'

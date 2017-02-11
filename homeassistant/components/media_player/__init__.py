@@ -20,6 +20,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.deprecation import deprecated_substitute
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -520,40 +521,9 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def supported_media_commands(self):
-        """Flag media commands that are supported.
-
-        DEPRECATED: Included for temporary custom platform compatibility.
-        """
-        return None
-
-    @property
+    @deprecated_substitute('supported_media_commands')
     def supported_features(self):
         """Flag media player features that are supported."""
-        # Begin temporary transition logic
-
-        if self.supported_media_commands is not None:
-            # If this platform is still using supported_media_commands, issue
-            # a logger warning once with instructions on how to fix it.
-            if not getattr(self, '_supported_features_warned', False):
-                def show_warning():
-                    """Show a deprecation warning in the log for this class."""
-                    import inspect
-                    _LOGGER.warning(
-                        "supported_media_commands is deprecated. Please "
-                        "rename supported_media_commands to "
-                        "supported_features in '%s' to ensure future support.",
-                        inspect.getfile(self.__class__))
-                # This is a temporary attribute. We don't want to pollute
-                # __init__ so it can be easily removed.
-                # pylint: disable=attribute-defined-outside-init
-                self._supported_features_warned = True
-                self.hass.add_job(show_warning)
-
-            # Return the old property
-            return self.supported_media_commands
-
-        # End temporary transition logic
         return 0
 
     def turn_on(self):
