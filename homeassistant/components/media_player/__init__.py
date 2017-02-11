@@ -923,7 +923,6 @@ def _async_fetch_image(hass, url):
     return content, content_type, is_permanent_failure
 
 
-
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
