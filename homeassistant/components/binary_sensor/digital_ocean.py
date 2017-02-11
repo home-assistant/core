@@ -63,7 +63,7 @@ class DigitalOceanBinarySensor(BinarySensorDevice):
         return self.data.status == 'active'
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of this sensor."""
         return DEFAULT_SENSOR_CLASS
 

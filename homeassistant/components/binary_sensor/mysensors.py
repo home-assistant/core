@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.mysensors/
 import logging
 
 from homeassistant.components import mysensors
-from homeassistant.components.binary_sensor import (SENSOR_CLASSES,
+from homeassistant.components.binary_sensor import (DEVICE_CLASSES,
                                                     BinarySensorDevice)
 from homeassistant.const import STATE_ON
 
@@ -62,8 +62,8 @@ class MySensorsBinarySensor(
         return False
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         pres = self.gateway.const.Presentation
         class_map = {
             pres.S_DOOR: 'opening',
@@ -78,5 +78,5 @@ class MySensorsBinarySensor(
                 pres.S_VIBRATION: 'vibration',
                 pres.S_MOISTURE: 'moisture',
             })
-        if class_map.get(self.child_type) in SENSOR_CLASSES:
+        if class_map.get(self.child_type) in DEVICE_CLASSES:
             return class_map.get(self.child_type)

@@ -64,8 +64,8 @@ class BloomSkySensor(BinarySensorDevice):
         return self._unique_id
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return SENSOR_TYPES.get(self._sensor_name)
 
     @property
