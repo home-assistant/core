@@ -391,7 +391,6 @@ class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
     _access_token = None
-    _last_bad_image_url = None
 
     # pylint: disable=no-self-use
     # Implement these for your media player
@@ -810,7 +809,8 @@ class MediaPlayerDevice(Entity):
             return None
 
         url = self.media_image_url
-        if url in (None, self._last_bad_image_url):
+
+        if url is None:
             return None
 
         return ENTITY_IMAGE_URL.format(
@@ -836,14 +836,6 @@ class MediaPlayerDevice(Entity):
             _async_fetch_image(self.hass, url), self.hass.loop
         ).result()
 
-    def set_last_bad_image_url(self, url):
-        """Save last bad image url."""
-        should_update = self._last_bad_image_url != url
-        self._last_bad_image_url = url
-        if should_update:
-            _LOGGER.debug('%s marked as inaccessible', url)
-            self.schedule_update_ha_state()
-
 
 @asyncio.coroutine
 def _async_fetch_image(hass, url):
@@ -854,10 +846,11 @@ def _async_fetch_image(hass, url):
     cache_images = ENTITY_IMAGE_CACHE[ATTR_CACHE_IMAGES]
     cache_urls = ENTITY_IMAGE_CACHE[ATTR_CACHE_URLS]
     cache_maxsize = ENTITY_IMAGE_CACHE[ATTR_CACHE_MAXSIZE]
+
     if url in cache_images:
         return cache_images[url]
 
-    content, content_type, is_permanent_failure = (None, None, False)
+    content, content_type = (None, None)
     websession = async_get_clientsession(hass)
     response = None
     try:
@@ -866,8 +859,6 @@ def _async_fetch_image(hass, url):
         if response.status == 200:
             content = yield from response.read()
             content_type = response.headers.get(CONTENT_TYPE_HEADER)
-        elif response.status in (400, 404):
-            is_permanent_failure = True
 
     except asyncio.TimeoutError:
         pass
@@ -877,9 +868,9 @@ def _async_fetch_image(hass, url):
             yield from response.release()
 
     if not content:
-        return (None, None, is_permanent_failure)
+        return (None, None)
 
-    cache_images[url] = (content, content_type, is_permanent_failure)
+    cache_images[url] = (content, content_type)
     cache_urls.append(url)
 
     while len(cache_urls) > cache_maxsize:
@@ -890,7 +881,7 @@ def _async_fetch_image(hass, url):
 
         cache_urls = cache_urls[1:]
 
-    return content, content_type, is_permanent_failure
+    return content, content_type
 
 
 class MediaPlayerImageView(HomeAssistantView):
@@ -916,15 +907,12 @@ class MediaPlayerImageView(HomeAssistantView):
                          request.GET.get('token') == player.access_token)
 
         if not authenticated:
-            return web.Response(status=401),
+            return web.Response(status=401)
 
-        url = player.media_image_url
-        data, content_type, is_permanent_failure = \
-            yield from _async_fetch_image(request.app['hass'], url)
+        data, content_type = yield from _async_fetch_image(
+            request.app['hass'], player.media_image_url)
 
         if data is None:
-            if is_permanent_failure:
-                player.set_last_bad_image_url(url)
             return web.Response(status=500)
 
         return web.Response(body=data, content_type=content_type)
