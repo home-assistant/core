@@ -4,11 +4,8 @@ import json
 
 from aiohttp import web
 
-from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 
-DOMAIN = 'hassbian'
-DEPENDENCIES = ['http']
 
 SAMPLE_OUTPUT = """
 {
@@ -51,12 +48,10 @@ SAMPLE_OUTPUT = """
 
 
 @asyncio.coroutine
-def async_setup(hass, config):
-    """Setup the hassbian component."""
-    register_built_in_panel(hass, 'hassbian', 'Hassbian', 'mdi:linux')
+def async_setup(hass):
+    """Setup the hassbian config."""
     hass.http.register_view(HassbianSuitesView)
     hass.http.register_view(HassbianSuiteInstallView)
-    return True
 
 
 @asyncio.coroutine
