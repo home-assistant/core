@@ -140,3 +140,8 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def open_cover(self):
         """Open the garage door."""
         self._value.data = True
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
