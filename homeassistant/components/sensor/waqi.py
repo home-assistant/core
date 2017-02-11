@@ -16,7 +16,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pwaqi==1.3']
+REQUIREMENTS = ['pwaqi==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

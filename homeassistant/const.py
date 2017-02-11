@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 37
-PATCH_VERSION = '1'
+MINOR_VERSION = 38
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -82,6 +82,7 @@ CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
 CONF_DISPLAY_OPTIONS = 'display_options'
+CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
 CONF_ELEVATION = 'elevation'
 CONF_EMAIL = 'email'
@@ -285,6 +286,9 @@ ATTR_ASSUMED_STATE = 'assumed_state'
 ATTR_STATE = 'state'
 
 ATTR_OPTION = 'option'
+
+# Bitfield of supported component features for the entity
+ATTR_SUPPORTED_FEATURES = 'supported_features'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'

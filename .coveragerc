@@ -5,6 +5,7 @@ omit =
     homeassistant/__main__.py
     homeassistant/scripts/*.py
     homeassistant/helpers/typing.py
+    homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
@@ -116,9 +117,6 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
-    homeassistant/components/ffmpeg.py
-    homeassistant/components/*/ffmpeg.py
-
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
 
@@ -132,6 +130,7 @@ omit =
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
+    homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
     homeassistant/components/binary_sensor/flic.py
@@ -141,6 +140,7 @@ omit =
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
+    homeassistant/components/camera/ffmpeg.py
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
@@ -210,7 +210,9 @@ omit =
     homeassistant/components/light/piglow.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
+    homeassistant/components/lock/nuki.py
     homeassistant/components/media_player/anthemav.py
+    homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
@@ -226,6 +228,7 @@ omit =
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
     homeassistant/components/media_player/lg_netcast.py
+    homeassistant/components/media_player/liveboxplaytv.py
     homeassistant/components/media_player/mpchc.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/nad.py
@@ -256,6 +259,7 @@ omit =
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
+    homeassistant/components/notify/mailgun.py
     homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nfandroidtv.py
@@ -325,11 +329,13 @@ omit =
     homeassistant/components/sensor/nzbget.py
     homeassistant/components/sensor/ohmconnect.py
     homeassistant/components/sensor/onewire.py
+    homeassistant/components/sensor/openevse.py
     homeassistant/components/sensor/openexchangerates.py
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pvoutput.py
+    homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
@@ -365,6 +371,7 @@ omit =
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
     homeassistant/components/switch/edimax.py
+    homeassistant/components/switch/fritzdect.py
     homeassistant/components/switch/hdmi_cec.py
     homeassistant/components/switch/hikvisioncam.py
     homeassistant/components/switch/hook.py

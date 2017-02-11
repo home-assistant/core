@@ -217,11 +217,9 @@ class ZwaveColorLight(ZwaveDimmer):
                 self._value_color = value_color
 
         if self._value_color_channels is None:
-            for value_color_channels in self._value.node.get_values(
-                    class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,
-                    genre=zwave.const.GENRE_SYSTEM,
-                    type=zwave.const.TYPE_INT).values():
-                self._value_color_channels = value_color_channels
+            self._value_color_channels = self.get_value(
+                class_id=zwave.const.COMMAND_CLASS_SWITCH_COLOR,
+                genre=zwave.const.GENRE_SYSTEM, type=zwave.const.TYPE_INT)
 
         if self._value_color and self._value_color_channels:
             _LOGGER.debug("Zwave node color values found.")

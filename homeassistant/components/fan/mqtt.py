@@ -150,7 +150,7 @@ class MqttFan(FanEntity):
             elif payload == self._payload[STATE_OFF]:
                 self._state = False
 
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             mqtt.subscribe(self._hass, self._topic[CONF_STATE_TOPIC],
@@ -165,7 +165,7 @@ class MqttFan(FanEntity):
                 self._speed = SPEED_MEDIUM
             elif payload == self._payload[SPEED_HIGH]:
                 self._speed = SPEED_HIGH
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
             mqtt.subscribe(self._hass, self._topic[CONF_SPEED_STATE_TOPIC],
@@ -183,7 +183,7 @@ class MqttFan(FanEntity):
                 self._oscillation = True
             elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
                 self._oscillation = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
             mqtt.subscribe(self._hass,
@@ -262,7 +262,7 @@ class MqttFan(FanEntity):
             self._speed = speed
             mqtt.publish(self._hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
                          mqtt_payload, self._qos, self._retain)
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def oscillate(self, oscillating: bool) -> None:
         """Set oscillation."""
@@ -274,4 +274,4 @@ class MqttFan(FanEntity):
             mqtt.publish(self._hass,
                          self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
                          payload, self._qos, self._retain)
-            self.update_ha_state()
+            self.schedule_update_ha_state()

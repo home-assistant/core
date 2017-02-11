@@ -26,6 +26,7 @@ from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
+from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -435,6 +436,7 @@ def async_from_config_dict(config: Dict[str, Any],
 
     yield from hass.async_stop_track_tasks()
 
+    async_register_signal_handling(hass)
     return hass
 
 

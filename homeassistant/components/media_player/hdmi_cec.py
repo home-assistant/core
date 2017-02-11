@@ -158,8 +158,8 @@ class CecPlayerDevice(CecDevice, MediaPlayerDevice):
         self.schedule_update_ha_state()
 
     @property
-    def supported_media_commands(self):
-        """Flag media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         from pycec.const import TYPE_RECORDER, TYPE_PLAYBACK, TYPE_TUNER, \
             TYPE_AUDIO
         if self.type_id == TYPE_RECORDER or self.type == TYPE_PLAYBACK:
