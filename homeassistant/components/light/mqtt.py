@@ -10,8 +10,9 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_COLOR_TEMP, SUPPORT_BRIGHTNESS,
-    SUPPORT_RGB_COLOR, SUPPORT_COLOR_TEMP, Light)
+    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_RGB_COLOR, ATTR_COLOR_TEMP,
+    SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_RGB_COLOR,
+    SUPPORT_COLOR_TEMP, Light)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON, CONF_STATE, CONF_BRIGHTNESS, CONF_RGB,
@@ -28,6 +29,9 @@ CONF_STATE_VALUE_TEMPLATE = 'state_value_template'
 CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
 CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
 CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
+CONF_EFFECT_COMMAND_TOPIC = 'effect_command_topic'
+CONF_EFFECT_STATE_TOPIC = 'effect_state_topic'
+CONF_EFFECT_VALUES = 'effect_values'
 CONF_RGB_STATE_TOPIC = 'rgb_state_topic'
 CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
 CONF_RGB_COMMAND_MODE = 'rgb_command_mode'
@@ -56,6 +60,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COLOR_TEMP_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_EFFECT_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_EFFECT_VALUES): dict,
     vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_RGB_COMMAND_MODE, default=DEFAULT_RGB_MODE):
@@ -82,6 +89,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 CONF_COMMAND_TOPIC,
                 CONF_BRIGHTNESS_STATE_TOPIC,
                 CONF_BRIGHTNESS_COMMAND_TOPIC,
+                CONF_EFFECT_STATE_TOPIC,
+                CONF_EFFECT_COMMAND_TOPIC,
+                CONF_EFFECT_VALUES,
                 CONF_RGB_STATE_TOPIC,
                 CONF_RGB_COMMAND_TOPIC,
                 CONF_RGB_COMMAND_MODE,
@@ -136,6 +146,9 @@ class MqttLight(Light):
         self._supported_features |= (
             topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
             SUPPORT_COLOR_TEMP)
+        self._supported_features |= (
+            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and
+            SUPPORT_EFFECT)
 
         for key, tpl in list(templates.items()):
             if tpl is None:
@@ -221,6 +234,11 @@ class MqttLight(Light):
         return self._color_temp
 
     @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return list(self._topic[CONF_EFFECT_VALUES].keys())
+
+    @property
     def should_poll(self):
         """No polling needed for a MQTT light."""
         return False
@@ -287,6 +305,13 @@ class MqttLight(Light):
             if self._optimistic_color_temp:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
                 should_update = True
+
+        if ATTR_EFFECT in kwargs and \
+           self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
+            effect = self._topic[CONF_EFFECT_VALUES][kwargs[ATTR_EFFECT]]
+            mqtt.publish(
+                self._hass, self._topic[CONF_EFFECT_COMMAND_TOPIC],
+                effect, self._qos, self._retain)
 
         mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
                      self._payload['on'], self._qos, self._retain)
