@@ -3,17 +3,21 @@
 import json
 from datetime import datetime, timedelta
 import unittest
+from unittest.mock import patch, call, MagicMock
 
 import pytest
+from sqlalchemy import create_engine
+
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
 from homeassistant.bootstrap import setup_component
 from tests.common import get_test_home_assistant
+from tests.components.recorder import models_original
 
 
-class TestRecorder(unittest.TestCase):
-    """Test the recorder module."""
+class BaseTestRecorder(unittest.TestCase):
+    """Base class for common recorder tests."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
@@ -23,7 +27,6 @@ class TestRecorder(unittest.TestCase):
             recorder.DOMAIN: {recorder.CONF_DB_URL: db_uri}})
         self.hass.start()
         recorder._verify_instance()
-        self.session = recorder.Session()
         recorder._INSTANCE.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -41,26 +44,25 @@ class TestRecorder(unittest.TestCase):
         self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
 
-        for event_id in range(5):
-            if event_id < 3:
-                timestamp = five_days_ago
-                state = 'purgeme'
-            else:
-                timestamp = now
-                state = 'dontpurgeme'
+        with recorder.session_scope() as session:
+            for event_id in range(5):
+                if event_id < 3:
+                    timestamp = five_days_ago
+                    state = 'purgeme'
+                else:
+                    timestamp = now
+                    state = 'dontpurgeme'
 
-            self.session.add(recorder.get_model('States')(
-                entity_id='test.recorder2',
-                domain='sensor',
-                state=state,
-                attributes=json.dumps(attributes),
-                last_changed=timestamp,
-                last_updated=timestamp,
-                created=timestamp,
-                event_id=event_id + 1000
-            ))
-
-        self.session.commit()
+                session.add(recorder.get_model('States')(
+                    entity_id='test.recorder2',
+                    domain='sensor',
+                    state=state,
+                    attributes=json.dumps(attributes),
+                    last_changed=timestamp,
+                    last_updated=timestamp,
+                    created=timestamp,
+                    event_id=event_id + 1000
+                ))
 
     def _add_test_events(self):
         """Add a few events for testing."""
@@ -70,21 +72,27 @@ class TestRecorder(unittest.TestCase):
 
         self.hass.block_till_done()
         recorder._INSTANCE.block_till_done()
-        for event_id in range(5):
-            if event_id < 2:
-                timestamp = five_days_ago
-                event_type = 'EVENT_TEST_PURGE'
-            else:
-                timestamp = now
-                event_type = 'EVENT_TEST'
 
-            self.session.add(recorder.get_model('Events')(
-                event_type=event_type,
-                event_data=json.dumps(event_data),
-                origin='LOCAL',
-                created=timestamp,
-                time_fired=timestamp,
-            ))
+        with recorder.session_scope() as session:
+            for event_id in range(5):
+                if event_id < 2:
+                    timestamp = five_days_ago
+                    event_type = 'EVENT_TEST_PURGE'
+                else:
+                    timestamp = now
+                    event_type = 'EVENT_TEST'
+
+                session.add(recorder.get_model('Events')(
+                    event_type=event_type,
+                    event_data=json.dumps(event_data),
+                    origin='LOCAL',
+                    created=timestamp,
+                    time_fired=timestamp,
+                ))
+
+
+class TestRecorder(BaseTestRecorder):
+    """Test the recorder module."""
 
     def test_saving_state(self):
         """Test saving and restoring a state."""
@@ -190,13 +198,70 @@ class TestRecorder(unittest.TestCase):
         self.assertEqual(states.count(), 5)
         self.assertEqual(events.count(), 5)
 
+    def test_schema_no_recheck(self):
+        """Test that schema is not double-checked when up-to-date."""
+        with patch.object(recorder._INSTANCE, '_apply_update') as update, \
+                patch.object(recorder._INSTANCE, '_inspect_schema_version') \
+                as inspect:
+            recorder._INSTANCE._migrate_schema()
+            self.assertEqual(update.call_count, 0)
+            self.assertEqual(inspect.call_count, 0)
+
+    def test_invalid_update(self):
+        """Test that an invalid new version raises an exception."""
+        with self.assertRaises(ValueError):
+            recorder._INSTANCE._apply_update(-1)
+
+
+def create_engine_test(*args, **kwargs):
+    """Test version of create_engine that initializes with old schema.
+
+    This simulates an existing db with the old schema.
+    """
+    engine = create_engine(*args, **kwargs)
+    models_original.Base.metadata.create_all(engine)
+    return engine
+
+
+class TestMigrateRecorder(BaseTestRecorder):
+    """Test recorder class that starts with an original schema db."""
+
+    @patch('sqlalchemy.create_engine', new=create_engine_test)
+    @patch('homeassistant.components.recorder.Recorder._migrate_schema')
+    def setUp(self, migrate):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started.
+
+        create_engine is patched to create a db that starts with the old
+        schema.
+
+        _migrate_schema is mocked to ensure it isn't run, so we can test it
+        below.
+        """
+        super().setUp()
+
+    def test_schema_update_calls(self):  # pylint: disable=no-self-use
+        """Test that schema migrations occurr in correct order."""
+        with patch.object(recorder._INSTANCE, '_apply_update') as update:
+            recorder._INSTANCE._migrate_schema()
+            update.assert_has_calls([call(version+1) for version in range(
+                0, recorder.models.SCHEMA_VERSION)])
+
+    def test_schema_migrate(self):  # pylint: disable=no-self-use
+        """Test the full schema migration logic.
+
+        We're just testing that the logic can execute successfully here without
+        throwing exceptions. Maintaining a set of assertions based on schema
+        inspection could quickly become quite cumbersome.
+        """
+        recorder._INSTANCE._migrate_schema()
+
 
 @pytest.fixture
 def hass_recorder():
     """HASS fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
-    def setup_recorder(config):
+    def setup_recorder(config={}):
         """Setup with params."""
         db_uri = 'sqlite://'  # In memory DB
         conf = {recorder.CONF_DB_URL: db_uri}
@@ -277,3 +342,61 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     assert len(states) == 1
     assert hass.states.get('test.ok') == states[0]
     assert hass.states.get('test.ok').state == 'state2'
+
+
+def test_recorder_errors_exceptions(hass_recorder): \
+        # pylint: disable=redefined-outer-name
+    """Test session_scope and get_model errors."""
+    # Model cannot be resolved
+    assert recorder.get_model('dont-exist') is None
+
+    # Verify the instance fails before setup
+    with pytest.raises(RuntimeError):
+        recorder._verify_instance()
+
+    # Setup the recorder
+    hass_recorder()
+
+    recorder._verify_instance()
+
+    # Verify session scope raises (and prints) an exception
+    with patch('homeassistant.components.recorder._LOGGER.error') as e_mock, \
+            pytest.raises(Exception) as err:
+        with recorder.session_scope() as session:
+            session.execute('select * from notthere')
+    assert e_mock.call_count == 1
+    assert recorder.ERROR_QUERY[:-4] in e_mock.call_args[0][0]
+    assert 'no such table' in str(err.value)
+
+
+def test_recorder_bad_commit(hass_recorder):
+    """Bad _commit should retry 3 times."""
+    hass_recorder()
+
+    def work(session):
+        """Bad work."""
+        session.execute('select * from notthere')
+
+    with patch('homeassistant.components.recorder.time.sleep') as e_mock, \
+            recorder.session_scope() as session:
+        res = recorder._INSTANCE._commit(session, work)
+    assert res is False
+    assert e_mock.call_count == 3
+
+
+def test_recorder_bad_execute(hass_recorder):
+    """Bad execute, retry 3 times."""
+    hass_recorder()
+
+    def to_native():
+        """Rasie exception."""
+        from sqlalchemy.exc import SQLAlchemyError
+        raise SQLAlchemyError()
+
+    mck1 = MagicMock()
+    mck1.to_native = to_native
+
+    with patch('homeassistant.components.recorder.time.sleep') as e_mock:
+        res = recorder.execute((mck1,))
+    assert res == []
+    assert e_mock.call_count == 3

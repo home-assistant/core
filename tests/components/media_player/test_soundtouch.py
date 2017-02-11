@@ -318,7 +318,7 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   default_component(),
                                   mock.MagicMock())
         self.assertEqual(mocked_sountouch_device.call_count, 1)
-        self.assertEqual(soundtouch.DEVICES[0].supported_media_commands, 17853)
+        self.assertEqual(soundtouch.DEVICES[0].supported_features, 17853)
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.power_off')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')

@@ -134,7 +134,7 @@ class TestOpenAlprLocal(object):
             """Mock event."""
             self.alpr_events.append(event)
 
-        self.hass.bus.listen('found_plate', mock_alpr_event)
+        self.hass.bus.listen('image_processing.found_plate', mock_alpr_event)
 
     def teardown_method(self):
         """Stop everything that was started."""

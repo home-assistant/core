@@ -10,7 +10,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE)
+    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.core import HomeAssistant, DOMAIN as CORE_DOMAIN
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -148,6 +148,11 @@ class Entity(object):
         """
         return False
 
+    @property
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return None
+
     def update(self):
         """Retrieve latest state.
 
@@ -231,6 +236,8 @@ class Entity(object):
         self._attr_setter('entity_picture', str, ATTR_ENTITY_PICTURE, attr)
         self._attr_setter('hidden', bool, ATTR_HIDDEN, attr)
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
+        self._attr_setter('supported_features', int, ATTR_SUPPORTED_FEATURES,
+                          attr)
 
         end = timer()
 

@@ -22,7 +22,7 @@ REQUIRES = [
     'jinja2>=2.8',
     'voluptuous==0.9.3',
     'typing>=3,<4',
-    'aiohttp==1.2',
+    'aiohttp==1.3.1',
     'async_timeout==1.1.0',
 ]
 

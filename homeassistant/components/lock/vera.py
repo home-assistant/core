@@ -35,13 +35,11 @@ class VeraLock(VeraDevice, LockDevice):
         """Lock the device."""
         self.vera_device.lock()
         self._state = STATE_LOCKED
-        self.update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         self.vera_device.unlock()
         self._state = STATE_UNLOCKED
-        self.update_ha_state()
 
     @property
     def is_locked(self):
