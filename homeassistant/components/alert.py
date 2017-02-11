@@ -101,7 +101,7 @@ def async_toggle(hass, entity_id):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up the Aalert component."""
+    """Set up the Alert component."""
     alerts = config.get(DOMAIN)
     all_alerts = {}
 
