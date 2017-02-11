@@ -9,13 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    PLATFORM_SCHEMA, BaseNotificationService,
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA)
+    PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE, ATTR_TITLE_DEFAULT,
+    ATTR_DATA)
 from homeassistant.const import (
     CONF_TOKEN, CONF_DOMAIN, CONF_RECIPIENT, CONF_SENDER)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
+
 REQUIREMENTS = ['https://github.com/pschmitt/pymailgun/'
                 'archive/1.3.zip#'
                 'pymailgun==1.3']
