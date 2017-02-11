@@ -30,17 +30,22 @@ CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
 CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
 CONF_RGB_STATE_TOPIC = 'rgb_state_topic'
 CONF_RGB_COMMAND_TOPIC = 'rgb_command_topic'
+CONF_RGB_COMMAND_MODE = 'rgb_command_mode'
 CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
 CONF_COLOR_TEMP_STATE_TOPIC = 'color_temp_state_topic'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
 CONF_COLOR_TEMP_VALUE_TEMPLATE = 'color_temp_value_template'
 
+RGB_MODE_HEX = 'hex'
+RGB_MODE_TUPLE = 'tuple'
+
 DEFAULT_NAME = 'MQTT Light'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_RGB_MODE = RGB_MODE_TUPLE
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -53,6 +58,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_COLOR_TEMP_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_RGB_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_RGB_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_RGB_COMMAND_MODE, default=DEFAULT_RGB_MODE):
+        vol.Any(RGB_MODE_HEX, RGB_MODE_TUPLE),
     vol.Optional(CONF_RGB_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
@@ -77,6 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 CONF_BRIGHTNESS_COMMAND_TOPIC,
                 CONF_RGB_STATE_TOPIC,
                 CONF_RGB_COMMAND_TOPIC,
+                CONF_RGB_COMMAND_MODE,
                 CONF_COLOR_TEMP_STATE_TOPIC,
                 CONF_COLOR_TEMP_COMMAND_TOPIC
             )
@@ -244,8 +252,14 @@ class MqttLight(Light):
         if ATTR_RGB_COLOR in kwargs and \
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
+            if self._topic.get(CONF_RGB_COMMAND_MODE,
+                               DEFAULT_RGB_MODE) == RGB_MODE_HEX:
+                template = '{:02X}{:02X}{:02X}'
+            else:
+                template = '{},{},{}'
+
             mqtt.publish(self._hass, self._topic[CONF_RGB_COMMAND_TOPIC],
-                         '{},{},{}'.format(*kwargs[ATTR_RGB_COLOR]),
+                         template.format(*kwargs[ATTR_RGB_COLOR]),
                          self._qos, self._retain)
 
             if self._optimistic_rgb:
