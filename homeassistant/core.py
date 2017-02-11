@@ -393,7 +393,11 @@ class EventBus(object):
         # remove themselves as a listener while being executed which
         # causes the iterator to be confused.
         get = self._listeners.get
-        listeners = get(MATCH_ALL, []) + get(event_type, [])
+        listeners = get(event_type, [])
+
+        # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
+        if event_type not in EVENT_HOMEASSISTANT_CLOSE:
+            listeners += get(MATCH_ALL, [])
 
         event = Event(event_type, event_data, origin)
 
