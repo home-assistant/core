@@ -124,9 +124,9 @@ class TestHelpersEntity(object):
     def test_device_class(self):
         """Test device class attribute."""
         state = self.hass.states.get(self.entity.entity_id)
-        assert state.attributes.get(ATTR_DEVICE_CLASS) == None
+        assert state.attributes.get(ATTR_DEVICE_CLASS) is None
         with patch('homeassistant.helpers.entity.Entity.device_class',
-                        new='test_class'):
+                   new='test_class'):
             self.entity.update_ha_state()
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'
