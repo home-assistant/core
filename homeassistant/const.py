@@ -78,6 +78,7 @@ CONF_CONDITION = 'condition'
 CONF_COVERS = 'covers'
 CONF_CUSTOMIZE = 'customize'
 CONF_DEVICE = 'device'
+CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
@@ -290,6 +291,9 @@ ATTR_OPTION = 'option'
 
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = 'supported_features'
+
+# Class of device within its domain
+ATTR_DEVICE_CLASS = 'device_class'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'

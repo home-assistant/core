@@ -26,7 +26,7 @@ ATTR_ISS_NUMBER_PEOPLE_SPACE = 'number_of_people_in_space'
 CONF_SHOW_ON_MAP = 'show_on_map'
 
 DEFAULT_NAME = 'ISS'
-DEFAULT_SENSOR_CLASS = 'visible'
+DEFAULT_DEVICE_CLASS = 'visible'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
@@ -77,9 +77,9 @@ class IssBinarySensor(BinarySensorDevice):
         return self.iss_data.is_above if self.iss_data else False
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of this sensor."""
-        return DEFAULT_SENSOR_CLASS
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def device_state_attributes(self):

@@ -60,8 +60,8 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         return self._info['status']['open']
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
     def _update_callback(self, zone):
