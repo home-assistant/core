@@ -21,5 +21,6 @@ def async_setup(hass, config):
             continue
 
         yield from panel.async_setup(hass)
+        hass.config.components.add('{}.{}'.format(DOMAIN, panel_name))
 
     return True

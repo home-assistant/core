@@ -1,6 +1,7 @@
 """Component to interact with Hassbian tools."""
 import asyncio
 import json
+import os
 
 from aiohttp import web
 
@@ -50,6 +51,12 @@ SAMPLE_OUTPUT = """
 @asyncio.coroutine
 def async_setup(hass):
     """Setup the hassbian config."""
+    # TODO: Test if is hassbian
+    is_hassbian = 'FORCE_HASSBIAN' in os.environ
+
+    if not is_hassbian:
+        return
+
     hass.http.register_view(HassbianSuitesView)
     hass.http.register_view(HassbianSuiteInstallView)
 
@@ -57,6 +64,7 @@ def async_setup(hass):
 @asyncio.coroutine
 def hassbian_status(hass):
     """Query for the Hassbian status."""
+    # TODO: fetch real output
     cmd = ['echo', SAMPLE_OUTPUT]
     tool = yield from asyncio.create_subprocess_exec(
         *cmd,
