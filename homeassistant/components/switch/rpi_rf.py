@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_SWITCHES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['rpi-rf==0.9.5']
+REQUIREMENTS = ['rpi-rf==0.9.6']
 
 _LOGGER = logging.getLogger(__name__)
 

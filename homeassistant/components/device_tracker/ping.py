@@ -19,7 +19,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DEFAULT_SCAN_INTERVAL)
+    PLATFORM_SCHEMA, DEFAULT_SCAN_INTERVAL, SOURCE_TYPE_ROUTER)
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant import util
 from homeassistant import const
@@ -66,14 +66,14 @@ class Host:
         failed = 0
         while failed < self._count:  # check more times if host in unreachable
             if self.ping():
-                see(dev_id=self.dev_id)
+                see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
                 return True
             failed += 1
 
         _LOGGER.debug("ping KO on ip=%s failed=%d", self.ip_address, failed)
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the Host objects and return the update function."""
     hosts = [Host(ip, dev_id, hass, config) for (dev_id, ip) in
              config[const.CONF_HOSTS].items()]

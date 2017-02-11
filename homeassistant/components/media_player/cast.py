@@ -20,7 +20,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==0.7.6']
+REQUIREMENTS = ['pychromecast==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,8 +226,8 @@ class CastDevice(MediaPlayerDevice):
         return self.cast.app_display_name
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CAST
 
     @property

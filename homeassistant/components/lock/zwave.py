@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
 from homeassistant.config import load_yaml_config_file
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,74 +38,74 @@ DEVICE_MAPPINGS = {
 }
 
 LOCK_NOTIFICATION = {
-    1: 'Manual Lock',
-    2: 'Manual Unlock',
-    3: 'RF Lock',
-    4: 'RF Unlock',
-    5: 'Keypad Lock',
-    6: 'Keypad Unlock',
-    11: 'Lock Jammed',
-    254: 'Unknown Event'
+    '1': 'Manual Lock',
+    '2': 'Manual Unlock',
+    '3': 'RF Lock',
+    '4': 'RF Unlock',
+    '5': 'Keypad Lock',
+    '6': 'Keypad Unlock',
+    '11': 'Lock Jammed',
+    '254': 'Unknown Event'
 }
 
 LOCK_ALARM_TYPE = {
-    9: 'Deadbolt Jammed',
-    18: 'Locked with Keypad by user',
-    19: 'Unlocked with Keypad by user ',
-    21: 'Manually Locked by',
-    22: 'Manually Unlocked by Key or Inside thumb turn',
-    24: 'Locked by RF',
-    25: 'Unlocked by RF',
-    27: 'Auto re-lock',
-    33: 'User deleted: ',
-    112: 'Master code changed or User added: ',
-    113: 'Duplicate Pin-code: ',
-    130: 'RF module, power restored',
-    161: 'Tamper Alarm: ',
-    167: 'Low Battery',
-    168: 'Critical Battery Level',
-    169: 'Battery too low to operate'
+    '9': 'Deadbolt Jammed',
+    '18': 'Locked with Keypad by user ',
+    '19': 'Unlocked with Keypad by user ',
+    '21': 'Manually Locked by',
+    '22': 'Manually Unlocked by Key or Inside thumb turn',
+    '24': 'Locked by RF',
+    '25': 'Unlocked by RF',
+    '27': 'Auto re-lock',
+    '33': 'User deleted: ',
+    '112': 'Master code changed or User added: ',
+    '113': 'Duplicate Pin-code: ',
+    '130': 'RF module, power restored',
+    '161': 'Tamper Alarm: ',
+    '167': 'Low Battery',
+    '168': 'Critical Battery Level',
+    '169': 'Battery too low to operate'
 }
 
 MANUAL_LOCK_ALARM_LEVEL = {
-    1: 'Key Cylinder or Inside thumb turn',
-    2: 'Touch function (lock and leave)'
+    '1': 'Key Cylinder or Inside thumb turn',
+    '2': 'Touch function (lock and leave)'
 }
 
 TAMPER_ALARM_LEVEL = {
-    1: 'Too many keypresses',
-    2: 'Cover removed'
+    '1': 'Too many keypresses',
+    '2': 'Cover removed'
 }
 
 LOCK_STATUS = {
-    1: True,
-    2: False,
-    3: True,
-    4: False,
-    5: True,
-    6: False,
-    9: False,
-    18: True,
-    19: False,
-    21: True,
-    22: False,
-    24: True,
-    25: False,
-    27: True
+    '1': True,
+    '2': False,
+    '3': True,
+    '4': False,
+    '5': True,
+    '6': False,
+    '9': False,
+    '18': True,
+    '19': False,
+    '21': True,
+    '22': False,
+    '24': True,
+    '25': False,
+    '27': True
 }
 
 ALARM_TYPE_STD = [
-    18,
-    19,
-    33,
-    112,
-    113
+    '18',
+    '19',
+    '33',
+    '112',
+    '113'
 ]
 
 SET_USERCODE_SCHEMA = vol.Schema({
     vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
-    vol.Required(ATTR_USERCODE): vol.Coerce(int),
+    vol.Required(ATTR_USERCODE): cv.string,
 })
 
 GET_USERCODE_SCHEMA = vol.Schema({
@@ -233,66 +234,58 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_DOOR_LOCK).values():
-            if value.type != zwave.const.TYPE_BOOL:
-                continue
-            if value.genre != zwave.const.GENRE_USER:
-                continue
-            self._state = value.data
-            _LOGGER.debug('Lock state set from Bool value and'
-                          ' is %s', value.data)
-            break
+        self._state = self.get_value(class_id=zwave
+                                     .const.COMMAND_CLASS_DOOR_LOCK,
+                                     type=zwave.const.TYPE_BOOL,
+                                     genre=zwave.const.GENRE_USER,
+                                     member='data')
+        _LOGGER.debug('Lock state set from Bool value and'
+                      ' is %s', self._state)
+        notification_data = self.get_value(class_id=zwave.const
+                                           .COMMAND_CLASS_ALARM,
+                                           label=['Access Control'],
+                                           member='data')
+        if notification_data:
+            self._notification = LOCK_NOTIFICATION.get(str(notification_data))
+        if self._v2btze:
+            advanced_config = self.get_value(class_id=zwave.const
+                                             .COMMAND_CLASS_CONFIGURATION,
+                                             index=12,
+                                             data=CONFIG_ADVANCED,
+                                             member='data')
+            if advanced_config:
+                self._state = LOCK_STATUS.get(str(notification_data))
+                _LOGGER.debug('Lock state set from Access Control '
+                              'value and is %s, get=%s',
+                              str(notification_data),
+                              self.state)
 
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_ALARM).values():
-            if value.label != "Access Control":
-                continue
-            self._notification = LOCK_NOTIFICATION.get(value.data)
-            notification_data = value.data
-            if self._v2btze:
-                for value in (self._node.get_values(
-                        class_id=zwave.const.COMMAND_CLASS_CONFIGURATION)
-                              .values()):
-                    if value.index != 12:
-                        continue
-                    if value.data == CONFIG_ADVANCED:
-                        self._state = LOCK_STATUS.get(notification_data)
-                        _LOGGER.debug('Lock state set from Access Control '
-                                      'value and is %s', notification_data)
-                    break
-
-            break
-
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_ALARM).values():
-            if value.label != "Alarm Type":
-                continue
-            alarm_type = LOCK_ALARM_TYPE.get(value.data)
-            break
-
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_ALARM).values():
-            if value.label != "Alarm Level":
-                continue
-            alarm_level = value.data
-            _LOGGER.debug('Lock alarm_level is %s', alarm_level)
-            if alarm_type is 21:
-                self._lock_status = '{}{}'.format(
-                    LOCK_ALARM_TYPE.get(alarm_type),
-                    MANUAL_LOCK_ALARM_LEVEL.get(alarm_level))
-            if alarm_type in ALARM_TYPE_STD:
-                self._lock_status = '{}{}'.format(
-                    LOCK_ALARM_TYPE.get(alarm_type), alarm_level)
-                break
-            if alarm_type is 161:
-                self._lock_status = '{}{}'.format(
-                    LOCK_ALARM_TYPE.get(alarm_type),
-                    TAMPER_ALARM_LEVEL.get(alarm_level))
-                break
-            if alarm_type != 0:
-                self._lock_status = LOCK_ALARM_TYPE.get(alarm_type)
-                break
+        alarm_type = self.get_value(class_id=zwave.const
+                                    .COMMAND_CLASS_ALARM,
+                                    label=['Alarm Type'], member='data')
+        _LOGGER.debug('Lock alarm_type is %s', str(alarm_type))
+        alarm_level = self.get_value(class_id=zwave.const
+                                     .COMMAND_CLASS_ALARM,
+                                     label=['Alarm Level'], member='data')
+        _LOGGER.debug('Lock alarm_level is %s', str(alarm_level))
+        if not alarm_type:
+            return
+        if alarm_type is 21:
+            self._lock_status = '{}{}'.format(
+                LOCK_ALARM_TYPE.get(str(alarm_type)),
+                MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level)))
+        if alarm_type in ALARM_TYPE_STD:
+            self._lock_status = '{}{}'.format(
+                LOCK_ALARM_TYPE.get(str(alarm_type)), str(alarm_level))
+            return
+        if alarm_type is 161:
+            self._lock_status = '{}{}'.format(
+                LOCK_ALARM_TYPE.get(str(alarm_type)),
+                TAMPER_ALARM_LEVEL.get(str(alarm_level)))
+            return
+        if alarm_type != 0:
+            self._lock_status = LOCK_ALARM_TYPE.get(str(alarm_type))
+            return
 
     @property
     def is_locked(self):

@@ -59,7 +59,7 @@ ATTR_VALUE = "value"
 SERVICE_WRITE_REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_UNIT): cv.positive_int,
     vol.Required(ATTR_ADDRESS): cv.positive_int,
-    vol.Required(ATTR_VALUE): cv.positive_int
+    vol.Required(ATTR_VALUE): vol.All(cv.ensure_list, [cv.positive_int])
 })
 
 

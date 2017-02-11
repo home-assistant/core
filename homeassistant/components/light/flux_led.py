@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.12']
+REQUIREMENTS = ['flux_led==0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +29,13 @@ DOMAIN = 'flux_led'
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                     SUPPORT_RGB_COLOR)
 
+MODE_RGB = 'rgb'
+MODE_RGBW = 'rgbw'
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(ATTR_MODE, default='rgbw'):
-        vol.All(cv.string, vol.In(['rgbw', 'rgb'])),
+    vol.Optional(ATTR_MODE, default=MODE_RGBW):
+        vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
     vol.Optional(CONF_PROTOCOL, default=None):
         vol.All(cv.string, vol.In(['ledenet'])),
 })
@@ -48,7 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import flux_led
     lights = []
     light_ips = []
-    for ipaddr, device_config in config[CONF_DEVICES].items():
+
+    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
         device = {}
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
@@ -59,7 +63,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(light)
             light_ips.append(ipaddr)
 
-    if not config[CONF_AUTOMATIC_ADD]:
+    if discovery_info:
+        device = {}
+        # discovery_info: ip address,device id,device type
+        device['ipaddr'] = discovery_info[0]
+        device['name'] = discovery_info[1]
+        # As we don't know protocol and mode set to none to autodetect.
+        device[CONF_PROTOCOL] = None
+        device[ATTR_MODE] = None
+
+        light = FluxLight(device)
+        if light.is_valid:
+            lights.append(light)
+            light_ips.append(device['ipaddr'])
+
+    if not config.get(CONF_AUTOMATIC_ADD, False):
         add_devices(lights)
         return
 
@@ -94,10 +112,20 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self.is_valid = True
         self._bulb = None
+
         try:
             self._bulb = flux_led.WifiLedBulb(self._ipaddr)
             if self._protocol:
                 self._bulb.setProtocol(self._protocol)
+
+            # After bulb object is created the status is updated. We can
+            # now set the correct mode if it was not explicitly defined.
+            if not self._mode:
+                if self._bulb.rgbwcapable:
+                    self._mode = MODE_RGBW
+                else:
+                    self._mode = MODE_RGB
+
         except socket.error:
             self.is_valid = False
             _LOGGER.error(
@@ -121,7 +149,7 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._bulb.getWarmWhite255()
+        return self._bulb.brightness
 
     @property
     def rgb_color(self):

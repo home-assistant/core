@@ -21,11 +21,13 @@ from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from . import const
+from . import workaround
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+CLASS_ID = 'class_id'
 CONF_AUTOHEAL = 'autoheal'
 CONF_DEBUG = 'debug'
 CONF_POLLING_INTENSITY = 'polling_intensity'
@@ -343,12 +345,18 @@ def setup(hass, config):
             _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
                           "Specific_command_class=%s, "
                           "Command_class=%s, Value type=%s, "
-                          "Genre=%s", node.node_id,
+                          "Genre=%s as %s", node.node_id,
                           node.generic, node.specific,
                           value.command_class, value.type,
-                          value.genre)
-            name = "{}.{}".format(component, object_id(value))
+                          value.genre, component)
+            workaround_component = workaround.get_device_component_mapping(
+                value)
+            if workaround_component and workaround_component != component:
+                _LOGGER.debug("Using %s instead of %s",
+                              workaround_component, component)
+                component = workaround_component
 
+            name = "{}.{}".format(component, object_id(value))
             node_config = customize.get_overrides(hass, DOMAIN, name)
 
             if node_config.get(CONF_IGNORED):
@@ -626,6 +634,48 @@ class ZWaveDeviceEntity(Entity):
         """Called when a value for this entity's node has changed."""
         self.update_properties()
         self.schedule_update_ha_state()
+
+    def _value_handler(self, method=None, class_id=None, index=None,
+                       label=None, data=None, member=None, **kwargs):
+        """Get the values for a given command_class with arguments."""
+        varname = member
+        if class_id is not None:
+            kwargs[CLASS_ID] = class_id
+        _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
+                      ' member=%s, kwargs=%s',
+                      method, class_id, index, label, data, member, kwargs)
+        values = self._value.node.get_values(**kwargs).values()
+        _LOGGER.debug('values=%s', values)
+        results = None
+        if not values:
+            return None
+        for value in values:
+            if index is not None and value.index != index:
+                continue
+            if label is not None:
+                for entry in label:
+                    if entry is not None and value.label != entry:
+                        continue
+            if method == 'set':
+                value.data = data
+                return
+            if data is not None and value.data != data:
+                continue
+            if member is not None:
+                results = getattr(value, varname)
+            else:
+                results = value
+            break
+        _LOGGER.debug('final result=%s', results)
+        return results
+
+    def get_value(self, **kwargs):
+        """Simplifyer to get values."""
+        return self._value_handler(method='get', **kwargs)
+
+    def set_value(self, **kwargs):
+        """Simplifyer to set a value."""
+        return self._value_handler(method='set', **kwargs)
 
     def update_properties(self):
         """Callback on data changes for node values."""
