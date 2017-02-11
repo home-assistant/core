@@ -947,7 +947,7 @@ class MediaPlayerImageView(HomeAssistantView):
                          request.GET.get('token') == player.access_token)
 
         if not authenticated:
-            return web.Response(status=401), 
+            return web.Response(status=401),
 
         url = player.media_image_url
         data, content_type, is_permanent_failure = \
