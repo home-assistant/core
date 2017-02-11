@@ -154,8 +154,8 @@ class NetatmoBinarySensor(BinarySensorDevice):
         return self._unique_id
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         if self._cameratype == "NACamera":
             return WELCOME_SENSOR_TYPES.get(self._sensor_name)
         elif self._cameratype == "NOC":

@@ -10,7 +10,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES)
+    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
 from homeassistant.core import HomeAssistant, DOMAIN as CORE_DOMAIN
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -107,6 +107,11 @@ class Entity(object):
 
         Implemented by platform classes.
         """
+        return None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
         return None
 
     @property
@@ -236,6 +241,7 @@ class Entity(object):
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
         self._attr_setter('supported_features', int, ATTR_SUPPORTED_FEATURES,
                           attr)
+        self._attr_setter('device_class', str, ATTR_DEVICE_CLASS, attr)
 
         end = timer()
 

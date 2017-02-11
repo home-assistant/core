@@ -38,7 +38,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-        self._sensor_class = 'occupancy'
+        self._device_class = 'occupancy'
         self.update()
 
     @property
@@ -57,9 +57,9 @@ class EcobeeBinarySensor(BinarySensorDevice):
         return "binary_sensor_ecobee_{}_{}".format(self._name, self.index)
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
-        return self._sensor_class
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
+        return self._device_class
 
     def update(self):
         """Get the latest state of the sensor."""

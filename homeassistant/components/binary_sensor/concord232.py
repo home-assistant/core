@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES)
+    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -30,7 +30,7 @@ DEFAULT_SSL = False
 SCAN_INTERVAL = datetime.timedelta(seconds=1)
 
 ZONE_TYPES_SCHEMA = vol.Schema({
-    cv.positive_int: vol.In(SENSOR_CLASSES),
+    cv.positive_int: vol.In(DEVICE_CLASSES),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -102,8 +102,8 @@ class Concord232ZoneSensor(BinarySensorDevice):
         self.update()
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
     @property
