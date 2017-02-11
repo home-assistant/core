@@ -53,7 +53,8 @@ def get_average(temp_base):
     get_average.temp[2] = get_average.temp[1]
     get_average.temp[1] = get_average.temp[0]
     get_average.temp[0] = temp_base
-    temp_avg = (get_average.temp[0] + get_average.temp[1] + get_average.temp[2]) / 3
+    temp_avg = (get_average.temp[0] + get_average.temp[1]
+                + get_average.temp[2]) / 3
     return temp_avg
 
 
