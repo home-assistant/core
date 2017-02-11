@@ -336,7 +336,8 @@ class RflinkCommand(RflinkDevice):
         else:
             # Puts command on outgoing buffer and returns straight away.
             # Rflink protocol/transport handles asynchronous writing of buffer
-            # to serial/tcp device. Does not wait for command send confirmation.
+            # to serial/tcp device. Does not wait for command send
+            # confirmation.
             self.hass.loop.run_in_executor(None, ft.partial(
                 self._protocol.send_command, self._device_id, cmd))
 
