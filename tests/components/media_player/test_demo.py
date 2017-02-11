@@ -254,7 +254,7 @@ class TestMediaPlayerWeb(unittest.TestCase):
         assert setup_component(
             self.hass, mp.DOMAIN,
             {'media_player': {'platform': 'demo'}})
-        mp.ENTITY_IMAGE_CACHE[mp.ATTR_CACHE_IMAGES].clear()
+
         self.hass.start()
 
     def tearDown(self):
@@ -295,63 +295,3 @@ class TestMediaPlayerWeb(unittest.TestCase):
                            state.attributes.get('entity_picture'))
         assert req.status_code == 200
         assert req.text == fake_picture_data
-
-    def test_media_image_proxy_500(self):
-        """Test the media server image proxy server ."""
-        class MockResponse():
-            def __init__(self):
-                self.status = 500
-
-            @asyncio.coroutine
-            def release(self):
-                pass
-
-        class MockWebsession():
-
-            @asyncio.coroutine
-            def get(self, url):
-                return MockResponse()
-
-            def detach(self):
-                pass
-
-        self.hass.data[DATA_CLIENTSESSION] = MockWebsession()
-
-        assert self.hass.states.is_state(entity_id, 'playing')
-        state = self.hass.states.get(entity_id)
-        req = requests.get(HTTP_BASE_URL +
-                           state.attributes.get('entity_picture'))
-        assert req.status_code == 500
-        self.hass.block_till_done()
-        assert self.hass.states.get(entity_id).attributes.get(
-            'entity_picture') is not None
-
-    def test_media_image_proxy_404(self):
-        """Test the media server image proxy server ."""
-        class MockResponse():
-            def __init__(self):
-                self.status = 404
-
-            @asyncio.coroutine
-            def release(self):
-                pass
-
-        class MockWebsession():
-
-            @asyncio.coroutine
-            def get(self, url):
-                return MockResponse()
-
-            def detach(self):
-                pass
-
-        self.hass.data[DATA_CLIENTSESSION] = MockWebsession()
-
-        assert self.hass.states.is_state(entity_id, 'playing')
-        state = self.hass.states.get(entity_id)
-        req = requests.get(HTTP_BASE_URL +
-                           state.attributes.get('entity_picture'))
-        assert req.status_code == 500
-        self.hass.block_till_done()
-        assert self.hass.states.get(entity_id).attributes.get(
-            'entity_picture') is None
