@@ -51,8 +51,7 @@ class Script():
         self.last_triggered = None
         self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
                               in action for action in self.sequence)
-        self._async_unsub_delay_listener = None
-        self._async_unsub_wait_listener = None
+        self._async_listener = []
         self._template_cache = {}
         self._config_cache = {}
 
@@ -85,10 +84,13 @@ class Script():
 
             if CONF_DELAY in action:
                 # Call ourselves in the future to continue work
+                unsub = None
+
                 @callback
                 def async_script_delay(now):
                     """Called after delay is done."""
-                    self._async_unsub_delay_listener = None
+                    # pylint: disable=cell-var-from-loop
+                    self._async_listener.remove(unsub)
                     self.hass.async_add_job(self.async_run(variables))
 
                 delay = action[CONF_DELAY]
@@ -99,10 +101,12 @@ class Script():
                         cv.positive_timedelta)(
                             delay.async_render(variables))
 
-                self._async_unsub_delay_listener = \
-                    async_track_point_in_utc_time(
-                        self.hass, async_script_delay,
-                        date_util.utcnow() + delay)
+                unsub = async_track_point_in_utc_time(
+                    self.hass, async_script_delay,
+                    date_util.utcnow() + delay
+                )
+                self._async_listener.append(unsub)
+
                 self._cur = cur + 1
                 if self._change_listener:
                     self.hass.async_add_job(self._change_listener)
@@ -124,8 +128,8 @@ class Script():
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
 
-                self._async_unsub_wait_listener = async_track_template(
-                    self.hass, wait_template, async_script_wait)
+                self._async_listener.append(async_track_template(
+                    self.hass, wait_template, async_script_wait))
 
                 self._cur = cur + 1
                 if self._change_listener:
@@ -199,27 +203,26 @@ class Script():
     def _async_set_timeout(self, action, variables):
         """Schedule a timeout to abort script."""
         timeout = action[CONF_TIMEOUT]
+        unsub = None
 
         @callback
         def async_script_timeout(now):
             """Call after timeout is retrieve stop script."""
-            self._async_unsub_delay_listener = None
+            self._async_listener.remove(unsub)
+            self._log("Timout reach, abort script.")
             self.async_stop()
 
-        self._async_unsub_delay_listener = \
-            async_track_point_in_utc_time(
-                self.hass, async_script_timeout,
-                date_util.utcnow() + timeout)
+        unsub = async_track_point_in_utc_time(
+            self.hass, async_script_timeout,
+            date_util.utcnow() + timeout
+        )
+        self._async_listener.append(unsub)
 
     def _async_remove_listener(self):
         """Remove point in time listener, if any."""
-        if self._async_unsub_delay_listener:
-            self._async_unsub_delay_listener()
-            self._async_unsub_delay_listener = None
-
-        if self._async_unsub_wait_listener:
-            self._async_unsub_wait_listener()
-            self._async_unsub_wait_listener = None
+        for unsub in self._async_listener:
+            unsub()
+        self._async_listener.clear()
 
     def _log(self, msg):
         """Logger helper."""
