@@ -2,7 +2,7 @@
 Support for Yeelight Sunflower colour bulbs (not Yeelight Blue or WiFi).
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.yeelight-sunflower/ (maybe one day)
+https://home-assistant.io/components/light.yeelight-sunflower/ (TODO)
 """
 import logging
 import voluptuous as vol
@@ -15,7 +15,7 @@ from homeassistant.components.light import (Light,
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelightsunflower==0.0.1']
+REQUIREMENTS = ['yeelightsunflower==0.0.2']
 SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,9 +64,14 @@ class SunflowerBulb(Light):
         return "sunflower_{}".format(self._light.zid)
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._light.available
+
+    @property
     def is_on(self):
         """Return true if light is on."""
-        return self._light.is_on()
+        return self._light.is_on
 
     @property
     def brightness(self):
