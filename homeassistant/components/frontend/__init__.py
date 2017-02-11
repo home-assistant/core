@@ -19,6 +19,7 @@ DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
+URL_CUSTOM_UI_COMPONENT = '/frontend/custom_ui/{}.html'
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
 MANIFEST_JSON = {
     "background_color": "#FFFFFF",
@@ -41,10 +42,12 @@ for size in (192, 384, 512, 1024):
     })
 
 DATA_PANELS = 'frontend_panels'
+DATA_CUSTOM_UI = 'frontend_custom_ui'
 DATA_INDEX_VIEW = 'frontend_index_view'
 
 # To keep track we don't register a component twice (gives a warning)
 _REGISTERED_COMPONENTS = set()
+_REGISTERED_CUSTOM_UI = set()
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -132,6 +135,46 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
                                        index_view.get)
 
 
+def register_custom_ui(hass, component_name, path, url_path=None, config=None):
+    """Register a custom ui component for the frontend.
+
+    component_name: name of the custom ui
+    path: path to the HTML of the custom ui
+    url_path: url to serve the component on me to use in the url
+              (defaults to /frontend/custom_ui/{component_name}.html)
+    config: config to be passed into the component
+    """
+    custom_ui = hass.data.get(DATA_CUSTOM_UI)
+    if custom_ui is None:
+        custom_ui = hass.data[DATA_CUSTOM_UI] = {}
+
+    if component_name in custom_ui:
+        _LOGGER.warning('Overwriting custom ui %s', component_name,)
+    if not os.path.isfile(path):
+        _LOGGER.error('Custom component %s component does not exist: %s',
+                      component_name, path)
+        return
+
+    data = {
+        'component_name': component_name,
+    }
+
+    if config is not None:
+        data['config'] = config
+
+    if url_path is None:
+        url_path = URL_CUSTOM_UI_COMPONENT.format(component_name)
+
+    if url_path not in _REGISTERED_COMPONENTS:
+        hass.http.register_static_path(url_path, path)
+        _REGISTERED_COMPONENTS.add(url_path)
+        data['url'] = url_path
+    else:
+        _LOGGER.warning('Re-registering %s for %s', url_path, path)
+
+    custom_ui[component_name] = data
+
+
 def add_manifest_json_key(key, val):
     """Add a keyval to the manifest.json."""
     MANIFEST_JSON[key] = val
@@ -169,6 +212,9 @@ def setup(hass, config):
     else:
         hass.data[DATA_PANELS] = {}
 
+    if DATA_CUSTOM_UI not in hass.data:
+        hass.data[DATA_CUSTOM_UI] = {}
+
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
@@ -195,6 +241,7 @@ class BootstrapView(HomeAssistantView):
             'events': api.async_events_json(hass),
             'services': api.async_services_json(hass),
             'panels': hass.data[DATA_PANELS],
+            'custom_ui': hass.data[DATA_CUSTOM_UI],
         })
 
 
