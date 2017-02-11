@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hub = yeelightsunflower.Hub(host)
 
     # Verify that hub is responsive
-    if not hub.check():
+    if not hub.available:
         _LOGGER.error('Could not connect to Yeelight Sunflower hub')
         return False
 
@@ -76,9 +76,6 @@ class SunflowerBulb(Light):
     @property
     def brightness(self):
         """HA brightness is 0-255; Yeelight Sunflower's brightness is 0-100."""
-        """Brightness of the light (an integer in the range 0-255).
-        Note that Yeelight Sunflower's brightness is 0-100
-        """
         return self._light.brightness / 100 * 255
 
     @property
