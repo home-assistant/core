@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OpenEVSE sensor."""
+    """Set up the OpenEVSE sensor."""
     import openevsewifi
 
     host = config.get(CONF_HOST)
@@ -85,7 +85,7 @@ class OpenEVSESensor(Entity):
             if self.type == 'status':
                 self._state = self.charger.getStatus()
             elif self.type == 'charge_time':
-                self._state = self.charger.getChargeTimeElapsed()/60
+                self._state = self.charger.getChargeTimeElapsed() / 60
             elif self.type == 'ambient_temp':
                 self._state = self.charger.getAmbientTemperature()
             elif self.type == 'ir_temp':
@@ -93,10 +93,10 @@ class OpenEVSESensor(Entity):
             elif self.type == 'rtc_temp':
                 self._state = self.charger.getRTCTemperature()
             elif self.type == 'usage_session':
-                self._state = float(self.charger.getUsageSession())/1000
+                self._state = float(self.charger.getUsageSession()) / 1000
             elif self.type == 'usage_total':
-                self._state = float(self.charger.getUsageTotal())/1000
+                self._state = float(self.charger.getUsageTotal()) / 1000
             else:
                 self._state = 'Unknown'
         except (RequestException, ValueError, KeyError):
-            _LOGGER.warning('Could not update status for %s', self.name)
+            _LOGGER.warning("Could not update status for %s", self.name)
