@@ -320,7 +320,7 @@ window.hassUtil.domainIcon = function (domain, state) {
 
 window.hassUtil.binarySensorIcon = function (state) {
   var activated = state.state && state.state === 'off';
-  switch (state.attributes.sensor_class) {
+  switch (state.attributes.device_class) {
     case 'connectivity':
       return activated ? 'mdi:server-network-off' : 'mdi:server-network';
     case 'light':
