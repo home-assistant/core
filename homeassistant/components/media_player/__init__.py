@@ -871,6 +871,7 @@ class MediaPlayerDevice(Entity):
         should_update = self._last_bad_image_url != url
         self._last_bad_image_url = url
         if should_update:
+            _LOGGER.debug('%s marked as inaccessible', url)
             self.schedule_update_ha_state()
 
 
