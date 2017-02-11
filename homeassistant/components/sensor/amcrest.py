@@ -126,13 +126,13 @@ class AmcrestSensor(Entity):
             version, build_date = self._camera.software_information
             self._attrs['Build Date'] = build_date.split('=')[-1]
             self._attrs['Version'] = version.split('=')[-1]
-        except:
+        except ValueError:
             self._attrs['Build Date'] = 'Not Available'
             self._attrs['Version'] = 'Not Available'
 
         try:
             self._attrs['Serial Number'] = self._camera.serial_number
-        except:
+        except ValueError:
             self._attrs['Serial Number'] = 'Not Available'
 
         if self._sensor_type == 'motion_detector':
