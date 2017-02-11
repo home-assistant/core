@@ -269,4 +269,3 @@ class MpdDevice(MediaPlayerDevice):
             self.client.clear()
             self.client.add(media_id)
             self.client.play()
-
