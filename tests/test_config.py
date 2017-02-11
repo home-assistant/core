@@ -18,7 +18,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 
 from tests.common import (
-    get_test_config_dir, get_test_home_assistant)
+    get_test_config_dir, get_test_home_assistant, mock_generator)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -375,6 +375,37 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == blankConfig.location_name
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
+
+    @mock.patch('asyncio.create_subprocess_exec')
+    def test_check_ha_config_file_correct(self, mock_create):
+        """Check that restart propagates to stop."""
+        process_mock = mock.MagicMock()
+        attrs = {
+            'communicate.return_value': mock_generator(('output', 'error')),
+            'wait.return_value': mock_generator(0)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_generator(process_mock)
+
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass), self.hass.loop
+        ).result() is None
+
+    @mock.patch('asyncio.create_subprocess_exec')
+    def test_check_ha_config_file_wrong(self, mock_create):
+        """Check that restart with a bad config doesn't propagate to stop."""
+        process_mock = mock.MagicMock()
+        attrs = {
+            'communicate.return_value':
+                mock_generator((r'\033[hellom'.encode('utf-8'), 'error')),
+            'wait.return_value': mock_generator(1)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_generator(process_mock)
+
+        with self.assertRaises(HomeAssistantError):
+            run_coroutine_threadsafe(
+                config_util.async_check_ha_config_file(self.hass),
+                self.hass.loop
+            ).result()
 
 
 # pylint: disable=redefined-outer-name

@@ -5,7 +5,6 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zoneminder/
 """
 import logging
-import json
 from urllib.parse import urljoin
 
 import requests
@@ -79,46 +78,44 @@ def login():
         ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
         timeout=DEFAULT_TIMEOUT)
 
-    if req.status_code != requests.codes.ok:
+    if not req.ok:
         _LOGGER.error("Connection error logging into ZoneMinder")
         return False
 
     return True
 
 
-# pylint: disable=no-member
-def get_state(api_url):
-    """Get a state from the ZoneMinder API service."""
+def _zm_request(method, api_url, data=None):
+    """Perform a Zoneminder request."""
     # Since the API uses sessions that expire, sometimes we need to re-auth
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
-        req = requests.get(urljoin(ZM['url'], api_url), cookies=ZM['cookies'],
-                           timeout=DEFAULT_TIMEOUT)
+        req = requests.request(
+            method, urljoin(ZM['url'], api_url), data=data,
+            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT)
 
-        if req.status_code != requests.codes.ok:
+        if not req.ok:
             login()
         else:
             break
+
     else:
         _LOGGER.exception("Unable to get API response from ZoneMinder")
 
-    return json.loads(req.text)
+    try:
+        return req.json()
+    except ValueError:
+        _LOGGER.exception('JSON decode exception caught while attempting to '
+                          'decode "%s"', req.text)
+
+
+# pylint: disable=no-member
+def get_state(api_url):
+    """Get a state from the ZoneMinder API service."""
+    return _zm_request('get', api_url)
 
 
 # pylint: disable=no-member
 def change_state(api_url, post_data):
     """Update a state using the Zoneminder API."""
-    for _ in range(LOGIN_RETRIES):
-        req = requests.post(
-            urljoin(ZM['url'], api_url), data=post_data, cookies=ZM['cookies'],
-            timeout=DEFAULT_TIMEOUT)
-
-        if req.status_code != requests.codes.ok:
-            login()
-        else:
-            break
-
-    else:
-        _LOGGER.exception("Unable to get API response from ZoneMinder")
-
-    return json.loads(req.text)
+    return _zm_request('post', api_url, data=post_data)

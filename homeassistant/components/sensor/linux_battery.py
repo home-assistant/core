@@ -98,7 +98,7 @@ class LinuxBatterySensor(Entity):
         return ICON
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_NAME: self._battery_stat.name,

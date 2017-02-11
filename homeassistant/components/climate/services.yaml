@@ -78,7 +78,7 @@ set_fan_mode:
       description: Name(s) of entities to change
       example: 'climate.nest'
 
-    fan:
+    fan_mode:
       description: New value of fan mode
       example: On Low
 

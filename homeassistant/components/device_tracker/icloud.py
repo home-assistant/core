@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config: dict, see):
+def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Set up the iCloud Scanner."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)

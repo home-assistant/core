@@ -21,6 +21,7 @@ REQUIREMENTS = ['python-vlc==1.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ARGUMENTS = 'arguments'
+DEFAULT_NAME = 'Vlc'
 
 SUPPORT_VLC = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY
@@ -34,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the vlc platform."""
-    add_devices([VlcDevice(config.get(CONF_NAME),
+    add_devices([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
                            config.get(CONF_ARGUMENTS))])
 
 
@@ -96,8 +97,8 @@ class VlcDevice(MediaPlayerDevice):
         return self._muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_VLC
 
     @property

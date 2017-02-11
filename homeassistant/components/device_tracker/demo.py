@@ -4,7 +4,7 @@ import random
 from homeassistant.components.device_tracker import DOMAIN
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the demo tracker."""
     def offset():
         """Return random offset."""

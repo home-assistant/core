@@ -6,7 +6,8 @@ from tests.common import get_test_home_assistant
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.components.input_select import (
-    ATTR_OPTIONS, DOMAIN, select_option, select_next, select_previous)
+    ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
+    select_option, select_next, select_previous)
 from homeassistant.const import (
     ATTR_ICON, ATTR_FRIENDLY_NAME)
 
@@ -175,3 +176,38 @@ class TestInputSelect(unittest.TestCase):
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
         self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+
+    def test_set_options_service(self):
+        """Test set_options service."""
+        self.assertTrue(
+            setup_component(self.hass, DOMAIN, {DOMAIN: {
+                'test_1': {
+                    'options': [
+                        'first option',
+                        'middle option',
+                        'last option',
+                    ],
+                    'initial': 'middle option',
+                },
+            }}))
+        entity_id = 'input_select.test_1'
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual('middle option', state.state)
+
+        data = {ATTR_OPTIONS: ["test1", "test2"], "entity_id": entity_id}
+        self.hass.services.call(DOMAIN, SERVICE_SET_OPTIONS, data)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(entity_id)
+        self.assertEqual('test1', state.state)
+
+        select_option(self.hass, entity_id, 'first option')
+        self.hass.block_till_done()
+        state = self.hass.states.get(entity_id)
+        self.assertEqual('test1', state.state)
+
+        select_option(self.hass, entity_id, 'test2')
+        self.hass.block_till_done()
+        state = self.hass.states.get(entity_id)
+        self.assertEqual('test2', state.state)

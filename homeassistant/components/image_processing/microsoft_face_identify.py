@@ -23,11 +23,16 @@ DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_IDENTIFY_FACE = 'identify_face'
+EVENT_DETECT_FACE = 'image_processing.detect_face'
 
 ATTR_NAME = 'name'
 ATTR_TOTAL_FACES = 'total_faces'
-ATTR_KNOWN_FACES = 'known_faces'
+ATTR_AGE = 'age'
+ATTR_GENDER = 'gender'
+ATTR_MOTION = 'motion'
+ATTR_GLASSES = 'glasses'
+ATTR_FACES = 'faces'
+
 CONF_GROUP = 'group'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -52,71 +57,90 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     yield from async_add_devices(entities)
 
 
-class ImageProcessingFaceIdentifyEntity(ImageProcessingEntity):
-    """Base entity class for face identify/verify image processing."""
+class ImageProcessingFaceEntity(ImageProcessingEntity):
+    """Base entity class for face image processing."""
 
     def __init__(self):
         """Initialize base face identify/verify entity."""
-        self.known_faces = {}  # last scan data
+        self.faces = []  # last scan data
         self.total_faces = 0  # face count
 
     @property
     def state(self):
         """Return the state of the entity."""
         confidence = 0
-        face_name = STATE_UNKNOWN
+        state = STATE_UNKNOWN
 
-        # search high verify face
-        for i_name, i_co in self.known_faces.items():
-            if i_co > confidence:
-                confidence = i_co
-                face_name = i_name
-        return face_name
+        # no confidence support
+        if not self.confidence:
+            return self.total_faces
+
+        # search high confidence
+        for face in self.faces:
+            if ATTR_CONFIDENCE not in face:
+                continue
+
+            f_co = face[ATTR_CONFIDENCE]
+            if f_co > confidence:
+                confidence = f_co
+                for attr in [ATTR_NAME, ATTR_MOTION]:
+                    if attr in face:
+                        state = face[attr]
+                        break
+
+        return state
 
     @property
     def state_attributes(self):
         """Return device specific state attributes."""
         attr = {
-            ATTR_KNOWN_FACES: self.known_faces,
+            ATTR_FACES: self.faces,
             ATTR_TOTAL_FACES: self.total_faces,
         }
 
         return attr
 
-    def process_faces(self, known, total):
+    def process_faces(self, faces, total):
         """Send event with detected faces and store data."""
         run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, known, total
+            self.hass.loop, self.async_process_faces, faces, total
         ).result()
 
     @callback
-    def async_process_faces(self, known, total):
+    def async_process_faces(self, faces, total):
         """Send event with detected faces and store data.
 
         known are a dict in follow format:
-          { 'name': confidence }
+         [
+           {
+              ATTR_CONFIDENCE: 80,
+              ATTR_NAME: 'Name',
+              ATTR_AGE: 12.0,
+              ATTR_GENDER: 'man',
+              ATTR_MOTION: 'smile',
+              ATTR_GLASSES: 'sunglasses'
+           },
+         ]
 
         This method must be run in the event loop.
         """
-        detect = {name: confidence for name, confidence in known.items()
-                  if confidence >= self.confidence}
-
         # send events
-        for name, confidence in detect.items():
+        for face in faces:
+            if ATTR_CONFIDENCE in face and self.confidence:
+                if face[ATTR_CONFIDENCE] < self.confidence:
+                    continue
+
+            face.update({ATTR_ENTITY_ID: self.entity_id})
             self.hass.async_add_job(
-                self.hass.bus.async_fire, EVENT_IDENTIFY_FACE, {
-                    ATTR_NAME: name,
-                    ATTR_ENTITY_ID: self.entity_id,
-                    ATTR_CONFIDENCE: confidence,
-                }
+                self.hass.bus.async_fire, EVENT_DETECT_FACE, face
             )
 
         # update entity store
-        self.known_faces = detect
+        self.faces = faces
         self.total_faces = total
 
 
-class MicrosoftFaceIdentifyEntity(ImageProcessingFaceIdentifyEntity):
+class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
     """Microsoft face api entity for identify."""
 
     def __init__(self, camera_entity, api, face_group, confidence, name=None):
@@ -173,7 +197,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceIdentifyEntity):
             return
 
         # parse data
-        knwon_faces = {}
+        knwon_faces = []
         total = 0
         for face in detect:
             total += 1
@@ -187,7 +211,10 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceIdentifyEntity):
                     name = s_name
                     break
 
-            knwon_faces[name] = data['confidence'] * 100
+            knwon_faces.append({
+                ATTR_NAME: name,
+                ATTR_CONFIDENCE: data['confidence'] * 100,
+            })
 
         # process data
         self.async_process_faces(knwon_faces, total)

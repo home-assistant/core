@@ -4,9 +4,11 @@ Support for Cover devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover/
 """
-import os
+import asyncio
 from datetime import timedelta
+import functools as ft
 import logging
+import os
 
 import voluptuous as vol
 
@@ -53,17 +55,17 @@ COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_OPEN_COVER: {'method': 'open_cover'},
-    SERVICE_CLOSE_COVER: {'method': 'close_cover'},
+    SERVICE_OPEN_COVER: {'method': 'async_open_cover'},
+    SERVICE_CLOSE_COVER: {'method': 'async_close_cover'},
     SERVICE_SET_COVER_POSITION: {
-        'method': 'set_cover_position',
+        'method': 'async_set_cover_position',
         'schema': COVER_SET_COVER_POSITION_SCHEMA},
-    SERVICE_STOP_COVER: {'method': 'stop_cover'},
-    SERVICE_OPEN_COVER_TILT: {'method': 'open_cover_tilt'},
-    SERVICE_CLOSE_COVER_TILT: {'method': 'close_cover_tilt'},
-    SERVICE_STOP_COVER_TILT: {'method': 'stop_cover_tilt'},
+    SERVICE_STOP_COVER: {'method': 'async_stop_cover'},
+    SERVICE_OPEN_COVER_TILT: {'method': 'async_open_cover_tilt'},
+    SERVICE_CLOSE_COVER_TILT: {'method': 'async_close_cover_tilt'},
+    SERVICE_STOP_COVER_TILT: {'method': 'async_stop_cover_tilt'},
     SERVICE_SET_COVER_TILT_POSITION: {
-        'method': 'set_cover_tilt_position',
+        'method': 'async_set_cover_tilt_position',
         'schema': COVER_SET_COVER_TILT_POSITION_SCHEMA},
 }
 
@@ -124,40 +126,53 @@ def stop_cover_tilt(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_STOP_COVER_TILT, data)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for covers."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
-    component.setup(config)
 
-    def handle_cover_service(service):
+    yield from component.async_setup(config)
+
+    @asyncio.coroutine
+    def async_handle_cover_service(service):
         """Handle calls to the cover services."""
+        covers = component.async_extract_from_service(service)
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
         params.pop(ATTR_ENTITY_ID, None)
 
-        if not method:
-            return
-
-        covers = component.extract_from_service(service)
-
+        # call method
         for cover in covers:
-            getattr(cover, method['method'])(**params)
+            yield from getattr(cover, method['method'])(**params)
+
+        update_tasks = []
 
         for cover in covers:
             if not cover.should_poll:
                 continue
 
-            cover.update_ha_state(True)
+            update_coro = hass.loop.create_task(
+                cover.async_update_ha_state(True))
+            if hasattr(cover, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
 
     for service_name in SERVICE_TO_METHOD:
         schema = SERVICE_TO_METHOD[service_name].get(
             'schema', COVER_SERVICE_SCHEMA)
-        hass.services.register(DOMAIN, service_name, handle_cover_service,
-                               descriptions.get(service_name), schema=schema)
+        hass.services.async_register(
+            DOMAIN, service_name, async_handle_cover_service,
+            descriptions.get(service_name), schema=schema)
+
     return True
 
 
@@ -215,30 +230,94 @@ class CoverDevice(Entity):
         """Open the cover."""
         raise NotImplementedError()
 
+    def async_open_cover(self, **kwargs):
+        """Open the cover.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.open_cover, **kwargs))
+
     def close_cover(self, **kwargs):
         """Close cover."""
         raise NotImplementedError()
+
+    def async_close_cover(self, **kwargs):
+        """Close cover.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.close_cover, **kwargs))
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         pass
 
+    def async_set_cover_position(self, **kwargs):
+        """Move the cover to a specific position.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.set_cover_position, **kwargs))
+
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         pass
+
+    def async_stop_cover(self, **kwargs):
+        """Stop the cover.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.stop_cover, **kwargs))
 
     def open_cover_tilt(self, **kwargs):
         """Open the cover tilt."""
         pass
 
+    def async_open_cover_tilt(self, **kwargs):
+        """Open the cover tilt.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.open_cover_tilt, **kwargs))
+
     def close_cover_tilt(self, **kwargs):
         """Close the cover tilt."""
         pass
+
+    def async_close_cover_tilt(self, **kwargs):
+        """Close the cover tilt.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.close_cover_tilt, **kwargs))
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         pass
 
+    def async_set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.set_cover_tilt_position, **kwargs))
+
     def stop_cover_tilt(self, **kwargs):
         """Stop the cover."""
         pass
+
+    def async_stop_cover_tilt(self, **kwargs):
+        """Stop the cover.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, ft.partial(self.stop_cover_tilt, **kwargs))

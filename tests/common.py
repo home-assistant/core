@@ -26,6 +26,7 @@ from homeassistant.components import sun, mqtt
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
+from homeassistant.util.async import run_callback_threadsafe
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -107,8 +108,7 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        with patch.object(loop, 'add_signal_handler'), \
-                patch('homeassistant.core._async_create_timer'):
+        with patch('homeassistant.core._async_create_timer'):
             yield from orig_start()
 
     hass.async_start = mock_async_start
@@ -147,13 +147,20 @@ def mock_service(hass, domain, service):
     return calls
 
 
-def fire_mqtt_message(hass, topic, payload, qos=0):
+@ha.callback
+def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
-    hass.bus.fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
+    hass.bus.async_fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
         mqtt.ATTR_TOPIC: topic,
         mqtt.ATTR_PAYLOAD: payload,
         mqtt.ATTR_QOS: qos,
     })
+
+
+def fire_mqtt_message(hass, topic, payload, qos=0):
+    """Fire the MQTT message."""
+    run_callback_threadsafe(
+        hass.loop, async_fire_mqtt_message, hass, topic, payload, qos).result()
 
 
 def fire_time_changed(hass, time):
@@ -386,6 +393,11 @@ def mock_coro(return_value=None):
         return return_value
 
     return coro
+
+
+def mock_generator(return_value=None):
+    """Helper method to return a coro generator that returns a value."""
+    return mock_coro(return_value)()
 
 
 @contextmanager
