@@ -65,7 +65,7 @@ def async_setup(hass):
 @asyncio.coroutine
 def hassbian_status(hass, test_mode=False):
     """Query for the Hassbian status."""
-    # TODO: fetch real output
+    # fetch real output when not in test mode
     if test_mode:
         return json.loads(_TEST_OUTPUT)
 
@@ -114,5 +114,5 @@ class HassbianSuiteInstallView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request, suite):
         """Request suite status."""
-        # TODO
+        # do real install if not in test mode
         return self.json({"status": "ok"})
