@@ -589,9 +589,6 @@ qnapstats==0.2.1
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
 
-# homeassistant.components.c_Elta
-requests==2.13.0
-
 # homeassistant.components.rflink
 rflink==0.0.28
 
