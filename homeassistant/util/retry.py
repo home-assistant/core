@@ -13,7 +13,7 @@ def retry(count=5, exc_type=Exception):
             for _ in range(count - 1):
                 try:
                     return func(*args, **kwargs)
-                except exc_type: # pylint: disable=broad-except
+                except exc_type:  # pylint: disable=broad-except
                     pass
             return func(*args, **kwargs)
         return wrapper
