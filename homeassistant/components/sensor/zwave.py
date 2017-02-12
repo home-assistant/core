@@ -55,6 +55,11 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity):
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
     @property
+    def force_update(self):
+        """Return force_update."""
+        return True
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._value.data
