@@ -433,6 +433,9 @@ pychromecast==0.8.0
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
 
+# homeassistant.components.c_Elta
+pycountry==17.1.8
+
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
@@ -585,6 +588,9 @@ qnapstats==0.2.1
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
+
+# homeassistant.components.c_Elta
+requests==2.13.0
 
 # homeassistant.components.rflink
 rflink==0.0.28
