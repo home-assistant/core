@@ -189,7 +189,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test', rgb_color=(75, 75, 75),
+        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
                       brightness=50)
         self.hass.block_till_done()
 
