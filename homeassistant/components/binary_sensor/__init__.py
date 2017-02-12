@@ -14,13 +14,13 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.deprecation import deprecated_substitute
 
 DOMAIN = 'binary_sensor'
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-SENSOR_CLASSES = [
-    None,            # Generic on/off
+DEVICE_CLASSES = [
     'cold',          # On means cold (or too cold)
     'connectivity',  # On means connection present, Off = no connection
     'gas',           # CO, CO2, etc.
@@ -38,7 +38,7 @@ SENSOR_CLASSES = [
     'vibration',     # On means vibration detected, Off means no vibration
 ]
 
-SENSOR_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(SENSOR_CLASSES))
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 
 @asyncio.coroutine
@@ -66,16 +66,7 @@ class BinarySensorDevice(Entity):
         return STATE_ON if self.is_on else STATE_OFF
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    @deprecated_substitute('sensor_class')
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
         return None
-
-    @property
-    def state_attributes(self):
-        """Return device specific state attributes."""
-        attr = {}
-
-        if self.sensor_class is not None:
-            attr['sensor_class'] = self.sensor_class
-
-        return attr

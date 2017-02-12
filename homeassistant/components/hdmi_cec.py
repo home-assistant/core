@@ -21,12 +21,13 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
-                                 CONF_CUSTOMIZE, STATE_PLAYING, STATE_IDLE,
+                                 STATE_PLAYING, STATE_IDLE,
                                  STATE_PAUSED, CONF_HOST)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import customize
 
-REQUIREMENTS = ['pyCEC==0.4.12']
+REQUIREMENTS = ['pyCEC==0.4.13']
 
 DOMAIN = 'hdmi_cec'
 
@@ -299,10 +300,12 @@ def setup(hass: HomeAssistant, base_config):
         """Called when new device is detected by HDMI network."""
         key = DOMAIN + '.' + device.name
         hass.data[key] = device
-        discovery.load_platform(hass, base_config.get(core.DOMAIN).get(
-            CONF_CUSTOMIZE, {}).get(key, {}).get(CONF_PLATFORM, platform),
-                                DOMAIN, discovered={ATTR_NEW: [key]},
-                                hass_config=base_config)
+        discovery.load_platform(
+            hass,
+            customize.get_overrides(hass, core.DOMAIN, key).get(
+                CONF_PLATFORM, platform),
+            DOMAIN, discovered={ATTR_NEW: [key]},
+            hass_config=base_config)
 
     def _shutdown(call):
         hdmi_network.stop()

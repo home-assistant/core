@@ -137,6 +137,9 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.fastdotcom
 fastdotcom==0.0.1
 
+# homeassistant.components.sensor.fedex
+fedexdeliverymanager==1.0.1
+
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
@@ -171,13 +174,16 @@ gTTS-token==1.1.1
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.5.5
+google-api-python-client==1.6.2
 
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
 
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
+
+# homeassistant.components.media_player.gstreamer
+gstreamer-player==1.0.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.4
@@ -198,7 +204,7 @@ hikvision==0.4
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/310c59b0293354d07d94375f1365f7b9b9110c7d.zip#Adafruit_DHT==1.3.0
 
 # homeassistant.components.switch.dlink
-https://github.com/LinuxChristian/pyW215/archive/v0.3.7.zip#pyW215==0.3.7
+https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
@@ -332,7 +338,7 @@ miflora==0.1.15
 mutagen==1.36.2
 
 # homeassistant.components.sensor.usps
-myusps==1.0.2
+myusps==1.0.3
 
 # homeassistant.components.discovery
 netdisco==0.8.2
@@ -341,7 +347,7 @@ netdisco==0.8.2
 neurio==0.3.1
 
 # homeassistant.components.google
-oauth2client==3.0.0
+oauth2client==4.0.0
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
@@ -385,7 +391,7 @@ pmsensor==0.3
 proliphix==0.4.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.1.2
+psutil==5.1.3
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.0
@@ -403,13 +409,13 @@ pwaqi==1.4
 py-cpuinfo==0.2.3
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.4.12
+pyCEC==0.4.13
 
 # homeassistant.components.switch.tplink
 pyHS100==0.2.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.16.1
+pyRFXtrx==0.17.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -418,7 +424,7 @@ pyasn1-modules==0.0.8
 pyasn1==0.2.2
 
 # homeassistant.components.media_player.apple_tv
-pyatv==0.1.3
+pyatv==0.1.4
 
 # homeassistant.components.device_tracker.bbox
 # homeassistant.components.sensor.bbox
@@ -487,7 +493,7 @@ pynetgear==0.3.3
 pynetio==0.1.6
 
 # homeassistant.components.lock.nuki
-pynuki==1.2
+pynuki==1.2.1
 
 # homeassistant.components.sensor.nut
 pynut2==2.1.2
@@ -575,19 +581,19 @@ pyvera==0.2.23
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.11
+pywemo==0.4.12
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.1
+qnapstats==0.2.2
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
 
 # homeassistant.components.rflink
-rflink==0.0.24
+rflink==0.0.28
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
@@ -668,6 +674,9 @@ twilio==5.7.0
 # homeassistant.components.sensor.uber
 uber_rides==0.2.7
 
+# homeassistant.components.sensor.ups
+upsmychoice==1.0.1
+
 # homeassistant.components.device_tracker.unifi
 urllib3
 
@@ -681,7 +690,7 @@ volvooncall==0.1.1
 vsure==0.11.1
 
 # homeassistant.components.sensor.vasttrafik
-vtjp==0.1.11
+vtjp==0.1.14
 
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.webostv
@@ -712,7 +721,7 @@ yahoo-finance==1.4.0
 yahooweather==0.8
 
 # homeassistant.components.light.yeelight
-yeelight==0.2.1
+yeelight==0.2.2
 
 # homeassistant.components.light.zengge
 zengge==0.2

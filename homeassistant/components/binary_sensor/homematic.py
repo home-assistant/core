@@ -54,8 +54,8 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         return bool(self._hm_get_state())
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         if not self.available:
             return None
 

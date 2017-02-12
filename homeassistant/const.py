@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 38
+MINOR_VERSION = 39
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -78,6 +78,7 @@ CONF_CONDITION = 'condition'
 CONF_COVERS = 'covers'
 CONF_CUSTOMIZE = 'customize'
 CONF_DEVICE = 'device'
+CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
@@ -253,6 +254,7 @@ ATTR_DISCOVERED = 'discovered'
 ATTR_LOCATION = 'location'
 
 ATTR_BATTERY_LEVEL = 'battery_level'
+ATTR_WAKEUP = 'wake_up_interval'
 
 # For devices which support a code attribute
 ATTR_CODE = 'code'
@@ -289,6 +291,9 @@ ATTR_OPTION = 'option'
 
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = 'supported_features'
+
+# Class of device within its domain
+ATTR_DEVICE_CLASS = 'device_class'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'

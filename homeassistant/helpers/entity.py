@@ -10,7 +10,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES)
+    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
 from homeassistant.core import HomeAssistant, DOMAIN as CORE_DOMAIN
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
@@ -107,6 +107,11 @@ class Entity(object):
 
         Implemented by platform classes.
         """
+        return None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
         return None
 
     @property
@@ -210,26 +215,24 @@ class Entity(object):
 
         start = timer()
 
-        state = self.state
-
-        if state is None:
-            state = STATE_UNKNOWN
-        else:
-            state = str(state)
-
-        attr = self.state_attributes or {}
-
-        device_attr = self.device_state_attributes
-
-        if device_attr is not None:
-            attr.update(device_attr)
-
-        self._attr_setter('unit_of_measurement', str, ATTR_UNIT_OF_MEASUREMENT,
-                          attr)
-
         if not self.available:
             state = STATE_UNAVAILABLE
             attr = {}
+        else:
+            state = self.state
+
+            if state is None:
+                state = STATE_UNKNOWN
+            else:
+                state = str(state)
+
+            attr = self.state_attributes or {}
+            device_attr = self.device_state_attributes
+            if device_attr is not None:
+                attr.update(device_attr)
+
+        self._attr_setter('unit_of_measurement', str, ATTR_UNIT_OF_MEASUREMENT,
+                          attr)
 
         self._attr_setter('name', str, ATTR_FRIENDLY_NAME, attr)
         self._attr_setter('icon', str, ATTR_ICON, attr)
@@ -238,6 +241,7 @@ class Entity(object):
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
         self._attr_setter('supported_features', int, ATTR_SUPPORTED_FEATURES,
                           attr)
+        self._attr_setter('device_class', str, ATTR_DEVICE_CLASS, attr)
 
         end = timer()
 

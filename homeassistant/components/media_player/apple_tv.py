@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.1.3']
+REQUIREMENTS = ['pyatv==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

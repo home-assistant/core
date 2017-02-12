@@ -224,6 +224,7 @@ omit =
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/gpmdp.py
+    homeassistant/components/media_player/gstreamer.py
     homeassistant/components/media_player/hdmi_cec.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
@@ -303,6 +304,7 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
     homeassistant/components/sensor/fastdotcom.py
+    homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
@@ -358,6 +360,7 @@ omit =
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
+    homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/usps.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py

@@ -11,11 +11,12 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES_SCHEMA)
+    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
-    CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_SENSOR_CLASS)
+    CONF_RESOURCE, CONF_PIN, CONF_NAME, CONF_SENSOR_CLASS, CONF_DEVICE_CLASS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +26,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_PIN): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS): SENSOR_CLASSES_SCHEMA,
+    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 
@@ -33,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the aREST binary sensor."""
     resource = config.get(CONF_RESOURCE)
     pin = config.get(CONF_PIN)
-    sensor_class = config.get(CONF_SENSOR_CLASS)
+    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
 
     try:
         response = requests.get(resource, timeout=10).json()
@@ -49,18 +51,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([ArestBinarySensor(
         arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-        sensor_class, pin)])
+        device_class, pin)])
 
 
 class ArestBinarySensor(BinarySensorDevice):
     """Implement an aREST binary sensor for a pin."""
 
-    def __init__(self, arest, resource, name, sensor_class, pin):
+    def __init__(self, arest, resource, name, device_class, pin):
         """Initialize the aREST device."""
         self.arest = arest
         self._resource = resource
         self._name = name
-        self._sensor_class = sensor_class
+        self._device_class = device_class
         self._pin = pin
         self.update()
 
@@ -81,9 +83,9 @@ class ArestBinarySensor(BinarySensorDevice):
         return bool(self.arest.data.get('state'))
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of this sensor."""
-        return self._sensor_class
+        return self._device_class
 
     def update(self):
         """Get the latest data from aREST API."""

@@ -48,9 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
-    def __init__(self, value, sensor_class):
+    def __init__(self, value, device_class):
         """Initialize the sensor."""
-        self._sensor_type = sensor_class
+        self._sensor_type = device_class
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
 
     @property
@@ -59,8 +59,8 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         return self._value.data
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._sensor_type
 
     @property
@@ -72,9 +72,9 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, value, sensor_class, hass, re_arm_sec=60):
+    def __init__(self, value, device_class, hass, re_arm_sec=60):
         """Initialize the sensor."""
-        super(ZWaveTriggerSensor, self).__init__(value, sensor_class)
+        super(ZWaveTriggerSensor, self).__init__(value, device_class)
         self._hass = hass
         self.re_arm_sec = re_arm_sec
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
