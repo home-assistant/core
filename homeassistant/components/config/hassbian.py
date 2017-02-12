@@ -3,12 +3,10 @@ import asyncio
 import json
 import os
 
-from aiohttp import web
-
 from homeassistant.components.http import HomeAssistantView
 
 
-SAMPLE_OUTPUT = """
+_TEST_OUTPUT = """
 {
   "suites": [
     {
@@ -52,45 +50,42 @@ SAMPLE_OUTPUT = """
 def async_setup(hass):
     """Setup the hassbian config."""
     # TODO: Test if is hassbian
-    is_hassbian = 'FORCE_HASSBIAN' in os.environ
+    test_mode = 'FORCE_HASSBIAN' in os.environ
+    is_hassbian = test_mode
 
     if not is_hassbian:
-        return
+        return False
 
-    hass.http.register_view(HassbianSuitesView)
-    hass.http.register_view(HassbianSuiteInstallView)
+    hass.http.register_view(HassbianSuitesView(test_mode))
+    hass.http.register_view(HassbianSuiteInstallView(test_mode))
+
+    return True
 
 
 @asyncio.coroutine
-def hassbian_status(hass):
+def hassbian_status(hass, test_mode=False):
     """Query for the Hassbian status."""
     # TODO: fetch real output
-    cmd = ['echo', SAMPLE_OUTPUT]
-    tool = yield from asyncio.create_subprocess_exec(
-        *cmd,
-        loop=hass.loop,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.DEVNULL
-    )
+    if test_mode:
+        return json.loads(_TEST_OUTPUT)
 
-    stdout, _ = yield from tool.communicate()
-
-    try:
-        return json.loads(str(stdout, 'utf-8'))
-    except ValueError:
-        return web.Response(status=400)
+    raise Exception('Real mode not implemented yet.')
 
 
 class HassbianSuitesView(HomeAssistantView):
     """Hassbian packages endpoint."""
 
-    url = '/api/hassbian/suites'
-    name = 'api:hassbian:suites'
+    url = '/api/config/hassbian/suites'
+    name = 'api:config:hassbian:suites'
+
+    def __init__(self, test_mode):
+        """Initialize suites view."""
+        self._test_mode = test_mode
 
     @asyncio.coroutine
     def get(self, request):
         """Request suite status."""
-        inp = yield from hassbian_status(request.app['hass'])
+        inp = yield from hassbian_status(request.app['hass'], self._test_mode)
 
         # Flatten the structure a bit
         suites = {}
@@ -109,8 +104,12 @@ class HassbianSuitesView(HomeAssistantView):
 class HassbianSuiteInstallView(HomeAssistantView):
     """Hassbian packages endpoint."""
 
-    url = '/api/hassbian/suites/{suite}/install'
-    name = 'api:hassbian:suite'
+    url = '/api/config/hassbian/suites/{suite}/install'
+    name = 'api:config:hassbian:suite'
+
+    def __init__(self, test_mode):
+        """Initialize suite view."""
+        self._test_mode = test_mode
 
     @asyncio.coroutine
     def post(self, request, suite):
