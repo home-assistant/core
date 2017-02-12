@@ -53,6 +53,9 @@ introduction:
 # Enables the frontend
 frontend:
 
+# Enables configuration UI
+config:
+
 http:
   # Uncomment this to add a password (recommended!)
   # api_password: PASSWORD
