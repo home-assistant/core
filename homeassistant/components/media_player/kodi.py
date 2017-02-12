@@ -391,14 +391,15 @@ class KodiDevice(MediaPlayerDevice):
     def async_clear_playlist(self):
         return self._server.Playlist.Clear({"playlistid": 0})
     
-    def play_song(self, song_name):
-        song_id = self.find_song(song_name)
+    @asyncio.coroutine
+    def async_play_song(self, song_name):
+        song_id = yield from self.async_find_song(song_name)
         
-        asyncio.get_event_loop().run_until_complete(self.async_media_stop())
-        asyncio.get_event_loop().run_until_complete(self.async_clear_playlist())
-        asyncio.get_event_loop().run_until_complete(self.async_add_song_to_playlist(song_id))
+        yield from self.async_media_stop()
+        yield from self.async_clear_playlist()
+        yield from self.async_add_song_to_playlist(song_id)
         
-        return asyncio.get_event_loop().run_until_complete(self.async_play_media("PLAYLIST", 0))
+        yield from self.async_play_media("PLAYLIST", 0)
     
     @asyncio.coroutine
     def async_get_artists(self):
@@ -424,9 +425,10 @@ class KodiDevice(MediaPlayerDevice):
         else:
             return (yield from self._server.AudioLibrary.GetSongs(
                 {"filter": {"artistid": int(artist_id)}}))
-                
-    def find_song(self, song_name):
-        songs = asyncio.get_event_loop().run_until_complete(self.async_get_songs())
+    
+    @asyncio.coroutine     
+    def async_find_song(self, song_name):
+        songs = yield from self.async_get_songs()
         out = self._find(song_name, [a['label'] for a in songs['songs']])
         return songs['songs'][out[0][0]]['songid']
                 
@@ -446,20 +448,6 @@ if __name__ == '__main__':
     import re
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
-    song_id = kodi.find_song('comfortably and numb')
-    
-    kodi.play_song('comfortably and numb')
-    
-#     asyncio.get_event_loop().run_until_complete(kodi.async_media_stop())
-#     asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
-#     asyncio.get_event_loop().run_until_complete(kodi.async_add_song_to_playlist(song_id))
-#     pl = asyncio.get_event_loop().run_until_complete(kodi._server.Playlist.GetPlaylists())
-#     pl_i = asyncio.get_event_loop().run_until_complete(kodi._server.Playlist.GetItems({'playlistid': 0}))
-#     asyncio.get_event_loop().run_until_complete(kodi._server.Player.Open({"item": {"playlistid": 0}}))
-    
-    print(songs)
-    print(song_id)
-    #print(pl_i)
+    asyncio.get_event_loop().run_until_complete(kodi.async_play_song('too much love kill you'))
     
     
