@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -67,15 +67,6 @@ def async_setup_platform(hass, config, async_add_entities,
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
     entity = AppleTvDevice(atv, name)
 
-    @asyncio.coroutine
-    def async_stop_subscription(event):
-        """Logout device to close its session."""
-        _LOGGER.info("Closing Apple TV session")
-        yield from atv.logout()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                               async_stop_subscription)
-
     yield from async_add_entities([entity], update_before_add=True)
 
 
@@ -87,7 +78,6 @@ class AppleTvDevice(MediaPlayerDevice):
         self._name = name
         self._atv = atv
         self._playing = None
-        self._artwork = None
         self._artwork_hash = None
 
     @property
@@ -121,12 +111,11 @@ class AppleTvDevice(MediaPlayerDevice):
         try:
             playing = yield from self._atv.metadata.playing()
 
-            if self._should_download_artwork(playing):
-                self._artwork = None
-                self._artwork_hash = None
-                self._artwork = yield from self._atv.metadata.artwork()
-                if self._artwork:
-                    self._artwork_hash = hashlib.md5(self._artwork).hexdigest()
+            if self._has_playing_media_changed(playing):
+                base = str(playing.title) + str(playing.artist) + \
+                    str(playing.album) + str(playing.total_time)
+                self._artwork_hash = hashlib.md5(
+                    base.encode('utf-8')).hexdigest()
 
             self._playing = playing
         except exceptions.AuthenticationError as ex:
@@ -136,7 +125,7 @@ class AppleTvDevice(MediaPlayerDevice):
         except asyncio.TimeoutError:
             _LOGGER.warning('timed out while connecting to Apple TV')
 
-    def _should_download_artwork(self, new_playing):
+    def _has_playing_media_changed(self, new_playing):
         if self._playing is None:
             return True
         old_playing = self._playing
@@ -181,9 +170,14 @@ class AppleTvDevice(MediaPlayerDevice):
         yield from self._atv.remote_control.play_url(media_id, 0)
 
     @property
-    def media_image(self):
-        """Artwork for what is currently playing."""
-        return self._artwork, 'image/png', self._artwork_hash
+    def media_image_hash(self):
+        """Hash value for media image."""
+        return self._artwork_hash
+
+    @asyncio.coroutine
+    def async_get_media_image(self):
+        """Fetch media image of current playing image."""
+        return (yield from self._atv.metadata.artwork()), 'image/png'
 
     @property
     def media_title(self):
