@@ -237,7 +237,7 @@ def _setup_discovery(hass, config):
         _LOGGER.error("Unable to load MQTT discovery")
         return None
 
-    success = discovery.start(hass, conf[CONF_DISCOVERY_PREFIX], config)
+    success = discovery.async_start(hass, conf[CONF_DISCOVERY_PREFIX], config)
 
     return success
 
