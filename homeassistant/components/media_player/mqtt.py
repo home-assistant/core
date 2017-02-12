@@ -1,8 +1,48 @@
 """
-Support for interfacing with MQTT receivers.
+Support for interfacing with MQTT enabled Media Players.
 
-For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.mqtt/
+Configuration:
+
+To use the media_player/mqtt component you will need to adapt (should be more or less self explaining)
+the following configuration and add it to your configuration.yaml file.
+
+media_player:
+  - platform: mqtt
+    name: Harmann Kardon AVR265
+    min_volume: 0
+    max_volume: 35
+    volume:
+      status_topic: "stat/AVR/VOL"
+      command_set_topic: "cmnd/AVR/SET_VOL"
+      command_up_topic: "cmnd/AVR/VOL_UP"
+      command_down_topic: "cmnd/AVR/VOL_DOWN"
+    power:
+      status_topic: "stat/AVR/POWER_Z1"
+      command_topic: "cmnd/AVR/POWER_Z1"
+    mute:
+      status_topic: "stat/AVR/MUTE_Z1"
+      command_topic: "cmnd/AVR/MUTE"
+    sources:
+      status_topic: "stat/AVR/INPUT"
+      command_topic: "cmnd/AVR/INPUT"
+      options:
+         - SAT
+         - BLURAY
+         - BRIDGE
+         - DVR
+         - SIRIUS
+         - FM
+         - AM
+         - TV
+         - GAME
+         - MEDIA
+         - AUX
+         - INET_RADIO
+         - NETWORK
+         - SRC_A
+         - SRC_B
+         - SRC_C
+         - SRC_D
 """
 import logging
 
@@ -130,7 +170,6 @@ class MQTT_MEDIA(MediaPlayerDevice):
 
     def message_power_changed(self, topic, payload, qos):
         """A new MQTT power message has been received."""
-        print("got power changed %s" %payload)
         if payload.upper() == "ON":
             self._state=STATE_ON
         if payload.upper() == "OFF":
@@ -146,7 +185,6 @@ class MQTT_MEDIA(MediaPlayerDevice):
 
     def message_mute_changed(self, topic, payload, qos):
         """A new MQTT mute message has been received."""
-        print("got mute changed %s" %payload)
         if payload.upper() == "ON":
             self._mute=True
         if payload.upper() == "OFF":
