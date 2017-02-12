@@ -451,6 +451,25 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        url = self.media_image_url
+
+        if url is not None:
+            return hashlib.md5(url.encode('utf-8')).hexdigest()[:5]
+
+        return None
+
+    @asyncio.coroutine
+    def async_get_media_image(self):
+        """Fetch media image of current playing image."""
+        url = self.media_image_url
+        if url is None:
+            return None, None
+
+        return (yield from _async_fetch_image(self.hass, url))
+
+    @property
     def media_title(self):
         """Title of current playing media."""
         return None
@@ -808,14 +827,13 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
-        url = self.media_image_url
+        image_hash = self.media_image_hash
 
-        if url is None:
+        if image_hash is None:
             return None
 
         return ENTITY_IMAGE_URL.format(
-            self.entity_id, self.access_token,
-            hashlib.md5(url.encode('utf-8')).hexdigest()[:5])
+            self.entity_id, self.access_token, image_hash)
 
     @property
     def state_attributes(self):
@@ -909,8 +927,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        data, content_type = yield from _async_fetch_image(
-            request.app['hass'], player.media_image_url)
+        data, content_type = yield from player.async_get_media_image()
 
         if data is None:
             return web.Response(status=500)
