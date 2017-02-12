@@ -97,9 +97,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._current_temperature = self.get_value(
             class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL,
             label=['Temperature'], member='data')
-        self._unit = self.get_value(
+        device_unit = self.get_value(
             class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL,
             label=['Temperature'], member='units')
+        if device_unit is not None:
+            self._unit = device_unit
 
         # Fan Mode
         self._current_fan_mode = self.get_value(
