@@ -135,6 +135,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class MQTTMedia(MediaPlayerDevice):
     """Representation of a MQTT_MEDIA Receiver."""
+
     def __init__(
             self,
             hass,
@@ -160,7 +161,6 @@ class MQTTMedia(MediaPlayerDevice):
         self._payload_off = "OFF"
         self._payload_on = "ON"
         self._retain = False
-
         self._qos = 0
 
         mqtt.subscribe(
