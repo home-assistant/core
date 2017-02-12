@@ -26,6 +26,6 @@ class CheckConfigView(HomeAssistantView):
         state = 'invalid' if errors else 'valid'
 
         return self.json({
-          "result": state,
-          "errors": errors,
+            "result": state,
+            "errors": errors,
         })
