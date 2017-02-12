@@ -21,7 +21,10 @@ def tracking(str):
         13 characters'.format(tracking_number))
     else:
         headers = {'Cookie': 'lang=en'}
-        r = requests.post('http://www.elta-courier.gr/track.php', data={'number': tracking_number}, headers=headers)
+        r = requests.post(
+            'http://www.elta-courier.gr/track.php',
+            data={'number': tracking_number},
+            headers=headers)
         t_result = r.json()['result'][tracking_number]['result']
         if t_result != 'wrong number':
             p_date = t_result[-1]['date']
