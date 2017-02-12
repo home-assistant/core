@@ -376,6 +376,9 @@ class KodiDevice(MediaPlayerDevice):
         if media_type == "CHANNEL":
             return self._server.Player.Open(
                 {"item": {"channelid": int(media_id)}})
+        elif media_type == "PLAYLIST":
+            return self._server.Player.Open(
+                {"item": {"playlistid": int(media_id)}})
         else:
             return self._server.Player.Open(
                 {"item": {"file": str(media_id)}})
