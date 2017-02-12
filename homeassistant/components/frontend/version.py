@@ -12,7 +12,7 @@ FINGERPRINTS = {
     "panels/ha-panel-dev-template.html": "2b618508510afa5281c9ecae0c3a3dbd",
     "panels/ha-panel-history.html": "8955c1d093a2c417c89ed90dd627c7d3",
     "panels/ha-panel-iframe.html": "d920f0aa3c903680f2f8795e2255daab",
-    "panels/ha-panel-logbook.html": "f36297a894524518fa70883f264492b0",
+    "panels/ha-panel-logbook.html": "7eb06cf9fdeab6683bcd755276f571aa",
     "panels/ha-panel-map.html": "9c8c7924ba8f731560c9f4093835cc26",
     "websocket_test.html": "575de64b431fe11c3785bf96d7813450"
 }
