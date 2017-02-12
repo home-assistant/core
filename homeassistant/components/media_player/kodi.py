@@ -388,6 +388,19 @@ class KodiDevice(MediaPlayerDevice):
         return self._server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
     
     @asyncio.coroutine
+    def async_clear_playlist(self):
+        return self._server.Playlist.Clear({"playlistid": 0})
+    
+    def play_song(self, song_name):
+        song_id = self.find_song(song_name)
+        
+        asyncio.get_event_loop().run_until_complete(self.async_media_stop())
+        asyncio.get_event_loop().run_until_complete(self.async_clear_playlist())
+        asyncio.get_event_loop().run_until_complete(self.async_add_song_to_playlist(song_id))
+        
+        return asyncio.get_event_loop().run_until_complete(self.async_play_media("PLAYLIST", 0))
+    
+    @asyncio.coroutine
     def async_get_artists(self):
         return (yield from self._server.AudioLibrary.GetArtists())
     
@@ -433,9 +446,20 @@ if __name__ == '__main__':
     import re
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    art = 'pink floyd'
-    out = kodi.find_artist(art)
+    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
+    song_id = kodi.find_song('comfortably and numb')
     
-    print(out)
+    kodi.play_song('comfortably and numb')
+    
+#     asyncio.get_event_loop().run_until_complete(kodi.async_media_stop())
+#     asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
+#     asyncio.get_event_loop().run_until_complete(kodi.async_add_song_to_playlist(song_id))
+#     pl = asyncio.get_event_loop().run_until_complete(kodi._server.Playlist.GetPlaylists())
+#     pl_i = asyncio.get_event_loop().run_until_complete(kodi._server.Playlist.GetItems({'playlistid': 0}))
+#     asyncio.get_event_loop().run_until_complete(kodi._server.Player.Open({"item": {"playlistid": 0}}))
+    
+    print(songs)
+    print(song_id)
+    #print(pl_i)
     
     
