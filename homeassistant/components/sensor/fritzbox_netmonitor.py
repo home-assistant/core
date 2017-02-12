@@ -1,26 +1,42 @@
 """
-Support for monitoring the local system.
+Support for monitoring an AVM Fritz!Box router.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.systemmonitor/
+https://home-assistant.io/components/sensor.fritzbox_netmonitor/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST, CONF_RESOURCES, CONF_TYPE)
-from homeassistant.components import group
+from homeassistant.const import (CONF_HOST, STATE_UNAVAILABLE)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
+
+from requests.exceptions import RequestException
 
 REQUIREMENTS = ['fritzconnection==0.6']
 
-GROUP_NAME_ALL_DEVICES = 'fritz status'
-ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('fritz_status')
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
+
+ATTR_IS_LINKED = "is_linked"
+ATTR_IS_CONNECTED = "is_connected"
+ATTR_WAN_ACCESS_TYPE = "wan_access_type"
+ATTR_EXTERNAL_IP = "external_ip"
+ATTR_UPTIME = "uptime"
+ATTR_BYTES_SENT = "bytes_sent"
+ATTR_BYTES_RECEIVED = "bytes_received"
+ATTR_MAX_BYTE_RATE_UP = "max_byte_rate_up"
+ATTR_MAX_BYTE_RATE_DOWN = "max_byte_rate_down"
+
+STATE_ONLINE = 'online'
+STATE_OFFLINE = 'offline'
+
+ICON = 'mdi:web'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
@@ -28,38 +44,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _LOGGER = logging.getLogger(__name__)
 
-SENSOR_TYPES = {
-    'is_linked': ['Link active', '', 'mdi:web'],
-    'is_connected': ['Connection status', '', 'mdi:web'],
-    'wan_access_type': ['Connection type', '', 'mdi:web'],
-    'external_ip': ['External IP address', '', 'mdi:server-network'],
-    'uptime': ['Uptime', 's', 'mdi:clock'],
-    'bytes_sent': ['Bytes sent', 'bytes', 'mdi:server-network'],
-    'bytes_received': ['Bytes received', 'bytes', 'mdi:server-network'],
-    'transmission_rate_up': ['Upstream', 'bytes/s', 'mdi:server-network'],
-    'transmission_rate_down': ['Downstream', 'bytes/s', 'mdi:server-network'],
-
-    'max_byte_rate_up': ['Maximum upstream-rate', 'bytes/s',
-                         'mdi:server-network'],
-    'max_byte_rate_down': ['Maximum downstream-rate', 'bytes/s',
-                           'mdi:server-network'],
-    'max_bit_rate_up': ['Maximum upstream-rate', 'bits/s',
-                        'mdi:server-network'],
-    'max_bit_rate_down': ['Maximum downstream-rate', 'bits/s',
-                          'mdi:server-network'],
-}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the fritzbox monitor sensors."""
     # pylint: disable=import-error
     import fritzconnection as fc
+    from fritzconnection.fritzconnection import FritzConnectionException
 
     host = config[CONF_HOST]
 
     try:
         fstatus = fc.FritzStatus(address=host)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, FritzConnectionException):
         fstatus = None
 
     if fstatus is None:
@@ -69,31 +65,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         _LOGGER.info('Successfully connected to FRITZ!Box')
 
-    devices = []
-    for resource in config[CONF_RESOURCES]:
-        if 'arg' not in resource:
-            resource['arg'] = ''
-        devices.append(FritzboxMonitorSensor(fstatus,
-                                             resource[CONF_TYPE],
-                                             resource['arg']))
-
+    sensor = FritzboxMonitorSensor(fstatus)
+    devices = [sensor]
     add_devices(devices)
-
-    entity_ids = (dev.entity_id for dev in devices)
-    group.Group.create_group(hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
 
 class FritzboxMonitorSensor(Entity):
     """Implementation of a fritzbox monitor sensor."""
 
-    def __init__(self, fstatus, sensor_type, argument=''):
+    def __init__(self, fstatus):
         """Initialize the sensor."""
-        self._name = '{} {}'.format(SENSOR_TYPES[sensor_type][0], argument)
-        self.argument = argument
-        self.type = sensor_type
-        self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._name = 'fritz_netmonitor'
         self._fstatus = fstatus
+        self._state = STATE_UNAVAILABLE
         self.update()
 
     @property
@@ -104,7 +88,7 @@ class FritzboxMonitorSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        return ICON
 
     @property
     def state(self):
@@ -112,35 +96,38 @@ class FritzboxMonitorSensor(Entity):
         return self._state
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
+    def state_attributes(self):
+        """Return the device state attributes."""
+        # Don't return attributes if FritzBox is unreachable
+        if self._state == STATE_UNAVAILABLE:
+            return {}
+        attr = {
+            ATTR_IS_LINKED: self._is_linked,
+            ATTR_IS_CONNECTED: self._is_connected,
+            ATTR_WAN_ACCESS_TYPE: self._wan_access_type,
+            ATTR_EXTERNAL_IP: self._external_ip,
+            ATTR_UPTIME: self._uptime,
+            ATTR_BYTES_SENT: self._bytes_sent,
+            ATTR_BYTES_RECEIVED: self._bytes_received,
+            ATTR_MAX_BYTE_RATE_UP: self._max_byte_rate_up,
+            ATTR_MAX_BYTE_RATE_DOWN: self._max_byte_rate_down,
+        }
+        return attr
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest system information."""
-        if self.type == 'is_linked':
-            self._state = self._fstatus.is_linked
-        elif self.type == 'is_connected':
-            self._state = self._fstatus.is_connected
-        elif self.type == 'wan_access_type':
-            self._state = self._fstatus.wan_access_type
-        elif self.type == 'external_ip':
-            self._state = self._fstatus.external_ip
-        elif self.type == 'uptime':
-            self._state = self._fstatus.uptime
-        elif self.type == 'bytes_sent':
-            self._state = self._fstatus.bytes_sent
-        elif self.type == 'bytes_received':
-            self._state = self._fstatus.bytes_received
-        elif self.type == 'transmission_rate_up':
-            self._state = self._fstatus.transmission_rate[0]
-        elif self.type == 'transmission_rate_down':
-            self._state = self._fstatus.transmission_rate[1]
-        elif self.type == 'max_byte_rate_up':
-            self._state = self._fstatus.max_byte_rate[0]
-        elif self.type == 'max_byte_rate_down':
-            self._state = self._fstatus.max_byte_rate[1]
-        elif self.type == 'max_bit_rate_up':
-            self._state = self._fstatus.max_bit_rate[0]
-        elif self.type == 'max_bit_rate_down':
-            self._state = self._fstatus.max_bit_rate[1]
+        """Retrieve information from the FritzBox."""
+        try:
+            self._is_linked = self._fstatus.is_linked
+            self._is_connected = self._fstatus.is_connected
+            self._wan_access_type = self._fstatus.wan_access_type
+            self._external_ip = self._fstatus.external_ip
+            self._uptime = self._fstatus.uptime
+            self._bytes_sent = self._fstatus.bytes_sent
+            self._bytes_received = self._fstatus.bytes_received
+            self._max_byte_rate_up = self._fstatus.max_byte_rate[0]
+            self._max_byte_rate_down = self._fstatus.max_byte_rate[1]
+            self._state = STATE_ONLINE if self._is_connected else STATE_OFFLINE
+        except RequestException as err:
+            self._state = STATE_UNAVAILABLE
+            _LOGGER.warning('Could not reach Fritzbox: %s', err)
