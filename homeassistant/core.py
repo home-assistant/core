@@ -396,7 +396,7 @@ class EventBus(object):
         listeners = get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
-        if event_type not in EVENT_HOMEASSISTANT_CLOSE:
+        if event_type != EVENT_HOMEASSISTANT_CLOSE:
             listeners += get(MATCH_ALL, [])
 
         event = Event(event_type, event_data, origin)
