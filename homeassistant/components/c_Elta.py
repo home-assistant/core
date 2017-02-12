@@ -4,7 +4,7 @@ import logging
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'c_Elta'
 REQUIREMENTS = ['requests==2.13.0','pycountry==17.1.8']
-#DEPENDENCIES = []
+# DEPENDENCIES = []
 ATTR_CODE = 'code'
 DEFAULT_CODE = 'null'
 
@@ -22,12 +22,14 @@ def tracking(str):
             p_date = t_result[-1]['date']
             p_time = t_result[-1]['time']
             p_status = t_result[-1]['status']
-            result = (p_date +" "+ p_time + " "+ p_status)
+            result = (p_date + " " + p_time + " " + p_status)
         else:
             result = ('wrong number')
-        #Country_origin = pycountry.countries.lookup(tracking_number[-2:])
-        #print ('Origin is: '+ Country_origin.name)
+        # Country_origin = pycountry.countries.lookup(tracking_number[-2:])
+        # print ('Origin is: '+ Country_origin.name)
     return (result)
+
+
 def setup(hass, config):
     code = config[DOMAIN].get(ATTR_CODE, DEFAULT_CODE)
     wd = tracking(code)
