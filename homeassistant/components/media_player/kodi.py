@@ -380,12 +380,9 @@ class KodiDevice(MediaPlayerDevice):
             return self._server.Player.Open(
                 {"item": {"file": str(media_id)}})
             
-    def add_song_to_playlist(self, song_id):
-        """Set volume level, range 0..1.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self._server.Playist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
+    @asyncio.coroutine
+    def async_add_song_to_playlist(self, song_id):
+        return self._server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
     
     @asyncio.coroutine
     def async_get_artists(self):
