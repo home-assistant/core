@@ -1,3 +1,4 @@
+"""HA Elta tracking based on https://github.com/apo-mak/courier."""
 import logging
 
 _LOGGER = logging.getLogger(__name__)
@@ -9,12 +10,15 @@ DEFAULT_CODE = 'null'
 
 
 def tracking(str):
+    """"request for josn web post."""
     import requests
 
     tracking_number = str
     if len(tracking_number) != 13:
-        result = ' the ', tracking_number,' dose not seem like an ELTA tracking number...'
-        _LOGGER.error('Invalid key {0}. Key must be 13 characters'.format(tracking_number))
+        result = ' the ', tracking_number, ' dose not seem like an ELTA \
+        tracking number...'
+        _LOGGER.error('Invalid key {0}. Key must be \
+        13 characters'.format(tracking_number))
     else:
         headers = {'Cookie': 'lang=en'}
         r = requests.post('http://www.elta-courier.gr/track.php', data={'number': tracking_number}, headers=headers)
@@ -32,6 +36,7 @@ def tracking(str):
 
 
 def setup(hass, config):
+    """HA setup."""
     code = config[DOMAIN].get(ATTR_CODE, DEFAULT_CODE)
     wd = tracking(code)
     hass.states.set('c_Elta.trcode', wd)
