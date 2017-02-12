@@ -238,29 +238,38 @@ def nice_print_node(node):
 
 def get_config_value(node, value_index):
     """Return the current configuration value for a specific index."""
-    try:
+    def try_once(node, value_index):
         for value in node.values.values():
             # 112 == config command class
             if value.command_class == 112 and value.index == value_index:
                 return value.data
-    except RuntimeError:
-        # If we get an runtime error the dict has changed while
-        # we was looking for a value, just do it again
-        return get_config_value(node, value_index)
+        return None
+
+    for _ in range(5):
+        try:
+            return try_once(node, value_index)
+        except RuntimeError:
+            # If we get an runtime error the dict has changed while
+            # we was looking for a value, just do it again
+            pass
+    return None
 
 
 def _get_wakeup(node):
     """Return wakeup interval of the node or None if node is not wakable."""
-    try:
+    def try_once(node):
         if node.can_wake_up():
             for value_id in node.get_values(
                     class_id=const.COMMAND_CLASS_WAKE_UP):
                 return node.values[value_id].data
-    except RuntimeError:
-        # If we get an runtime error the dict has changed while
-        # we was looking for a value, just do it again
-        return _get_wakeup(node)
-
+        return None 
+    for _ in range(5):
+        try:
+            return try_once(node)
+        except RuntimeError:
+            # If we get an runtime error the dict has changed while
+            # we was looking for a value, just do it again
+            pass
     return None
 
 
