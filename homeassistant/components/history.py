@@ -223,7 +223,12 @@ class HistoryPeriodView(HomeAssistantView):
 
         now = dt_util.utcnow()
 
-        one_day = timedelta(days=1)
+        days = request.GET.get('days')
+        if days:
+            days = int(days)
+        else:
+            days = 1
+        day_delta = timedelta(days=days)
 
         if datetime:
             start_time = dt_util.as_utc(datetime)
@@ -232,8 +237,7 @@ class HistoryPeriodView(HomeAssistantView):
 
         if start_time > now:
             return self.json([])
-
-        end_time = start_time + one_day
+        end_time = start_time + day_delta
         entity_id = request.GET.get('filter_entity_id')
 
         result = yield from request.app['hass'].loop.run_in_executor(
