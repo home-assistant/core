@@ -14,6 +14,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoCover(hass, 'Kitchen Window'),
         DemoCover(hass, 'Hall Window', 10),
         DemoCover(hass, 'Living Room Window', 70, 50),
+        DemoCover(hass, 'Garage Door', device_class='garage'),
     ])
 
 
@@ -21,11 +22,13 @@ class DemoCover(CoverDevice):
     """Representation of a demo cover."""
 
     # pylint: disable=no-self-use
-    def __init__(self, hass, name, position=None, tilt_position=None):
+    def __init__(self, hass, name, position=None, tilt_position=None,
+                 device_class=None):
         """Initialize the cover."""
         self.hass = hass
         self._name = name
         self._position = position
+        self._device_class = device_class
         self._set_position = None
         self._set_tilt_position = None
         self._tilt_position = tilt_position
@@ -33,6 +36,10 @@ class DemoCover(CoverDevice):
         self._closing_tilt = True
         self._unsub_listener_cover = None
         self._unsub_listener_cover_tilt = None
+        if position is None:
+            self._closed = True
+        else:
+            self._closed = self.current_cover_position <= 0
 
     @property
     def name(self):
@@ -57,17 +64,20 @@ class DemoCover(CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        if self._position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
-        else:
-            return None
+        return self._closed
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return self._device_class
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self._position in (0, None):
+        if self._position == 0:
+            return
+        elif self._position is None:
+            self._closed = True
+            self.schedule_update_ha_state()
             return
 
         self._listen_cover()
@@ -83,7 +93,11 @@ class DemoCover(CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self._position in (100, None):
+        if self._position == 100:
+            return
+        elif self._position is None:
+            self._closed = False
+            self.schedule_update_ha_state()
             return
 
         self._listen_cover()
@@ -149,6 +163,9 @@ class DemoCover(CoverDevice):
 
         if self._position in (100, 0, self._set_position):
             self.stop_cover()
+
+        self._closed = self.current_cover_position <= 0
+
         self.schedule_update_ha_state()
 
     def _listen_cover_tilt(self):

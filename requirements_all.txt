@@ -137,6 +137,9 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.fastdotcom
 fastdotcom==0.0.1
 
+# homeassistant.components.sensor.fedex
+fedexdeliverymanager==1.0.1
+
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
@@ -171,13 +174,16 @@ gTTS-token==1.1.1
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.5.5
+google-api-python-client==1.6.2
 
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
 
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
+
+# homeassistant.components.media_player.gstreamer
+gstreamer-player==1.0.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.4
@@ -332,7 +338,7 @@ miflora==0.1.15
 mutagen==1.36.2
 
 # homeassistant.components.sensor.usps
-myusps==1.0.2
+myusps==1.0.3
 
 # homeassistant.components.discovery
 netdisco==0.8.2
@@ -341,7 +347,7 @@ netdisco==0.8.2
 neurio==0.3.1
 
 # homeassistant.components.google
-oauth2client==3.0.0
+oauth2client==4.0.0
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
@@ -575,13 +581,13 @@ pyvera==0.2.23
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.11
+pywemo==0.4.12
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.1
+qnapstats==0.2.2
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
@@ -668,6 +674,9 @@ twilio==5.7.0
 # homeassistant.components.sensor.uber
 uber_rides==0.2.7
 
+# homeassistant.components.sensor.ups
+upsmychoice==1.0.1
+
 # homeassistant.components.device_tracker.unifi
 urllib3
 
@@ -681,7 +690,7 @@ volvooncall==0.1.1
 vsure==0.11.1
 
 # homeassistant.components.sensor.vasttrafik
-vtjp==0.1.11
+vtjp==0.1.14
 
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.webostv

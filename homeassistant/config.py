@@ -53,6 +53,9 @@ introduction:
 # Enables the frontend
 frontend:
 
+# Enables configuration UI
+config:
+
 http:
   # Uncomment this to add a password (recommended!)
   # api_password: PASSWORD
@@ -463,22 +466,15 @@ def async_check_ha_config_file(hass):
 
     This method is a coroutine.
     """
-    import homeassistant.components.persistent_notification as pn
-
     proc = yield from asyncio.create_subprocess_exec(
-        sys.argv[0],
-        '--script',
-        'check_config',
-        stdout=asyncio.subprocess.PIPE)
+        sys.executable, '-m', 'homeassistant', '--script',
+        'check_config', '--config', hass.config.config_dir,
+        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
     # Wait for the subprocess exit
-    (stdout_data, dummy) = yield from proc.communicate()
+    stdout_data, dummy = yield from proc.communicate()
     result = yield from proc.wait()
-    if result:
-        content = re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
-        # Put error cleaned from color codes in the error log so it
-        # will be visible at the UI.
-        _LOGGER.error(content)
-        pn.async_create(
-            hass, "Config error. See dev-info panel for details.",
-            "Config validating", "{0}.check_config".format(CONF_CORE))
-        raise HomeAssistantError("Invalid config")
+
+    if not result:
+        return None
+
+    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
