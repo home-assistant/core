@@ -171,7 +171,7 @@ gTTS-token==1.1.1
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.5.5
+google-api-python-client==1.6.2
 
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
@@ -341,7 +341,7 @@ netdisco==0.8.2
 neurio==0.3.1
 
 # homeassistant.components.google
-oauth2client==3.0.0
+oauth2client==4.0.0
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
