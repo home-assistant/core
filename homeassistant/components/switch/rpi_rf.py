@@ -84,8 +84,10 @@ class RPiRFSwitch(SwitchDevice):
         self._pulselength = pulselength
         self._code_on = code_on
         self._code_off = code_off
-        self._code_on_list = [int(item_on) for item_on in self._code_on.split(',')]
-        self._code_off_list = [int(item_off) for item_off in self._code_off.split(',')]
+        self._code_on_list = [int(item_on) for item_on in
+                              self._code_on.split(',')]
+        self._code_off_list = [int(item_off) for item_off in
+                               self._code_off.split(',')]
         self._rfdevice.tx_repeat = signal_repetitions
 
     @property
@@ -112,12 +114,14 @@ class RPiRFSwitch(SwitchDevice):
 
     def turn_on(self):
         """Turn the switch on."""
-        if self._send_code(self._code_on_list, self._protocol, self._pulselength):
+        if self._send_code(self._code_on_list, self._protocol,
+                           self._pulselength):
             self._state = True
             self.update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
-        if self._send_code(self._code_off_list, self._protocol, self._pulselength):
+        if self._send_code(self._code_off_list, self._protocol,
+                           self._pulselength):
             self._state = False
             self.update_ha_state()
