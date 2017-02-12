@@ -182,6 +182,9 @@ googlemaps==2.4.4
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
 
+# homeassistant.components.media_player.gstreamer
+gstreamer-player==1.0.0
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.4
 
