@@ -1,15 +1,16 @@
-import requests
 import logging
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'c_Elta'
-REQUIREMENTS = ['requests==2.13.0','pycountry==17.1.8']
+REQUIREMENTS = [ 'pycountry==17.1.8' ]
 # DEPENDENCIES = []
 ATTR_CODE = 'code'
 DEFAULT_CODE = 'null'
 
 
 def tracking(str):
+    import requests
+
     tracking_number = str
     if len(tracking_number) != 13:
         result = ' the ' ,tracking_number,' dose not seem like an ELTA tracking number...'
