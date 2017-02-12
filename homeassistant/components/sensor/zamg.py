@@ -5,8 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zamg/
 """
 import csv
-import logging
 from datetime import datetime, timedelta
+import gzip
+import json
+import logging
+import os
 
 import pytz
 import requests
@@ -18,7 +21,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED)
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, __version__)
+    CONF_MONITORED_CONDITIONS, CONF_NAME, __version__,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -56,17 +60,25 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_STATION_ID): cv.string,
+    vol.Optional(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZAMG sensor platform."""
-    station_id = config.get(CONF_STATION_ID)
     name = config.get(CONF_NAME, DEFAULT_NAME)
-
     logger = logging.getLogger(__name__)
+
+    station_id = config.get(CONF_STATION_ID) or closest_station(
+        config.get(CONF_LATITUDE),
+        config.get(CONF_LONGITUDE),
+        hass.config.config_dir)
+    if station_id not in zamg_stations(hass.config.config_dir):
+        logger.error("Configured ZAMG %s (%s) is not a known station",
+                     CONF_STATION_ID, station_id)
+        return False
+
     probe = ZamgData(station_id=station_id, logger=logger)
     try:
         probe.update()
@@ -141,6 +153,18 @@ class ZamgData(object):
             return datetime.strptime(date + time, '%d-%m-%Y%H:%M').replace(
                 tzinfo=pytz.timezone('Europe/Vienna'))
 
+    @classmethod
+    def current_observations(cls):
+        """Fetch the latest CSV data."""
+        try:
+            response = requests.get(
+                cls.API_URL, headers=cls.API_HEADERS, timeout=15)
+            response.raise_for_status()
+            return csv.DictReader(response.text.splitlines(),
+                                  delimiter=';', quotechar='"')
+        except Exception:  # pylint:disable=broad-except
+            logging.getLogger(__name__).exception("While fetching data")
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from ZAMG."""
@@ -148,28 +172,7 @@ class ZamgData(object):
                                  datetime.utcnow().replace(tzinfo=pytz.utc)):
             return  # Not time to update yet; data is only hourly
 
-        try:
-            response = requests.get(
-                self.API_URL, headers=self.API_HEADERS, timeout=15)
-        except requests.exceptions.RequestException:
-            self._logger.exception("While fetching data from server")
-            return
-
-        if response.status_code != 200:
-            self._logger.error("API call returned with status %s",
-                               response.status_code)
-            return
-
-        content_type = response.headers.get('Content-Type', 'whatever')
-        if content_type != 'text/csv':
-            self._logger.error("Expected text/csv but got %s", content_type)
-            return
-
-        response.encoding = 'UTF8'
-        content = response.text
-        data = (line for line in content.split('\n'))
-        reader = csv.DictReader(data, delimiter=';', quotechar='"')
-        for row in reader:
+        for row in self.current_observations():
             if row.get('Station') == self._station_id:
                 api_fields = {col_heading: (standard_name, dtype)
                               for standard_name, (_, _, col_heading, dtype)
@@ -178,13 +181,54 @@ class ZamgData(object):
                     api_fields.get(col_heading)[0]:
                         api_fields.get(col_heading)[1](v.replace(',', '.'))
                     for col_heading, v in row.items()
-                    if col_heading in self.API_FIELDS and v}
+                    if col_heading in api_fields and v}
                 break
         else:
             raise ValueError('No weather data for station {}'
                              .format(self._station_id))
 
-
     def get_data(self, variable):
         """Generic accessor for data."""
         return self.data.get(variable)
+
+
+def _get_zamg_stations():
+    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
+    capital_stations = {r['Station'] for r in ZamgData.current_observations()}
+    url = ('https://www.zamg.ac.at/cms/en/documents/climate/doc_metnetwork/'
+           'zamg-observation-points')
+    return {e['SYNNR']: tuple(float(e[k].replace(',', '.'))
+                              for k in ['BREITE_DEZI', 'LÄNGR_DEI'])
+            for e in csv.DictReader(requests.get(url).text.splitlines(),
+                                    delimiter=';', quotechar='"')
+            if e['SYNNR'] in capital_stations}
+
+
+def zamg_stations(cache_dir):
+    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
+
+    Results from internet requests are cached as compressed json, making
+    subsequent calls very much faster.
+    """
+    cache_file = os.path.join(cache_dir, '.zamg-stations.json.gz')
+    if not os.path.isfile(cache_file):
+        stations = _get_zamg_stations()
+        with gzip.open(cache_file, 'wt') as cache:
+            json.dump(stations, cache, sort_keys=True)
+        return stations
+    with gzip.open(cache_file, 'rt') as cache:
+        return {k: tuple(v) for k, v in json.load(cache).items()}
+
+
+def closest_station(lat, lon, cache_dir):
+    """Return the ZONE_ID.WMO_ID of the closest station to our lat/lon."""
+    if lat is None or lon is None or not os.path.isdir(cache_dir):
+        return
+    stations = zamg_stations(cache_dir)
+
+    def comparable_dist(zamg_id):
+        """A fast key function for psudeo-distance from lat/lon."""
+        station_lat, station_lon = stations[zamg_id]
+        return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
+
+    return min(stations, key=comparable_dist)
