@@ -161,9 +161,9 @@ def async_setup(hass, config):
             return
 
         if errors:
-            pn = get_component('persistent_notification')
+            notif = get_component('persistent_notification')
             _LOGGER.error(errors)
-            pn.async_create(
+            notif.async_create(
                 hass, "Config error. See dev-info panel for details.",
                 "Config validating", "{0}.check_config".format(ha.DOMAIN))
             return
