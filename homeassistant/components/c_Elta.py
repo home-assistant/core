@@ -12,11 +12,11 @@ DEFAULT_CODE = 'null'
 def tracking(str):
     tracking_number = str
     if len(tracking_number) != 13:
-        result = ' the ',tracking_number,' dose not seem like an ELTA tracking number...'
+        result = ' the ' ,tracking_number,' dose not seem like an ELTA tracking number...'
         _LOGGER.error('Invalid key {0}. Key must be 13 characters'.format(tracking_number))
     else:
         headers = {'Cookie': 'lang=en'}
-        r = requests.post('http://www.elta-courier.gr/track.php', data = { 'number': tracking_number}, headers=headers)
+        r = requests.post('http://www.elta-courier.gr/track.php', data = {'number': tracking_number}, headers=headers)
         t_result = r.json()['result'][tracking_number]['result']
         if t_result != 'wrong number':
             p_date = t_result[-1]['date']
