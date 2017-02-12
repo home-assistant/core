@@ -467,8 +467,9 @@ def async_check_ha_config_file(hass):
     This method is a coroutine.
     """
     proc = yield from asyncio.create_subprocess_exec(
-        sys.argv[0], '--script', 'check_config', '--config',
-        hass.config.config_dir, stdout=asyncio.subprocess.PIPE)
+        sys.executable, '-m', 'homeassistant', '--script',
+        'check_config', '--config', hass.config.config_dir,
+        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
     # Wait for the subprocess exit
     stdout_data, dummy = yield from proc.communicate()
     result = yield from proc.wait()
