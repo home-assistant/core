@@ -11,6 +11,8 @@ import urllib
 import aiohttp
 import voluptuous as vol
 
+import re
+
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
@@ -445,9 +447,8 @@ class KodiDevice(MediaPlayerDevice):
         return sorted(out, key=lambda out: out[1], reverse=True)    
     
 if __name__ == '__main__':
-    import re
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    asyncio.get_event_loop().run_until_complete(kodi.async_play_song('too much love kill you'))
+    asyncio.get_event_loop().run_until_complete(kodi.async_play_song('firth fifth'))
     
     

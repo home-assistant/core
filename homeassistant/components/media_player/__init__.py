@@ -55,6 +55,7 @@ SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 SERVICE_GET_ARTISTS = 'get_artists'
+SERVICE_PLAY_SONG = 'play_song'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -80,6 +81,7 @@ ATTR_SUPPORTED_MEDIA_COMMANDS = 'supported_media_commands'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
+ATTR_MEDIA_SONG_NAME = 'song_name'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -132,6 +134,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
 })
 
+MEDIA_PLAYER_PLAY_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SONG_NAME): cv.string,
+})
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'async_turn_on'},
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
@@ -161,6 +167,9 @@ SERVICE_TO_METHOD = {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
     SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
+    SERVICE_PLAY_SONG: {
+        'method': 'async_play_song',
+        'schema': MEDIA_PLAYER_PLAY_SONG_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -359,6 +368,8 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
+        elif service.service == SERVICE_PLAY_SONG:
+            params['song_name'] = service.data.get(ATTR_MEDIA_SONG_NAME)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
