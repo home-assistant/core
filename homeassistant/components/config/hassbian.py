@@ -49,7 +49,7 @@ _TEST_OUTPUT = """
 @asyncio.coroutine
 def async_setup(hass):
     """Setup the hassbian config."""
-    # TODO: Test if is hassbian
+    # Test if is hassbian
     test_mode = 'FORCE_HASSBIAN' in os.environ
     is_hassbian = test_mode
 
