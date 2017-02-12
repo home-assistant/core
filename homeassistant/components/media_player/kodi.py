@@ -398,10 +398,39 @@ class KodiDevice(MediaPlayerDevice):
         else:
             return (yield from self._server.AudioLibrary.GetAlbums(
                 {"filter": {"artistid": int(artist_id)}}))
+                
+    def find_artist(self, artist_name):
+        artists = asyncio.get_event_loop().run_until_complete(self.async_get_artists())
+        out = self._find(artist_name, [a['artist'] for a in artists['artists']])
+        return artists['artists'][out[0][0]]['artistid']
+
+    @asyncio.coroutine
+    def async_get_songs(self, artist_id=None):
+        if artist_id is None:
+            return (yield from self._server.AudioLibrary.GetSongs())
+        else:
+            return (yield from self._server.AudioLibrary.GetSongs(
+                {"filter": {"artistid": int(artist_id)}}))
+                
+    def _find(self, key_word, words):
+        key_word = key_word.split(' ')
+        patt = [re.compile(k, re.IGNORECASE) for k in key_word]
+         
+        out = [[i, 0] for i in range(len(words))]
+        for i in range(len(words)):
+            mt = [p.search(words[i]) for p in patt]
+            l = [m is not None for m in mt].count(True)
+            out[i][1] = l
+            
+        return sorted(out, key=lambda out: out[1], reverse=True)    
     
 if __name__ == '__main__':
+    import re
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    test = asyncio.get_event_loop().run_until_complete(kodi.async_get_albums())
-    print(test)
+    art = 'pink floyd'
+    out = kodi.find_artist(art)
+    
+    print(out)
+    
     
