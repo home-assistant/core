@@ -396,16 +396,15 @@ class TestConfig(unittest.TestCase):
         process_mock = mock.MagicMock()
         attrs = {
             'communicate.return_value':
-                mock_generator((r'\033[hellom'.encode('utf-8'), 'error')),
+                mock_generator(('\033[34mhello'.encode('utf-8'), 'error')),
             'wait.return_value': mock_generator(1)}
         process_mock.configure_mock(**attrs)
         mock_create.return_value = mock_generator(process_mock)
 
-        with self.assertRaises(HomeAssistantError):
-            run_coroutine_threadsafe(
-                config_util.async_check_ha_config_file(self.hass),
-                self.hass.loop
-            ).result()
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
+        ).result() == 'hello'
 
 
 # pylint: disable=redefined-outer-name
