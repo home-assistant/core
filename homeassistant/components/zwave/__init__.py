@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import convert, slugify
+from homeassistant.util import convert, slugify, retry
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from . import const
@@ -236,40 +236,23 @@ def nice_print_node(node):
     print("\n\n\n")
 
 
+@retry.retry(exc_type=RuntimeError)
 def get_config_value(node, value_index):
     """Return the current configuration value for a specific index."""
-    def try_once(node, value_index):
-        for value in node.values.values():
-            # 112 == config command class
-            if value.command_class == 112 and value.index == value_index:
-                return value.data
-        return None
-
-    for _ in range(5):
-        try:
-            return try_once(node, value_index)
-        except RuntimeError:
-            # If we get an runtime error the dict has changed while
-            # we was looking for a value, just do it again
-            pass
+    for value in node.values.values():
+        # 112 == config command class
+        if value.command_class == 112 and value.index == value_index:
+            return value.data
     return None
 
 
+@retry.retry(exc_type=RuntimeError)
 def _get_wakeup(node):
     """Return wakeup interval of the node or None if node is not wakable."""
-    def try_once(node):
-        if node.can_wake_up():
-            for value_id in node.get_values(
-                    class_id=const.COMMAND_CLASS_WAKE_UP):
-                return node.values[value_id].data
-        return None
-    for _ in range(5):
-        try:
-            return try_once(node)
-        except RuntimeError:
-            # If we get an runtime error the dict has changed while
-            # we was looking for a value, just do it again
-            pass
+    if node.can_wake_up():
+        for value_id in node.get_values(
+                class_id=const.COMMAND_CLASS_WAKE_UP):
+            return node.values[value_id].data
     return None
 
 
