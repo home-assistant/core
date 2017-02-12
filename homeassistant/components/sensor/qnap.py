@@ -12,13 +12,13 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
+    CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 import voluptuous as vol
 
-REQUIREMENTS = ['qnapstats==0.2.1']
+REQUIREMENTS = ['qnapstats==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,6 +86,7 @@ _MONITORED_CONDITIONS = list(_HEALTH_MON_COND.keys()) + \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -175,7 +176,9 @@ class QNAPStatsAPI(object):
             protocol + "://" + config.get(CONF_HOST),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD))
+            config.get(CONF_PASSWORD),
+            verify_ssl=config.get(CONF_VERIFY_SSL)
+        )
 
         self.data = {}
 
