@@ -33,6 +33,11 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+DEVICE_CLASSES = [
+    'window',        # Window control
+    'garage',        # Garage door control
+]
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
