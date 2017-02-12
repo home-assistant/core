@@ -233,7 +233,7 @@ class HistoryPeriodView(HomeAssistantView):
         if datetime:
             start_time = dt_util.as_utc(datetime)
         else:
-            start_time = now - one_day
+            start_time = now - day_delta
 
         if start_time > now:
             return self.json([])
