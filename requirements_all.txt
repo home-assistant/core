@@ -137,6 +137,9 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.fastdotcom
 fastdotcom==0.0.1
 
+# homeassistant.components.sensor.fedex
+fedexdeliverymanager==1.0.1
+
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
