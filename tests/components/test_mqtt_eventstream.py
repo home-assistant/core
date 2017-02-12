@@ -170,7 +170,8 @@ class TestMqttEventStream(object):
         # Use MQTT component message handler to simulate firing message
         # received event.
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage(SUB_TOPIC, 1, 'Hello World!'.encode('utf-8'))
+        message = MQTTMessage(
+            SUB_TOPIC, 1, '{"test": "Hello World!"}'.encode('utf-8'))
         mqtt.MQTT._mqtt_on_message(self, None, {'hass': self.hass}, message)
 
         self.hass.block_till_done()
@@ -179,7 +180,8 @@ class TestMqttEventStream(object):
         assert mock_pub.call_count == 0
 
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
+        message = MQTTMessage(
+            'test_topic', 1, '{"test": "Hello World!"}'.encode('utf-8'))
         mqtt.MQTT._mqtt_on_message(self, None, {'hass': self.hass}, message)
 
         self.hass.block_till_done()

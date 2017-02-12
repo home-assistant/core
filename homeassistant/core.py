@@ -389,15 +389,11 @@ class EventBus(object):
                 self._hass.state == CoreState.stopping:
             raise ShuttingDown("Home Assistant is shutting down")
 
-        # Copy the list of the current listeners because some listeners
-        # remove themselves as a listener while being executed which
-        # causes the iterator to be confused.
-        get = self._listeners.get
-        listeners = get(event_type, [])
+        listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
         if event_type != EVENT_HOMEASSISTANT_CLOSE:
-            listeners += get(MATCH_ALL, [])
+            listeners = self._listeners.get(MATCH_ALL, []) + listeners
 
         event = Event(event_type, event_data, origin)
 
