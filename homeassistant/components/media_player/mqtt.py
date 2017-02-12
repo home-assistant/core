@@ -45,7 +45,6 @@ media_player:
          - SRC_C
          - SRC_D
 """
-import logging
 
 import voluptuous as vol
 
@@ -64,8 +63,6 @@ import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['mqtt']
-
-_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Media Player'
 DEFAULT_MIN_VOLUME = 0
