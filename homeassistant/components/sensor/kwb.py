@@ -8,9 +8,11 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+
 
 REQUIREMENTS = ['pykwb==0.0.5']
 
@@ -19,7 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 23
 DEFAULT_TYPE = 'tcp'
-DEFAULT_RAW = 'off'
+DEFAULT_RAW = False
+DEFAULT_DEVICE = '/dev/ttyUSB0'
 
 MODE_SERIAL = 0
 MODE_TCP = 1
@@ -28,23 +31,32 @@ CONF_TYPE = 'type'
 CONF_RAW = 'raw'
 
 SERIAL_SCHEMA = {
-    vol.Required(CONF_PORT): cv.string,
-    vol.Required(CONF_TYPE): 'serial',
-    vol.Optional(CONF_TYPE): 'raw',
+    vol.Required(CONF_DEVICE, default = DEFAULT_DEVICE): cv.string,
+    vol.Required(CONF_TYPE, default = DEFAULT_TYPE): 'serial',
+    vol.Optional(CONF_RAW, default = DEFAULT_RAW): cv.boolean,
 }
 
 ETHERNET_SCHEMA = {
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.positive_int,
-    vol.Required(CONF_TYPE): 'tcp',
-    vol.Optional(CONF_TYPE): 'raw',
+    vol.Required(CONF_HOST, default = DEFAULT_HOST): cv.string,
+    vol.Required(CONF_PORT, default = DEFAULT_PORT): cv.port,
+    vol.Required(CONF_TYPE, default = DEFAULT_TYPE): 'tcp',
+    vol.Optional(CONF_RAW, default = DEFAULT_RAW): cv.boolean,
 }
+
+#PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+#    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
+#})
+
+#CONFIG_SCHEMA = vol.Schema({
+#    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
+#}, extra=vol.ALLOW_EXTRA)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the KWB component."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    device = config.get(CONF_DEVICE)
     connection_type = config.get(CONF_TYPE)
     raw = config.get(CONF_RAW)
 
@@ -53,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     from pykwb import kwb
 
-    _LOGGER.info('KWB: initializing')
+    _LOGGER.info('initializing')
 
     if connection_type == 'serial':
-        easyfire = kwb.KWBEasyfire(MODE_SERIAL, "", 0, port)
+        easyfire = kwb.KWBEasyfire(MODE_SERIAL, "", 0, device)
     elif connection_type == 'tcp':
         easyfire = kwb.KWBEasyfire(MODE_TCP, host, port)
     else:
@@ -70,9 +82,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(sensors)
 
-    _LOGGER.info('KWB: starting thread')
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         lambda event: easyfire.stop_thread())
+
+    _LOGGER.info('starting thread')
     easyfire.run_thread()
-    _LOGGER.info('KWB: thread started')
+    _LOGGER.info('thread started')
 
 
 class KWBSensor(Entity):
