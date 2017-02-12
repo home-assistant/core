@@ -137,12 +137,12 @@ class MqttJson(Light):
             self._brightness = None
 
         if self._supported_features & SUPPORT_RGB_COLOR:
-            self._rgb = (0, 0, 0)
+            self._rgb = [0, 0, 0]
         else:
             self._rgb = None
 
         if self._supported_features & SUPPORT_XY_COLOR:
-            self._xy = (0, 0)
+            self._xy = [0, 0]
         else:
             self._xy = None
 
@@ -179,9 +179,9 @@ class MqttJson(Light):
                     green = int(values['color']['g'])
                     blue = int(values['color']['b'])
 
-                    self._rgb = (red, green, blue)
+                    self._rgb = [red, green, blue]
                     xyb = color_util.color_RGB_to_xy(red, green, blue)
-                    self._xy = (xyb[0], xyb[1])
+                    self._xy = [xyb[0], xyb[1]]
                 except KeyError:
                     pass
                 except ValueError:
@@ -193,8 +193,8 @@ class MqttJson(Light):
                     x = float(values['color']['x'])
                     y = float(values['color']['y'])
 
-                    self._xy = (x, y)
-                    self._rgb = tuple(color_util.color_xy_brightness_to_RGB(
+                    self._xy = [x, y]
+                    self._rgb = list(color_util.color_xy_brightness_to_RGB(
                         x, y, 255))
                 except KeyError:
                     pass
@@ -308,8 +308,8 @@ class MqttJson(Light):
                 message['color'] = {'x': xyb[0], 'y': xyb[1]}
 
             if self._optimistic:
-                self._rgb = tuple(rgb)
-                self._xy = (xyb[0], xyb[1])
+                self._rgb = list(rgb)
+                self._xy = [xyb[0], xyb[1]]
                 should_update = True
 
         if ATTR_XY_COLOR in kwargs and \
@@ -322,8 +322,8 @@ class MqttJson(Light):
                 message['color'] = {'r': rgb[0], 'g': rgb[1], 'b': rgb[2]}
 
             if self._optimistic:
-                self._xy = tuple(xy)
-                self._rgb = tuple(rgb)
+                self._xy = list(xy)
+                self._rgb = list(rgb)
                 should_update = True
 
         if ATTR_COLOR_TEMP in kwargs and \
