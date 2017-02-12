@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_ENTITY_ID)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import convert, slugify, retry
+from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from . import const
@@ -236,23 +236,34 @@ def nice_print_node(node):
     print("\n\n\n")
 
 
-@retry.retry(exc_type=RuntimeError)
-def get_config_value(node, value_index):
+def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
-    for value in node.values.values():
-        # 112 == config command class
-        if value.command_class == 112 and value.index == value_index:
-            return value.data
+    try:
+        for value in node.values.values():
+            # 112 == config command class
+            if value.command_class == 112 and value.index == value_index:
+                return value.data
+    except RuntimeError:
+        # If we get an runtime error the dict has changed while
+        # we was looking for a value, just do it again
+        return None if tries <= 0 else get_config_value(
+            node, value_index, tries=tries - 1)
     return None
 
 
-@retry.retry(exc_type=RuntimeError)
-def _get_wakeup(node):
+def _get_wakeup(node, tries=5):
     """Return wakeup interval of the node or None if node is not wakable."""
-    if node.can_wake_up():
-        for value_id in node.get_values(
-                class_id=const.COMMAND_CLASS_WAKE_UP):
-            return node.values[value_id].data
+    try:
+        if node.can_wake_up():
+            for value_id in node.get_values(
+                    class_id=const.COMMAND_CLASS_WAKE_UP):
+                return node.values[value_id].data
+    except RuntimeError:
+        # If we get an runtime error the dict has changed while
+        # we was looking for a value, just do it again
+        return None if tries <= 0 else _get_wakeup(
+            node, tries=tries - 1)
+
     return None
 
 
