@@ -332,7 +332,7 @@ miflora==0.1.15
 mutagen==1.36.2
 
 # homeassistant.components.sensor.usps
-myusps==1.0.2
+myusps==1.0.3
 
 # homeassistant.components.discovery
 netdisco==0.8.2
