@@ -236,7 +236,7 @@ def nice_print_node(node):
     print("\n\n\n")
 
 
-def get_config_value(node, value_index):
+def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
@@ -246,14 +246,24 @@ def get_config_value(node, value_index):
     except RuntimeError:
         # If we get an runtime error the dict has changed while
         # we was looking for a value, just do it again
-        return get_config_value(node, value_index)
+        return None if tries <= 0 else get_config_value(
+            node, value_index, tries=tries - 1)
+    return None
 
 
-def _get_wakeup(node):
+def _get_wakeup(node, tries=5):
     """Return wakeup interval of the node or None if node is not wakable."""
-    if node.can_wake_up():
-        for value_id in node.get_values(class_id=const.COMMAND_CLASS_WAKE_UP):
-            return node.values[value_id].data
+    try:
+        if node.can_wake_up():
+            for value_id in node.get_values(
+                    class_id=const.COMMAND_CLASS_WAKE_UP):
+                return node.values[value_id].data
+    except RuntimeError:
+        # If we get an runtime error the dict has changed while
+        # we was looking for a value, just do it again
+        return None if tries <= 0 else _get_wakeup(
+            node, tries=tries - 1)
+
     return None
 
 
@@ -671,7 +681,6 @@ class ZWaveDeviceEntity(Entity):
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
         """Get the values for a given command_class with arguments."""
-        varname = member
         if class_id is not None:
             kwargs[CLASS_ID] = class_id
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
@@ -686,16 +695,20 @@ class ZWaveDeviceEntity(Entity):
             if index is not None and value.index != index:
                 continue
             if label is not None:
+                label_found = False
                 for entry in label:
-                    if entry is not None and value.label != entry:
-                        continue
+                    if value.label == entry:
+                        label_found = True
+                        break
+                if not label_found:
+                    continue
             if method == 'set':
                 value.data = data
                 return
             if data is not None and value.data != data:
                 continue
             if member is not None:
-                results = getattr(value, varname)
+                results = getattr(value, member)
             else:
                 results = value
             break
