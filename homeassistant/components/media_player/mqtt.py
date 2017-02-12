@@ -135,7 +135,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class MQTTMedia(MediaPlayerDevice):
     """Representation of a MQTT_MEDIA Receiver."""
-
     def __init__(
             self,
             hass,
@@ -147,7 +146,6 @@ class MQTTMedia(MediaPlayerDevice):
             mute_dict,
             source_dict):
         """Initialize the MQTT_MEDIA Receiver device."""
-
         self._name = name
         self._min_volume = min_volume
         self._max_volume = max_volume
