@@ -4,6 +4,7 @@ import os
 from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
+from homeassistant.components import config
 from homeassistant.components.config.hassbian import (
     HassbianSuitesView, HassbianSuiteInstallView)
 from tests.common import (
@@ -13,7 +14,8 @@ from tests.common import (
 def test_setup_check_env_prevents_load(hass, loop):
     """Test it does not set up hassbian if environment var not present."""
     mock_http_component(hass)
-    with patch.dict(os.environ, clear=True):
+    with patch.dict(os.environ, clear=True), \
+            patch.object(config, 'SECTIONS', ['hassbian']):
         loop.run_until_complete(async_setup_component(hass, 'config', {}))
     assert 'config' in hass.config.components
     assert HassbianSuitesView.name not in hass.http.views
@@ -23,7 +25,8 @@ def test_setup_check_env_prevents_load(hass, loop):
 def test_setup_check_env_works(hass, loop):
     """Test it sets up hassbian if environment var present."""
     mock_http_component(hass)
-    with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}):
+    with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}), \
+            patch.object(config, 'SECTIONS', ['hassbian']):
         loop.run_until_complete(async_setup_component(hass, 'config', {}))
     assert 'config' in hass.config.components
     assert HassbianSuitesView.name in hass.http.views
@@ -35,7 +38,8 @@ def test_get_suites(hass, test_client):
     """Test getting suites."""
     app = mock_http_component_app(hass)
 
-    with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}):
+    with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}), \
+            patch.object(config, 'SECTIONS', ['hassbian']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[HassbianSuitesView.name].register(app.router)
@@ -56,7 +60,8 @@ def test_install_suite(hass, test_client):
     """Test getting suites."""
     app = mock_http_component_app(hass)
 
-    with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}):
+    with patch.dict(os.environ, {'FORCE_HASSBIAN': '1'}), \
+            patch.object(config, 'SECTIONS', ['hassbian']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[HassbianSuiteInstallView.name].register(app.router)
