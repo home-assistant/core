@@ -5,6 +5,7 @@ FINGERPRINTS = {
     "frontend.html": "cfd75c944ab14912cfbb4fdd9027579c",
     "mdi.html": "c1dde43ccf5667f687c418fc8daf9668",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
+    "panels/ha-panel-config.html": "fb50a25da4b4cfbb0d9a74bb22a31db9",
     "panels/ha-panel-dev-event.html": "5c82300b3cf543a92cf4297506e450e7",
     "panels/ha-panel-dev-info.html": "0469024d94d6270a8680df2be44ba916",
     "panels/ha-panel-dev-service.html": "9f749635e518a4ca7991975bdefdb10a",

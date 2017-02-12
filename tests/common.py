@@ -210,9 +210,9 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass):
+def mock_http_component(hass, api_password=None):
     """Mock the HTTP component."""
-    hass.http = MagicMock()
+    hass.http = MagicMock(api_password=api_password)
     hass.config.components.add('http')
     hass.http.views = {}
 
@@ -229,7 +229,8 @@ def mock_http_component(hass):
 
 def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
-    hass.http = MagicMock(api_password=api_password)
+    if 'http' not in hass.config.components:
+        mock_http_component(hass, api_password)
     app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
