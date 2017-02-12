@@ -13,7 +13,7 @@ def async_setup(hass, config):
     """Setup the hassbian component."""
     register_built_in_panel(hass, 'config', 'Configuration', 'mdi:settings')
 
-    for panel_name in ('hassbian',):
+    for panel_name in ('core', 'hassbian'):
         panel = yield from async_prepare_setup_platform(hass, config, DOMAIN,
                                                         panel_name)
 
