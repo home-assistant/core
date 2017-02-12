@@ -412,6 +412,11 @@ class KodiDevice(MediaPlayerDevice):
             return (yield from self._server.AudioLibrary.GetSongs(
                 {"filter": {"artistid": int(artist_id)}}))
                 
+    def find_song(self, song_name):
+        songs = asyncio.get_event_loop().run_until_complete(self.async_get_songs())
+        out = self._find(song_name, [a['label'] for a in songs['songs']])
+        return songs['songs'][out[0][0]]['songid']
+                
     def _find(self, key_word, words):
         key_word = key_word.split(' ')
         patt = [re.compile(k, re.IGNORECASE) for k in key_word]
