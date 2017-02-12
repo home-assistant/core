@@ -11,7 +11,7 @@ from datetime import timedelta
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, 
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
     CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
