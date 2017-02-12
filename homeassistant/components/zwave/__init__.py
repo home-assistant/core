@@ -262,7 +262,7 @@ def _get_wakeup(node):
             for value_id in node.get_values(
                     class_id=const.COMMAND_CLASS_WAKE_UP):
                 return node.values[value_id].data
-        return None 
+        return None
     for _ in range(5):
         try:
             return try_once(node)
