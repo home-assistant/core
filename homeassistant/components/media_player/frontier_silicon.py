@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.frontier_silicon/
 """
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -29,13 +28,12 @@ SUPPORT_FRONTIER_SILICON = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_TURN_ON | \
     SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
-DEFAULT_HOST = '192.168.1.11'
 DEFAULT_PORT = 80
 DEFAULT_PASSWORD = '1234'
 DEVICE_URL = 'http://{0}:{1}/device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
 })
@@ -44,6 +42,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Frontier Silicon platform."""
+    import requests
+
     if discovery_info is not None:
         add_devices(
             [FSAPIDevice(discovery_info, DEFAULT_PASSWORD)],
@@ -63,6 +63,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except requests.exceptions.RequestException:
         _LOGGER.error('Could not add the FSAPI device at %s:%s -> %s',
                       host, port, password)
+
+    return False
 
 
 class FSAPIDevice(MediaPlayerDevice):
@@ -104,7 +106,7 @@ class FSAPIDevice(MediaPlayerDevice):
         return self._title
 
     @property
-    def supported_media_commands(self):
+    def supported_features(self):
         """Flag of media commands that are supported."""
         return SUPPORT_FRONTIER_SILICON
 
