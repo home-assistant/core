@@ -153,6 +153,7 @@ omit =
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
+    homeassistant/components/cover/myq.py
     homeassistant/components/cover/rpi_gpio.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/cover/wink.py
