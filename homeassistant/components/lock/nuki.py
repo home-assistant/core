@@ -14,7 +14,7 @@ from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pynuki==1.2']
+REQUIREMENTS = ['pynuki==1.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ class NukiLock(LockDevice):
     @Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Update the nuki lock properties."""
-        self._nuki_lock.update()
+        self._nuki_lock.update(aggressive=False)
         self._name = self._nuki_lock.name
         self._locked = self._nuki_lock.is_locked
 

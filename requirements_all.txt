@@ -31,7 +31,7 @@ PyMata==2.13
 SoCo==0.12
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.3
+TwitterAPI==2.4.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -137,6 +137,9 @@ evohomeclient==0.2.5
 # homeassistant.components.sensor.fastdotcom
 fastdotcom==0.0.1
 
+# homeassistant.components.sensor.fedex
+fedexdeliverymanager==1.0.1
+
 # homeassistant.components.feedreader
 feedparser==5.2.1
 
@@ -171,13 +174,16 @@ gTTS-token==1.1.1
 gntp==1.0.3
 
 # homeassistant.components.google
-google-api-python-client==1.5.5
+google-api-python-client==1.6.2
 
 # homeassistant.components.sensor.google_travel_time
 googlemaps==2.4.4
 
 # homeassistant.components.sensor.gpsd
 gps3==0.33.3
+
+# homeassistant.components.media_player.gstreamer
+gstreamer-player==1.0.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.4
@@ -213,6 +219,9 @@ https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.6.zip#braviarc==0.3.6
+
+# homeassistant.components.cover.myq
+https://github.com/arraylabs/pymyq/archive/v0.0.2.zip#pymyq==0.0.2
 
 # homeassistant.components.media_player.roku
 https://github.com/bah2830/python-roku/archive/3.1.3.zip#roku==3.1.3
@@ -332,7 +341,7 @@ miflora==0.1.15
 mutagen==1.36.2
 
 # homeassistant.components.sensor.usps
-myusps==1.0.2
+myusps==1.0.3
 
 # homeassistant.components.discovery
 netdisco==0.8.2
@@ -341,7 +350,10 @@ netdisco==0.8.2
 neurio==0.3.1
 
 # homeassistant.components.google
-oauth2client==3.0.0
+oauth2client==4.0.0
+
+# homeassistant.components.climate.oem
+oemthermostat==1.1
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
@@ -397,7 +409,7 @@ pushbullet.py==0.10.0
 pushetta==1.0.15
 
 # homeassistant.components.sensor.waqi
-pwaqi==1.4
+pwaqi==2.0
 
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==0.2.3
@@ -468,6 +480,9 @@ pyicloud==0.9.1
 # homeassistant.components.binary_sensor.iss
 pyiss==1.0.1
 
+# homeassistant.components.remote.itach
+pyitachip2ir==0.0.5
+
 # homeassistant.components.sensor.lastfm
 pylast==1.7.0
 
@@ -487,7 +502,7 @@ pynetgear==0.3.3
 pynetio==0.1.6
 
 # homeassistant.components.lock.nuki
-pynuki==1.2
+pynuki==1.2.2
 
 # homeassistant.components.sensor.nut
 pynut2==2.1.2
@@ -575,13 +590,13 @@ pyvera==0.2.23
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.11
+pywemo==0.4.12
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.1
+qnapstats==0.2.2
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
@@ -652,7 +667,7 @@ tellduslive==0.3.2
 temperusb==1.5.1
 
 # homeassistant.components.thingspeak
-thingspeak==0.4.0
+thingspeak==0.4.1
 
 # homeassistant.components.light.tikteck
 tikteck==0.4
@@ -668,6 +683,9 @@ twilio==5.7.0
 # homeassistant.components.sensor.uber
 uber_rides==0.2.7
 
+# homeassistant.components.sensor.ups
+upsmychoice==1.0.1
+
 # homeassistant.components.device_tracker.unifi
 urllib3
 
@@ -681,7 +699,7 @@ volvooncall==0.1.1
 vsure==0.11.1
 
 # homeassistant.components.sensor.vasttrafik
-vtjp==0.1.11
+vtjp==0.1.14
 
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.webostv

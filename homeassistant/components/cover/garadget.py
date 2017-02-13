@@ -168,6 +168,11 @@ class GaradgetCover(CoverDevice):
         else:
             return self._state == STATE_CLOSED
 
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
     def get_token(self):
         """Get new token for usage during this session."""
         args = {

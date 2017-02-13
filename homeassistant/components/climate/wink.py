@@ -366,8 +366,8 @@ class WinkAC(WinkDevice, ClimateDevice):
         if target_temp_low is not None:
             data[ATTR_TARGET_TEMP_LOW] = self._convert_for_display(
                 self.target_temperature_low)
-        data["total_consumption"] = self.wink.toatl_consumption()
-        data["schedule_enabled"] = self.wink.toatl_consumption()
+        data["total_consumption"] = self.wink.total_consumption()
+        data["schedule_enabled"] = self.wink.schedule_enabled()
 
         return data
 
