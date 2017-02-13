@@ -366,7 +366,8 @@ class EntityPlatform(object):
         """
         if self._process_updates.locked():
             self.component.logger.warning(
-                'Slow update circle on %d', self.component.domain)
+                "Updating %s took longer than the scheduled update "
+                "interval %s", self.component.domain, self.scan_interval)
             return
 
         with (yield from self._process_updates):
