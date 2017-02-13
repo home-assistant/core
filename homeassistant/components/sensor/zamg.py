@@ -67,7 +67,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZAMG sensor platform."""
-    name = config.get(CONF_NAME, DEFAULT_NAME)
     logger = logging.getLogger(__name__)
 
     station_id = config.get(CONF_STATION_ID) or closest_station(
@@ -86,10 +85,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         logger.error("Received error from ZAMG: %s", err)
         return False
 
-    sensors = [ZamgSensor(probe, variable, name)
-               for variable in config[CONF_MONITORED_CONDITIONS]]
-
-    add_devices(sensors, True)
+    add_devices([ZamgSensor(probe, variable, config.get(CONF_NAME))
+                 for variable in config[CONF_MONITORED_CONDITIONS]], True)
 
 
 class ZamgSensor(Entity):
@@ -195,11 +192,11 @@ class ZamgData(object):
 def _get_zamg_stations():
     """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
     capital_stations = {r['Station'] for r in ZamgData.current_observations()}
-    url = ('https://www.zamg.ac.at/cms/en/documents/climate/doc_metnetwork/'
-           'zamg-observation-points')
+    req = requests.get('https://www.zamg.ac.at/cms/en/documents/climate/'
+                       'doc_metnetwork/zamg-observation-points', timeout=15)
     return {e['SYNNR']: tuple(float(e[k].replace(',', '.'))
                               for k in ['BREITE_DEZI', 'LÄNGR_DEI'])
-            for e in csv.DictReader(requests.get(url).text.splitlines(),
+            for e in csv.DictReader(req.text.splitlines(),
                                     delimiter=';', quotechar='"')
             if e['SYNNR'] in capital_stations}
 
