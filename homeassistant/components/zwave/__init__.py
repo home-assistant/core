@@ -14,8 +14,7 @@ import voluptuous as vol
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_ENTITY_ID)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -162,7 +161,6 @@ SET_WAKEUP_SCHEMA = vol.Schema({
 })
 
 _DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.match_all,
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
