@@ -162,6 +162,7 @@ class WaqiData(object):
         """Get the data from World Air Quality Index and updates the states."""
         import pwaqi
         try:
-            self.data = pwaqi.getStationObservation(self._station_id, self._token)
+            self.data = pwaqi.getStationObservation(
+                self._station_id, self._token)
         except AttributeError:
             _LOGGER.exception("Unable to fetch data from WAQI")
