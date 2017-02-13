@@ -190,12 +190,12 @@ class MqttJson(Light):
             # read xy color
             if self._color_space == CONF_XY:
                 try:
-                    x = float(values['color']['x'])
-                    y = float(values['color']['y'])
+                    x_color = float(values['color']['x'])
+                    y_color = float(values['color']['y'])
 
-                    self._xy = [x, y]
+                    self._xy = [x_color, y_color]
                     self._rgb = list(color_util.color_xy_brightness_to_RGB(
-                        x, y, 255))
+                        x_color, y_color, 255))
                 except KeyError:
                     pass
                 except ValueError:
@@ -314,15 +314,16 @@ class MqttJson(Light):
 
         if ATTR_XY_COLOR in kwargs and \
            self._supported_features & SUPPORT_XY_COLOR:
-            xy = kwargs[ATTR_XY_COLOR]
-            rgb = color_util.color_xy_brightness_to_RGB(xy[0], xy[1], 255)
+            xy_color = kwargs[ATTR_XY_COLOR]
+            rgb = color_util.color_xy_brightness_to_RGB(xy_color[0],
+                                                        xy_color[1], 255)
             if self._color_space == CONF_XY:
-                message['color'] = {'x': xy[0], 'y': xy[1]}
+                message['color'] = {'x': xy_color[0], 'y': xy_color[1]}
             else:
                 message['color'] = {'r': rgb[0], 'g': rgb[1], 'b': rgb[2]}
 
             if self._optimistic:
-                self._xy = list(xy)
+                self._xy = list(xy_color)
                 self._rgb = list(rgb)
                 should_update = True
 
