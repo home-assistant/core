@@ -31,7 +31,7 @@ PyMata==2.13
 SoCo==0.12
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.3
+TwitterAPI==2.4.4
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
