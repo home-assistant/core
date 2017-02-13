@@ -199,7 +199,7 @@ def async_setup(hass, config):
             '{domain}.connection_status'.format(
                 domain=DOMAIN), 'connected')
 
-    hass.loop.create_task(connect())
+    hass.async_add_job(connect)
     return True
 
 
