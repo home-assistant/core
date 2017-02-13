@@ -8,6 +8,9 @@ import asyncio
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
+import logging
+import time
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -18,6 +21,8 @@ from homeassistant.components import recorder, script
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
@@ -215,6 +220,7 @@ class HistoryPeriodView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, datetime=None):
         """Return history over a period of time."""
+        timer_start = time.perf_counter()
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
 
@@ -239,8 +245,12 @@ class HistoryPeriodView(HomeAssistantView):
         result = yield from request.app['hass'].loop.run_in_executor(
             None, get_significant_states, start_time, end_time, entity_id,
             self.filters)
-
-        return self.json(result.values())
+        result = result.values()
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            elapsed = time.perf_counter() - timer_start
+            _LOGGER.debug(
+                'Extracted %d states in %fs', sum(map(len, result)), elapsed)
+        return self.json(result)
 
 
 class Filters(object):
