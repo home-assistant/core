@@ -376,6 +376,10 @@ def setup(hass, config):
             workaround_component = workaround.get_device_component_mapping(
                 value)
             if workaround_component and workaround_component != component:
+                if workaround_component == workaround.WORKAROUND_IGNORE:
+                    _LOGGER.info("Ignoring device %s",
+                                 "{}.{}".format(component, object_id(value)))
+                    continue
                 _LOGGER.debug("Using %s instead of %s",
                               workaround_component, component)
                 component = workaround_component
