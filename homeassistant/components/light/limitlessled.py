@@ -300,6 +300,7 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
                 pipeline.white()
                 self._color = WHITE
 
+
 class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
     """Representation of a LimitlessLED RGBWW group."""
 
