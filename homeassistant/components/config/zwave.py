@@ -41,8 +41,11 @@ class DeviceConfigView(HomeAssistantView):
             return self.json_message('Invalid JSON specified', 400)
 
         try:
-            data = _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY(data)
+            # We just validate, we don't store that data because
+            # we don't want to store the defaults.
+            _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY(data)
         except vol.Invalid as err:
+            print(data, err)
             return self.json_message('Message malformed: {}'.format(err), 400)
 
         hass = request.app['hass']

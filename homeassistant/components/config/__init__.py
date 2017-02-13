@@ -47,9 +47,8 @@ def async_setup(hass, config):
     def component_loaded(event):
         """Respond to components being loaded."""
         panel_name = event.data.get(ATTR_COMPONENT)
-
         if panel_name in ON_DEMAND:
-            setup_panel(panel_name)
+            hass.async_add_job(setup_panel(panel_name))
 
     hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
 
