@@ -64,8 +64,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
     def test_no_features_if_no_config(self): \
             # pylint: disable=invalid-name
-        """Test if there are no state attributes if the features aren't enabled
-        """
+        """Test the existance of attributes when features are disabled."""
         self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
