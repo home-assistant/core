@@ -4,10 +4,10 @@ import unittest
 
 import aiohttp
 
+from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.bootstrap import setup_component
 import homeassistant.helpers.aiohttp_client as client
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -93,9 +93,8 @@ class TestHelpersAiohttpClient(unittest.TestCase):
         assert isinstance(
             self.hass.data[client.DATA_CONNECTOR], aiohttp.TCPConnector)
 
-        run_coroutine_threadsafe(
-            client.async_cleanup_websession(self.hass), self.hass.loop
-        ).result()
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_CLOSE)
+        self.hass.block_till_done()
 
         assert self.hass.data[client.DATA_CLIENTSESSION].closed
         assert self.hass.data[client.DATA_CONNECTOR].closed
@@ -112,9 +111,8 @@ class TestHelpersAiohttpClient(unittest.TestCase):
             self.hass.data[client.DATA_CONNECTOR_NOTVERIFY],
             aiohttp.TCPConnector)
 
-        run_coroutine_threadsafe(
-            client.async_cleanup_websession(self.hass), self.hass.loop
-        ).result()
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_CLOSE)
+        self.hass.block_till_done()
 
         assert self.hass.data[client.DATA_CLIENTSESSION_NOTVERIFY].closed
         assert self.hass.data[client.DATA_CONNECTOR_NOTVERIFY].closed
