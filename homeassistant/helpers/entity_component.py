@@ -291,7 +291,7 @@ class EntityPlatform(object):
         self.entity_namespace = entity_namespace
         self.platform_entities = []
         self._async_unsub_polling = None
-        self._process_updates = False
+        self._process_updates = asyncio.Lock(loop=component.hass.loop)
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
@@ -364,11 +364,12 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
-        if self._process_updates:
+        if self._process_updates.locked():
+            self.component.logger.warning(
+                'Slow update circle on %d', self.component.domain)
             return
-        self._process_updates = True
 
-        try:
+        with (yield from self._process_updates):
             tasks = []
             to_update = []
 
@@ -384,9 +385,12 @@ class EntityPlatform(object):
                     to_update.append(update_coro)
 
             for update_coro in to_update:
-                yield from update_coro
+                try:
+                    yield from update_coro
+                except Exception:  # pylint: disable=broad-except
+                    self.component.logger.exception(
+                        'Error while update entity in %s',
+                        self.component.domain)
 
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)
-        finally:
-            self._process_updates = False
