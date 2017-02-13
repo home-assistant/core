@@ -63,11 +63,6 @@ class MoonSensor(Entity):
             return 'New moon'
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return 'Phase'
-
-    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return ICON
