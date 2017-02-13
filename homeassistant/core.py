@@ -26,7 +26,7 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
@@ -53,8 +53,6 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
-# AsyncHandler for logging
-DATA_ASYNCHANDLER = 'log_asynchandler'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -279,23 +277,17 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        import homeassistant.helpers.aiohttp_client as aiohttp_client
-
+        # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.async_block_till_done()
-        self.executor.shutdown()
+
+        # stage 2
         self.state = CoreState.not_running
-
-        # cleanup connector pool from aiohttp
-        yield from aiohttp_client.async_cleanup_websession(self)
-
-        # cleanup async layer from python logging
-        if self.data.get(DATA_ASYNCHANDLER):
-            handler = self.data.pop(DATA_ASYNCHANDLER)
-            logging.getLogger('').removeHandler(handler)
-            yield from handler.async_close(blocking=True)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+        yield from self.async_block_till_done()
+        self.executor.shutdown()
 
         self.exit_code = exit_code
         self.loop.stop()
@@ -397,11 +389,11 @@ class EventBus(object):
                 self._hass.state == CoreState.stopping:
             raise ShuttingDown("Home Assistant is shutting down")
 
-        # Copy the list of the current listeners because some listeners
-        # remove themselves as a listener while being executed which
-        # causes the iterator to be confused.
-        get = self._listeners.get
-        listeners = get(MATCH_ALL, []) + get(event_type, [])
+        listeners = self._listeners.get(event_type, [])
+
+        # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
+        if event_type != EVENT_HOMEASSISTANT_CLOSE:
+            listeners = self._listeners.get(MATCH_ALL, []) + listeners
 
         event = Event(event_type, event_data, origin)
 

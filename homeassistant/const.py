@@ -156,6 +156,7 @@ CONF_ZONE = 'zone'
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'
 EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
+EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
