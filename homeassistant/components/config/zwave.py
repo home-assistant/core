@@ -6,7 +6,7 @@ import yaml
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY
-from homeassistant.util.yaml import load_yaml
+from homeassistant.util.yaml import load_yaml, dump
 
 
 DEVICE_CONFIG = 'zwave_device_config.yml'
@@ -73,4 +73,4 @@ def _read(path):
 def _write(path, data):
     """Write YAML helper."""
     with open(path, 'w') as outfile:
-        yaml.safe_dump(data, outfile, default_flow_style=False)
+        dump(data, outfile)

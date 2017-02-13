@@ -69,9 +69,9 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         raise HomeAssistantError(exc)
 
 
-def dump(_dict: dict) -> str:
+def dump(_dict: dict, outfile=None) -> str:
     """Dump yaml to a string and remove null."""
-    return yaml.safe_dump(_dict, default_flow_style=False) \
+    return yaml.safe_dump(_dict, outfile, default_flow_style=False) \
         .replace(': null\n', ':\n')
 
 
@@ -275,6 +275,7 @@ yaml.SafeLoader.add_constructor('!include_dir_merge_named',
 
 
 # From: https://gist.github.com/miracle2k/3184458
+# pylint: disable=redefined-outer-name
 def represent_odict(dump, tag, mapping, flow_style=None):
     """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
     value = []
@@ -302,5 +303,6 @@ def represent_odict(dump, tag, mapping, flow_style=None):
 
 
 yaml.SafeDumper.add_representer(
-    OrderedDict, lambda dumper, value:
-        represent_odict(dumper, u'tag:yaml.org,2002:map', value))
+    OrderedDict,
+    lambda dumper, value:
+    represent_odict(dumper, u'tag:yaml.org,2002:map', value))
