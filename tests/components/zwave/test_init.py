@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave import (
-    DATA_DEVICE_CONFIG, _DEVICE_CONFIG_SCHEMA_ENTRY)
+    DATA_DEVICE_CONFIG, DEVICE_CONFIG_SCHEMA_ENTRY)
 
 
 @pytest.fixture(autouse=True)

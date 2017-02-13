@@ -1,3 +1,4 @@
+"""Test Z-Wave config panel."""
 import asyncio
 from copy import deepcopy
 import json
