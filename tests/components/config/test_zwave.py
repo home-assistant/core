@@ -9,7 +9,6 @@ from homeassistant.components.config.zwave import DeviceConfigView
 from tests.common import mock_http_component_app, mock_coro, mock_coro_func
 
 
-
 @asyncio.coroutine
 def test_get_device_config(hass, test_client):
     """Test getting device config."""
