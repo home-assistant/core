@@ -10,8 +10,6 @@ from homeassistant import const
 
 from tests.common import get_test_home_assistant
 
-entity_id = 'media_player.frontier_silicon_dummy'
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -31,19 +29,14 @@ class TestFrontierSiliconMediaPlayer(unittest.TestCase):
         fake_config = {
             const.CONF_HOST: 'host_ip',
         }
-        result = frontier_silicon.setup_platform(self.hass, fake_config, mock.MagicMock())
-
-        #fsapi = FSAPIDevice('DSDSDS','32332322')
-        #fsapi.update()
+        result = frontier_silicon.setup_platform(self.hass,
+                                                 fake_config, mock.MagicMock())
 
         self.assertTrue(result)
 
-    def test_invalid_host(self): 
+    def test_invalid_host(self):
         """Test that a host with a valid url is set when using a conf."""
         import requests
 
-        fsapi = FSAPIDevice('INVALID_URL','1234')
+        fsapi = FSAPIDevice('INVALID_URL', '1234')
         self.assertRaises(requests.exceptions.MissingSchema, fsapi.update)
-
-        self.assertTrue(True)
-
