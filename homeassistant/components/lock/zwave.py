@@ -294,11 +294,19 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._value.data = True
+        self.set_value(
+            class_id=zwave.const.COMMAND_CLASS_DOOR_LOCK,
+            type=zwave.const.TYPE_BOOL,
+            genre=zwave.const.GENRE_USER,
+            data=True)
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._value.data = False
+        self.set_value(
+            class_id=zwave.const.COMMAND_CLASS_DOOR_LOCK,
+            type=zwave.const.TYPE_BOOL,
+            genre=zwave.const.GENRE_USER,
+            data=False)
 
     @property
     def device_state_attributes(self):
