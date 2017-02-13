@@ -54,13 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-    name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
-    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name)
-    refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
-    delay = node_config.get(zwave.CONF_REFRESH_DELAY)
-    _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
-                  ' CONF_REFRESH_DELAY=%s', name, node_config,
-                  refresh, delay)
+
     if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
         return
     if value.type != zwave.const.TYPE_BYTE:
@@ -71,9 +65,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value.set_change_verified(False)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
-        add_devices([ZwaveColorLight(value, refresh, delay)])
+        add_devices([ZwaveColorLight(value)])
     else:
-        add_devices([ZwaveDimmer(value, refresh, delay)])
+        add_devices([ZwaveDimmer(value)])
 
 
 def brightness_state(value):
@@ -87,13 +81,12 @@ def brightness_state(value):
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     """Representation of a Z-Wave dimmer."""
 
-    def __init__(self, value, refresh, delay):
+    def __init__(self, value):
         """Initialize the light."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._brightness = None
         self._state = None
-        self._delay = delay
-        self._refresh_value = refresh
+
         self._zw098 = None
 
         # Enable appropriate workaround flags for our device
@@ -112,8 +105,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # Used for value change event handling
         self._refreshing = False
         self._timer = None
-        _LOGGER.debug('self._refreshing=%s self.delay=%s',
-                      self._refresh_value, self._delay)
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
@@ -122,24 +113,20 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
-        if self._refresh_value:
-            if self._refreshing:
-                self._refreshing = False
-                self.update_properties()
-            else:
-                def _refresh_value():
-                    """Used timer callback for delayed value refresh."""
-                    self._refreshing = True
-                    self._value.refresh()
-
-                if self._timer is not None and self._timer.isAlive():
-                    self._timer.cancel()
-
-                self._timer = Timer(self._delay, _refresh_value)
-                self._timer.start()
-            self.schedule_update_ha_state()
-        else:
+        if self._refreshing:
+            self._refreshing = False
             self.update_properties()
+        else:
+            def _refresh_value():
+                """Used timer callback for delayed value refresh."""
+                self._refreshing = True
+                self._value.refresh()
+
+            if self._timer is not None and self._timer.isAlive():
+                self._timer.cancel()
+
+            self._timer = Timer(5, _refresh_value)
+            self._timer.start()
             self.schedule_update_ha_state()
 
     @property
@@ -186,7 +173,7 @@ def ct_to_rgb(temp):
 class ZwaveColorLight(ZwaveDimmer):
     """Representation of a Z-Wave color changing light."""
 
-    def __init__(self, value, refresh, delay):
+    def __init__(self, value):
         """Initialize the light."""
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
@@ -197,7 +184,7 @@ class ZwaveColorLight(ZwaveDimmer):
         self._rgb = None
         self._ct = None
 
-        super().__init__(value, refresh, delay)
+        super().__init__(value)
 
         # Create a listener so the color values can be linked to this entity
         dispatcher.connect(

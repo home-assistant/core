@@ -48,8 +48,7 @@ DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
-DEFAULT_CONF_REFRESH_VALUE = False
-DEFAULT_CONF_REFRESH_DELAY = 2
+
 DOMAIN = 'zwave'
 
 NETWORK = None
@@ -167,10 +166,6 @@ SET_WAKEUP_SCHEMA = vol.Schema({
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
-    vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
-        cv.boolean,
-    vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-        cv.positive_int
 })
 
 CONFIG_SCHEMA = vol.Schema({
