@@ -4,13 +4,13 @@ Support for MyQ-Enabled Garage Doors.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/cover.myq/
 """
-
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
-    CONF_TYPE, STATE_CLOSED
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
@@ -40,11 +40,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if not myq.is_supported_brand():
         logger.error('MyQ Cover - Unsupported Brand')
-        return False
+        return
 
     if not myq.is_login_valid():
         logger.error('MyQ Cover - Username or Password is incorrect')
-        return False
+        return
 
     try:
         add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
@@ -76,11 +76,6 @@ class MyQDevice(CoverDevice):
     def is_closed(self):
         """Return True if cover is closed, else False."""
         return self._status == STATE_CLOSED
-
-    @property
-    def current_cover_position(self):
-        """Return current position of cover."""
-        return 0 if self.is_closed else 100
 
     def close_cover(self):
         """Issue close command to cover."""
