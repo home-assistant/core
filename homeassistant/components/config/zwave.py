@@ -2,7 +2,6 @@
 import asyncio
 import os
 import voluptuous as vol
-import yaml
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.zwave import _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY
