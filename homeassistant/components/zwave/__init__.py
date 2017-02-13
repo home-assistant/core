@@ -50,6 +50,7 @@ DEFAULT_CONF_REFRESH_DELAY = 2
 DOMAIN = 'zwave'
 
 NETWORK = None
+DATA_DEVICE_CONFIG = 'zwave_device_config'
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
 # value type, genre type, specific device class).
@@ -297,6 +298,7 @@ def setup(hass, config):
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
+    hass.data[DATA_DEVICE_CONFIG] = config[DOMAIN][CONF_DEVICE_CONFIG]
 
     # Setup options
     options = ZWaveOption(
@@ -381,7 +383,7 @@ def setup(hass, config):
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = config[DOMAIN][CONF_DEVICE_CONFIG].get(name)
+            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info("Ignoring device %s", name)
