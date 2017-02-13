@@ -55,6 +55,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
     gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
 
     for gateway in gateways:
+        if float(gateway.protocol_version) < 2.0:
+            continue
         gateway.platform_callbacks.append(mysensors_callback)
 
     return True
