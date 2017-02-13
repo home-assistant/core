@@ -734,3 +734,8 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.18.0
+
+# homeassistant.components.tado_v1
+# homeassistant.components.sensor.tado_v1
+# homeassistant.components.switch.tado_v1
+https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
