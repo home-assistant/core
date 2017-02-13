@@ -27,7 +27,6 @@ SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor']
 @callback
 def async_start(hass, discovery_topic, hass_config):
     """Initialization of MQTT Discovery."""
-
     @asyncio.coroutine
     def async_device_message_received(topic, payload, qos):
         """Process the received message."""
