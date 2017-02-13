@@ -210,7 +210,7 @@ def test_error_when_not_connected(hass, monkeypatch):
     # rflink initiated disconnect
     disconnect_callback(None)
 
-    yield from hass.async_block_till_done()
+    yield from asyncio.sleep(0, loop=hass.loop)
 
     assert hass.states.get('rflink.connection_status').state == 'error'
 
