@@ -25,7 +25,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.info('New INSTEON PLM light device: %s (%s)', name, address)
         hass.async_add_job(async_add_devices([InsteonPLMDimmerDevice(hass, plm, address, name)]))
 
-    plm.protocol.new_device_callback(async_insteonplm_light_callback, {})
+    plm.protocol.add_device_callback(async_insteonplm_light_callback, {})
 
 
     new_lights = []
@@ -40,7 +40,7 @@ class InsteonPLMDimmerDevice(Light):
         self._plm = plm.protocol
         self._address = address
         self._name = name
-        self._plm.update_callback(self.async_insteonplm_light_update_callback, dict(address=self._address))
+        self._plm.add_update_callback(self.async_insteonplm_light_update_callback, dict(address=self._address))
 
     @property
     def should_poll(self):
