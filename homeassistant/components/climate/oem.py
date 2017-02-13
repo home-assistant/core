@@ -25,7 +25,6 @@ REQUIREMENTS = ['oemthermostat==1.1']
 _LOGGER = logging.getLogger(__name__)
 
 # Local configs
-CONF_TARGET_TEMP = 'target_temp'
 CONF_AWAY_TEMP = 'away_temp'
 
 # Validation of the user's configuration
@@ -35,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=80): cv.port,
     vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-    vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
     vol.Optional(CONF_AWAY_TEMP, default=14): vol.Coerce(float)
 })
 
@@ -51,7 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    target_temp = config.get(CONF_TARGET_TEMP)
     away_temp = config.get(CONF_AWAY_TEMP)
 
     # If creating the class raises an exception, it failed to connect or
@@ -61,9 +58,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            username=username, password=password)
     except (ValueError, AssertionError, requests.RequestException):
         return False
-
-    if target_temp:
-        therm.setpoint = target_temp
 
     # Add devices
     add_devices((ThermostatDevice(hass, therm, name, away_temp), ), True)
