@@ -137,7 +137,7 @@ class KNXGroupAddress(Entity):
             """
             if (addr == self.state_address) or (addr == self.address):
                 self._state = data[0]
-                self.update_ha_state()
+                self.schedule_update_ha_state()
 
         KNXTUNNEL.register_listener(self.address, handle_knx_message)
         if self.state_address:
