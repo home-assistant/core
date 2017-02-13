@@ -60,7 +60,6 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
             class_id=zwave.const.COMMAND_CLASS_SENSOR_BINARY,
             member='data')
 
-
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
