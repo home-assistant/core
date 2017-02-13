@@ -4,7 +4,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.zwave import _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY
+from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY
 from homeassistant.util.yaml import load_yaml, dump
 
 
@@ -43,7 +43,7 @@ class DeviceConfigView(HomeAssistantView):
         try:
             # We just validate, we don't store that data because
             # we don't want to store the defaults.
-            _ZWAVE_CUSTOMIZE_SCHEMA_ENTRY(data)
+            DEVICE_CONFIG_SCHEMA_ENTRY(data)
         except vol.Invalid as err:
             print(data, err)
             return self.json_message('Message malformed: {}'.format(err), 400)

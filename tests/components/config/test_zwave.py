@@ -3,33 +3,11 @@ from copy import deepcopy
 import json
 from unittest.mock import patch, MagicMock
 
-import pytest
-import voluptuous as vol
-
-from homeassistant.components import zwave
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
-from homeassistant.components.config import zwave as zwave_conf
 from homeassistant.components.config.zwave import DeviceConfigView
 from tests.common import mock_http_component_app, mock_coro, mock_coro_func
 
-
-import homeassistant.helpers.config_validation as cv
-
-
-@pytest.fixture(autouse=True)
-def patch_schema():
-    """Temporary patch while waiting for other PR to get merged."""
-    with patch.object(zwave_conf, '_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY', vol.Schema({
-        vol.Optional(zwave.CONF_POLLING_INTENSITY): cv.positive_int,
-        vol.Optional(zwave.CONF_IGNORED, default=zwave.DEFAULT_CONF_IGNORED):
-            cv.boolean,
-        vol.Optional(zwave.CONF_REFRESH_VALUE,
-                     default=zwave.DEFAULT_CONF_REFRESH_VALUE): cv.boolean,
-        vol.Optional(zwave.CONF_REFRESH_DELAY,
-                     default=zwave.DEFAULT_CONF_REFRESH_DELAY): cv.positive_int
-    })):
-        yield
 
 
 @asyncio.coroutine
