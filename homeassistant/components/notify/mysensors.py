@@ -19,6 +19,8 @@ def get_service(hass, config, discovery_info=None):
         return
 
     for gateway in gateways:
+        if float(gateway.protocol_version) < 2.0:
+            continue
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
