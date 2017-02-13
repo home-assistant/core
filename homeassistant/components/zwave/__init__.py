@@ -174,7 +174,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            _DEVICE_CONFIG_SCHEMA_ENTRY,
+            vol.Schema({cv.entity_id: _DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
