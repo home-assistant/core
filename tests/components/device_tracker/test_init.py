@@ -48,10 +48,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
-        try:
+        if os.path.isfile(self.yaml_devices):
             os.remove(self.yaml_devices)
-        except FileNotFoundError:
-            pass
 
         self.hass.stop()
 
