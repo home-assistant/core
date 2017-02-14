@@ -8,12 +8,12 @@ from homeassistant.components.zwave import DEVICE_CONFIG_SCHEMA_ENTRY
 from homeassistant.util.yaml import load_yaml, dump
 
 
-DEVICE_CONFIG = 'zwave_device_config.yml'
+DEVICE_CONFIG = 'zwave_device_config.yaml'
 
 
 @asyncio.coroutine
 def async_setup(hass):
-    """Setup the hassbian config."""
+    """Setup the Z-Wave config API."""
     hass.http.register_view(DeviceConfigView)
     return True
 
