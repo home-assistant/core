@@ -1,4 +1,4 @@
-"""Component to interact with Hassbian tools."""
+"""Component to configure Home Assistant via an API."""
 import asyncio
 
 from homeassistant.core import callback
@@ -15,7 +15,7 @@ ON_DEMAND = ('zwave', )
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the hassbian component."""
+    """Setup the config component."""
     register_built_in_panel(hass, 'config', 'Configuration', 'mdi:settings')
 
     @asyncio.coroutine

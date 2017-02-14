@@ -24,7 +24,6 @@ from . import const
 from . import workaround
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
-DEPENDENCIES = ['config']
 
 _LOGGER = logging.getLogger(__name__)
 

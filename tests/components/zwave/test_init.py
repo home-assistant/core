@@ -39,7 +39,7 @@ def test_device_config(hass):
     assert DATA_DEVICE_CONFIG in hass.data
 
     test_data = {
-        key: _DEVICE_CONFIG_SCHEMA_ENTRY(value)
+        key: DEVICE_CONFIG_SCHEMA_ENTRY(value)
         for key, value in device_config.items()
     }
 

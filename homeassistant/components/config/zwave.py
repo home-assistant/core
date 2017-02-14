@@ -1,4 +1,4 @@
-"""Component to interact with Hassbian tools."""
+"""Provide configuration end points for Z-Wave."""
 import asyncio
 import os
 import voluptuous as vol
@@ -19,7 +19,7 @@ def async_setup(hass):
 
 
 class DeviceConfigView(HomeAssistantView):
-    """Hassbian packages endpoint."""
+    """Configure a Z-Wave device endpoint."""
 
     url = '/api/config/zwave/device_config/{entity_id}'
     name = 'api:config:zwave:device_config:update'
