@@ -107,7 +107,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
 
-        self.update_properties()
 
         # Used for value change event handling
         self._refreshing = False

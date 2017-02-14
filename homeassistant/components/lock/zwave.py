@@ -230,7 +230,6 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                     self._v2btze = 1
                     _LOGGER.debug("Polycontrol Danalock v2 BTZE "
                                   "workaround enabled")
-        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""

@@ -117,7 +117,6 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._state = None
-        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
