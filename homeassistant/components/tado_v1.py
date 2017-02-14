@@ -8,10 +8,12 @@ https://home-assistant.io/components/tado_v1/
 import logging
 import urllib
 
+import voluptuous as vol
+
 from homeassistant.components.discovery import load_platform
 from homeassistant.helpers import config_validation as cv
-
-import voluptuous as vol
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,21 +28,18 @@ TADO_V1_COMPONENTS = [
     'sensor', 'climate'
 ]
 
-CONF_MYTADO_USERNAME = 'mytado_username'
-CONF_MYTADO_PASSWORD = 'mytado_password'
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_MYTADO_USERNAME, default=''): cv.string,
-        vol.Required(CONF_MYTADO_PASSWORD, default=''): cv.string
+        vol.Required(CONF_USERNAME, default=''): cv.string,
+        vol.Required(CONF_PASSWORD, default=''): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Your controller/hub specific code."""
-    username = config[DOMAIN][CONF_MYTADO_USERNAME]
-    password = config[DOMAIN][CONF_MYTADO_PASSWORD]
+    username = config[DOMAIN][CONF_USERNAME]
+    password = config[DOMAIN][CONF_PASSWORD]
 
     from PyTado.interface import Tado
 

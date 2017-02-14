@@ -69,11 +69,6 @@ class TadoSensor(Entity):
         self._state_attributes = None
 
     @property
-    def should_poll(self):
-        """Polling needed for tado sensors."""
-        return True
-
-    @property
     def unique_id(self):
         """Return the unique id."""
         return self._unique_id
@@ -89,7 +84,7 @@ class TadoSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._state_attributes
 
@@ -183,7 +178,7 @@ class TadoSensor(Entity):
                 self._state_attributes = {}
 
         if update_ha:
-            super().update_ha_state()
+            self.schedule_update_ha_state()
 
 
 class TadoData(object):
