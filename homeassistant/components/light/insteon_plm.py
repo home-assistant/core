@@ -33,7 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.info('New INSTEON PLM light device: %s (%s)', name, address)
         hass.async_add_job(async_add_devices([InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)]))
 
-    criteria = dict(capability='switch')
+    criteria = dict(capability='light')
     plm.protocol.add_device_callback(async_insteonplm_light_callback, criteria)
 
 
