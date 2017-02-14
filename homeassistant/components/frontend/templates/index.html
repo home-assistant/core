@@ -10,6 +10,7 @@
           href='/static/icons/favicon-apple-180x180.png'>
     <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
     <link rel='preload' href='{{ core_url }}' as='script'/>
+    <link rel='preload' href='{{ compatibility_url }}' as='script'/>
     {% for panel in panels.values() -%}
       <link rel='prefetch' href='{{ panel.url }}'>
     {% endfor -%}
@@ -79,6 +80,7 @@
     <home-assistant icons='{{ icons }}'></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
     <script src='{{ core_url }}'></script>
+    <script src='{{ compatibility_url }}'></script>
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}
       <link rel='import' href='{{ panel_url }}' onerror='initError()' async>
