@@ -13,11 +13,13 @@ import voluptuous as vol
 from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import script, config_validation as cv
 
 REQUIREMENTS = ['fuzzywuzzy==0.14.0']
 
 ATTR_TEXT = 'text'
+
+CONF_ACTION = 'action'
 
 DOMAIN = 'conversation'
 
@@ -30,7 +32,9 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_ACTION): cv.SCRIPT_SCHEMA,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -41,7 +45,25 @@ def setup(hass, config):
 
     logger = logging.getLogger(__name__)
 
-    def process(service):
+    # Get action entity if defined
+    action = config[DOMAIN].get(CONF_ACTION, None)
+
+    def process_action(service):
+        """Calls an action for processing of the text."""
+        text = service.data[ATTR_TEXT]
+
+        if not text.strip():
+            return
+
+        logger.info("Conversation query: %s", (text))
+
+        parameters = {'text': text}
+        si = script.Script(hass, action,
+                           "Conversation action: {}".format(action))
+
+        hass.async_add_job(si.async_run(parameters))
+
+    def process_fuzzy(service):
         """Parse text into commands."""
         text = service.data[ATTR_TEXT]
         match = REGEX_TURN_COMMAND.match(text)
@@ -74,6 +96,10 @@ def setup(hass, config):
             logger.error('Got unsupported command %s from text %s',
                          command, text)
 
+    # Use action if configured, otherwise use fuzzy "turn on/off" matching
+    process = process_action if action else process_fuzzy
+
+    # Register the service call ("conversation.process")
     hass.services.register(
         DOMAIN, SERVICE_PROCESS, process, schema=SERVICE_PROCESS_SCHEMA)
 
