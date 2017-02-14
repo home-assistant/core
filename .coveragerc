@@ -325,6 +325,7 @@ omit =
     homeassistant/components/sensor/influxdb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
+    homeassistant/components/sensor/llap.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/miflora.py
