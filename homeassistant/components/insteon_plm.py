@@ -38,13 +38,8 @@ def async_setup(hass, config):
 
     _LOGGER.info('Looking for PLM on %s', port)
 
-    def async_insteonplm_update_callback(message):
-        """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM: %s', message)
-
     plm = yield from insteonplm.Connection.create(
-        device=port, loop=hass.loop,
-        update_callback=async_insteonplm_update_callback)
+        device=port, loop=hass.loop)
 
     hass.data['insteon_plm'] = plm
 
