@@ -76,6 +76,16 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         else:
             return False
 
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Moo."""
+        print(kwargs)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Moo."""
+        print(kwargs)
+
     def async_insteonplm_switch_update_callback(self, message):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from PLM for %s', self._address)
