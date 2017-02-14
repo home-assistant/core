@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE
-                                 , EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -61,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
 })
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the KWB component."""
