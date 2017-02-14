@@ -39,14 +39,11 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
         """Initialize the Z-Wave switch device."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._state = None
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self.get_value(
-            class_id=zwave.const.COMMAND_CLASS_SWITCH_BINARY,
-            type=zwave.const.TYPE_BOOL,
-            genre=zwave.const.GENRE_USER,
-            member='data')
+        self._state = self._value.data
 
     @property
     def is_on(self):

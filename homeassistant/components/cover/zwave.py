@@ -50,6 +50,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._open_id = None
         self._close_id = None
         self._current_position = None
+
         self._workaround = workaround.get_device_mapping(value)
         if self._workaround:
             _LOGGER.debug("Using workaround %s", self._workaround)
@@ -116,12 +117,11 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._state = None
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self.get_value(
-            class_id=zwave.const.COMMAND_CLASS_SWITCH_BINARY,
-            member='data')
+        self._state = self._value.data
 
     @property
     def is_closed(self):

@@ -50,15 +50,14 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
 
     def __init__(self, value, device_class):
         """Initialize the sensor."""
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._sensor_type = device_class
         self._state = None
-        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self.get_value(
-            class_id=zwave.const.COMMAND_CLASS_SENSOR_BINARY,
-            member='data')
+        self._state = self._value.data
 
     @property
     def is_on(self):
@@ -94,9 +93,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
 
     def update_properties(self):
         """Called when a value for this entity's node has changed."""
-        self._state = self.get_value(
-            class_id=zwave.const.COMMAND_CLASS_SENSOR_BINARY,
-            member='data')
+        self._state = self._value.data
         self.schedule_update_ha_state()
         if self._state:
             # only allow this value to be true for re_arm secs
