@@ -400,7 +400,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
             """Create entity helper."""
             entity = EntityTest()
             entity.entity_id = generate_entity_id(component.entity_id_format,
-                                                  'Number', hass=self.hass)
+                                                  'Number {}'.format(number),
+                                                  hass=self.hass)
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))

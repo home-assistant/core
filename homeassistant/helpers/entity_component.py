@@ -315,10 +315,11 @@ class EntityPlatform(object):
         if not new_entities:
             return
 
-        tasks = [self._async_process_entity(entity, update_before_add)
-                 for entity in new_entities]
+        # Do it in sequence so if two entities have the same name entity id
+        # generation is deterministic.
+        for entity in new_entities:
+            yield from self._async_process_entity(entity, update_before_add)
 
-        yield from asyncio.wait(tasks, loop=self.component.hass.loop)
         yield from self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
