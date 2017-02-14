@@ -44,18 +44,15 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self.available:
-            return int(self._hm_get_state() * 100)
-        return None
+        return int(self._hm_get_state() * 100)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if self.available:
-            if ATTR_POSITION in kwargs:
-                position = float(kwargs[ATTR_POSITION])
-                position = min(100, max(0, position))
-                level = position / 100.0
-                self._hmdevice.set_level(level, self._channel)
+        if ATTR_POSITION in kwargs:
+            position = float(kwargs[ATTR_POSITION])
+            position = min(100, max(0, position))
+            level = position / 100.0
+            self._hmdevice.set_level(level, self._channel)
 
     @property
     def is_closed(self):
@@ -68,18 +65,15 @@ class HMCover(HMDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.available:
-            self._hmdevice.move_up(self._channel)
+        self._hmdevice.move_up(self._channel)
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.available:
-            self._hmdevice.move_down(self._channel)
+        self._hmdevice.move_down(self._channel)
 
     def stop_cover(self, **kwargs):
         """Stop the device if in motion."""
-        if self.available:
-            self._hmdevice.stop(self._channel)
+        self._hmdevice.stop(self._channel)
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
