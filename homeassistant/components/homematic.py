@@ -22,7 +22,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.21"]
+REQUIREMENTS = ["pyhomematic==0.1.22"]
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -63,7 +63,7 @@ HM_DEVICE_TYPES = {
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
-        'MAXWallThermostat'],
+        'MAXWallThermostat', 'IPThermostat'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
