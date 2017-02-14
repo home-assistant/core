@@ -119,6 +119,8 @@ CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
 CONF_IP = 'ip'
 CONF_PORT = 'port'
+CONF_CALLBACK_IP = "callback_ip"
+CONF_CALLBACK_PORT = "callback_port"
 CONF_RESOLVENAMES = 'resolvenames'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
@@ -252,6 +254,8 @@ def setup(hass, config):
         remotes[rname][CONF_RESOLVENAMES] = rconfig.get(CONF_RESOLVENAMES)
         remotes[rname][CONF_USERNAME] = rconfig.get(CONF_USERNAME)
         remotes[rname][CONF_PASSWORD] = rconfig.get(CONF_PASSWORD)
+        remotes[rname]['callbackip'] = rconfig.get(CONF_CALLBACK_IP)
+        remotes[rname]['callbackport'] = rconfig.get(CONF_CALLBACK_PORT)
 
         if server not in hosts or rconfig.get(CONF_PRIMARY):
             hosts[server] = {

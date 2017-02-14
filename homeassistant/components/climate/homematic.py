@@ -108,7 +108,7 @@ class HMThermostat(HMDevice, ClimateDevice):
         if temperature is None:
             return None
 
-        self._hmdevice.set_temperature(temperature)
+        self._hmdevice.writeNodeData(self._state, float(temperature))
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
