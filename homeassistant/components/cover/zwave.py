@@ -130,15 +130,11 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def close_cover(self):
         """Close the garage door."""
-        self.set_value(
-            class_id=zwave.const.COMMAND_CLASS_SWITCH_BINARY,
-            data='False')
+        self._value.data = False
 
     def open_cover(self):
         """Open the garage door."""
-        self.set_value(
-            class_id=zwave.const.COMMAND_CLASS_SWITCH_BINARY,
-            data='True')
+        self._value.data = True
 
     @property
     def device_class(self):
