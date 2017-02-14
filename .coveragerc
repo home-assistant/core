@@ -5,7 +5,6 @@ omit =
     homeassistant/__main__.py
     homeassistant/scripts/*.py
     homeassistant/helpers/typing.py
-    homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
     homeassistant/components/apcupsd.py
@@ -149,12 +148,10 @@ omit =
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
     homeassistant/components/climate/knx.py
-    homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
-    homeassistant/components/cover/myq.py
     homeassistant/components/cover/rpi_gpio.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/cover/wink.py
@@ -214,7 +211,6 @@ omit =
     homeassistant/components/lirc.py
     homeassistant/components/lock/nuki.py
     homeassistant/components/media_player/anthemav.py
-    homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
     homeassistant/components/media_player/braviatv.py
     homeassistant/components/media_player/cast.py
@@ -226,7 +222,6 @@ omit =
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
     homeassistant/components/media_player/gpmdp.py
-    homeassistant/components/media_player/gstreamer.py
     homeassistant/components/media_player/hdmi_cec.py
     homeassistant/components/media_player/itunes.py
     homeassistant/components/media_player/kodi.py
@@ -262,7 +257,6 @@ omit =
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
-    homeassistant/components/notify/mailgun.py
     homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nfandroidtv.py
@@ -284,7 +278,6 @@ omit =
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
     homeassistant/components/remote/harmony.py
-    homeassistant/components/remote/itach.py
     homeassistant/components/scene/hunterdouglas_powerview.py
     homeassistant/components/sensor/amcrest.py
     homeassistant/components/sensor/arest.py
@@ -307,11 +300,9 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
     homeassistant/components/sensor/fastdotcom.py
-    homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/fitbit.py
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
-    homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
     homeassistant/components/sensor/gpsd.py
@@ -364,7 +355,6 @@ omit =
     homeassistant/components/sensor/transmission.py
     homeassistant/components/sensor/twitch.py
     homeassistant/components/sensor/uber.py
-    homeassistant/components/sensor/ups.py
     homeassistant/components/sensor/usps.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/waqi.py
@@ -393,7 +383,6 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/telegram_webhooks.py
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
@@ -414,4 +403,5 @@ exclude_lines =
 
     # Don't complain if tests don't hit defensive assertion code:
     raise AssertionError
-    raise NotImplementedError
+raise NotImplementedError
+
