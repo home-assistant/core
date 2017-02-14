@@ -2,7 +2,9 @@
 Support for Yeelight Sunflower colour bulbs (not Yeelight Blue or WiFi).
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.yeelight-sunflower/ (TODO)
+https://home-assistant.io/components/light.yeelight-sunflower
+Uses the yeelightsunflower library:
+https://github.com/lindsaymarkward/python-yeelight-sunflower
 """
 import logging
 import voluptuous as vol
@@ -52,6 +54,10 @@ class SunflowerBulb(Light):
     def __init__(self, light):
         """Initialize a Yeelight Sunflower bulb."""
         self._light = light
+        self._available = light.available
+        self._brightness = light.brightness
+        self._is_on = light.is_on
+        self._rgb_color = light.rgb_color
 
     @property
     def unique_id(self):
@@ -66,22 +72,22 @@ class SunflowerBulb(Light):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._light.available
+        return self._available
 
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._light.is_on
+        return self._is_on
 
     @property
     def brightness(self):
         """HA brightness is 0-255; Yeelight Sunflower's brightness is 0-100."""
-        return self._light.brightness / 100 * 255
+        return self._brightness / 100 * 255
 
     @property
     def rgb_color(self):
         """Return the color property."""
-        return self._light.rgb_color
+        return self._rgb_color
 
     @property
     def supported_features(self):
@@ -110,5 +116,9 @@ class SunflowerBulb(Light):
         self._light.turn_off()
 
     def update(self):
-        """Fetch new state data for this light."""
+        """Fetch new state data for this light and update local values."""
         self._light.update()
+        self._available = self._light.available
+        self._brightness = self._light.brightness
+        self._is_on = self._light.is_on
+        self._rgb_color = self._light.rgb_color
