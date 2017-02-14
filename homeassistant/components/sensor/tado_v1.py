@@ -108,10 +108,8 @@ class TadoSensor(Entity):
         """Update method called when should_poll is true."""
         self._tado_data.update()
 
-        self.push_update(self._tado_data.get_data(self._data_id), True)
+        data = self._tado_data.get_data(self._data_id)
 
-    def push_update(self, data, update_ha):
-        """Push the update to the current object."""
         # pylint: disable=R0912
         if self.zone_variable == 'temperature':
             if 'sensorDataPoints' in data:
@@ -175,8 +173,7 @@ class TadoSensor(Entity):
                 self._state = False
                 self._state_attributes = {}
 
-        if update_ha:
-            self.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
 
 class TadoData(object):
