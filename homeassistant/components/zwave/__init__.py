@@ -160,7 +160,7 @@ SET_WAKEUP_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), cv.positive_int),
 })
 
-_DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
@@ -174,7 +174,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
-            vol.Schema({cv.entity_id: _DEVICE_CONFIG_SCHEMA_ENTRY}),
+            vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
