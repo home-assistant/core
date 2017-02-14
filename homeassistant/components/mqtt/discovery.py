@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
     r'homeassistant/(?P<component>\w+)/(?P<object_id>\w+)/config')
-SUPPORTED_COMPONENTS = ['binary_sensor']
+
+SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor']
 
 
 @callback
@@ -39,8 +40,7 @@ def async_start(hass, discovery_topic, hass_config):
         try:
             payload = json.loads(payload)
         except ValueError:
-            _LOGGER.warning(
-                "Unable to parse JSON %s: %s", object_id, payload)
+            _LOGGER.warning("Unable to parse JSON %s: %s", object_id, payload)
             return
 
         if component not in SUPPORTED_COMPONENTS:
