@@ -11,6 +11,7 @@ import hashlib
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
@@ -86,9 +87,11 @@ class AppleTvDevice(MediaPlayerDevice):
         self._playing = None
         self._artwork_hash = None
 
-    def _reset(self):
+    @callback
+    def _set_power_off(self, is_off):
         self._playing = None
         self._artwork_hash = None
+        self._is_off = is_off
 
     @property
     def name(self):
@@ -120,24 +123,26 @@ class AppleTvDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        if not self._is_off:
-            from pyatv import exceptions
-            try:
-                playing = yield from self._atv.metadata.playing()
+        if self._is_off:
+            return
 
-                if self._has_playing_media_changed(playing):
-                    base = str(playing.title) + str(playing.artist) + \
-                        str(playing.album) + str(playing.total_time)
-                    self._artwork_hash = hashlib.md5(
-                        base.encode('utf-8')).hexdigest()
+        from pyatv import exceptions
+        try:
+            playing = yield from self._atv.metadata.playing()
 
-                self._playing = playing
-            except exceptions.AuthenticationError as ex:
-                _LOGGER.warning('%s (bad login id?)', str(ex))
-            except aiohttp.errors.ClientOSError as ex:
-                _LOGGER.error('failed to connect to Apple TV (%s)', str(ex))
-            except asyncio.TimeoutError:
-                _LOGGER.warning('timed out while connecting to Apple TV')
+            if self._has_playing_media_changed(playing):
+                base = str(playing.title) + str(playing.artist) + \
+                    str(playing.album) + str(playing.total_time)
+                self._artwork_hash = hashlib.md5(
+                    base.encode('utf-8')).hexdigest()
+
+            self._playing = playing
+        except exceptions.AuthenticationError as ex:
+            _LOGGER.warning('%s (bad login id?)', str(ex))
+        except aiohttp.errors.ClientOSError as ex:
+            _LOGGER.error('failed to connect to Apple TV (%s)', str(ex))
+        except asyncio.TimeoutError:
+            _LOGGER.warning('timed out while connecting to Apple TV')
 
     def _has_playing_media_changed(self, new_playing):
         if self._playing is None:
@@ -145,18 +150,6 @@ class AppleTvDevice(MediaPlayerDevice):
         old_playing = self._playing
         return new_playing.media_type != old_playing.media_type or \
             new_playing.title != old_playing.title
-
-    def turn_on(self):
-        """Turn the media player on."""
-        self._is_off = False
-        self._reset()
-        self.schedule_update_ha_state()
-
-    def turn_off(self):
-        """Turn the media player off."""
-        self._is_off = True
-        self._reset()
-        self.schedule_update_ha_state()
 
     @property
     def media_content_type(self):
@@ -228,6 +221,16 @@ class AppleTvDevice(MediaPlayerDevice):
                 features |= SUPPORT_PLAY_MEDIA
         return features
 
+    @asyncio.coroutine
+    def async_turn_on(self):
+        """Turn the media player on."""
+        self._set_power_off(False)
+
+    @asyncio.coroutine
+    def async_turn_off(self):
+        """Turn the media player off."""
+        self._set_power_off(True)
+
     def async_media_play_pause(self):
         """Pause media on media player.
 
@@ -272,8 +275,10 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing is not None:
             return self._atv.remote_control.previous()
 
-    @asyncio.coroutine
     def async_media_seek(self, position):
-        """Send seek command."""
+        """Send seek command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         if self._playing is not None:
-            yield from self._atv.remote_control.set_position(position)
+            return self._atv.remote_control.set_position(position)
