@@ -98,16 +98,16 @@ SENSOR_TYPES = {
 }
 
 CONDITION_PICTURES = {
-    'clear-day': '/images/weather-sunny.png',
-    'clear-night': '/images/weather-night.png',
-    'rain': '/images/weather-rainy.png',
-    'snow': '/images/weather-snowy.png',
-    'sleet': '/images/weather-hail.png',
-    'wind': '/images/weather-windy.png',
-    'fog': '/images/weather-fog.png',
-    'cloudy': '/images/weather-cloudy.png',
-    'partly-cloudy-day': '/images/weather-partlycloudy.png',
-    'partly-cloudy-night': '/images/weather-cloudy.png',
+    'clear-day': '/static/images/weather-sunny.png',
+    'clear-night': '/static/images/weather-night.png',
+    'rain': '/static/images/weather-rainy.png',
+    'snow': '/static/images/weather-snowy.png',
+    'sleet': '/static/images/weather-hail.png',
+    'wind': '/static/images/weather-windy.png',
+    'fog': '/static/images/weather-fog.png',
+    'cloudy': '/static/images/weather-cloudy.png',
+    'partly-cloudy-day': '/static/images/weather-partlycloudy.png',
+    'partly-cloudy-night': '/static/images/weather-cloudy.png',
 }
 
 
