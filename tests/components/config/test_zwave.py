@@ -1,13 +1,12 @@
 """Test Z-Wave config panel."""
 import asyncio
-from copy import deepcopy
 import json
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
 from homeassistant.components.config.zwave import DeviceConfigView
-from tests.common import mock_http_component_app, mock_coro, mock_coro_func
+from tests.common import mock_http_component_app
 
 
 @asyncio.coroutine
@@ -22,14 +21,18 @@ def test_get_device_config(hass, test_client):
 
     client = yield from test_client(app)
 
-    with patch.object(hass.loop, 'run_in_executor', mock_coro_func({
-                   'hello.beer': {
-                       'free': 'beer',
-                   },
-                   'other.entity': {
-                       'do': 'something',
-                   },
-               })):
+    def mock_read(path):
+        """Mock reading data."""
+        return {
+            'hello.beer': {
+                'free': 'beer',
+            },
+            'other.entity': {
+                'do': 'something',
+            },
+        }
+
+    with patch('homeassistant.components.config.zwave._read', mock_read):
         resp = yield from client.get(
             '/api/config/zwave/device_config/hello.beer')
 
@@ -59,9 +62,19 @@ def test_update_device_config(hass, test_client):
             'polling_intensity': 2,
         },
     }
-    mock_executor = MagicMock(return_value=mock_coro(deepcopy(orig_data))())
 
-    with patch.object(hass.loop, 'run_in_executor', mock_executor):
+    def mock_read(path):
+        """Mock reading data."""
+        return orig_data
+
+    written = []
+
+    def mock_write(path, data):
+        """Mock writing data."""
+        written.append(data)
+
+    with patch('homeassistant.components.config.zwave._read', mock_read), \
+            patch('homeassistant.components.config.zwave._write', mock_write):
         resp = yield from client.post(
             '/api/config/zwave/device_config/hello.beer', data=json.dumps({
                 'polling_intensity': 2
@@ -71,9 +84,6 @@ def test_update_device_config(hass, test_client):
     result = yield from resp.json()
     assert result == {'result': 'ok'}
 
-    assert len(mock_executor.mock_calls) == 2
-    data = mock_executor.mock_calls[1][1][3]
-
     orig_data['hello.beer']['polling_intensity'] = 2
 
-    assert orig_data == data
+    assert written[0] == orig_data
