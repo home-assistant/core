@@ -9,9 +9,9 @@ from collections import defaultdict
 import functools as ft
 import logging
 
+import async_timeout
 import voluptuous as vol
 
-import async_timeout
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
