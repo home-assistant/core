@@ -485,7 +485,7 @@ pyiss==1.0.1
 pyitachip2ir==0.0.5
 
 # homeassistant.components.sensor.lastfm
-pylast==1.7.0
+pylast==1.8.0
 
 # homeassistant.components.litejet
 pylitejet==0.1
