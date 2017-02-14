@@ -10,7 +10,7 @@ from tests.common import mock_http_component_app, mock_coro
 
 @asyncio.coroutine
 def test_validate_config_ok(hass, test_client):
-    """Test getting suites."""
+    """Test checking config."""
     app = mock_http_component_app(hass)
     with patch.object(config, 'SECTIONS', ['core']):
         yield from async_setup_component(hass, 'config', {})

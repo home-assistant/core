@@ -401,6 +401,16 @@ def mock_generator(return_value=None):
     return mock_coro(return_value)()
 
 
+def mock_coro_func(return_value=None):
+    """Helper method to return a coro that returns a value."""
+    @asyncio.coroutine
+    def coro(*args, **kwargs):
+        """Fake coroutine."""
+        return return_value
+
+    return coro
+
+
 @contextmanager
 def assert_setup_component(count, domain=None):
     """Collect valid configuration from setup_component.
