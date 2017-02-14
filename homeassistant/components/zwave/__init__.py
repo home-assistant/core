@@ -385,7 +385,7 @@ def setup(hass, config):
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
+            node_config = hass.data[DATA_DEVICE_CONFIG].get(name) or {}
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info("Ignoring device %s", name)
