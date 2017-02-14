@@ -35,8 +35,6 @@ SENSOR_TYPES = ['temperature', 'humidity', 'tado mode', 'power', 'overlay']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the climate platform."""
-    # pylint: disable=W0613
-
     # get the PyTado object from the hub component
     tado = hass.data['Mytado']
 
