@@ -10,6 +10,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
+from datetime import datetime, timedelta
 
 DEPENDENCIES = ['wemo']
 
@@ -19,6 +20,16 @@ ATTR_SENSOR_STATE = "sensor_state"
 ATTR_SWITCH_MODE = "switch_mode"
 ATTR_CURRENT_STATE_DETAIL = 'state_detail'
 ATTR_COFFEMAKER_MODE = "coffeemaker_mode"
+
+# Wemo Insight
+ATTR_POWER_CURRENT_W = 'power_current_w'
+# ATTR_POWER_AVG_W = 'power_average_w'
+ATTR_POWER_TODAY_MW_MIN = 'power_today_mW_min'
+ATTR_POWER_TOTAL_MW_MIN = 'power_total_mW_min'
+ATTR_ON_FOR_TIME = 'on_time_most_recent'
+ATTR_ON_TODAY_TIME = 'on_time_today'
+ATTR_ON_TOTAL_TIME = 'on_time_total'
+ATTR_POWER_THRESHOLD = 'power_threshold_w'
 
 MAKER_SWITCH_MOMENTARY = "momentary"
 MAKER_SWITCH_TOGGLE = "toggle"
@@ -109,23 +120,81 @@ class WemoSwitch(SwitchDevice):
 
         if self.insight_params or (self.coffeemaker_mode is not None):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
+            attr[ATTR_POWER_CURRENT_W] = self.power_current_watt
+            # attr[ATTR_POWER_AVG_W] = self.power_average_watt
+            attr[ATTR_POWER_TODAY_MW_MIN] = self.power_today_mw_min
+            attr[ATTR_POWER_TOTAL_MW_MIN] = self.power_total_mw_min
+            attr[ATTR_ON_FOR_TIME] = self.on_for
+            attr[ATTR_ON_TODAY_TIME] = self.on_today
+            attr[ATTR_ON_TOTAL_TIME] = self.on_total
+            attr[ATTR_POWER_THRESHOLD] = self.power_threshold
 
         if self.coffeemaker_mode is not None:
             attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
 
         return attr
 
-    @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
+#    @property
+    def _current_power_mw(self):
+        """Current power usage in mW."""
         if self.insight_params:
-            return self.insight_params['currentpower']
+           return self.insight_params['currentpower']
 
     @property
-    def today_power_mw(self):
-        """Today total power usage in mW."""
+    def power_current_watt(self):
+        """Current power usage in W."""
         if self.insight_params:
-            return self.insight_params['todaymw']
+            try:
+               return self._current_power_mw() / 1000
+            except:
+               return None
+
+    @property
+    def power_threshold(self):
+        if self.insight_params:
+           return self.insight_params['powerthreshold'] / 1000
+
+    def _as_uptime(self, _seconds):
+      d = datetime(1,1,1) + timedelta(seconds=_seconds)
+      return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(d.day-1,
+                                                     d.hour,
+                                                     d.minute, d.second)
+
+    @property
+    def on_for(self):
+        """On time in seconds."""
+        if self.insight_params:
+            return self._as_uptime(self.insight_params['onfor'])
+
+    @property
+    def on_today(self):
+        """On time in seconds."""
+        if self.insight_params:
+            return self._as_uptime(self.insight_params['ontoday'])
+
+    @property
+    def on_total(self):
+        """On time in seconds."""
+        if self.insight_params:
+            return self._as_uptime(self.insight_params['ontotal'])
+
+    @property
+    def power_total_mw_min(self):
+        """This is a total of average mW per minute."""
+        if self.insight_params:
+            try:
+               return self.insight_params['totalmw']
+            except:
+               return None
+
+    @property
+    def power_today_mw_min(self):
+        """This is the total consumption today in mW per minute."""
+        if self.insight_params:
+            try:
+               return self.insight_params['todaymw']
+            except:
+               return None
 
     @property
     def detail_state(self):
