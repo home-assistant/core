@@ -41,7 +41,7 @@ class EntityComponent(object):
         self.config = None
 
         self._platforms = {
-            'core': EntityPlatform(self, self.scan_interval, None),
+            'core': EntityPlatform(self, domain, self.scan_interval, None),
         }
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
@@ -134,8 +134,8 @@ class EntityComponent(object):
         key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
-            self._platforms[key] = EntityPlatform(self, scan_interval,
-                                                  entity_namespace)
+            self._platforms[key] = EntityPlatform(
+                self, platform_type, scan_interval, entity_namespace)
         entity_platform = self._platforms[key]
 
         try:
@@ -284,9 +284,10 @@ class EntityComponent(object):
 class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
-    def __init__(self, component, scan_interval, entity_namespace):
+    def __init__(self, component, platform, scan_interval, entity_namespace):
         """Initalize the entity platform."""
         self.component = component
+        self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.platform_entities = []
@@ -366,8 +367,9 @@ class EntityPlatform(object):
         """
         if self._process_updates.locked():
             self.component.logger.warning(
-                "Updating %s took longer than the scheduled update "
-                "interval %s", self.component.domain, self.scan_interval)
+                "Updating %s %s took longer than the scheduled update "
+                "interval %s", self.platform, self.component.domain,
+                self.scan_interval)
             return
 
         with (yield from self._process_updates):
@@ -390,8 +392,8 @@ class EntityPlatform(object):
                     yield from update_coro
                 except Exception:  # pylint: disable=broad-except
                     self.component.logger.exception(
-                        'Error while update entity in %s',
-                        self.component.domain)
+                        'Error while update entity from %s in %s',
+                        self.platform, self.component.domain)
 
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)
