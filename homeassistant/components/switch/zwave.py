@@ -37,26 +37,12 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
 
     def __init__(self, value):
         """Initialize the Z-Wave switch device."""
-        from openzwave.network import ZWaveNetwork
-        from pydispatch import dispatcher
-
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-
-        self._state = value.data
-        dispatcher.connect(
-            self._value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
-
-    def _value_changed(self, value):
-        """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self._state = value.data
-            self.schedule_update_ha_state()
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._state
+        return self._value.data
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

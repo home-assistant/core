@@ -12,7 +12,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+    ATTR_TARGET, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONTENT_TYPE_JSON
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,6 +41,15 @@ class FacebookNotificationService(BaseNotificationService):
         """Send some message."""
         payload = {'access_token': self.page_access_token}
         targets = kwargs.get(ATTR_TARGET)
+        data = kwargs.get(ATTR_DATA)
+
+        body_message = {"text": message}
+
+        if data is not None:
+            body_message.update(data)
+            # Only one of text or attachment can be specified
+            if 'attachment' in body_message:
+                body_message.pop('text')
 
         if not targets:
             _LOGGER.error("At least 1 target is required")
@@ -49,7 +58,7 @@ class FacebookNotificationService(BaseNotificationService):
         for target in targets:
             body = {
                 "recipient": {"phone_number": target},
-                "message": {"text": message}
+                "message": body_message
             }
             import json
             resp = requests.post(BASE_URL, data=json.dumps(body),

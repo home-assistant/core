@@ -208,6 +208,27 @@ class TestDemoClimate(unittest.TestCase):
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual('off', state.attributes.get('away_mode'))
 
+    def test_set_hold_mode_home(self):
+        """Test setting the hold mode home."""
+        climate.set_hold_mode(self.hass, 'home', ENTITY_ECOBEE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('home', state.attributes.get('hold_mode'))
+
+    def test_set_hold_mode_away(self):
+        """Test setting the hold mode away."""
+        climate.set_hold_mode(self.hass, 'away', ENTITY_ECOBEE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual('away', state.attributes.get('hold_mode'))
+
+    def test_set_hold_mode_none(self):
+        """Test setting the hold mode off/false."""
+        climate.set_hold_mode(self.hass, None, ENTITY_ECOBEE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_ECOBEE)
+        self.assertEqual(None, state.attributes.get('hold_mode'))
+
     def test_set_aux_heat_bad_attr(self):
         """Test setting the auxillary heater without required attribute."""
         state = self.hass.states.get(ENTITY_CLIMATE)

@@ -58,7 +58,7 @@ class TelldusLiveSensor(TelldusLiveEntity):
     @property
     def _value(self):
         """Return value of the sensor."""
-        return self.device.value(self._id[1:])
+        return self.device.value(*self._id[1:])
 
     @property
     def _value_as_temperature(self):
@@ -85,7 +85,9 @@ class TelldusLiveSensor(TelldusLiveEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._type == SENSOR_TYPE_TEMP:
+        if not self.available:
+            return None
+        elif self._type == SENSOR_TYPE_TEMP:
             return self._value_as_temperature
         elif self._type == SENSOR_TYPE_HUMIDITY:
             return self._value_as_humidity

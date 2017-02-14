@@ -50,7 +50,7 @@ class DescriptionXmlView(HomeAssistantView):
 """
 
         resp_text = xml_template.format(
-            self.config.host_ip_addr, self.config.listen_port)
+            self.config.advertise_ip, self.config.advertise_port)
 
         return web.Response(text=resp_text, content_type='text/xml')
 
@@ -60,7 +60,8 @@ class UPNPResponderThread(threading.Thread):
 
     _interrupted = False
 
-    def __init__(self, host_ip_addr, listen_port, upnp_bind_multicast):
+    def __init__(self, host_ip_addr, listen_port, upnp_bind_multicast,
+                 advertise_ip, advertise_port):
         """Initialize the class."""
         threading.Thread.__init__(self)
 
@@ -81,9 +82,9 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
 """
 
-        self.upnp_response = resp_template.format(host_ip_addr, listen_port) \
-                                          .replace("\n", "\r\n") \
-                                          .encode('utf-8')
+        self.upnp_response = resp_template.format(
+            advertise_ip, advertise_port).replace("\n", "\r\n") \
+                                         .encode('utf-8')
 
         # Set up a pipe for signaling to the receiver that it's time to
         # shutdown. Essentially, we place the SSDP socket into nonblocking

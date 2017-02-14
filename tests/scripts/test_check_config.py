@@ -101,7 +101,13 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir('platform.yaml'))
             change_yaml_files(res)
             self.assertDictEqual(
-                {'mqtt': {'keepalive': 60, 'port': 1883, 'protocol': '3.1.1'},
+                {'mqtt': {
+                    'keepalive': 60,
+                    'port': 1883,
+                    'protocol': '3.1.1',
+                    'discovery': False,
+                    'discovery_prefix': 'homeassistant',
+                },
                  'light': []},
                 res['components']
             )
@@ -180,3 +186,24 @@ class TestCheckConfig(unittest.TestCase):
                 'secrets': {'http_pw': 'abc123'},
                 'yaml_files': ['.../secret.yaml', '.../secrets.yaml']
             }, res)
+
+    def test_package_invalid(self): \
+            # pylint: disable=no-self-use,invalid-name
+        """Test a valid platform setup."""
+        files = {
+            'bad.yaml': BASE_CONFIG + ('  packages:\n'
+                                       '    p1:\n'
+                                       '      group: ["a"]'),
+        }
+        with patch_yaml_files(files):
+            res = check_config.check(get_test_config_dir('bad.yaml'))
+            change_yaml_files(res)
+
+            err = res['except'].pop('homeassistant.packages.p1')
+            assert res['except'] == {}
+            assert err == {'group': ['a']}
+            assert res['yaml_files'] == ['.../bad.yaml']
+
+            assert res['components'] == {}
+            assert res['secret_cache'] == {}
+            assert res['secrets'] == {}

@@ -20,7 +20,7 @@ import homeassistant.loader as loader
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['amcrest==1.1.3']
+REQUIREMENTS = ['amcrest==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,10 +122,18 @@ class AmcrestSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        version, build_date = self._camera.software_information
-        self._attrs['Build Date'] = build_date.split('=')[-1]
-        self._attrs['Serial Number'] = self._camera.serial_number
-        self._attrs['Version'] = version.split('=')[-1]
+        try:
+            version, build_date = self._camera.software_information
+            self._attrs['Build Date'] = build_date.split('=')[-1]
+            self._attrs['Version'] = version.split('=')[-1]
+        except ValueError:
+            self._attrs['Build Date'] = 'Not Available'
+            self._attrs['Version'] = 'Not Available'
+
+        try:
+            self._attrs['Serial Number'] = self._camera.serial_number
+        except ValueError:
+            self._attrs['Serial Number'] = 'Not Available'
 
         if self._sensor_type == 'motion_detector':
             self._state = self._camera.is_motion_detected

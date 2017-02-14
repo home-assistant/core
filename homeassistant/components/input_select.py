@@ -45,6 +45,15 @@ SERVICE_SELECT_PREVIOUS_SCHEMA = vol.Schema({
 })
 
 
+SERVICE_SET_OPTIONS = 'set_options'
+
+SERVICE_SET_OPTIONS_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_OPTIONS):
+        vol.All(cv.ensure_list, vol.Length(min=1), [cv.string]),
+})
+
+
 def _cv_input_select(cfg):
     """Config validation helper for input select (Voluptuous)."""
     options = cfg[CONF_OPTIONS]
@@ -86,6 +95,14 @@ def select_previous(hass, entity_id):
     """Set previous value of input_select."""
     hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
         ATTR_ENTITY_ID: entity_id,
+    })
+
+
+def set_options(hass, entity_id, options):
+    """Set options of input_select."""
+    hass.services.call(DOMAIN, SERVICE_SET_OPTIONS, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_OPTIONS: options,
     })
 
 
@@ -148,6 +165,20 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_SELECT_PREVIOUS, async_select_previous_service,
         schema=SERVICE_SELECT_PREVIOUS_SCHEMA)
 
+    @asyncio.coroutine
+    def async_set_options_service(call):
+        """Handle a calls to the set options service."""
+        target_inputs = component.async_extract_from_service(call)
+
+        tasks = [input_select.async_set_options(call.data[ATTR_OPTIONS])
+                 for input_select in target_inputs]
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_OPTIONS, async_set_options_service,
+        schema=SERVICE_SET_OPTIONS_SCHEMA)
+
     yield from component.async_add_entities(entities)
     return True
 
@@ -206,4 +237,11 @@ class InputSelect(Entity):
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
+        yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def async_set_options(self, options):
+        """Set options."""
+        self._current_option = options[0]
+        self._options = options
         yield from self.async_update_ha_state()

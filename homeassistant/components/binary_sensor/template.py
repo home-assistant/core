@@ -12,14 +12,15 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, ENTITY_ID_FORMAT, PLATFORM_SCHEMA,
-    SENSOR_CLASSES_SCHEMA)
+    DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
-    CONF_SENSOR_CLASS, CONF_SENSORS)
+    CONF_SENSOR_CLASS, CONF_SENSORS, CONF_DEVICE_CLASS)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,8 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA
+    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -45,7 +47,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                       value_template.extract_entities())
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        sensor_class = device_config.get(CONF_SENSOR_CLASS)
+        device_class = get_deprecated(
+            device_config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
 
         if value_template is not None:
             value_template.hass = hass
@@ -55,7 +58,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 hass,
                 device,
                 friendly_name,
-                sensor_class,
+                device_class,
                 value_template,
                 entity_ids)
             )
@@ -70,14 +73,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
-    def __init__(self, hass, device, friendly_name, sensor_class,
+    def __init__(self, hass, device, friendly_name, device_class,
                  value_template, entity_ids):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device,
                                                   hass=hass)
         self._name = friendly_name
-        self._sensor_class = sensor_class
+        self._device_class = device_class
         self._template = value_template
         self._state = None
 
@@ -100,9 +103,9 @@ class BinarySensorTemplate(BinarySensorDevice):
         return self._state
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the sensor class of the sensor."""
-        return self._sensor_class
+        return self._device_class
 
     @property
     def should_poll(self):
@@ -118,7 +121,8 @@ class BinarySensorTemplate(BinarySensorDevice):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning(ex)
+                _LOGGER.warning('Could not render template %s,'
+                                ' the state is unknown.', self._name)
                 return
-            _LOGGER.error(ex)
+            _LOGGER.error('Could not render template %s: %s', self._name, ex)
             self._state = False

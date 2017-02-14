@@ -168,6 +168,11 @@ class GaradgetCover(CoverDevice):
         else:
             return self._state == STATE_CLOSED
 
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
     def get_token(self):
         """Get new token for usage during this session."""
         args = {
@@ -199,8 +204,7 @@ class GaradgetCover(CoverDevice):
 
     def _check_state(self, now):
         """Check the state of the service during an operation."""
-        self.update()
-        self.update_ha_state()
+        self.schedule_update_ha_state(True)
 
     def close_cover(self):
         """Close the cover."""

@@ -287,8 +287,8 @@ class SoundTouchDevice(MediaPlayerDevice):
         return self._volume.muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_SOUNDTOUCH
 
     def turn_off(self):

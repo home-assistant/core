@@ -15,18 +15,23 @@ from homeassistant.const import (
     ATTR_SERVICE_DATA, EVENT_CALL_SERVICE, EVENT_SERVICE_EXECUTED,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import EventOrigin, State
+import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
+from .mqtt import EVENT_MQTT_MESSAGE_RECEIVED
 
 DOMAIN = "mqtt_eventstream"
 DEPENDENCIES = ['mqtt']
 
 CONF_PUBLISH_TOPIC = 'publish_topic'
 CONF_SUBSCRIBE_TOPIC = 'subscribe_topic'
+CONF_PUBLISH_EVENTSTREAM_RECEIVED = 'publish_eventstream_received'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_PUBLISH_TOPIC): valid_publish_topic,
         vol.Optional(CONF_SUBSCRIBE_TOPIC): valid_subscribe_topic,
+        vol.Optional(CONF_PUBLISH_EVENTSTREAM_RECEIVED, default=False):
+            cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -43,6 +48,15 @@ def setup(hass, config):
         if event.origin != EventOrigin.local:
             return
         if event.event_type == EVENT_TIME_CHANGED:
+            return
+
+        # MQTT fires a bus event for every incoming message, also messages from
+        # eventstream. Disable publishing these messages to other HA instances
+        # and possibly creating an infinite loop if these instances publish
+        # back to this one.
+        if all([not conf.get(CONF_PUBLISH_EVENTSTREAM_RECEIVED),
+                event.event_type == EVENT_MQTT_MESSAGE_RECEIVED,
+                event.data.get('topic') == sub_topic]):
             return
 
         # Filter out the events that were triggered by publishing

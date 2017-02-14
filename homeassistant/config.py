@@ -3,8 +3,9 @@ import asyncio
 from collections import OrderedDict
 import logging
 import os
+import re
 import shutil
-from types import MappingProxyType
+import sys
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
 
@@ -14,7 +15,7 @@ from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    CONF_ENTITY_ID, __version__)
+    __version__)
 from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
@@ -22,7 +23,7 @@ from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.helpers.customize import set_customize
+from homeassistant.helpers import customize
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,6 +52,9 @@ introduction:
 
 # Enables the frontend
 frontend:
+
+# Enables configuration UI
+config:
 
 http:
   # Uncomment this to add a password (recommended!)
@@ -87,27 +91,6 @@ tts:
 """
 
 
-CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): vol.All(
-        cv.ensure_list_csv, vol.Length(min=1), [cv.string], [vol.Lower])
-}, extra=vol.ALLOW_EXTRA)
-
-
-def _convert_old_config(inp: Any) -> List:
-    if not isinstance(inp, dict):
-        return cv.ensure_list(inp)
-    if CONF_ENTITY_ID in inp:
-        return [inp]  # sigle entry
-    res = []
-
-    inp = vol.Schema({cv.match_all: dict})(inp)
-    for key, val in inp.items():
-        val = dict(val)
-        val[CONF_ENTITY_ID] = key
-        res.append(val)
-    return res
-
-
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
         {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
@@ -121,9 +104,7 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Required(CONF_CUSTOMIZE,
-                 default=MappingProxyType({})): vol.All(
-                     _convert_old_config, [CUSTOMIZE_SCHEMA_ENTRY]),
+    vol.Optional(CONF_CUSTOMIZE, default=[]): customize.CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -308,7 +289,9 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    set_customize(hass, config.get(CONF_CUSTOMIZE) or {})
+    merged_customize = merge_packages_customize(
+        config[CONF_CUSTOMIZE], config[CONF_PACKAGES])
+    customize.set_customize(hass, CONF_CORE, merged_customize)
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -407,6 +390,8 @@ def merge_packages_config(config, packages):
     PACKAGES_CONFIG_SCHEMA(packages)
     for pack_name, pack_conf in packages.items():
         for comp_name, comp_conf in pack_conf.items():
+            if comp_name == CONF_CORE:
+                continue
             component = get_component(comp_name)
 
             if component is None:
@@ -459,3 +444,37 @@ def merge_packages_config(config, packages):
             config[comp_name] = comp_conf
 
     return config
+
+
+def merge_packages_customize(core_customize, packages):
+    """Merge customize from packages."""
+    schema = vol.Schema({
+        vol.Optional(CONF_CORE): vol.Schema({
+            CONF_CUSTOMIZE: customize.CUSTOMIZE_SCHEMA}),
+    }, extra=vol.ALLOW_EXTRA)
+
+    cust = list(core_customize)
+    for pkg in packages.values():
+        conf = schema(pkg)
+        cust.extend(conf.get(CONF_CORE, {}).get(CONF_CUSTOMIZE, []))
+    return cust
+
+
+@asyncio.coroutine
+def async_check_ha_config_file(hass):
+    """Check if HA config file valid.
+
+    This method is a coroutine.
+    """
+    proc = yield from asyncio.create_subprocess_exec(
+        sys.executable, '-m', 'homeassistant', '--script',
+        'check_config', '--config', hass.config.config_dir,
+        stdout=asyncio.subprocess.PIPE, loop=hass.loop)
+    # Wait for the subprocess exit
+    stdout_data, dummy = yield from proc.communicate()
+    result = yield from proc.wait()
+
+    if not result:
+        return None
+
+    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))

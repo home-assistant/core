@@ -17,7 +17,7 @@ DEPENDENCIES = ['qwikswitch']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Add lights from the main Qwikswitch component."""
     if discovery_info is None:
-        _LOGGER.error("Configure Qwikswitch component")
+        _LOGGER.error("Configure Qwikswitch component failed")
         return False
 
     add_devices(qwikswitch.QSUSB['light'])

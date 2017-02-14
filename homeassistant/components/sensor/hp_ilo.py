@@ -110,7 +110,7 @@ class HpIloSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         return self._data
 

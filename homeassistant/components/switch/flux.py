@@ -32,6 +32,7 @@ CONF_START_CT = 'start_colortemp'
 CONF_SUNSET_CT = 'sunset_colortemp'
 CONF_STOP_CT = 'stop_colortemp'
 CONF_BRIGHTNESS = 'brightness'
+CONF_DISABLE_BRIGTNESS_ADJUST = 'disable_brightness_adjust'
 CONF_MODE = 'mode'
 
 MODE_XY = 'xy'
@@ -52,6 +53,7 @@ PLATFORM_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), vol.Range(min=1000, max=40000)),
     vol.Optional(CONF_BRIGHTNESS):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
+    vol.Optional(CONF_DISABLE_BRIGTNESS_ADJUST): cv.boolean,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE):
         vol.Any(MODE_XY, MODE_MIRED)
 })
@@ -88,10 +90,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sunset_colortemp = config.get(CONF_SUNSET_CT)
     stop_colortemp = config.get(CONF_STOP_CT)
     brightness = config.get(CONF_BRIGHTNESS)
+    disable_brightness_adjust = config.get(CONF_DISABLE_BRIGTNESS_ADJUST)
     mode = config.get(CONF_MODE)
     flux = FluxSwitch(name, hass, False, lights, start_time, stop_time,
                       start_colortemp, sunset_colortemp, stop_colortemp,
-                      brightness, mode)
+                      brightness, disable_brightness_adjust, mode)
     add_devices([flux])
 
     def update(call=None):
@@ -106,7 +109,7 @@ class FluxSwitch(SwitchDevice):
 
     def __init__(self, name, hass, state, lights, start_time, stop_time,
                  start_colortemp, sunset_colortemp, stop_colortemp,
-                 brightness, mode):
+                 brightness, disable_brightness_adjust, mode):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
@@ -118,6 +121,7 @@ class FluxSwitch(SwitchDevice):
         self._sunset_colortemp = sunset_colortemp
         self._stop_colortemp = stop_colortemp
         self._brightness = brightness
+        self._disable_brightness_adjust = disable_brightness_adjust
         self._mode = mode
         self.unsub_tracker = None
 
@@ -192,6 +196,8 @@ class FluxSwitch(SwitchDevice):
                 temp = self._sunset_colortemp + temp_offset
         x_val, y_val, b_val = color_RGB_to_xy(*color_temperature_to_rgb(temp))
         brightness = self._brightness if self._brightness else b_val
+        if self._disable_brightness_adjust:
+            brightness = None
         if self._mode == MODE_XY:
             set_lights_xy(self.hass, self._lights, x_val,
                           y_val, brightness)

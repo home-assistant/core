@@ -18,7 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_stream)
 
-REQUIREMENTS = ['amcrest==1.1.3']
+REQUIREMENTS = ['amcrest==1.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 

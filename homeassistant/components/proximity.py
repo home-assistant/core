@@ -63,7 +63,7 @@ def setup_proximity_component(hass, name, config):
     proximity_zone = name
     unit_of_measurement = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit)
-    zone_id = 'zone.{}'.format(proximity_zone)
+    zone_id = 'zone.{}'.format(config.get(CONF_ZONE))
 
     proximity = Proximity(hass, proximity_zone, DEFAULT_DIST_TO_ZONE,
                           DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,

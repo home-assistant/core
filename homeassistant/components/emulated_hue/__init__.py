@@ -30,6 +30,8 @@ NUMBERS_FILE = 'emulated_hue_ids.json'
 
 CONF_HOST_IP = 'host_ip'
 CONF_LISTEN_PORT = 'listen_port'
+CONF_ADVERTISE_IP = 'advertise_ip'
+CONF_ADVERTISE_PORT = 'advertise_port'
 CONF_UPNP_BIND_MULTICAST = 'upnp_bind_multicast'
 CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
@@ -52,6 +54,9 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST_IP): cv.string,
         vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
+            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_ADVERTISE_IP): cv.string,
+        vol.Optional(CONF_ADVERTISE_PORT):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
         vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
         vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
@@ -92,7 +97,8 @@ def setup(hass, yaml_config):
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
-        config.upnp_bind_multicast)
+        config.upnp_bind_multicast, config.advertise_ip,
+        config.advertise_port)
 
     @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
@@ -168,6 +174,13 @@ class Config(object):
         # True
         self.exposed_domains = conf.get(
             CONF_EXPOSED_DOMAINS, DEFAULT_EXPOSED_DOMAINS)
+
+        # Calculated effective advertised IP and port for network isolation
+        self.advertise_ip = conf.get(
+            CONF_ADVERTISE_IP) or self.host_ip_addr
+
+        self.advertise_port = conf.get(
+            CONF_ADVERTISE_PORT) or self.listen_port
 
     def entity_id_to_number(self, entity_id):
         """Get a unique number for the entity id."""

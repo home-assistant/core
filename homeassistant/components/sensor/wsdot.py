@@ -1,7 +1,8 @@
 """
 Support for Washington State Department of Transportation (WSDOT) data.
 
-Data provided by WSDOT is documented at http://wsdot.com/traffic/api/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.wsdot/
 """
 import logging
 import re
@@ -16,7 +17,6 @@ from homeassistant.const import (
     )
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,7 +109,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
 
         response = requests.get(self.RESOURCE, params, timeout=10)
         if response.status_code != 200:
-            _LOGGER.warning('Invalid response from WSDOT API.')
+            _LOGGER.warning("Invalid response from WSDOT API")
         else:
             self._data = response.json()
         self._state = self._data.get(ATTR_CURRENT_TIME)

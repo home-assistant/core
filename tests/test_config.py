@@ -18,7 +18,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 
 from tests.common import (
-    get_test_config_dir, get_test_home_assistant)
+    get_test_config_dir, get_test_home_assistant, mock_generator)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -234,25 +234,6 @@ class TestConfig(unittest.TestCase):
 
         assert state.attributes['hidden']
 
-    def test_entity_customization_comma_separated(self):
-        """Test entity customization through configuration."""
-        config = {CONF_LATITUDE: 50,
-                  CONF_LONGITUDE: 50,
-                  CONF_NAME: 'Test',
-                  CONF_CUSTOMIZE: [
-                      {'entity_id': 'test.not_test,test,test.not_t*',
-                       'key1': 'value1'},
-                      {'entity_id': 'test.test,not_test,test.not_t*',
-                       'key2': 'value2'},
-                      {'entity_id': 'test.not_test,not_test,test.t*',
-                       'key3': 'value3'}]}
-
-        state = self._compute_state(config)
-
-        assert state.attributes['key1'] == 'value1'
-        assert state.attributes['key2'] == 'value2'
-        assert state.attributes['key3'] == 'value3'
-
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
     def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
@@ -395,6 +376,36 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
 
+    @mock.patch('asyncio.create_subprocess_exec')
+    def test_check_ha_config_file_correct(self, mock_create):
+        """Check that restart propagates to stop."""
+        process_mock = mock.MagicMock()
+        attrs = {
+            'communicate.return_value': mock_generator(('output', 'error')),
+            'wait.return_value': mock_generator(0)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_generator(process_mock)
+
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass), self.hass.loop
+        ).result() is None
+
+    @mock.patch('asyncio.create_subprocess_exec')
+    def test_check_ha_config_file_wrong(self, mock_create):
+        """Check that restart with a bad config doesn't propagate to stop."""
+        process_mock = mock.MagicMock()
+        attrs = {
+            'communicate.return_value':
+                mock_generator(('\033[34mhello'.encode('utf-8'), 'error')),
+            'wait.return_value': mock_generator(1)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_generator(process_mock)
+
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
+        ).result() == 'hello'
+
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture
@@ -473,7 +484,6 @@ def test_merge_type_mismatch(merge_log_err):
 def test_merge_once_only(merge_log_err):
     """Test if we have a merge for a comp that may occur only once."""
     packages = {
-        'pack_1': {'homeassistant': {}},
         'pack_2': {
             'mqtt': {},
             'api': {},  # No config schema
@@ -484,7 +494,7 @@ def test_merge_once_only(merge_log_err):
         'mqtt': {}, 'api': {}
     }
     config_util.merge_packages_config(config, packages)
-    assert merge_log_err.call_count == 3
+    assert merge_log_err.call_count == 2
     assert len(config) == 3
 
 
@@ -519,3 +529,29 @@ def test_merge_duplicate_keys(merge_log_err):
     assert merge_log_err.call_count == 1
     assert len(config) == 2
     assert len(config['input_select']) == 1
+
+
+@pytest.mark.asyncio
+def test_merge_customize(hass):
+    """Test loading core config onto hass object."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        'customize': {'a.a': {'friendly_name': 'A'}},
+        'packages': {'pkg1': {'homeassistant': {'customize': {
+            'b.b': {'friendly_name': 'BB'}}}}},
+    }
+    yield from config_util.async_process_ha_core_config(hass, core_config)
+
+    entity = Entity()
+    entity.entity_id = 'b.b'
+    entity.hass = hass
+    yield from entity.async_update_ha_state()
+
+    state = hass.states.get('b.b')
+    assert state is not None
+    assert state.attributes['friendly_name'] == 'BB'

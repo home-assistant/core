@@ -87,7 +87,7 @@ components <https://home-assistant.io/developers/creating_components/>`__.
 
 If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help
-section <https://home-assistant.io/help/>`__ how to reach us.
+section <https://home-assistant.io/help/>`__ of our website for further help and information.
 
 .. |Build Status| image:: https://travis-ci.org/home-assistant/home-assistant.svg?branch=master
    :target: https://travis-ci.org/home-assistant/home-assistant

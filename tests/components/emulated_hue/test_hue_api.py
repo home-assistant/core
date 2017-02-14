@@ -301,7 +301,7 @@ def test_put_light_state_fan(hass_hue, hue_client):
         blocking=True)
 
     # Emulated hue converts 0-100% to 0-255.
-    level = 23
+    level = 43
     brightness = round(level * 255 / 100)
 
     fan_result = yield from perform_put_light_state(

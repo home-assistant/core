@@ -367,7 +367,7 @@ class MicrosoftFace(object):
 
                 answer = yield from response.json()
                 _LOGGER.debug("Read from microsoft face api: %s", answer)
-                if response.status == 200:
+                if response.status == 200 or response.status == 202:
                     return answer
 
                 _LOGGER.warning("Error %d microsoft face api %s",

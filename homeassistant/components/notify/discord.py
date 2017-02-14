@@ -1,4 +1,9 @@
-"""Discord platform for notify component."""
+"""
+Discord platform for notify component.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/notify.discord/
+"""
 import logging
 import asyncio
 import voluptuous as vol

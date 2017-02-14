@@ -13,7 +13,7 @@ class TestMQTT:
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('http')
+        self.hass.config.components.add('http')
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -38,7 +38,7 @@ class TestMQTT:
 
         mock_mqtt.reset_mock()
 
-        self.hass.config.components = ['http']
+        self.hass.config.components = set(['http'])
         self.hass.config.api = MagicMock(api_password=None)
         assert setup_component(self.hass, mqtt.DOMAIN, {})
         assert mock_mqtt.called
