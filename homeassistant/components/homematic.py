@@ -162,6 +162,8 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
             vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.boolean,
             vol.Optional(CONF_PRIMARY, default=DEFAULT_PRIMARY): cv.boolean,
+            vol.Optional(CONF_CALLBACK_IP): cv.string,
+            vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
         vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
