@@ -20,12 +20,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     plm = hass.data['insteon_plm']
 
-    def async_insteonplm_light_callback(address = None, name = None):
+    def async_insteonplm_light_callback(device):
         """New device detected from transport."""
-        _LOGGER.info('New INSTEON PLM light device: %s (%s)', name, address)
-        hass.async_add_job(async_add_devices([InsteonPLMDimmerDevice(hass, plm, address, name)]))
+        name = device['address']
+        address = device['address_hex']
 
-    plm.protocol.add_device_callback(async_insteonplm_light_callback, {})
+        if 'dimmable' in device['capabilities']:
+            dimmable = True
+        else:
+            dimmable = False
+
+        _LOGGER.info('New INSTEON PLM light device: %s (%s)', name, address)
+        hass.async_add_job(async_add_devices([InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)]))
+
+    criteria = dict(capability='switch')
+    plm.protocol.add_device_callback(async_insteonplm_light_callback, criteria)
 
 
     new_lights = []
@@ -34,13 +43,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class InsteonPLMDimmerDevice(Light):
     """A Class for an Insteon device."""
 
-    def __init__(self, hass, plm, address, name):
+    def __init__(self, hass, plm, address, name, dimmable):
         """Initialize the light."""
         self._hass = hass
         self._plm = plm.protocol
         self._address = address
         self._name = name
-        self._plm.add_update_callback(self.async_insteonplm_light_update_callback, dict(address=self._address))
+        self._dimmable = dimmable
+
+        self._plm.add_update_callback(
+            self.async_insteonplm_light_update_callback,
+            dict(address=self._address))
 
     @property
     def should_poll(self):
@@ -56,14 +69,14 @@ class InsteonPLMDimmerDevice(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.info('on level for %s is %s', self._address, onlevel)
+        _LOGGER.debug('on level for %s is %s', self._address, onlevel)
         return int(onlevel)
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
         onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.info('on level for %s is %s', self._address, onlevel)
+        _LOGGER.debug('on level for %s is %s', self._address, onlevel)
         if onlevel:
             return (onlevel > 0)
         else:
@@ -72,7 +85,8 @@ class InsteonPLMDimmerDevice(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+        if self._dimmable:
+            return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn device on."""
@@ -88,5 +102,5 @@ class InsteonPLMDimmerDevice(Light):
 
     def async_insteonplm_light_update_callback(self, message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM: %s', message)
+        _LOGGER.info('Received update calback from PLM for %s', self._address)
         self._hass.async_add_job(self.async_update_ha_state(True))
