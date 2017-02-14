@@ -206,14 +206,16 @@ class GenericThermostat(ClimateDevice):
         hold_mode = kwargs.get(ATTR_HOLD_MODE, HOLD_MODE_HOME)
 
         if hold_mode not in HOLD_MODE_LIST:
-            _LOGGER.warning('Hold mode `%s` is not supported, ignoring it.',
+            _LOGGER.warning('Hold mode `%s` is not supported, ignoring.',
                             hold_mode)
             return
 
+        if temperature is None:
+            _LOGGER.warning('Attribute `%s` is not an optional attribute, '
+                            'ignoring service call.', ATTR_TEMPERATURE)
+            return
+
         if hold_mode == HOLD_MODE_HOME:
-            # cannot set None to the default temperature
-            if temperature is None:
-                return
             self._target_temp = temperature
 
         # Store the temperature in the hold_temps dictionary

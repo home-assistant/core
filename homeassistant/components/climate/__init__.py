@@ -96,6 +96,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_OPERATION_MODE): cv.string,
+    vol.Optional(ATTR_HOLD_MODE): cv.string,
 })
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
