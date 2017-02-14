@@ -14,8 +14,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/arraylabs/pymyq/archive/v0.0.2.zip'
-    '#pymyq==0.0.2']
+    'https://github.com/arraylabs/pymyq/archive/v0.0.5.zip'
+    '#pymyq==0.0.5']
 
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_TYPE): cv.string,
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     myq = pymyq(username, password, brand)
 
     if not myq.is_supported_brand():
-        logger.error('MyQ Cover - Unsupported Brand')
+        logger.error('MyQ Cover - Unsupported Type. See documentation')
         return
 
     if not myq.is_login_valid():
