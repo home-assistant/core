@@ -130,7 +130,7 @@ class HMThermostat(HMDevice, ClimateDevice):
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
         # Add state to data dict
-        self._state = list(self._hmdevice.WRITENODE.keys())[0]
+        self._state = next(iter(self._hmdevice.WRITENODE.keys()))
         self._data[self._state] = STATE_UNKNOWN
 
         # support state
