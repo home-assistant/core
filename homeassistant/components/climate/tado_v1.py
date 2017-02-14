@@ -164,14 +164,14 @@ class TadoClimate(ClimateDevice):
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self._current_operation = operation_mode
         self._overlay_mode = None
         self._control_heating()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def min_temp(self):
@@ -194,7 +194,6 @@ class TadoClimate(ClimateDevice):
             return ClimateDevice.max_temp.fget(self)
 
     def sensor_changed(self, entity_id, old_state, new_state):
-        #  pylint: disable=W0613
         """Called when a depending sensor changes."""
         if new_state is None or new_state.state is None:
             return
@@ -208,50 +207,59 @@ class TadoClimate(ClimateDevice):
 
         _LOGGER.info("%s changed to %s", entity_type, state.state)
 
-        try:
-            if entity_type.endswith("temperature"):
-                unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        if entity_type.endswith("temperature"):
+            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+
+            try:
+                temperature = float(state.state)
+                setting = float(state.attributes.get("setting"))
 
                 self._cur_temp = self.hass.config.units.temperature(
-                    float(state.state), unit)
+                    temperature, unit)
 
                 self._target_temp = self.hass.config.units.temperature(
-                    float(state.attributes.get("setting")), unit)
+                    setting, unit)
+            except ValueError:
+                _LOGGER.error("Unable to update temperature from sensor: %s",
+                              entity_type)
 
-            elif entity_type.endswith("humidity"):
-                self._cur_humidity = float(state.state)
+        elif entity_type.endswith("humidity"):
+            try:
+                humidity = float(state.state)
 
-            elif entity_type.endswith("tado mode"):
-                self._is_away = state.state == "AWAY"
+                self._cur_humidity = humidity
+            except ValueError:
+                _LOGGER.error("Unable to update humidity from sensor: %s",
+                              entity_type)
 
-            elif entity_type.endswith("power"):
-                if state.state == "OFF":
-                    self._current_operation = CONST_MODE_OFF
-                    self._device_is_active = False
-                else:
-                    self._device_is_active = True
+        elif entity_type.endswith("tado mode"):
+            self._is_away = state.state == "AWAY"
 
-            elif entity_type.endswith("overlay"):
-                #  if you set mode manualy to off, there will be an overlay
-                #  and a termination, but we want to see the mode "OFF"
-                overlay = state.state
-                termination = state.attributes.get("termination")
+        elif entity_type.endswith("power"):
+            if state.state == "OFF":
+                self._current_operation = CONST_MODE_OFF
+                self._device_is_active = False
+            else:
+                self._device_is_active = True
 
-                if overlay == "True" and self._device_is_active:
-                    #  there is an overlay the device is on
-                    self._overlay_mode = termination
-                    self._current_operation = termination
-                elif overlay == "False":
-                    #  there is no overlay, the mode will always be
-                    #  "SMART_SCHEDULE"
-                    self._overlay_mode = CONST_MODE_SMART_SCHEDULE
-                    self._current_operation = CONST_MODE_SMART_SCHEDULE
+        elif entity_type.endswith("overlay"):
+            #  if you set mode manualy to off, there will be an overlay
+            #  and a termination, but we want to see the mode "OFF"
+            overlay = state.state
+            termination = state.attributes.get("termination")
 
-            if update_ha:
-                self.schedule_update_ha_state()
+            if overlay == "True" and self._device_is_active:
+                #  there is an overlay the device is on
+                self._overlay_mode = termination
+                self._current_operation = termination
+            elif overlay == "False":
+                #  there is no overlay, the mode will always be
+                #  "SMART_SCHEDULE"
+                self._overlay_mode = CONST_MODE_SMART_SCHEDULE
+                self._current_operation = CONST_MODE_SMART_SCHEDULE
 
-        except ValueError:
-            _LOGGER.error("Unable to update from sensor: %s", entity_type)
+        if update_ha:
+            self.schedule_update_ha_state()
 
     def _control_heating(self):
         """Send new target temperature to mytado."""
