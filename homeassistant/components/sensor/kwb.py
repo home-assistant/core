@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE
+                                 , EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -30,27 +31,36 @@ MODE_TCP = 1
 CONF_TYPE = 'type'
 CONF_RAW = 'raw'
 
+"""
 SERIAL_SCHEMA = {
-    vol.Required(CONF_DEVICE, default = DEFAULT_DEVICE): cv.string,
-    vol.Required(CONF_TYPE, default = DEFAULT_TYPE): 'serial',
-    vol.Optional(CONF_RAW, default = DEFAULT_RAW): cv.boolean,
+    vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): 'serial',
+    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
 }
 
 ETHERNET_SCHEMA = {
-    vol.Required(CONF_HOST, default = DEFAULT_HOST): cv.string,
-    vol.Required(CONF_PORT, default = DEFAULT_PORT): cv.port,
-    vol.Required(CONF_TYPE, default = DEFAULT_TYPE): 'tcp',
-    vol.Optional(CONF_RAW, default = DEFAULT_RAW): cv.boolean,
+    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): 'tcp',
+    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
 }
 
-#PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-#    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
-#})
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
+})
 
-#CONFIG_SCHEMA = vol.Schema({
-#    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
-#}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
+}, extra=vol.ALLOW_EXTRA)
+"""
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): 'tcp',
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
+})
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the KWB component."""
