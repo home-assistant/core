@@ -8,42 +8,26 @@ from homeassistant.components.http import HomeAssistantView
 
 _TEST_OUTPUT = """
 {
-  "suites": [
-    {
-      "openzwave": [
-        {
-          "state": "installed"
+    "suites":{
+        "libcec":{
+            "state":"Uninstalled",
+            "description":"Installs the libcec package for controlling CEC devices from this Pi"
         },
-        {
-          "description": "This is the description of the Open Z-Wave suite."
-        }
-      ]
-    },
-    {
-      "openelec": [
-        {
-          "state": "not_installed"
+        "mosquitto":{
+            "state":"failed",
+            "description":"Installs the Mosquitto package for setting up a local MQTT server"
         },
-        {
-          "description":
-          "OpenElec is amazing. It allows you to control the TV."
-        }
-      ]
-    },
-    {
-      "mosquitto": [
-        {
-          "state": "installing"
+        "openzwave":{
+            "state":"Uninstalled",
+            "description":"Installs the Open Z-wave package for setting up your zwave network"
         },
-        {
-          "description":
-          "Mosquitto is an MQTT broker."
+        "samba":{
+            "state":"installing",
+            "description":"Installs the samba package for sharing the hassbian configuration files over the Pi's network."
         }
-      ]
     }
-  ]
 }
-"""
+"""  # noqa
 
 
 @asyncio.coroutine
@@ -87,18 +71,7 @@ class HassbianSuitesView(HomeAssistantView):
         """Request suite status."""
         inp = yield from hassbian_status(request.app['hass'], self._test_mode)
 
-        # Flatten the structure a bit
-        suites = {}
-
-        for suite in inp['suites']:
-            key = next(iter(suite))
-            info = suites[key] = {}
-
-            for item in suite[key]:
-                item_key = next(iter(item))
-                info[item_key] = item[item_key]
-
-        return self.json(suites)
+        return self.json(inp['suites'])
 
 
 class HassbianSuiteInstallView(HomeAssistantView):
