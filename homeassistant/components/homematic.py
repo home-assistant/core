@@ -22,7 +22,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.21"]
+REQUIREMENTS = ["pyhomematic==0.1.22"]
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -63,7 +63,7 @@ HM_DEVICE_TYPES = {
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
-        'MAXWallThermostat'],
+        'MAXWallThermostat', 'IPThermostat'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
@@ -119,6 +119,8 @@ CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
 CONF_IP = 'ip'
 CONF_PORT = 'port'
+CONF_CALLBACK_IP = "callback_ip"
+CONF_CALLBACK_PORT = "callback_port"
 CONF_RESOLVENAMES = 'resolvenames'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
@@ -160,6 +162,8 @@ CONFIG_SCHEMA = vol.Schema({
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
             vol.Optional(CONF_DEVICES, default=DEFAULT_DEVICES): cv.boolean,
             vol.Optional(CONF_PRIMARY, default=DEFAULT_PRIMARY): cv.boolean,
+            vol.Optional(CONF_CALLBACK_IP): cv.string,
+            vol.Optional(CONF_CALLBACK_PORT): cv.port,
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
         vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
@@ -252,6 +256,8 @@ def setup(hass, config):
         remotes[rname][CONF_RESOLVENAMES] = rconfig.get(CONF_RESOLVENAMES)
         remotes[rname][CONF_USERNAME] = rconfig.get(CONF_USERNAME)
         remotes[rname][CONF_PASSWORD] = rconfig.get(CONF_PASSWORD)
+        remotes[rname]['callbackip'] = rconfig.get(CONF_CALLBACK_IP)
+        remotes[rname]['callbackport'] = rconfig.get(CONF_CALLBACK_PORT)
 
         if server not in hosts or rconfig.get(CONF_PRIMARY):
             hosts[server] = {

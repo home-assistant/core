@@ -53,13 +53,11 @@ class HMSwitch(HMDevice, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self.available:
-            self._hmdevice.on(self._channel)
+        self._hmdevice.on(self._channel)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        if self.available:
-            self._hmdevice.off(self._channel)
+        self._hmdevice.off(self._channel)
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
