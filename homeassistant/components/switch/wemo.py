@@ -168,19 +168,19 @@ class WemoSwitch(SwitchDevice):
     def on_for(self):
         """On time in seconds."""
         if self.insight_params:
-            return as_uptime(self.insight_params['onfor'])
+            return WemoSwitch.as_uptime(self.insight_params['onfor'])
 
     @property
     def on_today(self):
         """On time in seconds."""
         if self.insight_params:
-            return as_uptime(self.insight_params['ontoday'])
+            return WemoSwitch.as_uptime(self.insight_params['ontoday'])
 
     @property
     def on_total(self):
         """On time in seconds."""
         if self.insight_params:
-            return as_uptime(self.insight_params['ontotal'])
+            return WemoSwitch.as_uptime(self.insight_params['ontotal'])
 
     @property
     def power_total_mw_min(self):
