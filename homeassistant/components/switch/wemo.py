@@ -5,12 +5,12 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.wemo/
 """
 import logging
+from datetime import datetime, timedelta
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
-from datetime import datetime, timedelta
 
 DEPENDENCIES = ['wemo']
 
@@ -138,21 +138,21 @@ class WemoSwitch(SwitchDevice):
     def _current_power_mw(self):
         """Current power usage in mW."""
         if self.insight_params:
-           return self.insight_params['currentpower']
+             return self.insight_params['currentpower']
 
     @property
     def power_current_watt(self):
         """Current power usage in W."""
         if self.insight_params:
             try:
-               return self._current_power_mw() / 1000
+                 return self._current_power_mw() / 1000
             except:
-               return None
+                 return None
 
     @property
     def power_threshold(self):
         if self.insight_params:
-           return self.insight_params['powerthreshold'] / 1000
+             return self.insight_params['powerthreshold'] / 1000
 
     def _as_uptime(self, _seconds):
       d = datetime(1,1,1) + timedelta(seconds=_seconds)
@@ -183,18 +183,18 @@ class WemoSwitch(SwitchDevice):
         """This is a total of average mW per minute."""
         if self.insight_params:
             try:
-               return self.insight_params['totalmw']
+                return self.insight_params['totalmw']
             except:
-               return None
+                return None
 
     @property
     def power_today_mw_min(self):
         """This is the total consumption today in mW per minute."""
         if self.insight_params:
             try:
-               return self.insight_params['todaymw']
+                return self.insight_params['todaymw']
             except:
-               return None
+                return None
 
     @property
     def detail_state(self):
