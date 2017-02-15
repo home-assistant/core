@@ -138,7 +138,10 @@ class WemoSwitch(SwitchDevice):
     def _current_power_mw(self):
         """Current power usage in mW."""
         if self.insight_params:
-            return self.insight_params['currentpower']
+            try:
+                return self.insight_params['currentpower']
+            except KeyError:
+                return None
 
     @property
     def power_current_watt(self):
@@ -146,7 +149,7 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params:
             try:
                 return self._current_power_mw() / 1000
-            except Exception:
+            except TypeError:
                 return None
 
     @property
@@ -157,7 +160,7 @@ class WemoSwitch(SwitchDevice):
 
     @staticmethod
     def as_uptime(_seconds):
-        """Format seconds into uptime string in the format: 00d 00h 00m 00s"""
+        """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
         return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(uptime.day-1,
                                                             uptime.hour,
@@ -188,7 +191,7 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params:
             try:
                 return self.insight_params['totalmw']
-            except Exception:
+            except KeyError:
                 return None
 
     @property
@@ -197,7 +200,7 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params:
             try:
                 return self.insight_params['todaymw']
-            except Exception:
+            except KeyError:
                 return None
 
     @property
