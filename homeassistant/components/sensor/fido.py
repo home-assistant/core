@@ -97,7 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         fido_data = FidoData(username, password)
         fido_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error(error)
+        _LOGGER.error("Failt login: %s", error)
         return False
 
     name = config.get(CONF_NAME)
@@ -165,8 +165,8 @@ class FidoData(object):
         from pyfido.client import PyFidoError
         try:
             self.client.fetch_data()
-        except PyFidoError as exp:
-            _LOGGER.exception(exp)
+        except PyFidoError as err:
+            _LOGGER.error("Error on receive last Fido data: %s", err)
             return
         # Update data
         self.data = self.client.get_data()
