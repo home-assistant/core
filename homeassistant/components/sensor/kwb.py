@@ -66,9 +66,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     connection_type = config.get(CONF_TYPE)
     raw = config.get(CONF_RAW)
 
-    if raw == 'on':
-        raw = True
-
     from pykwb import kwb
 
     _LOGGER.info('initializing')
@@ -119,7 +116,7 @@ class KWBSensor(Entity):
     @property
     def state(self):
         """Return the state of value."""
-        if (self._sensor.value is not None and self._sensor.available):
+        if self._sensor.value is not None and self._sensor.available:
             return self._sensor.value
         else:
             return STATE_UNKNOWN
