@@ -9,13 +9,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE,
-                                 EVENT_HOMEASSISTANT_STOP)
+                                 EVENT_HOMEASSISTANT_STOP,
+                                 STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['pykwb==0.0.6']
+REQUIREMENTS = ['pykwb==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,20 +80,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         return False
 
+    _LOGGER.info('starting thread')
+    easyfire.run_thread()
+    _LOGGER.info('thread started')
+
     sensors = []
     for sensor in easyfire.get_sensors():
         if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW)
                 or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
             sensors.append(KWBSensor(easyfire, sensor))
 
-    add_devices(sensors)
-
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                          lambda event: easyfire.stop_thread())
 
-    _LOGGER.info('starting thread')
-    easyfire.run_thread()
-    _LOGGER.info('thread started')
+    add_devices(sensors)
+
 
 
 class KWBSensor(Entity):
@@ -112,13 +114,16 @@ class KWBSensor(Entity):
 
     @property
     def available(self) -> bool:
-        """Return if thermostat is available."""
-        return self._sensor is not None and self._sensor.value is not None
+        """Return if sensor is available."""
+        return self._sensor.available
 
     @property
     def state(self):
         """Return the state of value."""
-        return self._sensor.value
+        if (self._sensor.value is not None and self._sensor.available):
+            return self._sensor.value
+        else:
+            return STATE_UNKNOWN
 
     @property
     def unit_of_measurement(self):
