@@ -210,15 +210,13 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-        if self._playing is not None:
-            if self.state != STATE_IDLE:
-                features |= SUPPORT_PAUSE | SUPPORT_PLAY | \
-                    SUPPORT_SEEK | SUPPORT_STOP | \
-                    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | \
-                    SUPPORT_PLAY_MEDIA
-            else:
-                features |= SUPPORT_PLAY_MEDIA
+        features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+        if self._playing is None or self.state == STATE_IDLE:
+            return features
+
+        features |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
+            SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+
         return features
 
     @asyncio.coroutine
