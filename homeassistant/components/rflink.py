@@ -9,12 +9,14 @@ from collections import defaultdict
 import functools as ft
 import logging
 
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -39,6 +41,7 @@ DATA_DEVICE_REGISTER = 'rflink_device_register'
 DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
 DEFAULT_RECONNECT_INTERVAL = 10
 DEFAULT_SIGNAL_REPETITIONS = 1
+CONNECTION_TIMEOUT = 10
 
 EVENT_BUTTON_PRESSED = 'button_pressed'
 EVENT_KEY_COMMAND = 'command'
@@ -148,7 +151,10 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info("Initiating Rflink connection")
+        _LOGGER.info('Initiating Rflink connection')
+        hass.states.async_set(
+            '{domain}.connection_status'.format(
+                domain=DOMAIN), 'connecting')
 
         # Rflink create_rflink_connection decides based on the value of host
         # (string or None) if serial or tcp mode should be used
@@ -164,13 +170,19 @@ def async_setup(hass, config):
         )
 
         try:
-            transport, protocol = yield from connection
+            with async_timeout.timeout(CONNECTION_TIMEOUT,
+                                       loop=hass.loop):
+                transport, protocol = yield from connection
+
         except (serial.serialutil.SerialException, ConnectionRefusedError,
-                TimeoutError) as exc:
+                TimeoutError, OSError, asyncio.TimeoutError) as exc:
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
             _LOGGER.exception(
                 "Error connecting to Rflink, reconnecting in %s",
                 reconnect_interval)
+            hass.states.async_set(
+                '{domain}.connection_status'.format(
+                    domain=DOMAIN), 'error')
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
 
@@ -182,9 +194,12 @@ def async_setup(hass, config):
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    lambda x: transport.close())
 
-        _LOGGER.info("Connected to Rflink")
+        _LOGGER.info('Connected to Rflink')
+        hass.states.async_set(
+            '{domain}.connection_status'.format(
+                domain=DOMAIN), 'connected')
 
-    yield from connect()
+    hass.async_add_job(connect)
     return True
 
 
@@ -279,12 +294,19 @@ class RflinkCommand(RflinkDevice):
     # are sent
     _repetition_task = None
 
+    _protocol = None
+
     @classmethod
     def set_rflink_protocol(cls, protocol, wait_ack=None):
         """Set the Rflink asyncio protocol as a class variable."""
         cls._protocol = protocol
         if wait_ack is not None:
             cls._wait_ack = wait_ack
+
+    @classmethod
+    def is_connected(cls):
+        """Return connection status."""
+        return bool(cls._protocol)
 
     @asyncio.coroutine
     def _async_handle_command(self, command, *args):
@@ -329,6 +351,9 @@ class RflinkCommand(RflinkDevice):
         _LOGGER.debug(
             "Sending command: %s to Rflink device: %s", cmd, self._device_id)
 
+        if not self.is_connected():
+            raise HomeAssistantError('Cannot send command, not connected!')
+
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
             # the command has been send out in the ether.
@@ -359,12 +384,10 @@ class SwitchableRflinkDevice(RflinkCommand):
         elif command == 'off':
             self._state = False
 
-    @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self._async_handle_command('turn_on')
+        return self._async_handle_command("turn_on")
 
-    @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self._async_handle_command('turn_off')
+        return self._async_handle_command("turn_off")
