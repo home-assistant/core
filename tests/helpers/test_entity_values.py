@@ -26,12 +26,12 @@ def test_override_by_glob():
     assert store.get(ent) == {'key': 'value'}
 
 
-def test_domain_overrules_glob():
+def test_glob_overrules_domain():
     """Test domain overrules glob match."""
     store = EV(
         domain={'test': {'key': 'domain'}},
         glob={'test.?e*': {'key': 'glob'}})
-    assert store.get(ent) == {'key': 'domain'}
+    assert store.get(ent) == {'key': 'glob'}
 
 
 def test_exact_overrules_domain():
