@@ -158,7 +158,7 @@ class WemoSwitch(SwitchDevice):
       d = datetime(1,1,1) + timedelta(seconds=_seconds)
       return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(d.day-1,
                                                           d.hour,
-                                                          d.minute, 
+                                                          d.minute,
                                                           d.second)
     
     @property
