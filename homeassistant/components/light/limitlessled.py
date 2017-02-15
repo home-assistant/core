@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.3']
+REQUIREMENTS = ['limitlessled==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -89,6 +89,8 @@ def rewrite_legacy(config):
                     })
         new_bridges.append({
             'host': bridge_conf.get(CONF_HOST),
+            'version': bridge_conf.get(CONF_VERSION),
+            'port': bridge_conf.get(CONF_PORT),
             'groups': groups
         })
     return {'bridges': new_bridges}
