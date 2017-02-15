@@ -167,9 +167,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
             if scanner:
-                hass.async_add_job(
-                    async_setup_scanner_platform, hass, p_config, scanner,
-                    tracker.async_see)
+                async_setup_scanner_platform(
+                    hass, p_config, scanner, tracker.async_see)
                 return
 
             if not setup:
@@ -678,8 +677,8 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
 
             hass.async_add_job(async_see_device(**kwargs))
 
-    hass.async_add_job(async_device_tracker_scan(None))
     async_track_time_interval(hass, async_device_tracker_scan, interval)
+    hass.async_add_job(async_device_tracker_scan(None))
 
 
 def update_config(path: str, dev_id: str, device: Device):
