@@ -65,17 +65,17 @@ SENSOR_TYPES = {
                        MESSAGES, 'mdi:message-alart'],
     'text_int_remaining': ['Internaltional remaining',
                            MESSAGES, 'mdi:message-alert'],
-    'talk_used': ['Talk time',
+    'talk_used': ['Talk used',
                   MINUTES, 'mdi:cellphone'],
-    'talk_limit': ['Talk time limit',
+    'talk_limit': ['Talk limit',
                    MINUTES, 'mdi:cellphone'],
-    'talt_remaining': ['Talk time remaining',
+    'talt_remaining': ['Talk remaining',
                        MINUTES, 'mdi:cellphone'],
-    'talk_other_used': ['Other Talk time',
+    'other_talk_used': ['Other Talk used',
                         MINUTES, 'mdi:cellphone'],
-    'talk_other_limit': ['Other Talk time limit',
+    'other_talk_limit': ['Other Talk limit',
                          MINUTES, 'mdi:cellphone'],
-    'talt_other_remaining': ['Other Talk time remaining',
+    'other_talk_remaining': ['Other Talk remaining',
                              MINUTES, 'mdi:cellphone'],
 }
 
@@ -87,30 +87,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-JANRAIN_CLIENT_ID = "bfkecrvys7sprse8kc4wtwugr2bj9hmp"
-HOST_JANRAIN = "https://rogers-fido.janraincapture.com"
-HOST_FIDO = "https://www.fido.ca/pages/api/selfserve"
-LOGIN_URL = "{}/widget/traditional_signin.jsonp".format(HOST_JANRAIN)
-TOKEN_URL = "{}/widget/get_result.jsonp".format(HOST_JANRAIN)
-ACCOUNT_URL = "{}/v3/login".format(HOST_FIDO)
-BALANCE_URL = "{}/v2/accountOverview".format(HOST_FIDO)
-FIDO_DOLLAR_URL = "{}/v1/wireless/rewards/basicinfo".format(HOST_FIDO)
-USAGE_URL = "{}/v1/postpaid/dashboard/usage".format(HOST_FIDO)
-
-
-DATA_MAP = {'data': ('data', 'D'),
-            'text': ('text', 'BL'),
-            'mms': ('text', 'M'),
-            'text_int': ('text', 'SI'),
-            'talk': ('talk', 'V'),
-            'talk_other': ('talk', 'VL')}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fido sensor."""
-    # Create a data fetcher to support all of the configured sensors. Then make
-    # the first call to init the data.
-
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -127,7 +106,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(FidoSensor(fido_data, variable, name))
 
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class FidoSensor(Entity):
@@ -137,14 +116,11 @@ class FidoSensor(Entity):
         """Initialize the sensor."""
         self.client_name = name
         self.type = sensor_type
-        self.entity_id = "sensor.{}_{}".format(name, sensor_type)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._icon = SENSOR_TYPES[sensor_type][2]
         self.fido_data = fido_data
         self._state = None
-
-        self.update()
 
     @property
     def name(self):
@@ -190,7 +166,7 @@ class FidoData(object):
         try:
             self.client.fetch_data()
         except PyFidoError as exp:
-            _LOGGER.error(exp)
+            _LOGGER.exception(exp)
             return
         # Update data
         self.data = self.client.get_data()
