@@ -206,7 +206,7 @@ class DarkSkySensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
-        if not self._icon is None or 'summary' not in self.type:
+        if self._icon is None or 'summary' not in self.type:
             return None
 
         if self._icon in CONDITION_PICTURES:
