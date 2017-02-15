@@ -138,63 +138,66 @@ class WemoSwitch(SwitchDevice):
     def _current_power_mw(self):
         """Current power usage in mW."""
         if self.insight_params:
-             return self.insight_params['currentpower']
+            return self.insight_params['currentpower']
 
     @property
     def power_current_watt(self):
         """Current power usage in W."""
         if self.insight_params:
             try:
-                 return self._current_power_mw() / 1000
-            except:
-                 return None
+                return self._current_power_mw() / 1000
+            except Exception:
+                return None
 
     @property
     def power_threshold(self):
+        """Threshold of W at which Insight will indicate it's load is ON."""
         if self.insight_params:
-             return self.insight_params['powerthreshold'] / 1000
+            return self.insight_params['powerthreshold'] / 1000
 
-    def _as_uptime(self, _seconds):
-      d = datetime(1,1,1) + timedelta(seconds=_seconds)
-      return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(d.day-1,
-                                                          d.hour,
-                                                          d.minute,
-                                                          d.second)
-    
+    @staticmethod
+    def as_uptime(_seconds):
+        """Format seconds in to uptime string in the format: 00d 00h 00m 00s """
+        uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
+        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(uptime.day-1,
+                                                            uptime.hour,
+                                                            uptime.minute,
+                                                            uptime.second)
+
     @property
     def on_for(self):
         """On time in seconds."""
         if self.insight_params:
-            return self._as_uptime(self.insight_params['onfor'])
+            return as_uptime(self.insight_params['onfor'])
 
     @property
     def on_today(self):
         """On time in seconds."""
         if self.insight_params:
-            return self._as_uptime(self.insight_params['ontoday'])
+            return as_uptime(self.insight_params['ontoday'])
 
     @property
     def on_total(self):
         """On time in seconds."""
         if self.insight_params:
-            return self._as_uptime(self.insight_params['ontotal'])
+            return as_uptime(self.insight_params['ontotal'])
 
     @property
     def power_total_mw_min(self):
-        """This is a total of average mW per minute."""
+        """Total of average mW per minute."""
         if self.insight_params:
             try:
                 return self.insight_params['totalmw']
-            except:
+            except Exception:
                 return None
 
     @property
     def power_today_mw_min(self):
-        """This is the total consumption today in mW per minute."""
+        """Total consumption today in mW per minute."""
         if self.insight_params:
             try:
                 return self.insight_params['todaymw']
-            except:
+            except Exception:
                 return None
 
     @property
