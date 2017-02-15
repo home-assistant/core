@@ -11,13 +11,15 @@ import hashlib
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, MediaPlayerDevice,
-    PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
+    SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
+    SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    CONF_NAME)
+    STATE_OFF, CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
@@ -28,6 +30,7 @@ REQUIREMENTS = ['pyatv==0.1.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LOGIN_ID = 'login_id'
+CONF_START_OFF = 'start_off'
 
 DEFAULT_NAME = 'Apple TV'
 
@@ -37,6 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_LOGIN_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_START_OFF, default=False): cv.boolean
 })
 
 
@@ -50,10 +54,12 @@ def async_setup_platform(hass, config, async_add_entities,
         name = discovery_info['name']
         host = discovery_info['host']
         login_id = discovery_info['hsgid']
+        start_off = False
     else:
         name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
         login_id = config.get(CONF_LOGIN_ID)
+        start_off = config.get(CONF_START_OFF)
 
     if DATA_APPLE_TV not in hass.data:
         hass.data[DATA_APPLE_TV] = []
@@ -65,7 +71,7 @@ def async_setup_platform(hass, config, async_add_entities,
     details = pyatv.AppleTVDevice(name, host, login_id)
     session = async_get_clientsession(hass)
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
-    entity = AppleTvDevice(atv, name)
+    entity = AppleTvDevice(atv, name, start_off)
 
     yield from async_add_entities([entity], update_before_add=True)
 
@@ -73,12 +79,19 @@ def async_setup_platform(hass, config, async_add_entities,
 class AppleTvDevice(MediaPlayerDevice):
     """Representation of an Apple TV device."""
 
-    def __init__(self, atv, name):
+    def __init__(self, atv, name, is_off):
         """Initialize the Apple TV device."""
-        self._name = name
         self._atv = atv
+        self._name = name
+        self._is_off = is_off
         self._playing = None
         self._artwork_hash = None
+
+    @callback
+    def _set_power_off(self, is_off):
+        self._playing = None
+        self._artwork_hash = None
+        self._is_off = is_off
 
     @property
     def name(self):
@@ -88,6 +101,9 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        if self._is_off:
+            return STATE_OFF
+
         if self._playing is not None:
             from pyatv import const
             state = self._playing.play_state
@@ -107,6 +123,9 @@ class AppleTvDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
+        if self._is_off:
+            return
+
         from pyatv import exceptions
         try:
             playing = yield from self._atv.metadata.playing()
@@ -183,20 +202,32 @@ class AppleTvDevice(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         if self._playing is not None:
+            if self.state == STATE_IDLE:
+                return 'Nothing playing'
             title = self._playing.title
             return title if title else "No title"
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._playing is not None:
-            if self.state != STATE_IDLE:
-                return SUPPORT_PAUSE | SUPPORT_PLAY | \
-                    SUPPORT_SEEK | SUPPORT_STOP | \
-                    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | \
-                    SUPPORT_PLAY_MEDIA
-            else:
-                return SUPPORT_PLAY_MEDIA
+        features = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA
+        if self._playing is None or self.state == STATE_IDLE:
+            return features
+
+        features |= SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_SEEK | \
+            SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK
+
+        return features
+
+    @asyncio.coroutine
+    def async_turn_on(self):
+        """Turn the media player on."""
+        self._set_power_off(False)
+
+    @asyncio.coroutine
+    def async_turn_off(self):
+        """Turn the media player off."""
+        self._set_power_off(True)
 
     def async_media_play_pause(self):
         """Pause media on media player.
@@ -242,8 +273,10 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing is not None:
             return self._atv.remote_control.previous()
 
-    @asyncio.coroutine
     def async_media_seek(self, position):
-        """Send seek command."""
+        """Send seek command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         if self._playing is not None:
-            yield from self._atv.remote_control.set_position(position)
+            return self._atv.remote_control.set_position(position)
