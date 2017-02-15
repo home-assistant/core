@@ -98,16 +98,16 @@ SENSOR_TYPES = {
 }
 
 CONDITION_PICTURES = {
-    'clear-day': '/static/images/weather-sunny.svg',
-    'clear-night': '/static/images/weather-night.svg',
-    'rain': '/static/images/weather-pouring.svg',
-    'snow': '/static/images/weather-snowy.svg',
-    'sleet': '/static/images/weather-hail.svg',
-    'wind': '/static/images/weather-windy.svg',
-    'fog': '/static/images/weather-fog.svg',
-    'cloudy': '/static/images/weather-cloudy.svg',
-    'partly-cloudy-day': '/static/images/weather-partlycloudy.svg',
-    'partly-cloudy-night': '/static/images/weather-cloudy.svg',
+    'clear-day': '/static/images/darksky/weather-sunny.svg',
+    'clear-night': '/static/images/darksky/weather-night.svg',
+    'rain': '/static/images/darksky/weather-pouring.svg',
+    'snow': '/static/images/darksky/weather-snowy.svg',
+    'sleet': '/static/images/darksky/weather-hail.svg',
+    'wind': '/static/images/darksky/weather-windy.svg',
+    'fog': '/static/images/darksky/weather-fog.svg',
+    'cloudy': '/static/images/darksky/weather-cloudy.svg',
+    'partly-cloudy-day': '/static/images/darksky/weather-partlycloudy.svg',
+    'partly-cloudy-night': '/static/images/darksky/weather-cloudy.svg',
 }
 
 
@@ -206,7 +206,7 @@ class DarkSkySensor(Entity):
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
-        if self._icon is None or "summary" not in self.type:
+        if not self._icon is None or 'summary' not in self.type:
             return None
 
         if self._icon in CONDITION_PICTURES:
@@ -291,7 +291,7 @@ class DarkSkySensor(Entity):
         if state is None:
             return state
 
-        if "summary" in self.type:
+        if 'summary' in self.type:
             self._icon = getattr(data, 'icon', '')
 
         # Some state data needs to be rounded to whole values or converted to
