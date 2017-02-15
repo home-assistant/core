@@ -365,7 +365,6 @@ class SonosDevice(MediaPlayerDevice):
             self._support_pause = False
             self._is_playing_tv = False
             self._is_playing_line_in = False
-            self._favorite_sources = None
             self._source_name = None
             self._last_avtransport_event = None
             return
