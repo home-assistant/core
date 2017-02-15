@@ -1,4 +1,5 @@
 """A class to hold entity values."""
+from collections import OrderedDict
 import fnmatch
 import re
 
@@ -14,11 +15,14 @@ class EntityValues(object):
         self._exact = exact
         self._domain = domain
 
-        if glob is not None:
-            glob = {re.compile(fnmatch.translate(key)): value
-                    for key, value in glob.items()}
+        if glob is None:
+            compiled = None
+        else:
+            compiled = OrderedDict()
+            for key, value in glob.items():
+                compiled[re.compile(fnmatch.translate(key))] = value
 
-        self._glob = glob
+        self._glob = compiled
 
     def get(self, entity_id):
         """Get config for an entity id."""

@@ -1,4 +1,5 @@
 """Test the entity values helper."""
+from collections import OrderedDict
 from homeassistant.helpers.entity_values import EntityValues as EV
 
 ent = 'test.test'
@@ -52,4 +53,16 @@ def test_merging_values():
         'exact_key': 'exact',
         'domain_key': 'domain',
         'glob_key': 'glob',
+    }
+
+
+def test_glob_order():
+    """Test merging glob, domain and exact configs."""
+    glob = OrderedDict()
+    glob['test.*est'] = {"value": "first"}
+    glob['test.*'] = {"value": "second"}
+
+    store = EV(glob=glob)
+    assert store.get(ent) == {
+        'value': 'second'
     }
