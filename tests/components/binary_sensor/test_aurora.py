@@ -43,7 +43,11 @@ class TestAuroraSensorSetUp(unittest.TestCase):
             for entity in new_entities:
                 entities.append(entity)
 
-        aurora.setup_platform(self.hass, {"name": "Test"}, mock_add_entities)
+        config = {
+            "name": "Test",
+            "forecast_threshold": 75
+        }
+        aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
         self.assertEqual(len(entities), 1)
@@ -57,6 +61,38 @@ class TestAuroraSensorSetUp(unittest.TestCase):
             "nothing's out"
         )
         self.assertFalse(aurora_component.is_on)
+
+    @requests_mock.Mocker()
+    def test_custom_threshold_works(self, mock_req):
+        """Test that the the config can take a custom forecast threshold."""
+        uri = re.compile(
+            "http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
+        )
+        mock_req.get(uri, text=load_fixture('aurora.txt'))
+
+        entities = []
+
+        def mock_add_entities(new_entities, update_before_add=False):
+            """Mock add entities."""
+            if update_before_add:
+                for entity in new_entities:
+                    entity.update()
+
+            for entity in new_entities:
+                entities.append(entity)
+
+        config = {
+            "name": "Test",
+            "forecast_threshold": 1
+        }
+        self.hass.config.longitude = 5
+        self.hass.config.latitude = 5
+
+        aurora.setup_platform(self.hass, config, mock_add_entities)
+
+        aurora_component = entities[0]
+        self.assertEquals(aurora_component.aurora_data.visibility_level, '5')
+        self.assertTrue(aurora_component.is_on)
 
 
 class TestAuroraGateway(unittest.TestCase):
