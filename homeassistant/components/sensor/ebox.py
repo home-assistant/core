@@ -72,27 +72,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-HOST = "https://client.ebox.ca"
-HOME_URL = "{}/".format(HOST)
-LOGIN_URL = "{}/login".format(HOST)
-USAGE_URL = "{}/myusage".format(HOST)
-
-USAGE_MAP = {"before_offpeak_download": 0,
-             "before_offpeak_upload": 1,
-             "before_offpeak_total": 2,
-             "offpeak_download": 3,
-             "offpeak_upload": 4,
-             "offpeak_total": 5,
-             "download": 6,
-             "upload": 7,
-             "total": 8}
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the EBox sensor."""
-    # Create a data fetcher to support all of the configured sensors. Then make
-    # the first call to init the data.
-
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
@@ -109,7 +91,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(EBoxSensor(ebox_data, variable, name))
 
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class EBoxSensor(Entity):
@@ -119,14 +101,11 @@ class EBoxSensor(Entity):
         """Initialize the sensor."""
         self.client_name = name
         self.type = sensor_type
-        self.entity_id = "sensor.{}_{}".format(name, sensor_type)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._icon = SENSOR_TYPES[sensor_type][2]
         self.ebox_data = ebox_data
         self._state = None
-
-        self.update()
 
     @property
     def name(self):
@@ -171,7 +150,7 @@ class EBoxData(object):
         try:
             self.client.fetch_data()
         except PyEboxError as exp:
-            _LOGGER.error(exp)
+            _LOGGER.exception(exp)
             return
         # Update data
         self.data = self.client.get_data()
