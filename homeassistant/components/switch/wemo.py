@@ -157,9 +157,10 @@ class WemoSwitch(SwitchDevice):
     def _as_uptime(self, _seconds):
       d = datetime(1,1,1) + timedelta(seconds=_seconds)
       return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(d.day-1,
-                                                     d.hour,
-                                                     d.minute, d.second)
-
+                                                          d.hour,
+                                                          d.minute, 
+                                                          d.second)
+    
     @property
     def on_for(self):
         """On time in seconds."""
