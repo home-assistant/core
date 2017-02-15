@@ -157,7 +157,7 @@ class WemoSwitch(SwitchDevice):
 
     @staticmethod
     def as_uptime(_seconds):
-        """Format seconds in to uptime string in the format: 00d 00h 00m 00s """
+        """Format seconds into uptime string in the format: 00d 00h 00m 00s"""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
         return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(uptime.day-1,
                                                             uptime.hour,
