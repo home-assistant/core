@@ -87,10 +87,13 @@ class S20Switch(SwitchDevice):
 
     def update(self):
         """Update device state."""
-        try:
-            self._state = self._s20.on
-        except self._exc:
-            _LOGGER.exception("Error while fetching S20 state")
+        for attempt in range(5):
+            try:
+                self._state = self._s20.on
+                return
+            except self._exc:
+                continue
+        _LOGGER.warn("Error while fetching S20 state")
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
