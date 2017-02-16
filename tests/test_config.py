@@ -18,7 +18,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 
 from tests.common import (
-    get_test_config_dir, get_test_home_assistant, mock_generator)
+    get_test_config_dir, get_test_home_assistant, mock_coro)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -381,10 +381,10 @@ class TestConfig(unittest.TestCase):
         """Check that restart propagates to stop."""
         process_mock = mock.MagicMock()
         attrs = {
-            'communicate.return_value': mock_generator(('output', 'error')),
-            'wait.return_value': mock_generator(0)}
+            'communicate.return_value': mock_coro(('output', 'error')),
+            'wait.return_value': mock_coro(0)}
         process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_generator(process_mock)
+        mock_create.return_value = mock_coro(process_mock)
 
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass), self.hass.loop
@@ -396,10 +396,10 @@ class TestConfig(unittest.TestCase):
         process_mock = mock.MagicMock()
         attrs = {
             'communicate.return_value':
-                mock_generator(('\033[34mhello'.encode('utf-8'), 'error')),
-            'wait.return_value': mock_generator(1)}
+                mock_coro(('\033[34mhello'.encode('utf-8'), 'error')),
+            'wait.return_value': mock_coro(1)}
         process_mock.configure_mock(**attrs)
-        mock_create.return_value = mock_generator(process_mock)
+        mock_create.return_value = mock_coro(process_mock)
 
         assert run_coroutine_threadsafe(
             config_util.async_check_ha_config_file(self.hass),

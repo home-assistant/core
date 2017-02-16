@@ -298,9 +298,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert platform2_setup.called
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
-           '._async_setup_platform', return_value=mock_coro()())
+           '._async_setup_platform', return_value=mock_coro())
     @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           return_value=mock_coro(True))
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)

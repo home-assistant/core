@@ -393,12 +393,7 @@ def mock_coro(return_value=None):
         """Fake coroutine."""
         return return_value
 
-    return coro
-
-
-def mock_generator(return_value=None):
-    """Helper method to return a coro generator that returns a value."""
-    return mock_coro(return_value)()
+    return coro()
 
 
 def mock_coro_func(return_value=None):
