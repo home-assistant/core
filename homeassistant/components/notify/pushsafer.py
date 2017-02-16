@@ -66,6 +66,6 @@ class PushsaferNotificationService(BaseNotificationService):
             try:
                 self.pushsafer.send_message(message, data['title'], "", "",
                                             "", "", "", "",
-                                            "0", "", "", "" )
+                                            "0", "", "", "")
             except ValueError as val_err:
                 _LOGGER.error(str(val_err))
