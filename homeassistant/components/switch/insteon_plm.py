@@ -69,7 +69,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._plm.get_device_attr(self._address, 'onlevel')
+        onlevel = self._plm.get_device_attr(self._address, 'switchstate')
         _LOGGER.debug('on level for %s is %s', self._address, onlevel)
         if onlevel:
             return (onlevel > 0)
@@ -79,12 +79,12 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Moo."""
-        print(kwargs)
+        self._plm.turn_on(self._address, 1)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Moo."""
-        print(kwargs)
+        self._plm.turn_off(self._address)
 
     def async_insteonplm_switch_update_callback(self, message):
         """Receive notification from transport that new data exists."""
