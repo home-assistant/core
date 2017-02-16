@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
-    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name) or {}
+    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name)
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
     _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
