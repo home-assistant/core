@@ -7,7 +7,8 @@ https://home-assistant.io/components/light.litejet/
 import logging
 
 import homeassistant.components.litejet as litejet
-from homeassistant.components.light import ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
 DEPENDENCIES = ['litejet']
 
