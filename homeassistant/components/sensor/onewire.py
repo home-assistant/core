@@ -35,19 +35,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_files = []
     if base_dir == DEFAULT_MOUNT_DIR:
         """ Use w1_gpio + w1_therm driver """
-        for device_folder in glob(os.path.join(base_dir, device_family +
-                                               '[.-]*')):
-            sensor_ids.append(os.path.split(device_folder)[1])
-            device_files.append(os.path.join(device_folder, 'w1_slave'))
+        for device_family in DEVICE_FAMILIES:
+            for device_folder in glob(os.path.join(base_dir, device_family +
+                                                   '[.-]*')):
+                sensor_ids.append(os.path.split(device_folder)[1])
+                device_files.append(os.path.join(device_folder, 'w1_slave'))
     else:
         """ Use OWFS driver. Folder name may be aliased by OWFS """
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
             family = family_file.read()
             if family in DEVICE_FAMILIES:
-                sensor_id = os.path.split(os.path.split(family_file_path)[0])[1];
+                sensor_id = os.path.split(
+                    os.path.split(family_file_path)[0])[1]
                 sensor_ids.append(sensor_id)
-                device_files.append(os.path.join(os.path.split(family_file_path)[0], 'temperature'))
+                device_files.append(os.path.join(
+                    os.path.split(family_file_path)[0], 'temperature'))
+
 
     if device_files == []:
         _LOGGER.error('No onewire sensor found. Check if '
