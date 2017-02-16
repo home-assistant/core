@@ -88,7 +88,8 @@ class InsteonPLMDimmerDevice(Light):
         if self._dimmable:
             return SUPPORT_BRIGHTNESS
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn device on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
@@ -96,7 +97,8 @@ class InsteonPLMDimmerDevice(Light):
             brightness = 255
         self._plm.turn_on(self._address, brightness=brightness)
 
-    def turn_off(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn device off."""
         self._plm.turn_off(self._address)
 
