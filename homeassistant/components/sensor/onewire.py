@@ -52,7 +52,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_files.append(os.path.join(
                     os.path.split(family_file_path)[0], 'temperature'))
 
-
     if device_files == []:
         _LOGGER.error('No onewire sensor found. Check if '
                       'dtoverlay=w1-gpio is in your /boot/config.txt. '
