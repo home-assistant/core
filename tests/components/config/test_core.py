@@ -20,7 +20,7 @@ def test_validate_config_ok(hass, test_client):
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',
-            return_value=mock_coro(None)()):
+            return_value=mock_coro()):
         resp = yield from client.post('/api/config/core/check_config')
 
     assert resp.status == 200
@@ -30,7 +30,7 @@ def test_validate_config_ok(hass, test_client):
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',
-            return_value=mock_coro('beer')()):
+            return_value=mock_coro('beer')):
         resp = yield from client.post('/api/config/core/check_config')
 
     assert resp.status == 200
