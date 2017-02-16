@@ -250,7 +250,6 @@ class SpeechManager(object):
                 except OSError as err:
                     _LOGGER.warning(
                         "Can't remove cache file '%s': %s", filename, err)
-                    pass
 
         yield from self.hass.loop.run_in_executor(None, remove_files)
         self.file_cache = {}
