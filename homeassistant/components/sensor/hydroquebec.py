@@ -168,7 +168,7 @@ class HydroquebecData(object):
         try:
             self.client.fetch_data()
         except PyHydroQuebecError as exp:
-            _LOGGER.error("Error on receive last Ebox data: %s", exp)
+            _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
             return
         # Update data
         self.data = self.client.get_data()
