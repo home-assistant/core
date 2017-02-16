@@ -16,10 +16,12 @@ from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
+
 from . import const
 from . import workaround
 
@@ -38,6 +40,8 @@ CONF_IGNORED = 'ignored'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
+CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
+CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -175,6 +179,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CONFIG_PATH): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
@@ -296,7 +304,10 @@ def setup(hass, config):
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
-    hass.data[DATA_DEVICE_CONFIG] = config[DOMAIN][CONF_DEVICE_CONFIG]
+    hass.data[DATA_DEVICE_CONFIG] = EntityValues(
+        config[DOMAIN][CONF_DEVICE_CONFIG],
+        config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
+        config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
 
     # Setup options
     options = ZWaveOption(
@@ -385,7 +396,7 @@ def setup(hass, config):
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = hass.data[DATA_DEVICE_CONFIG].get(name) or {}
+            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info("Ignoring device %s", name)
