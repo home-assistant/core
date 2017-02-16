@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['insteonplm==0.0.1']
+REQUIREMENTS = ['insteonplm==0.7.0']
 
 _LOGGER = logging.getLogger(__name__)
 
