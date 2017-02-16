@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hydroquebec_data = HydroquebecData(username, password)
         hydroquebec_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error(error)
+        _LOGGER.error("Failt login: %s", error)
         return False
 
     name = config.get(CONF_NAME)
@@ -168,7 +168,7 @@ class HydroquebecData(object):
         try:
             self.client.fetch_data()
         except PyHydroQuebecError as exp:
-            _LOGGER.error(exp)
+            _LOGGER.error("Error on receive last Ebox data: %s", exp)
             return
         # Update data
         self.data = self.client.get_data()
