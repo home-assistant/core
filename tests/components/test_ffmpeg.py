@@ -181,7 +181,7 @@ class TestFFmpegSetup(object):
         assert len(manager._cache) == 0
 
     @patch('haffmpeg.Test.run_test',
-           return_value=mock_coro(return_value=True)())
+           return_value=mock_coro(True))
     def test_setup_component_test_run_test(self, mock_test):
         """Setup ffmpeg component test run_test."""
         with assert_setup_component(2):
@@ -204,7 +204,7 @@ class TestFFmpegSetup(object):
         assert manager._cache['blabalblabla']
 
     @patch('haffmpeg.Test.run_test',
-           return_value=mock_coro(return_value=False)())
+           return_value=mock_coro(False))
     def test_setup_component_test_run_test_test_fail(self, mock_test):
         """Setup ffmpeg component test run_test."""
         with assert_setup_component(2):
