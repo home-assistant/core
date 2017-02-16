@@ -149,6 +149,47 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual([125, 125, 125],
                          light_state.attributes.get('rgb_color'))
 
+    def test_controlling_color_with_templates_via_topic(self): \
+            # pylint: disable=invalid-name
+        """Test the controlling of the color with templates via topic."""
+        self.hass.config.components = ['mqtt']
+        with assert_setup_component(1):
+            assert setup_component(self.hass, light.DOMAIN, {
+                light.DOMAIN: {
+                    'platform': 'mqtt_json',
+                    'name': 'test',
+                    'state_topic': 'test_light_rgb',
+                    'command_topic': 'test_light_rgb/set',
+                    'brightness': True,
+                    'rgb': True,
+                    'rgb_value_template': '{{ value_json.color[0] }},'
+                                          '{{ value_json.color[1] }},'
+                                          '{{ value_json.color[2] }}',
+                    'rgb_set_template': '{"color":['
+                                        '{{ value_json.r }},'
+                                        '{{ value_json.g }},'
+                                        '{{ value_json.b }}'
+                                        ']}',
+                    'qos': '0'
+                }
+            })
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertIsNone(state.attributes.get('rgb_color'))
+        self.assertIsNone(state.attributes.get('brightness'))
+        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        # Set to a custom color using [r, g, b] list format
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          '{"state":"ON",'
+                          '"color":[41,42,43],'
+                          '"brightness":255}')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test')
+        self.assertEqual([41, 42, 43], state.attributes.get('rgb_color'))
+
     def test_sending_mqtt_commands_and_optimistic(self): \
             # pylint: disable=invalid-name
         """Test the sending of command in optimistic mode."""

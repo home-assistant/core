@@ -26,10 +26,21 @@ DOMAIN = 'mqtt_json'
 
 DEPENDENCIES = ['mqtt']
 
+CONF_RGB_VALUE_TEMPLATE = 'rgb_value_template'
+CONF_RGB_SET_TEMPLATE = 'rgb_set_template'
+
 DEFAULT_NAME = 'MQTT JSON Light'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS = False
 DEFAULT_RGB = False
+DEFAULT_RGB_VALUE_TEMPLATE = cv.template('{{ value_json.color.r }},'
+                                         '{{ value_json.color.g }},'
+                                         '{{ value_json.color.b }}')
+DEFAULT_RGB_SET_TEMPLATE = cv.template('{"color": {'
+                                       '"r": {{ value_json.r }}, '
+                                       '"g": {{ value_json.g }}, '
+                                       '"b": {{ value_json.b }}}'
+                                       '}')
 DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_FLASH_TIME_LONG = 10
 
@@ -50,6 +61,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
+    vol.Optional(CONF_RGB_VALUE_TEMPLATE, default=DEFAULT_RGB_VALUE_TEMPLATE):
+        cv.template,
+    vol.Optional(CONF_RGB_SET_TEMPLATE, default=DEFAULT_RGB_SET_TEMPLATE):
+        cv.template,
     vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
         cv.positive_int,
     vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG):
@@ -68,6 +83,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 CONF_COMMAND_TOPIC
             )
         },
+        {
+            CONF_RGB_VALUE_TEMPLATE: config.get(CONF_RGB_VALUE_TEMPLATE),
+            CONF_RGB_SET_TEMPLATE: config.get(CONF_RGB_SET_TEMPLATE)
+        },
         config.get(CONF_QOS),
         config.get(CONF_RETAIN),
         config.get(CONF_OPTIMISTIC),
@@ -85,7 +104,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttJson(Light):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, hass, name, topic, qos, retain,
+    def __init__(self, hass, name, topic, templates, qos, retain,
                  optimistic, brightness, rgb, flash_times):
         """Initialize MQTT JSON light."""
         self._hass = hass
@@ -107,6 +126,11 @@ class MqttJson(Light):
 
         self._flash_times = flash_times
 
+        self._templates = {}
+        for key, tpl in templates.items():
+            tpl.hass = hass
+            self._templates[key] = tpl.render_with_possible_json_value
+
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
             values = json.loads(payload)
@@ -118,11 +142,9 @@ class MqttJson(Light):
 
             if self._rgb is not None:
                 try:
-                    red = int(values['color']['r'])
-                    green = int(values['color']['g'])
-                    blue = int(values['color']['b'])
-
-                    self._rgb = [red, green, blue]
+                    self._rgb = [int(val) for val in
+                                 self._templates[CONF_RGB_VALUE_TEMPLATE](
+                                     payload).split(',')]
                 except KeyError:
                     pass
                 except ValueError:
@@ -184,11 +206,13 @@ class MqttJson(Light):
         message = {'state': 'ON'}
 
         if ATTR_RGB_COLOR in kwargs:
-            message['color'] = {
-                'r': kwargs[ATTR_RGB_COLOR][0],
-                'g': kwargs[ATTR_RGB_COLOR][1],
-                'b': kwargs[ATTR_RGB_COLOR][2]
-            }
+            message.update(json.loads(self._templates[CONF_RGB_SET_TEMPLATE](
+                json.dumps({
+                    'r': kwargs[ATTR_RGB_COLOR][0],
+                    'g': kwargs[ATTR_RGB_COLOR][1],
+                    'b': kwargs[ATTR_RGB_COLOR][2]
+                })
+            )))
 
             if self._optimistic:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
