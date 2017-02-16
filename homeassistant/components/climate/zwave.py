@@ -78,6 +78,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
                                   " workaround")
                     self._zxt_120 = 1
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""

@@ -52,7 +52,7 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         """Initialize the sensor."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self._sensor_type = device_class
-        self._state = None
+        self._state = self._value.data
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -88,6 +88,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
         track_point_in_time(
             self._hass, self.async_update_ha_state,
             self.invalidate_after)
+
 
     def update_properties(self):
         """Called when a value for this entity's node has changed."""

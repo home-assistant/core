@@ -112,6 +112,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._timer = None
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
+        self.update_properties()
 
     def update_properties(self):
         """Update internal properties based on zwave values."""

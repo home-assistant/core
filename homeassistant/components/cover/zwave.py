@@ -54,6 +54,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._workaround = workaround.get_device_mapping(value)
         if self._workaround:
             _LOGGER.debug("Using workaround %s", self._workaround)
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
