@@ -710,7 +710,8 @@ class ZWaveDeviceEntity(Entity):
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
-        """Get the values for a given command_class with arguments."""
+        """Get the values for a given command_class with arguments.
+           May only be used inside callback."""
         if class_id is not None:
             kwargs[CLASS_ID] = class_id
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
@@ -746,7 +747,8 @@ class ZWaveDeviceEntity(Entity):
         return results
 
     def get_value(self, **kwargs):
-        """Simplifyer to get values."""
+        """Simplifyer to get values.
+           May only be used inside callback."""
         return self._value_handler(method='get', **kwargs)
 
     def set_value(self, **kwargs):
