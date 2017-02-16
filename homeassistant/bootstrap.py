@@ -299,6 +299,10 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     # Load dependencies
     for component in getattr(platform, 'DEPENDENCIES', []):
+        if component == 'config':
+            raise HomeAssistantError(
+                'Config is not allowed to be a dependency.')
+
         res = yield from async_setup_component(hass, component, config)
         if not res:
             _LOGGER.error(
@@ -430,7 +434,13 @@ def async_from_config_dict(config: Dict[str, Any],
     service.HASS = hass
 
     # Setup the components
+    no_load_config = 'config' not in components
+
     for domain in loader.load_order_components(components):
+        if no_load_config and domain == 'config':
+            raise HomeAssistantError(
+                'Config is not allowed to be a dependency')
+
         yield from _async_setup_component(hass, domain, config)
 
     setup_lock.release()
