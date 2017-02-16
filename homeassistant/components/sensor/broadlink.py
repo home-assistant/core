@@ -132,7 +132,7 @@ class BroadlinkData(object):
             success = False
         if success:
             return
-        if not self._auth() or retry < 1::
+        if not self._auth() or retry < 1:
             return
         self._update(max(0, retry-1))
 
