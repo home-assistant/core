@@ -167,7 +167,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
             if scanner:
-                yield from async_setup_scanner_platform(
+                async_setup_scanner_platform(
                     hass, p_config, scanner, tracker.async_see)
                 return
 
@@ -638,12 +638,12 @@ def async_load_config(path: str, hass: HomeAssistantType,
         return []
 
 
-@asyncio.coroutine
+@callback
 def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                                  scanner: Any, async_see_device: Callable):
     """Helper method to connect scanner-based platform to device tracker.
 
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
     scanner.hass = hass
@@ -678,7 +678,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             hass.async_add_job(async_see_device(**kwargs))
 
     async_track_time_interval(hass, async_device_tracker_scan, interval)
-    hass.async_add_job(async_device_tracker_scan, None)
+    hass.async_add_job(async_device_tracker_scan(None))
 
 
 def update_config(path: str, dev_id: str, device: Device):
