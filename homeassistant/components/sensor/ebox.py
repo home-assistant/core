@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ebox_data = EBoxData(username, password)
         ebox_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error(error)
+        _LOGGER.error("Failt login: %s", error)
         return False
 
     name = config.get(CONF_NAME)
@@ -150,7 +150,7 @@ class EBoxData(object):
         try:
             self.client.fetch_data()
         except PyEboxError as exp:
-            _LOGGER.exception(exp)
+            _LOGGER.error("Error on receive last Fido data: %s", exp)
             return
         # Update data
         self.data = self.client.get_data()
