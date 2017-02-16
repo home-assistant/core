@@ -121,17 +121,13 @@ class BroadlinkData(object):
                     data.get('light', 0)  not in [0, 1, 2, 3] or
                     data.get('air_quality', 0)  not in [0, 1, 2, 3] or
                     data.get('noise', 0)  not in [0, 1, 2]):
-                success = False
             else:
-                success = True
                 self.data = data
+                return
         except socket.timeout as error:
             if retry < 1:
                 _LOGGER.error(error)
                 return
-            success = False
-        if success:
-            return
         if not self._auth() or retry < 1:
             return
         self._update(max(0, retry-1))
