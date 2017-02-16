@@ -118,8 +118,8 @@ class BroadlinkData(object):
         try:
             data = self._device.check_sensors_raw()
             if (data.get('humidity', 0) <= 100 and
-                    data.get('light', 0)  in [0, 1, 2, 3] and
-                    data.get('air_quality', 0)  in [0, 1, 2, 3] and
+                    data.get('light', 0) in [0, 1, 2, 3] and
+                    data.get('air_quality', 0) in [0, 1, 2, 3] and
                     data.get('noise', 0) in [0, 1, 2]):
                 self.data = data
                 return
