@@ -116,14 +116,25 @@ class BroadlinkData(object):
 
     def _update(self, retry=2):
         try:
-            self.data = self._device.check_sensors_raw()
+            data = self._device.check_sensors_raw()
+            if (data.get('humidity', 0) > 100 or
+                data.get('light', 0)  not in [0 ,1, 2, 3] or
+                data.get('air_quality', 0)  not in [0 ,1, 2, 3] or
+                data.get('noise', 0)  not in [0 ,1, 2]):
+                success = False
+            else:
+                success = True
+                self.data = data
         except socket.timeout as error:
             if retry < 1:
                 _LOGGER.error(error)
                 return
-            if not self._auth():
-                return
-            return self._update(max(0, retry-1))
+            success = False
+        if success:
+            return
+        if not self._auth() or retry < 1::
+            return
+        self._update(max(0, retry-1))
 
     def _auth(self, retry=2):
         try:
