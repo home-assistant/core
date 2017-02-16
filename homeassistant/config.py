@@ -85,12 +85,7 @@ sun:
 sensor:
   platform: yr
 
-# Text to speech
-tts:
-  platform: google
-
 """
-
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
