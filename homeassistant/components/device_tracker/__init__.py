@@ -168,7 +168,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
             if scanner:
                 async_setup_scanner_platform(
-                    hass, p_config, scanner, tracker.async_see)
+                    hass, p_config, scanner, tracker.async_see, p_type)
                 return
 
             if not setup:
@@ -640,12 +640,14 @@ def async_load_config(path: str, hass: HomeAssistantType,
 
 @callback
 def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
-                                 scanner: Any, async_see_device: Callable):
+                                 scanner: Any, async_see_device: Callable,
+                                 platform: str):
     """Helper method to connect scanner-based platform to device tracker.
 
     This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    update_lock = asyncio.Lock(loop=hass.loop)
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
@@ -654,7 +656,14 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     @asyncio.coroutine
     def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Called when interval matches."""
-        found_devices = yield from scanner.async_scan_devices()
+        if update_lock.locked():
+            _LOGGER.warning(
+                "Updating device list from %s took longer than the scheduled "
+                "scan interval %s", platform, interval)
+            return
+
+        with (yield from update_lock):
+            found_devices = yield from scanner.async_scan_devices()
 
         for mac in found_devices:
             if mac in seen:
