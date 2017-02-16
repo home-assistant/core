@@ -692,6 +692,10 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
+        self.node_id = None
+        self.location = None
+        self.battery_level = None
+        self.wakeup_interval = None
 
         dispatcher.connect(
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -705,8 +709,16 @@ class ZWaveDeviceEntity(Entity):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
+        self.update_attributes()
         self.update_properties()
         self.schedule_update_ha_state()
+
+    def update_attributes(self):
+        """Update the node attributes."""
+        self.node_id = self._value.node.node_id
+        self.location = self._value.node.location
+        self.battery_level = self._value.node.get_battery_level()
+        self.wakeup_interval = _get_wakeup(self._value.node)
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
@@ -789,26 +801,16 @@ class ZWaveDeviceEntity(Entity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
-            const.ATTR_NODE_ID: self._value.node.node_id,
+            const.ATTR_NODE_ID: self.node_id,
         }
 
-        try:
-            battery_level = self._value.node.get_battery_level()
-        except RuntimeError:
-            # If we get an runtime error the dict has changed while
-            # we was looking for a value, just do it again
-            battery_level = self._value.node.get_battery_level()
+        if self.battery_level:
+            attrs[ATTR_BATTERY_LEVEL] = self.battery_level
 
-        if battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = battery_level
+        if self.location:
+            attrs[ATTR_LOCATION] = self.location
 
-        location = self._value.node.location
-
-        if location:
-            attrs[ATTR_LOCATION] = location
-
-        wakeup = _get_wakeup(self._value.node)
-        if wakeup:
-            attrs[ATTR_WAKEUP] = wakeup
+        if self.wakeup_interval:
+            attrs[ATTR_WAKEUP] = self.wakeup_interval
 
         return attrs
