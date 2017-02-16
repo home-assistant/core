@@ -48,7 +48,6 @@ class PushsaferNotificationService(BaseNotificationService):
 
     def send_message(self, message='', **kwargs):
         """Send a message to a user."""
-
         # Make a copy and use empty dict if necessary
         data = dict(kwargs.get(ATTR_DATA) or {})
 
