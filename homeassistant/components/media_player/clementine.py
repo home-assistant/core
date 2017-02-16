@@ -29,9 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Clementine Remote'
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                      SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_SET | \
                      SUPPORT_NEXT_TRACK | \
