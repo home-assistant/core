@@ -85,22 +85,20 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
         # If it's active make sure that we set the timeout tracker
-        if self._state:
-            track_point_in_time(
-                self._hass, self.async_update_ha_state,
-                self.invalidate_after)
+        track_point_in_time(
+            self._hass, self.async_update_ha_state,
+            self.invalidate_after)
 
     def update_properties(self):
         """Called when a value for this entity's node has changed."""
         self._state = self._value.data
         self.schedule_update_ha_state()
-        if self._state:
-            # only allow this value to be true for re_arm secs
-            self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-                seconds=self.re_arm_sec)
-            track_point_in_time(
-                self._hass, self.async_update_ha_state,
-                self.invalidate_after)
+        # only allow this value to be true for re_arm secs
+        self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
+            seconds=self.re_arm_sec)
+        track_point_in_time(
+            self._hass, self.async_update_ha_state,
+            self.invalidate_after)
 
     @property
     def is_on(self):
