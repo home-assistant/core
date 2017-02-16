@@ -43,4 +43,5 @@ def test_device_config(hass):
         for key, value in device_config.items()
     }
 
-    assert hass.data[DATA_DEVICE_CONFIG] == test_data
+    assert hass.data[DATA_DEVICE_CONFIG].get('light.kitchen') == \
+        test_data.get('light.kitchen')
