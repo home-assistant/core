@@ -118,9 +118,9 @@ class BroadlinkData(object):
         try:
             data = self._device.check_sensors_raw()
             if (data.get('humidity', 0) > 100 or
-                data.get('light', 0)  not in [0 ,1, 2, 3] or
-                data.get('air_quality', 0)  not in [0 ,1, 2, 3] or
-                data.get('noise', 0)  not in [0 ,1, 2]):
+                    data.get('light', 0)  not in [0, 1, 2, 3] or
+                    data.get('air_quality', 0)  not in [0, 1, 2, 3] or
+                    data.get('noise', 0)  not in [0, 1, 2]):
                 success = False
             else:
                 success = True
