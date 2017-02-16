@@ -7,8 +7,9 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.helpers.entity as entity
-from homeassistant.helpers.customize import set_customize
 from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
+from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.helpers.entity_values import EntityValues
 
 from tests.common import get_test_home_assistant
 
@@ -89,10 +90,8 @@ class TestHelpersEntity(object):
 
     def test_overwriting_hidden_property_to_true(self):
         """Test we can overwrite hidden property to True."""
-        set_customize(
-            self.hass,
-            entity.CORE_DOMAIN,
-            [{'entity_id': [self.entity.entity_id], ATTR_HIDDEN: True}])
+        self.hass.data[DATA_CUSTOMIZE] = EntityValues({
+            self.entity.entity_id: {ATTR_HIDDEN: True}})
         self.entity.update_ha_state()
 
         state = self.hass.states.get(self.entity.entity_id)
