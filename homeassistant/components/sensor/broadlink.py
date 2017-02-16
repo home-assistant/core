@@ -127,9 +127,9 @@ class BroadlinkData(object):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-        if not self._auth() or retry < 1:
+        if retry < 1 or not self._auth():
             return
-        self._update(max(0, retry-1))
+        self._update(retry-1)
 
     def _auth(self, retry=2):
         try:
@@ -137,5 +137,5 @@ class BroadlinkData(object):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(max(0, retry-1))
+            return self._auth(retry-1)
         return auth
