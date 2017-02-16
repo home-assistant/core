@@ -714,7 +714,7 @@ class ZWaveDeviceEntity(Entity):
         self.schedule_update_ha_state()
 
     def update_attributes(self):
-        """Update the node attributes."""
+        """Update the node attributes. May only be used inside callback."""
         self.node_id = self._value.node.node_id
         self.location = self._value.node.location
         self.battery_level = self._value.node.get_battery_level()
