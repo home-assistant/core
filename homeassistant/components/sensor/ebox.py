@@ -150,7 +150,7 @@ class EBoxData(object):
         try:
             self.client.fetch_data()
         except PyEboxError as exp:
-            _LOGGER.error("Error on receive last Fido data: %s", exp)
+            _LOGGER.error("Error on receive last EBox data: %s", exp)
             return
         # Update data
         self.data = self.client.get_data()
