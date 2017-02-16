@@ -32,6 +32,7 @@ MODE_TCP = 1
 CONF_TYPE = 'type'
 CONF_RAW = 'raw'
 
+"""
 SERIAL_SCHEMA = {
     vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     vol.Required(CONF_TYPE, default=DEFAULT_TYPE): 'serial',
@@ -45,17 +46,18 @@ ETHERNET_SCHEMA = {
     vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
 }
 
-"""
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
 })
 """
 
-"""
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
-}, extra=vol.ALLOW_EXTRA)
-"""
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
+    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
