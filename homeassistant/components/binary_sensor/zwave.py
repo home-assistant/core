@@ -89,7 +89,6 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
             self._hass, self.async_update_ha_state,
             self.invalidate_after)
 
-
     def update_properties(self):
         """Called when a value for this entity's node has changed."""
         self._state = self._value.data
