@@ -1,0 +1,115 @@
+"""
+Support for functionality to have conversations with Home Assistant.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/conversation/
+"""
+import asyncio
+import ctypes
+import functools as ft
+import hashlib
+import logging
+import mimetypes
+import os
+import re
+import io
+
+import voluptuous as vol
+
+from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.core import callback
+from homeassistant.config import load_yaml_config_file
+from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_player import (
+    SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_per_platform
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = []
+
+DOMAIN = 'conversation'
+DEPENDENCIES = []
+
+_LOGGER = logging.getLogger(__name__)
+
+SERVICE_PROCESS = 'process'
+
+ATTR_TEXT = 'text'
+
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+})
+
+SCHEMA_SERVICE_PROCESS = vol.Schema({
+    vol.Required(ATTR_TEXT): cv.string,
+    #vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Set up Conversation."""
+
+    provider = None
+    conf = config[DOMAIN][0] if config.get(DOMAIN, []) else {}
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    @asyncio.coroutine
+    def async_setup_platform(p_type, p_config, disc_info=None):
+        """Set up a Conversation platform."""
+        platform = yield from async_prepare_setup_platform(
+            hass, config, DOMAIN, p_type)
+        if platform is None:
+            return
+
+        try:
+            provider = yield from platform.async_get_engine(hass, p_config)
+
+            if provider is None:
+                _LOGGER.error("Error setting up platform %s", p_type)
+                return
+
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.exception("Error setting up platform %s: %s", p_type, ex)
+            return
+
+        @asyncio.coroutine
+        def async_process_handle(service):
+            """Service handle for say."""
+            text = service.data.get(ATTR_TEXT)
+            yield from provider.process(text)
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_PROCESS, async_process_handle,
+            descriptions.get(SERVICE_PROCESS), schema=SCHEMA_SERVICE_PROCESS)
+
+    setup_tasks = [async_setup_platform(p_type, p_config)
+                   for p_type, p_config
+                   in config_per_platform(config, DOMAIN)]
+
+    if setup_tasks:
+        yield from asyncio.wait(setup_tasks, loop=hass.loop)
+
+    return True
+
+
+class ConversationEngine(object):
+    """Representation of a conversation engine."""
+
+    hass = None
+    name = None
+
+    def __init__(self, hass):
+        """Initialize a speech store."""
+        self.hass = hass
+
+    @asyncio.coroutine
+    def process(self, text):
+        """Process the given message."""
+        raise NotImplementedError()
+
