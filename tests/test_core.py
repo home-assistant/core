@@ -217,6 +217,29 @@ class TestHomeAssistant(unittest.TestCase):
         assert len(self.hass._pending_tasks) == 0
         assert len(call_count) == 2
 
+    def test_async_add_job_pending_tasks_future(self):
+        """Run a executor/future in pending tasks."""
+        call_count = []
+
+        def test_executor():
+            """Test executor."""
+            call_count.append('call')
+
+        @asyncio.coroutine
+        def task_callback():
+            """Wait until all stuff is scheduled."""
+            fut1 = self.hass.loop.run_in_executor(None, test_executor)
+            fut2 = self.hass.loop.run_in_executor(None, test_executor)
+            self.hass.async_add_job(fut1)
+            self.hass.async_add_job(fut2)
+
+        run_coroutine_threadsafe(
+            task_callback(), self.hass.loop).result()
+
+        assert len(self.hass._pending_tasks) == 2
+        self.hass.block_till_done()
+        assert len(call_count) == 2
+
     def test_add_job_with_none(self):
         """Try to add a job with None as function."""
         with pytest.raises(ValueError):
