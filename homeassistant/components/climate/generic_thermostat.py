@@ -16,7 +16,8 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE)
 from homeassistant.helpers import condition
-from homeassistant.helpers.event import async_track_state_change, async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_state_change, async_track_time_interval)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TOLERANCE, default=DEFAULT_TOLERANCE): vol.Coerce(float),
     vol.Optional(CONF_TARGET_TEMP): vol.Coerce(float),
-    vol.Optional(CONF_KEEP_ALIVE): vol.All(cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_KEEP_ALIVE): vol.All(
+        cv.time_period, cv.positive_timedelta),
 })
 
 
