@@ -62,7 +62,7 @@ class TestHelpersDiscovery:
                                                        in calls_multi]
 
     @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           return_value=mock_coro(True))
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
         calls = []
