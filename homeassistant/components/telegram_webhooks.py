@@ -108,20 +108,17 @@ class BotPushReceiver(HomeAssistantView):
             _LOGGER.error("Received telegram data: %s", data)
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
+        # check for basic message rules
         data = data.get('message')
-        if not data:
+        if not data or 'from' not in data or 'text' not in data:
             return self.json({})
 
-        try:
-            assert data['from']['id'] in self.users
-        except (AssertionError, IndexError):
+        if data['from'].get('id') not in self.users:
             _LOGGER.warning("User not allowed")
             return self.json_message('Invalid user', HTTP_BAD_REQUEST)
 
         _LOGGER.debug("Received telegram data: %s", data)
-        try:
-            assert data['text'][0] == '/'
-        except (AssertionError, IndexError):
+        if not data['text'] or data['text'][:1] != '/':
             _LOGGER.warning('no command')
             return self.json({})
 
