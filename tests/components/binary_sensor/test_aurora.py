@@ -93,26 +93,3 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         aurora_component = entities[0]
         self.assertEquals(aurora_component.aurora_data.visibility_level, '5')
         self.assertTrue(aurora_component.is_on)
-
-
-class TestAuroraGateway(unittest.TestCase):
-    """Test for the aurora tracker's API gateway."""
-
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.lat = 5
-        self.lon = 5
-
-    @requests_mock.Mocker()
-    def test_correctly_parses_expected_input(self, mock_req):
-        """Test that the gateway correctly parses the expected response."""
-        uri = re.compile(
-            "http://services\.swpc\.noaa\.gov/text/aurora-nowcast-map\.txt"
-        )
-        mock_req.get(uri, text=load_fixture('aurora.txt'))
-
-        gateway = aurora.AuroraAPIGateway(self.lat, self.lon)
-
-        forecast = gateway.get_aurora_forecast()
-
-        self.assertEquals(forecast, "5")

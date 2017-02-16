@@ -21,7 +21,7 @@ CONF_THRESHOLD = "forecast_threshold"
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Aurora Visibility'
-DEFAULT_SENSOR_CLASS = "visible"
+DEFAULT_DEVICE_CLASS = "visible"
 DEFAULT_THRESHOLD = 75
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -75,9 +75,9 @@ class AuroraSensor(BinarySensorDevice):
         return self.aurora_data.is_visible if self.aurora_data else False
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor."""
-        return DEFAULT_SENSOR_CLASS
+    def device_class(self):
+        """Return the class of this device."""
+        return DEFAULT_DEVICE_CLASS
 
     @property
     def device_state_attributes(self):
@@ -100,7 +100,14 @@ class AuroraData(object):
 
     def __init__(self, latitude, longitude, threshold):
         """Initialize the data object."""
-        self.api_gateway = AuroraAPIGateway(latitude, longitude)
+        self.latitude = latitude
+        self.longitude = longitude
+        self.number_of_latitude_intervals = 513
+        self.number_of_longitude_intervals = 1024
+        self.api_url = \
+            "http://services.swpc.noaa.gov/text/aurora-nowcast-map.txt"
+        self.headers = {"User-Agent": "Home Assistant Aurora Tracker v.0.1.0"}
+
         self.threshold = int(threshold)
         self.is_visible = None
         self.is_visible_text = None
@@ -110,7 +117,7 @@ class AuroraData(object):
     def update(self):
         """Get the latest data from the Aurora service."""
         try:
-            self.visibility_level = self.api_gateway.get_aurora_forecast()
+            self.visibility_level = self.get_aurora_forecast()
             if int(self.visibility_level) > self.threshold:
                 self.is_visible = True
                 self.is_visible_text = "visible!"
@@ -122,20 +129,6 @@ class AuroraData(object):
             _LOGGER.error(
                 "Connection to aurora forecast service failed: %s", error)
             return False
-
-
-class AuroraAPIGateway(object):
-    """Get data from originating api."""
-
-    def __init__(self, latitude, longitude):
-        """Initialize the object."""
-        self.api_url = \
-            "http://services.swpc.noaa.gov/text/aurora-nowcast-map.txt"
-        self.headers = {"User-Agent": "Home Assistant Aurora Tracker v.0.1.0"}
-        self.latitude = latitude
-        self.longitude = longitude
-        self.number_of_latitude_intervals = 513
-        self.number_of_longitude_intervals = 1024
 
     def get_aurora_forecast(self):
         """Get forecast data and parse for given long/lat."""
