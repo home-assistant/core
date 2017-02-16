@@ -34,14 +34,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_ids = []
     device_files = []
     if base_dir == DEFAULT_MOUNT_DIR:
-        """ Use w1_gpio + w1_therm driver """
         for device_family in DEVICE_FAMILIES:
             for device_folder in glob(os.path.join(base_dir, device_family +
                                                    '[.-]*')):
                 sensor_ids.append(os.path.split(device_folder)[1])
                 device_files.append(os.path.join(device_folder, 'w1_slave'))
     else:
-        """ Use OWFS driver. Folder name may be aliased by OWFS """
         for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
             family_file = open(family_file_path, "r")
             family = family_file.read()
