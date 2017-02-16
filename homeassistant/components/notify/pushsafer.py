@@ -64,6 +64,8 @@ class PushsaferNotificationService(BaseNotificationService):
                 data['device'] = target
 
             try:
-                self.pushsafer.send_message(message, data['title'], "", "", "", "", "", "", "0", "", "", "" )
+                self.pushsafer.send_message(message, data['title'], "", "",
+                                            "", "", "", "",
+                                            "0", "", "", "" )
             except ValueError as val_err:
                 _LOGGER.error(str(val_err))
