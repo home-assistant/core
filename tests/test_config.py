@@ -547,11 +547,5 @@ def test_merge_customize(hass):
     }
     yield from config_util.async_process_ha_core_config(hass, core_config)
 
-    entity = Entity()
-    entity.entity_id = 'b.b'
-    entity.hass = hass
-    yield from entity.async_update_ha_state()
-
-    state = hass.states.get('b.b')
-    assert state is not None
-    assert state.attributes['friendly_name'] == 'BB'
+    assert hass.data[config_util.DATA_CUSTOMIZE].get('b.b') == \
+        {'friendly_name': 'BB'}
