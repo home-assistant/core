@@ -120,7 +120,26 @@ class KodiDevice(MediaPlayerDevice):
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
         if websocket:
+            # Setup websocket connection
             self._ws_server = jsonrpc_websocket.Server(self._ws_url, **kwargs)
+
+            # Register notification listeners
+            self._ws_server.Player.OnPause = self.async_on_speed_event
+            self._ws_server.Player.OnPlay = self.async_on_speed_event
+            self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
+            self._ws_server.Player.OnStop = self.async_on_stop
+            self._ws_server.Application.OnVolumeChanged = \
+                self.async_on_volume_changed
+            self._ws_server.System.OnQuit = self.async_on_quit
+            self._ws_server.System.OnRestart = self.async_on_quit
+            self._ws_server.System.OnSleep = self.async_on_quit
+
+            def on_hass_stop(event):
+                """Close websocket connection when hass stops."""
+                self.hass.async_add_job(self._ws_server.close())
+
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, on_hass_stop)
         else:
             self._ws_server = None
 
@@ -131,22 +150,6 @@ class KodiDevice(MediaPlayerDevice):
         self._item = {}
         self._app_properties = {}
         self._ws_connected = False
-
-        def on_hass_stop(event):
-            """Close websocket connection when hass stops."""
-            self.hass.async_add_job(self._ws_server.close())
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
-
-        # Register notification listeners
-        self._ws_server.Player.OnPause = self.async_on_speed_event
-        self._ws_server.Player.OnPlay = self.async_on_speed_event
-        self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
-        self._ws_server.Player.OnStop = self.async_on_stop
-        self._ws_server.Application.OnVolumeChanged = \
-            self.async_on_volume_changed
-        self._ws_server.System.OnQuit = self.async_on_quit
-        self._ws_server.System.OnRestart = self.async_on_quit
-        self._ws_server.System.OnSleep = self.async_on_quit
 
     @callback
     def async_on_speed_event(self, sender, data):
