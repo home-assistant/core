@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
 
-    livebox_devices =  []
+    livebox_devices = []
 
     try:
         device = LiveboxPlayTvDevice(host, port, name)
