@@ -4,31 +4,28 @@ Support to interface with the Plex API.
 For more details about this platform, please refer to the documentation at
 https://github.com/JesseWebDotCom/home-assistant-configuration/blob/master/docs/media_player_plexdevices.md
 """
-# Required to get a web response from Plex and ignore HTTPS warnings
-import requests
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-
-import asyncio
 import json
 import logging
 import os
 from datetime import timedelta
 from urllib.parse import urlparse
-
 import voluptuous as vol
-
 import homeassistant.util as util
+import homeassistant.helpers.config_validation as cv
+import asyncio
+
+import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_VOLUME_SET,
     SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_TURN_OFF, SUPPORT_SEEK,
     PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF,
-                                 STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
+                                 STATE_PAUSED, STATE_PLAYING)
 from homeassistant.loader import get_component
 from homeassistant.helpers.event import (track_utc_time_change)
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['plexapi==2.0.2']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -63,6 +60,8 @@ SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK | \
     SUPPORT_TURN_OFF
 
+requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
+
 
 def config_from_file(filename, config=None):
     """Small configuration file management function."""
@@ -92,7 +91,7 @@ def config_from_file(filename, config=None):
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
 
-    #optional parameters
+    # optional parameters
     optional_config = {}
     optional_config[CONF_INCLUDE_NON_CLIENTS] = config.get(
         CONF_INCLUDE_NON_CLIENTS)
@@ -193,18 +192,18 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
 
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
         if optional_config[CONF_INCLUDE_NON_CLIENTS]:
-            for machineIdentifier, session in plex_sessions.items():
-                if machineIdentifier not in plex_clients:
+            for machine_identifier, session in plex_sessions.items():
+                if machine_identifier not in plex_clients:
                     new_client = PlexClient(optional_config, None, session,
                                             plex_sessions, update_devices,
                                             update_sessions)
-                    plex_clients[machineIdentifier] = new_client
+                    plex_clients[machine_identifier] = new_client
                     new_plex_clients.append(new_client)
                 else:
-                    plex_clients[machineIdentifier].set_session(session)
+                    plex_clients[machine_identifier].set_session(session)
 
         # force devices to idle that do not have a valid session
-        for machineIdentifier, client in plex_clients.items():
+        for machine_identifier, client in plex_clients.items():
             if client.session is None:
                 client.set_state(STATE_IDLE)
 
@@ -213,7 +212,7 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
             active_entity_id_list = []
             inactive_entity_id_list = []
 
-            for machineIdentifier, client in plex_clients.items():
+            for machine_identifier, client in plex_clients.items():
                 if client.entity_id:
                     if client.state in [STATE_IDLE, STATE_OFF]:
                         inactive_entity_id_list.append(client.entity_id)
@@ -503,9 +502,8 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self.session.server.url(thumb_url)
                 thumb_response = requests.get(thumb_url, verify=False)
                 if thumb_response.status_code != 200:
-                    _LOGGER.debug(
-                        'Using art because thumbnail was not found: content id %s',
-                        self.media_content_id)
+                    _LOGGER.debug('Using art because thumbnail was not found: '
+                                  'content id %s', self.media_content_id)
                     thumb_url = self.session.server.url(
                         self._convert_na_to_none(self.session.art))
 
@@ -571,7 +569,7 @@ class PlexClient(MediaPlayerDevice):
         # or when casting to an Nvidia shield running a plex server
         if self.local:
             return None
-        #No mute since Shield only supports volume 2-100
+        # No mute since Shield only supports volume 2-100
         elif self.make == "SHIELD Android TV":
             return SUPPORT_PLEX
         elif self.device:
