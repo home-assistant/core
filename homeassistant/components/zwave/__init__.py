@@ -701,15 +701,21 @@ class ZWaveDeviceEntity(Entity):
         """Update properties common to all zwave devices."""
         self._battery_level = self._value.node.get_battery_level()
         self._location = self._value.node.location
-        self._wakeup = self.get_value(class_id=const.COMMAND_CLASS_WAKE_UP, member='data')
-        self._power = self.get_value(
-            class_id=const.COMMAND_CLASS_SENSOR_MULTILEVEL, label=['Power'], member='data')
+        self._wakeup = self.get_value(
+            class_id=const.COMMAND_CLASS_WAKE_UP, member='data')
+        power_value = self.get_value(
+            class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+                      const.COMMAND_CLASS_METER],
+            label=['Power'])
+        self._power = round(
+            power_value.data, power_value.precision) if power_value else None
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
         """Get the values for a given command_class with arguments."""
-        if class_id is not None:
+        if class_id is not None and not isinstance(class_id, list):
             kwargs[CLASS_ID] = class_id
+            class_id = None
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
                       ' member=%s, kwargs=%s',
                       method, class_id, index, label, data, member, kwargs)
@@ -721,6 +727,14 @@ class ZWaveDeviceEntity(Entity):
         for value in values:
             if index is not None and value.index != index:
                 continue
+            if class_id is not None:
+                class_found = False
+                for entry in class_id:
+                    if value.command_class == entry:
+                        class_found = True
+                        break
+                if not class_found:
+                    continue
             if label is not None:
                 label_found = False
                 for entry in label:
@@ -786,19 +800,15 @@ class ZWaveDeviceEntity(Entity):
         }
 
         if self._battery_level is not None:
-            print(self._battery_level)
             attrs[ATTR_BATTERY_LEVEL] = self._battery_level
 
         if self._location:
-            print(self._location)
             attrs[ATTR_LOCATION] = self._location
 
         if self._wakeup is not None:
-            print(self._wakeup)
             attrs[ATTR_WAKEUP] = self._wakeup
 
         if self._power is not None:
-            print(self._power)
-            attrs[ATTR_POWER] = round(self._power, 2)
+            attrs[ATTR_POWER] = self._power
 
         return attrs
