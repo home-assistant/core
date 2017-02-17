@@ -293,7 +293,6 @@ class PlexClient(MediaPlayerDevice):
         self.update_sessions = update_sessions
         self.set_device(device)
         self.set_session(session)
-        self._season = None
         self._state = STATE_IDLE
         self._volume_muted = False  # since we can't retrieve remotely
         self._volume_level = 1  # since we can't retrieve remotely
@@ -367,7 +366,7 @@ class PlexClient(MediaPlayerDevice):
             self._session = self.plex_sessions.get(
                 self.device.machineIdentifier, None)
 
-        return self._session
+        return self._convert_na_to_none(self._session)
 
     @property
     def state(self):
@@ -390,11 +389,6 @@ class PlexClient(MediaPlayerDevice):
         """Get the latest details."""
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
-
-        if self.media_content_type is MEDIA_TYPE_TVSHOW:
-            if self.session:
-                self._season = self._convert_na_to_none(
-                    self.session.parentIndex).zfill(2)
 
     # pylint: disable=no-self-use, singleton-comparison
     def _convert_na_to_none(self, value):
@@ -527,7 +521,16 @@ class PlexClient(MediaPlayerDevice):
     @property
     def media_season(self):
         """Season of curent playing media (TV Show only)."""
-        return self._season
+        if self.media_content_type is MEDIA_TYPE_TVSHOW:
+            if self.session is not None:
+                if callable(self.session):
+                    return self._convert_na_to_none(
+                        self.session.seasons()[0].index).zfill(2)
+                else:
+                    return self._convert_na_to_none(
+                        self.session.parentIndex).zfill(2)
+
+        return None
 
     @property
     def media_series_title(self):
