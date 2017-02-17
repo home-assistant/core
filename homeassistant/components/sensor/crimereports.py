@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.crimereports/
 """
 from collections import defaultdict
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -18,7 +18,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME,
     LENGTH_KILOMETERS, LENGTH_METERS)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify, Throttle
+from homeassistant.util import slugify
 from homeassistant.util.distance import convert
 from homeassistant.util.dt import now
 import homeassistant.helpers.config_validation as cv
@@ -27,18 +27,16 @@ REQUIREMENTS = ['crimereports==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(minutes=30)
 DEPENDENCIES = ['zone']
 DOMAIN = 'crimereports'
-CONF_UPDATE_INTERVAL = 'update_interval'
 EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
 NAME_FORMAT = '{} Incidents'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     CONF_ZONE: cv.string,
     vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=1800)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
+    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string])
 })
 
 
@@ -57,15 +55,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = NAME_FORMAT.format(zone_friendly_name)
     add_devices([CrimeReportsSensor(hass, name, latitude, longitude, radius,
                                     config.get(CONF_INCLUDE),
-                                    config.get(CONF_EXCLUDE),
-                                    config.get(CONF_UPDATE_INTERVAL))])
+                                    config.get(CONF_EXCLUDE))], True)
 
 
 class CrimeReportsSensor(Entity):
     """Crime Reports Sensor."""
 
     def __init__(self, hass, name, latitude, longitude, radius,
-                 include, exclude, interval):
+                 include, exclude):
         """Initialize the sensor."""
         import crimereports
         self._hass = hass
@@ -78,8 +75,6 @@ class CrimeReportsSensor(Entity):
         self._attributes = None
         self._state = None
         self._previous_incidents = set()
-        self.update = Throttle(interval)(self._update)
-        self.update()
 
     @property
     def name(self):
@@ -110,7 +105,7 @@ class CrimeReportsSensor(Entity):
             })
         self._hass.bus.fire(EVENT_INCIDENT, data)
 
-    def _update(self):
+    def update(self):
         """Update device state."""
         import crimereports
         incident_counts = defaultdict(int)
