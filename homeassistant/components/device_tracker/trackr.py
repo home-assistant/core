@@ -59,7 +59,7 @@ class TrackRDeviceScanner(object):
             trackr_id = trackr.tracker_id()
             trackr_device_id = trackr.id()
             lost = trackr.lost()
-            dev_id = slugify(trackr.name().replace(" ", "_"))
+            dev_id = slugify(trackr.name())
             if dev_id is None:
                 dev_id = trackr_id
             location = trackr.last_known_location()
