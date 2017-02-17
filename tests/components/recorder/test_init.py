@@ -213,6 +213,49 @@ class TestRecorder(BaseTestRecorder):
             recorder._INSTANCE._apply_update(-1)
 
 
+class TestRecorderNoEvent(BaseTestRecorder):
+    """Class for testing recorder with event saving disabled."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        db_uri = 'sqlite://'  # In memory DB
+        setup_component(self.hass, recorder.DOMAIN, {
+            recorder.DOMAIN: {
+                recorder.CONF_DB_URL: db_uri,
+                recorder.CONF_RECORD_EVENTS: False}})
+        self.hass.start()
+        recorder._verify_instance()
+        recorder._INSTANCE.block_till_done()
+
+    def test_not_saving_event(self):
+        """Test not saving events."""
+        event_type = 'EVENT_TEST'
+        event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
+
+        events = []
+
+        @callback
+        def event_listener(event):
+            """Record events from eventbus."""
+            if event.event_type == event_type:
+                events.append(event)
+
+        self.hass.bus.listen(MATCH_ALL, event_listener)
+
+        self.hass.bus.fire(event_type, event_data)
+
+        self.hass.block_till_done()
+        recorder._INSTANCE.block_till_done()
+
+        db_events = recorder.execute(
+            recorder.query('Events').filter_by(
+                event_type=event_type))
+
+        assert len(events) == 1
+        assert len(db_events) == 0
+
+
 def create_engine_test(*args, **kwargs):
     """Test version of create_engine that initializes with old schema.
 
@@ -228,7 +271,7 @@ class TestMigrateRecorder(BaseTestRecorder):
 
     @patch('sqlalchemy.create_engine', new=create_engine_test)
     @patch('homeassistant.components.recorder.Recorder._migrate_schema')
-    def setUp(self, migrate):  # pylint: disable=invalid-name
+    def setUp(self, migrate):  # pylint: disable=invalid-name,arguments-differ
         """Setup things to be run when tests are started.
 
         create_engine is patched to create a db that starts with the old
@@ -261,11 +304,11 @@ def hass_recorder():
     """HASS fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
-    def setup_recorder(config={}):
+    def setup_recorder(config=None):
         """Setup with params."""
         db_uri = 'sqlite://'  # In memory DB
         conf = {recorder.CONF_DB_URL: db_uri}
-        conf.update(config)
+        conf.update(config or {})
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: conf})
         hass.start()
         hass.block_till_done()
