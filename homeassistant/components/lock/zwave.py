@@ -293,6 +293,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self._value.data = True
 
     def unlock(self, **kwargs):
+        """Unlock the device."""
         self._value.data = False
 
     @property

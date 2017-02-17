@@ -261,6 +261,7 @@ def get_config_value(node, value_index, tries=5):
             node, value_index, tries=tries - 1)
     return None
 
+
 # pylint: disable=R0914
 def setup(hass, config):
     """Setup Z-Wave.
