@@ -150,6 +150,10 @@ PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
 })
 
+PRINT_NODE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -543,6 +547,7 @@ def setup(hass, config):
                      param, node_id, get_config_value(node, param))
 
     def print_node(service):
+        """Print all information about z-wave node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = NETWORK.nodes[node_id]
         nice_print_node(node)
@@ -660,8 +665,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_SET_WAKEUP],
                                schema=SET_WAKEUP_SCHEMA)
-        hass.services.register(DOMAIN, "print_node",
-                               print_node)
+        hass.services.register(DOMAIN, const.SERVICE_PRINT_NODE,
+                               print_node,
+                               descriptions[
+                                   const.SERVICE_PRINT_NODE],
+                               schema=PRINT_NODE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
