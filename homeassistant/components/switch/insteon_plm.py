@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SWITCHES)
 from homeassistant.loader import get_component
 import homeassistant.util as util
+from homeassistant.components import insteon_plm
 
 DEPENDENCIES = ['insteon_plm']
 
@@ -90,3 +91,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from PLM for %s', self._address)
         self._hass.async_add_job(self.async_update_ha_state(True))
+
+    @property
+    def device_state_attributes(self):
+        return insteon_plm.common_attributes(self)
