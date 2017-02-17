@@ -21,7 +21,7 @@ from homeassistant.const import (
     STATE_PAUSED, STATE_UNKNOWN, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['liveboxplaytv==1.4.7']
+REQUIREMENTS = ['liveboxplaytv==1.4.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
 
-    add_devices([LiveboxPlayTvDevice(host, port, name)], True)
+    try:
+        add_devices([LiveboxPlayTvDevice(host, port, name)], True)
+    except IOError:
+        _LOGGER.error('Failed to connect to Livebox Play TV at %s:%s. '
+                      'Please check your configuration.', host, port)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
@@ -62,7 +66,6 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         self._client = LiveboxPlayTv(host, port)
         # Assume that the appliance is not muted
         self._muted = False
-        # Assume that the TV is in Play mode
         self._name = name
         self._current_source = None
         self._state = STATE_UNKNOWN
