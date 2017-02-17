@@ -11,16 +11,17 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.helpers import discovery, customize
+from homeassistant.helpers import discovery
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
-    CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_ENTITY_ID, ATTR_POWER)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, ATTR_POWER)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
+
 from . import const
 from . import workaround
 
@@ -38,6 +39,9 @@ CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
+CONF_DEVICE_CONFIG = 'device_config'
+CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
+CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -49,6 +53,7 @@ DEFAULT_CONF_REFRESH_DELAY = 2
 DOMAIN = 'zwave'
 
 NETWORK = None
+DATA_DEVICE_CONFIG = 'zwave_device_config'
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
 # value type, genre type, specific device class).
@@ -159,8 +164,7 @@ SET_WAKEUP_SCHEMA = vol.Schema({
         vol.All(vol.Coerce(int), cv.positive_int),
 })
 
-_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.match_all,
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
@@ -173,9 +177,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_CUSTOMIZE, default=[]):
-            vol.All(customize.CUSTOMIZE_SCHEMA,
-                    [_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY]),
+        vol.Optional(CONF_DEVICE_CONFIG, default={}):
+            vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
@@ -236,7 +243,7 @@ def nice_print_node(node):
     print("\n\n\n")
 
 
-def get_config_value(node, value_index):
+def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
@@ -246,7 +253,25 @@ def get_config_value(node, value_index):
     except RuntimeError:
         # If we get an runtime error the dict has changed while
         # we was looking for a value, just do it again
-        return get_config_value(node, value_index)
+        return None if tries <= 0 else get_config_value(
+            node, value_index, tries=tries - 1)
+    return None
+
+
+def _get_wakeup(node, tries=5):
+    """Return wakeup interval of the node or None if node is not wakable."""
+    try:
+        if node.can_wake_up():
+            for value_id in node.get_values(
+                    class_id=const.COMMAND_CLASS_WAKE_UP):
+                return node.values[value_id].data
+    except RuntimeError:
+        # If we get an runtime error the dict has changed while
+        # we was looking for a value, just do it again
+        return None if tries <= 0 else _get_wakeup(
+            node, tries=tries - 1)
+
+    return None
 
 
 # pylint: disable=R0914
@@ -278,8 +303,11 @@ def setup(hass, config):
 
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
-    customize.set_customize(hass, DOMAIN, config[DOMAIN].get(CONF_CUSTOMIZE))
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
+    hass.data[DATA_DEVICE_CONFIG] = EntityValues(
+        config[DOMAIN][CONF_DEVICE_CONFIG],
+        config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
+        config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
 
     # Setup options
     options = ZWaveOption(
@@ -359,12 +387,16 @@ def setup(hass, config):
             workaround_component = workaround.get_device_component_mapping(
                 value)
             if workaround_component and workaround_component != component:
+                if workaround_component == workaround.WORKAROUND_IGNORE:
+                    _LOGGER.info("Ignoring device %s",
+                                 "{}.{}".format(component, object_id(value)))
+                    continue
                 _LOGGER.debug("Using %s instead of %s",
                               workaround_component, component)
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = customize.get_overrides(hass, DOMAIN, name)
+            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info("Ignoring device %s", name)
@@ -676,7 +708,6 @@ class ZWaveDeviceEntity(Entity):
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
         """Get the values for a given command_class with arguments."""
-        varname = member
         if class_id is not None:
             kwargs[CLASS_ID] = class_id
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
@@ -691,7 +722,7 @@ class ZWaveDeviceEntity(Entity):
             if index is not None and value.index != index:
                 continue
             if label is not None:
-                label_found = False 
+                label_found = False
                 for entry in label:
                     if value.label == entry:
                         label_found = True
@@ -704,7 +735,7 @@ class ZWaveDeviceEntity(Entity):
             if data is not None and value.data != data:
                 continue
             if member is not None:
-                results = getattr(value, varname)
+                results = getattr(value, member)
             else:
                 results = value
             break

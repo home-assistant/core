@@ -16,7 +16,7 @@ from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_START)
 
 from tests.common import get_test_home_assistant
 
@@ -89,6 +89,26 @@ def test_async_run_job_delegates_non_async():
     assert len(hass.async_add_job.mock_calls) == 1
 
 
+def test_stage_shutdown():
+    """Simulate a shutdown, test calling stuff."""
+    hass = get_test_home_assistant()
+    test_stop = []
+    test_close = []
+    test_all = []
+
+    hass.bus.listen(
+        EVENT_HOMEASSISTANT_STOP, lambda event: test_stop.append(event))
+    hass.bus.listen(
+        EVENT_HOMEASSISTANT_CLOSE, lambda event: test_close.append(event))
+    hass.bus.listen('*', lambda event: test_all.append(event))
+
+    hass.stop()
+
+    assert len(test_stop) == 1
+    assert len(test_close) == 1
+    assert len(test_all) == 1
+
+
 class TestHomeAssistant(unittest.TestCase):
     """Test the Home Assistant core classes."""
 
@@ -101,26 +121,6 @@ class TestHomeAssistant(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
-
-    # This test hangs on `loop.add_signal_handler`
-    # def test_start_and_sigterm(self):
-    #     """Start the test."""
-    #     calls = []
-    #     self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-    #                               lambda event: calls.append(1))
-
-    #     self.hass.start()
-
-    #     self.assertEqual(1, len(calls))
-
-    #     self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-    #                               lambda event: calls.append(1))
-
-    #     os.kill(os.getpid(), signal.SIGTERM)
-
-    #     self.hass.block_till_done()
-
-    #     self.assertEqual(1, len(calls))
 
     def test_pending_sheduler(self):
         """Add a coro to pending tasks."""

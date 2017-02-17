@@ -21,6 +21,8 @@ PACKAGES=(
   nmap net-tools libcurl3-dev
   # homeassistant.components.device_tracker.bluetooth_tracker
   bluetooth libglib2.0-dev libbluetooth-dev
+  # homeassistant.components.device_tracker.owntracks
+  libsodium13
 )
 
 # Required debian packages for building dependencies
