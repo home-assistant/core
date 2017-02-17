@@ -388,7 +388,7 @@ def setup(hass, config):
                 value)
             if workaround_component and workaround_component != component:
                 if workaround_component == workaround.WORKAROUND_IGNORE:
-                    _LOGGER.info("Ignoring device %s",
+                    _LOGGER.info("Ignoring device %s due to workaround.",
                                  "{}.{}".format(component, object_id(value)))
                     continue
                 _LOGGER.debug("Using %s instead of %s",
@@ -399,7 +399,8 @@ def setup(hass, config):
             node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
 
             if node_config.get(CONF_IGNORED):
-                _LOGGER.info("Ignoring device %s", name)
+                _LOGGER.info(
+                    "Ignoring device %s due to device settings.", name)
                 return
 
             polling_intensity = convert(
