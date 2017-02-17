@@ -125,7 +125,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         if self._refresh_value:
             if self._refreshing:
                 self._refreshing = False
-                self.update_properties()
             else:
                 def _refresh_value():
                     """Used timer callback for delayed value refresh."""
@@ -137,10 +136,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
                 self._timer = Timer(self._delay, _refresh_value)
                 self._timer.start()
-            self.schedule_update_ha_state()
-        else:
-            self.update_properties()
-            self.schedule_update_ha_state()
+                return
+        super().value_changed(value)
 
     @property
     def brightness(self):
