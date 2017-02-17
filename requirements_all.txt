@@ -282,9 +282,6 @@ https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
 
-# homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.2
-
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
@@ -631,6 +628,9 @@ sense-hat==2.2.0
 
 # homeassistant.components.media_player.aquostv
 sharp_aquos_rc==0.3.2
+
+# homeassistant.components.alarm_control_panel.simplisafe
+simplisafe-python==1.0.2
 
 # homeassistant.components.notify.slack
 slacker==0.9.40
