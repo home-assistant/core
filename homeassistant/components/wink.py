@@ -194,6 +194,8 @@ class WinkDevice(Entity):
             attributes["device_manufacturer"] = self._device_manufacturer
         if self._model_name:
             attributes["model_name"] = self._model_name
+        if self._tamper is not None:
+            attributes["tamper_detected"] = self._tamper
         return attributes
 
     @property
@@ -221,3 +223,11 @@ class WinkDevice(Entity):
     def _model_name(self):
         """Return the model name."""
         return self.wink.model_name()
+
+    @property
+    def _tamper(self):
+        """Return the devices tamper status."""
+        try:
+            return self.wink.tamper_detected()
+        except AttributeError:
+            return None
