@@ -53,8 +53,6 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity):
     def __init__(self, value):
         """Initialize the sensor."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-        self._state = None
-        self._units = None
         self.update_properties()
 
     def update_properties(self):

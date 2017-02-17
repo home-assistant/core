@@ -261,23 +261,6 @@ def get_config_value(node, value_index, tries=5):
             node, value_index, tries=tries - 1)
     return None
 
-
-def _get_wakeup(node, tries=5):
-    """Return wakeup interval of the node or None if node is not wakable."""
-    try:
-        if node.can_wake_up():
-            for value_id in node.get_values(
-                    class_id=const.COMMAND_CLASS_WAKE_UP):
-                return node.values[value_id].data
-    except RuntimeError:
-        # If we get an runtime error the dict has changed while
-        # we was looking for a value, just do it again
-        return None if tries <= 0 else _get_wakeup(
-            node, tries=tries - 1)
-
-    return None
-
-
 # pylint: disable=R0914
 def setup(hass, config):
     """Setup Z-Wave.
@@ -692,10 +675,7 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
-        self.node_id = None
-        self.location = None
-        self.battery_level = None
-        self.wakeup_interval = None
+        self._update_attributes()
 
         dispatcher.connect(
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -709,16 +689,20 @@ class ZWaveDeviceEntity(Entity):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
-        self.update_attributes()
+        self._update_attributes()
         self.update_properties()
         self.schedule_update_ha_state()
 
-    def update_attributes(self):
+    def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
         self.node_id = self._value.node.node_id
         self.location = self._value.node.location
         self.battery_level = self._value.node.get_battery_level()
-        self.wakeup_interval = _get_wakeup(self._value.node)
+        self.wakeup_interval = None
+        if self._value.node.can_wake_up():
+            self.wakeup_interval = self.get_value(
+                class_id=const.COMMAND_CLASS_WAKE_UP,
+                member='data')
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
@@ -804,13 +788,13 @@ class ZWaveDeviceEntity(Entity):
             const.ATTR_NODE_ID: self.node_id,
         }
 
-        if self.battery_level:
+        if self.battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = self.battery_level
 
         if self.location:
             attrs[ATTR_LOCATION] = self.location
 
-        if self.wakeup_interval:
+        if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
 
         return attrs

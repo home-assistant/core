@@ -92,7 +92,6 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
     def update_properties(self):
         """Called when a value for this entity's node has changed."""
         self._state = self._value.data
-        self.schedule_update_ha_state()
         # only allow this value to be true for re_arm secs
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
