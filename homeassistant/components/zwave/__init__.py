@@ -398,16 +398,17 @@ def setup(hass, config):
             name = "{}.{}".format(component, object_id(value))
             node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
 
-            if node_config.get(CONF_IGNORED):
-                _LOGGER.info("Ignoring device %s", name)
-                return
+            if node_config:
+                if node_config.get(CONF_IGNORED):
+                    _LOGGER.info("Ignoring device %s", name)
+                    return
 
-            polling_intensity = convert(
-                node_config.get(CONF_POLLING_INTENSITY), int)
-            if polling_intensity:
-                value.enable_poll(polling_intensity)
-            else:
-                value.disable_poll()
+                polling_intensity = convert(
+                    node_config.get(CONF_POLLING_INTENSITY), int)
+                if polling_intensity:
+                    value.enable_poll(polling_intensity)
+                else:
+                    value.disable_poll()
 
             discovery.load_platform(hass, component, DOMAIN, {
                 const.ATTR_NODE_ID: node.node_id,
