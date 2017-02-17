@@ -290,10 +290,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._value.date= True
+        self._value.data = True
 
     def unlock(self, **kwargs):
-        self._value.date= False
+        self._value.data = False
 
     @property
     def device_state_attributes(self):
