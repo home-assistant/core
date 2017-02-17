@@ -15,13 +15,16 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.loader as loader
 
-REQUIREMENTS = ['simplisafe-python==1.0.1']
+REQUIREMENTS = ['simplisafe-python==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'SimpliSafe'
 DOMAIN = 'simplisafe'
+NOTIFICATION_ID = 'simplisafe_notification'
+NOTIFICATION_TITLE = 'SimpliSafe Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
@@ -39,12 +42,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
+    persistent_notification = loader.get_component('persistent_notification')
     simplisafe = SimpliSafeApiInterface()
-    simplisafe.set_credintials(username, password)
-    hass.data[DOMAIN] = simplisafe
-    locations = get_systems(simplisafe)
-    for location in locations:
-        add_devices([SimpliSafeAlarm(location, name, code)])
+    status = simplisafe.set_credentials(username, password)
+    if status:
+        hass.data[DOMAIN] = simplisafe
+        locations = get_systems(simplisafe)
+        for location in locations:
+            add_devices([SimpliSafeAlarm(location, name, code)])
+    else:
+        message = 'Failed to log into SimpliSafe. Check credentials.'
+        _LOGGER.error(message)
+        persistent_notification.create(
+            hass, message,
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
 
     def logout(event):
         """Logout of the SimpliSafe API."""
