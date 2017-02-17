@@ -119,7 +119,10 @@ class KodiDevice(MediaPlayerDevice):
         self._ws_url = '{}://{}:{}/jsonrpc'.format(ws_protocol, host, tcp_port)
 
         self._http_server = jsonrpc_async.Server(self._http_url, **kwargs)
-        self._ws_server = jsonrpc_websocket.Server(self._ws_url, **kwargs)
+        if websocket:
+            self._ws_server = jsonrpc_websocket.Server(self._ws_url, **kwargs)
+        else:
+            self._ws_server = None
 
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
