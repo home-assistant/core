@@ -10,7 +10,7 @@ from tests.common import mock_http_component_app, mock_coro
 
 @asyncio.coroutine
 def test_validate_config_ok(hass, test_client):
-    """Test getting suites."""
+    """Test checking config."""
     app = mock_http_component_app(hass)
     with patch.object(config, 'SECTIONS', ['core']):
         yield from async_setup_component(hass, 'config', {})
@@ -20,7 +20,7 @@ def test_validate_config_ok(hass, test_client):
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',
-            return_value=mock_coro(None)()):
+            return_value=mock_coro()):
         resp = yield from client.post('/api/config/core/check_config')
 
     assert resp.status == 200
@@ -30,7 +30,7 @@ def test_validate_config_ok(hass, test_client):
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',
-            return_value=mock_coro('beer')()):
+            return_value=mock_coro('beer')):
         resp = yield from client.post('/api/config/core/check_config')
 
     assert resp.status == 200

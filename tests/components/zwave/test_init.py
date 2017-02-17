@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.zwave import (
-    DATA_DEVICE_CONFIG, _DEVICE_CONFIG_SCHEMA_ENTRY)
+    DATA_DEVICE_CONFIG, DEVICE_CONFIG_SCHEMA_ENTRY)
 
 
 @pytest.fixture(autouse=True)
@@ -39,8 +39,9 @@ def test_device_config(hass):
     assert DATA_DEVICE_CONFIG in hass.data
 
     test_data = {
-        key: _DEVICE_CONFIG_SCHEMA_ENTRY(value)
+        key: DEVICE_CONFIG_SCHEMA_ENTRY(value)
         for key, value in device_config.items()
     }
 
-    assert hass.data[DATA_DEVICE_CONFIG] == test_data
+    assert hass.data[DATA_DEVICE_CONFIG].get('light.kitchen') == \
+        test_data.get('light.kitchen')

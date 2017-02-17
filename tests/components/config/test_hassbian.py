@@ -51,8 +51,9 @@ def test_get_suites(hass, test_client):
 
     assert 'mosquitto' in result
     info = result['mosquitto']
-    assert info['state'] == 'installing'
-    assert info['description'] == 'Mosquitto is an MQTT broker.'
+    assert info['state'] == 'failed'
+    assert info['description'] == \
+        'Installs the Mosquitto package for setting up a local MQTT server'
 
 
 @asyncio.coroutine
