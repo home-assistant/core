@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +59,7 @@ class TrackRDeviceScanner(object):
             trackr_id = trackr.tracker_id()
             trackr_device_id = trackr.id()
             lost = trackr.lost()
-            dev_id = trackr.name().replace(" ", "_")
+            dev_id = slugify(trackr.name())
             if dev_id is None:
                 dev_id = trackr_id
             location = trackr.last_known_location()
