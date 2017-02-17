@@ -542,6 +542,11 @@ def setup(hass, config):
         _LOGGER.info("Config parameter %s on Node %s : %s",
                      param, node_id, get_config_value(node, param))
 
+    def print_node(service):
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        nice_print_node(node)
+
     def set_wakeup(service):
         """Set wake-up interval of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
@@ -655,6 +660,8 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_SET_WAKEUP],
                                schema=SET_WAKEUP_SCHEMA)
+        hass.services.register(DOMAIN, "print_node",
+                               print_node)
 
     # Setup autoheal
     if autoheal:
