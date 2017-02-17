@@ -211,21 +211,23 @@ class HistoryPeriodView(HomeAssistantView):
 
     url = '/api/history/period'
     name = 'api:history:view-period'
-    extra_urls = ['/api/history/period/{datetime}']
+    extra_urls = ['/api/history/period/{datetime}',
+                  '/api/history/period/{datetime}/{end_time}']
 
     def __init__(self, filters):
         """Initilalize the history period view."""
         self.filters = filters
 
     @asyncio.coroutine
-    def get(self, request, datetime=None):
+    def get(self, request, datetime=None, end_time=None):
         """Return history over a period of time."""
         timer_start = time.perf_counter()
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
 
             if datetime is None:
-                return self.json_message('Invalid datetime', HTTP_BAD_REQUEST)
+                return self.json_message('Invalid format for Start Time',
+                                         HTTP_BAD_REQUEST)
 
         now = dt_util.utcnow()
 
@@ -238,14 +240,20 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = request.GET.get('end_time')
+        if end_time is None:
+            end_time = request.GET.get('end_time')
+
         if end_time:
-            end_time = dt_util.as_utc(
-                dt_util.parse_datetime(end_time))
+            end_time = dt_util.as_utc(dt_util.parse_datetime(end_time))
             if end_time is None:
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
+
+        if start_time > end_time:
+            return self.json_message('End Time cannot be before Start Time',
+                                     HTTP_BAD_REQUEST)
+
         entity_id = request.GET.get('filter_entity_id')
 
         result = yield from request.app['hass'].loop.run_in_executor(
