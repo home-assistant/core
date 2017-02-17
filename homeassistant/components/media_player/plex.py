@@ -93,6 +93,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     # optional parameters
     optional_config = {}
+    optional_config["entity_namespace"] = config.get("entity_namespace")
     optional_config[CONF_INCLUDE_NON_CLIENTS] = config.get(
         CONF_INCLUDE_NON_CLIENTS)
     optional_config[CONF_USE_EPISODE_ART] = config.get(CONF_USE_EPISODE_ART)
@@ -299,15 +300,20 @@ class PlexClient(MediaPlayerDevice):
         self._previous_volume_level = 1  # Used in fake muting
 
         if self.optional_config[CONF_USE_CUSTOM_ENTITY_IDS]:
+            prefix = ''
+            if optional_config["entity_namespace"]:
+                prefix = optional_config["entity_namespace"] + '_'
+
             # rename the entity
             if self.machine_identifier:
-                self.entity_id = "%s.%s" % (
-                    'media_player',
+                self.entity_id = "%s.%s%s" % (
+                    'media_player', prefix,
                     self.machine_identifier.lower().replace('-', '_'))
             else:
                 if self.name:
-                    self.entity_id = "%s.%s" % (
-                        'media_player', self.name.lower().replace('-', '_'))
+                    self.entity_id = "%s.%s%s" % (
+                        'media_player', prefix,
+                        self.name.lower().replace('-', '_'))
 
     def set_device(self, device):
         """Set the device property."""
