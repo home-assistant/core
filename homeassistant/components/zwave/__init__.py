@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery, customize
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
     CONF_CUSTOMIZE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    CONF_ENTITY_ID)
+    CONF_ENTITY_ID, ATTR_POWER)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -247,14 +247,6 @@ def get_config_value(node, value_index):
         # If we get an runtime error the dict has changed while
         # we was looking for a value, just do it again
         return get_config_value(node, value_index)
-
-
-def _get_wakeup(node):
-    """Return wakeup interval of the node or None if node is not wakable."""
-    if node.can_wake_up():
-        for value_id in node.get_values(class_id=const.COMMAND_CLASS_WAKE_UP):
-            return node.values[value_id].data
-    return None
 
 
 # pylint: disable=R0914
@@ -652,6 +644,10 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
+        self._battery_level = None
+        self._location = None
+        self._wakeup = None
+        self._power = None
 
         dispatcher.connect(
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -665,8 +661,17 @@ class ZWaveDeviceEntity(Entity):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
+        self._update_common_properties()
         self.update_properties()
         self.schedule_update_ha_state()
+
+    def _update_common_properties(self):
+        """Update properties common to all zwave devices."""
+        self._battery_level = self._value.node.get_battery_level()
+        self._location = self._value.node.location
+        self._wakeup = self.get_value(class_id=const.COMMAND_CLASS_WAKE_UP, member='data')
+        self._power = self.get_value(
+            class_id=const.COMMAND_CLASS_SENSOR_MULTILEVEL, label=['Power'], member='data')
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
@@ -686,9 +691,13 @@ class ZWaveDeviceEntity(Entity):
             if index is not None and value.index != index:
                 continue
             if label is not None:
+                label_found = False 
                 for entry in label:
-                    if entry is not None and value.label != entry:
-                        continue
+                    if value.label == entry:
+                        label_found = True
+                        break
+                if not label_found:
+                    continue
             if method == 'set':
                 value.data = data
                 return
@@ -745,23 +754,20 @@ class ZWaveDeviceEntity(Entity):
             const.ATTR_NODE_ID: self._value.node.node_id,
         }
 
-        try:
-            battery_level = self._value.node.get_battery_level()
-        except RuntimeError:
-            # If we get an runtime error the dict has changed while
-            # we was looking for a value, just do it again
-            battery_level = self._value.node.get_battery_level()
+        if self._battery_level is not None:
+            print(self._battery_level)
+            attrs[ATTR_BATTERY_LEVEL] = self._battery_level
 
-        if battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = battery_level
+        if self._location:
+            print(self._location)
+            attrs[ATTR_LOCATION] = self._location
 
-        location = self._value.node.location
+        if self._wakeup is not None:
+            print(self._wakeup)
+            attrs[ATTR_WAKEUP] = self._wakeup
 
-        if location:
-            attrs[ATTR_LOCATION] = location
-
-        wakeup = _get_wakeup(self._value.node)
-        if wakeup:
-            attrs[ATTR_WAKEUP] = wakeup
+        if self._power is not None:
+            print(self._power)
+            attrs[ATTR_POWER] = round(self._power, 2)
 
         return attrs

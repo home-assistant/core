@@ -295,6 +295,9 @@ ATTR_SUPPORTED_FEATURES = 'supported_features'
 # Class of device within its domain
 ATTR_DEVICE_CLASS = 'device_class'
 
+# Power consumption
+ATTR_POWER = 'power_consumption'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
