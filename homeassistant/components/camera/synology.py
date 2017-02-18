@@ -119,19 +119,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         'method': 'List',
         'version': '1'
     }
+
+    camera_req = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             camera_req = yield from websession.get(
                 syno_camera_url,
                 params=camera_payload
             )
+
+            camera_resp = yield from camera_req.json()
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_camera_url)
         return False
+    finally:
+        camera_req.close()
 
-    camera_resp = yield from camera_req.json()
     cameras = camera_resp['data']['cameras']
-    camera_req.close()
 
     # add cameras
     devices = []
