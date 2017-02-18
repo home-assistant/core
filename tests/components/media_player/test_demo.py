@@ -278,6 +278,9 @@ class TestMediaPlayerWeb(unittest.TestCase):
             def release(self):
                 pass
 
+            def close(self):
+                pass
+
         class MockWebsession():
 
             @asyncio.coroutine
