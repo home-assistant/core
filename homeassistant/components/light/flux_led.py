@@ -12,8 +12,9 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_RANDOM,
-    SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, Light,
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
+    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_RGB_COLOR, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
@@ -32,23 +33,20 @@ SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
 
-#List of Supported Effects which aren't already declared in LIGHT
-EFFECT_COLORLOOP = "colorloop"
-EFFECT_RANDOM = "random"
-EFFECT_WHITE = "white"
-EFFECT_RED_FADE = "red_fade"    
-EFFECT_GREEN_FADE = "green_fade"  
+# List of Supported Effects which aren't already declared in LIGHT
+EFFECT_RED_FADE = "red_fade"
+EFFECT_GREEN_FADE = "green_fade"
 EFFECT_BLUE_FADE = "blue_fade"
-EFFECT_YELLOW_FADE = "yellow_fade"  
+EFFECT_YELLOW_FADE = "yellow_fade"
 EFFECT_CYAN_FADE = "cyan_fade"
-EFFECT_PURPLE_FADE = "purple_fade" 
-EFFECT_WHITE_FADE = "white_fade"  
-EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"  
-EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"   
-EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"  
-EFFECT_COLORSTROBE = "colorstrobe"  
+EFFECT_PURPLE_FADE = "purple_fade"
+EFFECT_WHITE_FADE = "white_fade"
+EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"
+EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"
+EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"
+EFFECT_COLORSTROBE = "colorstrobe"
 EFFECT_RED_STROBE = "red_strobe"
-EFFECT_GREEN_STROBE =  "green_strobe"
+EFFECT_GREEN_STROBE = "green_strobe"
 EFFECT_BLUE_STOBE = "blue_strobe"
 EFFECT_YELLOW_STROBE = "yellow_strobe"
 EFFECT_CYAN_STROBE = "cyan_strobe"
@@ -59,7 +57,6 @@ EFFECT_COLORJUMP = "colorjump"
 FLUX_EFFECT_LIST = [
     EFFECT_COLORLOOP,
     EFFECT_RANDOM,
-    EFFECT_WHITE,
     EFFECT_RED_FADE,
     EFFECT_GREEN_FADE,
     EFFECT_BLUE_FADE,
@@ -209,7 +206,7 @@ class FluxLight(Light):
         """Flag supported features."""
         return SUPPORT_FLUX_LED
 
-@property
+    @property
     def effect_list(self):
         """Return the list of supported effects."""
         return FLUX_EFFECT_LIST
@@ -276,7 +273,6 @@ class FluxLight(Light):
             self._bulb.setPresetPattern(0x37, 50)
         elif effect == EFFECT_COLORJUMP:
             self._bulb.setPresetPattern(0x38, 50)
-
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
