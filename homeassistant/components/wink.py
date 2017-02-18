@@ -227,7 +227,7 @@ class WinkDevice(Entity):
     @property
     def _tamper(self):
         """Return the devices tamper status."""
-        try:
+        if hasattr(self.wink, 'tamper_detected'):
             return self.wink.tamper_detected()
-        except AttributeError:
+        else:
             return None
