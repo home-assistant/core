@@ -419,7 +419,7 @@ class MQTT(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.run_in_executor(
+        return self.hass.loop.run_in_executor(
             None, self._mqttc.publish, topic, payload, qos, retain)
 
     def async_start(self):
@@ -427,7 +427,7 @@ class MQTT(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.run_in_executor(None, self._mqttc.loop_start)
+        return self.hass.loop.run_in_executor(None, self._mqttc.loop_start)
 
     def async_stop(self):
         """Stop the MQTT client.
@@ -439,7 +439,7 @@ class MQTT(object):
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
 
-        return self.hass.run_in_executor(None, stop)
+        return self.hass.loop.run_in_executor(None, stop)
 
     @asyncio.coroutine
     def async_subscribe(self, topic, qos):
@@ -452,7 +452,7 @@ class MQTT(object):
 
         if topic in self.topics:
             return
-        result, mid = yield from self.hass.run_in_executor(
+        result, mid = yield from self.hass.loop.run_in_executor(
             None, self._mqttc.subscribe, topic, qos)
 
         _raise_on_error(result)
@@ -465,7 +465,7 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result, mid = yield from self.hass.run_in_executor(
+        result, mid = yield from self.hass.loop.run_in_executor(
             None, self._mqttc.unsubscribe, topic)
 
         _raise_on_error(result)
@@ -496,12 +496,14 @@ class MQTT(object):
         for topic, qos in old_topics.items():
             # qos is None if we were in process of subscribing
             if qos is not None:
-                self.subscribe(topic, qos)
+                self.hass.add_job(self.async_subscribe, topic, qos)
+
         if self.birth_message:
-            self.publish(self.birth_message.get(ATTR_TOPIC),
-                         self.birth_message.get(ATTR_PAYLOAD),
-                         self.birth_message.get(ATTR_QOS),
-                         self.birth_message.get(ATTR_RETAIN))
+            self.hass.add_job(self.async_publish(
+                self.birth_message.get(ATTR_TOPIC),
+                self.birth_message.get(ATTR_PAYLOAD),
+                self.birth_message.get(ATTR_QOS),
+                self.birth_message.get(ATTR_RETAIN)))
 
     def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Subscribe successful callback."""
