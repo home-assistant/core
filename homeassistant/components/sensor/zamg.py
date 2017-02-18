@@ -194,11 +194,18 @@ def _get_zamg_stations():
     capital_stations = {r['Station'] for r in ZamgData.current_observations()}
     req = requests.get('https://www.zamg.ac.at/cms/en/documents/climate/'
                        'doc_metnetwork/zamg-observation-points', timeout=15)
-    return {e['SYNNR']: tuple(float(e[k].replace(',', '.'))
-                              for k in ['BREITE_DEZI', 'LÄNGR_DEI'])
-            for e in csv.DictReader(req.text.splitlines(),
-                                    delimiter=';', quotechar='"')
-            if e['SYNNR'] in capital_stations}
+    stations = {}
+    for row in csv.DictReader(req.text.splitlines(),
+                              delimiter=';', quotechar='"'):
+        if row.get('synnr') in capital_stations:
+            try:
+                stations[row['synnr']] = tuple(
+                    float(row[coord].replace(',', '.'))
+                    for coord in ['breite_dezi', 'länge_dezi'])
+            except KeyError:
+                logging.getLogger(__name__).exception(
+                    'ZAMG schema changed again, cannot autodetect station.')
+    return stations
 
 
 def zamg_stations(cache_dir):
