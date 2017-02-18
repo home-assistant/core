@@ -27,7 +27,8 @@ class AiohttpClientMocker:
                 params=None,
                 headers={},
                 exc=None,
-                cookies=None):
+                cookies=None,
+                allow_redirects=None):
         """Mock a request."""
         if json:
             text = _json.dumps(json)
@@ -73,8 +74,9 @@ class AiohttpClientMocker:
         self.mock_calls.clear()
 
     @asyncio.coroutine
+    # pylint: disable=unused-variable
     def match_request(self, method, url, *, data=None, auth=None, params=None,
-                      headers=None):  # pylint: disable=unused-variable
+                      headers=None, allow_redirects=None):
         """Match a request against pre-registered requests."""
         for response in self._mocks:
             if response.match_request(method, url, params):
