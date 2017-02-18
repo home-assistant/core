@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_DEVICE,
-                                 EVENT_HOMEASSISTANT_STOP,
+                                 CONF_NAME, EVENT_HOMEASSISTANT_STOP,
                                  STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -25,6 +25,7 @@ DEFAULT_PORT = 23
 DEFAULT_TYPE = 'tcp'
 DEFAULT_RAW = False
 DEFAULT_DEVICE = '/dev/ttyUSB0'
+DEFAULT_NAME = 'KWB'
 
 MODE_SERIAL = 0
 MODE_TCP = 1
@@ -32,31 +33,13 @@ MODE_TCP = 1
 CONF_TYPE = 'type'
 CONF_RAW = 'raw'
 
-"""
-SERIAL_SCHEMA = {
-    vol.Required(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
-    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): 'serial',
-    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
-}
-
-ETHERNET_SCHEMA = {
-    vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): 'tcp',
-    vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
-}
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    DOMAIN: vol.Any(SERIAL_SCHEMA, ETHERNET_SCHEMA)
-})
-"""
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): cv.string,
+    vol.Required(CONF_TYPE, default=DEFAULT_TYPE): vol.In(['tcp', 'serial']),
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DEVICE, default=DEFAULT_DEVICE): cv.string,
     vol.Optional(CONF_RAW, default=DEFAULT_RAW): cv.boolean,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -67,6 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device = config.get(CONF_DEVICE)
     connection_type = config.get(CONF_TYPE)
     raw = config.get(CONF_RAW)
+    client_name = config.get(CONF_NAME)
 
     from pykwb import kwb
 
@@ -87,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in easyfire.get_sensors():
         if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW)
                 or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
-            sensors.append(KWBSensor(easyfire, sensor))
+            sensors.append(KWBSensor(easyfire, sensor, client_name))
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                          lambda event: easyfire.stop_thread())
@@ -98,11 +82,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class KWBSensor(Entity):
     """Representation of a KWB Easyfire sensor."""
 
-    def __init__(self, easyfire, sensor):
+    def __init__(self, easyfire, sensor, client_name):
         """Initialize the KWB sensor."""
         self._easyfire = easyfire
         self._sensor = sensor
-        self._client_name = "KWB"
+        self._client_name = client_name
         self._name = self._sensor.name
 
     @property
