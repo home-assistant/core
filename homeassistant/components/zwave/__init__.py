@@ -150,6 +150,10 @@ PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
 })
 
+PRINT_NODE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -255,22 +259,6 @@ def get_config_value(node, value_index, tries=5):
         # we was looking for a value, just do it again
         return None if tries <= 0 else get_config_value(
             node, value_index, tries=tries - 1)
-    return None
-
-
-def _get_wakeup(node, tries=5):
-    """Return wakeup interval of the node or None if node is not wakable."""
-    try:
-        if node.can_wake_up():
-            for value_id in node.get_values(
-                    class_id=const.COMMAND_CLASS_WAKE_UP):
-                return node.values[value_id].data
-    except RuntimeError:
-        # If we get an runtime error the dict has changed while
-        # we was looking for a value, just do it again
-        return None if tries <= 0 else _get_wakeup(
-            node, tries=tries - 1)
-
     return None
 
 
@@ -543,6 +531,12 @@ def setup(hass, config):
         _LOGGER.info("Config parameter %s on Node %s : %s",
                      param, node_id, get_config_value(node, param))
 
+    def print_node(service):
+        """Print all information about z-wave node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        nice_print_node(node)
+
     def set_wakeup(service):
         """Set wake-up interval of a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
@@ -656,6 +650,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_SET_WAKEUP],
                                schema=SET_WAKEUP_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_PRINT_NODE,
+                               print_node,
+                               descriptions[
+                                   const.SERVICE_PRINT_NODE],
+                               schema=PRINT_NODE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -677,10 +676,7 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
-        self._battery_level = None
-        self._location = None
-        self._wakeup = None
-        self._power = None
+        self._update_attributes()
 
         dispatcher.connect(
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -694,27 +690,35 @@ class ZWaveDeviceEntity(Entity):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
-        self._update_common_properties()
+        self._update_attributes()
         self.update_properties()
         self.schedule_update_ha_state()
 
-    def _update_common_properties(self):
-        """Update properties common to all zwave devices."""
-        self._battery_level = self._value.node.get_battery_level()
-        self._location = self._value.node.location
-        self._wakeup = self.get_value(
-            class_id=const.COMMAND_CLASS_WAKE_UP, member='data')
+    def _update_attributes(self):
+        """Update the node attributes. May only be used inside callback."""
+        self.node_id = self._value.node.node_id
+        self.location = self._value.node.location
+        self.battery_level = self._value.node.get_battery_level()
+        self.wakeup_interval = None
+        if self._value.node.can_wake_up():
+            self.wakeup_interval = self.get_value(
+                class_id=const.COMMAND_CLASS_WAKE_UP,
+                member='data')
         power_value = self.get_value(
             class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                       const.COMMAND_CLASS_METER],
             label=['Power'])
-        self._power = round(
+        self.power_consumption = round(
             power_value.data, power_value.precision) if power_value else None
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
-        """Get the values for a given command_class with arguments."""
-        if class_id is not None and not isinstance(class_id, list):
+        """Get the values for a given command_class with arguments.
+
+        May only be used inside callback.
+
+        """
+        if class_id is not None and isinstance(class_id, list):
             kwargs[CLASS_ID] = class_id
             class_id = None
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
@@ -758,7 +762,7 @@ class ZWaveDeviceEntity(Entity):
         return results
 
     def get_value(self, **kwargs):
-        """Simplifyer to get values."""
+        """Simplifyer to get values. May only be used inside callback."""
         return self._value_handler(method='get', **kwargs)
 
     def set_value(self, **kwargs):
@@ -797,19 +801,19 @@ class ZWaveDeviceEntity(Entity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
-            const.ATTR_NODE_ID: self._value.node.node_id,
+            const.ATTR_NODE_ID: self.node_id,
         }
 
-        if self._battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = self._battery_level
+        if self.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = self.battery_level
 
-        if self._location:
-            attrs[ATTR_LOCATION] = self._location
+        if self.location:
+            attrs[ATTR_LOCATION] = self.location
 
-        if self._wakeup is not None:
-            attrs[ATTR_WAKEUP] = self._wakeup
+        if self.wakeup_interval is not None:
+            attrs[ATTR_WAKEUP] = self.wakeup_interval
 
-        if self._power is not None:
-            attrs[ATTR_POWER] = self._power
+        if self.power_consumption is not None:
+            attrs[ATTR_POWER] = self.power_consumption
 
         return attrs

@@ -107,13 +107,12 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
 
-        self.update_properties()
-
         # Used for value change event handling
         self._refreshing = False
         self._timer = None
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
+        self.update_properties()
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
