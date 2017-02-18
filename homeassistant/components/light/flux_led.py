@@ -32,6 +32,51 @@ SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
 
+#List of Supported Effects which aren't already declared in LIGHT
+EFFECT_RED_FADE = "red_fade"    
+EFFECT_GREEN_FADE = "green_fade"  
+EFFECT_BLUE_FADE = "blue_fade"
+EFFECT_YELLOW_FADE = "yellow_fade"  
+EFFECT_CYAN_FADE = "cyan_fade"
+EFFECT_PURPLE_FADE = "purple_fade" 
+EFFECT_WHITE_FADE = "white_fade"  
+EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"  
+EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"   
+EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"  
+EFFECT_COLORSTROBE = "colorstrobe"  
+EFFECT_RED_STROBE = "red_strobe"
+EFFECT_GREEN_STROBE =  "green_strobe"
+EFFECT_BLUE_STOBE = "blue_strobe"
+EFFECT_YELLOW_STROBE = "yellow_strobe"
+EFFECT_CYAN_STROBE = "cyan_strobe"
+EFFECT_PURPLE_STROBE = "purple_strobe"
+EFFECT_WHITE_STROBE = "white_strobe"
+EFFECT_COLORJUMP = "colorjump"
+
+FLUX_EFFECT_LIST = [
+    EFFECT_COLORLOOP,
+    EFFECT_RANDOM,
+    EFFECT_WHITE,
+    EFFECT_RED_FADE,
+    EFFECT_GREEN_FADE,
+    EFFECT_BLUE_FADE,
+    EFFECT_YELLOW_FADE,
+    EFFECT_CYAN_FADE,
+    EFFECT_PURPLE_FADE,
+    EFFECT_WHITE_FADE,
+    EFFECT_RED_GREEN_CROSS_FADE,
+    EFFECT_RED_BLUE_CROSS_FADE,
+    EFFECT_GREEN_BLUE_CROSS_FADE,
+    EFFECT_COLORSTROBE,
+    EFFECT_RED_STROBE,
+    EFFECT_GREEN_STROBE,
+    EFFECT_BLUE_STOBE,
+    EFFECT_YELLOW_STROBE,
+    EFFECT_CYAN_STROBE,
+    EFFECT_PURPLE_STROBE,
+    EFFECT_WHITE_STROBE,
+    EFFECT_COLORJUMP]
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(ATTR_MODE, default=MODE_RGBW):
@@ -183,6 +228,47 @@ class FluxLight(Light):
             self._bulb.setRgb(random.randrange(0, 255),
                               random.randrange(0, 255),
                               random.randrange(0, 255))
+        elif effect == EFFECT_COLORLOOP:
+            self._bulb.setPresetPattern(0x25)
+        elif effect == EFFECT_RED_FADE:
+            self._bulb.setPresetPattern(0x26)
+        elif effect == EFFECT_GREEN_FADE:
+            self._bulb.setPresetPattern(0x27)
+        elif effect == EFFECT_BLUE_FADE:
+            self._bulb.setPresetPattern(0x28)
+        elif effect == EFFECT_YELLOW_FADE:
+            self._bulb.setPresetPattern(0x29)
+        elif effect == EFFECT_CYAN_FADE:
+            self._bulb.setPresetPattern(0x2a)
+        elif effect == EFFECT_PURPLE_FADE:
+            self._bulb.setPresetPattern(0x2b)
+        elif effect == EFFECT_WHITE_FADE:
+            self._bulb.setPresetPattern(0x2c)
+        elif effect == EFFECT_RED_GREEN_CROSS_FADE:
+            self._bulb.setPresetPattern(0x2d)
+        elif effect == EFFECT_RED_BLUE_CROSS_FADE:
+            self._bulb.setPresetPattern(0x2e)
+        elif effect == EFFECT_GREEN_BLUE_CROSS_FADE:
+            self._bulb.setPresetPattern(0x2f)
+        elif effect == EFFECT_COLORSTROBE:
+            self._bulb.setPresetPattern(0x30)
+        elif effect == EFFECT_RED_STROBE:
+            self._bulb.setPresetPattern(0x31)
+        elif effect == EFFECT_GREEN_STROBE:
+            self._bulb.setPresetPattern(0x32)
+        elif effect == EFFECT_BLUE_STOBE:
+            self._bulb.setPresetPattern(0x33)
+        elif effect == EFFECT_YELLOW_STROBE:
+            self._bulb.setPresetPattern(0x34)
+        elif effect == EFFECT_CYAN_STROBE:
+            self._bulb.setPresetPattern(0x35)
+        elif effect == EFFECT_PURPLE_STROBE:
+            self._bulb.setPresetPattern(0x36)
+        elif effect == EFFECT_WHITE_STROBE:
+            self._bulb.setPresetPattern(0x37)
+        elif effect == EFFECT_COLORJUMP:
+            self._bulb.setPresetPattern(0x38)
+
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
