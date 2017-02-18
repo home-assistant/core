@@ -718,28 +718,20 @@ class ZWaveDeviceEntity(Entity):
         May only be used inside callback.
 
         """
-        if class_id is not None and not isinstance(class_id, list):
-            kwargs[CLASS_ID] = class_id
-            class_id = None
-        _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
-                      ' member=%s, kwargs=%s',
-                      method, class_id, index, label, data, member, kwargs)
-        values = self._value.node.get_values(**kwargs).values()
+        values = []
+        if not isinstance(class_id, list):
+            class_id = [class_id]
+        for cid in class_id:
+            values.extend(
+                self._value.node.get_values(class_id=cid, **kwargs).values())
+            _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s,'
+                          ' data=%s, member=%s, kwargs=%s',
+                          method, class_id, index, label, data, member, kwargs)
         _LOGGER.debug('values=%s', values)
         results = None
-        if not values:
-            return None
         for value in values:
             if index is not None and value.index != index:
                 continue
-            if class_id is not None:
-                class_found = False
-                for entry in class_id:
-                    if value.command_class == entry:
-                        class_found = True
-                        break
-                if not class_found:
-                    continue
             if label is not None:
                 label_found = False
                 for entry in label:
