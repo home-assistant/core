@@ -104,7 +104,7 @@ def async_setup(hass, config):
 
             finally:
                 if request is not None:
-                    yield from request.release()
+                    request.close()
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)

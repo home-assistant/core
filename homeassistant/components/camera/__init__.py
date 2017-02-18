@@ -75,7 +75,7 @@ def async_get_image(hass, entity_id, timeout=10):
 
     finally:
         if response is not None:
-            yield from response.release()
+            response.close()
 
 
 @asyncio.coroutine

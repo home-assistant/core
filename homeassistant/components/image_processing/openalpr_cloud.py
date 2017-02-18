@@ -133,7 +133,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
         finally:
             if request is not None:
-                yield from request.release()
+                request.close()
 
         # processing api data
         vehicles = 0

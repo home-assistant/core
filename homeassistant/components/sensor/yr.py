@@ -179,7 +179,7 @@ class YrData(object):
 
             finally:
                 if resp is not None:
-                    self.hass.async_add_job(resp.release())
+                    resp.close()
 
             try:
                 import xmltodict

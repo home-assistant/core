@@ -133,7 +133,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
         # Without a home_id, we fetched an URL where the mobile devices can be
         # found under the mobileDevices key.

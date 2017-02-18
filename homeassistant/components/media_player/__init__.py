@@ -883,7 +883,7 @@ def _async_fetch_image(hass, url):
 
     finally:
         if response is not None:
-            yield from response.release()
+            response.close()
 
     if not content:
         return (None, None)

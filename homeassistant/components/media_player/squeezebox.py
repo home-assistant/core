@@ -153,7 +153,7 @@ class LogitechMediaServer(object):
             return False
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
         try:
             return data['result']

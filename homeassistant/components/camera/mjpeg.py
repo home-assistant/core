@@ -109,7 +109,7 @@ class MjpegCamera(Camera):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
     def camera_image(self):
         """Return a still image response from the camera."""

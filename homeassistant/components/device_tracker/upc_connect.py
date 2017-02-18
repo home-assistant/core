@@ -137,7 +137,7 @@ class UPCDeviceScanner(DeviceScanner):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
     @asyncio.coroutine
     def _async_ws_function(self, function, additional_form=None):
@@ -178,4 +178,4 @@ class UPCDeviceScanner(DeviceScanner):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
