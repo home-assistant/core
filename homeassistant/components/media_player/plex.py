@@ -96,7 +96,6 @@ def config_from_file(filename, config=None):
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
-
     # optional parameters
     optional_config = {}
     optional_config["entity_namespace"] = config.get("entity_namespace")
@@ -258,7 +257,6 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
 def request_configuration(host, hass, optional_config, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
-
     # We got an error if this method is called while we are configuring
     if host in _CONFIGURING:
         configurator.notify_errors(_CONFIGURING[host],
@@ -307,6 +305,7 @@ class PlexClient(MediaPlayerDevice):
         self._volume_muted = False  # since we can't retrieve remotely
         self._volume_level = 1  # since we can't retrieve remotely
         self._previous_volume_level = 1  # Used in fake muting
+        self._media_position_updated_at = None
 
         if self.optional_config[CONF_USE_CUSTOM_ENTITY_IDS]:
             prefix = ''
@@ -497,7 +496,9 @@ class PlexClient(MediaPlayerDevice):
     @property
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
-        return util.dt.utcnow()
+        if self.state == STATE_PLAYING:
+            self._media_position_updated_at = util.dt.utcnow()
+        return self._media_position_updated_at
 
     @property
     def media_image_url(self):
