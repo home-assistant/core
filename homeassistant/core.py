@@ -190,8 +190,6 @@ class HomeAssistant(object):
             self.loop.create_task(target)
         elif is_callback(target):
             self.loop.call_soon(target, *args)
-        elif isinstance(target, asyncio.Future):
-            pass
         elif asyncio.iscoroutinefunction(target):
             self.loop.create_task(target(*args))
         else:
@@ -215,8 +213,6 @@ class HomeAssistant(object):
             task = self.loop.create_task(target)
         elif is_callback(target):
             self.loop.call_soon(target, *args)
-        elif isinstance(target, asyncio.Future):
-            task = target
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
         else:
