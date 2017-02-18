@@ -11,7 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
-import asyncio
 
 DEFAULT_NAME = 'MiGardener'
 DEPENDENCIES = ['mqtt']
@@ -45,6 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(readings)
     mg.create_group()
 
+
 class MiGardener(Entity):
 
     def __init__(self, hass, config):
@@ -56,7 +56,7 @@ class MiGardener(Entity):
         self._readings = []
 
     def add_reading(self, name, unit_of_measurement, cast_function):
-        r = MiGardenerReading(self._hass, self._config, name, unit_of_measurement, cast_function)
+        r = _MiGardenerReading(self._hass, self._config, name, unit_of_measurement, cast_function)
         self._readings.append(name)
         return r
 
@@ -91,14 +91,14 @@ class MiGardener(Entity):
         return self._readings
 
 
-class MiGardenerReading(Entity):
+class _MiGardenerReading(Entity):
 
     def __init__(self, hass, config, name, unit_of_measurement, cast_function):
         self._hass = hass
         self._config = config
         self._name = '{}_{}'.format(config[CONF_NAME],name)
         self._state_topic = '{}/{}'.format(config[CONF_STATE_TOPIC], name)
-        self._friendly_name = name
+        self._short_name = name
         self._unit_of_measurement = unit_of_measurement
         self._cast_function = cast_function
         self._state = STATE_UNKNOWN
@@ -132,8 +132,3 @@ class MiGardenerReading(Entity):
     def state(self):
         """Return the state of the entity."""
         return self._state
-
-    @property
-    def friendly_name(self):
-        return self._friendly_name
-
