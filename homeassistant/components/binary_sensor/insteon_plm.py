@@ -68,10 +68,10 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.info('sensor state for %s is %s', self._address, onlevel)
-        if onlevel:
-            return (onlevel > 0)
+        sensorstate = self._plm.get_device_attr(self._address, 'sensorstate')
+        _LOGGER.info('sensor state for %s is %s', self._address, sensorstate)
+        if sensorstate:
+            return (sensorstate > 0)
         else:
             return False
 
