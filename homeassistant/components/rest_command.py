@@ -90,6 +90,8 @@ def async_setup(hass, config):
                         auth=auth
                     )
 
+                    yield from request.release()
+
                     if request.status == 200:
                         _LOGGER.info("Success call %s.", request.url)
                         return
