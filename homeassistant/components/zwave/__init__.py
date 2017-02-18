@@ -718,7 +718,7 @@ class ZWaveDeviceEntity(Entity):
         May only be used inside callback.
 
         """
-        if class_id is not None and isinstance(class_id, list):
+        if class_id is not None and not isinstance(class_id, list):
             kwargs[CLASS_ID] = class_id
             class_id = None
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
