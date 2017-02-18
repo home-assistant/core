@@ -412,7 +412,7 @@ def _async_process_trigger(hass, config, trigger_configs, name, action):
         if platform is None:
             return None
 
-        remove = platform.async_trigger(hass, conf, action)
+        remove = yield from platform.async_trigger(hass, conf, action)
 
         if not remove:
             _LOGGER.error("Error setting up trigger %s", name)
