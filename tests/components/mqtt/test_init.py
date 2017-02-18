@@ -356,6 +356,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
 @asyncio.coroutine
 def test_birth_message(hass):
+    """Test sending birth message."""
     mqtt_client = yield from mock_mqtt_client(hass, {
         mqtt.CONF_BROKER: 'mock-broker',
         mqtt.CONF_BIRTH_MESSAGE: {mqtt.ATTR_TOPIC: 'birth',
