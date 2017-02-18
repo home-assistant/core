@@ -8,7 +8,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.components import insteon_plm
+
+insteon_plm = get_component('insteon_plm')
 
 DEPENDENCIES = ['insteon_plm']
 

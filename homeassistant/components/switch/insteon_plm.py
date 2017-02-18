@@ -11,7 +11,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SWITCHES)
 from homeassistant.loader import get_component
 import homeassistant.util as util
-from homeassistant.components import insteon_plm
+
+insteon_plm = get_component('insteon_plm')
+
 
 DEPENDENCIES = ['insteon_plm']
 
