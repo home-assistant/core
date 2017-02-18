@@ -436,7 +436,7 @@ class KodiDevice(MediaPlayerDevice):
                 
     def _find(self, key_word, words):
         key_word = key_word.split(' ')
-        patt = [re.compile(k, re.IGNORECASE) for k in key_word]
+        patt = [re.compile('(^| )' + k + '( |$)', re.IGNORECASE) for k in key_word]
          
         out = [[i, 0] for i in range(len(words))]
         for i in range(len(words)):
@@ -449,6 +449,12 @@ class KodiDevice(MediaPlayerDevice):
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    asyncio.get_event_loop().run_until_complete(kodi.async_play_song('firth fifth'))
+    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
+    out = asyncio.get_event_loop().run_until_complete(kodi.async_find_song('she'))
+    
+    for s in songs['songs']:
+        if s['songid'] == out:
+            print(s)
+    print(out)
     
     
