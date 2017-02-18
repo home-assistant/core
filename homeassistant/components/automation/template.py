@@ -4,6 +4,7 @@ Offer template automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#template-trigger
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -22,6 +23,7 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = vol.Schema({
 })
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     value_template = config.get(CONF_VALUE_TEMPLATE)

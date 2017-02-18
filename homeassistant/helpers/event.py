@@ -34,6 +34,7 @@ def threaded_listener_factory(async_factory):
     return factory
 
 
+@callback
 def async_track_state_change(hass, entity_ids, action, from_state=None,
                              to_state=None):
     """Track specific state changes.
@@ -84,6 +85,7 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
 track_state_change = threaded_listener_factory(async_track_state_change)
 
 
+@callback
 def async_track_template(hass, template, action, variables=None):
     """Add a listener that track state changes with template condition."""
     from . import condition
@@ -111,6 +113,7 @@ def async_track_template(hass, template, action, variables=None):
 track_template = threaded_listener_factory(async_track_template)
 
 
+@callback
 def async_track_point_in_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
@@ -127,6 +130,7 @@ def async_track_point_in_time(hass, action, point_in_time):
 track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 
+@callback
 def async_track_point_in_utc_time(hass, action, point_in_time):
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
@@ -160,6 +164,7 @@ track_point_in_utc_time = threaded_listener_factory(
     async_track_point_in_utc_time)
 
 
+@callback
 def async_track_time_interval(hass, action, interval):
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
@@ -189,6 +194,7 @@ def async_track_time_interval(hass, action, interval):
 track_time_interval = threaded_listener_factory(async_track_time_interval)
 
 
+@callback
 def async_track_sunrise(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunrise daily."""
     from homeassistant.components import sun
@@ -225,6 +231,7 @@ def async_track_sunrise(hass, action, offset=None):
 track_sunrise = threaded_listener_factory(async_track_sunrise)
 
 
+@callback
 def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
     from homeassistant.components import sun
@@ -261,6 +268,7 @@ def async_track_sunset(hass, action, offset=None):
 track_sunset = threaded_listener_factory(async_track_sunset)
 
 
+@callback
 def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
                                 hour=None, minute=None, second=None,
                                 local=False):
@@ -305,6 +313,7 @@ def async_track_utc_time_change(hass, action, year=None, month=None, day=None,
 track_utc_time_change = threaded_listener_factory(async_track_utc_time_change)
 
 
+@callback
 def async_track_time_change(hass, action, year=None, month=None, day=None,
                             hour=None, minute=None, second=None):
     """Add a listener that will fire if UTC time matches a pattern."""

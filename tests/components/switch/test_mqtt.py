@@ -72,7 +72,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'beer on', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
@@ -80,7 +80,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'beer off', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
 

@@ -4,6 +4,7 @@ Offer time listening automation rules.
 For more details about this automation rule, please refer to the documentation
 at https://home-assistant.io/components/automation/#time-trigger
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -29,6 +30,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
                             CONF_SECONDS, CONF_AFTER))
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     if CONF_AFTER in config:
