@@ -186,7 +186,6 @@ class IPWebcam(object):
         self.status_data = None
         self.sensor_data = None
         self._sensor_updated_at = (datetime.now() - timedelta(seconds=5))
-        self.async_update()
 
     @property
     def base_url(self):
