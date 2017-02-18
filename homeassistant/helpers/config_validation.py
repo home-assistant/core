@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.loader import get_platform
 from homeassistant.const import (
-    CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS, CONF_INCLUDE,
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
@@ -431,19 +430,6 @@ EVENT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required('event'): string,
     vol.Optional('event_data'): dict,
-})
-
-FILTER_SCHEMA = vol.Schema({
-    CONF_EXCLUDE: vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(ensure_list, [string])
-    }),
-    CONF_INCLUDE: vol.Schema({
-        vol.Optional(CONF_ENTITIES, default=[]): entity_ids,
-        vol.Optional(CONF_DOMAINS, default=[]):
-            vol.All(ensure_list, [string])
-    })
 })
 
 SERVICE_SCHEMA = vol.All(vol.Schema({

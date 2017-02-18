@@ -15,7 +15,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
 from homeassistant.components.frontend import register_built_in_panel
@@ -28,7 +27,7 @@ DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.FILTER_SCHEMA,
+    DOMAIN: recorder.FILTER_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
@@ -77,7 +76,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None,
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
     states = recorder.get_model('States')
-    query = recorder.query('States').filter(
+    query = recorder.query(states).filter(
         (states.last_changed == states.last_updated) &
         (states.last_changed > start_time))
 
@@ -118,7 +117,7 @@ def get_states(utc_point_in_time, entity_ids=None, run=None, filters=None):
     most_recent_state_ids = most_recent_state_ids.group_by(
         states.entity_id).subquery()
 
-    query = recorder.query('States').join(most_recent_state_ids, and_(
+    query = recorder.query(states).join(most_recent_state_ids, and_(
         states.state_id == most_recent_state_ids.c.max_state_id))
 
     for state in recorder.execute(query):

@@ -15,6 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.components.recorder.restore_state import get_last_state
 
 DOMAIN = 'input_boolean'
 
@@ -140,11 +141,11 @@ class InputBoolean(ToggleEntity):
         return self._state
 
     @asyncio.coroutine
-    def async_added_to_hass(self, state):
-        """Component added to hass, restore state here."""
+    def async_added_to_hass(self):
+        """Component added to hass, no platforms, so restore state here."""
+        state = get_last_state(self, False)
         if state:
             self._state = state.state == 'on'
-        return state
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):

@@ -9,10 +9,8 @@ import pytest
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.core import split_entity_id
-from homeassistant.const import ATTR_RESTORED_STATE
 from homeassistant.components import recorder, input_boolean
 import homeassistant.components.recorder.models as models
-from homeassistant.components import restore_state as restore
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -74,7 +72,8 @@ def _add_test_data(entities):
         recorder._INSTANCE._close_run()
 
 
-def test_restore_state(hass_sql):  # pylint: disable=redefined-outer-name
+def test_recorder_restore_state(  # pylint: disable=redefined-outer-name
+        hass_sql):
     """Ensure states are 'restored' on startup."""
     test_entity_id1 = 'input_boolean.b1'
     test_entity_id2 = 'input_boolean.b2'
@@ -88,13 +87,6 @@ def test_restore_state(hass_sql):  # pylint: disable=redefined-outer-name
     })
 
     hass_sql.block_till_done()
-
-    with assert_setup_component(1, restore.DOMAIN):
-        setup_component(hass_sql, restore.DOMAIN, {
-            restore.DOMAIN: {
-                restore.CONF_INCLUDE: {
-                    restore.CONF_ENTITIES: [test_entity_id1, test_entity_id2]}
-            }})
 
     with assert_setup_component(3):
         setup_component(hass_sql, input_boolean.DOMAIN, {
@@ -111,17 +103,14 @@ def test_restore_state(hass_sql):  # pylint: disable=redefined-outer-name
     state = hass_sql.states.get(test_entity_id1)
     assert state
     assert state.state == 'on'
-    assert state.attributes[ATTR_RESTORED_STATE] is True
 
     state = hass_sql.states.get(test_entity_id2)
     assert state
-    assert state.attributes[ATTR_RESTORED_STATE] is True
     assert state.state == 'off'
 
     # Ignored by config
     state = hass_sql.states.get(test_entity_id3)
     assert state
     assert state.state == 'off'  # default is off
-    assert ATTR_RESTORED_STATE not in state.attributes
 
     assert hass_sql.states.get(test_entity_id4) is None

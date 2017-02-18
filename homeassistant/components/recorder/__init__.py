@@ -43,12 +43,25 @@ CONNECT_RETRY_WAIT = 10
 QUERY_RETRY_WAIT = 0.1
 ERROR_QUERY = "Error during query: %s"
 
+FILTER_SCHEMA = vol.Schema({
+    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string])
+    }),
+     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string])
+    })
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: FILTER_SCHEMA.extend({
         vol.Optional(CONF_PURGE_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
-    }).extend(cv.FILTER_SCHEMA.schema)
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 _INSTANCE = None  # type: Any
@@ -209,23 +222,27 @@ class Recorder(threading.Thread):
     def run(self):
         """Start processing events to save."""
         from homeassistant.components.recorder.models import Events, States
-        import sqlalchemy.exc
+        from homeassistant.components.recorder.restore_state import (
+            load_restore_cache)
+        from sqlalchemy.exc import SQLAlchemyError
 
         while True:
             try:
                 self._setup_connection()
                 self._setup_run()
                 break
-            except sqlalchemy.exc.SQLAlchemyError as err:
+            except SQLAlchemyError as err:
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
                 time.sleep(CONNECT_RETRY_WAIT)
 
-        _wait(self.start_recording, "Waiting to start recording")
+        load_restore_cache(self.hass)
 
         if self.purge_days is not None:
             async_track_time_interval(
                 self.hass, self._purge_old_data, timedelta(days=2))
+
+        _wait(self.start_recording, "Waiting to start recording")
 
         while True:
             event = self.queue.get()
