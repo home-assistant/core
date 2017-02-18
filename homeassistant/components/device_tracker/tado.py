@@ -121,6 +121,7 @@ class TadoDeviceScanner(DeviceScanner):
 
                 # error on Tado webservice
                 if response.status != 200:
+                    yield from response.release()
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, self.tadoapiurl)
                     return

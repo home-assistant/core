@@ -144,6 +144,7 @@ class LogitechMediaServer(object):
                     _LOGGER.error(
                         "Query failed, response code: %s Full message: %s",
                         response.status, response)
+                    yield from response.release()
                     return False
 
         except (asyncio.TimeoutError,

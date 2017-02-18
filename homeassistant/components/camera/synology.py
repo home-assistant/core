@@ -133,7 +133,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.exception("Error on %s", syno_camera_url)
         return False
     finally:
-        camera_req.close()
+        if camera_req is not None:
+            camera_req.close()
 
     cameras = camera_resp['data']['cameras']
 

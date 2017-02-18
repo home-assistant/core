@@ -164,6 +164,7 @@ class UPCDeviceScanner(DeviceScanner):
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, function)
                     self.token = None
+                    yield from response.releae()
                     return
 
                 # load data, store token for next request
