@@ -721,14 +721,17 @@ class ZWaveDeviceEntity(Entity):
 
         """
         values = []
-        if not isinstance(class_id, list):
-            class_id = [class_id]
-        for cid in class_id:
-            values.extend(
-                self._value.node.get_values(class_id=cid, **kwargs).values())
-            _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s,'
-                          ' data=%s, member=%s, kwargs=%s',
-                          method, class_id, index, label, data, member, kwargs)
+        if class_id is None:
+            values.extend(self._value.node.get_values(**kwargs).values())
+        else:
+            if not isinstance(class_id, list):
+                class_id = [class_id]
+            for cid in class_id:
+                values.extend(self._value.node.get_values(
+                    class_id=cid, **kwargs).values())
+        _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
+                      ' member=%s, kwargs=%s',
+                      method, class_id, index, label, data, member, kwargs)
         _LOGGER.debug('values=%s', values)
         results = None
         for value in values:
