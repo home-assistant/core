@@ -414,71 +414,62 @@ class MQTT(object):
 
         self._mqttc.connect_async(broker, port, keepalive)
 
-    def publish(self, topic, payload, qos, retain):
-        """Publish a MQTT message."""
-        self._mqttc.publish(topic, payload, qos, retain)
-
     def async_publish(self, topic, payload, qos, retain):
         """Publish a MQTT message.
 
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.run_in_executor(
-            None, self.publish, topic, payload, qos, retain)
-
-    def start(self):
-        """Run the MQTT client."""
-        self._mqttc.loop_start()
+            None, self._mqttc.publish, topic, payload, qos, retain)
 
     def async_start(self):
         """Run the MQTT client.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.run_in_executor(None, self.start)
-
-    def stop(self):
-        """Stop the MQTT client."""
-        self._mqttc.disconnect()
-        self._mqttc.loop_stop()
+        return self.hass.run_in_executor(None, self._mqttc.loop_start)
 
     def async_stop(self):
         """Stop the MQTT client.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.run_in_executor(None, self.stop)
+        def stop(self):
+            """Stop the MQTT client."""
+            self._mqttc.disconnect()
+            self._mqttc.loop_stop()
 
-    def subscribe(self, topic, qos):
-        """Subscribe to a topic."""
-        assert isinstance(topic, str)
+        return self.hass.run_in_executor(None, stop)
+
+    @asyncio.coroutine
+    def async_subscribe(self, topic, qos):
+        """Subscribe to a topic.
+
+        This method is a coroutine.
+        """
+        if not isinstance(topic, str):
+            raise HomeAssistantError("topic need to be a string!")
 
         if topic in self.topics:
             return
-        result, mid = self._mqttc.subscribe(topic, qos)
+        result, mid = yield from self.hass.run_in_executor(
+            None, self._mqttc.subscribe, topic, qos)
+
         _raise_on_error(result)
         self.progress[mid] = topic
         self.topics[topic] = None
 
-    def async_subscribe(self, topic, qos):
-        """Subscribe to a topic.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.run_in_executor(None, self.subscribe, topic, qos)
-
-    def unsubscribe(self, topic):
-        """Unsubscribe from topic."""
-        result, mid = self._mqttc.unsubscribe(topic)
-        _raise_on_error(result)
-        self.progress[mid] = topic
-
+    @asyncio.coroutine
     def async_unsubscribe(self, topic):
         """Unsubscribe from topic.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
-        return self.hass.run_in_executor(None, self.unsubscribe, topic)
+        result, mid = yield from self.hass.run_in_executor(
+            None, self._mqttc.unsubscribe, topic)
+
+        _raise_on_error(result)
+        self.progress[mid] = topic
 
     def _mqtt_on_connect(self, _mqttc, _userdata, _flags, result_code):
         """On connect callback.
