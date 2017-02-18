@@ -281,3 +281,4 @@ class FluxLight(Light):
     def update(self):
         """Synchronize state with bulb."""
         self._bulb.refreshState()
+        
