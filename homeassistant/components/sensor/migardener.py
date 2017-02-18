@@ -14,7 +14,23 @@ from homeassistant.core import callback
 
 DEFAULT_NAME = 'MiGardener'
 DEPENDENCIES = ['mqtt']
-CONF_MIN_BATTERY_LEVEL = 'min_{}'.format(ATTR_BATTERY_LEVEL)
+
+READING_BATTERY = ATTR_BATTERY_LEVEL
+READING_TEMPERATURE = ATTR_TEMPERATURE
+READING_MOISTURE = 'moisture'
+READING_CONDUCTIVITY = 'conductivity'
+READING_BRIGHTNESS = 'brightness'
+
+CONF_MIN_BATTERY_LEVEL = 'min_' + READING_BATTERY
+CONF_MIN_TEMPERATURE = 'min_' + READING_TEMPERATURE
+CONF_MAX_TEMPERATURE = 'max_' + READING_TEMPERATURE
+CONF_MIN_MOISTURE = 'min_' + READING_MOISTURE
+CONF_MAX_MOISTURE = 'max_' + READING_MOISTURE
+CONF_MIN_CONDUCTIVITY = 'min_' + READING_CONDUCTIVITY
+CONF_MAX_CONDUCTIVITY = 'max_' + READING_CONDUCTIVITY
+CONF_MIN_BRIGHTNESS = 'min_' + READING_BRIGHTNESS
+CONF_MAX_BRIGHTNESS = 'max_' + READING_BRIGHTNESS
+
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): cv.string,
@@ -33,11 +49,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     mg = MiGardener(hass,config)
 
     readings = [
-        mg.add_reading('battery',  '%', int),
-        mg.add_reading('temperature', TEMP_CELSIUS, float),
-        mg.add_reading('moisture',  '%', int),
-        mg.add_reading('conductivity', 'µS/cm', int),
-        mg.add_reading('brightness', 'lux', int),
+        mg.add_reading(READING_BATTERY,  '%', int),
+        mg.add_reading(READING_TEMPERATURE, TEMP_CELSIUS, float),
+        mg.add_reading(READING_MOISTURE,  '%', int),
+        mg.add_reading(READING_CONDUCTIVITY, 'µS/cm', int),
+        mg.add_reading(READING_BRIGHTNESS, 'lux', int),
     ]
 
     add_devices([mg])
@@ -97,7 +113,10 @@ class _MiGardenerReading(Entity):
         self._hass = hass
         self._config = config
         self._name = '{}_{}'.format(config[CONF_NAME],name)
-        self._state_topic = '{}/{}'.format(config[CONF_STATE_TOPIC], name)
+        if name == ATTR_BATTERY_LEVEL:
+            self._state_topic = '{}/{}'.format(config[CONF_STATE_TOPIC], 'battery')
+        else:
+            self._state_topic = '{}/{}'.format(config[CONF_STATE_TOPIC], name)
         self._short_name = name
         self._unit_of_measurement = unit_of_measurement
         self._cast_function = cast_function
