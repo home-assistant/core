@@ -156,10 +156,14 @@ class KodiDevice(MediaPlayerDevice):
         """Called when player changes between playing and paused."""
         self._properties['speed'] = data['player']['speed']
 
-        # If a new item is playing, force a complete refresh
-        new_item = data['item']['id'] != self._item.get('id')
+        if not hasattr(data['item'], 'id'):
+            # If no item id is given, perform a full update
+            force_refresh = True
+        else:
+            # If a new item is playing, force a complete refresh
+            force_refresh = data['item']['id'] != self._item.get('id')
 
-        self.hass.async_add_job(self.async_update_ha_state(new_item))
+        self.hass.async_add_job(self.async_update_ha_state(force_refresh))
 
     @callback
     def async_on_stop(self, sender, data):
