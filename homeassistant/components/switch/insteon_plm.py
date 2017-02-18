@@ -82,7 +82,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Moo."""
-        self._plm.turn_on(self._address, 1)
+        self._plm.turn_on(self._address)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
