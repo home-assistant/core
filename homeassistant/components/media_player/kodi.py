@@ -438,6 +438,16 @@ class KodiDevice(MediaPlayerDevice):
         songs = yield from self.async_get_songs(artist_id)
         out = self._find(song_name, [a['label'] for a in songs['songs']])
         return songs['songs'][out[0][0]]['songid']
+    
+    @asyncio.coroutine     
+    def async_find_album(self, album_name, artist_name=None):
+        artist_id = None
+        if artist_name is not None:
+            artist_id = yield from self.async_find_artist(artist_name)
+        
+        albums = yield from self.async_get_albums(artist_id)
+        out = self._find(album_name, [a['label'] for a in albums['albums']])
+        return albums['albums'][out[0][0]]['albumid']
                 
     def _find(self, key_word, words):
         key_word = key_word.split(' ')
@@ -454,11 +464,11 @@ class KodiDevice(MediaPlayerDevice):
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
-    out = asyncio.get_event_loop().run_until_complete(kodi.async_find_song('rainbow', 'stones'))
+    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_albums())
+    out = asyncio.get_event_loop().run_until_complete(kodi.async_find_album('30', 'stones'))
     
-    for s in songs['songs']:
-        if s['songid'] == out:
+    for s in songs['albums']:
+        if s['albumid'] == out:
             print(s)
     print(out)
     
