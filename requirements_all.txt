@@ -298,10 +298,13 @@ insteon_hub==0.4.5
 insteonlocal==0.39
 
 # homeassistant.components.media_player.kodi
-jsonrpc-async==0.2
+jsonrpc-async==0.4
 
 # homeassistant.components.notify.kodi
 jsonrpc-requests==0.3
+
+# homeassistant.components.media_player.kodi
+jsonrpc-websocket==0.2
 
 # homeassistant.scripts.keyring
 keyring>=9.3,<10.0
