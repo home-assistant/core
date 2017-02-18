@@ -294,6 +294,6 @@ class MqttCover(CoverDevice):
                      self._qos, self._retain)
         if self._tilt_optimistic:
             # Optimistically assume that cover has changed state.
-            self._tilt_state = position == 0
+            self._tilt_state = tilt_position == 0
             self._tilt_position = tilt_position
             self.update_ha_state()
