@@ -2,7 +2,7 @@
 Support to interface with the Plex API.
 
 For more details about this platform, please refer to the documentation at
-https://github.com/JesseWebDotCom/home-assistant-configuration/blob/master/docs/media_player_plexdevices.md
+https://home-assistant.io/components/media_player.plex/
 """
 import json
 import logging
@@ -36,10 +36,16 @@ PLEX_CONFIG_FILE = 'plex.conf'
 GROUP_ACTIVE_DEVICES = 'group._plex_devices_active'
 GROUP_INACTIVE_DEVICES = 'group._plex_devices_inactive'
 
+# includes non-controllable clients (ex. PlexConnect Apple TV's)
 CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
+# Use episode art instead of show art
 CONF_USE_EPISODE_ART = 'use_episode_art'
+# Automatically group devices into active and inactive groups
 CONF_USE_DYNAMIC_GROUPS = 'use_dynamic_groups'
+# Name entities by device id (less ambiguous, more predictable names)
 CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
+# Show all controls instead of only displaying ones within client capabilities
+CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
@@ -101,6 +107,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         CONF_USE_DYNAMIC_GROUPS)
     optional_config[CONF_USE_CUSTOM_ENTITY_IDS] = config.get(
         CONF_USE_CUSTOM_ENTITY_IDS)
+    optional_config[CONF_SHOW_ALL_CONTROLS] = config.get(
+        CONF_SHOW_ALL_CONTROLS)
 
     config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
     if len(config):
@@ -240,7 +248,8 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
 
         plex_sessions.clear()
         for session in sessions:
-            plex_sessions[session.player.machineIdentifier] = session
+            if session.player:
+                plex_sessions[session.player.machineIdentifier] = session
 
     update_sessions()
     update_devices()
@@ -301,6 +310,7 @@ class PlexClient(MediaPlayerDevice):
 
         if self.optional_config[CONF_USE_CUSTOM_ENTITY_IDS]:
             prefix = ''
+            # allow for namespace prefixing when using custom entity names
             if optional_config["entity_namespace"]:
                 prefix = optional_config["entity_namespace"] + '_'
 
@@ -337,9 +347,10 @@ class PlexClient(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         if self.device:
-            return self.device.title or DEVICE_DEFAULT_NAME
+            return self._convert_na_to_none(
+                self.device.title) or DEVICE_DEFAULT_NAME
         if self.session and self.session.player:
-            return self.session.player.title
+            return self._convert_na_to_none(self.session.player.title)
 
     @property
     def machine_identifier(self):
@@ -360,10 +371,10 @@ class PlexClient(MediaPlayerDevice):
     def app_name(self):
         """Library name of playing media"""
         if self.session:
-            section = self.session.server.library.sectionByID(
-                self.session.librarySectionID)
-            if section:
-                return section.title
+            if self.session.librarySectionID:
+                return self._convert_na_to_none(
+                    self.session.server.library.sectionByID(
+                        self.session.librarySectionID).title)
 
     @property
     def session(self):
@@ -426,7 +437,7 @@ class PlexClient(MediaPlayerDevice):
         """Content type of current playing media."""
         if self.session:
             media_type = self.session.type
-            if media_type == 'episode':
+            if media_type in ('episode', 'clip'):
                 return MEDIA_TYPE_TVSHOW
             elif media_type == 'movie':
                 return MEDIA_TYPE_VIDEO
@@ -475,13 +486,13 @@ class PlexClient(MediaPlayerDevice):
     def media_duration(self):
         """Duration of current playing media in seconds."""
         if self.session:
-            return self.session.duration
+            return self._convert_na_to_none(self.session.duration)
 
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
         if self.session:
-            return self.session.viewOffset
+            return self._convert_na_to_none(self.session.viewOffset)
 
     @property
     def media_position_updated_at(self):
@@ -502,10 +513,15 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self.session.server.url(thumb_url)
                 thumb_response = requests.get(thumb_url, verify=False)
                 if thumb_response.status_code != 200:
-                    _LOGGER.debug('Using art because thumbnail was not found: '
+                    _LOGGER.debug('Using art because thumbnail was missing: '
                                   'content id %s', self.media_content_id)
                     thumb_url = self.session.server.url(
                         self._convert_na_to_none(self.session.art))
+            else:
+                _LOGGER.debug('Using art because thumbnail was not found: '
+                              'content id %s', self.media_content_id)
+                thumb_url = self.session.server.url(
+                    self._convert_na_to_none(self.session.art))
 
             return thumb_url
 
@@ -513,16 +529,17 @@ class PlexClient(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         # find a string we can use as a title
+        title = None
         if self.session:
-            # append year for movies
-            if self.media_content_type is MEDIA_TYPE_VIDEO:
-                if self._convert_na_to_none(self.session.title) is not None \
-                        and self._convert_na_to_none(
-                                self.session.year) is not None:
-                    return '{} ({})'.format(self.session.title,
-                                            self.session.year)
+            if self._convert_na_to_none(self.session.title) is not None:
+                title = self.session.title
 
-            return self._convert_na_to_none(self.session.title)
+                # append year for movies
+                if self.media_content_type is MEDIA_TYPE_VIDEO:
+                    if self._convert_na_to_none(self.session.year) is not None:
+                        title = title + " (" + str(self.session.year) + ")"
+
+        return title
 
     @property
     def media_season(self):
@@ -532,9 +549,9 @@ class PlexClient(MediaPlayerDevice):
                 if callable(self.session):
                     return self._convert_na_to_none(
                         self.session.seasons()[0].index).zfill(2)
-                else:
-                    return self._convert_na_to_none(
-                        self.session.parentIndex).zfill(2)
+                elif self._convert_na_to_none(
+                        self.session.parentIndex) is not None:
+                    return self.session.parentIndex.zfill(2)
 
         return None
 
@@ -573,18 +590,22 @@ class PlexClient(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
 
-        # Disable controls if player is local (127.0.0.1)
-        # Like when running client and server on a single Nvidia shield
-        # or when casting to an Nvidia shield running a plex server
-        if self.local:
-            return None
-        # No mute since Shield only supports volume 2-100
-        elif self.make == "SHIELD Android TV":
-            return SUPPORT_PLEX
-        elif self.device:
+        # force show all controls
+        if self.optional_config[CONF_SHOW_ALL_CONTROLS]:
             return SUPPORT_PLEX | SUPPORT_VOLUME_MUTE
         else:
-            return None
+            # Disable controls if player is local (127.0.0.1)
+            # Like when running client and server on a single Nvidia shield
+            # or when casting to an Nvidia shield running a plex server
+            if self.local:
+                return None
+            # No mute since Shield only supports volume 2-100
+            elif self.make == "SHIELD Android TV":
+                return SUPPORT_PLEX
+            elif self.device:
+                return SUPPORT_PLEX | SUPPORT_VOLUME_MUTE
+            else:
+                return None
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
