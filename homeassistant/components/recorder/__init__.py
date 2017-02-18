@@ -49,7 +49,7 @@ FILTER_SCHEMA = vol.Schema({
         vol.Optional(CONF_DOMAINS, default=[]):
             vol.All(cv.ensure_list, [cv.string])
     }),
-     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+    vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
         vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
             vol.All(cv.ensure_list, [cv.string])
