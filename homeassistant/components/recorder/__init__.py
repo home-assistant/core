@@ -264,13 +264,15 @@ class Recorder(threading.Thread):
                 if self.record_events:
                     dbevent = Events.from_event(event)
                     self._commit(session, dbevent)
+                else:
+                    dbevent = None
 
                 if event.event_type != EVENT_STATE_CHANGED:
                     self.queue.task_done()
                     continue
 
                 dbstate = States.from_event(event)
-                dbstate.event_id = dbevent.event_id
+                dbstate.event_id = dbevent.event_id if dbevent else None
                 self._commit(session, dbstate)
 
             self.queue.task_done()

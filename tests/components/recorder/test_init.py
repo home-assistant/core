@@ -255,6 +255,26 @@ class TestRecorderNoEvent(BaseTestRecorder):
         assert len(events) == 1
         assert len(db_events) == 0
 
+    def test_saving_state(self):
+        """Test saving and restoring a state."""
+        entity_id = 'test.recorder'
+        state = 'restoring_from_db'
+        attributes = {'test_attr': 5, 'test_attr_10': 'nice'}
+
+        self.hass.states.set(entity_id, state, attributes)
+
+        self.hass.block_till_done()
+        recorder._INSTANCE.block_till_done()
+
+        db_states = recorder.query('States')
+        states = recorder.execute(db_states)
+
+        # When events are not stores states have no event_id
+        self.assertIsNone(db_states[0].event_id)
+
+        self.assertEqual(1, len(states))
+        self.assertEqual(self.hass.states.get(entity_id), states[0])
+
 
 def create_engine_test(*args, **kwargs):
     """Test version of create_engine that initializes with old schema.
