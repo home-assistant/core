@@ -30,6 +30,8 @@ if False:
 
 PREPARED = False
 
+DEPENDENCY_BLACKLIST = set(('config',))
+
 # List of available components
 AVAILABLE_COMPONENTS = []  # type: List[str]
 

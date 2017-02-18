@@ -1,15 +1,18 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
+import asyncio
 import os
 from unittest import mock
 import threading
 import logging
 
 import voluptuous as vol
+import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.config as config_util
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant import bootstrap, loader
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -440,3 +443,27 @@ class TestBootstrap:
         self.hass.start()
 
         assert call_order == [1, 1, 2]
+
+
+@asyncio.coroutine
+def test_component_cannot_depend_config(hass):
+    """Test config is not allowed to be a dependency."""
+    loader.set_component(
+        'test_component1',
+        MockModule('test_component1', dependencies=['config']))
+
+    with pytest.raises(HomeAssistantError):
+        yield from bootstrap.async_from_config_dict(
+            {'test_component1': None}, hass)
+
+
+@asyncio.coroutine
+def test_platform_cannot_depend_config():
+    """Test config is not allowed to be a dependency."""
+    loader.set_component(
+        'test_component1.test',
+        MockPlatform('whatever', dependencies=['config']))
+
+    with pytest.raises(HomeAssistantError):
+        yield from bootstrap.async_prepare_setup_platform(
+            mock.MagicMock(), {}, 'test_component1', 'test')
