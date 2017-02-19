@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -63,10 +63,7 @@ class UPCDeviceScanner(DeviceScanner):
                            "Chrome/47.0.2526.106 Safari/537.36")
         }
 
-        self.websession = async_create_clientsession(
-            hass, auto_cleanup=False,
-            cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop)
-        )
+        self.websession = async_get_clientsession(hass)
 
         @asyncio.coroutine
         def async_logout(event):
@@ -92,8 +89,7 @@ class UPCDeviceScanner(DeviceScanner):
         raw = yield from self._async_ws_function(CMD_DEVICES)
 
         try:
-            xml_root = yield from self.hass.loop.run_in_executor(
-                None, ET.fromstring, raw)
+            xml_root = ET.fromstring(raw)
             return [mac.text for mac in xml_root.iter('MACAddr')]
         except (ET.ParseError, TypeError):
             _LOGGER.warning("Can't read device from %s", self.host)
@@ -111,7 +107,6 @@ class UPCDeviceScanner(DeviceScanner):
         response = None
         try:
             # get first token
-            self.websession.cookie_jar.clear()
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from self.websession.get(
                     "http://{}/common_page/login.html".format(self.host)
@@ -156,21 +151,13 @@ class UPCDeviceScanner(DeviceScanner):
                 response = yield from self.websession.post(
                     "http://{}/xml/getter.xml".format(self.host),
                     data=form_data,
-                    headers=self.headers
+                    headers=self.headers,
+                    allow_redirects=False
                 )
 
-                # error on UPC webservice
-                if response.status != 200:
-                    _LOGGER.warning(
-                        "Error %d on %s.", response.status, function)
-                    self.token = None
-                    return
-
                 # load data, store token for next request
-                raw = yield from response.text()
                 self.token = response.cookies['sessionToken'].value
-
-                return raw
+                return (yield from response.text())
 
         except (asyncio.TimeoutError, aiohttp.errors.ClientError):
             _LOGGER.error("Error on %s", function)
