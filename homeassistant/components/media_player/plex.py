@@ -578,16 +578,6 @@ class PlexClient(MediaPlayerDevice):
             return self._convert_na_to_none(self.session.player.device)
 
     @property
-    def local(self):
-        """Returns true if the client is local (127.0.0.1)."""
-        if self.device:
-            if self._convert_na_to_none(self.device.baseurl):
-                if "127.0.0.1" in self.device.baseurl:
-                    return True
-
-        return False
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
 
@@ -595,22 +585,34 @@ class PlexClient(MediaPlayerDevice):
         if self.optional_config[CONF_SHOW_ALL_CONTROLS]:
             return SUPPORT_PLEX | SUPPORT_VOLUME_MUTE
         else:
-            # Disable controls if player is local (127.0.0.1)
-            # Like when running client and server on a single Nvidia shield
-            # or when casting to an Nvidia shield running a plex server
-            if self.local:
-                return None
-            # No mute since Shield only supports volume 2-100
-            elif self.make == "SHIELD Android TV":
+            if self.make == "SHIELD Android TV":
                 return SUPPORT_PLEX
             elif self.device:
                 return SUPPORT_PLEX | SUPPORT_VOLUME_MUTE
             else:
                 return None
 
+    def local_client_control_fix(self):
+        """Detects if local client and adjusts url to allow control"""
+        if self.device:
+            # if this device's machineIdentifier matches an active client
+            # with a loopback address, the device must be local or casting
+            for client in self.device.server.clients():
+                if "127.0.0.1" in client.baseurl:
+                    if client.machineIdentifier == self.device.machineIdentifier:
+                        # point controls to server since that's where the
+                        # playback is occuring
+                        server_url = self.device.server.baseurl
+                        client_url = self.device.baseurl
+                        self.device.baseurl = "{}://{}:{}".format(
+                            urlparse(client_url).scheme,
+                            urlparse(server_url).hostname,
+                            str(urlparse(client_url).port))
+
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         if self.device:
+            self.local_client_control_fix()
             self.device.setVolume(
                 int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
@@ -644,16 +646,19 @@ class PlexClient(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         if self.device:
+            self.local_client_control_fix()
             self.device.play(self._active_media_plexapi_type)
 
     def media_pause(self):
         """Send pause command."""
         if self.device:
+            self.local_client_control_fix()
             self.device.pause(self._active_media_plexapi_type)
 
     def media_stop(self):
         """Send stop command."""
         if self.device:
+            self.local_client_control_fix()
             self.device.stop(self._active_media_plexapi_type)
 
     def turn_off(self):
@@ -664,11 +669,13 @@ class PlexClient(MediaPlayerDevice):
     def media_next_track(self):
         """Send next track command."""
         if self.device:
+            self.local_client_control_fix()
             self.device.skipNext(self._active_media_plexapi_type)
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device:
+            self.local_client_control_fix()
             self.device.skipPrevious(self._active_media_plexapi_type)
 
     @asyncio.coroutine
@@ -705,6 +712,7 @@ class PlexClient(MediaPlayerDevice):
             server_url = media.server.baseurl.split(':')
             playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
                                                            media, **params)
+            self.local_client_control_fix()
             self.device.sendCommand('playback/playMedia', **dict({
                 'machineIdentifier':
                 self.device.server.machineIdentifier,
