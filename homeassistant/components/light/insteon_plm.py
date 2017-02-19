@@ -36,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.async_add_job(async_add_devices([InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)]))
 
     criteria = dict(capability='light')
-    plm.protocol.add_device_callback(async_insteonplm_light_callback, criteria)
+    plm.protocol.devices.add_device_callback(async_insteonplm_light_callback, criteria)
 
 
     new_lights = []
