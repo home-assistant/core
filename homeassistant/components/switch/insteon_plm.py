@@ -61,6 +61,11 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         return False
 
     @property
+    def address(self):
+        """Return the the address of the node."""
+        return self._address
+
+    @property
     def name(self):
         """Return the the name of the node."""
         return self._name
@@ -93,6 +98,10 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from PLM for %s', self._address)
         self._hass.async_add_job(self.async_update_ha_state(True))
+
+    def get_attr(self, key):
+        """Return specified attribute for this device."""
+        return self._plm.get_device_attr(self.address, key)
 
     @property
     def device_state_attributes(self):

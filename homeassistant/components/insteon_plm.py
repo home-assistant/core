@@ -87,7 +87,7 @@ def common_attributes(entity):
 
     for key in attributekeys:
         name = attributekeys[key]
-        val = entity._plm.get_device_attr(entity._address, key)
+        val = entity.get_attr(key)
         if val is not None:
             if key in hexkeys:
                 attributes[name] = hex(int(val))
