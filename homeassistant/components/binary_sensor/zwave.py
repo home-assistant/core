@@ -18,31 +18,30 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Z-Wave platform for binary sensors."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
+def get_device(value, hass, **kwargs):
+    """Create zwave entity device."""
     value.set_change_verified(False)
 
     device_mapping = workaround.get_device_mapping(value)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
         # Default the multiplier to 4
         re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
-        add_devices([
-            ZWaveTriggerSensor(value, "motion",
-                               hass, re_arm_multiplier * 8)
-        ])
-        return
+        return ZWaveTriggerSensor(value, "motion", hass, re_arm_multiplier * 8)
 
     if workaround.get_device_component_mapping(value) == DOMAIN:
-        add_devices([ZWaveBinarySensor(value, None)])
-        return
+        return ZWaveBinarySensor(value, None)
 
     if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
-        add_devices([ZWaveBinarySensor(value, None)])
+        return ZWaveBinarySensor(value, None)
+    return None
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Z-Wave platform for binary sensors."""
+    if discovery_info is None or zwave.NETWORK is None:
+        return
+    add_devices(
+        [zwave.get_device(discovery_info[zwave.const.DISCOVERY_DEVICE])])
 
 
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):

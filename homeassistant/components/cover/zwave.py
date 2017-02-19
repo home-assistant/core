@@ -16,27 +16,29 @@ from homeassistant.components.cover import CoverDevice
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_device(value, **kwargs):
+    """Create zwave entity device."""
+    if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
+            and value.index == 0):
+        value.set_change_verified(False)
+        return ZwaveRollershutter(value)
+    elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
+          value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
+        if (value.type != zwave.const.TYPE_BOOL and
+                value.genre != zwave.const.GENRE_USER):
+            return None
+        value.set_change_verified(False)
+        return ZwaveGarageDoor(value)
+    return None
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Z-Wave covers."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
-    if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
-            and value.index == 0):
-        value.set_change_verified(False)
-        add_devices([ZwaveRollershutter(value)])
-    elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
-          value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
-        if (value.type != zwave.const.TYPE_BOOL and
-                value.genre != zwave.const.GENRE_USER):
-            return
-        value.set_change_verified(False)
-        add_devices([ZwaveGarageDoor(value)])
-    else:
-        return
+    add_devices(
+        [zwave.get_device(discovery_info[zwave.const.DISCOVERY_DEVICE])])
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):

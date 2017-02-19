@@ -14,6 +14,22 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 _LOGGER = logging.getLogger(__name__)
 
 
+def get_device(node, value, **kwargs):
+    """Create zwave entity device."""
+    value.set_change_verified(False)
+
+    # Generic Device mappings
+    if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
+        return ZWaveMultilevelSensor(value)
+    if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
+            value.type == zwave.const.TYPE_DECIMAL:
+        return ZWaveMultilevelSensor(value)
+    if node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
+            node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
+        return ZWaveAlarmSensor(value)
+    return None
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Z-Wave sensors."""
     # Return on empty `discovery_info`. Given you configure HA with:
@@ -25,26 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
-    value.set_change_verified(False)
-
-    # if 1 in groups and (NETWORK.controller.node_id not in
-    #                     groups[1].associations):
-    #     node.groups[1].add_association(NETWORK.controller.node_id)
-
-    # Generic Device mappings
-    if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
-        add_devices([ZWaveMultilevelSensor(value)])
-
-    elif node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
-            value.type == zwave.const.TYPE_DECIMAL:
-        add_devices([ZWaveMultilevelSensor(value)])
-
-    elif node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
-            node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
-        add_devices([ZWaveAlarmSensor(value)])
+    add_devices(
+        [zwave.get_device(discovery_info[zwave.const.DISCOVERY_DEVICE])])
 
 
 class ZWaveSensor(zwave.ZWaveDeviceEntity):

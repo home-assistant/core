@@ -14,22 +14,25 @@ _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
+def get_device(node, value, **kwargs):
+    """Create zwave entity device."""
+    if not node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_BINARY):
+        return None
+    if value.type != zwave.const.TYPE_BOOL or value.genre != \
+            zwave.const.GENRE_USER:
+        return None
+    value.set_change_verified(False)
+    return ZwaveSwitch(value)
+
+
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Z-Wave platform."""
     if discovery_info is None or zwave.NETWORK is None:
         return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
-    if not node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_BINARY):
-        return
-    if value.type != zwave.const.TYPE_BOOL or value.genre != \
-       zwave.const.GENRE_USER:
-        return
-
-    value.set_change_verified(False)
-    add_devices([ZwaveSwitch(value)])
+    add_devices(
+        [zwave.get_device(discovery_info[zwave.const.DISCOVERY_DEVICE])])
 
 
 class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):

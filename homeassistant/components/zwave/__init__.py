@@ -11,6 +11,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
@@ -53,6 +54,11 @@ DEFAULT_CONF_REFRESH_DELAY = 2
 DOMAIN = 'zwave'
 
 NETWORK = None
+
+# Dictionary from (node_id, value_id) to zwave device.
+# Should be acessed in OZW thread only.
+_DEVICES = {}
+
 DATA_DEVICE_CONFIG = 'zwave_device_config'
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
@@ -262,6 +268,11 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
+def get_device(entity_id):
+    """Return Zwave Entity device."""
+    return _DEVICES[entity_id]
+
+
 # pylint: disable=R0914
 def setup(hass, config):
     """Setup Z-Wave.
@@ -397,11 +408,14 @@ def setup(hass, config):
                 value.enable_poll(polling_intensity)
             else:
                 value.disable_poll()
-
-            discovery.load_platform(hass, component, DOMAIN, {
-                const.ATTR_NODE_ID: node.node_id,
-                const.ATTR_VALUE_ID: value.value_id,
-            }, config)
+            platform = get_platform(component, DOMAIN)
+            device = platform.get_device(
+                node=node, value=value, node_config=node_config, hass=hass)
+            if device:
+                _DEVICES[device.entity_id] = device
+                discovery.load_platform(hass, component, DOMAIN, {
+                    const.DISCOVERY_DEVICE: device.entity_id,
+                }, config)
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""

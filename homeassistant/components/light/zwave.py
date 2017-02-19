@@ -52,28 +52,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and add Z-Wave lights."""
     if discovery_info is None or zwave.NETWORK is None:
         return
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
+    add_devices(
+        [zwave.get_device(discovery_info[zwave.const.DISCOVERY_DEVICE])])
+
+
+def get_device(node, value, node_config, **kwargs):
+    """Create zwave entity device."""
     name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
-    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name)
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
     _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
                   ' CONF_REFRESH_DELAY=%s', name, node_config,
                   refresh, delay)
     if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
-        return
+        return None
     if value.type != zwave.const.TYPE_BYTE:
-        return
+        return None
     if value.genre != zwave.const.GENRE_USER:
-        return
+        return None
 
     value.set_change_verified(False)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
-        add_devices([ZwaveColorLight(value, refresh, delay)])
+        return ZwaveColorLight(value, refresh, delay)
     else:
-        add_devices([ZwaveDimmer(value, refresh, delay)])
+        return ZwaveDimmer(value, refresh, delay)
 
 
 def brightness_state(value):
