@@ -7,7 +7,6 @@ https://home-assistant.io/components/insteon_plm/
 import logging
 import asyncio
 
-import requests
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -57,7 +56,8 @@ def async_setup(hass, config):
         #
         # Override the device default capabilities for a specific address
         #
-        plm.protocol.devices.add_override(device['address'], 'capabilities', [device['platform']])
+        plm.protocol.devices.add_override(
+            device['address'], 'capabilities', [device['platform']])
 
     hass.data['insteon_plm'] = plm
 
@@ -65,9 +65,11 @@ def async_setup(hass, config):
 
     for platform in PLM_PLATFORMS:
         _LOGGER.info('Trying to load platform %s', platform)
-        hass.async_add_job(discovery.async_load_platform(hass, platform, DOMAIN, config))
+        hass.async_add_job(
+            discovery.async_load_platform(hass, platform, DOMAIN, config))
 
     return True
+
 
 def common_attributes(entity):
     """Return the device state attributes."""
