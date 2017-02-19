@@ -576,6 +576,9 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.notify.pushsafer
+python-pushsafer==0.2
+
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
