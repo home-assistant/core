@@ -92,13 +92,13 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
         super().__init__(wink, hass)
-        try:
+        if hasattr(self.wink, 'unit'):
             self._unit_of_measurement = self.wink.unit()
-        except AttributeError:
+        else:
             self._unit_of_measurement = None
-        try:
+        if hasattr(self.wink, 'capability'):
             self.capability = self.wink.capability()
-        except AttributeError:
+        else:
             self.capability = None
 
     @property

@@ -88,6 +88,9 @@ omit =
     homeassistant/components/verisure.py
     homeassistant/components/*/verisure.py
 
+    homeassistant/components/volvooncall.py
+    homeassistant/components/*/volvooncall.py
+
     homeassistant/components/*/webostv.py
 
     homeassistant/components/wemo.py
@@ -183,7 +186,6 @@ omit =
     homeassistant/components/device_tracker/tplink.py
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
-    homeassistant/components/device_tracker/volvooncall.py
     homeassistant/components/device_tracker/xiaomi.py
     homeassistant/components/discovery.py
     homeassistant/components/downloader.py
@@ -209,6 +211,7 @@ omit =
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
+    homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
@@ -271,6 +274,7 @@ omit =
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
     homeassistant/components/notify/pushover.py
+    homeassistant/components/notify/pushsafer.py
     homeassistant/components/notify/rest.py
     homeassistant/components/notify/sendgrid.py
     homeassistant/components/notify/simplepush.py
@@ -343,6 +347,7 @@ omit =
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/pi_hole.py
     homeassistant/components/sensor/plex.py
+    homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/sabnzbd.py

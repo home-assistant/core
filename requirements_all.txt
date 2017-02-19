@@ -247,6 +247,9 @@ https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.7.zip#russound==0.1.7
 
+# homeassistant.components.sensor.pocketcasts
+https://github.com/molobrakos/python-pocketcasts/archive/9f61ff00c77c7c98ffa0af9dd3540df3dce4a836.zip#python-pocketcasts==0.0.1
+
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
@@ -280,9 +283,6 @@ https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
-
-# homeassistant.components.alarm_control_panel.simplisafe
-https://github.com/w1ll1am23/simplisafe-python/archive/586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#simplisafe-python==0.0.1
 
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
@@ -573,6 +573,9 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.notify.pushsafer
+python-pushsafer==0.2
+
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
@@ -643,6 +646,9 @@ sense-hat==2.2.0
 # homeassistant.components.media_player.aquostv
 sharp_aquos_rc==0.3.2
 
+# homeassistant.components.alarm_control_panel.simplisafe
+simplisafe-python==1.0.2
+
 # homeassistant.components.notify.slack
 slacker==0.9.40
 
@@ -707,8 +713,8 @@ urllib3
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
 
-# homeassistant.components.device_tracker.volvooncall
-volvooncall==0.1.1
+# homeassistant.components.volvooncall
+volvooncall==0.3.0
 
 # homeassistant.components.verisure
 vsure==0.11.1
@@ -746,6 +752,9 @@ yahooweather==0.8
 
 # homeassistant.components.light.yeelight
 yeelight==0.2.2
+
+# homeassistant.components.light.yeelightsunflower
+yeelightsunflower==0.0.5
 
 # homeassistant.components.light.zengge
 zengge==0.2

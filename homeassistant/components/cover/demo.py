@@ -4,7 +4,8 @@ Demo platform for the cover component.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import (
+    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.helpers.event import track_utc_time_change
 
 
@@ -14,7 +15,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoCover(hass, 'Kitchen Window'),
         DemoCover(hass, 'Hall Window', 10),
         DemoCover(hass, 'Living Room Window', 70, 50),
-        DemoCover(hass, 'Garage Door', device_class='garage'),
+        DemoCover(hass, 'Garage Door', device_class='garage',
+                  supported_features=(SUPPORT_OPEN | SUPPORT_CLOSE)),
     ])
 
 
@@ -23,12 +25,13 @@ class DemoCover(CoverDevice):
 
     # pylint: disable=no-self-use
     def __init__(self, hass, name, position=None, tilt_position=None,
-                 device_class=None):
+                 device_class=None, supported_features=None):
         """Initialize the cover."""
         self.hass = hass
         self._name = name
         self._position = position
         self._device_class = device_class
+        self._supported_features = supported_features
         self._set_position = None
         self._set_tilt_position = None
         self._tilt_position = tilt_position
@@ -70,6 +73,14 @@ class DemoCover(CoverDevice):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return self._device_class
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        if self._supported_features is not None:
+            return self._supported_features
+        else:
+            return super().supported_features
 
     def close_cover(self, **kwargs):
         """Close the cover."""
