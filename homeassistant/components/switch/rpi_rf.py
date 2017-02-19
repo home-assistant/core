@@ -27,10 +27,10 @@ DEFAULT_PROTOCOL = 1
 DEFAULT_SIGNAL_REPETITIONS = 10
 
 SWITCH_SCHEMA = vol.Schema({
-    vol.Required(CONF_CODE_OFF): vol.All(cv.string,
-                                vol.Match(r"^[\d]+(,*[\d]*)*$")),
-    vol.Required(CONF_CODE_ON): vol.All(cv.string,
-                                vol.Match(r"^[\d]+(,*[\d]*)*$")),
+    vol.Required(CONF_CODE_OFF):
+        vol.All(cv.string, vol.Match(r"^[\d]+(,*[\d]*)*$")),
+    vol.Required(CONF_CODE_ON):
+        vol.All(cv.string, vol.Match(r"^[\d]+(,*[\d]*)*$")),
     vol.Optional(CONF_PULSELENGTH): cv.positive_int,
     vol.Optional(CONF_SIGNAL_REPETITIONS,
                  default=DEFAULT_SIGNAL_REPETITIONS): cv.positive_int,
