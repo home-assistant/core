@@ -38,6 +38,15 @@ DEVICE_CLASSES = [
     'garage',        # Garage door control
 ]
 
+SUPPORT_OPEN = 1
+SUPPORT_CLOSE = 2
+SUPPORT_SET_POSITION = 4
+SUPPORT_STOP = 8
+SUPPORT_OPEN_TILT = 16
+SUPPORT_CLOSE_TILT = 32
+SUPPORT_STOP_TILT = 64
+SUPPORT_SET_TILT_POSITION = 128
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
@@ -225,6 +234,21 @@ class CoverDevice(Entity):
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
 
         return data
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+
+        if self.current_cover_position is not None:
+            supported_features |= SUPPORT_SET_POSITION
+
+        if self.current_cover_tilt_position is not None:
+            supported_features |= (
+                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
+                SUPPORT_SET_TILT_POSITION)
+
+        return supported_features
 
     @property
     def is_closed(self):
