@@ -84,6 +84,7 @@ ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
 ATTR_MEDIA_SONG_NAME = 'song_name'
+ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -138,6 +139,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 
 MEDIA_PLAYER_PLAY_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SONG_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 
 SERVICE_TO_METHOD = {
@@ -371,6 +373,7 @@ def async_setup(hass, config):
                 service.data.get(ATTR_MEDIA_ENQUEUE)
         elif service.service == SERVICE_PLAY_SONG:
             params['song_name'] = service.data.get(ATTR_MEDIA_SONG_NAME)
+            params['artist_name'] = service.data.get(ATTR_MEDIA_ARTIST_NAME)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []

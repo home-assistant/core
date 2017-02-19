@@ -394,8 +394,8 @@ class KodiDevice(MediaPlayerDevice):
         return self._server.Playlist.Clear({"playlistid": 0})
     
     @asyncio.coroutine
-    def async_play_song(self, song_name):
-        song_id = yield from self.async_find_song(song_name)
+    def async_play_song(self, song_name, artist_name=None):
+        song_id = yield from self.async_find_song(song_name, artist_name)
         
         yield from self.async_media_stop()
         yield from self.async_clear_playlist()
