@@ -119,9 +119,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.ssh_args = {}
 
         if self.protocol == 'ssh':
-
-            if self.port != DEFAULT_SSH_PORT:
-                self.ssh_args['port'] = self.port
+            
+            self.ssh_args['port'] = self.port
             if self.ssh_key:
                 self.ssh_args['ssh_key'] = self.ssh_key
             elif self.password:
