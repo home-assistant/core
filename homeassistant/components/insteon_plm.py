@@ -29,7 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
-        vol.Optional(CONF_OVERRIDE, default=None): vol.All(
+        vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
             cv.ensure_list_csv, vol.Length(min=1))
     })
 }, extra=vol.ALLOW_EXTRA)
@@ -52,6 +52,8 @@ def async_setup(hass, config):
 
     plm = yield from insteonplm.Connection.create(
         device=port, loop=hass.loop)
+
+    print(overrides)
 
     for device in overrides:
         #
