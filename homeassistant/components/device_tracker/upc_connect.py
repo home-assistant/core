@@ -68,11 +68,8 @@ class UPCDeviceScanner(DeviceScanner):
         @asyncio.coroutine
         def async_logout(event):
             """Logout from upc connect box."""
-            try:
-                yield from self._async_ws_function(CMD_LOGOUT)
-                self.token = None
-            finally:
-                self.websession.detach()
+            yield from self._async_ws_function(CMD_LOGOUT)
+            self.token = None
 
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, async_logout)
