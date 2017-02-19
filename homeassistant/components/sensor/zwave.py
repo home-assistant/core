@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     add_devices(
-        [zwave.get_device(discovery_info[zwave.const.DISCOVERY_DEVICE])])
+        [zwave.get_device(hass, discovery_info[zwave.const.DISCOVERY_DEVICE])])
 
 
 class ZWaveSensor(zwave.ZWaveDeviceEntity):

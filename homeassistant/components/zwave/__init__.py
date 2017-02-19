@@ -11,6 +11,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.const import (
@@ -55,11 +56,10 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 2
 DOMAIN = 'zwave'
 
+DATA_ZWAVE_DICT = 'zwave_devices'
+
 NETWORK = None
 
-# Dictionary from (node_id, value_id) to zwave device.
-# Should be acessed in OZW thread only.
-_DEVICES = {}
 
 DATA_DEVICE_CONFIG = 'zwave_device_config'
 
@@ -270,9 +270,9 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
-def get_device(entity_id):
+def get_device(hass, dict_id):
     """Return Zwave Entity device."""
-    return _DEVICES[entity_id]
+    return hass.data[DATA_ZWAVE_DICT].pop(dict_id)
 
 
 # pylint: disable=R0914
@@ -321,6 +321,7 @@ def setup(hass, config):
     options.lock()
 
     NETWORK = ZWaveNetwork(options, autostart=False)
+    hass.data[DATA_ZWAVE_DICT] = {}
 
     if use_debug:
         def log_all(signal, value=None):
@@ -414,10 +415,16 @@ def setup(hass, config):
             device = platform.get_device(
                 node=node, value=value, node_config=node_config, hass=hass)
             if device:
-                _DEVICES[device.entity_id] = device
-                discovery.load_platform(hass, component, DOMAIN, {
-                    const.DISCOVERY_DEVICE: device.entity_id,
-                }, config)
+                dict_id = value.value_id
+
+                @callback
+                def discover_device(component, device, dict_id):
+                    """Put device in a dictionary and call discovery on it."""
+                    hass.data[DATA_ZWAVE_DICT][dict_id] = device
+                    discovery.load_platform(hass, component, DOMAIN, {
+                        const.DISCOVERY_DEVICE: dict_id}, config)
+
+                hass.add_job(discover_device, component, device, dict_id)
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
@@ -708,7 +715,10 @@ class ZWaveDeviceEntity(Entity):
         """Called when a value for this entity's node has changed."""
         self._update_attributes()
         self.update_properties()
-        self.schedule_update_ha_state()
+        # If value changed after device was createed but before setup_platform
+        # was called - skip updating state.
+        if self.hass:
+            self.schedule_update_ha_state()
 
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
