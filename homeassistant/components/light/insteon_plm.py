@@ -11,8 +11,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.loader import get_component
 
-insteon_plm = get_component('insteon_plm')
-
 DEPENDENCIES = ['insteon_plm']
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,7 +54,7 @@ class InsteonPLMDimmerDevice(Light):
         self._dimmable = dimmable
 
         self._plm.add_update_callback(
-           self.async_light_update, dict(address=self._address))
+            self.async_light_update, dict(address=self._address))
 
     @property
     def should_poll(self):
@@ -96,6 +94,7 @@ class InsteonPLMDimmerDevice(Light):
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
+        insteon_plm = get_component('insteon_plm')
         return insteon_plm.common_attributes(self)
 
     def get_attr(self, key):

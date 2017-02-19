@@ -10,8 +10,6 @@ import asyncio
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.loader import get_component
 
-insteon_plm = get_component('insteon_plm')
-
 DEPENDENCIES = ['insteon_plm']
 
 _LOGGER = logging.getLogger(__name__)
@@ -85,6 +83,7 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Provide attributes for display on device card."""
+        insteon_plm = get_component('insteon_plm')
         return insteon_plm.common_attributes(self)
 
     def get_attr(self, key):
