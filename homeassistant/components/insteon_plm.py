@@ -23,11 +23,14 @@ DEFAULT_PORT = '/dev/ttyUSB0'
 DOMAIN = 'insteon_plm'
 
 CONF_DEBUG = 'debug'
+CONF_OVERRIDE = 'device_override'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean
+        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
+        vol.Optional(CONF_OVERRIDE, default=None): vol.All(
+            cv.ensure_list_csv, vol.Length(min=1))
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -43,11 +46,18 @@ def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
+    overrides = conf.get(CONF_OVERRIDE)
 
     _LOGGER.info('Looking for PLM on %s', port)
 
     plm = yield from insteonplm.Connection.create(
         device=port, loop=hass.loop)
+
+    for device in overrides:
+        #
+        # Override the device default capabilities for a specific address
+        #
+        plm.protocol.devices.add_override(device['address'], 'capabilities', [device['platform']])
 
     hass.data['insteon_plm'] = plm
 
