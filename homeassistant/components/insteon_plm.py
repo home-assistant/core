@@ -50,8 +50,6 @@ def async_setup(hass, config):
     plm = yield from insteonplm.Connection.create(
         device=port, loop=hass.loop)
 
-    print(overrides)
-
     for device in overrides:
         #
         # Override the device default capabilities for a specific address
@@ -74,14 +72,15 @@ def async_setup(hass, config):
 def common_attributes(entity):
     """Return the device state attributes."""
     attributes = {}
-    attributekeys = {}
-    attributekeys['address'] = 'INSTEON Address'
-    attributekeys['description'] = 'Description'
-    attributekeys['model'] = 'Model'
-    attributekeys['cat'] = 'Category'
-    attributekeys['subcat'] = 'Subcategory'
-    attributekeys['firmware'] = 'Firmware'
-    attributekeys['product_key'] = 'Product Key'
+    attributekeys = {
+        'address': 'INSTEON Address',
+        'description': 'Description',
+        'model': 'Model',
+        'cat': 'Cagegory',
+        'subcat': 'Subcategory',
+        'firmware': 'Firmware',
+        'product_key': 'Product Key'
+    }
 
     hexkeys = ['cat', 'subcat', 'firmware']
 

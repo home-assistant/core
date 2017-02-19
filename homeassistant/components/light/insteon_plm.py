@@ -13,6 +13,8 @@ from homeassistant.loader import get_component
 
 DEPENDENCIES = ['insteon_plm']
 
+MAX_BRIGHTNESS = 255
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -34,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.async_add_job(async_add_devices(
             [InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)]))
 
-    criteria = dict(capability='light')
+    criteria = {'capability': 'light'}
     plm.protocol.devices.add_device_callback(
         async_plm_light_callback, criteria)
 
@@ -54,7 +56,7 @@ class InsteonPLMDimmerDevice(Light):
         self._dimmable = dimmable
 
         self._plm.add_update_callback(
-            self.async_light_update, dict(address=self._address))
+            self.async_light_update, {'address': self._address})
 
     @property
     def should_poll(self):
@@ -112,7 +114,7 @@ class InsteonPLMDimmerDevice(Light):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
         else:
-            brightness = 255
+            brightness = MAX_BRIGHTNESS
         self._plm.turn_on(self._address, brightness=brightness)
 
     @asyncio.coroutine

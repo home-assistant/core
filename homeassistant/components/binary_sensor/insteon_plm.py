@@ -7,7 +7,7 @@ https://home-assistant.io/components/insteon_plm/
 import logging
 import asyncio
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.loader import get_component
 
 DEPENDENCIES = ['insteon_plm']
@@ -32,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.async_add_job(async_add_devices(
             [InsteonPLMBinarySensorDevice(hass, plm, address, name)]))
 
-    criteria = dict(capability='binary_sensor')
+    criteria = {'capability': 'binary_sensor'}
     plm.protocol.devices.add_device_callback(
         async_plm_binarysensor_callback, criteria)
 
@@ -51,7 +51,7 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
         self._name = name
 
         self._plm.add_update_callback(
-            self.async_binarysensor_update, dict(address=self._address))
+            self.async_binarysensor_update, {'address': self._address})
 
     @property
     def should_poll(self):

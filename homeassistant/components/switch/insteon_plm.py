@@ -32,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             async_add_devices(
                 [InsteonPLMSwitchDevice(hass, plm, address, name)]))
 
-    criteria = dict(capability='switch')
+    criteria = {'capability': 'switch'}
     plm.protocol.devices.add_device_callback(
         async_plm_switch_callback, criteria)
 
@@ -51,7 +51,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
         self._name = name
 
         self._plm.add_update_callback(
-            self.async_switch_update, dict(address=self._address))
+            self.async_switch_update, {'address': self._address})
 
     @property
     def should_poll(self):
