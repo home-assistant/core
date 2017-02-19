@@ -75,7 +75,8 @@ Build home automation on top of your devices:
    `Instapush <https://instapush.im>`__, `Notify My Android
    (NMA) <http://www.notifymyandroid.com/>`__,
    `PushBullet <https://www.pushbullet.com/>`__,
-   `PushOver <https://pushover.net/>`__, `Slack <https://slack.com/>`__,
+   `PushOver <https://pushover.net/>`__,
+   `Slack <https://slack.com/>`__,
    `Telegram <https://telegram.org/>`__, `Join <http://joaoapps.com/join/>`__, and `Jabber
    (XMPP) <http://xmpp.org>`__
 
