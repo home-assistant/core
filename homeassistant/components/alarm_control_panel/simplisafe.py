@@ -12,16 +12,19 @@ import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_UNKNOWN, CONF_CODE, CONF_NAME,
-    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY)
+    STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
+    EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.loader as loader
 
-REQUIREMENTS = ['https://github.com/w1ll1am23/simplisafe-python/archive/'
-                '586fede0e85fd69e56e516aaa8e97eb644ca8866.zip#'
-                'simplisafe-python==0.0.1']
+REQUIREMENTS = ['simplisafe-python==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'SimpliSafe'
+DOMAIN = 'simplisafe'
+NOTIFICATION_ID = 'simplisafe_notification'
+NOTIFICATION_TITLE = 'SimpliSafe Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
@@ -33,33 +36,44 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the SimpliSafe platform."""
+    from simplipy.api import SimpliSafeApiInterface, get_systems
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    add_devices([SimpliSafeAlarm(name, username, password, code)])
+    persistent_notification = loader.get_component('persistent_notification')
+    simplisafe = SimpliSafeApiInterface()
+    status = simplisafe.set_credentials(username, password)
+    if status:
+        hass.data[DOMAIN] = simplisafe
+        locations = get_systems(simplisafe)
+        for location in locations:
+            add_devices([SimpliSafeAlarm(location, name, code)])
+    else:
+        message = 'Failed to log into SimpliSafe. Check credentials.'
+        _LOGGER.error(message)
+        persistent_notification.create(
+            hass, message,
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
+
+    def logout(event):
+        """Logout of the SimpliSafe API."""
+        hass.data[DOMAIN].logout()
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, logout)
 
 
 class SimpliSafeAlarm(alarm.AlarmControlPanel):
     """Representation a SimpliSafe alarm."""
 
-    def __init__(self, name, username, password, code):
+    def __init__(self, simplisafe, name, code):
         """Initialize the SimpliSafe alarm."""
-        from simplisafe import SimpliSafe
-        self.simplisafe = SimpliSafe(username, password)
+        self.simplisafe = simplisafe
         self._name = name
         self._code = str(code) if code else None
-        self._id = self.simplisafe.get_id()
-        status = self.simplisafe.get_state()
-        if status == 'Off':
-            self._state = STATE_ALARM_DISARMED
-        elif status == 'Home':
-            self._state = STATE_ALARM_ARMED_HOME
-        elif status == 'Away':
-            self._state = STATE_ALARM_ARMED_AWAY
-        else:
-            self._state = STATE_UNKNOWN
 
     @property
     def name(self):
@@ -67,7 +81,7 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
         if self._name is not None:
             return self._name
         else:
-            return 'Alarm {}'.format(self._id)
+            return 'Alarm {}'.format(self.simplisafe.location_id())
 
     @property
     def code_format(self):
@@ -77,21 +91,32 @@ class SimpliSafeAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        status = self.simplisafe.state()
+        if status == 'Off':
+            state = STATE_ALARM_DISARMED
+        elif status == 'Home':
+            state = STATE_ALARM_ARMED_HOME
+        elif status == 'Away':
+            state = STATE_ALARM_ARMED_AWAY
+        else:
+            state = STATE_UNKNOWN
+        return state
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'temperature': self.simplisafe.temperature(),
+            'co': self.simplisafe.carbon_monoxide(),
+            'fire': self.simplisafe.fire(),
+            'alarm': self.simplisafe.alarm(),
+            'last_event': self.simplisafe.last_event(),
+            'flood': self.simplisafe.flood()
+        }
 
     def update(self):
         """Update alarm status."""
-        self.simplisafe.get_location()
-        status = self.simplisafe.get_state()
-
-        if status == 'Off':
-            self._state = STATE_ALARM_DISARMED
-        elif status == 'Home':
-            self._state = STATE_ALARM_ARMED_HOME
-        elif status == 'Away':
-            self._state = STATE_ALARM_ARMED_AWAY
-        else:
-            self._state = STATE_UNKNOWN
+        self.simplisafe.update()
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
