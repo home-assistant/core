@@ -64,6 +64,7 @@ def async_get_image(hass, entity_id, timeout=10):
             response = yield from websession.get(url)
 
             if response.status != 200:
+                yield from response.release()
                 raise HomeAssistantError("Error {0} on {1}".format(
                     response.status, url))
 
@@ -75,7 +76,7 @@ def async_get_image(hass, entity_id, timeout=10):
 
     finally:
         if response is not None:
-            yield from response.release()
+            response.close()
 
 
 @asyncio.coroutine

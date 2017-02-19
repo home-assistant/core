@@ -92,8 +92,7 @@ class UPCDeviceScanner(DeviceScanner):
         raw = yield from self._async_ws_function(CMD_DEVICES)
 
         try:
-            xml_root = yield from self.hass.loop.run_in_executor(
-                None, ET.fromstring, raw)
+            xml_root = ET.fromstring(raw)
             return [mac.text for mac in xml_root.iter('MACAddr')]
         except (ET.ParseError, TypeError):
             _LOGGER.warning("Can't read device from %s", self.host)
@@ -137,7 +136,7 @@ class UPCDeviceScanner(DeviceScanner):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
     @asyncio.coroutine
     def _async_ws_function(self, function, additional_form=None):
@@ -156,7 +155,8 @@ class UPCDeviceScanner(DeviceScanner):
                 response = yield from self.websession.post(
                     "http://{}/xml/getter.xml".format(self.host),
                     data=form_data,
-                    headers=self.headers
+                    headers=self.headers,
+                    allow_redirects=False
                 )
 
                 # error on UPC webservice
@@ -164,6 +164,7 @@ class UPCDeviceScanner(DeviceScanner):
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, function)
                     self.token = None
+                    yield from response.releae()
                     return
 
                 # load data, store token for next request
@@ -178,4 +179,4 @@ class UPCDeviceScanner(DeviceScanner):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()

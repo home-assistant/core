@@ -559,7 +559,7 @@ class Device(Entity):
             return 'unknown'
         finally:
             if resp is not None:
-                yield from resp.release()
+                resp.close()
 
 
 class DeviceScanner(object):

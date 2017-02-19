@@ -169,6 +169,7 @@ class YrData(object):
                                                      params=self._urlparams)
                 if resp.status != 200:
                     try_again('{} returned {}'.format(resp.url, resp.status))
+                    yield from resp.release()
                     return
                 text = yield from resp.text()
 
@@ -179,7 +180,7 @@ class YrData(object):
 
             finally:
                 if resp is not None:
-                    self.hass.async_add_job(resp.release())
+                    resp.close()
 
             try:
                 import xmltodict

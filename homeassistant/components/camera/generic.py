@@ -116,14 +116,12 @@ class GenericCamera(Camera):
                 self._last_image = yield from response.read()
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
-                return self._last_image
             except (aiohttp.errors.ClientError,
                     aiohttp.errors.ClientDisconnectedError) as err:
                 _LOGGER.error('Error getting new camera image: %s', err)
-                return self._last_image
             finally:
                 if response is not None:
-                    self.hass.async_add_job(response.release())
+                    response.close()
 
         self._last_url = url
         return self._last_image

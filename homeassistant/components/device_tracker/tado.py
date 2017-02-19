@@ -121,6 +121,7 @@ class TadoDeviceScanner(DeviceScanner):
 
                 # error on Tado webservice
                 if response.status != 200:
+                    yield from response.release()
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, self.tadoapiurl)
                     return
@@ -133,7 +134,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
         # Without a home_id, we fetched an URL where the mobile devices can be
         # found under the mobileDevices key.

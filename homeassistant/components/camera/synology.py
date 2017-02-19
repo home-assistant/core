@@ -92,7 +92,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     finally:
         if query_req is not None:
-            yield from query_req.release()
+            query_req.close()
 
     # Authticate to NAS to get a session id
     syno_auth_url = SYNO_API_URL.format(
@@ -119,19 +119,24 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         'method': 'List',
         'version': '1'
     }
+
+    camera_req = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             camera_req = yield from websession.get(
                 syno_camera_url,
                 params=camera_payload
             )
+
+            camera_resp = yield from camera_req.json()
     except (asyncio.TimeoutError, aiohttp.errors.ClientError):
         _LOGGER.exception("Error on %s", syno_camera_url)
         return False
+    finally:
+        if camera_req is not None:
+            camera_req.close()
 
-    camera_resp = yield from camera_req.json()
     cameras = camera_resp['data']['cameras']
-    yield from camera_req.release()
 
     # add cameras
     devices = []
@@ -184,7 +189,7 @@ def get_session_id(hass, websession, username, password, login_url):
 
     finally:
         if auth_req is not None:
-            yield from auth_req.release()
+            auth_req.close()
 
 
 class SynologyCamera(Camera):
@@ -235,7 +240,7 @@ class SynologyCamera(Camera):
             return None
 
         image = yield from response.read()
-        yield from response.release()
+        response.close()
 
         return image
 

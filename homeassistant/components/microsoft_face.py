@@ -383,6 +383,6 @@ class MicrosoftFace(object):
 
         finally:
             if response is not None:
-                yield from response.release()
+                response.close()
 
         raise HomeAssistantError("Network error on microsoft face api.")

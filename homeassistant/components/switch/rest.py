@@ -70,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
     finally:
         if req is not None:
-            yield from req.release()
+            req.close()
 
     yield from async_add_devices(
         [RestSwitch(hass, name, resource, body_on, body_off,
@@ -118,7 +118,7 @@ class RestSwitch(SwitchDevice):
             return
         finally:
             if request is not None:
-                yield from request.release()
+                request.close()
 
         if request.status == 200:
             self._state = True
@@ -142,7 +142,7 @@ class RestSwitch(SwitchDevice):
             return
         finally:
             if request is not None:
-                yield from request.release()
+                request.close()
 
         if request.status == 200:
             self._state = False
@@ -165,7 +165,7 @@ class RestSwitch(SwitchDevice):
             return
         finally:
             if request is not None:
-                yield from request.release()
+                request.close()
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(

@@ -115,7 +115,7 @@ class GoogleProvider(Provider):
 
             finally:
                 if request is not None:
-                    yield from request.release()
+                    request.close()
 
         return ("mp3", data)
 
