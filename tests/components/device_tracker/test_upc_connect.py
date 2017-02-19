@@ -278,7 +278,7 @@ class TestUPCConnect(object):
         mac_list = run_coroutine_threadsafe(
             scanner.async_scan_devices(), self.hass.loop).result()
 
-        assert len(aioclient_mock.mock_calls) == 2
+        assert len(aioclient_mock.mock_calls) == 3
         assert aioclient_mock.mock_calls[1][2]['fun'] == 15
         assert mac_list == []
 
