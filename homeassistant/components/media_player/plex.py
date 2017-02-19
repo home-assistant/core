@@ -599,7 +599,8 @@ class PlexClient(MediaPlayerDevice):
             # with a loopback address, the device must be local or casting
             for client in self.device.server.clients():
                 if "127.0.0.1" in client.baseurl:
-                    if client.machineIdentifier == self.device.machineIdentifier:
+                    if client.machineIdentifier == \
+                        self.device.machineIdentifier:
                         # point controls to server since that's where the
                         # playback is occuring
                         server_url = self.device.server.baseurl
