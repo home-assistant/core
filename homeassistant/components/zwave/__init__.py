@@ -43,6 +43,8 @@ CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 
+ATTR_POWER = 'power_consumption'
+
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
@@ -704,6 +706,12 @@ class ZWaveDeviceEntity(Entity):
             self.wakeup_interval = self.get_value(
                 class_id=const.COMMAND_CLASS_WAKE_UP,
                 member='data')
+        power_value = self.get_value(
+            class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+                      const.COMMAND_CLASS_METER],
+            label=['Power'])
+        self.power_consumption = round(
+            power_value.data, power_value.precision) if power_value else None
 
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
@@ -712,16 +720,20 @@ class ZWaveDeviceEntity(Entity):
         May only be used inside callback.
 
         """
-        if class_id is not None:
-            kwargs[CLASS_ID] = class_id
+        values = []
+        if class_id is None:
+            values.extend(self._value.node.get_values(**kwargs).values())
+        else:
+            if not isinstance(class_id, list):
+                class_id = [class_id]
+            for cid in class_id:
+                values.extend(self._value.node.get_values(
+                    class_id=cid, **kwargs).values())
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
                       ' member=%s, kwargs=%s',
                       method, class_id, index, label, data, member, kwargs)
-        values = self._value.node.get_values(**kwargs).values()
         _LOGGER.debug('values=%s', values)
         results = None
-        if not values:
-            return None
         for value in values:
             if index is not None and value.index != index:
                 continue
@@ -797,5 +809,8 @@ class ZWaveDeviceEntity(Entity):
 
         if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
+
+        if self.power_consumption is not None:
+            attrs[ATTR_POWER] = self.power_consumption
 
         return attrs
