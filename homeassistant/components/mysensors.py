@@ -186,12 +186,12 @@ def setup(hass, config):
 
         def gw_start(event):
             """Callback to trigger start of gateway and any persistence."""
-            gateway.start()
-            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                                 lambda event: gateway.stop())
             if persistence:
                 for node_id in gateway.sensors:
                     gateway.event_callback('persistence', node_id)
+            gateway.start()
+            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                                 lambda event: gateway.stop())
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, gw_start)
 
