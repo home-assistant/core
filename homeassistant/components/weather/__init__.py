@@ -118,11 +118,13 @@ class WeatherEntity(Entity):
         if attribution is not None:
             data[ATTR_WEATHER_ATTRIBUTION] = attribution
 
-        forecast = self.forecast
-        if forecast is not None:
-            for forecast_entry in forecast:
+        if self.forecast is not None:
+            forecast = []
+            for forecast_entry in self.forecast:
+                forecast_entry = dict(forecast_entry)
                 forecast_entry[ATTR_FORECAST_TEMP] = self._temp_for_display(
                     forecast_entry[ATTR_FORECAST_TEMP])
+                forecast.append(forecast_entry)
 
             data[ATTR_FORECAST] = forecast
 
