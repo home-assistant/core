@@ -18,14 +18,13 @@ REQUIREMENTS = ['insteonplm==0.7.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_PORT = '/dev/ttyUSB0'
 DOMAIN = 'insteon_plm'
 
 CONF_OVERRIDE = 'device_override'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
+        vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE, default=[]): vol.All(
             cv.ensure_list_csv, vol.Length(min=1))
     })

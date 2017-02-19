@@ -36,9 +36,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     plm.protocol.devices.add_device_callback(
         async_plm_switch_callback, criteria)
 
-    new_switches = []
-    yield from async_add_devices(new_switches)
-
 
 class InsteonPLMSwitchDevice(SwitchDevice):
     """A Class for an Insteon device."""
@@ -88,7 +85,7 @@ class InsteonPLMSwitchDevice(SwitchDevice):
     def async_switch_update(self, message):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from PLM for %s', self._address)
-        self._hass.async_add_job(self.async_update_ha_state(True))
+        self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
