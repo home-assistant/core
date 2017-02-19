@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/vera/
 """
 import logging
-from collections import defaultdict
+from collections import Counter, defaultdict
 
 import voluptuous as vol
 
@@ -57,35 +57,46 @@ def setup(hass, base_config):
     global VERA_CONTROLLER
     import pyvera as veraApi
 
-    config = base_config.get(DOMAIN)
-    base_url = config.get(CONF_CONTROLLER)
-    VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
-
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
         _LOGGER.info("Shutting down subscriptions.")
         VERA_CONTROLLER.stop()
 
+    config = base_config.get(DOMAIN)
+
+    # Get Vera specific configuration.
+    base_url = config.get(CONF_CONTROLLER)
+    light_ids = config.get(CONF_LIGHTS)
+    exclude_ids = config.get(CONF_EXCLUDE)
+
+    # Initialize the Vera controller.
+    VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
-        all_devices = VERA_CONTROLLER.get_devices()
+        devices = VERA_CONTROLLER.get_devices()
     except RequestException:
-        # There was a network related error connecting to the vera controller.
+        # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
-    exclude = config.get(CONF_EXCLUDE)
+    # Exclude devices unwanted by user.
+    devices = [device for device in devices
+               if device.device_id not in exclude_ids]
 
-    lights_ids = config.get(CONF_LIGHTS)
+    # Count the different device names.
+    counts = Counter(getattr(device, 'name').lower() for device in devices)
 
-    for device in all_devices:
-        if device.device_id in exclude:
+    for device in devices:
+        device_type = map_vera_device(device, light_ids)
+        if device_type is None:
             continue
-        dev_type = map_vera_device(device, lights_ids)
-        if dev_type is None:
-            continue
-        VERA_DEVICES[dev_type].append(device)
+
+        if counts[device.name.lower()] > 1:
+            # Non-unique device name, append id to prevent name clashes in HA.
+            device.name += ' ' + str(device.device_id)
+
+        VERA_DEVICES[device_type].append(device)
 
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
@@ -120,7 +131,7 @@ def map_vera_device(vera_device, remap):
 
 
 class VeraDevice(Entity):
-    """Representation of a Vera devicetity."""
+    """Representation of a Vera device entity."""
 
     def __init__(self, vera_device, controller):
         """Initialize the device."""
