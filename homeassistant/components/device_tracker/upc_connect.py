@@ -142,6 +142,7 @@ class UPCDeviceScanner(DeviceScanner):
         if additional_form:
             form_data.update(additional_form)
 
+        redirects = True if function != CMD_DEVICES else False
         response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -149,8 +150,14 @@ class UPCDeviceScanner(DeviceScanner):
                     "http://{}/xml/getter.xml".format(self.host),
                     data=form_data,
                     headers=self.headers,
-                    allow_redirects=False
+                    allow_redirects=redirects
                 )
+
+                # error?
+                if response.status != 200:
+                    _LOGGER.warning("Receive http code %d", response.status)
+                    self.token = None
+                    return
 
                 # load data, store token for next request
                 self.token = response.cookies['sessionToken'].value
