@@ -69,9 +69,9 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         raise HomeAssistantError(exc)
 
 
-def dump(_dict: dict, outfile=None) -> str:
+def dump(_dict: dict) -> str:
     """Dump yaml to a string and remove null."""
-    return yaml.safe_dump(_dict, outfile, default_flow_style=False) \
+    return yaml.safe_dump(_dict, default_flow_style=False) \
         .replace(': null\n', ':\n')
 
 
