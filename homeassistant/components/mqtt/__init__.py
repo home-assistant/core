@@ -434,7 +434,7 @@ class MQTT(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        def stop(self):
+        def stop():
             """Stop the MQTT client."""
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
