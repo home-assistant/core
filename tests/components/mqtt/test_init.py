@@ -27,9 +27,11 @@ def mock_mqtt_client(hass, config=None):
         }
 
     with mock.patch('paho.mqtt.client.Client') as mock_client:
-        yield from async_setup_component(hass, mqtt.DOMAIN, {
-                mqtt.DOMAIN: config
-            })
+        mock_client().connect = lambda *args: 0
+        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+            mqtt.DOMAIN: config
+        })
+        assert result
         return mock_client()
 
 
@@ -65,41 +67,6 @@ class TestMQTT(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_stop.called)
-
-    @mock.patch('paho.mqtt.client.Client')
-    def test_setup_fails_if_no_connect_broker(self, _):
-        """Test for setup failure if connection to broker is missing."""
-        test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker'}}
-
-        with mock.patch('homeassistant.components.mqtt.MQTT',
-                        side_effect=socket.error()):
-            self.hass.config.components = set()
-            assert not setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
-
-        # Ensure if we dont raise it sets up correctly
-        self.hass.config.components = set()
-        assert setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
-
-    @mock.patch('paho.mqtt.client.Client')
-    def test_setup_embedded(self, _):
-        """Test setting up embedded server with no config."""
-        client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
-
-        with mock.patch('homeassistant.components.mqtt.server.async_start',
-                        return_value=mock_coro(
-                            return_value=(True, client_config))
-                        ) as _start:
-            self.hass.config.components = set()
-            assert setup_component(self.hass, mqtt.DOMAIN,
-                                   {mqtt.DOMAIN: {}})
-            assert _start.call_count == 1
-
-            # Test with `embedded: None`
-            _start.return_value = mock_coro(return_value=(True, client_config))
-            self.hass.config.components = set()
-            assert setup_component(self.hass, mqtt.DOMAIN,
-                                   {mqtt.DOMAIN: {'embedded': None}})
-            assert _start.call_count == 2  # Another call
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
@@ -253,8 +220,8 @@ class TestMQTTCallbacks(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-        with mock.patch('paho.mqtt.client.Client'):
-            self.hass.config.components = set()
+        with mock.patch('paho.mqtt.client.Client') as client:
+            client().connect = lambda *args: 0
             assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
@@ -352,6 +319,51 @@ class TestMQTTCallbacks(unittest.TestCase):
                 "ERROR:homeassistant.components.mqtt:Illegal utf-8 unicode "
                 "payload from MQTT topic: %s, Payload: " % topic,
                 test_handle.output[0])
+
+
+@asyncio.coroutine
+def test_setup_embedded_starts_with_no_config(hass):
+    """Test setting up embedded server with no config."""
+    client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
+
+    with mock.patch('homeassistant.components.mqtt.server.async_start',
+                    return_value=mock_coro(
+                        return_value=(True, client_config))
+                    ) as _start:
+        yield from mock_mqtt_client(hass, {})
+        assert _start.call_count == 1
+
+
+@asyncio.coroutine
+def test_setup_embedded_with_embedded(hass):
+    """Test setting up embedded server with no config."""
+    client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
+
+    with mock.patch('homeassistant.components.mqtt.server.async_start',
+                    return_value=mock_coro(
+                        return_value=(True, client_config))
+                    ) as _start:
+        _start.return_value = mock_coro(return_value=(True, client_config))
+        yield from mock_mqtt_client(hass, {'embedded': None})
+        assert _start.call_count == 1
+
+
+@asyncio.coroutine
+def test_setup_fails_if_no_connect_broker(hass):
+    """Test for setup failure if connection to broker is missing."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker'}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT',
+                    side_effect=socket.error()):
+        result = yield from async_setup_component(hass, mqtt.DOMAIN,
+                                                  test_broker_cfg)
+        assert not result
+
+    with mock.patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect = lambda *args: 1
+        result = yield from async_setup_component(hass, mqtt.DOMAIN,
+                                                  test_broker_cfg)
+        assert not result
 
 
 @asyncio.coroutine
