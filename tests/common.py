@@ -86,7 +86,13 @@ def async_test_home_assistant(loop):
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
-    hass.async_track_tasks()
+
+    def async_add_job(target, *args):
+        if isinstance(target, MagicMock):
+            return
+        hass._async_add_job_tracking(target, *args)
+
+    hass.async_add_job = async_add_job
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -393,12 +399,7 @@ def mock_coro(return_value=None):
         """Fake coroutine."""
         return return_value
 
-    return coro
-
-
-def mock_generator(return_value=None):
-    """Helper method to return a coro generator that returns a value."""
-    return mock_coro(return_value)()
+    return coro()
 
 
 def mock_coro_func(return_value=None):

@@ -7,13 +7,16 @@ https://home-assistant.io/components/cover.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
-from homeassistant.components.cover import DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,9 +53,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._open_id = None
         self._close_id = None
         self._current_position = None
+
         self._workaround = workaround.get_device_mapping(value)
         if self._workaround:
             _LOGGER.debug("Using workaround %s", self._workaround)
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -115,11 +120,16 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, value):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.update_properties()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._value.data
+        return not self._state
 
     def close_cover(self):
         """Close the garage door."""
@@ -133,3 +143,8 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return 'garage'
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_GARAGE

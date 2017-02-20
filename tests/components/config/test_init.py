@@ -32,7 +32,7 @@ def test_load_on_demand_already_loaded(hass, test_client):
     with patch.object(config, 'SECTIONS', []), \
             patch.object(config, 'ON_DEMAND', ['zwave']), \
             patch('homeassistant.components.config.zwave.async_setup') as stp:
-        stp.return_value = mock_coro(True)()
+        stp.return_value = mock_coro(True)
 
         yield from async_setup_component(hass, 'config', {})
 
@@ -51,7 +51,7 @@ def test_load_on_demand_on_load(hass, test_client):
     assert 'config.zwave' not in hass.config.components
 
     with patch('homeassistant.components.config.zwave.async_setup') as stp:
-        stp.return_value = mock_coro(True)()
+        stp.return_value = mock_coro(True)
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: 'zwave'})
         yield from hass.async_block_till_done()
 

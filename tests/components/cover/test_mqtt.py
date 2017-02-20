@@ -118,7 +118,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'OPEN', 0, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_OPEN, state.state)
 
@@ -126,7 +126,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'CLOSE', 0, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_CLOSED, state.state)
 
@@ -150,7 +150,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'OPEN', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
@@ -174,7 +174,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'CLOSE', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
@@ -198,7 +198,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'STOP', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 

@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
-    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name) or {}
+    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name)
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
     _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
@@ -107,13 +107,12 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                     _LOGGER.debug("AEOTEC ZW098 workaround enabled")
                     self._zw098 = 1
 
-        self.update_properties()
-
         # Used for value change event handling
         self._refreshing = False
         self._timer = None
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
+        self.update_properties()
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
@@ -125,7 +124,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         if self._refresh_value:
             if self._refreshing:
                 self._refreshing = False
-                self.update_properties()
             else:
                 def _refresh_value():
                     """Used timer callback for delayed value refresh."""
@@ -137,10 +135,8 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
                 self._timer = Timer(self._delay, _refresh_value)
                 self._timer.start()
-            self.schedule_update_ha_state()
-        else:
-            self.update_properties()
-            self.schedule_update_ha_state()
+                return
+        super().value_changed(value)
 
     @property
     def brightness(self):

@@ -196,7 +196,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'on,,--', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
@@ -205,7 +205,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'off', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
@@ -215,12 +215,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(2, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(2, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,50,75-75-75', payload)
 
         # check the state
@@ -253,12 +253,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,short', payload)
 
         # long flash
@@ -266,12 +266,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,long', payload)
 
     def test_transition(self):
@@ -296,12 +296,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,10', payload)
 
         # transition off
@@ -309,12 +309,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('off,4', payload)
 
     def test_invalid_values(self): \
