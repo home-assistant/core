@@ -6,10 +6,9 @@ https://home-assistant.io/components/climate.homematic/
 """
 import logging
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
-from homeassistant.components.homematic import HMDevice
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['homematic']
 
@@ -37,18 +36,18 @@ HM_HUMI_MAP = [
 HM_CONTROL_MODE = 'CONTROL_MODE'
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Homematic thermostat platform."""
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
-    return homematic.setup_hmdevice_discovery_helper(
-        hass,
-        HMThermostat,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMThermostat(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
 class HMThermostat(HMDevice, ClimateDevice):
