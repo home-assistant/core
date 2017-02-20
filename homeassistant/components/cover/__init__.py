@@ -229,7 +229,7 @@ class CoverDevice(Entity):
         if tilt_closed is None:
             return STATE_UNKNOWN
 
-        return STATE_CLOSED if tilt_closed else STATE_OPEN
+        return STATE_OPEN if tilt_closed else STATE_CLOSED
 
     @property
     def state_attributes(self):
