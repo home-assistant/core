@@ -115,7 +115,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.ssh_key = config.get('ssh_key', config.get('pub_key', ''))
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
-        self.port = config.get(CONF_PORT, 22)
+        self.port = config[CONF_PORT]
         self.ssh_args = {}
 
         if self.protocol == 'ssh':
