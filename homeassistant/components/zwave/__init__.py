@@ -4,6 +4,7 @@ Support for Z-Wave.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
+import asyncio
 import logging
 import os.path
 import time
@@ -424,14 +425,13 @@ def setup(hass, config):
             if device:
                 dict_id = value.value_id
 
-                @callback
+                @asyncio.coroutine
                 def discover_device(component, device, dict_id):
                     """Put device in a dictionary and call discovery on it."""
                     hass.data[DATA_ZWAVE_DICT][dict_id] = device
                     yield from discovery.async_load_platform(
                         hass, component, DOMAIN,
                         {const.DISCOVERY_DEVICE: dict_id}, config)
-
                 hass.add_job(discover_device, component, device, dict_id)
 
     def scene_activated(node, scene_id):
