@@ -77,6 +77,11 @@ class iOSNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
 
+        if targets not in ios.enabled_push_ids():
+            _LOGGER.error("The target (%s) does not exist in ios.conf.",
+                          targets)
+            return
+
         if not targets:
             targets = ios.enabled_push_ids()
 
