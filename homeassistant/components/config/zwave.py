@@ -74,5 +74,5 @@ def _read(path):
 
 def _write(path, data):
     """Write YAML helper."""
-    with open(path, 'w') as outfile:
-        dump(data, outfile)
+    with open(path, 'w', encoding='utf-8') as outfile:
+        outfile.write(dump(data))

@@ -29,6 +29,9 @@ ATTR_WEATHER_PRESSURE = 'pressure'
 ATTR_WEATHER_TEMPERATURE = 'temperature'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
+ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TIME = 'datetime'
 
 
 @asyncio.coroutine
@@ -85,10 +88,15 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def forecast(self):
+        """Return the forecast."""
+        return None
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         data = {
-            ATTR_WEATHER_TEMPERATURE: self._temp_for_display,
+            ATTR_WEATHER_TEMPERATURE: self._temp_for_display(self.temperature),
             ATTR_WEATHER_HUMIDITY: self.humidity,
         }
 
@@ -112,6 +120,16 @@ class WeatherEntity(Entity):
         if attribution is not None:
             data[ATTR_WEATHER_ATTRIBUTION] = attribution
 
+        if self.forecast is not None:
+            forecast = []
+            for forecast_entry in self.forecast:
+                forecast_entry = dict(forecast_entry)
+                forecast_entry[ATTR_FORECAST_TEMP] = self._temp_for_display(
+                    forecast_entry[ATTR_FORECAST_TEMP])
+                forecast.append(forecast_entry)
+
+            data[ATTR_FORECAST] = forecast
+
         return data
 
     @property
@@ -124,10 +142,8 @@ class WeatherEntity(Entity):
         """Return the current condition."""
         raise NotImplementedError()
 
-    @property
-    def _temp_for_display(self):
+    def _temp_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        temp = self.temperature
         unit = self.temperature_unit
         hass_unit = self.hass.config.units.temperature_unit
 
