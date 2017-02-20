@@ -10,8 +10,10 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, STATE_ON, STATE_OFF,
     HTTP_BAD_REQUEST, HTTP_NOT_FOUND, ATTR_SUPPORTED_FEATURES,
 )
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_XY_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, SUPPORT_XY_COLOR
 )
 from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_LEVEL, SUPPORT_VOLUME_SET,
@@ -27,8 +29,16 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_EMULATED_HUE = 'emulated_hue'
 ATTR_EMULATED_HUE_NAME = 'emulated_hue_name'
 
+HUE_API_DEVICE_TYPE_DIMMABLE = 'Dimmable light'
+HUE_API_DEVICE_TYPE_COLOR_TEMP = 'Color temperature light'
+HUE_API_DEVICE_TYPE_COLOR = 'Color light'
+HUE_API_DEVICE_TYPE_EXTENDED_COLOR = 'Extended color light'
+
 HUE_API_STATE_ON = 'on'
 HUE_API_STATE_BRI = 'bri'
+HUE_API_STATE_COLORMODE = 'colormode'
+HUE_API_STATE_CT = 'ct'
+HUE_API_STATE_XY = 'xy'
 
 
 class HueUsernameView(HomeAssistantView):
@@ -73,11 +83,11 @@ class HueAllLightsStateView(HomeAssistantView):
 
         for entity in hass.states.async_all():
             if self.config.is_entity_exposed(entity):
-                state, brightness = get_entity_state(self.config, entity)
+                state, device_type = get_entity_state(self.config, entity)
 
                 number = self.config.entity_id_to_number(entity.entity_id)
                 json_response[number] = entity_to_json(
-                    entity, state, brightness)
+                    entity, state, device_type)
 
         return self.json(json_response)
 
@@ -108,9 +118,9 @@ class HueOneLightStateView(HomeAssistantView):
             _LOGGER.error('Entity not exposed: %s', entity_id)
             return web.Response(text="Entity not exposed", status=404)
 
-        state, brightness = get_entity_state(self.config, entity)
+        state, device_type = get_entity_state(self.config, entity)
 
-        json_response = entity_to_json(entity, state, brightness)
+        json_response = entity_to_json(entity, state, device_type)
 
         return self.json(json_response)
 
@@ -160,7 +170,7 @@ class HueOneLightChangeView(HomeAssistantView):
             _LOGGER.error('Unable to parse data: %s', request_json)
             return web.Response(text="Bad request", status=400)
 
-        result, brightness = parsed
+        result, brightness, color = parsed
 
         # Choose general HA domain
         domain = core.DOMAIN
@@ -181,6 +191,20 @@ class HueOneLightChangeView(HomeAssistantView):
             if entity_features & SUPPORT_BRIGHTNESS:
                 if brightness is not None:
                     data[ATTR_BRIGHTNESS] = brightness
+            if entity_features & SUPPORT_XY_COLOR:
+                if color is not None:
+                    data[ATTR_XY_COLOR] = color
+            elif entity_features & SUPPORT_RGB_COLOR:
+                if color is not None:
+                    if brightness is not None:
+                        final_brightness = brightness
+                    else:
+                        final_brightness = entity.attributes.get(
+                            ATTR_BRIGHTNESS, 255 if result else 0)
+                    data[ATTR_XY_COLOR] = \
+                        color_util.color_xy_brightness_to_RGB(color[0],
+                                                              color[1],
+                                                              final_brightness)
 
         # If the requested entity is a script add some variables
         elif entity.domain == "script":
@@ -251,11 +275,20 @@ class HueOneLightChangeView(HomeAssistantView):
             json_response.append(create_hue_success_response(
                 entity_id, HUE_API_STATE_BRI, brightness))
 
+        if color is not None:
+            json_response.append(create_hue_success_response(
+                entity_id, HUE_API_STATE_XY, color))
+
+        _LOGGER.debug("JSON respose: %s", json_response)
+
         return self.json(json_response)
 
 
 def parse_hue_api_put_light_body(request_json, entity):
     """Parse the body of a request to change the state of a light."""
+    _LOGGER.debug("Parsing JSON request for entity %s: %s", entity.entity_id,
+                  request_json)
+
     if HUE_API_STATE_ON in request_json:
         if not isinstance(request_json[HUE_API_STATE_ON], bool):
             return None
@@ -264,11 +297,13 @@ def parse_hue_api_put_light_body(request_json, entity):
             # Echo requested device be turned on
             brightness = None
             report_brightness = False
+            color = None
             result = True
         else:
             # Echo requested device be turned off
             brightness = None
             report_brightness = False
+            color = None
             result = False
 
     if HUE_API_STATE_BRI in request_json:
@@ -296,7 +331,22 @@ def parse_hue_api_put_light_body(request_json, entity):
             report_brightness = True
             result = True
 
-    return (result, brightness) if report_brightness else (result, None)
+    if HUE_API_STATE_XY in request_json:
+        if not isinstance(request_json[HUE_API_STATE_XY], list) and \
+                len(request_json[HUE_API_STATE_XY]) != 2:
+            return None
+
+        # Make sure the entity actually supports color
+        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+        if entity.domain == "light":
+            if entity_features & SUPPORT_XY_COLOR or \
+                    entity_features & SUPPORT_RGB_COLOR:
+                report_brightness = True
+                color = request_json[HUE_API_STATE_XY]
+
+    return (result, brightness, color) if report_brightness else (result, None,
+                                                                  color)
 
 
 def get_entity_state(config, entity):
@@ -304,53 +354,80 @@ def get_entity_state(config, entity):
     cached_state = config.cached_states.get(entity.entity_id, None)
 
     if cached_state is None:
-        final_state = entity.state != STATE_OFF
-        final_brightness = entity.attributes.get(
-            ATTR_BRIGHTNESS, 255 if final_state else 0)
+        is_on = entity.state != STATE_OFF
+        device_type = HUE_API_DEVICE_TYPE_DIMMABLE
 
-        # Make sure the entity actually supports brightness
-        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        state = {HUE_API_STATE_ON: is_on}
+        brightness = entity.attributes.get(ATTR_BRIGHTNESS,
+                                           255 if is_on else 0)
+        state[HUE_API_STATE_BRI] = brightness
 
         if entity.domain == "light":
-            if entity_features & SUPPORT_BRIGHTNESS:
-                pass
+            # Make sure the entity actually supports brightness
+            entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+
+            if entity_features & SUPPORT_COLOR_TEMP:
+                color_temp = entity.attributes.get(ATTR_COLOR_TEMP, 0)
+                state[HUE_API_STATE_CT] = color_temp
+
+            if entity_features & SUPPORT_XY_COLOR:
+                xy_color = entity.attributes.get(ATTR_XY_COLOR, [0.0, 0.0])
+                state[HUE_API_STATE_XY] = xy_color
+            elif entity_features & SUPPORT_RGB_COLOR:
+                rgb_color = entity.attributes.get(ATTR_RGB_COLOR, [0, 0, 0])
+                xy_color = color_util.color_RGB_to_xy(
+                    *(int(val) for val in rgb_color))
+                state[HUE_API_STATE_XY] = xy_color
+
+            if entity_features & SUPPORT_XY_COLOR or \
+                    entity_features & SUPPORT_RGB_COLOR:
+                state[HUE_API_STATE_COLORMODE] = HUE_API_STATE_XY
+                if entity_features & SUPPORT_COLOR_TEMP:
+                    device_type = HUE_API_DEVICE_TYPE_EXTENDED_COLOR
+                else:
+                    device_type = HUE_API_DEVICE_TYPE_COLOR
+            elif entity_features & SUPPORT_COLOR_TEMP:
+                state[HUE_API_STATE_COLORMODE] = HUE_API_STATE_CT
+                device_type = HUE_API_DEVICE_TYPE_COLOR_TEMP
 
         elif entity.domain == "media_player":
             level = entity.attributes.get(
-                ATTR_MEDIA_VOLUME_LEVEL, 1.0 if final_state else 0.0)
+                ATTR_MEDIA_VOLUME_LEVEL, 1.0 if state else 0.0)
             # Convert 0.0-1.0 to 0-255
-            final_brightness = round(min(1.0, level) * 255)
+            state[HUE_API_STATE_BRI] = round(min(1.0, level) * 255)
+
         elif entity.domain == "fan":
             speed = entity.attributes.get(ATTR_SPEED, 0)
             # Convert 0.0-1.0 to 0-255
-            final_brightness = 0
+            state[HUE_API_STATE_BRI] = 0
             if speed == SPEED_LOW:
-                final_brightness = 85
+                state[HUE_API_STATE_BRI] = 85
             elif speed == SPEED_MEDIUM:
-                final_brightness = 170
+                state[HUE_API_STATE_BRI] = 170
             elif speed == SPEED_HIGH:
-                final_brightness = 255
+                state[HUE_API_STATE_BRI] = 255
+
     else:
+        device_type = HUE_API_DEVICE_TYPE_DIMMABLE
         final_state, final_brightness = cached_state
+
+        state = {HUE_API_STATE_ON: final_state}
         # Make sure brightness is valid
         if final_brightness is None:
-            final_brightness = 255 if final_state else 0
+            state[HUE_API_STATE_BRI] = 255 if final_state else 0
 
-    return (final_state, final_brightness)
+    return (state, device_type)
 
 
-def entity_to_json(entity, is_on=None, brightness=None):
+def entity_to_json(entity, state, device_type):
     """Convert an entity to its Hue bridge JSON representation."""
     name = entity.attributes.get(ATTR_EMULATED_HUE_NAME, entity.name)
 
+    state['reachable'] = True
+
     return {
-        'state':
-        {
-            HUE_API_STATE_ON: is_on,
-            HUE_API_STATE_BRI: brightness,
-            'reachable': True
-        },
-        'type': 'Dimmable light',
+        'state': state,
+        'type': device_type,
         'name': name,
         'modelid': 'HASS123',
         'uniqueid': entity.entity_id,
