@@ -16,7 +16,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -25,6 +26,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 CONF_PROTOCOL = 'protocol'
 CONF_MODE = 'mode'
+DEFAULT_SSH_PORT = 22
 CONF_SSH_KEY = 'ssh_key'
 CONF_PUB_KEY = 'pub_key'
 SECRET_GROUP = 'Password or SSH Key'
@@ -38,6 +40,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'):
             vol.In(['router', 'ap']),
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
@@ -112,12 +115,16 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.ssh_key = config.get('ssh_key', config.get('pub_key', ''))
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
+        self.port = config[CONF_PORT]
+        self.ssh_args = {}
 
         if self.protocol == 'ssh':
+
+            self.ssh_args['port'] = self.port
             if self.ssh_key:
-                self.ssh_secret = {'ssh_key': self.ssh_key}
+                self.ssh_args['ssh_key'] = self.ssh_key
             elif self.password:
-                self.ssh_secret = {'password': self.password}
+                self.ssh_args['password'] = self.password
             else:
                 _LOGGER.error('No password or private key specified')
                 self.success_init = False
@@ -179,7 +186,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         ssh = pxssh.pxssh()
         try:
-            ssh.login(self.host, self.username, **self.ssh_secret)
+            ssh.login(self.host, self.username, **self.ssh_args)
         except exceptions.EOF as err:
             _LOGGER.error('Connection refused. Is SSH enabled?')
             return None
