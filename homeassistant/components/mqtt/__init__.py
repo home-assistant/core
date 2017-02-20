@@ -226,10 +226,6 @@ def _async_setup_server(hass, config):
     """
     conf = config.get(DOMAIN, {})
 
-    # Only setup if embedded config passed in or no broker specified
-    if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
-        return None
-
     server = yield from async_prepare_setup_platform(
         hass, config, DOMAIN, 'server')
 
@@ -272,7 +268,11 @@ def async_setup(hass, config):
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
 
-    broker_config = yield from _async_setup_server(hass, config)
+    # Only setup if embedded config passed in or no broker specified
+    if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
+        broker_config = None
+    else:
+        broker_config = yield from _async_setup_server(hass, config)
 
     if CONF_BROKER in conf:
         broker = conf[CONF_BROKER]
@@ -329,6 +329,11 @@ def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_mqtt)
 
+    success = yield from hass.data[DATA_MQTT].async_connect()
+
+    if not success:
+        return False
+
     @asyncio.coroutine
     def async_publish_service(call):
         """Handle MQTT publish service calls."""
@@ -375,6 +380,9 @@ class MQTT(object):
         import paho.mqtt.client as mqtt
 
         self.hass = hass
+        self.broker = broker
+        self.port = port
+        self.keepalive = keepalive
         self.topics = {}
         self.progress = {}
         self.birth_message = birth_message
@@ -412,8 +420,6 @@ class MQTT(object):
                                  will_message.get(ATTR_QOS),
                                  will_message.get(ATTR_RETAIN))
 
-        self._mqttc.connect_async(broker, port, keepalive)
-
     def async_publish(self, topic, payload, qos, retain):
         """Publish a MQTT message.
 
@@ -421,6 +427,21 @@ class MQTT(object):
         """
         return self.hass.loop.run_in_executor(
             None, self._mqttc.publish, topic, payload, qos, retain)
+
+    @asyncio.coroutine
+    def async_connect(self):
+        """Connect to the host. Does not process messages yet.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        result = yield from self.hass.loop.run_in_executor(
+            None, self._mqttc.connect, self.broker, self.port, self.keepalive)
+
+        if result != 0:
+            import paho.mqtt.client as mqtt
+            _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
+
+        return not result
 
     def async_start(self):
         """Run the MQTT client.
@@ -434,7 +455,7 @@ class MQTT(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        def stop(self):
+        def stop():
             """Stop the MQTT client."""
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
@@ -477,14 +498,11 @@ class MQTT(object):
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        if result_code != 0:
-            _LOGGER.error('Unable to connect to the MQTT broker: %s', {
-                1: 'Incorrect protocol version',
-                2: 'Invalid client identifier',
-                3: 'Server unavailable',
-                4: 'Bad username or password',
-                5: 'Not authorised'
-            }.get(result_code, 'Unknown reason'))
+        import paho.mqtt.client as mqtt
+
+        if result_code != mqtt.CONNACK_ACCEPTED:
+            _LOGGER.error('Unable to connect to the MQTT broker: %s',
+                          mqtt.connack_string(result_code))
             self._mqttc.disconnect()
             return
 
@@ -574,7 +592,10 @@ class MQTT(object):
 def _raise_on_error(result):
     """Raise error if error result."""
     if result != 0:
-        raise HomeAssistantError('Error talking to MQTT: {}'.format(result))
+        import paho.mqtt.client as mqtt
+
+        raise HomeAssistantError(
+            'Error talking to MQTT: {}'.format(mqtt.error_string(result)))
 
 
 def _match_topic(subscription, topic):

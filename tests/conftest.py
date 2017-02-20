@@ -10,7 +10,7 @@ from homeassistant import util, bootstrap
 from homeassistant.util import location
 from homeassistant.components import mqtt
 
-from .common import async_test_home_assistant
+from .common import async_test_home_assistant, mock_coro
 from .test_util.aiohttp import mock_aiohttp_client
 
 logging.basicConfig()
@@ -66,7 +66,8 @@ def aioclient_mock():
 def mqtt_mock(loop, hass):
     """Fixture to mock MQTT."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
-        loop.run_until_complete(bootstrap.async_setup_component(
+        mock_mqtt().async_connect.return_value = mock_coro(True)
+        assert loop.run_until_complete(bootstrap.async_setup_component(
             hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
