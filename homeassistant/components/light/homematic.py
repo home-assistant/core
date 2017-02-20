@@ -5,11 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.homematic/
 """
 import logging
-from homeassistant.components.light import (ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.homematic import HMDevice
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,13 +22,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
-    return homematic.setup_hmdevice_discovery_helper(
-        hass,
-        HMLight,
-        discovery_info,
-        add_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMLight(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
 class HMLight(HMDevice, Light):
