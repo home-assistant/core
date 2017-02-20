@@ -8,9 +8,7 @@ from homeassistant.components.emulated_hue import Config, _LOGGER
 
 def test_config_google_home_entity_id_to_number():
     """Test config adheres to the type."""
-    conf = Config(Mock(), {
-        'type': 'google_home'
-    })
+    conf = Config(Mock(), {'type': 'google_home'}, 'hue')
 
     mop = mock_open(read_data=json.dumps({'1': 'light.test2'}))
     handle = mop()
@@ -60,7 +58,7 @@ def test_warning_config_google_home_listen_port():
             'type': 'google_home',
             'host_ip': '123.123.123.123',
             'listen_port': 8300
-        })
+        }, 'hue')
 
         assert mock_warn.called
         assert mock_warn.mock_calls[0][1][0] == \
