@@ -80,6 +80,9 @@ boto3==1.4.3
 # homeassistant.components.switch.broadlink
 broadlink==0.3
 
+# homeassistant.components.notify.ciscospark
+ciscosparkapi==0.4.2
+
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==2.0.1
 
