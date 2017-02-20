@@ -7,6 +7,7 @@ https://home-assistant.io/components/insteon_plm/
 import logging
 import asyncio
 
+from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.loader import get_component
 
@@ -22,6 +23,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     plm = hass.data['insteon_plm']
 
+    @callback
     def async_plm_binarysensor_callback(device):
         """New device detected from transport."""
         name = device['address']
@@ -82,6 +84,7 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
         """Return specified attribute for this device."""
         return self._plm.get_device_attr(self.address, key)
 
+    @callback
     def async_binarysensor_update(self, message):
         """Receive notification from transport that new data exists."""
         _LOGGER.info('Received update calback from PLM for %s', self._address)
