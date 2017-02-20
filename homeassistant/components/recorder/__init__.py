@@ -161,17 +161,19 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     exclude = config.get(DOMAIN, {}).get(CONF_EXCLUDE, {})
     _INSTANCE = Recorder(hass, purge_days=purge_days, uri=db_url,
                          include=include, exclude=exclude)
+    _INSTANCE.start()
 
     return True
 
 
-def query(model_name: Union[str, Any], *args) -> QueryType:
+def query(model_name: Union[str, Any], session=None, *args) -> QueryType:
     """Helper to return a query handle."""
-    ins = get_instance()
+    if session is None:
+        session = get_instance().get_session()
 
     if isinstance(model_name, str):
-        return ins.get_session().query(get_model(model_name), *args)
-    return ins.get_session().query(model_name, *args)
+        return session.query(get_model(model_name), *args)
+    return session.query(model_name, *args)
 
 
 def get_model(model_name: str) -> Any:
@@ -217,26 +219,21 @@ class Recorder(threading.Thread):
 
         self.get_session = None
 
-        self.start()
-
     def run(self):
         """Start processing events to save."""
         from homeassistant.components.recorder.models import Events, States
-        from homeassistant.components.recorder.restore_state import (
-            load_restore_cache)
         from sqlalchemy.exc import SQLAlchemyError
 
         while True:
             try:
                 self._setup_connection()
                 self._setup_run()
+                self.db_ready.set()
                 break
             except SQLAlchemyError as err:
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
                 time.sleep(CONNECT_RETRY_WAIT)
-
-        load_restore_cache(self.hass)
 
         if self.purge_days is not None:
             async_track_time_interval(
@@ -313,10 +310,6 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        if self.get_session is not None:
-            _LOGGER.debug("SESSION exist: %s", self.get_session)
-            return
-
         import homeassistant.components.recorder.models as models
         from sqlalchemy import create_engine
         from sqlalchemy.orm import scoped_session
@@ -336,7 +329,6 @@ class Recorder(threading.Thread):
         session_factory = sessionmaker(bind=self.engine)
         self.get_session = scoped_session(session_factory)
         self._migrate_schema()
-        self.db_ready.set()
 
     def _migrate_schema(self):
         """Check if the schema needs to be upgraded."""
@@ -426,7 +418,8 @@ class Recorder(threading.Thread):
         """Log the start of the current run."""
         recorder_runs = get_model('RecorderRuns')
         with session_scope() as session:
-            for run in query(recorder_runs).filter_by(end=None):
+            for run in query(
+                    recorder_runs, session=session).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start
                 _LOGGER.warning("Ended unfinished session (id=%s from %s)",
@@ -510,7 +503,6 @@ def _wait(event, message):
         if event.is_set():
             return
         msg = message + " ({} seconds)".format(retry)
-        assert msg
         _LOGGER.warning(msg)
     if not event.is_set():
         raise HomeAssistantError(msg)

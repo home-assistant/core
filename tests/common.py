@@ -447,11 +447,29 @@ def assert_setup_component(count, domain=None):
         .format(count, res_len, res)
 
 
-def init_recorder_component(hass, add_config=None):
+def init_recorder_component(hass, add_config=None, db_ready_callback=None):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     config[recorder.CONF_DB_URL] = 'sqlite://'  # In memory DB
-    assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
+
+    saved_recorder = recorder.Recorder
+
+    class Recorder2(saved_recorder):
+        """Recorder with a callback after db_ready."""
+
+        def _setup_connection(self):
+            """Setup the connection and run the callback."""
+            super(Recorder2, self)._setup_connection()
+            if db_ready_callback:
+                _LOGGER.debug('db_ready_callback start (db_ready not set,'
+                              'never use get_instance in the callback)')
+                db_ready_callback()
+                _LOGGER.debug('db_ready_callback completed')
+
+    with patch('homeassistant.components.recorder.Recorder',
+               side_effect=Recorder2):
+        assert setup_component(hass, recorder.DOMAIN,
+                               {recorder.DOMAIN: config})
     assert recorder.DOMAIN in hass.config.components
     recorder.get_instance().block_till_db_ready()
     _LOGGER.info("In-memory recorder successfully started")

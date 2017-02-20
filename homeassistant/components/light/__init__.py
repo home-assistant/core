@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components import group
-from homeassistant.components.recorder.restore_state import get_last_state
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
@@ -23,6 +22,7 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -125,6 +125,16 @@ PROFILE_SCHEMA = vol.Schema(
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def extract_info(state):
+    """Extract light parameters from a state object."""
+    params = {key: state.attr[key] for key in (
+        ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_XY_COLOR,
+        ATTR_COLOR_TEMP, ATTR_COLOR_NAME, ATTR_WHITE_VALUE
+    ) if key in state.attr}
+    params['is_on'] = state.state == STATE_ON
+    return params
 
 
 def is_on(hass, entity_id=None):
@@ -374,12 +384,4 @@ class Light(ToggleEntity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Component added, restore_state using platforms."""
-        state = get_last_state(self)
-        if state:
-            params = {key: state.attr[key] for key in (
-                ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_XY_COLOR,
-                ATTR_COLOR_TEMP, ATTR_COLOR_NAME, ATTR_WHITE_VALUE
-            ) if key in state.attr}
-            params['is_on'] = state.state == STATE_ON
-            # pylint: disable=no-member
-            yield from self.async_restore_state(**params)
+        yield from async_restore_state(self, extract_info)

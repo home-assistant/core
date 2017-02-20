@@ -39,6 +39,8 @@ def last_recorder_run():
     rec_runs = recorder.get_model('RecorderRuns')
     with recorder.session_scope() as session:
         res = recorder.query(rec_runs).order_by(rec_runs.end.desc()).first()
+        if res is None:
+            return None
         session.expunge(res)
         return res
 
