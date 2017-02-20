@@ -9,6 +9,7 @@ import asyncio
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import (
     CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
@@ -30,9 +31,11 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-PLM_PLATFORMS = [
-    'binary_sensor', 'light', 'switch'
-]
+PLM_PLATFORMS = {
+    'binary_sensor': ['binary_sensor'],
+    'light': ['light'],
+    'switch': ['switch'],
+}
 
 
 @asyncio.coroutine
@@ -44,10 +47,33 @@ def async_setup(hass, config):
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE)
 
-    _LOGGER.info('Looking for PLM on %s', port)
+    @callback
+    def async_plm_new_device(device):
+        """New device detected from transport to be delegated to platform."""
+        name = device.get('address')
+        address = device.get('address_hex')
+        capabilities = device.get('capabilities', [])
 
-    plm = yield from insteonplm.Connection.create(
-        device=port, loop=hass.loop)
+        _LOGGER.info('New INSTEON PLM device: %s (%s) %r',
+                     name, address, capabilities)
+
+        loadlist = []
+        for platform in PLM_PLATFORMS:
+            caplist = PLM_PLATFORMS.get(platform)
+            for key in capabilities:
+                if key in caplist:
+                    loadlist.append(platform)
+
+        loadlist = sorted(set(loadlist))
+
+        for loadplatform in loadlist:
+            hass.async_add_job(
+                discovery.async_load_platform(
+                    hass, loadplatform, DOMAIN, discovered=[device],
+                    hass_config=config))
+
+    _LOGGER.info('Looking for PLM on %s', port)
+    plm = yield from insteonplm.Connection.create(device=port, loop=hass.loop)
 
     for device in overrides:
         #
@@ -60,10 +86,7 @@ def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, plm.close)
 
-    for platform in PLM_PLATFORMS:
-        _LOGGER.info('Trying to load platform %s', platform)
-        hass.async_add_job(
-            discovery.async_load_platform(hass, platform, DOMAIN, config))
+    plm.protocol.devices.add_device_callback(async_plm_new_device, {})
 
     return True
 

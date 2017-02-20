@@ -22,25 +22,21 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-    _LOGGER.info('Provisioning Insteon PLM Lights')
-
     plm = hass.data['insteon_plm']
 
-    @callback
-    def async_plm_light_callback(device):
-        """New device detected from transport."""
-        name = device['address']
-        address = device['address_hex']
+    device_list = []
+    for device in discovery_info:
+        name = device.get('address')
+        address = device.get('address_hex')
+        dimmable = bool('dimmable' in device.get('capabilities'))
 
-        dimmable = bool('dimmable' in device['capabilities'])
+        _LOGGER.info('Registered %s with light platform.', name)
 
-        _LOGGER.info('New INSTEON PLM light device: %s (%s)', name, address)
-        hass.async_add_job(async_add_devices(
-            [InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)]))
+        device_list.append(
+            InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)
+        )
 
-    criteria = {'capability': 'light'}
-    plm.protocol.devices.add_device_callback(
-        async_plm_light_callback, criteria)
+    hass.async_add_job(async_add_devices(device_list))
 
 
 class InsteonPLMDimmerDevice(Light):
