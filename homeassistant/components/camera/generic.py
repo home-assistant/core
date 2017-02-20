@@ -123,7 +123,7 @@ class GenericCamera(Camera):
                 return self._last_image
             finally:
                 if response is not None:
-                    self.hass.async_add_job(response.release())
+                    yield from response.release()
 
         self._last_url = url
         return self._last_image
