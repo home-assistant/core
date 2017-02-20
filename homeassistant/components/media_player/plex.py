@@ -62,10 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_PLEX = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_STOP | SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK | \
-    SUPPORT_TURN_OFF
-
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 
@@ -295,6 +291,7 @@ class PlexClient(MediaPlayerDevice):
 
         self.na_type = NA
         self._session = None
+        self._make = ''
         self.optional_config = optional_config
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
@@ -406,6 +403,11 @@ class PlexClient(MediaPlayerDevice):
         self.update_devices(no_throttle=True)
         self.update_sessions(no_throttle=True)
 
+        if self.session and self.session.player:
+            make = self._convert_na_to_none(self.session.player.device)
+            if make:
+                self._make = make
+
     # pylint: disable=no-self-use, singleton-comparison
     def _convert_na_to_none(self, value):
         """Convert PlexAPI _NA() instances to None."""
@@ -514,13 +516,9 @@ class PlexClient(MediaPlayerDevice):
                 thumb_url = self.session.server.url(thumb_url)
                 thumb_response = requests.get(thumb_url, verify=False)
                 if thumb_response.status_code != 200:
-                    _LOGGER.debug('Using art because thumbnail was missing: '
-                                  'content id %s', self.media_content_id)
                     thumb_url = self.session.server.url(
                         self._convert_na_to_none(self.session.art))
             else:
-                _LOGGER.debug('Using art because thumbnail was not found: '
-                              'content id %s', self.media_content_id)
                 thumb_url = self.session.server.url(
                     self._convert_na_to_none(self.session.art))
 
@@ -574,8 +572,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def make(self):
         """The make of the device (ex. SHIELD Android TV)."""
-        if self.session and self.session.player:
-            return self._convert_na_to_none(self.session.player.device)
+        return self._make
 
     @property
     def supported_features(self):
@@ -583,12 +580,29 @@ class PlexClient(MediaPlayerDevice):
 
         # force show all controls
         if self.optional_config[CONF_SHOW_ALL_CONTROLS]:
-            return SUPPORT_PLEX | SUPPORT_VOLUME_MUTE
+            return SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
+                SUPPORT_NEXT_TRACK | SUPPORT_STOP | SUPPORT_VOLUME_SET | \
+                SUPPORT_PLAY | SUPPORT_SEEK | SUPPORT_TURN_OFF | \
+                SUPPORT_VOLUME_MUTE
         else:
-            if self.make == "SHIELD Android TV":
-                return SUPPORT_PLEX
+            # only show controls when we know what device is connecting
+            if not self._make:
+                return None
+            # no mute support
+            elif self.make.lower() == "shield android tv":
+                return SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
+                    SUPPORT_NEXT_TRACK | SUPPORT_STOP | SUPPORT_VOLUME_SET | \
+                    SUPPORT_PLAY | SUPPORT_SEEK | SUPPORT_TURN_OFF
+            # Only supports play,pause,stop (and off which really is stop)
+            elif self.make.lower().startswith("tivo"):
+                return SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP | \
+                    SUPPORT_TURN_OFF
+            # Default to show all controls
             elif self.device:
-                return SUPPORT_PLEX | SUPPORT_VOLUME_MUTE
+                return SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
+                    SUPPORT_NEXT_TRACK | SUPPORT_STOP | SUPPORT_VOLUME_SET | \
+                    SUPPORT_PLAY | SUPPORT_SEEK | SUPPORT_TURN_OFF | \
+                    SUPPORT_VOLUME_MUTE
             else:
                 return None
 
