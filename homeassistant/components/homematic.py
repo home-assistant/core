@@ -520,23 +520,6 @@ def _create_ha_name(name, channel, param, count):
         return "{} {} {}".format(name, channel, param)
 
 
-def setup_hmdevice_discovery_helper(hass, hmdevicetype, discovery_info,
-                                    add_callback_devices):
-    """Helper to setup Homematic devices with discovery info."""
-    devices = []
-    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
-        _LOGGER.debug("Add device %s from config: %s",
-                      str(hmdevicetype), str(config))
-
-        # create object and add to HA
-        new_device = hmdevicetype(hass, config)
-        new_device.link_homematic()
-        devices.append(new_device)
-
-    add_callback_devices(devices)
-    return True
-
-
 def _hm_event_handler(hass, proxy, device, caller, attribute, value):
     """Handle all pyhomematic device events."""
     try:
