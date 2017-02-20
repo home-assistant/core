@@ -38,11 +38,7 @@ def test_config_google_home_entity_id_to_number():
 
 def test_config_alexa_entity_id_to_number():
     """Test config adheres to the type."""
-    conf = Config(None, {
-        'hue': {
-           'type': 'alexa'
-        }
-    })
+    conf = Config(None, {'type': 'alexa'}, 'hue')
 
     number = conf.entity_id_to_number('light.test')
     assert number == 'light.test'
