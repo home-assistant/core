@@ -104,21 +104,26 @@ class BotPushReceiver(HomeAssistantView):
 
         try:
             data = yield from request.json()
-            data = data['message']
-
-            if data['from']['id'] not in self.users:
-                _LOGGER.warning("User not allowed")
-                return self.json_message('Invalid user', HTTP_BAD_REQUEST)
-
-            if data['text'][0] != '/':
-                _LOGGER.warning('no command')
-                return self.json({})
-        except (KeyError, IndexError):
+        except ValueError:
+            _LOGGER.error("Received telegram data: %s", data)
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
+        # check for basic message rules
+        data = data.get('message')
+        if not data or 'from' not in data or 'text' not in data:
+            return self.json({})
+
+        if data['from'].get('id') not in self.users:
+            _LOGGER.warning("User not allowed")
+            return self.json_message('Invalid user', HTTP_BAD_REQUEST)
+
         _LOGGER.debug("Received telegram data: %s", data)
+        if not data['text'] or data['text'][:1] != '/':
+            _LOGGER.warning('no command')
+            return self.json({})
 
         pieces = data['text'].split(' ')
+
         request.app['hass'].bus.async_fire(EVENT_TELEGRAM_COMMAND, {
             ATTR_COMMAND: pieces[0],
             ATTR_ARGS: " ".join(pieces[1:]),
