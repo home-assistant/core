@@ -329,6 +329,8 @@ def async_setup(hass, config):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_mqtt)
 
+    yield from hass.data[DATA_MQTT].async_connect()
+
     @asyncio.coroutine
     def async_publish_service(call):
         """Handle MQTT publish service calls."""
@@ -375,6 +377,9 @@ class MQTT(object):
         import paho.mqtt.client as mqtt
 
         self.hass = hass
+        self.broker = broker
+        self.port = port
+        self.keepalive = keepalive
         self.topics = {}
         self.progress = {}
         self.birth_message = birth_message
@@ -412,8 +417,6 @@ class MQTT(object):
                                  will_message.get(ATTR_QOS),
                                  will_message.get(ATTR_RETAIN))
 
-        self._mqttc.connect_async(broker, port, keepalive)
-
     def async_publish(self, topic, payload, qos, retain):
         """Publish a MQTT message.
 
@@ -421,6 +424,14 @@ class MQTT(object):
         """
         return self.hass.loop.run_in_executor(
             None, self._mqttc.publish, topic, payload, qos, retain)
+
+    def async_connect(self):
+        """Connect to the host. Does not process messages yet.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self._mqttc.connect, self.broker, self.port, self.keepalive)
 
     def async_start(self):
         """Run the MQTT client.
