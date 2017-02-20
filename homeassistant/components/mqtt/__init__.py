@@ -420,12 +420,13 @@ class MQTT(object):
                                  will_message.get(ATTR_QOS),
                                  will_message.get(ATTR_RETAIN))
 
+    @asyncio.coroutine
     def async_publish(self, topic, payload, qos, retain):
         """Publish a MQTT message.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
+        yield from self.hass.loop.run_in_executor(
             None, self._mqttc.publish, topic, payload, qos, retain)
 
     @asyncio.coroutine
