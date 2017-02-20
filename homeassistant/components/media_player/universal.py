@@ -151,7 +151,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         @callback
         def async_on_dependency_update(*_):
             """Update ha state when dependencies update."""
-            self.hass.add_job(self.async_update_ha_state(True))
+            self.hass.async_add_job(self.async_update_ha_state(True))
 
         depend = copy(children)
         for entity in attributes.values():
