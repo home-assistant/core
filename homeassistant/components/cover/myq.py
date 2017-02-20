@@ -14,8 +14,8 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/arraylabs/pymyq/archive/v0.0.5.zip'
-    '#pymyq==0.0.5']
+    'https://github.com/arraylabs/pymyq/archive/v0.0.6.zip'
+    '#pymyq==0.0.6']
 
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_TYPE): cv.string,
