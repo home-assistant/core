@@ -87,7 +87,7 @@ class S20Switch(SwitchDevice):
 
     def update(self):
         """Update device state."""
-        for attempt in range(5):
+        for _ in range(5):
             try:
                 self._state = self._s20.on
                 return
