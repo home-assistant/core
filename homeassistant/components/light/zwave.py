@@ -4,6 +4,7 @@ Support for Z-Wave lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.zwave/
 """
+import asyncio
 import logging
 
 # Because we do not compile openzwave on CI
@@ -48,12 +49,10 @@ SUPPORT_ZWAVE_COLORTEMP = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
                            | SUPPORT_COLOR_TEMP)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and add Z-Wave lights."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-    add_devices(
-        [zwave.get_device(hass, discovery_info[zwave.const.DISCOVERY_DEVICE])])
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Create zwave entity device."""
+    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 def get_device(node, value, node_config, **kwargs):

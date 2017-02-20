@@ -61,8 +61,6 @@ DATA_ZWAVE_DICT = 'zwave_devices'
 NETWORK = None
 
 
-DATA_DEVICE_CONFIG = 'zwave_device_config'
-
 # List of tuple (DOMAIN, discovered service, supported command classes,
 # value type, genre type, specific device class).
 DISCOVERY_COMPONENTS = [
@@ -270,9 +268,18 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
-def get_device(hass, dict_id):
-    """Return Zwave Entity device."""
-    return hass.data[DATA_ZWAVE_DICT].pop(dict_id)
+@callback
+def async_setup_platform(hass, async_add_devices, discovery_info):
+    """Generic Z-Wave platform setup."""
+    if discovery_info is None or NETWORK is None:
+        return False
+    device = hass.data[DATA_ZWAVE_DICT].pop(
+        discovery_info[const.DISCOVERY_DEVICE])
+    if device:
+        yield from async_add_devices([device])
+        return True
+    else:
+        return False
 
 
 # pylint: disable=R0914
@@ -305,7 +312,7 @@ def setup(hass, config):
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
-    hass.data[DATA_DEVICE_CONFIG] = EntityValues(
+    device_config = EntityValues(
         config[DOMAIN][CONF_DEVICE_CONFIG],
         config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
         config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
@@ -398,7 +405,7 @@ def setup(hass, config):
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
+            node_config = device_config.get(name)
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info(
@@ -421,8 +428,9 @@ def setup(hass, config):
                 def discover_device(component, device, dict_id):
                     """Put device in a dictionary and call discovery on it."""
                     hass.data[DATA_ZWAVE_DICT][dict_id] = device
-                    discovery.load_platform(hass, component, DOMAIN, {
-                        const.DISCOVERY_DEVICE: dict_id}, config)
+                    yield from discovery.async_load_platform(
+                        hass, component, DOMAIN,
+                        {const.DISCOVERY_DEVICE: dict_id}, config)
 
                 hass.add_job(discover_device, component, device, dict_id)
 
@@ -715,7 +723,7 @@ class ZWaveDeviceEntity(Entity):
         """Called when a value for this entity's node has changed."""
         self._update_attributes()
         self.update_properties()
-        # If value changed after device was createed but before setup_platform
+        # If value changed after device was created but before setup_platform
         # was called - skip updating state.
         if self.hass:
             self.schedule_update_ha_state()

@@ -6,6 +6,7 @@ https://home-assistant.io/components/climate.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
+import asyncio
 import logging
 from homeassistant.components.climate import DOMAIN
 from homeassistant.components.climate import ClimateDevice
@@ -32,13 +33,10 @@ DEVICE_MAPPINGS = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Z-Wave Climate devices."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    add_devices(
-        [zwave.get_device(hass, discovery_info[zwave.const.DISCOVERY_DEVICE])])
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Create zwave entity device."""
+    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 def get_device(hass, value, **kwargs):
