@@ -53,7 +53,7 @@ DEFAULT_TYPE = TYPE_GOOGLE
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.ordered_dict({
-        cv.slug: cv.string, 
+        cv.slug: cv.string,
         vol.Optional(CONF_HOST_IP): cv.string,
         vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
@@ -80,7 +80,7 @@ def setup(hass, yaml_config):
 
     for hue_name, conf in yaml_config.get(DOMAIN, {}).items():
         _LOGGER.error("hue {}".format(hue_name))
-        config = Config(hass,conf,hue_name)
+        config = Config(hass, conf, hue_name)
 
         server = HomeAssistantWSGI(
             hass,
@@ -108,7 +108,7 @@ def setup(hass, yaml_config):
             config.upnp_bind_multicast, config.advertise_ip,
             config.advertise_port, config.target_ip)
 
-        hue_data = { 'config': config, 'server': server, 'upnp_listener': upnp_listener}
+        hue_data = {'config': config, 'server': server, 'upnp_listener': upnp_listener}
         hue_list.append(hue_data)
 
 
@@ -116,15 +116,15 @@ def setup(hass, yaml_config):
     def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         for hue_data in hue_list:
-           hue_data['upnp_listener'].stop()
-           yield from hue_data['server'].stop()
+            hue_data['upnp_listener'].stop()
+            yield from hue_data['server'].stop()
 
     @asyncio.coroutine
     def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
         for hue_data in hue_list:
-           hue_data['upnp_listener'].start()
-           yield from hue_data['server'].start()
+            hue_data['upnp_listener'].start()
+            yield from hue_data['server'].start()
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    stop_emulated_hue_bridge)
@@ -141,7 +141,7 @@ class Config(object):
         """Initialize the instance."""
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
-        self.target_ip = conf.get(CONF_TARGET_IP,None)
+        self.target_ip = conf.get(CONF_TARGET_IP, None)
         self.numbers = None
         self.cached_states = {}
         self.hue_name = hue_name
@@ -242,14 +242,11 @@ class Config(object):
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
 
-        # 
         # entity attribute emulated_hue_instance - e.g. 'emulated_hue_instance: hue1'
-        #
         hue_instance = entity.attributes.get(ATTR_EMULATED_HUE_INSTANCE, None)
         if hue_instance is not None:
             if hue_instance != self.hue_name:
                 return False
-                
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 

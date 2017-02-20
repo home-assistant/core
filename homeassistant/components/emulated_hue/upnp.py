@@ -63,14 +63,14 @@ class UPNPResponderThread(threading.Thread):
     _interrupted = False
 
     def __init__(self, host_ip_addr, listen_port, upnp_bind_multicast,
-                 advertise_ip, advertise_port,target_ip):
+                 advertise_ip, advertise_port, target_ip):
         """Initialize the class."""
         threading.Thread.__init__(self)
 
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
         self.upnp_bind_multicast = upnp_bind_multicast
-        self.advertise_ip = advertise_ip 
+        self.advertise_ip = advertise_ip
         self.advertise_port = advertise_port
         self.target_ip = target_ip
 
@@ -104,13 +104,13 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
                 return
 
         # Randomize the mcast response - otherwise Echo can lose messages
-        r = random.randint(1,8)
+        r = random.randint(1, 8)
         time.sleep(r)
 
         upnp_response = resp_template.format(
             self.advertise_ip, self.advertise_port).replace("\n", "\r\n") \
                                          .encode('utf-8')
-        resp_socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM)
+        resp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         resp_socket.sendto(upnp_response, addr)
         resp_socket.close()
 
@@ -167,7 +167,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
             if "M-SEARCH" in data.decode('utf-8'):
                 # SSDP M-SEARCH method received, respond to it with our info
-                self.send_adv(addr,data)
+                self.send_adv(addr, data)
 
     def stop(self):
         """Stop the server."""
