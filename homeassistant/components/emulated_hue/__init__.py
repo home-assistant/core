@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import util
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
 from homeassistant.components.http import HomeAssistantWSGI
@@ -33,6 +33,7 @@ CONF_LISTEN_PORT = 'listen_port'
 CONF_ADVERTISE_IP = 'advertise_ip'
 CONF_ADVERTISE_PORT = 'advertise_port'
 CONF_UPNP_BIND_MULTICAST = 'upnp_bind_multicast'
+CONF_TARGET_IP = 'target_ip'
 CONF_OFF_MAPS_TO_ON_DOMAINS = 'off_maps_to_on_domains'
 CONF_EXPOSE_BY_DEFAULT = 'expose_by_default'
 CONF_EXPOSED_DOMAINS = 'exposed_domains'
@@ -51,7 +52,8 @@ DEFAULT_EXPOSED_DOMAINS = [
 DEFAULT_TYPE = TYPE_GOOGLE
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: cv.ordered_dict({
+        cv.slug: cv.string, 
         vol.Optional(CONF_HOST_IP): cv.string,
         vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
@@ -59,6 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ADVERTISE_PORT):
             vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
         vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
+        vol.Optional(CONF_TARGET_IP): cv.string,
         vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
         vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
@@ -68,49 +71,61 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ATTR_EMULATED_HUE = 'emulated_hue'
+ATTR_EMULATED_HUE_INSTANCE = 'emulated_hue_instance'
 
 
 def setup(hass, yaml_config):
     """Activate the emulated_hue component."""
-    config = Config(hass, yaml_config.get(DOMAIN, {}))
+    hue_list = []
 
-    server = HomeAssistantWSGI(
-        hass,
-        development=False,
-        server_host=config.host_ip_addr,
-        server_port=config.listen_port,
-        api_password=None,
-        ssl_certificate=None,
-        ssl_key=None,
-        cors_origins=None,
-        use_x_forwarded_for=False,
-        trusted_networks=[],
-        login_threshold=0,
-        is_ban_enabled=False
-    )
+    for hue_name, conf in yaml_config.get(DOMAIN, {}).items():
+        _LOGGER.error("hue {}".format(hue_name))
+        config = Config(hass,conf,hue_name)
 
-    server.register_view(DescriptionXmlView(config))
-    server.register_view(HueUsernameView)
-    server.register_view(HueAllLightsStateView(config))
-    server.register_view(HueOneLightStateView(config))
-    server.register_view(HueOneLightChangeView(config))
+        server = HomeAssistantWSGI(
+            hass,
+            development=False,
+            server_host=config.host_ip_addr,
+            server_port=config.listen_port,
+            api_password=None,
+            ssl_certificate=None,
+            ssl_key=None,
+            cors_origins=None,
+            use_x_forwarded_for=False,
+            trusted_networks=[],
+            login_threshold=0,
+            is_ban_enabled=False
+        )
 
-    upnp_listener = UPNPResponderThread(
-        config.host_ip_addr, config.listen_port,
-        config.upnp_bind_multicast, config.advertise_ip,
-        config.advertise_port)
+        server.register_view(DescriptionXmlView(config))
+        server.register_view(HueUsernameView)
+        server.register_view(HueAllLightsStateView(config))
+        server.register_view(HueOneLightStateView(config))
+        server.register_view(HueOneLightChangeView(config))
+
+        upnp_listener = UPNPResponderThread(
+            config.host_ip_addr, config.listen_port,
+            config.upnp_bind_multicast, config.advertise_ip,
+            config.advertise_port, config.target_ip)
+
+        hue_data = { 'config': config, 'server': server, 'upnp_listener': upnp_listener}
+        hue_list.append(hue_data)
+
 
     @asyncio.coroutine
     def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
-        upnp_listener.stop()
-        yield from server.stop()
+        for hue_data in hue_list:
+           hue_data['upnp_listener'].stop()
+           yield from hue_data['server'].stop()
 
     @asyncio.coroutine
     def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
-        upnp_listener.start()
-        yield from server.start()
+        for hue_data in hue_list:
+           hue_data['upnp_listener'].start()
+           yield from hue_data['server'].start()
+
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    stop_emulated_hue_bridge)
 
@@ -122,12 +137,14 @@ def setup(hass, yaml_config):
 class Config(object):
     """Holds configuration variables for the emulated hue bridge."""
 
-    def __init__(self, hass, conf):
+    def __init__(self, hass, conf, hue_name):
         """Initialize the instance."""
         self.hass = hass
         self.type = conf.get(CONF_TYPE)
+        self.target_ip = conf.get(CONF_TARGET_IP,None)
         self.numbers = None
         self.cached_states = {}
+        self.hue_name = hue_name
 
         if self.type == TYPE_ALEXA:
             _LOGGER.warning('Alexa type is deprecated and will be removed in a'
@@ -143,6 +160,7 @@ class Config(object):
 
         # Get the port that the Hue bridge will listen on
         self.listen_port = conf.get(CONF_LISTEN_PORT)
+        _LOGGER.info("listen port - {}".format(self.listen_port))
         if not isinstance(self.listen_port, int):
             self.listen_port = DEFAULT_LISTEN_PORT
             _LOGGER.warning(
@@ -224,6 +242,14 @@ class Config(object):
         domain = entity.domain.lower()
         explicit_expose = entity.attributes.get(ATTR_EMULATED_HUE, None)
 
+        # 
+        # entity attribute emulated_hue_instance - e.g. 'emulated_hue_instance: hue1'
+        #
+        hue_instance = entity.attributes.get(ATTR_EMULATED_HUE_INSTANCE, None)
+        if hue_instance is not None:
+            if hue_instance != self.hue_name:
+                return False
+                
         domain_exposed_by_default = \
             self.expose_by_default and domain in self.exposed_domains
 

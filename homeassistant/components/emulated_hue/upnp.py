@@ -4,6 +4,8 @@ import socket
 import logging
 import os
 import select
+import random
+import time
 
 from aiohttp import web
 
@@ -43,8 +45,8 @@ class DescriptionXmlView(HomeAssistantView):
 <modelName>Philips hue bridge 2015</modelName>
 <modelNumber>BSB002</modelNumber>
 <modelURL>http://www.meethue.com</modelURL>
-<serialNumber>1234</serialNumber>
-<UDN>uuid:2f402f80-da50-11e1-9b23-001788255acc</UDN>
+<serialNumber>{1}</serialNumber>
+<UDN>uuid:2f402f80-da50-11e1-{1}-001788255acc</UDN>
 </device>
 </root>
 """
@@ -61,30 +63,16 @@ class UPNPResponderThread(threading.Thread):
     _interrupted = False
 
     def __init__(self, host_ip_addr, listen_port, upnp_bind_multicast,
-                 advertise_ip, advertise_port):
+                 advertise_ip, advertise_port,target_ip):
         """Initialize the class."""
         threading.Thread.__init__(self)
 
         self.host_ip_addr = host_ip_addr
         self.listen_port = listen_port
         self.upnp_bind_multicast = upnp_bind_multicast
-
-        # Note that the double newline at the end of
-        # this string is required per the SSDP spec
-        resp_template = """HTTP/1.1 200 OK
-CACHE-CONTROL: max-age=60
-EXT:
-LOCATION: http://{0}:{1}/description.xml
-SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
-hue-bridgeid: 1234
-ST: urn:schemas-upnp-org:device:basic:1
-USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
-
-"""
-
-        self.upnp_response = resp_template.format(
-            advertise_ip, advertise_port).replace("\n", "\r\n") \
-                                         .encode('utf-8')
+        self.advertise_ip = advertise_ip 
+        self.advertise_port = advertise_port
+        self.target_ip = target_ip
 
         # Set up a pipe for signaling to the receiver that it's time to
         # shutdown. Essentially, we place the SSDP socket into nonblocking
@@ -97,6 +85,34 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
         # ready to be read, which indicates to us that the responder needs to
         # be shutdown.
         self._interrupted_read_pipe, self._interrupted_write_pipe = os.pipe()
+
+    def send_adv(self, addr, data):
+        # Note that the double newline at the end of
+        # this string is required per the SSDP spec
+        resp_template = """HTTP/1.1 200 OK
+CACHE-CONTROL: max-age=60
+EXT:
+LOCATION: http://{0}:{1}/description.xml
+SERVER: FreeRTOS/6.0.5, UPnP/1.0, IpBridge/0.1
+hue-bridgeid: {1}
+ST: urn:schemas-upnp-org:device:basic:1
+USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
+
+"""
+        if self.target_ip is not None:
+            if addr[0] != self.target_ip:
+                return
+
+        # Randomize the mcast response - otherwise Echo can lose messages
+        r = random.randint(1,8)
+        time.sleep(r)
+
+        upnp_response = resp_template.format(
+            self.advertise_ip, self.advertise_port).replace("\n", "\r\n") \
+                                         .encode('utf-8')
+        resp_socket = socket.socket( socket.AF_INET, socket.SOCK_DGRAM)
+        resp_socket.sendto(upnp_response, addr)
+        resp_socket.close()
 
     def run(self):
         """Run the server."""
@@ -151,11 +167,7 @@ USN: uuid:Socket-1_0-221438K0100073::urn:schemas-upnp-org:device:basic:1
 
             if "M-SEARCH" in data.decode('utf-8'):
                 # SSDP M-SEARCH method received, respond to it with our info
-                resp_socket = socket.socket(
-                    socket.AF_INET, socket.SOCK_DGRAM)
-
-                resp_socket.sendto(self.upnp_response, addr)
-                resp_socket.close()
+                self.send_adv(addr,data)
 
     def stop(self):
         """Stop the server."""
