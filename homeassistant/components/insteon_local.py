@@ -1,4 +1,4 @@
-"""
+4"""
 Local support for Insteon.
 
 For more details about this component, please refer to the documentation at
@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['insteonlocal==0.43']
+REQUIREMENTS = ['insteonlocal==0.44']
 
 _LOGGER = logging.getLogger(__name__)
 
