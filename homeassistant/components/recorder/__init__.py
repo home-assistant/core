@@ -33,9 +33,11 @@ REQUIREMENTS = ['sqlalchemy==1.1.5']
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
+DEFAULT_RECORD_EVENTS = True
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
+CONF_RECORD_EVENTS = 'record_events'
 
 RETRIES = 3
 CONNECT_RETRY_WAIT = 10
@@ -47,6 +49,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PURGE_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
+        vol.Optional(CONF_RECORD_EVENTS, default=DEFAULT_RECORD_EVENTS):
+            cv.boolean,
         vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
             vol.Optional(CONF_DOMAINS, default=[]):
@@ -146,8 +150,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     include = config.get(DOMAIN, {}).get(CONF_INCLUDE, {})
     exclude = config.get(DOMAIN, {}).get(CONF_EXCLUDE, {})
+    record_events = config.get(DOMAIN, {}).get(CONF_RECORD_EVENTS)
     _INSTANCE = Recorder(hass, purge_days=purge_days, uri=db_url,
-                         include=include, exclude=exclude)
+                         include=include, exclude=exclude,
+                         record_events=record_events)
 
     return True
 
@@ -175,7 +181,7 @@ class Recorder(threading.Thread):
     """A threaded recorder class."""
 
     def __init__(self, hass: HomeAssistant, purge_days: int, uri: str,
-                 include: Dict, exclude: Dict) -> None:
+                 include: Dict, exclude: Dict, record_events: bool) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self)
 
@@ -192,6 +198,7 @@ class Recorder(threading.Thread):
         self.include_d = include.get(CONF_DOMAINS, [])
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
+        self.record_events = record_events
 
         def start_recording(event):
             """Start recording."""
@@ -254,15 +261,18 @@ class Recorder(threading.Thread):
                     continue
 
             with session_scope() as session:
-                dbevent = Events.from_event(event)
-                self._commit(session, dbevent)
+                if self.record_events:
+                    dbevent = Events.from_event(event)
+                    self._commit(session, dbevent)
+                else:
+                    dbevent = None
 
                 if event.event_type != EVENT_STATE_CHANGED:
                     self.queue.task_done()
                     continue
 
                 dbstate = States.from_event(event)
-                dbstate.event_id = dbevent.event_id
+                dbstate.event_id = dbevent.event_id if dbevent else None
                 self._commit(session, dbstate)
 
             self.queue.task_done()
