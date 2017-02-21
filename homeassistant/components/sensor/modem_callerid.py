@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.modem_callerid/
 import logging
 import voluptuous as vol
 from homeassistant.const import (STATE_IDLE,
-                                 STATE_UNAVAILABLE,
                                  EVENT_HOMEASSISTANT_STOP,
                                  CONF_NAME,
                                  CONF_DEVICE)
