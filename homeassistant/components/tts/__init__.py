@@ -12,6 +12,7 @@ import logging
 import mimetypes
 import os
 import re
+import io
 
 from aiohttp import web
 import voluptuous as vol
@@ -30,6 +31,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'tts'
 DEPENDENCIES = ['http']
+REQUIREMENTS = ["mutagen==1.36.2"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -245,8 +247,9 @@ class SpeechManager(object):
             for _, filename in self.file_cache.items():
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
-                except OSError:
-                    pass
+                except OSError as err:
+                    _LOGGER.warning(
+                        "Can't remove cache file '%s': %s", filename, err)
 
         yield from self.hass.loop.run_in_executor(None, remove_files)
         self.file_cache = {}
@@ -255,6 +258,8 @@ class SpeechManager(object):
     def async_register_engine(self, engine, provider, config):
         """Register a TTS provider."""
         provider.hass = self.hass
+        if provider.name is None:
+            provider.name = engine
         self.providers[engine] = provider
 
     @asyncio.coroutine
@@ -276,6 +281,8 @@ class SpeechManager(object):
                 language))
 
         # options
+        if provider.default_options and options:
+            options = provider.default_options.copy().update(options)
         options = options or provider.default_options
         if options is not None:
             invalid_opts = [opt_name for opt_name in options.keys()
@@ -322,6 +329,9 @@ class SpeechManager(object):
 
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
+
+        data = self.write_tags(
+            filename, data, provider, message, language, options)
 
         # save to memory
         self._async_store_to_memcache(key, filename, data)
@@ -412,11 +422,43 @@ class SpeechManager(object):
         content, _ = mimetypes.guess_type(filename)
         return (content, self.mem_cache[key][MEM_CACHE_VOICE])
 
+    @staticmethod
+    def write_tags(filename, data, provider, message, language, options):
+        """Write ID3 tags to file.
+
+        Async friendly.
+        """
+        import mutagen
+
+        data_bytes = io.BytesIO(data)
+        data_bytes.name = filename
+        data_bytes.seek(0)
+
+        album = provider.name
+        artist = language
+
+        if options is not None:
+            if options.get('voice') is not None:
+                artist = options.get('voice')
+
+        try:
+            tts_file = mutagen.File(data_bytes, easy=True)
+            if tts_file is not None:
+                tts_file['artist'] = artist
+                tts_file['album'] = album
+                tts_file['title'] = message
+                tts_file.save(data_bytes)
+        except mutagen.MutagenError as err:
+            _LOGGER.error("ID3 tag error: %s", err)
+
+        return data_bytes.getvalue()
+
 
 class Provider(object):
     """Represent a single provider."""
 
     hass = None
+    name = None
 
     @property
     def default_language(self):

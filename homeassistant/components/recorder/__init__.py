@@ -13,6 +13,7 @@ import threading
 import time
 from datetime import timedelta, datetime
 from typing import Any, Union, Optional, List, Dict
+from contextlib import contextmanager
 
 import voluptuous as vol
 
@@ -21,8 +22,9 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType, QueryType
 import homeassistant.util.dt as dt_util
 
@@ -39,51 +41,81 @@ CONF_PURGE_DAYS = 'purge_days'
 RETRIES = 3
 CONNECT_RETRY_WAIT = 10
 QUERY_RETRY_WAIT = 0.1
+ERROR_QUERY = "Error during query: %s"
+
+FILTER_SCHEMA = vol.Schema({
+    vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string])
+    }),
+    vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
+        vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
+        vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string])
+    })
+})
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: FILTER_SCHEMA.extend({
         vol.Optional(CONF_PURGE_DAYS):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
-        vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        }),
-        vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        })
     })
 }, extra=vol.ALLOW_EXTRA)
 
 _INSTANCE = None  # type: Any
 _LOGGER = logging.getLogger(__name__)
 
-# These classes will be populated during setup()
-# pylint: disable=invalid-name,no-member
-Session = None  # pylint: disable=no-member
+
+@contextmanager
+def session_scope():
+    """Provide a transactional scope around a series of operations."""
+    session = _INSTANCE.get_session()
+    try:
+        yield session
+        session.commit()
+    except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.error(ERROR_QUERY, err)
+        session.rollback()
+        raise
+    finally:
+        session.close()
+
+
+def get_instance() -> None:
+    """Throw error if recorder not initialized."""
+    if _INSTANCE is None:
+        raise RuntimeError("Recorder not initialized.")
+
+    ident = _INSTANCE.hass.loop.__dict__.get("_thread_ident")
+    if ident is not None and ident == threading.get_ident():
+        raise RuntimeError('Cannot be called from within the event loop')
+
+    _wait(_INSTANCE.db_ready, "Database not ready")
+
+    return _INSTANCE
 
 
 # pylint: disable=invalid-sequence-index
-def execute(q: QueryType) -> List[Any]:
+def execute(qry: QueryType) -> List[Any]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
     """
-    import sqlalchemy.exc
-    try:
+    get_instance()
+    from sqlalchemy.exc import SQLAlchemyError
+    with session_scope() as session:
         for _ in range(0, RETRIES):
             try:
                 return [
                     row for row in
-                    (row.to_native() for row in q)
+                    (row.to_native() for row in qry)
                     if row is not None]
-            except sqlalchemy.exc.SQLAlchemyError as e:
-                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
-    finally:
-        Session.close()
+            except SQLAlchemyError as err:
+                _LOGGER.error(ERROR_QUERY, err)
+                session.rollback()
+                time.sleep(QUERY_RETRY_WAIT)
     return []
 
 
@@ -92,18 +124,22 @@ def run_information(point_in_time: Optional[datetime]=None):
 
     There is also the run that covers point_in_time.
     """
-    _verify_instance()
+    ins = get_instance()
 
     recorder_runs = get_model('RecorderRuns')
-    if point_in_time is None or point_in_time > _INSTANCE.recording_start:
+    if point_in_time is None or point_in_time > ins.recording_start:
         return recorder_runs(
             end=None,
-            start=_INSTANCE.recording_start,
+            start=ins.recording_start,
             closed_incorrect=False)
 
-    return query('RecorderRuns').filter(
-        (recorder_runs.start < point_in_time) &
-        (recorder_runs.end > point_in_time)).first()
+    with session_scope() as session:
+        res = query(recorder_runs).filter(
+            (recorder_runs.start < point_in_time) &
+            (recorder_runs.end > point_in_time)).first()
+        if res:
+            session.expunge(res)
+        return res
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -125,17 +161,19 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     exclude = config.get(DOMAIN, {}).get(CONF_EXCLUDE, {})
     _INSTANCE = Recorder(hass, purge_days=purge_days, uri=db_url,
                          include=include, exclude=exclude)
+    _INSTANCE.start()
 
     return True
 
 
-def query(model_name: Union[str, Any], *args) -> QueryType:
+def query(model_name: Union[str, Any], session=None, *args) -> QueryType:
     """Helper to return a query handle."""
-    _verify_instance()
+    if session is None:
+        session = get_instance().get_session()
 
     if isinstance(model_name, str):
-        return Session.query(get_model(model_name), *args)
-    return Session.query(model_name, *args)
+        return session.query(get_model(model_name), *args)
+    return session.query(model_name, *args)
 
 
 def get_model(model_name: str) -> Any:
@@ -146,22 +184,6 @@ def get_model(model_name: str) -> Any:
     except AttributeError:
         _LOGGER.error("Invalid model name %s", model_name)
         return None
-
-
-def log_error(e: Exception, retry_wait: Optional[float]=0,
-              rollback: Optional[bool]=True,
-              message: Optional[str]="Error during query: %s") -> None:
-    """Log about SQLAlchemy errors in a sane manner."""
-    import sqlalchemy.exc
-    if not isinstance(e, sqlalchemy.exc.OperationalError):
-        _LOGGER.exception(str(e))
-    else:
-        _LOGGER.error(message, str(e))
-    if rollback:
-        Session.rollback()
-    if retry_wait:
-        _LOGGER.info("Retrying in %s seconds", retry_wait)
-        time.sleep(retry_wait)
 
 
 class Recorder(threading.Thread):
@@ -178,6 +200,7 @@ class Recorder(threading.Thread):
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_ready = threading.Event()
+        self.start_recording = threading.Event()
         self.engine = None  # type: Any
         self._run = None  # type: Any
 
@@ -188,34 +211,35 @@ class Recorder(threading.Thread):
 
         def start_recording(event):
             """Start recording."""
-            self.start()
+            self.start_recording.set()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_recording)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         hass.bus.listen(MATCH_ALL, self.event_listener)
 
+        self.get_session = None
+
     def run(self):
         """Start processing events to save."""
         from homeassistant.components.recorder.models import Events, States
-        import sqlalchemy.exc
+        from sqlalchemy.exc import SQLAlchemyError
 
         while True:
             try:
                 self._setup_connection()
                 self._setup_run()
+                self.db_ready.set()
                 break
-            except sqlalchemy.exc.SQLAlchemyError as e:
-                log_error(e, retry_wait=CONNECT_RETRY_WAIT, rollback=False,
-                          message="Error during connection setup: %s")
+            except SQLAlchemyError as err:
+                _LOGGER.error("Error during connection setup: %s (retrying "
+                              "in %s seconds)", err, CONNECT_RETRY_WAIT)
+                time.sleep(CONNECT_RETRY_WAIT)
 
         if self.purge_days is not None:
-            def purge_ticker(event):
-                """Rerun purge every second day."""
-                self._purge_old_data()
-                track_point_in_utc_time(self.hass, purge_ticker,
-                                        dt_util.utcnow() + timedelta(days=2))
-            track_point_in_utc_time(self.hass, purge_ticker,
-                                    dt_util.utcnow() + timedelta(minutes=5))
+            async_track_time_interval(
+                self.hass, self._purge_old_data, timedelta(days=2))
+
+        _wait(self.start_recording, "Waiting to start recording")
 
         while True:
             event = self.queue.get()
@@ -250,16 +274,17 @@ class Recorder(threading.Thread):
                     self.queue.task_done()
                     continue
 
-            dbevent = Events.from_event(event)
-            self._commit(dbevent)
+            with session_scope() as session:
+                dbevent = Events.from_event(event)
+                self._commit(session, dbevent)
 
-            if event.event_type != EVENT_STATE_CHANGED:
-                self.queue.task_done()
-                continue
+                if event.event_type != EVENT_STATE_CHANGED:
+                    self.queue.task_done()
+                    continue
 
-            dbstate = States.from_event(event)
-            dbstate.event_id = dbevent.event_id
-            self._commit(dbstate)
+                dbstate = States.from_event(event)
+                dbstate.event_id = dbevent.event_id
+                self._commit(session, dbstate)
 
             self.queue.task_done()
 
@@ -271,10 +296,9 @@ class Recorder(threading.Thread):
     def shutdown(self, event):
         """Tell the recorder to shut down."""
         global _INSTANCE  # pylint: disable=global-statement
-        _INSTANCE = None
-
         self.queue.put(None)
         self.join()
+        _INSTANCE = None
 
     def block_till_done(self):
         """Block till all events processed."""
@@ -282,12 +306,10 @@ class Recorder(threading.Thread):
 
     def block_till_db_ready(self):
         """Block until the database session is ready."""
-        self.db_ready.wait()
+        _wait(self.db_ready, "Database not ready")
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        global Session  # pylint: disable=global-statement
-
         import homeassistant.components.recorder.models as models
         from sqlalchemy import create_engine
         from sqlalchemy.orm import scoped_session
@@ -298,52 +320,56 @@ class Recorder(threading.Thread):
             self.engine = create_engine(
                 'sqlite://',
                 connect_args={'check_same_thread': False},
-                poolclass=StaticPool)
+                poolclass=StaticPool,
+                pool_reset_on_return=None)
         else:
             self.engine = create_engine(self.db_url, echo=False)
 
         models.Base.metadata.create_all(self.engine)
         session_factory = sessionmaker(bind=self.engine)
-        Session = scoped_session(session_factory)
+        self.get_session = scoped_session(session_factory)
         self._migrate_schema()
-        self.db_ready.set()
 
     def _migrate_schema(self):
         """Check if the schema needs to be upgraded."""
-        import homeassistant.components.recorder.models as models
-        schema_changes = models.SchemaChanges
-        current_version = getattr(Session.query(schema_changes).order_by(
-            schema_changes.change_id.desc()).first(), 'schema_version', None)
+        from homeassistant.components.recorder.models import SCHEMA_VERSION
+        schema_changes = get_model('SchemaChanges')
+        with session_scope() as session:
+            res = session.query(schema_changes).order_by(
+                schema_changes.change_id.desc()).first()
+            current_version = getattr(res, 'schema_version', None)
 
-        if current_version == models.SCHEMA_VERSION:
-            return
-        _LOGGER.debug("Schema version incorrect: %d", current_version)
+            if current_version == SCHEMA_VERSION:
+                return
+            _LOGGER.debug("Schema version incorrect: %s", current_version)
 
-        if current_version is None:
-            current_version = self._inspect_schema_version()
-            _LOGGER.debug("No schema version found. Inspected version: %d",
-                          current_version)
+            if current_version is None:
+                current_version = self._inspect_schema_version()
+                _LOGGER.debug("No schema version found. Inspected version: %s",
+                              current_version)
 
-        for version in range(current_version, models.SCHEMA_VERSION):
-            new_version = version + 1
-            _LOGGER.info(
-                "Upgrading recorder db schema to version %d", new_version)
-            self._apply_update(new_version)
-            self._commit(schema_changes(schema_version=new_version))
-            _LOGGER.info(
-                "Upgraded recorder db schema to version %d", new_version)
+            for version in range(current_version, SCHEMA_VERSION):
+                new_version = version + 1
+                _LOGGER.info("Upgrading recorder db schema to version %s",
+                             new_version)
+                self._apply_update(new_version)
+                self._commit(session,
+                             schema_changes(schema_version=new_version))
+                _LOGGER.info("Upgraded recorder db schema to version %s",
+                             new_version)
 
     def _apply_update(self, new_version):
         """Perform operations to bring schema up to date."""
-        from sqlalchemy import Index, Table
+        from sqlalchemy import Table
         import homeassistant.components.recorder.models as models
 
         if new_version == 1:
             def create_index(table_name, column_name):
                 """Create an index for the specified table and column."""
                 table = Table(table_name, models.Base.metadata)
-                index_name = "_".join(("ix", table_name, column_name))
-                index = Index(index_name, getattr(table.c, column_name))
+                name = "_".join(("ix", table_name, column_name))
+                # Look up the index object that was created from the models
+                index = next(idx for idx in table.indexes if idx.name == name)
                 _LOGGER.debug("Creating index for table %s column %s",
                               table_name, column_name)
                 index.create(self.engine)
@@ -368,51 +394,54 @@ class Recorder(threading.Thread):
         import homeassistant.components.recorder.models as models
         inspector = reflection.Inspector.from_engine(self.engine)
         indexes = inspector.get_indexes("events")
-        for index in indexes:
-            if index['column_names'] == ["time_fired"]:
-                # Schema addition from version 1 detected. This is a new db.
-                current_version = models.SchemaChanges(
-                    schema_version=models.SCHEMA_VERSION)
-                self._commit(current_version)
-                return models.SCHEMA_VERSION
+        with session_scope() as session:
+            for index in indexes:
+                if index['column_names'] == ["time_fired"]:
+                    # Schema addition from version 1 detected. New DB.
+                    current_version = models.SchemaChanges(
+                        schema_version=models.SCHEMA_VERSION)
+                    self._commit(session, current_version)
+                    return models.SCHEMA_VERSION
 
-        # Version 1 schema changes not found, this db needs to be migrated.
-        current_version = models.SchemaChanges(schema_version=0)
-        self._commit(current_version)
-        return current_version.schema_version
+            # Version 1 schema changes not found, this db needs to be migrated.
+            current_version = models.SchemaChanges(schema_version=0)
+            self._commit(session, current_version)
+            return current_version.schema_version
 
     def _close_connection(self):
         """Close the connection."""
-        global Session  # pylint: disable=global-statement
         self.engine.dispose()
         self.engine = None
-        Session = None
+        self.get_session = None
 
     def _setup_run(self):
         """Log the start of the current run."""
         recorder_runs = get_model('RecorderRuns')
-        for run in query('RecorderRuns').filter_by(end=None):
-            run.closed_incorrect = True
-            run.end = self.recording_start
-            _LOGGER.warning("Ended unfinished session (id=%s from %s)",
-                            run.run_id, run.start)
-            Session.add(run)
+        with session_scope() as session:
+            for run in query(
+                    recorder_runs, session=session).filter_by(end=None):
+                run.closed_incorrect = True
+                run.end = self.recording_start
+                _LOGGER.warning("Ended unfinished session (id=%s from %s)",
+                                run.run_id, run.start)
+                session.add(run)
 
-            _LOGGER.warning("Found unfinished sessions")
+                _LOGGER.warning("Found unfinished sessions")
 
-        self._run = recorder_runs(
-            start=self.recording_start,
-            created=dt_util.utcnow()
-        )
-        self._commit(self._run)
+            self._run = recorder_runs(
+                start=self.recording_start,
+                created=dt_util.utcnow()
+            )
+            self._commit(session, self._run)
 
     def _close_run(self):
         """Save end time for current run."""
-        self._run.end = dt_util.utcnow()
-        self._commit(self._run)
+        with session_scope() as session:
+            self._run.end = dt_util.utcnow()
+            self._commit(session, self._run)
         self._run = None
 
-    def _purge_old_data(self):
+    def _purge_old_data(self, _=None):
         """Purge events and states older than purge_days ago."""
         from homeassistant.components.recorder.models import Events, States
 
@@ -429,8 +458,9 @@ class Recorder(threading.Thread):
                                   .delete(synchronize_session=False)
             _LOGGER.debug("Deleted %s states", deleted_rows)
 
-        if self._commit(_purge_states):
-            _LOGGER.info("Purged states created before %s", purge_before)
+        with session_scope() as session:
+            if self._commit(session, _purge_states):
+                _LOGGER.info("Purged states created before %s", purge_before)
 
         def _purge_events(session):
             deleted_rows = session.query(Events) \
@@ -438,10 +468,9 @@ class Recorder(threading.Thread):
                                   .delete(synchronize_session=False)
             _LOGGER.debug("Deleted %s events", deleted_rows)
 
-        if self._commit(_purge_events):
-            _LOGGER.info("Purged events created before %s", purge_before)
-
-        Session.expire_all()
+        with session_scope() as session:
+            if self._commit(session, _purge_events):
+                _LOGGER.info("Purged events created before %s", purge_before)
 
         # Execute sqlite vacuum command to free up space on disk
         if self.engine.driver == 'sqlite':
@@ -449,10 +478,9 @@ class Recorder(threading.Thread):
             self.engine.execute("VACUUM")
 
     @staticmethod
-    def _commit(work):
+    def _commit(session, work):
         """Commit & retry work: Either a model or in a function."""
         import sqlalchemy.exc
-        session = Session()
         for _ in range(0, RETRIES):
             try:
                 if callable(work):
@@ -461,13 +489,20 @@ class Recorder(threading.Thread):
                     session.add(work)
                 session.commit()
                 return True
-            except sqlalchemy.exc.OperationalError as e:
-                log_error(e, retry_wait=QUERY_RETRY_WAIT, rollback=True)
+            except sqlalchemy.exc.OperationalError as err:
+                _LOGGER.error(ERROR_QUERY, err)
+                session.rollback()
+                time.sleep(QUERY_RETRY_WAIT)
         return False
 
 
-def _verify_instance() -> None:
-    """Throw error if recorder not initialized."""
-    if _INSTANCE is None:
-        raise RuntimeError("Recorder not initialized.")
-    _INSTANCE.block_till_db_ready()
+def _wait(event, message):
+    """Event wait helper."""
+    for retry in (10, 20, 30):
+        event.wait(10)
+        if event.is_set():
+            return
+        msg = message + " ({} seconds)".format(retry)
+        _LOGGER.warning(msg)
+    if not event.is_set():
+        raise HomeAssistantError(msg)

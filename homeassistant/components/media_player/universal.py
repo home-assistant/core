@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
-    ATTR_SUPPORTED_MEDIA_COMMANDS, ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
@@ -29,7 +29,7 @@ from homeassistant.const import (
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON,
-    SERVICE_MEDIA_STOP)
+    SERVICE_MEDIA_STOP, ATTR_SUPPORTED_FEATURES)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_call_from_config
 
@@ -151,7 +151,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         @callback
         def async_on_dependency_update(*_):
             """Update ha state when dependencies update."""
-            self.hass.add_job(self.async_update_ha_state(True))
+            self.hass.async_add_job(self.async_update_ha_state(True))
 
         depend = copy(children)
         for entity in attributes.values():
@@ -357,9 +357,9 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
 
     @property
-    def supported_media_commands(self):
-        """Flag media commands that are supported."""
-        flags = self._child_attr(ATTR_SUPPORTED_MEDIA_COMMANDS) or 0
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        flags = self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
 
         if SERVICE_TURN_ON in self._cmds:
             flags |= SUPPORT_TURN_ON

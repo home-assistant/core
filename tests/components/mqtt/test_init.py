@@ -1,5 +1,6 @@
 """The tests for the MQTT component."""
-from collections import namedtuple
+import asyncio
+from collections import namedtuple, OrderedDict
 import unittest
 from unittest import mock
 import socket
@@ -7,14 +8,31 @@ import socket
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import setup_component, async_setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP)
 
 from tests.common import (
-    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
+    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message, mock_coro)
+
+
+@asyncio.coroutine
+def mock_mqtt_client(hass, config=None):
+    """Mock the MQTT paho client."""
+    if config is None:
+        config = {
+            mqtt.CONF_BROKER: 'mock-broker'
+        }
+
+    with mock.patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect = lambda *args: 0
+        result = yield from async_setup_component(hass, mqtt.DOMAIN, {
+            mqtt.DOMAIN: config
+        })
+        assert result
+        return mock_client()
 
 
 # pylint: disable=invalid-name
@@ -40,7 +58,7 @@ class TestMQTT(unittest.TestCase):
         """"Test if client start on HA launch."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
-        self.assertTrue(mqtt.MQTT_CLIENT.start.called)
+        self.assertTrue(self.hass.data['mqtt'].async_start.called)
 
     def test_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA launch."""
@@ -48,39 +66,7 @@ class TestMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
-        self.assertTrue(mqtt.MQTT_CLIENT.stop.called)
-
-    @mock.patch('paho.mqtt.client.Client')
-    def test_setup_fails_if_no_connect_broker(self, _):
-        """Test for setup failure if connection to broker is missing."""
-        test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker'}}
-
-        with mock.patch('homeassistant.components.mqtt.MQTT',
-                        side_effect=socket.error()):
-            self.hass.config.components = []
-            assert not setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
-
-        # Ensure if we dont raise it sets up correctly
-        self.hass.config.components = []
-        assert setup_component(self.hass, mqtt.DOMAIN, test_broker_cfg)
-
-    @mock.patch('paho.mqtt.client.Client')
-    def test_setup_embedded(self, _):
-        """Test setting up embedded server with no config."""
-        client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
-
-        with mock.patch('homeassistant.components.mqtt.server.start',
-                        return_value=(True, client_config)) as _start:
-            self.hass.config.components = []
-            assert setup_component(self.hass, mqtt.DOMAIN,
-                                   {mqtt.DOMAIN: {}})
-            assert _start.call_count == 1
-
-            # Test with `embedded: None`
-            self.hass.config.components = []
-            assert setup_component(self.hass, mqtt.DOMAIN,
-                                   {mqtt.DOMAIN: {'embedded': None}})
-            assert _start.call_count == 2  # Another call
+        self.assertTrue(self.hass.data['mqtt'].async_stop.called)
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
@@ -105,7 +91,7 @@ class TestMQTT(unittest.TestCase):
             ATTR_SERVICE: mqtt.SERVICE_PUBLISH
         })
         self.hass.block_till_done()
-        self.assertTrue(not mqtt.MQTT_CLIENT.publish.called)
+        self.assertTrue(not self.hass.data['mqtt'].async_publish.called)
 
     def test_service_call_with_template_payload_renders_template(self):
         """Test the service call with rendered template.
@@ -114,8 +100,9 @@ class TestMQTT(unittest.TestCase):
         """
         mqtt.publish_template(self.hass, "test/topic", "{{ 1+1 }}")
         self.hass.block_till_done()
-        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
-        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][1], "2")
+        self.assertTrue(self.hass.data['mqtt'].async_publish.called)
+        self.assertEqual(
+            self.hass.data['mqtt'].async_publish.call_args[0][1], "2")
 
     def test_service_call_with_payload_doesnt_render_template(self):
         """Test the service call with unrendered template.
@@ -129,7 +116,7 @@ class TestMQTT(unittest.TestCase):
             mqtt.ATTR_PAYLOAD: payload,
             mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template
         }, blocking=True)
-        self.assertFalse(mqtt.MQTT_CLIENT.publish.called)
+        self.assertFalse(self.hass.data['mqtt'].async_publish.called)
 
     def test_service_call_with_ascii_qos_retain_flags(self):
         """Test the service call with args that can be misinterpreted.
@@ -142,9 +129,10 @@ class TestMQTT(unittest.TestCase):
             mqtt.ATTR_QOS: '2',
             mqtt.ATTR_RETAIN: 'no'
         }, blocking=True)
-        self.assertTrue(mqtt.MQTT_CLIENT.publish.called)
-        self.assertEqual(mqtt.MQTT_CLIENT.publish.call_args[0][2], 2)
-        self.assertFalse(mqtt.MQTT_CLIENT.publish.call_args[0][3])
+        self.assertTrue(self.hass.data['mqtt'].async_publish.called)
+        self.assertEqual(
+            self.hass.data['mqtt'].async_publish.call_args[0][2], 2)
+        self.assertFalse(self.hass.data['mqtt'].async_publish.call_args[0][3])
 
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""
@@ -231,15 +219,12 @@ class TestMQTTCallbacks(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        # mock_mqtt_component(self.hass)
 
-        with mock.patch('paho.mqtt.client.Client'):
-            self.hass.config.components = []
+        with mock.patch('paho.mqtt.client.Client') as client:
+            client().connect = lambda *args: 0
             assert setup_component(self.hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
-                    mqtt.CONF_BIRTH_MESSAGE: {mqtt.ATTR_TOPIC: 'birth',
-                                              mqtt.ATTR_PAYLOAD: 'birth'}
                 }
             })
 
@@ -261,7 +246,8 @@ class TestMQTTCallbacks(unittest.TestCase):
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
         message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
 
-        mqtt.MQTT_CLIENT._mqtt_on_message(None, {'hass': self.hass}, message)
+        self.hass.data['mqtt']._mqtt_on_message(
+            None, {'hass': self.hass}, message)
         self.hass.block_till_done()
 
         self.assertEqual(1, len(calls))
@@ -273,68 +259,36 @@ class TestMQTTCallbacks(unittest.TestCase):
     def test_mqtt_failed_connection_results_in_disconnect(self):
         """Test if connection failure leads to disconnect."""
         for result_code in range(1, 6):
-            mqtt.MQTT_CLIENT._mqttc = mock.MagicMock()
-            mqtt.MQTT_CLIENT._mqtt_on_connect(None, {'topics': {}}, 0,
-                                              result_code)
-            self.assertTrue(mqtt.MQTT_CLIENT._mqttc.disconnect.called)
-
-    def test_mqtt_subscribes_topics_on_connect(self):
-        """Test subscription to topic on connect."""
-        from collections import OrderedDict
-        prev_topics = OrderedDict()
-        prev_topics['topic/test'] = 1,
-        prev_topics['home/sensor'] = 2,
-        prev_topics['still/pending'] = None
-
-        mqtt.MQTT_CLIENT.topics = prev_topics
-        mqtt.MQTT_CLIENT.progress = {1: 'still/pending'}
-        # Return values for subscribe calls (rc, mid)
-        mqtt.MQTT_CLIENT._mqttc.subscribe.side_effect = ((0, 2), (0, 3))
-        mqtt.MQTT_CLIENT._mqtt_on_connect(None, None, 0, 0)
-        self.assertFalse(mqtt.MQTT_CLIENT._mqttc.disconnect.called)
-
-        expected = [(topic, qos) for topic, qos in prev_topics.items()
-                    if qos is not None]
-        self.assertEqual(
-            expected,
-            [call[1] for call in mqtt.MQTT_CLIENT._mqttc.subscribe.mock_calls])
-        self.assertEqual({
-            1: 'still/pending',
-            2: 'topic/test',
-            3: 'home/sensor',
-        }, mqtt.MQTT_CLIENT.progress)
-
-    def test_mqtt_birth_message_on_connect(self):  \
-            # pylint: disable=no-self-use
-        """Test birth message on connect."""
-        mqtt.MQTT_CLIENT._mqtt_on_connect(None, None, 0, 0)
-        mqtt.MQTT_CLIENT._mqttc.publish.assert_called_with('birth', 'birth', 0,
-                                                           False)
+            self.hass.data['mqtt']._mqttc = mock.MagicMock()
+            self.hass.data['mqtt']._mqtt_on_connect(
+                None, {'topics': {}}, 0, result_code)
+            self.assertTrue(self.hass.data['mqtt']._mqttc.disconnect.called)
 
     def test_mqtt_disconnect_tries_no_reconnect_on_stop(self):
         """Test the disconnect tries."""
-        mqtt.MQTT_CLIENT._mqtt_on_disconnect(None, None, 0)
-        self.assertFalse(mqtt.MQTT_CLIENT._mqttc.reconnect.called)
+        self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 0)
+        self.assertFalse(self.hass.data['mqtt']._mqttc.reconnect.called)
 
     @mock.patch('homeassistant.components.mqtt.time.sleep')
     def test_mqtt_disconnect_tries_reconnect(self, mock_sleep):
         """Test the re-connect tries."""
-        mqtt.MQTT_CLIENT.topics = {
+        self.hass.data['mqtt'].topics = {
             'test/topic': 1,
             'test/progress': None
         }
-        mqtt.MQTT_CLIENT.progress = {
+        self.hass.data['mqtt'].progress = {
             1: 'test/progress'
         }
-        mqtt.MQTT_CLIENT._mqttc.reconnect.side_effect = [1, 1, 1, 0]
-        mqtt.MQTT_CLIENT._mqtt_on_disconnect(None, None, 1)
-        self.assertTrue(mqtt.MQTT_CLIENT._mqttc.reconnect.called)
-        self.assertEqual(4, len(mqtt.MQTT_CLIENT._mqttc.reconnect.mock_calls))
+        self.hass.data['mqtt']._mqttc.reconnect.side_effect = [1, 1, 1, 0]
+        self.hass.data['mqtt']._mqtt_on_disconnect(None, None, 1)
+        self.assertTrue(self.hass.data['mqtt']._mqttc.reconnect.called)
+        self.assertEqual(
+            4, len(self.hass.data['mqtt']._mqttc.reconnect.mock_calls))
         self.assertEqual([1, 2, 4],
                          [call[1][0] for call in mock_sleep.mock_calls])
 
-        self.assertEqual({'test/topic': 1}, mqtt.MQTT_CLIENT.topics)
-        self.assertEqual({}, mqtt.MQTT_CLIENT.progress)
+        self.assertEqual({'test/topic': 1}, self.hass.data['mqtt'].topics)
+        self.assertEqual({}, self.hass.data['mqtt'].progress)
 
     def test_invalid_mqtt_topics(self):
         """Test invalid topics."""
@@ -356,7 +310,7 @@ class TestMQTTCallbacks(unittest.TestCase):
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
         message = MQTTMessage(topic, 1, payload)
         with self.assertLogs(level='ERROR') as test_handle:
-            mqtt.MQTT_CLIENT._mqtt_on_message(
+            self.hass.data['mqtt']._mqtt_on_message(
                 None,
                 {'hass': self.hass},
                 message)
@@ -365,3 +319,92 @@ class TestMQTTCallbacks(unittest.TestCase):
                 "ERROR:homeassistant.components.mqtt:Illegal utf-8 unicode "
                 "payload from MQTT topic: %s, Payload: " % topic,
                 test_handle.output[0])
+
+
+@asyncio.coroutine
+def test_setup_embedded_starts_with_no_config(hass):
+    """Test setting up embedded server with no config."""
+    client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
+
+    with mock.patch('homeassistant.components.mqtt.server.async_start',
+                    return_value=mock_coro(
+                        return_value=(True, client_config))
+                    ) as _start:
+        yield from mock_mqtt_client(hass, {})
+        assert _start.call_count == 1
+
+
+@asyncio.coroutine
+def test_setup_embedded_with_embedded(hass):
+    """Test setting up embedded server with no config."""
+    client_config = ('localhost', 1883, 'user', 'pass', None, '3.1.1')
+
+    with mock.patch('homeassistant.components.mqtt.server.async_start',
+                    return_value=mock_coro(
+                        return_value=(True, client_config))
+                    ) as _start:
+        _start.return_value = mock_coro(return_value=(True, client_config))
+        yield from mock_mqtt_client(hass, {'embedded': None})
+        assert _start.call_count == 1
+
+
+@asyncio.coroutine
+def test_setup_fails_if_no_connect_broker(hass):
+    """Test for setup failure if connection to broker is missing."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker'}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT',
+                    side_effect=socket.error()):
+        result = yield from async_setup_component(hass, mqtt.DOMAIN,
+                                                  test_broker_cfg)
+        assert not result
+
+    with mock.patch('paho.mqtt.client.Client') as mock_client:
+        mock_client().connect = lambda *args: 1
+        result = yield from async_setup_component(hass, mqtt.DOMAIN,
+                                                  test_broker_cfg)
+        assert not result
+
+
+@asyncio.coroutine
+def test_birth_message(hass):
+    """Test sending birth message."""
+    mqtt_client = yield from mock_mqtt_client(hass, {
+        mqtt.CONF_BROKER: 'mock-broker',
+        mqtt.CONF_BIRTH_MESSAGE: {mqtt.ATTR_TOPIC: 'birth',
+                                  mqtt.ATTR_PAYLOAD: 'birth'}
+    })
+    calls = []
+    mqtt_client.publish = lambda *args: calls.append(args)
+    hass.data['mqtt']._mqtt_on_connect(None, None, 0, 0)
+    yield from hass.async_block_till_done()
+    assert calls[-1] == ('birth', 'birth', 0, False)
+
+
+@asyncio.coroutine
+def test_mqtt_subscribes_topics_on_connect(hass):
+    """Test subscription to topic on connect."""
+    mqtt_client = yield from mock_mqtt_client(hass)
+
+    prev_topics = OrderedDict()
+    prev_topics['topic/test'] = 1,
+    prev_topics['home/sensor'] = 2,
+    prev_topics['still/pending'] = None
+
+    hass.data['mqtt'].topics = prev_topics
+    hass.data['mqtt'].progress = {1: 'still/pending'}
+
+    # Return values for subscribe calls (rc, mid)
+    mqtt_client.subscribe.side_effect = ((0, 2), (0, 3))
+
+    hass.add_job = mock.MagicMock()
+    hass.data['mqtt']._mqtt_on_connect(None, None, 0, 0)
+
+    yield from hass.async_block_till_done()
+
+    assert not mqtt_client.disconnect.called
+
+    expected = [(topic, qos) for topic, qos in prev_topics.items()
+                if qos is not None]
+
+    assert [call[1][1:] for call in hass.add_job.mock_calls] == expected

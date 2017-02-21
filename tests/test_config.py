@@ -18,7 +18,7 @@ from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 
 from tests.common import (
-    get_test_config_dir, get_test_home_assistant)
+    get_test_config_dir, get_test_home_assistant, mock_coro)
 
 CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
@@ -376,6 +376,36 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
 
+    @mock.patch('asyncio.create_subprocess_exec')
+    def test_check_ha_config_file_correct(self, mock_create):
+        """Check that restart propagates to stop."""
+        process_mock = mock.MagicMock()
+        attrs = {
+            'communicate.return_value': mock_coro(('output', 'error')),
+            'wait.return_value': mock_coro(0)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_coro(process_mock)
+
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass), self.hass.loop
+        ).result() is None
+
+    @mock.patch('asyncio.create_subprocess_exec')
+    def test_check_ha_config_file_wrong(self, mock_create):
+        """Check that restart with a bad config doesn't propagate to stop."""
+        process_mock = mock.MagicMock()
+        attrs = {
+            'communicate.return_value':
+                mock_coro(('\033[34mhello'.encode('utf-8'), 'error')),
+            'wait.return_value': mock_coro(1)}
+        process_mock.configure_mock(**attrs)
+        mock_create.return_value = mock_coro(process_mock)
+
+        assert run_coroutine_threadsafe(
+            config_util.async_check_ha_config_file(self.hass),
+            self.hass.loop
+        ).result() == 'hello'
+
 
 # pylint: disable=redefined-outer-name
 @pytest.fixture
@@ -517,11 +547,5 @@ def test_merge_customize(hass):
     }
     yield from config_util.async_process_ha_core_config(hass, core_config)
 
-    entity = Entity()
-    entity.entity_id = 'b.b'
-    entity.hass = hass
-    yield from entity.async_update_ha_state()
-
-    state = hass.states.get('b.b')
-    assert state is not None
-    assert state.attributes['friendly_name'] == 'BB'
+    assert hass.data[config_util.DATA_CUSTOMIZE].get('b.b') == \
+        {'friendly_name': 'BB'}

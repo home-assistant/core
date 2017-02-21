@@ -15,7 +15,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['astral==1.3.3']
+REQUIREMENTS = ['astral==1.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,11 +61,6 @@ class MoonSensor(Entity):
             return 'First quarter'
         else:
             return 'New moon'
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return 'Phase'
 
     @property
     def icon(self):

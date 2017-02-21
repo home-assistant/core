@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC)
 
-REQUIREMENTS = ['miflora==0.1.15']
+REQUIREMENTS = ['miflora==0.1.16']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -179,12 +179,9 @@ class FlicButton(BinarySensorDevice):
         return False
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return device specific state attributes."""
-        attr = super(FlicButton, self).state_attributes
-        attr["address"] = self.address
-
-        return attr
+        return {"address": self.address}
 
     def _queued_event_check(self, click_type, time_diff):
         """Generate a log message and returns true if timeout exceeded."""

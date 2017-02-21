@@ -1,9 +1,13 @@
 """Test discovery helpers."""
+import asyncio
 from collections import OrderedDict
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant import loader, bootstrap
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -62,7 +66,7 @@ class TestHelpersDiscovery:
                                                        in calls_multi]
 
     @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           return_value=mock_coro(True))
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
         calls = []
@@ -155,7 +159,8 @@ class TestHelpersDiscovery:
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
 
-    def test_1st_discovers_2nd_component(self):
+    @patch('homeassistant.bootstrap.async_register_signal_handling')
+    def test_1st_discovers_2nd_component(self, mock_signal):
         """Test that we don't break if one component discovers the other.
 
         If the first component fires a discovery event to setup the
@@ -196,3 +201,17 @@ class TestHelpersDiscovery:
 
         # test_component will only be setup once
         assert len(component_calls) == 1
+
+
+@asyncio.coroutine
+def test_load_platform_forbids_config():
+    """Test you cannot setup config component with load_platform."""
+    with pytest.raises(HomeAssistantError):
+        yield from discovery.async_load_platform(None, 'config', 'zwave')
+
+
+@asyncio.coroutine
+def test_discover_forbids_config():
+    """Test you cannot setup config component with load_platform."""
+    with pytest.raises(HomeAssistantError):
+        yield from discovery.async_discover(None, None, None, 'config')

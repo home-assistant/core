@@ -33,7 +33,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
     def test_ensure_device_tracker_platform_validation(self): \
             # pylint: disable=invalid-name
         """Test if platform validation was done."""
-        def mock_setup_scanner(hass, config, see):
+        def mock_setup_scanner(hass, config, see, discovery_info=None):
             """Check that Qos was added by validation."""
             self.assertTrue('qos' in config)
 
@@ -43,7 +43,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
 
             dev_id = 'paulus'
             topic = '/location/paulus'
-            self.hass.config.components = ['mqtt', 'zone']
+            self.hass.config.components = set(['mqtt', 'zone'])
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'mqtt',
@@ -59,7 +59,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         topic = '/location/paulus'
         location = 'work'
 
-        self.hass.config.components = ['mqtt', 'zone']
+        self.hass.config.components = set(['mqtt', 'zone'])
         assert setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt',

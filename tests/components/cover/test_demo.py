@@ -24,6 +24,17 @@ class TestCoverDemo(unittest.TestCase):
         """Stop down everything that was started."""
         self.hass.stop()
 
+    def test_supported_features(self):
+        """Test cover supported features."""
+        state = self.hass.states.get('cover.garage_door')
+        self.assertEqual(3, state.attributes.get('supported_features'))
+        state = self.hass.states.get('cover.kitchen_window')
+        self.assertEqual(11, state.attributes.get('supported_features'))
+        state = self.hass.states.get('cover.hall_window')
+        self.assertEqual(15, state.attributes.get('supported_features'))
+        state = self.hass.states.get('cover.living_room_window')
+        self.assertEqual(255, state.attributes.get('supported_features'))
+
     def test_close_cover(self):
         """Test closing the cover."""
         state = self.hass.states.get(ENTITY_COVER)

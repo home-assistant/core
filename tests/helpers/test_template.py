@@ -186,6 +186,20 @@ class TestHelpersTemplate(unittest.TestCase):
                 template.Template('{{ %s | timestamp_local }}' % inp,
                                   self.hass).render())
 
+    def test_min(self):
+        """Test the min filter."""
+        self.assertEqual(
+            '1',
+            template.Template('{{ [1, 2, 3] | min }}',
+                              self.hass).render())
+
+    def test_max(self):
+        """Test the max filter."""
+        self.assertEqual(
+            '3',
+            template.Template('{{ [1, 2, 3] | max }}',
+                              self.hass).render())
+
     def test_timestamp_utc(self):
         """Test the timestamps to local filter."""
         tests = {
@@ -688,3 +702,14 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
     states.sensor.pick_humidity.state ~ „ %“
 }}
             """)))
+
+        self.assertListEqual(
+            sorted([
+                'sensor.luftfeuchtigkeit_mean',
+                'input_slider.luftfeuchtigkeit',
+            ]),
+            sorted(template.extract_entities(
+                "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
+                " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
+                " %}true{% endif %}"
+            )))

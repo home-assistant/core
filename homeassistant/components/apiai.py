@@ -77,14 +77,14 @@ class ApiaiIntentsView(HomeAssistantView):
         """Handle API.AI."""
         data = yield from request.json()
 
-        _LOGGER.debug('Received Apiai request: %s', data)
+        _LOGGER.debug("Received api.ai request: %s", data)
 
         req = data.get('result')
 
         if req is None:
-            _LOGGER.error('Received invalid data from Apiai: %s', data)
-            return self.json_message('Expected result value not received',
-                                     HTTP_BAD_REQUEST)
+            _LOGGER.error("Received invalid data from api.ai: %s", data)
+            return self.json_message(
+                "Expected result value not received", HTTP_BAD_REQUEST)
 
         action_incomplete = req['actionIncomplete']
 
@@ -106,7 +106,7 @@ class ApiaiIntentsView(HomeAssistantView):
         #     return self.json(response)
 
         if intent == "":
-            _LOGGER.warning('Received intent with empty action')
+            _LOGGER.warning("Received intent with empty action")
             response.add_speech(
                 "You have not defined an action in your api.ai intent.")
             return self.json(response)
@@ -114,7 +114,7 @@ class ApiaiIntentsView(HomeAssistantView):
         config = self.intents.get(intent)
 
         if config is None:
-            _LOGGER.warning('Received unknown intent %s', intent)
+            _LOGGER.warning("Received unknown intent %s", intent)
             response.add_speech(
                 "Intent '%s' is not yet configured within Home Assistant." %
                 intent)

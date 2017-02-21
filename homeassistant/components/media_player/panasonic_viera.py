@@ -123,8 +123,8 @@ class PanasonicVieraTVDevice(MediaPlayerDevice):
         return self._muted
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         if self._mac:
             return SUPPORT_VIERATV | SUPPORT_TURN_ON
         return SUPPORT_VIERATV

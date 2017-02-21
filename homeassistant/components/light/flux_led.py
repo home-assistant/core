@@ -12,12 +12,13 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_RANDOM,
-    SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, Light,
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
+    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_RGB_COLOR, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.12']
+REQUIREMENTS = ['flux_led==0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +30,57 @@ DOMAIN = 'flux_led'
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                     SUPPORT_RGB_COLOR)
 
+MODE_RGB = 'rgb'
+MODE_RGBW = 'rgbw'
+
+# List of Supported Effects which aren't already declared in LIGHT
+EFFECT_RED_FADE = "red_fade"
+EFFECT_GREEN_FADE = "green_fade"
+EFFECT_BLUE_FADE = "blue_fade"
+EFFECT_YELLOW_FADE = "yellow_fade"
+EFFECT_CYAN_FADE = "cyan_fade"
+EFFECT_PURPLE_FADE = "purple_fade"
+EFFECT_WHITE_FADE = "white_fade"
+EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"
+EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"
+EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"
+EFFECT_COLORSTROBE = "colorstrobe"
+EFFECT_RED_STROBE = "red_strobe"
+EFFECT_GREEN_STROBE = "green_strobe"
+EFFECT_BLUE_STOBE = "blue_strobe"
+EFFECT_YELLOW_STROBE = "yellow_strobe"
+EFFECT_CYAN_STROBE = "cyan_strobe"
+EFFECT_PURPLE_STROBE = "purple_strobe"
+EFFECT_WHITE_STROBE = "white_strobe"
+EFFECT_COLORJUMP = "colorjump"
+
+FLUX_EFFECT_LIST = [
+    EFFECT_COLORLOOP,
+    EFFECT_RANDOM,
+    EFFECT_RED_FADE,
+    EFFECT_GREEN_FADE,
+    EFFECT_BLUE_FADE,
+    EFFECT_YELLOW_FADE,
+    EFFECT_CYAN_FADE,
+    EFFECT_PURPLE_FADE,
+    EFFECT_WHITE_FADE,
+    EFFECT_RED_GREEN_CROSS_FADE,
+    EFFECT_RED_BLUE_CROSS_FADE,
+    EFFECT_GREEN_BLUE_CROSS_FADE,
+    EFFECT_COLORSTROBE,
+    EFFECT_RED_STROBE,
+    EFFECT_GREEN_STROBE,
+    EFFECT_BLUE_STOBE,
+    EFFECT_YELLOW_STROBE,
+    EFFECT_CYAN_STROBE,
+    EFFECT_PURPLE_STROBE,
+    EFFECT_WHITE_STROBE,
+    EFFECT_COLORJUMP]
+
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(ATTR_MODE, default='rgbw'):
-        vol.All(cv.string, vol.In(['rgbw', 'rgb'])),
+    vol.Optional(ATTR_MODE, default=MODE_RGBW):
+        vol.All(cv.string, vol.In([MODE_RGBW, MODE_RGB])),
     vol.Optional(CONF_PROTOCOL, default=None):
         vol.All(cv.string, vol.In(['ledenet'])),
 })
@@ -48,7 +96,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import flux_led
     lights = []
     light_ips = []
-    for ipaddr, device_config in config[CONF_DEVICES].items():
+
+    for ipaddr, device_config in config.get(CONF_DEVICES, {}).items():
         device = {}
         device['name'] = device_config[CONF_NAME]
         device['ipaddr'] = ipaddr
@@ -59,7 +108,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(light)
             light_ips.append(ipaddr)
 
-    if not config[CONF_AUTOMATIC_ADD]:
+    if discovery_info:
+        device = {}
+        # discovery_info: ip address,device id,device type
+        device['ipaddr'] = discovery_info[0]
+        device['name'] = discovery_info[1]
+        # As we don't know protocol and mode set to none to autodetect.
+        device[CONF_PROTOCOL] = None
+        device[ATTR_MODE] = None
+
+        light = FluxLight(device)
+        if light.is_valid:
+            lights.append(light)
+            light_ips.append(device['ipaddr'])
+
+    if not config.get(CONF_AUTOMATIC_ADD, False):
         add_devices(lights)
         return
 
@@ -94,10 +157,20 @@ class FluxLight(Light):
         self._mode = device[ATTR_MODE]
         self.is_valid = True
         self._bulb = None
+
         try:
             self._bulb = flux_led.WifiLedBulb(self._ipaddr)
             if self._protocol:
                 self._bulb.setProtocol(self._protocol)
+
+            # After bulb object is created the status is updated. We can
+            # now set the correct mode if it was not explicitly defined.
+            if not self._mode:
+                if self._bulb.rgbwcapable:
+                    self._mode = MODE_RGBW
+                else:
+                    self._mode = MODE_RGB
+
         except socket.error:
             self.is_valid = False
             _LOGGER.error(
@@ -121,7 +194,7 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._bulb.getWarmWhite255()
+        return self._bulb.brightness
 
     @property
     def rgb_color(self):
@@ -132,6 +205,11 @@ class FluxLight(Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_FLUX_LED
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return FLUX_EFFECT_LIST
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
@@ -155,6 +233,46 @@ class FluxLight(Light):
             self._bulb.setRgb(random.randrange(0, 255),
                               random.randrange(0, 255),
                               random.randrange(0, 255))
+        elif effect == EFFECT_COLORLOOP:
+            self._bulb.setPresetPattern(0x25, 50)
+        elif effect == EFFECT_RED_FADE:
+            self._bulb.setPresetPattern(0x26, 50)
+        elif effect == EFFECT_GREEN_FADE:
+            self._bulb.setPresetPattern(0x27, 50)
+        elif effect == EFFECT_BLUE_FADE:
+            self._bulb.setPresetPattern(0x28, 50)
+        elif effect == EFFECT_YELLOW_FADE:
+            self._bulb.setPresetPattern(0x29, 50)
+        elif effect == EFFECT_CYAN_FADE:
+            self._bulb.setPresetPattern(0x2a, 50)
+        elif effect == EFFECT_PURPLE_FADE:
+            self._bulb.setPresetPattern(0x2b, 50)
+        elif effect == EFFECT_WHITE_FADE:
+            self._bulb.setPresetPattern(0x2c, 50)
+        elif effect == EFFECT_RED_GREEN_CROSS_FADE:
+            self._bulb.setPresetPattern(0x2d, 50)
+        elif effect == EFFECT_RED_BLUE_CROSS_FADE:
+            self._bulb.setPresetPattern(0x2e, 50)
+        elif effect == EFFECT_GREEN_BLUE_CROSS_FADE:
+            self._bulb.setPresetPattern(0x2f, 50)
+        elif effect == EFFECT_COLORSTROBE:
+            self._bulb.setPresetPattern(0x30, 50)
+        elif effect == EFFECT_RED_STROBE:
+            self._bulb.setPresetPattern(0x31, 50)
+        elif effect == EFFECT_GREEN_STROBE:
+            self._bulb.setPresetPattern(0x32, 50)
+        elif effect == EFFECT_BLUE_STOBE:
+            self._bulb.setPresetPattern(0x33, 50)
+        elif effect == EFFECT_YELLOW_STROBE:
+            self._bulb.setPresetPattern(0x34, 50)
+        elif effect == EFFECT_CYAN_STROBE:
+            self._bulb.setPresetPattern(0x35, 50)
+        elif effect == EFFECT_PURPLE_STROBE:
+            self._bulb.setPresetPattern(0x36, 50)
+        elif effect == EFFECT_WHITE_STROBE:
+            self._bulb.setPresetPattern(0x37, 50)
+        elif effect == EFFECT_COLORJUMP:
+            self._bulb.setPresetPattern(0x38, 50)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""

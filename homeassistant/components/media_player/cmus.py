@@ -90,11 +90,9 @@ class CmusDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the media state."""
-        if 'status' not in self.status:
-            self.update()
-        if self.status['status'] == 'playing':
+        if self.status.get('status') == 'playing':
             return STATE_PLAYING
-        elif self.status['status'] == 'paused':
+        elif self.status.get('status') == 'paused':
             return STATE_PAUSED
         else:
             return STATE_OFF
@@ -151,8 +149,8 @@ class CmusDevice(MediaPlayerDevice):
         return int(volume)/100
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CMUS
 
     def turn_off(self):

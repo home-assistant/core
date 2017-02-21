@@ -126,8 +126,8 @@ class MpcHcDevice(MediaPlayerDevice):
             int(duration[2])
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_MPCHC
 
     def volume_up(self):

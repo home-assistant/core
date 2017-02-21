@@ -71,7 +71,7 @@ def get_cipher():
     return (KEYLEN, decrypt)
 
 
-def setup_scanner(hass, config, see):
+def setup_scanner(hass, config, see, discovery_info=None):
     """Set up an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)

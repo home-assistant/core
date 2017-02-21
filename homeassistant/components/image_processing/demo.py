@@ -4,19 +4,19 @@ Support for the demo image processing.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/demo/
 """
-
+from homeassistant.components.image_processing import ATTR_CONFIDENCE
 from homeassistant.components.image_processing.openalpr_local import (
     ImageProcessingAlprEntity)
 from homeassistant.components.image_processing.microsoft_face_identify import (
-    ImageProcessingFaceIdentifyEntity)
+    ImageProcessingFaceEntity, ATTR_NAME, ATTR_AGE, ATTR_GENDER)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the demo image_processing platform."""
     add_devices([
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
-        DemoImageProcessingFaceIdentify(
-            'camera.demo_camera', "Demo Face Identify")
+        DemoImageProcessingFace(
+            'camera.demo_camera', "Demo Face")
     ])
 
 
@@ -57,7 +57,7 @@ class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
         self.process_plates(demo_data, 1)
 
 
-class DemoImageProcessingFaceIdentify(ImageProcessingFaceIdentifyEntity):
+class DemoImageProcessingFace(ImageProcessingFaceEntity):
     """Demo face identify image processing entity."""
 
     def __init__(self, camera_entity, name):
@@ -84,10 +84,22 @@ class DemoImageProcessingFaceIdentify(ImageProcessingFaceIdentifyEntity):
 
     def process_image(self, image):
         """Process image."""
-        demo_data = {
-            'Hans': 98.34,
-            'Helena': 82.53,
-            'Luna': 62.53,
-        }
+        demo_data = [
+            {
+                ATTR_CONFIDENCE: 98.34,
+                ATTR_NAME: 'Hans',
+                ATTR_AGE: 16.0,
+                ATTR_GENDER: 'male',
+            },
+            {
+                ATTR_NAME: 'Helena',
+                ATTR_AGE: 28.0,
+                ATTR_GENDER: 'female',
+            },
+            {
+                ATTR_CONFIDENCE: 62.53,
+                ATTR_NAME: 'Luna',
+            },
+        ]
 
         self.process_faces(demo_data, 4)

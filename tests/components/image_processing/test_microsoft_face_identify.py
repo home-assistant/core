@@ -23,7 +23,7 @@ class TestMicrosoftFaceIdentifySetup(object):
         self.hass.stop()
 
     @patch('homeassistant.components.microsoft_face.'
-           'MicrosoftFace.update_store', return_value=mock_coro()())
+           'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform(self, store_mock):
         """Setup platform with one entity."""
         config = {
@@ -49,7 +49,7 @@ class TestMicrosoftFaceIdentifySetup(object):
             'image_processing.microsoftface_demo_camera')
 
     @patch('homeassistant.components.microsoft_face.'
-           'MicrosoftFace.update_store', return_value=mock_coro()())
+           'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform_name(self, store_mock):
         """Setup platform with one entity and set name."""
         config = {
@@ -106,7 +106,7 @@ class TestMicrosoftFaceIdentify(object):
     @patch('homeassistant.components.image_processing.microsoft_face_identify.'
            'MicrosoftFaceIdentifyEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
-    def test_openalpr_process_image(self, poll_mock, aioclient_mock):
+    def test_ms_identify_process_image(self, poll_mock, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
         aioclient_mock.get(
             mf.FACE_API_URL.format("persongroups"),
@@ -135,7 +135,7 @@ class TestMicrosoftFaceIdentify(object):
             """Mock event."""
             face_events.append(event)
 
-        self.hass.bus.listen('identify_face', mock_face_event)
+        self.hass.bus.listen('image_processing.detect_face', mock_face_event)
 
         aioclient_mock.get(url, content=b'image')
 

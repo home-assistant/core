@@ -16,7 +16,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pwaqi==1.4']
+REQUIREMENTS = ['pwaqi==2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
 CONF_LOCATIONS = 'locations'
 CONF_STATIONS = 'stations'
+CONF_API_TOKEN = 'token'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -42,6 +43,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATIONS): cv.ensure_list,
+    vol.Required(CONF_API_TOKEN): cv.string,
     vol.Required(CONF_LOCATIONS): cv.ensure_list,
 })
 
@@ -51,15 +53,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pwaqi
 
     dev = []
+    token = config.get(CONF_API_TOKEN)
     station_filter = config.get(CONF_STATIONS)
     for location_name in config.get(CONF_LOCATIONS):
-        station_ids = pwaqi.findStationCodesByCity(location_name)
+        station_ids = pwaqi.findStationCodesByCity(location_name, token)
         _LOGGER.info("The following stations were returned: %s", station_ids)
         for station in station_ids:
-            waqi_sensor = WaqiSensor(WaqiData(station), station)
+            waqi_sensor = WaqiSensor(WaqiData(station, token), station)
             if (not station_filter) or \
                (waqi_sensor.station_name in station_filter):
-                dev.append(WaqiSensor(WaqiData(station), station))
+                dev.append(WaqiSensor(WaqiData(station, token), station))
 
     add_devices(dev)
 
@@ -148,9 +151,10 @@ class WaqiSensor(Entity):
 class WaqiData(object):
     """Get the latest data and update the states."""
 
-    def __init__(self, station_id):
+    def __init__(self, station_id, token):
         """Initialize the data object."""
         self._station_id = station_id
+        self._token = token
         self.data = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -158,6 +162,7 @@ class WaqiData(object):
         """Get the data from World Air Quality Index and updates the states."""
         import pwaqi
         try:
-            self.data = pwaqi.getStationObservation(self._station_id)
+            self.data = pwaqi.getStationObservation(
+                self._station_id, self._token)
         except AttributeError:
             _LOGGER.exception("Unable to fetch data from WAQI")

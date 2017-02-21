@@ -184,8 +184,8 @@ class MpdDevice(MediaPlayerDevice):
         return int(self.status['volume'])/100
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_MPD
 
     @property
@@ -266,5 +266,6 @@ class MpdDevice(MediaPlayerDevice):
             self.client.load(media_id)
             self.client.play()
         else:
-            _LOGGER.error(str.format("Invalid media type. Expected: {0}",
-                                     MEDIA_TYPE_PLAYLIST))
+            self.client.clear()
+            self.client.add(media_id)
+            self.client.play()

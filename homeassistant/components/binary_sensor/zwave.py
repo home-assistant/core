@@ -9,28 +9,13 @@ import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
+from homeassistant.components.zwave import workaround
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
-
-PHILIO = 0x013c
-PHILIO_SLIM_SENSOR = 0x0002
-PHILIO_SLIM_SENSOR_MOTION = (PHILIO, PHILIO_SLIM_SENSOR, 0)
-PHILIO_3_IN_1_SENSOR_GEN_4 = 0x000d
-PHILIO_3_IN_1_SENSOR_GEN_4_MOTION = (PHILIO, PHILIO_3_IN_1_SENSOR_GEN_4, 0)
-WENZHOU = 0x0118
-WENZHOU_SLIM_SENSOR_MOTION = (WENZHOU, PHILIO_SLIM_SENSOR, 0)
-
-WORKAROUND_NO_OFF_EVENT = 'trigger_no_off_event'
-
-DEVICE_MAPPINGS = {
-    PHILIO_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
-    PHILIO_3_IN_1_SENSOR_GEN_4_MOTION: WORKAROUND_NO_OFF_EVENT,
-    WENZHOU_SLIM_SENSOR_MOTION: WORKAROUND_NO_OFF_EVENT,
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -42,23 +27,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
     value.set_change_verified(False)
 
-    # Make sure that we have values for the key before converting to int
-    if (value.node.manufacturer_id.strip() and
-            value.node.product_id.strip()):
-        specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                               int(value.node.product_id, 16),
-                               value.index)
+    device_mapping = workaround.get_device_mapping(value)
+    if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
+        # Default the multiplier to 4
+        re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
+        add_devices([
+            ZWaveTriggerSensor(value, "motion",
+                               hass, re_arm_multiplier * 8)
+        ])
+        return
 
-        if specific_sensor_key in DEVICE_MAPPINGS:
-            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_NO_OFF_EVENT:
-                # Default the multiplier to 4
-                re_arm_multiplier = (zwave.get_config_value(value.node,
-                                                            9) or 4)
-                add_devices([
-                    ZWaveTriggerSensor(value, "motion",
-                                       hass, re_arm_multiplier * 8)
-                ])
-                return
+    if workaround.get_device_component_mapping(value) == DOMAIN:
+        add_devices([ZWaveBinarySensor(value, None)])
+        return
 
     if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
         add_devices([ZWaveBinarySensor(value, None)])
@@ -67,19 +48,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
-    def __init__(self, value, sensor_class):
+    def __init__(self, value, device_class):
         """Initialize the sensor."""
-        self._sensor_type = sensor_class
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self._sensor_type = device_class
+        self._state = self._value.data
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
 
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        return self._value.data
+        return self._state
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._sensor_type
 
     @property
@@ -91,34 +77,31 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, value, sensor_class, hass, re_arm_sec=60):
+    def __init__(self, value, device_class, hass, re_arm_sec=60):
         """Initialize the sensor."""
-        super(ZWaveTriggerSensor, self).__init__(value, sensor_class)
+        super(ZWaveTriggerSensor, self).__init__(value, device_class)
         self._hass = hass
         self.re_arm_sec = re_arm_sec
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
         # If it's active make sure that we set the timeout tracker
-        if value.data:
-            track_point_in_time(
-                self._hass, self.async_update_ha_state,
-                self.invalidate_after)
+        track_point_in_time(
+            self._hass, self.async_update_ha_state,
+            self.invalidate_after)
 
-    def value_changed(self, value):
+    def update_properties(self):
         """Called when a value for this entity's node has changed."""
-        if self._value.value_id == value.value_id:
-            self.schedule_update_ha_state()
-            if value.data:
-                # only allow this value to be true for re_arm secs
-                self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-                    seconds=self.re_arm_sec)
-                track_point_in_time(
-                    self._hass, self.async_update_ha_state,
-                    self.invalidate_after)
+        self._state = self._value.data
+        # only allow this value to be true for re_arm secs
+        self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
+            seconds=self.re_arm_sec)
+        track_point_in_time(
+            self._hass, self.async_update_ha_state,
+            self.invalidate_after)
 
     @property
     def is_on(self):
         """Return True if movement has happened within the rearm time."""
-        return self._value.data and \
+        return self._state and \
             (self.invalidate_after is None or
              self.invalidate_after > dt_util.utcnow())

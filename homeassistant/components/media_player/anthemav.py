@@ -79,8 +79,8 @@ class AnthemAVR(MediaPlayerDevice):
         return getattr(self.avr.protocol, propname, dval)
 
     @property
-    def supported_media_commands(self):
-        """Return flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_ANTHEMAV
 
     @property
