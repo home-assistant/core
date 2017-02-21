@@ -54,11 +54,11 @@ class MqttSensor(Entity):
                  value_template):
         """Initialize the sensor."""
         self._state = STATE_UNKNOWN
-        self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
+        self._template = value_template
 
     def async_added_to_hass(self):
         """Subscribe mqtt events.
@@ -68,8 +68,8 @@ class MqttSensor(Entity):
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
             self.hass.async_add_job(self.async_update_ha_state())

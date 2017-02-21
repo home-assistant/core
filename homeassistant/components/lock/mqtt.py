@@ -75,6 +75,7 @@ class MqttLock(LockDevice):
         self._payload_lock = payload_lock
         self._payload_unlock = payload_unlock
         self._optimistic = optimistic
+        self._template = value_template
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -85,13 +86,14 @@ class MqttLock(LockDevice):
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.render_with_possible_json_value(
                     payload)
             if payload == self._payload_lock:
                 self._state = True
             elif payload == self._payload_unlock:
                 self._state = False
+
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._state_topic is None:

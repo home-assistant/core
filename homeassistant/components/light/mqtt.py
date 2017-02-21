@@ -146,7 +146,7 @@ class MqttLight(Light):
             if tpl is None:
                 templates[key] = lambda value: value
             else:
-                tpl.hass = hass
+                tpl.hass = self.hass
                 templates[key] = tpl.async_render_with_possible_json_value
 
         @callback
@@ -207,7 +207,7 @@ class MqttLight(Light):
 
         if self._topic[CONF_COLOR_TEMP_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
-                self._hass, self._topic[CONF_COLOR_TEMP_STATE_TOPIC],
+                self.hass, self._topic[CONF_COLOR_TEMP_STATE_TOPIC],
                 color_temp_received, self._qos)
             self._color_temp = 150
         if self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:

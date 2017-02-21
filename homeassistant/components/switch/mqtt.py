@@ -71,6 +71,7 @@ class MqttSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
+        self._template = value_template
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -81,13 +82,14 @@ class MqttSwitch(SwitchDevice):
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
             if payload == self._payload_on:
                 self._state = True
             elif payload == self._payload_off:
                 self._state = False
+
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._state_topic is None:

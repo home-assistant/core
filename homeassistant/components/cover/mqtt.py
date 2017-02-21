@@ -90,6 +90,7 @@ class MqttCover(CoverDevice):
         self._state_closed = state_closed
         self._retain = retain
         self._optimistic = optimistic or state_topic is None
+        self._template = value_template
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -100,8 +101,8 @@ class MqttCover(CoverDevice):
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
 
             if payload == self._state_open:

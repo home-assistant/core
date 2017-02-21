@@ -70,6 +70,7 @@ class MqttBinarySensor(BinarySensorDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._qos = qos
+        self._template = value_template
 
     def async_added_to_hass(self):
         """Subscribe mqtt events.
@@ -79,15 +80,15 @@ class MqttBinarySensor(BinarySensorDevice):
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self.value_template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
             if payload == self._payload_on:
                 self._state = True
-                self.hass.async_add_job(self.async_update_ha_state())
             elif payload == self._payload_off:
                 self._state = False
-                self.hass.async_add_job(self.async_update_ha_state())
+
+            self.hass.async_add_job(self.async_update_ha_state())
 
         return mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
