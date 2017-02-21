@@ -8,7 +8,7 @@ from homeassistant.components import config
 from tests.common import mock_http_component_app
 
 
-VIEW_NAME = 'api:config:zwave:device_config'
+VIEW_NAME = 'api:config:group:config'
 
 
 @asyncio.coroutine
@@ -16,7 +16,7 @@ def test_get_device_config(hass, test_client):
     """Test getting device config."""
     app = mock_http_component_app(hass)
 
-    with patch.object(config, 'SECTIONS', ['zwave']):
+    with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[VIEW_NAME].register(app.router)
@@ -36,7 +36,7 @@ def test_get_device_config(hass, test_client):
 
     with patch('homeassistant.components.config._read', mock_read):
         resp = yield from client.get(
-            '/api/config/zwave/device_config/hello.beer')
+            '/api/config/group/config/hello.beer')
 
     assert resp.status == 200
     result = yield from resp.json()
@@ -49,7 +49,7 @@ def test_update_device_config(hass, test_client):
     """Test updating device config."""
     app = mock_http_component_app(hass)
 
-    with patch.object(config, 'SECTIONS', ['zwave']):
+    with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[VIEW_NAME].register(app.router)
@@ -78,15 +78,15 @@ def test_update_device_config(hass, test_client):
     with patch('homeassistant.components.config._read', mock_read), \
             patch('homeassistant.components.config._write', mock_write):
         resp = yield from client.post(
-            '/api/config/zwave/device_config/hello.beer', data=json.dumps({
-                'polling_intensity': 2
+            '/api/config/group/config/hello_beer', data=json.dumps({
+                'name': 'Beer',
             }))
 
     assert resp.status == 200
     result = yield from resp.json()
     assert result == {'result': 'ok'}
 
-    orig_data['hello.beer']['polling_intensity'] = 2
+    orig_data['hello_beer']['name'] = 'Beer'
 
     assert written[0] == orig_data
 
@@ -96,7 +96,7 @@ def test_update_device_config_invalid_key(hass, test_client):
     """Test updating device config."""
     app = mock_http_component_app(hass)
 
-    with patch.object(config, 'SECTIONS', ['zwave']):
+    with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[VIEW_NAME].register(app.router)
@@ -104,8 +104,8 @@ def test_update_device_config_invalid_key(hass, test_client):
     client = yield from test_client(app)
 
     resp = yield from client.post(
-        '/api/config/zwave/device_config/invalid_entity', data=json.dumps({
-            'polling_intensity': 2
+        '/api/config/group/config/not a slug', data=json.dumps({
+            'name': 'YO',
         }))
 
     assert resp.status == 400
@@ -116,7 +116,7 @@ def test_update_device_config_invalid_data(hass, test_client):
     """Test updating device config."""
     app = mock_http_component_app(hass)
 
-    with patch.object(config, 'SECTIONS', ['zwave']):
+    with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[VIEW_NAME].register(app.router)
@@ -124,7 +124,7 @@ def test_update_device_config_invalid_data(hass, test_client):
     client = yield from test_client(app)
 
     resp = yield from client.post(
-        '/api/config/zwave/device_config/hello.beer', data=json.dumps({
+        '/api/config/group/config/hello_beer', data=json.dumps({
             'invalid_option': 2
         }))
 
@@ -136,7 +136,7 @@ def test_update_device_config_invalid_json(hass, test_client):
     """Test updating device config."""
     app = mock_http_component_app(hass)
 
-    with patch.object(config, 'SECTIONS', ['zwave']):
+    with patch.object(config, 'SECTIONS', ['group']):
         yield from async_setup_component(hass, 'config', {})
 
     hass.http.views[VIEW_NAME].register(app.router)
@@ -144,6 +144,6 @@ def test_update_device_config_invalid_json(hass, test_client):
     client = yield from test_client(app)
 
     resp = yield from client.post(
-        '/api/config/zwave/device_config/hello.beer', data='not json')
+        '/api/config/group/config/hello_beer', data='not json')
 
     assert resp.status == 400
