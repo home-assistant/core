@@ -39,9 +39,9 @@ SENSORS = {
                     "mdi:signal"),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "",
                         "mdi:message-text-outline"),
-    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GiB",
+    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GB",
                     "mdi:cloud-upload"),
-    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GiB",
+    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GB",
                       "mdi:cloud-download"),
 }
 
