@@ -147,7 +147,7 @@ class MqttJson(Light):
 
         if self._topic[CONF_STATE_TOPIC] is not None:
             yield from mqtt.async_subscribe(
-                self._hass, self._topic[CONF_STATE_TOPIC], state_received,
+                self.hass, self._topic[CONF_STATE_TOPIC], state_received,
                 self._qos)
 
     @property

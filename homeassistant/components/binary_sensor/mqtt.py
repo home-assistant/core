@@ -80,7 +80,7 @@ class MqttBinarySensor(BinarySensorDevice):
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if self.value_template is not None:
+            if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
             if payload == self._payload_on:

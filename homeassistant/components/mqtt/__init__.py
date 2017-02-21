@@ -184,6 +184,7 @@ def async_publish(hass, topic, payload, qos=None, retain=None):
     data[ATTR_PAYLOAD] = payload
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
+
 def publish_template(hass, topic, payload_template, qos=None, retain=None):
     """Publish message to an MQTT topic using a template payload."""
     data = _build_publish_data(topic, qos, retain)
