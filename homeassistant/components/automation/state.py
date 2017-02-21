@@ -46,11 +46,11 @@ def async_trigger(hass, config, action):
     async_remove_state_for_listener = None
 
     @callback
-    # pylint: disable=not-callable
     def clear_listener():
         """Clear all unsub listener."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
 
+        # pylint: disable=not-callable
         if async_remove_state_for_listener is not None:
             async_remove_state_for_listener()
             async_remove_state_for_listener = None
