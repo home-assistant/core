@@ -173,10 +173,16 @@ def _build_publish_data(topic, qos, retain):
 
 def publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
+    run_callback_threadsafe(
+        hass.loop, async_publish, topic, payload, qos, retain).result()
+
+
+@callback
+def async_publish(hass, topic, payload, qos=None, retain=None):
+    """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
     data[ATTR_PAYLOAD] = payload
-    hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
-
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 def publish_template(hass, topic, payload_template, qos=None, retain=None):
     """Publish message to an MQTT topic using a template payload."""
