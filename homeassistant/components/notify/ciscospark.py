@@ -25,20 +25,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
-    """
-    Get the CiscoSpark notification service.
-    """
+    """Get the CiscoSpark notification service."""
     return CiscoSparkNotificationService(
         config.get(CONF_TOKEN),
         config.get(CONF_ROOMID))
 
+
 class CiscoSparkNotificationService(BaseNotificationService):
+    """CiscoSparkNotificationService."""
+
     def __init__(self, token, default_room):
         """
         Initialize the service.
- 
+
         Args:
-            token: Cisco Spark Developer's Token 
+            token: Cisco Spark Developer's Token
             default_room: Cisco Spark Room ID
         """
         from ciscosparkapi import CiscoSparkAPI
