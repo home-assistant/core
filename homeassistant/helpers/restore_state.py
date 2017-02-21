@@ -48,7 +48,8 @@ def _load_restore_cache(hass: HomeAssistant):
 @asyncio.coroutine
 def async_get_last_state(hass, entity_id: str):
     """Helper to restore state."""
-    if _RECORDER not in hass.config.components:
+    if (_RECORDER not in hass.config.components or
+            hass.state != CoreState.starting):
         return None
 
     if DATA_RESTORE_CACHE in hass.data:
