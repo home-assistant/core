@@ -16,7 +16,9 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_PATH_ZMS = 'path_zms'
 DEFAULT_PATH = '/zm/'
+DEFAULT_PATH_ZMS = '/zm/cgi-bin/nph-zms'
 DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'zoneminder'
@@ -30,6 +32,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        # This should match PATH_ZMS in ZoneMinder settings.
+        vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string
     })
@@ -47,13 +51,18 @@ def setup(hass, config):
     else:
         schema = 'http'
 
-    url = urljoin('{}://{}'.format(schema, conf[CONF_HOST]), conf[CONF_PATH])
+    server_origin = '{}://{}'.format(schema, conf[CONF_HOST])
+    url = urljoin(server_origin, conf[CONF_PATH])
     username = conf.get(CONF_USERNAME, None)
     password = conf.get(CONF_PASSWORD, None)
 
+    ZM['server_origin'] = server_origin
     ZM['url'] = url
     ZM['username'] = username
     ZM['password'] = password
+    ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
+
+    hass.data[DOMAIN] = ZM
 
     return login()
 
