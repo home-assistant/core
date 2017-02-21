@@ -74,7 +74,7 @@ def async_restore_state(entity, extract_info):
                       entity.hass.state)
         return
 
-    state = yield from async_get_last_state(entity.entity_id)
+    state = yield from async_get_last_state(entity.hass, entity.entity_id)
 
     if not state:
         return

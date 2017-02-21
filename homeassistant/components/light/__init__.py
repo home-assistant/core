@@ -129,10 +129,8 @@ _LOGGER = logging.getLogger(__name__)
 
 def extract_info(state):
     """Extract light parameters from a state object."""
-    params = {key: state.attr[key] for key in (
-        ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_XY_COLOR,
-        ATTR_COLOR_TEMP, ATTR_COLOR_NAME, ATTR_WHITE_VALUE
-    ) if key in state.attr}
+    params = {key: state.attributes[key] for key in PROP_TO_ATTR
+              if key in state.attributes}
     params['is_on'] = state.state == STATE_ON
     return params
 
