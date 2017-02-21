@@ -297,6 +297,9 @@ class Recorder(threading.Thread):
         """Tell the recorder to shut down."""
         global _INSTANCE  # pylint: disable=global-statement
         self.queue.put(None)
+        if not self.start_recording.is_set():
+            _LOGGER.warning("Recorder never started correctly")
+            self.start_recording.set()
         self.join()
         _INSTANCE = None
 

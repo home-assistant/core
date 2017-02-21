@@ -75,7 +75,7 @@ def _add_data_in_last_run(entities):
             recorder._INSTANCE._commit(session, dbstate)
 
 
-def test_filling_the_cache(hass):
+def test_filling_the_cache():
     """Test filling the cache from the DB."""
     test_entity_id1 = 'input_boolean.b1'
     test_entity_id2 = 'input_boolean.b2'
@@ -97,6 +97,8 @@ def test_filling_the_cache(hass):
             'b2': None,
         }})
 
+    hass.start()
+
     state = hass.states.get('input_boolean.b1')
     assert state
     assert state.state == 'on'
@@ -104,3 +106,5 @@ def test_filling_the_cache(hass):
     state = hass.states.get('input_boolean.b2')
     assert state
     assert state.state == 'off'
+
+    hass.stop()
