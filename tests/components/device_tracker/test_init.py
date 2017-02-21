@@ -446,7 +446,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'gps': [.3, .8],
             'attributes': {
                 'test': 'test'
-            }
+            },
+            'source_type': 'mqtt',
         }
         device_tracker.see(self.hass, **params)
         self.hass.block_till_done()
