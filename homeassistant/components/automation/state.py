@@ -46,6 +46,18 @@ def async_trigger(hass, config, action):
     async_remove_state_for_listener = None
 
     @callback
+    def clear_listener():
+        """Clear all unsub listener."""
+        nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
+
+        if async_remove_state_for_listener is not None:
+            async_remove_state_for_listener()
+            async_remove_state_for_listener = None
+        if async_remove_state_for_cancel is not None:
+            async_remove_state_for_cancel()
+            async_remove_state_for_cancel = None
+
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
@@ -65,18 +77,6 @@ def async_trigger(hass, config, action):
         if time_delta is None:
             call_action()
             return
-
-        @callback
-        def clear_listener():
-            """Clear all unsub listener."""
-            nonlocal async_remove_state_for_cancel
-            nonlocal async_remove_state_for_listener
-            if async_remove_state_for_listener is not None:
-                async_remove_state_for_listener()
-                async_remove_state_for_listener = None
-            if async_remove_state_for_cancel is not None:
-                async_remove_state_for_cancel()
-                async_remove_state_for_cancel = None
 
         @callback
         def state_for_listener(now):
@@ -109,11 +109,6 @@ def async_trigger(hass, config, action):
     def async_remove():
         """Remove state listeners async."""
         unsub()
-        # pylint: disable=not-callable
-        if async_remove_state_for_cancel is not None:
-            async_remove_state_for_cancel()
-
-        if async_remove_state_for_listener is not None:
-            async_remove_state_for_listener()
+        clear_listener()
 
     return async_remove
