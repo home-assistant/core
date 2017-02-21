@@ -199,7 +199,7 @@ class HistoryStatsSensor(Entity):
         if self._start is not None:
             try:
                 start_rendered = self._start.render()
-            except TemplateError as ex:
+            except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, 'start')
                 return
             start = dt_util.parse_datetime(start_rendered)
@@ -216,7 +216,7 @@ class HistoryStatsSensor(Entity):
         if self._end is not None:
             try:
                 end_rendered = self._end.render()
-            except TemplateError as ex:
+            except (TemplateError, TypeError) as ex:
                 HistoryStatsHelper.handle_template_exception(ex, 'end')
                 return
             end = dt_util.parse_datetime(end_rendered)
