@@ -11,8 +11,7 @@ from sqlalchemy import create_engine
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
-from homeassistant.bootstrap import setup_component
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, init_recorder_component
 from tests.components.recorder import models_original
 
 
@@ -22,18 +21,15 @@ class BaseTestRecorder(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        db_uri = 'sqlite://'  # In memory DB
-        setup_component(self.hass, recorder.DOMAIN, {
-            recorder.DOMAIN: {recorder.CONF_DB_URL: db_uri}})
+        init_recorder_component(self.hass)
         self.hass.start()
-        recorder._verify_instance()
-        recorder._INSTANCE.block_till_done()
+        recorder.get_instance().block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
-        recorder._INSTANCE.shutdown(None)
         self.hass.stop()
-        assert recorder._INSTANCE is None
+        with self.assertRaises(RuntimeError):
+            recorder.get_instance()
 
     def _add_test_states(self):
         """Add multiple states to the db for testing."""
@@ -228,7 +224,7 @@ class TestMigrateRecorder(BaseTestRecorder):
 
     @patch('sqlalchemy.create_engine', new=create_engine_test)
     @patch('homeassistant.components.recorder.Recorder._migrate_schema')
-    def setUp(self, migrate):  # pylint: disable=invalid-name
+    def setUp(self, migrate):  # pylint: disable=invalid-name,arguments-differ
         """Setup things to be run when tests are started.
 
         create_engine is patched to create a db that starts with the old
@@ -261,16 +257,12 @@ def hass_recorder():
     """HASS fixture with in-memory recorder."""
     hass = get_test_home_assistant()
 
-    def setup_recorder(config={}):
+    def setup_recorder(config=None):
         """Setup with params."""
-        db_uri = 'sqlite://'  # In memory DB
-        conf = {recorder.CONF_DB_URL: db_uri}
-        conf.update(config)
-        assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: conf})
+        init_recorder_component(hass, config)
         hass.start()
         hass.block_till_done()
-        recorder._verify_instance()
-        recorder._INSTANCE.block_till_done()
+        recorder.get_instance().block_till_done()
         return hass
 
     yield setup_recorder
@@ -352,12 +344,12 @@ def test_recorder_errors_exceptions(hass_recorder): \
 
     # Verify the instance fails before setup
     with pytest.raises(RuntimeError):
-        recorder._verify_instance()
+        recorder.get_instance()
 
     # Setup the recorder
     hass_recorder()
 
-    recorder._verify_instance()
+    recorder.get_instance()
 
     # Verify session scope raises (and prints) an exception
     with patch('homeassistant.components.recorder._LOGGER.error') as e_mock, \

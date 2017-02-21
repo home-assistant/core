@@ -1,16 +1,17 @@
 """The test for the History Statistics sensor platform."""
 # pylint: disable=protected-access
-import unittest
 from datetime import timedelta
+import unittest
 from unittest.mock import patch
 
-import homeassistant.components.recorder as recorder
-import homeassistant.core as ha
-import homeassistant.util.dt as dt_util
 from homeassistant.bootstrap import setup_component
+import homeassistant.components.recorder as recorder
 from homeassistant.components.sensor.history_stats import HistoryStatsSensor
+import homeassistant.core as ha
 from homeassistant.helpers.template import Template
-from tests.common import get_test_home_assistant
+import homeassistant.util.dt as dt_util
+
+from tests.common import init_recorder_component, get_test_home_assistant
 
 
 class TestHistoryStatsSensor(unittest.TestCase):
@@ -204,12 +205,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
     def init_recorder(self):
         """Initialize the recorder."""
-        db_uri = 'sqlite://'
-        with patch('homeassistant.core.Config.path', return_value=db_uri):
-            setup_component(self.hass, recorder.DOMAIN, {
-                "recorder": {
-                    "db_url": db_uri}})
+        init_recorder_component(self.hass)
         self.hass.start()
-        recorder._INSTANCE.block_till_db_ready()
+        recorder.get_instance().block_till_db_ready()
         self.hass.block_till_done()
-        recorder._INSTANCE.block_till_done()
+        recorder.get_instance().block_till_done()
