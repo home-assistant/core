@@ -141,6 +141,7 @@ class MqttLight(Light):
 
         This method is a coroutine.
         """
+        templates = {}
         for key, tpl in list(self._templates.items()):
             if tpl is None:
                 templates[key] = lambda value: value
