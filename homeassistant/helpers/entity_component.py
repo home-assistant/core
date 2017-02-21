@@ -202,6 +202,10 @@ class EntityComponent(object):
                 'Invalid entity id: {}'.format(entity.entity_id))
 
         self.entities[entity.entity_id] = entity
+
+        if hasattr(entity, 'async_added_to_hass'):
+            yield from entity.async_added_to_hass()
+
         yield from entity.async_update_ha_state()
 
         return True
