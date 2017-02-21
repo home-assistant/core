@@ -142,8 +142,8 @@ class InputBoolean(ToggleEntity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Component added to hass, no platforms, so restore state here."""
-        state = yield from async_get_last_state(self)
+        """Called when entity about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
         self._state = state.state == 'on'

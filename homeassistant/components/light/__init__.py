@@ -384,4 +384,5 @@ class Light(ToggleEntity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Component added, restore_state using platforms."""
-        yield from async_restore_state(self, extract_info)
+        if hasattr(self, 'async_restore_state'):
+            yield from async_restore_state(self, extract_info)
