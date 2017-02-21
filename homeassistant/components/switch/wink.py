@@ -86,5 +86,5 @@ class WinkScene(WinkDevice, ToggleEntity):
         self.wink.activate()
 
     def turn_off(self):
-        """Scenes can only be turned on."""
+        """Scene can only be turned on."""
         return
