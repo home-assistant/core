@@ -64,6 +64,8 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
         self._source_names = list()
+        self._source_index = {}
+        self._source = {}
         self._name = None
         self._state = STATE_PLAYING
 
@@ -75,26 +77,23 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._volume_level = self._device.VolumeLevel()
         self._volume_muted = self._device.IsMuted()
         self._source = self._device.Source()
-        self._source_index = {}
         self._name = self._device.Room().decode('utf-8')
         self._supported_features = SUPPORT_OPENHOME
+        source_index = {}
+        source_names = list()
 
         for source in self._device.Sources():
-            self._source_names.append(source["name"])
-            self._source_index[source["name"]] = source["index"]
+            source_names.append(source["name"])
+            source_index[source["name"]] = source["index"]
+
+        self._source_index = source_index;
+        self._source_names = source_names;
 
         if self._source["type"] == "Radio":
-            if self._transport_state in ('Playing', 'Buffering'):
-                self._supported_features |= SUPPORT_STOP
-            else:
-                self._supported_features |= SUPPORT_PLAY
+            self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
         if self._source["type"] == "Playlist":
-            self._supported_features |= SUPPORT_PREVIOUS_TRACK |\
-                SUPPORT_NEXT_TRACK
-            if self._transport_state in ('Playing', 'Buffering'):
-                self._supported_features |= SUPPORT_PAUSE
-            else:
-                self._supported_features |= SUPPORT_PLAY
+            self._supported_features |= SUPPORT_PREVIOUS_TRACK | \
+                SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY
 
         if self._in_standby:
             self._state = STATE_OFF
@@ -105,6 +104,7 @@ class OpenhomeDevice(MediaPlayerDevice):
         elif self._transport_state == 'Stopped':
             self._state = STATE_IDLE
         else:
+            # Device is playing an external source with no transport controls
             self._state = STATE_PLAYING
 
     def turn_on(self):
