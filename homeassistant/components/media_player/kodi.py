@@ -395,7 +395,7 @@ class KodiDevice(MediaPlayerDevice):
         return self._server.Playlist.Clear({"playlistid": 0})
     
     @asyncio.coroutine
-    def async_play_song(self, song_name, artist_name=None):
+    def async_play_song(self, song_name, artist_name=''):
         song_id = yield from self.async_find_song(song_name, artist_name)
         if song_id is None:
             warnings.warn("no song found.", RuntimeWarning)
@@ -434,9 +434,9 @@ class KodiDevice(MediaPlayerDevice):
                 {"filter": {"artistid": int(artist_id)}}))
     
     @asyncio.coroutine     
-    def async_find_song(self, song_name, artist_name=None):
+    def async_find_song(self, song_name, artist_name=''):
         artist_id = None
-        if artist_name is not None:
+        if artist_name != '':
             artist_id = yield from self.async_find_artist(artist_name)
         
         songs = yield from self.async_get_songs(artist_id)
@@ -473,7 +473,7 @@ if __name__ == '__main__':
     
     songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
     
-    out = asyncio.get_event_loop().run_until_complete(kodi.async_play_song('hey jude', 'beatles'))
+    out = asyncio.get_event_loop().run_until_complete(kodi.async_play_song('stairway to heaven', ""))
      
     for s in songs['songs']:
         if s['songid'] == out:
