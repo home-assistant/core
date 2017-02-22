@@ -31,5 +31,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
                  vehicle.position['longitude']))
 
     hass.data[DOMAIN].entities[vin].append(see_vehicle)
+    see_vehicle(vehicle)
 
     return True
