@@ -14,6 +14,19 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 _LOGGER = logging.getLogger(__name__)
 
 
+FIBARO = 0x010f
+FIBARO_MOTION_FGMS001 = 0x1001
+FIBARO_MOTION_FGMS001_SENSOR = (FIBARO, FIBARO_MOTION_FGMS001, 0)
+
+WORKAROUND_AG_2_3 = 'association_group_2_3'
+
+DEVICE_MAPPINGS = {
+    # The Fibaro motion sensor requires associating to group 2 and 3 to
+    # receive the desired reports
+    FIBARO_MOTION_FGMS001_SENSOR: WORKAROUND_AG_2_3,
+}
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Z-Wave sensors."""
     # Return on empty `discovery_info`. Given you configure HA with:
@@ -33,6 +46,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # if 1 in groups and (NETWORK.controller.node_id not in
     #                     groups[1].associations):
     #     node.groups[1].add_association(NETWORK.controller.node_id)
+
+    # Make sure that we have values for the key before converting to int
+    if (value.node.manufacturer_id.strip() and
+            value.node.product_id.strip()):
+        specific_sensor_key = (int(value.node.manufacturer_id, 16),
+                               int(value.node.product_id, 16),
+                               value.index)
+
+        # Check workaround mappings for specific devices.
+        if specific_sensor_key in DEVICE_MAPPINGS:
+            if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_AG_2_3:
+                for group in [2, 3]:
+                    if (zwave.NETWORK.controller.node_id not in
+                            node.groups[group].associations):
+                        node.groups[group].add_association(
+                            zwave.NETWORK.controller.node_id)
 
     # Generic Device mappings
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
