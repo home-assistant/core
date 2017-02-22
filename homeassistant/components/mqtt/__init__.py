@@ -173,8 +173,7 @@ def _build_publish_data(topic, qos, retain):
 
 def publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
-    run_callback_threadsafe(
-        hass.loop, async_publish, hass, topic, payload, qos, retain).result()
+    hass.add_job(async_publish, hass, topic, payload, qos, retain)
 
 
 @callback

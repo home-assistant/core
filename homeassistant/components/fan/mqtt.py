@@ -269,20 +269,24 @@ class MqttFan(FanEntity):
 
         This method is a coroutine.
         """
-        if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
-            if speed == SPEED_LOW:
-                mqtt_payload = self._payload[SPEED_LOW]
-            elif speed == SPEED_MEDIUM:
-                mqtt_payload = self._payload[SPEED_MEDIUM]
-            elif speed == SPEED_HIGH:
-                mqtt_payload = self._payload[SPEED_HIGH]
-            else:
-                mqtt_payload = speed
+        if self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
+            return
 
+        if speed == SPEED_LOW:
+            mqtt_payload = self._payload[SPEED_LOW]
+        elif speed == SPEED_MEDIUM:
+            mqtt_payload = self._payload[SPEED_MEDIUM]
+        elif speed == SPEED_HIGH:
+            mqtt_payload = self._payload[SPEED_HIGH]
+        else:
+            mqtt_payload = speed
+
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
+            mqtt_payload, self._qos, self._retain)
+
+        if self._optimistic_speed:
             self._speed = speed
-            mqtt.async_publish(
-                self.hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
-                mqtt_payload, self._qos, self._retain)
             self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
@@ -291,14 +295,18 @@ class MqttFan(FanEntity):
 
         This method is a coroutine.
         """
-        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None:
-            self._oscillation = oscillating
-            if oscillating is False:
-                payload = self._payload[OSCILLATE_OFF_PAYLOAD]
-            else:
-                payload = self._payload[OSCILLATE_ON_PAYLOAD]
+        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is None:
+            return
 
-            mqtt.async_publish(
-                self.hass, self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-                payload, self._qos, self._retain)
+        if oscillating is False:
+            payload = self._payload[OSCILLATE_OFF_PAYLOAD]
+        else:
+            payload = self._payload[OSCILLATE_ON_PAYLOAD]
+
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
+            payload, self._qos, self._retain)
+
+        if self._optimistic_oscillation:
+            self._oscillation = oscillating
             self.hass.async_add_job(self.async_update_ha_state())
