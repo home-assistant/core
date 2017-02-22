@@ -6,12 +6,12 @@ https://home-assistant.io/components/climate.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-import asyncio
 import logging
 from homeassistant.components.climate import DOMAIN
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
@@ -31,12 +31,6 @@ WORKAROUND_ZXT_120 = 'zxt_120'
 DEVICE_MAPPINGS = {
     REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
 }
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Create zwave entity device."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 def get_device(hass, value, **kwargs):

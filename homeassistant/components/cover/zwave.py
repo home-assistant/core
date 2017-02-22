@@ -6,12 +6,12 @@ https://home-assistant.io/components/cover.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-import asyncio
 import logging
 from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 
@@ -34,12 +34,6 @@ def get_device(value, **kwargs):
         value.set_change_verified(False)
         return ZwaveGarageDoor(value)
     return None
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Create zwave entity device."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):

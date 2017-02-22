@@ -4,13 +4,13 @@ Interfaces with Z-Wave sensors.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/binary_sensor.zwave/
 """
-import asyncio
 import logging
 import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
 from homeassistant.components.zwave import workaround
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
@@ -35,12 +35,6 @@ def get_device(value, **kwargs):
     if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
         return ZWaveBinarySensor(value, None)
     return None
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Z-Wave platform for binary sensors."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
@@ -85,12 +79,14 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
         """Called when a value for this entity's node has changed."""
         self._state = self._value.data
         # only allow this value to be true for re_arm secs
-        if self.hass:
-            self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-                seconds=self.re_arm_sec)
-            track_point_in_time(
-                self.hass, self.async_update_ha_state,
-                self.invalidate_after)
+        if not self.hass:
+            return
+
+        self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
+            seconds=self.re_arm_sec)
+        track_point_in_time(
+            self.hass, self.async_update_ha_state,
+            self.invalidate_after)
 
     @property
     def is_on(self):

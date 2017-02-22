@@ -4,13 +4,13 @@ Interfaces with Z-Wave sensors.
 For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zwave/
 """
-import asyncio
 import logging
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,12 +29,6 @@ def get_device(node, value, **kwargs):
             node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
         return ZWaveAlarmSensor(value)
     return None
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Create zwave entity device."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 class ZWaveSensor(zwave.ZWaveDeviceEntity):

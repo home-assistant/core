@@ -4,7 +4,6 @@ Support for Z-Wave lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.zwave/
 """
-import asyncio
 import logging
 
 # Because we do not compile openzwave on CI
@@ -14,6 +13,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
     SUPPORT_RGB_COLOR, DOMAIN, Light
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
     color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
@@ -47,12 +47,6 @@ SUPPORT_ZWAVE_DIMMER = SUPPORT_BRIGHTNESS
 SUPPORT_ZWAVE_COLOR = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 SUPPORT_ZWAVE_COLORTEMP = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
                            | SUPPORT_COLOR_TEMP)
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Create zwave entity device."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 def get_device(node, value, node_config, **kwargs):

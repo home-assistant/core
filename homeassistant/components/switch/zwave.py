@@ -4,12 +4,12 @@ Z-Wave platform that handles simple binary switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.zwave/
 """
-import asyncio
 import logging
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,12 +24,6 @@ def get_device(node, value, **kwargs):
         return None
     value.set_change_verified(False)
     return ZwaveSwitch(value)
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Create zwave entity device."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):

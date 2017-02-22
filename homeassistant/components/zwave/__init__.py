@@ -12,7 +12,6 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.const import (
@@ -269,8 +268,8 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
-@callback
-def async_setup_platform(hass, async_add_devices, discovery_info):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Generic Z-Wave platform setup."""
     if discovery_info is None or NETWORK is None:
         return False
@@ -422,17 +421,18 @@ def setup(hass, config):
             platform = get_platform(component, DOMAIN)
             device = platform.get_device(
                 node=node, value=value, node_config=node_config, hass=hass)
-            if device:
-                dict_id = value.value_id
+            if not device:
+                continue
+            dict_id = value.value_id
 
-                @asyncio.coroutine
-                def discover_device(component, device, dict_id):
-                    """Put device in a dictionary and call discovery on it."""
-                    hass.data[DATA_ZWAVE_DICT][dict_id] = device
-                    yield from discovery.async_load_platform(
-                        hass, component, DOMAIN,
-                        {const.DISCOVERY_DEVICE: dict_id}, config)
-                hass.add_job(discover_device, component, device, dict_id)
+            @asyncio.coroutine
+            def discover_device(component, device, dict_id):
+                """Put device in a dictionary and call discovery on it."""
+                hass.data[DATA_ZWAVE_DICT][dict_id] = device
+                yield from discovery.async_load_platform(
+                    hass, component, DOMAIN,
+                    {const.DISCOVERY_DEVICE: dict_id}, config)
+            hass.add_job(discover_device, component, device, dict_id)
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""

@@ -6,7 +6,6 @@ https://home-assistant.io/components/lock.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
-import asyncio
 import logging
 from os import path
 
@@ -14,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -118,12 +118,6 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
     vol.Required(zwave.const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(ATTR_CODE_SLOT): vol.Coerce(int),
 })
-
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Create zwave entity device."""
-    return zwave.async_setup_platform(hass, async_add_devices, discovery_info)
 
 
 def get_device(hass, node, value, **kwargs):
