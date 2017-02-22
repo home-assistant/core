@@ -51,6 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CURRENT_POSITION = 'current_position'
 ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
+ATTR_CURRENT_TILT_STATE = 'current_tilt_state'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
 
@@ -221,6 +222,16 @@ class CoverDevice(Entity):
         return STATE_CLOSED if closed else STATE_OPEN
 
     @property
+    def tilt_state(self):
+        """Return the tilt state of the cover."""
+        tilt_closed = self.current_cover_tilt_position
+
+        if tilt_closed is None:
+            return STATE_UNKNOWN
+
+        return STATE_OPEN if tilt_closed else STATE_CLOSED
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         data = {}
@@ -232,6 +243,10 @@ class CoverDevice(Entity):
         current_tilt = self.current_cover_tilt_position
         if current_tilt is not None:
             data[ATTR_CURRENT_TILT_POSITION] = self.current_cover_tilt_position
+
+        current_tilt_state = self.tilt_state
+        if current_tilt_state is not None:
+            data[ATTR_CURRENT_TILT_STATE] = self.tilt_state
 
         return data
 
