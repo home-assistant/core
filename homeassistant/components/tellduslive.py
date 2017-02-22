@@ -17,7 +17,7 @@ import voluptuous as vol
 
 DOMAIN = 'tellduslive'
 
-REQUIREMENTS = ['tellduslive==0.3.2']
+REQUIREMENTS = ['tellduslive==0.3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +104,8 @@ class TelldusLiveClient(object):
 
     def _sync(self):
         """Update local list of devices."""
-        self._client.update()
+        if not self._client.update():
+            _LOGGER.warning('Failed request')
 
         def identify_device(device):
             """Find out what type of HA component to create."""
@@ -160,10 +161,13 @@ class TelldusLiveEntity(Entity):
         self._id = device_id
         self._client = hass.data[DOMAIN]
         self._client.entities.append(self)
+        self._name = self.device.name
         _LOGGER.debug('Created device %s', self)
 
     def changed(self):
         """A property of the device might have changed."""
+        if self.device.name:
+            self._name = self.device.name
         self.schedule_update_ha_state()
 
     @property
@@ -194,7 +198,7 @@ class TelldusLiveEntity(Entity):
     @property
     def name(self):
         """Return name of device."""
-        return self.device.name or DEVICE_DEFAULT_NAME
+        return self._name or DEVICE_DEFAULT_NAME
 
     @property
     def available(self):
