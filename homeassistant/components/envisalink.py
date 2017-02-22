@@ -21,6 +21,9 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
 
 DATA_EVL = 'envisalink'
+DATA_EVL_ALARM = 'envisalink.alarm'
+DATA_EVL_BINARY = 'envisalink.binary'
+DATA_EVL_SENSOR = 'envisalink.sensor'
 
 CONF_EVL_HOST = 'host'
 CONF_EVL_PORT = 'port'
@@ -45,13 +48,6 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = 'opening'
 DEFAULT_PANIC = 'Police'
-
-EVENT_ZONE_UPDATE = 'envisalink.zones_updated'
-EVENT_PARTITION_UPDATE = 'envisalink.partition_updated'
-EVENT_KEYPAD_UPDATE = 'envisalink.keypad_updated'
-
-ATTR_PARTITION = 'partition'
-ATTR_ZONE = 'zone'
 
 
 ZONE_SCHEMA = vol.Schema({
@@ -133,19 +129,26 @@ def async_setup(hass, config):
     def zones_updated_callback(data):
         """Handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
-        hass.bus.async_fire(EVENT_ZONE_UPDATE, {ATTR_ZONE: data})
+        for device in hass.data[DATA_EVL_BINARY]:
+            device.update_callback(data)
 
     @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
         _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
-        hass.bus.async_fire(EVENT_KEYPAD_UPDATE, {ATTR_PARTITION: data})
+        for device in hass.data[DATA_EVL_ALARM]:
+            device.update_callback(data)
+        for device in hass.data[DATA_EVL_SENSOR]:
+            device.update_callback(data)
 
     @callback
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.info("The envisalink sent a partition update event.")
-        hass.bus.async_fire(EVENT_PARTITION_UPDATE, {ATTR_PARTITION: data})
+        for device in hass.data[DATA_EVL_ALARM]:
+            device.update_callback(data)
+        for device in hass.data[DATA_EVL_SENSOR]:
+            device.update_callback(data)
 
     @callback
     def stop_envisalink(event):

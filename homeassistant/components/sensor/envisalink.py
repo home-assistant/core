@@ -10,7 +10,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.envisalink import (
     DATA_EVL, PARTITION_SCHEMA, CONF_PARTITIONNAME, EnvisalinkDevice,
-    EVENT_PARTITION_UPDATE, EVENT_KEYPAD_UPDATE, ATTR_PARTITION)
+    DATA_EVL_SENSOR)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['envisalink']
@@ -33,6 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass.data[DATA_EVL])
         devices.append(device)
 
+    hass.data[DATA_EVL_SENSOR] = devices
     yield from async_add_devices(devices)
 
 
@@ -47,9 +48,6 @@ class EnvisalinkSensor(EnvisalinkDevice, Entity):
 
         _LOGGER.debug('Setting up sensor for partition: ' + partition_name)
         super().__init__(partition_name + ' Keypad', info, controller)
-
-        hass.buss.async_listen(EVENT_PARTITION_UPDATE, self._update_callback)
-        hass.buss.async_listen(EVENT_KEYPAD_UPDATE, self._update_callback)
 
     @property
     def icon(self):
@@ -67,9 +65,7 @@ class EnvisalinkSensor(EnvisalinkDevice, Entity):
         return self._info['status']
 
     @callback
-    def _update_callback(self, event):
+    def update_callback(self, partition):
         """Update the partition state in HA, if needed."""
-        partition = event.data[ATTR_PARTITION]
-
         if partition is None or int(partition) == self._partition_number:
             self.hass.schedule_update_ha_state()
