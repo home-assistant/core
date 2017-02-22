@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
+from homeassistant.const import (STATE_OFF, STATE_ON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = []
@@ -31,10 +31,12 @@ KNOWN_HOSTS = []  # type: List[str]
 CONF_ZONES = 'zones'
 CONF_PORT = 'port'
 ZONE_SETUP_SCHEMA = vol.Schema({
-    vol.Required('commands'): vol.Schema({vol.All(cv.string): vol.Any(cv.string)}),
-    vol.Required('queries'): vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
+    vol.Required('commands'):
+        vol.Schema({vol.All(cv.string): vol.Any(cv.string)}),
+    vol.Required('queries'):
+        vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
 })
-ZONE_SCHEMA = vol.Schema({ vol.All(cv.string): ZONE_SETUP_SCHEMA })
+ZONE_SCHEMA = vol.Schema({vol.All(cv.string): ZONE_SETUP_SCHEMA})
 
 DEFAULT_SOURCES = {
     "00": "VIDEO1,VCR/DVR,STB/DVR",
@@ -93,14 +95,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PORT): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ZONES): ZONE_SCHEMA,
-    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES): {cv.string: cv.string},
+    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
+        {cv.string: cv.string},
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Onkyo platform."""
     import serial
-    import threading
 
     port = config.get(CONF_PORT)
 
@@ -118,7 +120,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if ser:
         if CONF_ZONES in config:
             for key, value in config[CONF_ZONES].items():
-                zones[key] = OnkyoSerialDevice(ser, config.get(CONF_SOURCES), value, name="onkyo-{zone}".format(zone=key))
+                zones[key] = OnkyoSerialDevice(
+                    ser,
+                    config.get(CONF_SOURCES),
+                    value,
+                    name="onkyo-{zone}".format(zone=key)
+                )
                 devices.append(zones[key])
     else:
         _LOGGER.error('Unable to connect to serial port %s', port)
@@ -133,13 +140,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class OnkyoBackgroundWorker(threading.Thread):
+    """Listens for incoming messages from the serial port and updates status in the background."""
+
     def __init__(self, port, commands, devices):
+        """Initialize the thread."""
         threading.Thread.__init__(self)
         self.daemon = True
         self._port = port
         self._commands = commands
         self._devices = devices
-        self._pattern = '\!1([A-Z]{3})(.{2})?'
+        self._pattern = '!1([A-Z]{3})(.{2})?'
 
         self.messages = {
             'power': self.power,
@@ -149,13 +159,14 @@ class OnkyoBackgroundWorker(threading.Thread):
         }
 
     def _readline(self):
+        """Read a single line from the serial port suffixed with a ^Z."""
         eol = b'\x1a'
         leneol = len(eol)
         line = bytearray()
         while True:
-            c = self._port.read(1)
-            if c:
-                line += c
+            cread = self._port.read(1)
+            if cread:
+                line += cread
                 if line[-leneol:] == eol:
                     break
             else:
@@ -164,24 +175,31 @@ class OnkyoBackgroundWorker(threading.Thread):
         return bytes(line)
 
     def process(self, message, value):
+        """Call the process handler for a specific message."""
         return self.messages[message](value)
 
+    #pylint: disable=R
     def power(self, value):
+        """Process power state."""
         if value == '00':
             return STATE_OFF
         else:
             return STATE_ON
 
     def mute(self, value):
+        """Process mute status."""
         return value == '01'
 
     def volume(self, value):
+        """Process volume state."""
         return int(value, 16) / 100
 
     def source(self, value):
+        """Process the current input source."""
         return DEFAULT_SOURCES[value]
 
     def run(self):
+        """Override run handler for the thread."""
         while True:
             out = self._readline().decode('utf-8')
             match = re.search(self._pattern, out)
@@ -191,8 +209,9 @@ class OnkyoBackgroundWorker(threading.Thread):
                 zone = None
                 prop = None
 
-                for z,c in self._commands.items():
-                    for child_key,child_cmd in self._commands[z].items():
+                #pylint: disable=C,W
+                for z, c in self._commands.items():
+                    for child_key, child_cmd in self._commands[z].items():
                         if child_cmd == cmd:
                             zone = z
                             prop = child_key
@@ -223,6 +242,7 @@ class OnkyoSerialDevice(MediaPlayerDevice):
         self.update()
 
     def command(self, command):
+        """Send a command to the serial port."""
         if self._port.isOpen():
             out = ''.join(['!1', command, '\r'])
             self._port.write(str.encode(out))
@@ -231,6 +251,8 @@ class OnkyoSerialDevice(MediaPlayerDevice):
         return True
 
     def update(self):
+        """Udpate request for status."""
+        #pylint: disable=W
         for query, cmd in self._queries.items():
             self.command(cmd)
 
@@ -274,7 +296,7 @@ class OnkyoSerialDevice(MediaPlayerDevice):
         self.command(self._commands['power'] + '00')
 
     def set_volume_level(self, volume):
-        """Set volume level, input is range 0..1. """
+        """Set volume level, input is range 0..1."""
         self.command(self._commands['volume'] + format(int(volume*100), '02X'))
 
     def mute_volume(self, mute):
@@ -290,11 +312,12 @@ class OnkyoSerialDevice(MediaPlayerDevice):
 
     def select_source(self, source):
         """Set the input source."""
+        #pylint: disable=W
         sel = self._reverse_mapping.get(source.upper(), None)
         if not sel:
-            for key,val in self._reverse_mapping.items():
+            for key, val in self._reverse_mapping.items():
                 if source.upper() in key.split(','):
                     sel = self._reverse_mapping[key]
 
         if sel:
-           self.command(self._commands['source'] + sel)
+            self.command(self._commands['source'] + sel)
