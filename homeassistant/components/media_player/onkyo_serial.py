@@ -2,7 +2,7 @@
 Support for Onkyo Receivers.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.onkyo/
+https://home-assistant.io/components/media_player.onkyoserial/
 """
 import logging
 import threading
