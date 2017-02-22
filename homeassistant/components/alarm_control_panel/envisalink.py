@@ -100,7 +100,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
             hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
 
     @callback
-    def update_callback(self, partition):
+    def _update_callback(self, partition):
         """Update HA state, if needed."""
         if partition is None or int(partition) == self._partition_number:
             self.hass.async_add_job(self.async_update_ha_state())
