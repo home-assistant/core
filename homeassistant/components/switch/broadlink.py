@@ -209,7 +209,7 @@ class BroadlinkRMSwitch(SwitchDevice):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, max(0, retry-1))
+            return self._sendpacket(packet, retry-1)
         return True
 
     def _auth(self, retry=2):
@@ -218,7 +218,7 @@ class BroadlinkRMSwitch(SwitchDevice):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(max(0, retry-1))
+            return self._auth(retry-1)
         return auth
 
 
@@ -241,7 +241,7 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, max(0, retry-1))
+            return self._sendpacket(packet, retry-1)
         return True
 
 
@@ -275,7 +275,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
                 return
             if not self._auth():
                 return
-            return self._update(max(0, retry-1))
+            return self._update(retry-1)
         if state is None and retry > 0:
-            return self._update(max(0, retry-1))
+            return self._update(retry-1)
         self._state = state
