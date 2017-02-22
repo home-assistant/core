@@ -239,7 +239,7 @@ class Recorder(threading.Thread):
             async_track_time_interval(
                 self.hass, self._purge_old_data, timedelta(days=2))
 
-        _wait(self.start_recording, "Waiting to start recording")
+        _wait(self.start_recording, "Waiting to start recording", 90)
 
         while True:
             event = self.queue.get()
@@ -499,13 +499,13 @@ class Recorder(threading.Thread):
         return False
 
 
-def _wait(event, message):
+def _wait(event, message, interval=15):
     """Event wait helper."""
-    for retry in (10, 20, 30):
-        event.wait(10)
+    for mult in range(1, 4):
+        event.wait(interval)
         if event.is_set():
             return
-        msg = message + " ({} seconds)".format(retry)
+        msg = "{} ({} seconds)".format(message, interval*mult)
         _LOGGER.warning(msg)
     if not event.is_set():
         raise HomeAssistantError(msg)
