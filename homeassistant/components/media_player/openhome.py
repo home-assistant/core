@@ -86,8 +86,8 @@ class OpenhomeDevice(MediaPlayerDevice):
             source_names.append(source["name"])
             source_index[source["name"]] = source["index"]
 
-        self._source_index = source_index;
-        self._source_names = source_names;
+        self._source_index = source_index
+        self._source_names = source_names
 
         if self._source["type"] == "Radio":
             self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
