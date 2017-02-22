@@ -11,12 +11,13 @@ import os
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.envisalink import (
     DATA_EVL, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
-    CONF_PARTITIONNAME, DATA_EVL_ALARM)
+    CONF_PARTITIONNAME, SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, ATTR_ENTITY_ID)
@@ -54,7 +55,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         )
         devices.append(device)
 
-    hass.data[DATA_EVL_ALARM] = devices
     yield from async_add_devices(devices)
 
     @callback
@@ -93,6 +93,11 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
 
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
+
+        async_dispatcher_connect(
+            hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
+        async_dispatcher_connect(
+            hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
 
     @callback
     def update_callback(self, partition):

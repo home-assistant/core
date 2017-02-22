@@ -8,10 +8,11 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.envisalink import (
     DATA_EVL, ZONE_SCHEMA, CONF_ZONENAME, CONF_ZONETYPE, EnvisalinkDevice,
-    DATA_EVL_BINARY)
+    SIGNAL_ZONE_UPDATE)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 
 DEPENDENCIES = ['envisalink']
@@ -36,7 +37,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         )
         devices.append(device)
 
-    hass.data[DATA_EVL_BINARY] = devices
     yield from async_add_devices(devices)
 
 
@@ -51,6 +51,9 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
 
         _LOGGER.debug('Setting up zone: ' + zone_name)
         super().__init__(zone_name, info, controller)
+
+        async_dispatcher_connect(
+            hass, SIGNAL_ZONE_UPDATE, self._update_callback)
 
     @property
     def device_state_attributes(self):
@@ -70,7 +73,7 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         return self._zone_type
 
     @callback
-    def update_callback(self, zone):
+    def _update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
             self.hass.async_add_job(self.async_update_ha_state())
