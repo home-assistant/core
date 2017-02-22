@@ -4,10 +4,12 @@ Connect two Home Assistant instances via MQTT.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt_eventstream/
 """
+import asyncio
 import json
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.loader as loader
 from homeassistant.components.mqtt import (
     valid_publish_topic, valid_subscribe_topic)
@@ -36,13 +38,15 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup the MQTT eventstream component."""
     mqtt = loader.get_component('mqtt')
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)
     sub_topic = conf.get(CONF_SUBSCRIBE_TOPIC)
 
+    @callback
     def _event_publisher(event):
         """Handle events by publishing them on the MQTT queue."""
         if event.origin != EventOrigin.local:
@@ -81,13 +85,14 @@ def setup(hass, config):
 
         event_info = {'event_type': event.event_type, 'event_data': event.data}
         msg = json.dumps(event_info, cls=JSONEncoder)
-        mqtt.publish(hass, pub_topic, msg)
+        mqtt.async_publish(hass, pub_topic, msg)
 
     # Only listen for local events if you are going to publish them.
     if pub_topic:
-        hass.bus.listen(MATCH_ALL, _event_publisher)
+        hass.bus.async_listen(MATCH_ALL, _event_publisher)
 
     # Process events from a remote server that are received on a queue.
+    @callback
     def _event_receiver(topic, payload, qos):
         """Receive events published by and fire them on this hass instance."""
         event = json.loads(payload)
@@ -105,7 +110,7 @@ def setup(hass, config):
                 if state:
                     event_data[key] = state
 
-        hass.bus.fire(
+        hass.bus.async_fire(
             event_type,
             event_data=event_data,
             origin=EventOrigin.remote
@@ -113,8 +118,7 @@ def setup(hass, config):
 
     # Only subscribe if you specified a topic.
     if sub_topic:
-        mqtt.subscribe(hass, sub_topic, _event_receiver)
+        yield from mqtt.async_subscribe(hass, sub_topic, _event_receiver)
 
-    hass.states.set('{domain}.initialized'.format(domain=DOMAIN), True)
-
+    hass.states.async_set('{domain}.initialized'.format(domain=DOMAIN), True)
     return True

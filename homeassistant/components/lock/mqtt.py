@@ -4,10 +4,12 @@ Support for MQTT locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.mqtt/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -38,14 +40,14 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the MQTT lock."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    add_devices([MqttLock(
-        hass,
+
+    yield from async_add_devices([MqttLock(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -61,11 +63,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttLock(LockDevice):
     """Represents a lock that can be toggled using MQTT."""
 
-    def __init__(self, hass, name, state_topic, command_topic, qos, retain,
+    def __init__(self, name, state_topic, command_topic, qos, retain,
                  payload_lock, payload_unlock, optimistic, value_template):
         """Initialize the lock."""
         self._state = False
-        self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
@@ -74,25 +75,33 @@ class MqttLock(LockDevice):
         self._payload_lock = payload_lock
         self._payload_unlock = payload_unlock
         self._optimistic = optimistic
+        self._template = value_template
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method is a coroutine.
+        """
+        @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
             if payload == self._payload_lock:
                 self._state = True
-                self.schedule_update_ha_state()
             elif payload == self._payload_unlock:
                 self._state = False
-                self.schedule_update_ha_state()
+
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            mqtt.subscribe(
-                hass, self._state_topic, message_received, self._qos)
+            yield from mqtt.async_subscribe(
+                self.hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -114,20 +123,30 @@ class MqttLock(LockDevice):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
-    def lock(self, **kwargs):
-        """Lock the device."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_lock,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_lock(self, **kwargs):
+        """Lock the device.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_lock, self._qos,
+            self._retain)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def unlock(self, **kwargs):
-        """Unlock the device."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_unlock,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_unlock(self, **kwargs):
+        """Unlock the device.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_unlock, self._qos,
+            self._retain)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())

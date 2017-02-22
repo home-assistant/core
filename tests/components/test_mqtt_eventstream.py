@@ -57,7 +57,7 @@ class TestMqttEventStream(object):
         # Verify that the event handler has been added as a listener
         assert self.hass.bus.listeners.get('*') == 1
 
-    @patch('homeassistant.components.mqtt.subscribe')
+    @patch('homeassistant.components.mqtt.async_subscribe')
     def test_subscribe(self, mock_sub):
         """"Test the subscription."""
         sub_topic = 'foo'
@@ -67,7 +67,7 @@ class TestMqttEventStream(object):
         # Verify that the this entity was subscribed to the topic
         mock_sub.assert_called_with(self.hass, sub_topic, ANY)
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
         """"Test the sending of a new message if event changed."""
@@ -110,7 +110,7 @@ class TestMqttEventStream(object):
         # Verify that the message received was that expected
         assert json.loads(msg) == event
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     def test_time_event_does_not_send_message(self, mock_pub):
         """"Test the sending of a new message if time event."""
         assert self.add_eventstream(pub_topic='bar')
@@ -147,7 +147,7 @@ class TestMqttEventStream(object):
 
         assert 1 == len(calls)
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     def test_mqtt_received_event(self, mock_pub):
         """Don't filter events from the mqtt component about received message.
 
