@@ -387,6 +387,14 @@ def timestamp_utc(value):
         return value
 
 
+def str_to_json(value):
+    """Convert a given json string to python dict."""
+    try:
+        return json.loads(value)
+    except (ValueError, KeyError, TypeError):
+        return value
+
+
 def strptime(string, fmt):
     """Parse a time string to datetime."""
     try:
@@ -433,3 +441,4 @@ ENV.globals['utcnow'] = dt_util.utcnow
 ENV.globals['as_timestamp'] = dt_util.as_timestamp
 ENV.globals['relative_time'] = dt_util.get_age
 ENV.globals['strptime'] = strptime
+ENV.globals['json_to_dict'] = json.loads
