@@ -54,7 +54,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     def __init__(self, hass, device):
         """Initialise the Openhome device."""
-      lf.hass = hass
+        self.hass = hass
         self._device = device
         self._track_information = {}
         self._in_standby = None
