@@ -12,6 +12,7 @@ import aiohttp
 import voluptuous as vol
 
 import re
+import warnings
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
@@ -396,6 +397,9 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_play_song(self, song_name, artist_name=None):
         song_id = yield from self.async_find_song(song_name, artist_name)
+        if song_id is None:
+            warnings.warn("no song found.", RuntimeWarning)
+            return
         
         yield from self.async_media_stop()
         yield from self.async_clear_playlist()
@@ -436,6 +440,9 @@ class KodiDevice(MediaPlayerDevice):
             artist_id = yield from self.async_find_artist(artist_name)
         
         songs = yield from self.async_get_songs(artist_id)
+        if songs['limits']['total']==0:
+            return None
+        
         out = self._find(song_name, [a['label'] for a in songs['songs']])
         return songs['songs'][out[0][0]]['songid']
     
@@ -464,11 +471,12 @@ class KodiDevice(MediaPlayerDevice):
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_albums())
-    out = asyncio.get_event_loop().run_until_complete(kodi.async_find_album('30', 'stones'))
+    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
     
-    for s in songs['albums']:
-        if s['albumid'] == out:
+    out = asyncio.get_event_loop().run_until_complete(kodi.async_play_song('hey jude', 'beatles'))
+     
+    for s in songs['songs']:
+        if s['songid'] == out:
             print(s)
     print(out)
     
