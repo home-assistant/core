@@ -35,11 +35,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info('Openhome device found, (%s)', discovery_info[0])
         device = Device(discovery_info[1])
 
-        # if device already exists by config
+        # if device has already been discovered
         if device.Uuid() in [x.unique_id for x in DEVICES]:
             return True
 
-        device = HassOpenhomeDevice(hass, device)
+        device = OpenhomeDevice(hass, device)
 
         add_devices([device], True)
         DEVICES.append(device)
@@ -49,12 +49,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return True
 
 
-class HassOpenhomeDevice(MediaPlayerDevice):
+class OpenhomeDevice(MediaPlayerDevice):
     """Representation of an Openhome device."""
 
     def __init__(self, hass, device):
         """Initialise the Openhome device."""
-        self.hass = hass
+      lf.hass = hass
         self._device = device
         self._track_information = {}
         self._in_standby = None
@@ -64,10 +64,8 @@ class HassOpenhomeDevice(MediaPlayerDevice):
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
         self._source_names = list()
-        self._name = device.Uuid()
+        self._name = None
         self._state = STATE_PLAYING
-
-        self.update()
 
     def update(self):
         """Update state of device."""
