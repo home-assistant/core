@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_datetime
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['myusps==1.0.2']
+REQUIREMENTS = ['myusps==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 

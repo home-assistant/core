@@ -10,13 +10,13 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT, DEVICE_DEFAULT_NAME, STATE_OFF, STATE_ON,
     STATE_UNAVAILABLE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES)
-from homeassistant.core import HomeAssistant, DOMAIN as CORE_DOMAIN
+    ATTR_ENTITY_PICTURE, ATTR_SUPPORTED_FEATURES, ATTR_DEVICE_CLASS)
+from homeassistant.core import HomeAssistant
+from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
-from homeassistant.helpers.customize import get_overrides
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +107,11 @@ class Entity(object):
 
         Implemented by platform classes.
         """
+        return None
+
+    @property
+    def device_class(self) -> str:
+        """Return the class of this device, from component DEVICE_CLASSES."""
         return None
 
     @property
@@ -204,8 +209,6 @@ class Entity(object):
                 # pylint: disable=no-member
                 yield from self.async_update()
             else:
-                # PS: Run this in our own thread pool once we have
-                #     future support?
                 yield from self.hass.loop.run_in_executor(None, self.update)
 
         start = timer()
@@ -236,6 +239,7 @@ class Entity(object):
         self._attr_setter('assumed_state', bool, ATTR_ASSUMED_STATE, attr)
         self._attr_setter('supported_features', int, ATTR_SUPPORTED_FEATURES,
                           attr)
+        self._attr_setter('device_class', str, ATTR_DEVICE_CLASS, attr)
 
         end = timer()
 
@@ -247,7 +251,8 @@ class Entity(object):
                             end - start)
 
         # Overwrite properties that have been set in the config file.
-        attr.update(get_overrides(self.hass, CORE_DOMAIN, self.entity_id))
+        if DATA_CUSTOMIZE in self.hass.data:
+            attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
 
         # Remove hidden property if false so it won't show up.
         if not attr.get(ATTR_HIDDEN, True):

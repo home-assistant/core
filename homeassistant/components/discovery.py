@@ -42,6 +42,7 @@ SERVICE_HANDLERS = {
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
+    'frontier_silicon': ('media_player', 'frontier_silicon'),
 }
 
 CONFIG_SCHEMA = vol.Schema({

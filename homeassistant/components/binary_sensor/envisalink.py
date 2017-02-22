@@ -60,11 +60,11 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         return self._info['status']['open']
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
     def _update_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
-            self.hass.async_add_job(self.update_ha_state)
+            self.hass.schedule_update_ha_state()

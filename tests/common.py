@@ -86,7 +86,13 @@ def async_test_home_assistant(loop):
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
-    hass.async_track_tasks()
+
+    def async_add_job(target, *args):
+        if isinstance(target, MagicMock):
+            return
+        hass._async_add_job_tracking(target, *args)
+
+    hass.async_add_job = async_add_job
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -210,9 +216,9 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass):
+def mock_http_component(hass, api_password=None):
     """Mock the HTTP component."""
-    hass.http = MagicMock()
+    hass.http = MagicMock(api_password=api_password)
     hass.config.components.add('http')
     hass.http.views = {}
 
@@ -229,7 +235,8 @@ def mock_http_component(hass):
 
 def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
-    hass.http = MagicMock(api_password=api_password)
+    if 'http' not in hass.config.components:
+        mock_http_component(hass, api_password)
     app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
@@ -241,6 +248,7 @@ def mock_http_component_app(hass, api_password=None):
 def mock_mqtt_component(hass):
     """Mock the MQTT component."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
+        mock_mqtt().async_connect.return_value = mock_coro(True)
         setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',
@@ -392,12 +400,17 @@ def mock_coro(return_value=None):
         """Fake coroutine."""
         return return_value
 
+    return coro()
+
+
+def mock_coro_func(return_value=None):
+    """Helper method to return a coro that returns a value."""
+    @asyncio.coroutine
+    def coro(*args, **kwargs):
+        """Fake coroutine."""
+        return return_value
+
     return coro
-
-
-def mock_generator(return_value=None):
-    """Helper method to return a coro generator that returns a value."""
-    return mock_coro(return_value)()
 
 
 @contextmanager

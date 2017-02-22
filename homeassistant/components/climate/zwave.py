@@ -68,7 +68,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._unit = temp_unit
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
-        self.update_properties()
         # Make sure that we have values for the key before converting to int
         if (value.node.manufacturer_id.strip() and
                 value.node.product_id.strip()):
@@ -79,6 +78,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
                                   " workaround")
                     self._zxt_120 = 1
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -97,9 +97,11 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._current_temperature = self.get_value(
             class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL,
             label=['Temperature'], member='data')
-        self._unit = self.get_value(
+        device_unit = self.get_value(
             class_id=zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL,
             label=['Temperature'], member='units')
+        if device_unit is not None:
+            self._unit = device_unit
 
         # Fan Mode
         self._current_fan_mode = self.get_value(

@@ -36,7 +36,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                     'test': {
                         'friendly_name': 'virtual thingy',
                         'value_template': '{{ foo }}',
-                        'sensor_class': 'motion',
+                        'device_class': 'motion',
                     },
                 },
             },
@@ -66,7 +66,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                 }
             })
 
-    def test_setup_invalid_sensor_class(self):
+    def test_setup_invalid_device_class(self):
         """"Test setup with invalid sensor class."""
         with assert_setup_component(0):
             assert bootstrap.setup_component(self.hass, 'binary_sensor', {
@@ -75,7 +75,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                     'sensors': {
                         'test': {
                             'value_template': '{{ foo }}',
-                            'sensor_class': 'foobarnotreal',
+                            'device_class': 'foobarnotreal',
                         },
                     },
                 }
@@ -89,7 +89,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
                     'platform': 'template',
                     'sensors': {
                         'test': {
-                            'sensor_class': 'motion',
+                            'device_class': 'motion',
                         },
                     }
                 }
@@ -103,7 +103,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             template_hlpr.Template('{{ 1 > 1 }}', self.hass), MATCH_ALL
         ).result()
         self.assertFalse(vs.should_poll)
-        self.assertEqual('motion', vs.sensor_class)
+        self.assertEqual('motion', vs.device_class)
         self.assertEqual('Parent', vs.name)
 
         vs.update()

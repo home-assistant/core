@@ -1,48 +1,35 @@
-"""Support for Rflink components.
+"""
+Support for Rflink components.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/rflink/
-
-Technical overview:
-
-The Rflink gateway is a USB serial device (Arduino with Rflink firwmare)
-connected to a 433Mhz transceiver module.
-
-The the `rflink` Python module a asyncio transport/protocol is setup that
-fires an callback for every (valid/supported) packet received by the Rflink
-gateway.
-
-This component uses this callback to distribute 'rflink packet events' over
-the HASS bus which can be subscribed to by entities/platform implementations.
-
-The platform implementions take care of creating new devices (if enabled) for
-unsees incoming packet id's.
-
-Device Entities take care of matching to the packet id, interpreting and
-performing actions based on the packet contents. Common entitiy logic is
-maintained in this file.
-
 """
 import asyncio
 from collections import defaultdict
 import functools as ft
 import logging
 
+import async_timeout
+import voluptuous as vol
+
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN)
 from homeassistant.core import CoreState, callback
+from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-import voluptuous as vol
 
-REQUIREMENTS = ['rflink==0.0.24']
+REQUIREMENTS = ['rflink==0.0.28']
 
-DOMAIN = 'rflink'
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_EVENT = 'event'
+ATTR_STATE = 'state'
 
 CONF_ALIASSES = 'aliasses'
-CONF_DEVICES = 'devices'
 CONF_DEVICE_DEFAULTS = 'device_defaults'
+CONF_DEVICES = 'devices'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_IGNORE_DEVICES = 'ignore_devices'
 CONF_NEW_DEVICES_GROUP = 'new_devices_group'
@@ -50,8 +37,19 @@ CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
 
-DEFAULT_SIGNAL_REPETITIONS = 1
+DATA_DEVICE_REGISTER = 'rflink_device_register'
+DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
 DEFAULT_RECONNECT_INTERVAL = 10
+DEFAULT_SIGNAL_REPETITIONS = 1
+CONNECTION_TIMEOUT = 10
+
+EVENT_BUTTON_PRESSED = 'button_pressed'
+EVENT_KEY_COMMAND = 'command'
+EVENT_KEY_ID = 'id'
+EVENT_KEY_SENSOR = 'sensor'
+EVENT_KEY_UNIT = 'unit'
+
+DOMAIN = 'rflink'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -71,27 +69,11 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-ATTR_EVENT = 'event'
-ATTR_STATE = 'state'
-
-DATA_DEVICE_REGISTER = 'rflink_device_register'
-DATA_ENTITY_LOOKUP = 'rflink_entity_lookup'
-
-EVENT_BUTTON_PRESSED = 'button_pressed'
-
-EVENT_KEY_COMMAND = 'command'
-EVENT_KEY_ID = 'id'
-EVENT_KEY_SENSOR = 'sensor'
-EVENT_KEY_UNIT = 'unit'
-
-_LOGGER = logging.getLogger(__name__)
-
 
 def identify_event_type(event):
     """Look at event to determine type of device.
 
     Async friendly.
-
     """
     if EVENT_KEY_COMMAND in event:
         return EVENT_KEY_COMMAND
@@ -103,79 +85,81 @@ def identify_event_type(event):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the Rflink component."""
+    """Set up the Rflink component."""
     from rflink.protocol import create_rflink_connection
     import serial
 
-    # allow entities to register themselves by device_id to be looked up when
+    # Allow entities to register themselves by device_id to be looked up when
     # new rflink events arrive to be handled
     hass.data[DATA_ENTITY_LOOKUP] = {
         EVENT_KEY_COMMAND: defaultdict(list),
         EVENT_KEY_SENSOR: defaultdict(list),
     }
 
-    # allow platform to specify function to register new unknown devices
+    # Allow platform to specify function to register new unknown devices
     hass.data[DATA_DEVICE_REGISTER] = {}
 
     @callback
     def event_callback(event):
-        """Handle incoming rflink events.
+        """Handle incoming Rflink events.
 
         Rflink events arrive as dictionaries of varying content
         depending on their type. Identify the events and distribute
         accordingly.
-
         """
         event_type = identify_event_type(event)
         _LOGGER.debug('event of type %s: %s', event_type, event)
 
-        # don't propagate non entity events (eg: version string, ack response)
+        # Don't propagate non entity events (eg: version string, ack response)
         if event_type not in hass.data[DATA_ENTITY_LOOKUP]:
             _LOGGER.debug('unhandled event of type: %s', event_type)
             return
 
-        # lookup entities who registered this device id as device id or alias
+        # Lookup entities who registered this device id as device id or alias
         event_id = event.get('id', None)
         entities = hass.data[DATA_ENTITY_LOOKUP][event_type][event_id]
 
         if entities:
-            # propagate event to every entity matching the device id
+            # Propagate event to every entity matching the device id
             for entity in entities:
                 _LOGGER.debug('passing event to %s', entities)
                 entity.handle_event(event)
         else:
             _LOGGER.debug('device_id not known, adding new device')
 
-            # if device is not yet known, register with platform (if loaded)
+            # If device is not yet known, register with platform (if loaded)
             if event_type in hass.data[DATA_DEVICE_REGISTER]:
                 hass.async_run_job(
                     hass.data[DATA_DEVICE_REGISTER][event_type], event)
 
-    # when connecting to tcp host instead of serial port (optional)
+    # When connecting to tcp host instead of serial port (optional)
     host = config[DOMAIN][CONF_HOST]
-    # tcp port when host configured, otherwise serial port
+    # TCP port when host configured, otherwise serial port
     port = config[DOMAIN][CONF_PORT]
 
     @callback
     def reconnect(exc=None):
         """Schedule reconnect after connection has been unexpectedly lost."""
-        # reset protocol binding before starting reconnect
+        # Reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
 
-        # if HA is not stopping, initiate new connection
+        # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
             _LOGGER.warning('disconnected from Rflink, reconnecting')
             hass.async_add_job(connect)
 
     @asyncio.coroutine
     def connect():
-        """Setup connection and hook it into HA for reconnect/shutdown."""
-        _LOGGER.info('initiating Rflink connection')
+        """Set up connection and hook it into HA for reconnect/shutdown."""
+        _LOGGER.info('Initiating Rflink connection')
+        hass.states.async_set(
+            '{domain}.connection_status'.format(
+                domain=DOMAIN), 'connecting')
 
-        # rflink create_rflink_connection decides based on the value of host
+        # Rflink create_rflink_connection decides based on the value of host
         # (string or None) if serial or tcp mode should be used
 
-        # initiate serial/tcp connection to Rflink gateway
+        # Initiate serial/tcp connection to Rflink gateway
         connection = create_rflink_connection(
             port=port,
             host=host,
@@ -186,43 +170,46 @@ def async_setup(hass, config):
         )
 
         try:
-            transport, protocol = yield from connection
+            with async_timeout.timeout(CONNECTION_TIMEOUT,
+                                       loop=hass.loop):
+                transport, protocol = yield from connection
+
         except (serial.serialutil.SerialException, ConnectionRefusedError,
-                TimeoutError) as exc:
+                TimeoutError, OSError, asyncio.TimeoutError) as exc:
             reconnect_interval = config[DOMAIN][CONF_RECONNECT_INTERVAL]
             _LOGGER.exception(
-                'error connecting to Rflink, reconnecting in %s',
+                "Error connecting to Rflink, reconnecting in %s",
                 reconnect_interval)
+            hass.states.async_set(
+                '{domain}.connection_status'.format(
+                    domain=DOMAIN), 'error')
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
 
-        # bind protocol to command class to allow entities to send commands
+        # Bind protocol to command class to allow entities to send commands
         RflinkCommand.set_rflink_protocol(
             protocol, config[DOMAIN][CONF_WAIT_FOR_ACK])
 
-        # handle shutdown of rflink asyncio transport
+        # handle shutdown of Rflink asyncio transport
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    lambda x: transport.close())
 
-        _LOGGER.info('connected to Rflink')
+        _LOGGER.info('Connected to Rflink')
+        hass.states.async_set(
+            '{domain}.connection_status'.format(
+                domain=DOMAIN), 'connected')
 
-    # make initial connection
-    yield from connect()
-
-    # whoo
+    hass.async_add_job(connect)
     return True
 
 
 class RflinkDevice(Entity):
-    """Represents a Rflink device.
+    """Representation of a Rflink device.
 
     Contains the common logic for Rflink entities.
-
     """
 
-    # should be set by component implementation
     platform = None
-    # default state
     _state = STATE_UNKNOWN
 
     def __init__(self, device_id, hass, name=None,
@@ -231,14 +218,14 @@ class RflinkDevice(Entity):
         """Initialize the device."""
         self.hass = hass
 
-        # rflink specific attributes for every component type
+        # Rflink specific attributes for every component type
         self._device_id = device_id
         if name:
             self._name = name
         else:
             self._name = device_id
 
-        # generate list of device_ids to match against
+        # Generate list of device_ids to match against
         if aliasses:
             self._aliasses = aliasses
         else:
@@ -249,23 +236,21 @@ class RflinkDevice(Entity):
 
     def handle_event(self, event):
         """Handle incoming event for device type."""
-        # call platform specific event handler
+        # Call platform specific event handler
         self._handle_event(event)
 
-        # propagate changes through ha
+        # Propagate changes through ha
         self.hass.async_add_job(self.async_update_ha_state())
 
-        # put command onto bus for user to subscribe to
+        # Put command onto bus for user to subscribe to
         if self._should_fire_event and identify_event_type(
                 event) == EVENT_KEY_COMMAND:
             self.hass.bus.fire(EVENT_BUTTON_PRESSED, {
                 ATTR_ENTITY_ID: self.entity_id,
                 ATTR_STATE: event[EVENT_KEY_COMMAND],
             })
-            _LOGGER.debug(
-                'fired bus event for %s: %s',
-                self.entity_id,
-                event[EVENT_KEY_COMMAND])
+            _LOGGER.debug("Fired bus event for %s: %s",
+                          self.entity_id, event[EVENT_KEY_COMMAND])
 
     def _handle_event(self, event):
         """Platform specific event handler."""
@@ -303,12 +288,13 @@ class RflinkCommand(RflinkDevice):
 
     The Rflink interface is managed as a class level and set during setup (and
     reset on reconnect).
-
     """
 
-    # keep repetition tasks to cancel if state is changed before repetitions
+    # Keep repetition tasks to cancel if state is changed before repetitions
     # are sent
     _repetition_task = None
+
+    _protocol = None
 
     @classmethod
     def set_rflink_protocol(cls, protocol, wait_ack=None):
@@ -317,12 +303,17 @@ class RflinkCommand(RflinkDevice):
         if wait_ack is not None:
             cls._wait_ack = wait_ack
 
+    @classmethod
+    def is_connected(cls):
+        """Return connection status."""
+        return bool(cls._protocol)
+
     @asyncio.coroutine
     def _async_handle_command(self, command, *args):
         """Do bookkeeping for command, send it to rflink and update state."""
         self.cancel_queued_send_commands()
 
-        if command == "turn_on":
+        if command == 'turn_on':
             cmd = 'on'
             self._state = True
 
@@ -335,8 +326,8 @@ class RflinkCommand(RflinkDevice):
             cmd = str(int(args[0] / 17))
             self._state = True
 
-        # send initial command and queue repetitions
-        # this allows the entity state to be updated quickly and not having to
+        # Send initial command and queue repetitions.
+        # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
         yield from self._async_send_command(cmd, self._signal_repetitions)
 
@@ -349,7 +340,6 @@ class RflinkCommand(RflinkDevice):
         For example when user changed state while repetitions are still
         queued for broadcast. Or when a incoming Rflink command (remote
         switch) changes the state.
-
         """
         # cancel any outstanding tasks from the previous state change
         if self._repetition_task:
@@ -358,8 +348,11 @@ class RflinkCommand(RflinkDevice):
     @asyncio.coroutine
     def _async_send_command(self, cmd, repetitions):
         """Send a command for device to Rflink gateway."""
-        _LOGGER.debug('sending command: %s to rflink device: %s',
-                      cmd, self._device_id)
+        _LOGGER.debug(
+            "Sending command: %s to Rflink device: %s", cmd, self._device_id)
+
+        if not self.is_connected():
+            raise HomeAssistantError('Cannot send command, not connected!')
 
         if self._wait_ack:
             # Puts command on outgoing buffer then waits for Rflink to confirm
@@ -391,12 +384,10 @@ class SwitchableRflinkDevice(RflinkCommand):
         elif command == 'off':
             self._state = False
 
-    @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        yield from self._async_handle_command("turn_on")
+        return self._async_handle_command("turn_on")
 
-    @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        yield from self._async_handle_command("turn_off")
+        return self._async_handle_command("turn_off")

@@ -74,6 +74,7 @@ light:
 
 """
 import unittest
+from unittest import mock
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
@@ -328,7 +329,7 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'on', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
@@ -336,27 +337,20 @@ class TestLightMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'off', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
+        self.mock_publish.reset_mock()
         light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
                       brightness=50)
         self.hass.block_till_done()
 
-        # Calls are threaded so we need to reorder them
-        bright_call, rgb_call, state_call = \
-            sorted((call[1] for call in self.mock_publish.mock_calls[-3:]),
-                   key=lambda call: call[0])
-
-        self.assertEqual(('test_light_rgb/set', 'on', 2, False),
-                         state_call)
-
-        self.assertEqual(('test_light_rgb/rgb/set', '75,75,75', 2, False),
-                         rgb_call)
-
-        self.assertEqual(('test_light_rgb/brightness/set', 50, 2, False),
-                         bright_call)
+        self.mock_publish().async_publish.assert_has_calls([
+                mock.call('test_light_rgb/set', 'on', 2, False),
+                mock.call('test_light_rgb/rgb/set', '75,75,75', 2, False),
+                mock.call('test_light_rgb/brightness/set', 50, 2, False),
+            ], any_order=True)
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)

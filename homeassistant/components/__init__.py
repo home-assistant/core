@@ -156,8 +156,16 @@ def async_setup(hass, config):
             return
 
         try:
-            yield from conf_util.async_check_ha_config_file(hass)
+            errors = yield from conf_util.async_check_ha_config_file(hass)
         except HomeAssistantError:
+            return
+
+        if errors:
+            notif = get_component('persistent_notification')
+            _LOGGER.error(errors)
+            notif.async_create(
+                hass, "Config error. See dev-info panel for details.",
+                "Config validating", "{0}.check_config".format(ha.DOMAIN))
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
