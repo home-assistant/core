@@ -42,6 +42,7 @@ class VolvoSwitch(VolvoEntity, ToggleEntity):
         """Return the name of the switch."""
         return 'Heater'
 
+    @property
     def icon(self):
         """Return the icon."""
         return 'mdi:radiator'
