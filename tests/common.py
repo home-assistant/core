@@ -15,6 +15,7 @@ from homeassistant import core as ha, loader
 from homeassistant.bootstrap import (
     setup_component, async_prepare_setup_component)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -88,6 +89,7 @@ def async_test_home_assistant(loop):
     hass = ha.HomeAssistant(loop)
 
     def async_add_job(target, *args):
+        """Add a magic mock."""
         if isinstance(target, MagicMock):
             return
         hass._async_add_job_tracking(target, *args)
@@ -459,24 +461,19 @@ def init_recorder_component(hass, add_config=None, db_ready_callback=None):
     config = dict(add_config) if add_config else {}
     config[recorder.CONF_DB_URL] = 'sqlite://'  # In memory DB
 
-    saved_recorder = recorder.Recorder
-
-    class Recorder2(saved_recorder):
-        """Recorder with a callback after db_ready."""
-
-        def _setup_connection(self):
-            """Setup the connection and run the callback."""
-            super(Recorder2, self)._setup_connection()
-            if db_ready_callback:
-                _LOGGER.debug('db_ready_callback start (db_ready not set,'
-                              'never use get_instance in the callback)')
-                db_ready_callback()
-                _LOGGER.debug('db_ready_callback completed')
-
-    with patch('homeassistant.components.recorder.Recorder',
-               side_effect=Recorder2):
-        assert setup_component(hass, recorder.DOMAIN,
-                               {recorder.DOMAIN: config})
+    assert setup_component(hass, recorder.DOMAIN,
+                           {recorder.DOMAIN: config})
     assert recorder.DOMAIN in hass.config.components
     recorder.get_instance().block_till_db_ready()
     _LOGGER.info("In-memory recorder successfully started")
+
+
+def mock_restore_cache(hass, states):
+    """Mock the DATA_RESTORE_CACHE."""
+    hass.data[DATA_RESTORE_CACHE] = {
+        state.entity_id: state for state in states}
+    _LOGGER.debug('Restore cache: %s', hass.data[DATA_RESTORE_CACHE])
+    assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
+        "Duplicate entity_id? {}".format(states)
+    hass.state = ha.CoreState.starting
+    hass.config.components.add(recorder.DOMAIN)
