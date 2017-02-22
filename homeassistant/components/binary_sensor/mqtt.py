@@ -4,6 +4,7 @@ Support for MQTT binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.mqtt/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -35,8 +36,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MQTT binary sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -44,8 +45,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    add_devices([MqttBinarySensor(
-        hass,
+
+    yield from async_add_devices([MqttBinarySensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS),
@@ -59,10 +60,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttBinarySensor(BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
-    def __init__(self, hass, name, state_topic, device_class, qos, payload_on,
+    def __init__(self, name, state_topic, device_class, qos, payload_on,
                  payload_off, value_template):
         """Initialize the MQTT binary sensor."""
-        self._hass = hass
         self._name = name
         self._state = False
         self._state_topic = state_topic
@@ -70,21 +70,28 @@ class MqttBinarySensor(BinarySensorDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._qos = qos
+        self._template = value_template
 
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
             if payload == self._payload_on:
                 self._state = True
-                hass.async_add_job(self.async_update_ha_state())
             elif payload == self._payload_off:
                 self._state = False
-                hass.async_add_job(self.async_update_ha_state())
 
-        mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
+            self.hass.async_add_job(self.async_update_ha_state())
+
+        return mqtt.async_subscribe(
+            self.hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
