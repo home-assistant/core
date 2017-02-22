@@ -55,7 +55,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan', 'alarm_control_panel'
+    'fan', 'alarm_control_panel', 'scene'
 ]
 
 

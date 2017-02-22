@@ -31,10 +31,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = sprinkler.object_id() + sprinkler.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkToggleDevice(sprinkler, hass)])
-    for scene in pywink.get_scenes():
-        _id = scene.object_id() + scene.name()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkScene(scene, hass)])
 
 
 class WinkToggleDevice(WinkDevice, ToggleEntity):
@@ -67,24 +63,3 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
         return {
             'last_event': event
         }
-
-
-class WinkScene(WinkDevice, ToggleEntity):
-    """Representation of a Wink shorcut/scene."""
-
-    def __init__(self, wink, hass):
-        """Initialize the Wink device."""
-        super().__init__(wink, hass)
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.wink.state()
-
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self.wink.activate()
-
-    def turn_off(self):
-        """Scene can only be turned on."""
-        return
