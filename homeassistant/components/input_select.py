@@ -13,6 +13,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import async_get_last_state
 
 
 DOMAIN = 'input_select'
@@ -193,6 +194,16 @@ class InputSelect(Entity):
         self._current_option = state
         self._options = options
         self._icon = icon
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        if state.state not in self._options:
+            return
+        self._current_option = state.state
 
     @property
     def should_poll(self):
