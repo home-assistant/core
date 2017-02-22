@@ -41,6 +41,7 @@ SERVICE_HANDLERS = {
     'yeelight': ('light', 'yeelight'),
     'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
+    'openhome': ('media_player', 'openhome'),
 }
 
 CONFIG_SCHEMA = vol.Schema({

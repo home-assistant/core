@@ -364,6 +364,9 @@ oemthermostat==1.1
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
 
+# homeassistant.components.media_player.openhome
+openhomedevice==0.2
+
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
 
