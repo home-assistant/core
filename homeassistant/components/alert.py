@@ -62,7 +62,8 @@ def is_on(hass, entity_id):
 
 def turn_on(hass, entity_id):
     """Reset the alert."""
-    run_callback_threadsafe(hass.loop, async_turn_on, hass, entity_id)
+    run_callback_threadsafe(
+        hass.loop, async_turn_on, hass, entity_id).result()
 
 
 @callback
@@ -75,7 +76,8 @@ def async_turn_on(hass, entity_id):
 
 def turn_off(hass, entity_id):
     """Acknowledge alert."""
-    run_callback_threadsafe(hass.loop, async_turn_off, hass, entity_id)
+    run_callback_threadsafe(
+        hass.loop, async_turn_off, hass, entity_id).result()
 
 
 @callback

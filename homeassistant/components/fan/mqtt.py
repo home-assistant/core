@@ -4,10 +4,12 @@ Support for MQTT fans.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/fan.mqtt/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
@@ -73,11 +75,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup MQTT fan platform."""
-    add_devices([MqttFan(
-        hass,
+    yield from async_add_devices([MqttFan(
         config.get(CONF_NAME),
         {
             key: config.get(key) for key in (
@@ -113,15 +114,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttFan(FanEntity):
     """A MQTT fan component."""
 
-    def __init__(self, hass, name, topic, templates, qos, retain, payload,
+    def __init__(self, name, topic, templates, qos, retain, payload,
                  speed_list, optimistic):
         """Initialize the MQTT fan."""
-        self._hass = hass
         self._name = name
         self._topic = topic
         self._qos = qos
         self._retain = retain
         self._payload = payload
+        self._templates = templates
         self._speed_list = speed_list
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
         self._optimistic_oscillation = (
@@ -129,19 +130,29 @@ class MqttFan(FanEntity):
         self._optimistic_speed = (
             optimistic or topic[CONF_SPEED_STATE_TOPIC] is None)
         self._state = False
+        self._speed = None
+        self._oscillation = None
         self._supported_features = 0
         self._supported_features |= (topic[CONF_OSCILLATION_STATE_TOPIC]
                                      is not None and SUPPORT_OSCILLATE)
         self._supported_features |= (topic[CONF_SPEED_STATE_TOPIC]
                                      is not None and SUPPORT_SET_SPEED)
 
-        for key, tpl in list(templates.items()):
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method is a coroutine.
+        """
+        templates = {}
+        for key, tpl in list(self._templates.items()):
             if tpl is None:
                 templates[key] = lambda value: value
             else:
-                tpl.hass = hass
-                templates[key] = tpl.render_with_possible_json_value
+                tpl.hass = self.hass
+                templates[key] = tpl.async_render_with_possible_json_value
 
+        @callback
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
             payload = templates[CONF_STATE](payload)
@@ -149,13 +160,14 @@ class MqttFan(FanEntity):
                 self._state = True
             elif payload == self._payload[STATE_OFF]:
                 self._state = False
-
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            mqtt.subscribe(self._hass, self._topic[CONF_STATE_TOPIC],
-                           state_received, self._qos)
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_STATE_TOPIC], state_received,
+                self._qos)
 
+        @callback
         def speed_received(topic, payload, qos):
             """A new MQTT message for the speed has been received."""
             payload = templates[ATTR_SPEED](payload)
@@ -165,17 +177,15 @@ class MqttFan(FanEntity):
                 self._speed = SPEED_MEDIUM
             elif payload == self._payload[SPEED_HIGH]:
                 self._speed = SPEED_HIGH
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_SPEED_STATE_TOPIC] is not None:
-            mqtt.subscribe(self._hass, self._topic[CONF_SPEED_STATE_TOPIC],
-                           speed_received, self._qos)
-            self._speed = SPEED_OFF
-        elif self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
-            self._speed = SPEED_OFF
-        else:
-            self._speed = SPEED_OFF
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_SPEED_STATE_TOPIC], speed_received,
+                self._qos)
+        self._speed = SPEED_OFF
 
+        @callback
         def oscillation_received(topic, payload, qos):
             """A new MQTT message has been received."""
             payload = templates[OSCILLATION](payload)
@@ -183,17 +193,13 @@ class MqttFan(FanEntity):
                 self._oscillation = True
             elif payload == self._payload[OSCILLATE_OFF_PAYLOAD]:
                 self._oscillation = False
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_OSCILLATION_STATE_TOPIC] is not None:
-            mqtt.subscribe(self._hass,
-                           self._topic[CONF_OSCILLATION_STATE_TOPIC],
-                           oscillation_received, self._qos)
-            self._oscillation = False
-        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None:
-            self._oscillation = False
-        else:
-            self._oscillation = False
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_OSCILLATION_STATE_TOPIC],
+                oscillation_received, self._qos)
+        self._oscillation = False
 
     @property
     def should_poll(self):
@@ -235,43 +241,72 @@ class MqttFan(FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    def turn_on(self, speed: str=None) -> None:
-        """Turn on the entity."""
-        mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
-                     self._payload[STATE_ON], self._qos, self._retain)
+    @asyncio.coroutine
+    def async_turn_on(self, speed: str=None) -> None:
+        """Turn on the entity.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_COMMAND_TOPIC],
+            self._payload[STATE_ON], self._qos, self._retain)
         if speed:
-            self.set_speed(speed)
+            yield from self.async_set_speed(speed)
 
-    def turn_off(self) -> None:
-        """Turn off the entity."""
-        mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
-                     self._payload[STATE_OFF], self._qos, self._retain)
+    @asyncio.coroutine
+    def async_turn_off(self) -> None:
+        """Turn off the entity.
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if self._topic[CONF_SPEED_COMMAND_TOPIC] is not None:
-            mqtt_payload = SPEED_OFF
-            if speed == SPEED_LOW:
-                mqtt_payload = self._payload[SPEED_LOW]
-            elif speed == SPEED_MEDIUM:
-                mqtt_payload = self._payload[SPEED_MEDIUM]
-            elif speed == SPEED_HIGH:
-                mqtt_payload = self._payload[SPEED_HIGH]
-            else:
-                mqtt_payload = speed
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_COMMAND_TOPIC],
+            self._payload[STATE_OFF], self._qos, self._retain)
+
+    @asyncio.coroutine
+    def async_set_speed(self, speed: str) -> None:
+        """Set the speed of the fan.
+
+        This method is a coroutine.
+        """
+        if self._topic[CONF_SPEED_COMMAND_TOPIC] is None:
+            return
+
+        if speed == SPEED_LOW:
+            mqtt_payload = self._payload[SPEED_LOW]
+        elif speed == SPEED_MEDIUM:
+            mqtt_payload = self._payload[SPEED_MEDIUM]
+        elif speed == SPEED_HIGH:
+            mqtt_payload = self._payload[SPEED_HIGH]
+        else:
+            mqtt_payload = speed
+
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
+            mqtt_payload, self._qos, self._retain)
+
+        if self._optimistic_speed:
             self._speed = speed
-            mqtt.publish(self._hass, self._topic[CONF_SPEED_COMMAND_TOPIC],
-                         mqtt_payload, self._qos, self._retain)
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def oscillate(self, oscillating: bool) -> None:
-        """Set oscillation."""
-        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None:
-            self._oscillation = oscillating
+    @asyncio.coroutine
+    def async_oscillate(self, oscillating: bool) -> None:
+        """Set oscillation.
+
+        This method is a coroutine.
+        """
+        if self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is None:
+            return
+
+        if oscillating is False:
+            payload = self._payload[OSCILLATE_OFF_PAYLOAD]
+        else:
             payload = self._payload[OSCILLATE_ON_PAYLOAD]
-            if oscillating is False:
-                payload = self._payload[OSCILLATE_OFF_PAYLOAD]
-            mqtt.publish(self._hass,
-                         self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
-                         payload, self._qos, self._retain)
-            self.schedule_update_ha_state()
+
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_OSCILLATION_COMMAND_TOPIC],
+            payload, self._qos, self._retain)
+
+        if self._optimistic_oscillation:
+            self._oscillation = oscillating
+            self.hass.async_add_job(self.async_update_ha_state())
