@@ -12,7 +12,8 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_PLAY, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_PLAY, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
+    MEDIA_TYPE_MUSIC)
 from homeassistant.const import (
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN,
     CONF_HOST, CONF_PORT, CONF_PASSWORD)
@@ -78,6 +79,8 @@ class FSAPIDevice(MediaPlayerDevice):
 
         self._name = None
         self._title = None
+        self._artist = None
+        self._album_name = None
         self._mute = None
         self._source = None
         self._source_list = None
@@ -106,7 +109,22 @@ class FSAPIDevice(MediaPlayerDevice):
         return self._title
 
     @property
-    def supported_features(self):
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        return self._artist
+
+    @property
+    def media_album_name(self):
+        """Album name of current playing media, music track only."""
+        return self._album_name
+
+    @property
+    def media_content_type(self):
+        """Content type of current playing media."""
+        return MEDIA_TYPE_MUSIC
+
+    @property
+    def supported_media_commands(self):
         """Flag of media commands that are supported."""
         return SUPPORT_FRONTIER_SILICON
 
@@ -131,8 +149,6 @@ class FSAPIDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         return self._media_image_url
 
-    # Async actions
-
     def update(self):
         """Get the latest date and update device state."""
         fs_device = self.get_fs()
@@ -143,16 +159,10 @@ class FSAPIDevice(MediaPlayerDevice):
         if not self._source_list:
             self._source_list = fs_device.mode_list
 
-        title = ''
-        artist = fs_device.play_info_artist
-        album = fs_device.play_info_album
         info_name = fs_device.play_info_name
         info_text = fs_device.play_info_text
 
-        if artist:
-            title += artist
-        if album:
-            title += ' ('+album+')'
+        title = ''
         if info_name:
             if title:
                 title += ' - '
@@ -161,6 +171,19 @@ class FSAPIDevice(MediaPlayerDevice):
             title += ': ' + info_text
 
         self._title = title
+
+        self._artist = ''
+        artist = fs_device.play_info_artist
+        if artist:
+            self._artist = fs_device.play_info_artist
+
+        self._album_name = ''
+        album = fs_device.play_info_album
+        if album:
+            self._album_name = album
+
+        # album name not shown in the UI, quick dirty fix
+        # self._title = album + ' - ' + title
 
         status = fs_device.play_status
         self._state = {
