@@ -46,6 +46,19 @@ def async_trigger(hass, config, action):
     async_remove_state_for_listener = None
 
     @callback
+    def clear_listener():
+        """Clear all unsub listener."""
+        nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
+
+        # pylint: disable=not-callable
+        if async_remove_state_for_listener is not None:
+            async_remove_state_for_listener()
+            async_remove_state_for_listener = None
+        if async_remove_state_for_cancel is not None:
+            async_remove_state_for_cancel()
+            async_remove_state_for_cancel = None
+
+    @callback
     def state_automation_listener(entity, from_s, to_s):
         """Listen for state changes and calls action."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
@@ -67,17 +80,10 @@ def async_trigger(hass, config, action):
             return
 
         @callback
-        def clear_listener():
-            """Clear all unsub listener."""
-            nonlocal async_remove_state_for_cancel
-            nonlocal async_remove_state_for_listener
-            async_remove_state_for_listener = None
-            async_remove_state_for_cancel = None
-
-        @callback
         def state_for_listener(now):
             """Fire on state changes after a delay and calls action."""
-            async_remove_state_for_cancel()
+            nonlocal async_remove_state_for_listener
+            async_remove_state_for_listener = None
             clear_listener()
             call_action()
 
@@ -86,9 +92,10 @@ def async_trigger(hass, config, action):
             """Fire on changes and cancel for listener if changed."""
             if inner_to_s.state == to_s.state:
                 return
-            async_remove_state_for_listener()
-            async_remove_state_for_cancel()
             clear_listener()
+
+        # cleanup previous listener
+        clear_listener()
 
         async_remove_state_for_listener = async_track_point_in_utc_time(
             hass, state_for_listener, dt_util.utcnow() + time_delta)
@@ -103,11 +110,6 @@ def async_trigger(hass, config, action):
     def async_remove():
         """Remove state listeners async."""
         unsub()
-        # pylint: disable=not-callable
-        if async_remove_state_for_cancel is not None:
-            async_remove_state_for_cancel()
-
-        if async_remove_state_for_listener is not None:
-            async_remove_state_for_listener()
+        clear_listener()
 
     return async_remove
