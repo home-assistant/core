@@ -98,7 +98,6 @@ class MHZ19Sensor(Entity):
 
     def update(self):
         """Read from sensor and update the state."""
-        _LOGGER.error('update called')
         self._mhz_client.update()
         data = self._mhz_client.data
         self._temperature = data.get(SENSOR_TEMPERATURE)
@@ -138,9 +137,7 @@ class MHZClient(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the MH-Z19 sensor."""
-        _LOGGER.error('inner update called')
         try:
-
             result = self.co2sensor.read_mh_z19_with_temperature(self._serial)
             if result is None:
                 self.data = dict()
