@@ -190,7 +190,6 @@ omit =
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/xiaomi.py
-    homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
