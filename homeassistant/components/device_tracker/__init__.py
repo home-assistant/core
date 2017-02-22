@@ -319,7 +319,6 @@ class DeviceTracker(object):
         yield from device.set_vendor_for_mac()
 
         # update known_devices.yaml
-
         self.hass.async_add_job(
             self.async_update_config(self.hass.config.path(YAML_DEVICES),
                                      dev_id, device)
@@ -573,23 +572,21 @@ class Device(Entity):
     def async_added_to_hass(self):
         """Called when entity about to be added to hass."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
-        _LOGGER.debug("add entity %s %s", self.entity_id, state)
         if not state:
             return
         self._state = state.state
 
-        _LOGGER.debug(dir(state))
-
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),
                 (ATTR_GPS_ACCURACY, 'gps_accuracy'),
-                (ATTR_BATTERY, 'source_type'),
+                (ATTR_BATTERY, 'battery'),
         ):
-            if attr in state.attr:
-                setattr(self, var, state.attr[attr])
+            if attr in state.attributes:
+                setattr(self, var, state.attributes[attr])
 
-        if ATTR_LONGITUDE in state.attr:
-            self.gps = (state.attr[ATTR_LATITUDE], state.attr[ATTR_LATITUDE])
+        if ATTR_LONGITUDE in state.attributes:
+            self.gps = (state.attributes[ATTR_LATITUDE],
+                        state.attributes[ATTR_LONGITUDE])
 
 
 class DeviceScanner(object):
