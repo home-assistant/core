@@ -14,6 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 REQUIREMENTS = ['pyenvisalink==2.0']
 
@@ -21,9 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
 
 DATA_EVL = 'envisalink'
-DATA_EVL_ALARM = 'envisalink.alarm'
-DATA_EVL_BINARY = 'envisalink.binary'
-DATA_EVL_SENSOR = 'envisalink.sensor'
 
 CONF_EVL_HOST = 'host'
 CONF_EVL_PORT = 'port'
@@ -49,6 +47,9 @@ DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = 'opening'
 DEFAULT_PANIC = 'Police'
 
+SIGNAL_ZONE_UPDATE = 'envisalink.zones_updated'
+SIGNAL_PARTITION_UPDATE = 'envisalink.partition_updated'
+SIGNAL_KEYPAD_UPDATE = 'envisalink.keypad_updated'
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONENAME): cv.string,
@@ -129,26 +130,19 @@ def async_setup(hass, config):
     def zones_updated_callback(data):
         """Handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
-        for device in hass.data[DATA_EVL_BINARY]:
-            device.update_callback(data)
+        async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
         _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
-        for device in hass.data[DATA_EVL_ALARM]:
-            device.update_callback(data)
-        for device in hass.data[DATA_EVL_SENSOR]:
-            device.update_callback(data)
+        async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
     @callback
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.info("The envisalink sent a partition update event.")
-        for device in hass.data[DATA_EVL_ALARM]:
-            device.update_callback(data)
-        for device in hass.data[DATA_EVL_SENSOR]:
-            device.update_callback(data)
+        async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback
     def stop_envisalink(event):
