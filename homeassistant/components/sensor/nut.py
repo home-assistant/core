@@ -217,7 +217,9 @@ class NUTSensor(Entity):
             return STATE_TYPES['OFF']
         else:
             try:
-                return STATE_TYPES[self._data.status[KEY_STATUS]]
+                return " ".join(
+                    STATE_TYPES[state]
+                    for state in self._data.status[KEY_STATUS].split())
             except KeyError:
                 return STATE_UNKNOWN
 
