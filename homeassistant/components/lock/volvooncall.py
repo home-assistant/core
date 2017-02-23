@@ -17,7 +17,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the lock."""
     if discovery_info is None:
         return
-    add_devices([VolvoLock(hass, discovery_info)])
+    add_devices([VolvoLock(hass, *discovery_info)])
 
 
 class VolvoLock(VolvoEntity, LockDevice):
@@ -35,8 +35,3 @@ class VolvoLock(VolvoEntity, LockDevice):
     def unlock(self, **kwargs):
         """Unlock the car."""
         self.vehicle.unlock()
-
-    @property
-    def _name(self):
-        """Return name."""
-        return 'Lock'

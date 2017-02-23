@@ -11,6 +11,7 @@ import threading
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
@@ -41,10 +42,16 @@ SERVICE_HANDLERS = {
     'yeelight': ('light', 'yeelight'),
     'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
+    'openhome': ('media_player', 'openhome'),
 }
 
+CONF_IGNORE = 'ignore'
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_IGNORE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -57,10 +64,17 @@ def setup(hass, config):
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
 
+    # Platforms ignore by config
+    ignored_platforms = config[DOMAIN][CONF_IGNORE]
+
     lock = threading.Lock()
 
     def new_service_listener(service, info):
         """Called when a new service is found."""
+        if service in ignored_platforms:
+            logger.info("Ignoring service: %s %s", service, info)
+            return
+
         with lock:
             logger.info("Found new service: %s %s", service, info)
 

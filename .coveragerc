@@ -190,7 +190,6 @@ omit =
     homeassistant/components/device_tracker/trackr.py
     homeassistant/components/device_tracker/ubus.py
     homeassistant/components/device_tracker/xiaomi.py
-    homeassistant/components/discovery.py
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
@@ -243,6 +242,7 @@ omit =
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/nad.py
     homeassistant/components/media_player/onkyo.py
+    homeassistant/components/media_player/openhome.py
     homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/philips_js.py
