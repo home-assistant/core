@@ -86,13 +86,14 @@ class FSAPIDevice(MediaPlayerDevice):
         self._source_list = None
         self._media_image_url = None
 
-    def get_fs(self):
+    # Properties
+    @property
+    def fs_device(self):
         """Create a fsapi session."""
         from fsapi import FSAPI
 
         return FSAPI(self._device_url, self._password)
 
-    # Properties
     @property
     def should_poll(self):
         """Device should be polled."""
@@ -124,7 +125,7 @@ class FSAPIDevice(MediaPlayerDevice):
         return MEDIA_TYPE_MUSIC
 
     @property
-    def supported_media_commands(self):
+    def supported_features(self):
         """Flag of media commands that are supported."""
         return SUPPORT_FRONTIER_SILICON
 
@@ -151,39 +152,13 @@ class FSAPIDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest date and update device state."""
-        fs_device = self.get_fs()
+        fs_device = self.fs_device
 
         if not self._name:
             self._name = fs_device.friendly_name
 
         if not self._source_list:
             self._source_list = fs_device.mode_list
-
-        info_name = fs_device.play_info_name
-        info_text = fs_device.play_info_text
-
-        title = ''
-        if info_name:
-            if title:
-                title += ' - '
-            title += info_name
-        if info_text:
-            title += ': ' + info_text
-
-        self._title = title
-
-        self._artist = ''
-        artist = fs_device.play_info_artist
-        if artist:
-            self._artist = fs_device.play_info_artist
-
-        self._album_name = ''
-        album = fs_device.play_info_album
-        if album:
-            self._album_name = album
-
-        # album name not shown in the UI, quick dirty fix
-        # self._title = album + ' - ' + title
 
         status = fs_device.play_status
         self._state = {
@@ -194,6 +169,13 @@ class FSAPIDevice(MediaPlayerDevice):
             None: STATE_OFF,
         }.get(status, STATE_UNKNOWN)
 
+        info_name = fs_device.play_info_name
+        info_text = fs_device.play_info_text
+
+        self._title = '- '.join(filter(None, [info_name, info_text]))
+        self._artist = fs_device.play_info_artist
+        self._album_name = fs_device.play_info_album
+
         self._source = fs_device.mode
         self._mute = fs_device.mute
         self._media_image_url = fs_device.play_info_graphics
@@ -203,38 +185,38 @@ class FSAPIDevice(MediaPlayerDevice):
     # power control
     def turn_on(self):
         """Turn on the device."""
-        self.get_fs().power = True
+        self.fs_device.power = True
 
     def turn_off(self):
         """Turn off the device."""
-        self.get_fs().power = False
+        self.fs_device.power = False
 
     def media_play(self):
         """Send play command."""
-        self.get_fs().play()
+        self.fs_device.play()
 
     def media_pause(self):
         """Send pause command."""
-        self.get_fs().pause()
+        self.fs_device.pause()
 
     def media_play_pause(self):
         """Send play/pause command."""
         if 'playing' in self._state:
-            self.get_fs().pause()
+            self.fs_device.pause()
         else:
-            self.get_fs().play()
+            self.fs_device.play()
 
     def media_stop(self):
         """Send play/pause command."""
-        self.get_fs().pause()
+        self.fs_device.pause()
 
     def media_previous_track(self):
         """Send previous track command (results in rewind)."""
-        self.get_fs().prev()
+        self.fs_device.prev()
 
     def media_next_track(self):
         """Send next track command (results in fast-forward)."""
-        self.get_fs().next()
+        self.fs_device.next()
 
     # mute
     @property
@@ -244,25 +226,23 @@ class FSAPIDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Send mute command."""
-        self.get_fs().mute = mute
+        self.fs_device.mute = mute
 
     # volume
     def volume_up(self):
         """Send volume up command."""
-        fs_device = self.get_fs()
-        current_volume = fs_device.volume
-        fs_device.volume = (current_volume + 1)
+        fs_device = self.fs_device
+        fs_device.volume = (fs_device.volume + 1)
 
     def volume_down(self):
         """Send volume down command."""
-        fs_device = self.get_fs()
-        current_volume = fs_device.volume
-        fs_device.volume = (current_volume - 1)
+        fs_device = self.fs_device
+        fs_device.volume = (fs_device.volume - 1)
 
     def set_volume_level(self, volume):
         """Set volume command."""
-        self.get_fs().volume = volume
+        self.fs_device.volume = volume
 
     def select_source(self, source):
         """Select input source."""
-        self.get_fs().mode = source
+        self.fs_device.mode = source
