@@ -1,16 +1,16 @@
-**Description:**
+## Description:
 
 
 **Related issue (if applicable):** fixes #<home-assistant issue number goes here>
 
 **Pull request in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io) with documentation (if applicable):** home-assistant/home-assistant.github.io#<home-assistant.github.io PR number goes here>
 
-**Example entry for `configuration.yaml` (if applicable):**
+## Example entry for `configuration.yaml` (if applicable):
 ```yaml
 
 ```
 
-**Checklist:**
+## Checklist:
 
 If user exposed functionality or configuration variables are added/changed:
   - [ ] Documentation added/updated in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io)
