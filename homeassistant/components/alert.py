@@ -87,7 +87,7 @@ def async_turn_off(hass, entity_id):
 
 def toggle(hass, entity_id):
     """Toggle acknowledgement of alert."""
-    hass.add_job(async_turn_toggle, hass, entity_id)
+    hass.add_job(async_toggle, hass, entity_id)
 
 
 @callback
