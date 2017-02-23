@@ -4,6 +4,7 @@ Support for Z-Wave.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
+import asyncio
 import logging
 import os.path
 import time
@@ -11,6 +12,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
@@ -54,8 +56,10 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 DOMAIN = 'zwave'
 
+DATA_ZWAVE_DICT = 'zwave_devices'
+
 NETWORK = None
-DATA_DEVICE_CONFIG = 'zwave_device_config'
+
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
 # value type, genre type, specific device class).
@@ -264,6 +268,20 @@ def get_config_value(node, value_index, tries=5):
     return None
 
 
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Generic Z-Wave platform setup."""
+    if discovery_info is None or NETWORK is None:
+        return False
+    device = hass.data[DATA_ZWAVE_DICT].pop(
+        discovery_info[const.DISCOVERY_DEVICE])
+    if device:
+        yield from async_add_devices([device])
+        return True
+    else:
+        return False
+
+
 # pylint: disable=R0914
 def setup(hass, config):
     """Setup Z-Wave.
@@ -294,7 +312,7 @@ def setup(hass, config):
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
-    hass.data[DATA_DEVICE_CONFIG] = EntityValues(
+    device_config = EntityValues(
         config[DOMAIN][CONF_DEVICE_CONFIG],
         config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
         config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
@@ -310,6 +328,7 @@ def setup(hass, config):
     options.lock()
 
     NETWORK = ZWaveNetwork(options, autostart=False)
+    hass.data[DATA_ZWAVE_DICT] = {}
 
     if use_debug:
         def log_all(signal, value=None):
@@ -386,7 +405,7 @@ def setup(hass, config):
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
+            node_config = device_config.get(name)
 
             if node_config.get(CONF_IGNORED):
                 _LOGGER.info(
@@ -399,11 +418,21 @@ def setup(hass, config):
                 value.enable_poll(polling_intensity)
             else:
                 value.disable_poll()
+            platform = get_platform(component, DOMAIN)
+            device = platform.get_device(
+                node=node, value=value, node_config=node_config, hass=hass)
+            if not device:
+                continue
+            dict_id = value.value_id
 
-            discovery.load_platform(hass, component, DOMAIN, {
-                const.ATTR_NODE_ID: node.node_id,
-                const.ATTR_VALUE_ID: value.value_id,
-            }, config)
+            @asyncio.coroutine
+            def discover_device(component, device, dict_id):
+                """Put device in a dictionary and call discovery on it."""
+                hass.data[DATA_ZWAVE_DICT][dict_id] = device
+                yield from discovery.async_load_platform(
+                    hass, component, DOMAIN,
+                    {const.DISCOVERY_DEVICE: dict_id}, config)
+            hass.add_job(discover_device, component, device, dict_id)
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
@@ -694,7 +723,10 @@ class ZWaveDeviceEntity(Entity):
         """Called when a value for this entity's node has changed."""
         self._update_attributes()
         self.update_properties()
-        self.schedule_update_ha_state()
+        # If value changed after device was created but before setup_platform
+        # was called - skip updating state.
+        if self.hass:
+            self.schedule_update_ha_state()
 
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
