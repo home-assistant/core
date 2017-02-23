@@ -34,9 +34,9 @@ class VolvoSensor(VolvoEntity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return RESOURCES[self._attribute][2]
+        return RESOURCES[self._attribute][3]
 
     @property
     def icon(self):
         """Return the icon."""
-        return RESOURCES[self._attribute][3]
+        return RESOURCES[self._attribute][2]
