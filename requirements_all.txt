@@ -162,7 +162,7 @@ freesms==0.1.1
 fritzhome==1.0.2
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.14.0
+fuzzywuzzy==0.15.0
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
@@ -363,6 +363,9 @@ oemthermostat==1.1
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
+
+# homeassistant.components.media_player.openhome
+openhomedevice==0.2
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
@@ -653,7 +656,7 @@ sharp_aquos_rc==0.3.2
 simplisafe-python==1.0.2
 
 # homeassistant.components.notify.slack
-slacker==0.9.40
+slacker==0.9.42
 
 # homeassistant.components.notify.xmpp
 sleekxmpp==1.3.1
