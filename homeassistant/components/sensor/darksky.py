@@ -13,7 +13,8 @@ from requests.exceptions import ConnectionError as ConnectError, \
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+    CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -117,6 +118,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
+    vol.Optional(CONF_LATITUDE): cv.latitude,
+    vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_FORECAST):
@@ -127,7 +130,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Dark Sky sensor."""
     # Validate the configuration
-    if None in (hass.config.latitude, hass.config.longitude):
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
@@ -140,8 +145,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     forecast_data = DarkSkyData(
         api_key=config.get(CONF_API_KEY, None),
-        latitude=hass.config.latitude,
-        longitude=hass.config.longitude,
+        latitude=latitude,
+        longitude=longitude,
         units=units,
         interval=config.get(CONF_UPDATE_INTERVAL))
     forecast_data.update()
