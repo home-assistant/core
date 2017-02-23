@@ -715,7 +715,7 @@ class HMDevice(Entity):
                 attr[data[0]] = value
 
         # static attributes
-        attr['device_id'] = self._hmdevice.ADDRESS
+        attr['id'] = self._hmdevice.ADDRESS
         attr['proxy'] = self._proxy
 
         return attr
