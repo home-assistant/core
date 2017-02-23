@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 
@@ -19,27 +20,20 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave covers."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
+def get_device(value, **kwargs):
+    """Create zwave entity device."""
     if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and value.index == 0):
         value.set_change_verified(False)
-        add_devices([ZwaveRollershutter(value)])
+        return ZwaveRollershutter(value)
     elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
           value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
         if (value.type != zwave.const.TYPE_BOOL and
                 value.genre != zwave.const.GENRE_USER):
-            return
+            return None
         value.set_change_verified(False)
-        add_devices([ZwaveGarageDoor(value)])
-    else:
-        return
+        return ZwaveGarageDoor(value)
+    return None
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
