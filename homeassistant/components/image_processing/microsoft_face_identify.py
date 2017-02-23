@@ -91,6 +91,11 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         return state
 
     @property
+    def device_class(self):
+        """Return device specific state attributes."""
+        return 'face'
+
+    @property
     def state_attributes(self):
         """Return device specific state attributes."""
         attr = {
