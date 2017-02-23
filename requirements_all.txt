@@ -457,7 +457,6 @@ pycmus==0.1.0
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
-# homeassistant.components.envisalink
 # homeassistant.components.zwave
 # homeassistant.components.binary_sensor.hikvision
 pydispatcher==2.0.5
