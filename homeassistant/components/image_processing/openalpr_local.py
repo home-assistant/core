@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
-from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -106,9 +105,7 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
     def process_plates(self, plates, vehicles):
         """Send event with new plates and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_plates, plates, vehicles
-        ).result()
+        self.hass.add_job(self.async_process_plates, plates, vehicles)
 
     @callback
     def async_process_plates(self, plates, vehicles):

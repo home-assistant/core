@@ -17,7 +17,6 @@ from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingEntity, CONF_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, ATTR_ENTITY_ID, ATTR_CONFIDENCE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_callback_threadsafe
 
 DEPENDENCIES = ['microsoft_face']
 
@@ -102,9 +101,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     def process_faces(self, faces, total):
         """Send event with detected faces and store data."""
-        run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, faces, total
-        ).result()
+        self.hass.add_job(self.async_process_faces, faces, total)
 
     @callback
     def async_process_faces(self, faces, total):
