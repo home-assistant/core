@@ -89,7 +89,13 @@ class FSAPIDevice(MediaPlayerDevice):
     # Properties
     @property
     def fs_device(self):
-        """Create a fsapi session."""
+        """
+        Create a fresh fsapi session.
+
+        A new session is created for each request in case someone else
+        connected to the device in between the updates and invalidated the
+        existing session (i.e UNDOK).
+        """
         from fsapi import FSAPI
 
         return FSAPI(self._device_url, self._password)
