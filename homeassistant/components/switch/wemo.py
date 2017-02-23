@@ -110,18 +110,16 @@ class WemoSwitch(SwitchDevice):
 
         if self.insight_params or (self.coffeemaker_mode is not None):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
-            attr['current_power_w'] = \
-                self.insight_params['currentpower'] / 1000
-            attr['today_power_mW_min'] = self.insight_params['todaymw']
-            attr['total_power_mW_min'] = self.insight_params['totalmw']
-            attr['on_time_most_recent'] = \
+
+        if self.insight_params:
+            attr['on_latest_time'] = \
                 WemoSwitch.as_uptime(self.insight_params['onfor'])
-            attr['on_time_today'] = \
+            attr['on_today_time'] = \
                 WemoSwitch.as_uptime(self.insight_params['ontoday'])
-            attr['on_time_total'] = \
+            attr['on_total_time'] = \
                 WemoSwitch.as_uptime(self.insight_params['ontotal'])
-            attr['power_threshold_w'] = \
-                self.insight_params['powerthreshold'] / 1000
+            attr['power_threshold_mw'] = \
+                self.insight_params['powerthreshold']
 
         if self.coffeemaker_mode is not None:
             attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
