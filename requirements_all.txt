@@ -620,7 +620,7 @@ pywemo==0.4.13
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.2
+qnapstats==0.2.3
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
