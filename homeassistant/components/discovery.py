@@ -46,12 +46,10 @@ SERVICE_HANDLERS = {
 
 CONF_IGNORE = 'ignore'
 
-# Validates that all entries are part of SERVICE_HANDLERS
-IGNORE_SCHEMA_LIST = vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_IGNORE, default=[]): IGNORE_SCHEMA_LIST
+        vol.Optional(CONF_IGNORE, default=[]):
+            vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -66,8 +64,7 @@ def setup(hass, config):
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
 
     # Platforms ignore by config
-    platform_config = config.get(DOMAIN, {})
-    ignored_platforms = platform_config.get(CONF_IGNORE)
+    ignored_platforms = config[DOMAIN][CONF_IGNORE]
 
     lock = threading.Lock()
 
