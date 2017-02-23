@@ -387,8 +387,11 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
             
     @asyncio.coroutine
-    def async_add_song_to_playlist(self, song_id):
-        return self._server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
+    def async_add_song_to_playlist(self, song_id=None, song_name='', artist_name=''):
+        if song_id is None:
+            song_id = yield from self.async_find_song(song_name, artist_name)
+            
+        yield from self._server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
     
     @asyncio.coroutine
     def async_clear_playlist(self):
