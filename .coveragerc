@@ -41,6 +41,9 @@ omit =
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
+    homeassistant/components/insteon_plm.py
+    homeassistant/components/*/insteon_plm.py
+
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
 
@@ -241,6 +244,7 @@ omit =
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/nad.py
     homeassistant/components/media_player/onkyo.py
+    homeassistant/components/media_player/openhome.py
     homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/philips_js.py

@@ -5,8 +5,10 @@ from unittest.mock import patch
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import config
-from homeassistant.components.config.zwave import DeviceConfigView
 from tests.common import mock_http_component_app
+
+
+VIEW_NAME = 'api:config:zwave:device_config'
 
 
 @asyncio.coroutine
@@ -17,7 +19,7 @@ def test_get_device_config(hass, test_client):
     with patch.object(config, 'SECTIONS', ['zwave']):
         yield from async_setup_component(hass, 'config', {})
 
-    hass.http.views[DeviceConfigView.name].register(app.router)
+    hass.http.views[VIEW_NAME].register(app.router)
 
     client = yield from test_client(app)
 
@@ -32,7 +34,7 @@ def test_get_device_config(hass, test_client):
             },
         }
 
-    with patch('homeassistant.components.config.zwave._read', mock_read):
+    with patch('homeassistant.components.config._read', mock_read):
         resp = yield from client.get(
             '/api/config/zwave/device_config/hello.beer')
 
@@ -50,7 +52,7 @@ def test_update_device_config(hass, test_client):
     with patch.object(config, 'SECTIONS', ['zwave']):
         yield from async_setup_component(hass, 'config', {})
 
-    hass.http.views[DeviceConfigView.name].register(app.router)
+    hass.http.views[VIEW_NAME].register(app.router)
 
     client = yield from test_client(app)
 
@@ -73,8 +75,8 @@ def test_update_device_config(hass, test_client):
         """Mock writing data."""
         written.append(data)
 
-    with patch('homeassistant.components.config.zwave._read', mock_read), \
-            patch('homeassistant.components.config.zwave._write', mock_write):
+    with patch('homeassistant.components.config._read', mock_read), \
+            patch('homeassistant.components.config._write', mock_write):
         resp = yield from client.post(
             '/api/config/zwave/device_config/hello.beer', data=json.dumps({
                 'polling_intensity': 2
@@ -87,3 +89,61 @@ def test_update_device_config(hass, test_client):
     orig_data['hello.beer']['polling_intensity'] = 2
 
     assert written[0] == orig_data
+
+
+@asyncio.coroutine
+def test_update_device_config_invalid_key(hass, test_client):
+    """Test updating device config."""
+    app = mock_http_component_app(hass)
+
+    with patch.object(config, 'SECTIONS', ['zwave']):
+        yield from async_setup_component(hass, 'config', {})
+
+    hass.http.views[VIEW_NAME].register(app.router)
+
+    client = yield from test_client(app)
+
+    resp = yield from client.post(
+        '/api/config/zwave/device_config/invalid_entity', data=json.dumps({
+            'polling_intensity': 2
+        }))
+
+    assert resp.status == 400
+
+
+@asyncio.coroutine
+def test_update_device_config_invalid_data(hass, test_client):
+    """Test updating device config."""
+    app = mock_http_component_app(hass)
+
+    with patch.object(config, 'SECTIONS', ['zwave']):
+        yield from async_setup_component(hass, 'config', {})
+
+    hass.http.views[VIEW_NAME].register(app.router)
+
+    client = yield from test_client(app)
+
+    resp = yield from client.post(
+        '/api/config/zwave/device_config/hello.beer', data=json.dumps({
+            'invalid_option': 2
+        }))
+
+    assert resp.status == 400
+
+
+@asyncio.coroutine
+def test_update_device_config_invalid_json(hass, test_client):
+    """Test updating device config."""
+    app = mock_http_component_app(hass)
+
+    with patch.object(config, 'SECTIONS', ['zwave']):
+        yield from async_setup_component(hass, 'config', {})
+
+    hass.http.views[VIEW_NAME].register(app.router)
+
+    client = yield from test_client(app)
+
+    resp = yield from client.post(
+        '/api/config/zwave/device_config/hello.beer', data='not json')
+
+    assert resp.status == 400
