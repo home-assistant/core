@@ -819,10 +819,9 @@ class PlexClient(MediaPlayerDevice):
                     src['library_name']).get(src['artist_name']).album(
                         src['album_name']).get(src['track_name'])
             elif media_type == 'EPISODE':
-                episode_number = int(src['episode_number']) + 1
-                media = self.device.server.library.section(
-                    src['library_name']).get(
-                        src['show_name']).episodes()[episode_number]
+                media = self._get_episode(
+                    src['library_name'], src['show_name'],
+                    src['season_number'], src['episode_number'])
             elif media_type == 'PLAYLIST':
                 media = self.device.server.playlist(src['playlist_name'])
             elif media_type == 'VIDEO':
@@ -831,6 +830,38 @@ class PlexClient(MediaPlayerDevice):
 
             if media:
                 self._client_play_media(media, shuffle=src['shuffle'])
+
+    def _get_episode(self, library_name, show_name, season_number,
+                     episode_number):
+        """Finds TV episode and returns a Plex media object"""
+        target_season = None
+        target_episode = None
+
+        seasons = self.device.server.library.section(library_name).get(
+            show_name).seasons()
+        for season in seasons:
+            if int(season.seasonNumber) == int(season_number):
+                target_season = season
+                break
+
+        if target_season is None:
+            _LOGGER.error('Season not found: %s\\%s - S%sE%s', library_name,
+                          show_name,
+                          str(season_number).zfill(2),
+                          str(episode_number).zfill(2))
+        else:
+            for episode in target_season.episodes():
+                if int(episode.index) == int(episode_number):
+                    target_episode = episode
+                    break
+
+            if target_episode is None:
+                _LOGGER.error('Episode not found: %s\\%s - S%sE%s',
+                              library_name, show_name,
+                              str(season_number).zfill(2),
+                              str(episode_number).zfill(2))
+
+        return target_episode
 
     def _client_play_media(self, media, **params):
         """Instructs Plex client to play a piece of media."""
