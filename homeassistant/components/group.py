@@ -20,8 +20,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'group'
 
@@ -98,7 +97,7 @@ def is_on(hass, entity_id):
 
 def reload(hass):
     """Reload the automation from config."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
+    hass.add_job(async_reload, hass)
 
 
 @asyncio.coroutine
@@ -365,7 +364,7 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        run_callback_threadsafe(self.hass.loop, self.async_start).result()
+        self.hass.add_job(self.async_start)
 
     @callback
     def async_start(self):
