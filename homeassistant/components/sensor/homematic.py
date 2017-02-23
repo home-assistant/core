@@ -40,7 +40,17 @@ HM_UNIT_HA_CAST = {
     "SUNSHINEDURATION": "#",
     "AIR_PRESSURE": "hPa",
     "FREQUENCY": "Hz",
-    "VALUE": "#"
+    "VALUE": "#",
+}
+
+HM_ICON_HA_CAST = {
+    "WIND_SPEED": 'mdi:weather-windy',
+    "HUMIDITY": 'mdi:water-percent',
+    "TEMPERATURE": 'mdi:thermometer',
+    "LUX": 'mdi:weather-sunny',
+    "BRIGHTNESS": 'mdi:invert-colors',
+    "POWER": 'mdi:flash-red-eye',
+    "CURRENT": "mdi:flash-red-eye",
 }
 
 
@@ -76,6 +86,11 @@ class HMSensor(HMDevice):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return HM_UNIT_HA_CAST.get(self._state, None)
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return HM_ICON_HA_CAST.get(self._state, None)
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
