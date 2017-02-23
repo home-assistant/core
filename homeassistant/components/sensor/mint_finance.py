@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_USERNAME, CONF_PASSWORD)
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -27,7 +27,6 @@ CONF_ACCOUNTS = 'accounts'
 CONF_THX_GUID = 'thx_guid'
 CONF_SESSION = 'ius_session'
 CONF_ID = "id"
-CONF_NAME = "name"
 CONF_CURRENCY = "currency"
 
 DEFAULT_NAME = 'Mint'
@@ -77,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # retrying
             retries += 1
             _LOGGER.info("Mint init failed."
-                         "retrying (Try %d/5)", retries)
+                         "retrying (Try %d/%d)", retries, INIT_RETRIES)
 
     # List accounts
     account_ids = [str(acc['accountId']) for acc in mint_client.get_accounts()
@@ -138,13 +137,12 @@ class MintSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the states."""
-        _LOGGER.debug("Updating sensor %s", self._name)
         self.data.update()
         self._state = self.data.balance
 
 
 class MintData(object):
-    """Get data from Yahoo Finance."""
+    """Get data from Intuit Mint."""
 
     def __init__(self, mint_client, account_id):
         """Initialize the data object."""
@@ -157,20 +155,29 @@ class MintData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
-        try:
-            # With store the last update time to share with
-            # all sensors to avoir multiple update requests
-            next_update = self._client.updated + 15 * 60
-            if time.time() > next_update:
-                # Save new update time
-                self._client.updated = time.time()
-                # Update accounts
-                self._client.initiate_account_refresh()
-            # Get accounts
-            raw_accounts = self._client.get_accounts()
-        except Exception as exp:  # pylint: disable=W0703
-            _LOGGER.exception(exp)
-            return
+        retries = 1
+        while retries <= INIT_RETRIES:
+            try:
+                # With store the last update time to share with
+                # all sensors to avoir multiple update requests
+                next_update = self._client.updated + 15 * 60
+                if time.time() > next_update:
+                    # Save new update time
+                    self._client.updated = time.time()
+                    # Update accounts
+                    self._client.initiate_account_refresh()
+                # Get accounts
+                raw_accounts = self._client.get_accounts()
+                break
+            except Exception as exp:  # pylint: disable=W0703
+                _LOGGER.info("Mint get account failed. Retrying "
+                             "(Try %s/%s)", retries, INIT_RETRIES)
+                if retries >= INIT_RETRIES:
+                    _LOGGER.exception(exp)
+                    return
+                # retrying
+                retries += 1
+
         # Search for account
         accounts = dict([(a['accountId'], a) for a in raw_accounts])
         if self._account_id not in accounts:
