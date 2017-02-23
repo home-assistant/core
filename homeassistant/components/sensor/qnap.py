@@ -48,6 +48,9 @@ DEFAULT_TIMEOUT = 5
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
+NOTIFICATION_ID = 'qnap_notification'
+NOTIFICATION_TITLE = 'QNAP Sensor Setup'
+
 _HEALTH_MON_COND = {
     'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
 }
@@ -105,6 +108,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the QNAP NAS sensor."""
     api = QNAPStatsAPI(config)
     api.update()
+
+    if not api.data:
+        import homeassistant.loader as loader
+        loader.get_component('persistent_notification').create(
+            hass, 'Error: Failed to set up QNAP sensor.<br />'
+                  'Check the logs for additional information. '
+                  'You will need to restart hass after fixing.',
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
 
     sensors = []
 
