@@ -8,7 +8,8 @@ https://home-assistant.io/components/volvooncall/
 from datetime import timedelta
 import logging
 
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
+                                 CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -18,7 +19,7 @@ import voluptuous as vol
 
 DOMAIN = 'volvooncall'
 
-REQUIREMENTS = ['volvooncall==0.3.0']
+REQUIREMENTS = ['volvooncall==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,12 +27,30 @@ CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
+RESOURCES = {'position': ('device_tracker',),
+             'lock': ('lock', 'Lock'),
+             'heater': ('switch', 'Heater', 'mdi:radiator'),
+             'odometer': ('sensor', 'Odometer', 'mdi:speedometer', 'km'),
+             'fuel_amount': ('sensor', 'Fuel', 'mdi:gas-station', 'L'),
+             'fuel_amount_level': ('sensor', 'Fuel', 'mdi:water-percent', '%'),
+             'distance_to_empty': ('sensor', 'Range', 'mdi:ruler', 'km'),
+             'washer_fluid_level': ('binary_sensor', 'Washer fluid'),
+             'brake_fluid': ('binary_sensor', 'Brake Fluid'),
+             'service_warning_status': ('binary_sensor', 'Service'),
+             'bulb_failures': ('binary_sensor', 'Bulbs'),
+             'doors': ('binary_sensor', 'Doors'),
+             'windows': ('binary_sensor', 'Windows')}
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_UPDATE_INTERVAL, default=DEFAULT_UPDATE_INTERVAL): (
-            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL)))
+            vol.All(cv.time_period, vol.Clamp(min=MIN_UPDATE_INTERVAL))),
+        vol.Optional(CONF_NAME, default={}): vol.Schema(
+            {cv.slug: cv.string}),
+        vol.Optional(CONF_RESOURCES): vol.All(
+            cv.ensure_list, [vol.In(RESOURCES)]),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -50,29 +69,21 @@ def setup(hass, config):
 
         entities = {}
         vehicles = {}
+        names = config[DOMAIN].get(CONF_NAME)
 
     hass.data[DOMAIN] = state
 
     def discover_vehicle(vehicle):
         """Load relevant platforms."""
         state.entities[vehicle.vin] = []
-        components = ['sensor', 'binary_sensor']
-
-        if getattr(vehicle, 'position'):
-            components.append('device_tracker')
-
-        if vehicle.heater_supported:
-            components.append('switch')
-
-        if vehicle.lock_supported:
-            components.append('lock')
-
-        for component in components:
-            discovery.load_platform(hass,
-                                    component,
-                                    DOMAIN,
-                                    vehicle.vin,
-                                    config)
+        for attr, (component, *_) in RESOURCES.items():
+            if (getattr(vehicle, attr + '_supported', True) and
+                    attr in config[DOMAIN].get(CONF_RESOURCES, [attr])):
+                discovery.load_platform(hass,
+                                        component,
+                                        DOMAIN,
+                                        (vehicle.vin, attr),
+                                        config)
 
     def update_vehicle(vehicle):
         """Updated information on vehicle received."""
@@ -107,28 +118,39 @@ def setup(hass, config):
 class VolvoEntity(Entity):
     """Base class for all VOC entities."""
 
-    def __init__(self, hass, vin):
+    def __init__(self, hass, vin, attribute):
         """Initialize the entity."""
         self._hass = hass
         self._vin = vin
-        self._hass.data[DOMAIN].entities[self._vin].append(self)
+        self._attribute = attribute
+        self._state.entities[self._vin].append(self)
+
+    @property
+    def _state(self):
+        return self._hass.data[DOMAIN]
 
     @property
     def vehicle(self):
         """Return vehicle."""
-        return self._hass.data[DOMAIN].vehicles[self._vin]
+        return self._state.vehicles[self._vin]
+
+    @property
+    def _vehicle_name(self):
+        return (self._state.names.get(self._vin.lower()) or
+                self._state.names.get(
+                    self.vehicle.registration_number.lower()) or
+                self.vehicle.registration_number)
+
+    @property
+    def _entity_name(self):
+        return RESOURCES[self._attribute][1]
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return full name of the entity."""
         return '%s %s' % (
-            self.vehicle.registration_number,
-            self._name)
-
-    @property
-    def _name(self):
-        """Overridden by subclasses."""
-        return None
+            self._vehicle_name,
+            self._entity_name)
 
     @property
     def should_poll(self):
