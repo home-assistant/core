@@ -92,7 +92,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     @property
     def device_class(self):
-        """Return device specific state attributes."""
+        """Return the class of this device, from component DEVICE_CLASSES."""
         return 'face'
 
     @property
