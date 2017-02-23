@@ -47,6 +47,10 @@ HM_ICON_HA_CAST = {
     "WIND_SPEED": 'mdi:weather-windy',
     "HUMIDITY": 'mdi:water-percent',
     "TEMPERATURE": 'mdi:thermometer',
+    "LUX": 'mdi:weather-sunny',
+    "BRIGHTNESS": 'mdi:invert-colors',
+    "POWER": 'mdi:flash-red-eye',
+    "CURRENT": "mdi:flash-red-eye",
 }
 
 
