@@ -51,8 +51,9 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 NOTIFICATION_ID = 'qnap_notification'
 NOTIFICATION_TITLE = 'QNAP Sensor Setup'
 
-_HEALTH_MON_COND = {
+_SYSTEM_MON_COND = {
     'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
+    'system_temp': ['System Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _CPU_MON_COND = {
     'cpu_temp': ['CPU Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
@@ -80,7 +81,7 @@ _VOLUME_MON_COND = {
     'volume_percentage_used': ['Volume Used', '%', 'mdi:chart-pie'],
 }
 
-_MONITORED_CONDITIONS = list(_HEALTH_MON_COND.keys()) + \
+_MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
                         list(_CPU_MON_COND.keys()) + \
                         list(_MEMORY_MON_COND.keys()) + \
                         list(_NETWORK_MON_COND.keys()) + \
@@ -123,9 +124,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Basic sensors
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        if variable in _HEALTH_MON_COND:
-            sensors.append(QNAPHealthStatus(api, variable,
-                                            _HEALTH_MON_COND[variable]))
+        if variable in _SYSTEM_MON_COND:
+            sensors.append(QNAPSystemSensor(api, variable,
+                                            _SYSTEM_MON_COND[variable]))
         if variable in _CPU_MON_COND:
             sensors.append(QNAPCPUSensor(api, variable,
                                          _CPU_MON_COND[variable]))
@@ -327,13 +328,17 @@ class QNAPNetworkSensor(QNAPSensor):
             }
 
 
-class QNAPHealthStatus(QNAPSensor):
+class QNAPSystemSensor(QNAPSensor):
     """A QNAP sensor that monitors overall system health."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._api.data["system_health"]
+        if self.var_id == "status":
+            return self._api.data["system_health"]
+
+        if self.var_id == "system_temp":
+            return int(self._api.data["system_stats"]["system"]["temp_c"])
 
     @property
     def device_state_attributes(self):
