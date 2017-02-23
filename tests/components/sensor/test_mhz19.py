@@ -3,9 +3,9 @@ import unittest
 from unittest.mock import patch, DEFAULT, Mock
 
 from homeassistant.bootstrap import setup_component
-import homeassistant.components.sensor as sensor
+from homeassistant.components.sensor import DOMAIN
 import homeassistant.components.sensor.mhz19 as mhz19
-
+from homeassistant.const import TEMP_FAHRENHEIT
 from tests.common import get_test_home_assistant, assert_setup_component
 
 
@@ -25,7 +25,7 @@ class TestMHZ19Sensor(unittest.TestCase):
     def test_setup_missing_config(self):
         """Test setup with configuration missing required entries."""
         with assert_setup_component(0):
-            assert setup_component(self.hass, sensor.DOMAIN, {
+            assert setup_component(self.hass, DOMAIN, {
                 'sensor': {'platform': 'mhz19'}})
 
     @patch('pmsensor.co2sensor.read_mh_z19', side_effect=OSError('test error'))
@@ -49,3 +49,71 @@ class TestMHZ19Sensor(unittest.TestCase):
                 mhz19.CONF_SERIAL_DEVICE: 'test.serial',
                 }, mock_add))
         self.assertEqual(1, mock_add.call_count)
+
+    @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
+           side_effect=OSError('test error'))
+    def test_client_update_oserror(self, mock_function):
+        """Test MHZClient when library throws OSError."""
+        from pmsensor import co2sensor
+        client = mhz19.MHZClient(co2sensor, 'test.serial')
+        client.update()
+        self.assertEqual({}, client.data)
+
+    @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
+           return_value=(5001, 24))
+    def test_client_update_ppm_overflow(self, mock_function):
+        """Test MHZClient when ppm is too high."""
+        from pmsensor import co2sensor
+        client = mhz19.MHZClient(co2sensor, 'test.serial')
+        client.update()
+        self.assertIsNone(client.data.get('co2'))
+
+    @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
+           return_value=(1000, 24))
+    def test_client_update_good_read(self, mock_function):
+        """Test MHZClient when ppm is too high."""
+        from pmsensor import co2sensor
+        client = mhz19.MHZClient(co2sensor, 'test.serial')
+        client.update()
+        self.assertEqual({'temperature': 24, 'co2': 1000}, client.data)
+
+    @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
+           return_value=(1000, 24))
+    def test_co2_sensor(self, mock_function):
+        """Test CO2 sensor."""
+        from pmsensor import co2sensor
+        client = mhz19.MHZClient(co2sensor, 'test.serial')
+        sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, 'name')
+
+        self.assertEqual('name: CO2', sensor.name)
+        self.assertEqual(1000, sensor.state)
+        self.assertEqual('ppm', sensor.unit_of_measurement)
+        self.assertTrue(sensor.should_poll)
+        self.assertEqual({'temperature': 24}, sensor.device_state_attributes)
+
+    @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
+           return_value=(1000, 24))
+    def test_temperature_sensor(self, mock_function):
+        """Test temperature sensor."""
+        from pmsensor import co2sensor
+        client = mhz19.MHZClient(co2sensor, 'test.serial')
+        sensor = mhz19.MHZ19Sensor(
+            client, mhz19.SENSOR_TEMPERATURE, None, 'name')
+
+        self.assertEqual('name: Temperature', sensor.name)
+        self.assertEqual(24, sensor.state)
+        self.assertEqual('°C', sensor.unit_of_measurement)
+        self.assertTrue(sensor.should_poll)
+        self.assertEqual(
+            {'co2_concentration': 1000}, sensor.device_state_attributes)
+
+    @patch('pmsensor.co2sensor.read_mh_z19_with_temperature',
+           return_value=(1000, 24))
+    def test_temperature_sensor_f(self, mock_function):
+        """Test temperature sensor."""
+        from pmsensor import co2sensor
+        client = mhz19.MHZClient(co2sensor, 'test.serial')
+        sensor = mhz19.MHZ19Sensor(
+            client, mhz19.SENSOR_TEMPERATURE, TEMP_FAHRENHEIT, 'name')
+
+        self.assertEqual(75.2, sensor.state)

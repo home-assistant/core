@@ -105,10 +105,7 @@ class MHZ19Sensor(Entity):
                 self._temp_unit == TEMP_FAHRENHEIT:
             self._temperature = round(
                 celsius_to_fahrenheit(self._temperature), 1)
-        # ppm values from sensor can only between 0 and 5000
         self._ppm = data.get(SENSOR_CO2)
-        if self._ppm is not None and not 0 < self._ppm <= 5000:
-            self._ppm = None
 
     def should_poll(self):
         """Sensor needs polling."""
@@ -137,20 +134,19 @@ class MHZClient(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the MH-Z19 sensor."""
+        self.data = dict()
         try:
             result = self.co2sensor.read_mh_z19_with_temperature(self._serial)
             if result is None:
-                self.data = dict()
                 return
             co2, temperature = result
 
         except OSError as err:
             _LOGGER.error("Could not open serial connection to %s (%s)",
                           self._serial, err)
-            self.data = dict()
             return
 
-        if temperature:
+        if temperature is not None:
             self.data[SENSOR_TEMPERATURE] = temperature
-        if co2:
+        if co2 is not None and 0 < co2 <= 5000:
             self.data[SENSOR_CO2] = co2
