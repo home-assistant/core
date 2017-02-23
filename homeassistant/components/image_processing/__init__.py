@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DEVICE_CLASSES = [
-    'alpr',        # licence plate
+    'alpr',        # automatic license plate recognition
     'face',        # face
 ]
 
