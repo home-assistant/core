@@ -162,7 +162,7 @@ freesms==0.1.1
 fritzhome==1.0.2
 
 # homeassistant.components.conversation
-fuzzywuzzy==0.14.0
+fuzzywuzzy==0.15.0
 
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
