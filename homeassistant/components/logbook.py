@@ -22,7 +22,6 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON,
                                  ATTR_HIDDEN, HTTP_BAD_REQUEST)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
-from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
@@ -68,9 +67,7 @@ LOG_MESSAGE_SCHEMA = vol.Schema({
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
-    run_callback_threadsafe(
-        hass.loop, async_log_entry, hass, name, message, domain, entity_id
-        ).result()
+    hass.add_job(async_log_entry, hass, name, message, domain, entity_id)
 
 
 def async_log_entry(hass, name, message, domain=None, entity_id=None):
