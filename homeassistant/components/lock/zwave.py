@@ -13,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -119,15 +120,8 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave locks."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
+def get_device(hass, node, value, **kwargs):
+    """Create zwave entity device."""
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
@@ -182,11 +176,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             break
 
     if value.command_class != zwave.const.COMMAND_CLASS_DOOR_LOCK:
-        return
+        return None
     if value.type != zwave.const.TYPE_BOOL:
-        return
+        return None
     if value.genre != zwave.const.GENRE_USER:
-        return
+        return None
     if node.has_command_class(zwave.const.COMMAND_CLASS_USER_CODE):
         hass.services.register(DOMAIN,
                                SERVICE_SET_USERCODE,
@@ -204,7 +198,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                descriptions.get(SERVICE_CLEAR_USERCODE),
                                schema=CLEAR_USERCODE_SCHEMA)
     value.set_change_verified(False)
-    add_devices([ZwaveLock(value)])
+    return ZwaveLock(value)
 
 
 class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):

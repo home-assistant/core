@@ -9,27 +9,21 @@ import logging
 # pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Z-Wave platform."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
+def get_device(node, value, **kwargs):
+    """Create zwave entity device."""
     if not node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_BINARY):
-        return
+        return None
     if value.type != zwave.const.TYPE_BOOL or value.genre != \
-       zwave.const.GENRE_USER:
-        return
-
+            zwave.const.GENRE_USER:
+        return None
     value.set_change_verified(False)
-    add_devices([ZwaveSwitch(value)])
+    return ZwaveSwitch(value)
 
 
 class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
