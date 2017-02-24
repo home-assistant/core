@@ -48,12 +48,14 @@ def _load_restore_cache(hass: HomeAssistant):
 @asyncio.coroutine
 def async_get_last_state(hass, entity_id: str):
     """Helper to restore state."""
-    if (_RECORDER not in hass.config.components or
-            hass.state != CoreState.starting):
-        return None
-
     if DATA_RESTORE_CACHE in hass.data:
         return hass.data[DATA_RESTORE_CACHE].get(entity_id)
+
+    if (_RECORDER not in hass.config.components or
+            hass.state not in (CoreState.starting, CoreState.not_running)):
+        _LOGGER.error("Cache can only be loaded during startup, not %s",
+                      hass.state)
+        return None
 
     if _LOCK not in hass.data:
         hass.data[_LOCK] = asyncio.Lock(loop=hass.loop)
@@ -63,7 +65,7 @@ def async_get_last_state(hass, entity_id: str):
             yield from hass.loop.run_in_executor(
                 None, _load_restore_cache, hass)
 
-    return hass.data[DATA_RESTORE_CACHE].get(entity_id)
+    return hass.data.get(DATA_RESTORE_CACHE, {}).get(entity_id)
 
 
 @asyncio.coroutine

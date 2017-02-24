@@ -36,6 +36,7 @@ IGNORE_DOMAINS = ('zone', 'scene',)
 
 def last_recorder_run():
     """Retireve the last closed recorder run from the DB."""
+    recorder.get_instance()
     rec_runs = recorder.get_model('RecorderRuns')
     with recorder.session_scope() as session:
         res = recorder.query(rec_runs).order_by(rec_runs.end.desc()).first()
