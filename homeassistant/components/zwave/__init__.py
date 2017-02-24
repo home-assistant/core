@@ -769,10 +769,7 @@ class ZWaveDeviceEntity(Entity):
             return None
         if not self._value.node.is_ready:
             # Node is not ready, so depend on the whole node.
-            print('node %s not ready' % self._value.node_node_id)
             return None
-        else:
-            print('node %s ready' % self._value.node_node_id)
 
         return [val for val in (self.dependent_value_ids + [
             self._wakeup_value_id, self._battery_value_id,
