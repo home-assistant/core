@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.core import CoreState, split_entity_id, State
+from homeassistant.core import split_entity_id, State
 import homeassistant.util.dt as dt_util
 from homeassistant.components import input_boolean, recorder
 from homeassistant.helpers.restore_state import (
@@ -18,7 +18,6 @@ from tests.common import get_test_home_assistant, init_recorder_component
 def test_caching_data(hass):
     """Test that we cache data."""
     hass.config.components.add('recorder')
-    hass.state = CoreState.starting
 
     states = [
         State('input_boolean.b0', 'on'),
@@ -81,7 +80,6 @@ def test_filling_the_cache():
     test_entity_id2 = 'input_boolean.b2'
 
     hass = get_test_home_assistant()
-    hass.state = CoreState.starting
 
     init_recorder_component(hass)
 

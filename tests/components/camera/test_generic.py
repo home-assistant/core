@@ -2,12 +2,14 @@
 import asyncio
 from unittest import mock
 
+from homeassistant.core import CoreState
 from homeassistant.bootstrap import setup_component
 
 
 @asyncio.coroutine
 def test_fetching_url(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
+    hass.state = CoreState.running
     aioclient_mock.get('http://example.com', text='hello world')
 
     def setup_platform():
@@ -39,6 +41,7 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 @asyncio.coroutine
 def test_limit_refetch(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
+    hass.state = CoreState.running
     aioclient_mock.get('http://example.com/5a', text='hello world')
     aioclient_mock.get('http://example.com/10a', text='hello world')
     aioclient_mock.get('http://example.com/15a', text='hello planet')

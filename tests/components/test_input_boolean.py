@@ -6,7 +6,7 @@ import logging
 
 from tests.common import get_test_home_assistant
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import State
 from homeassistant.bootstrap import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
     DOMAIN, is_on, toggle, turn_off, turn_on)
@@ -117,7 +117,6 @@ def test_restore_state(hass):
         'input_boolean.b3': State('input_boolean.b3', 'on'),
     }
 
-    hass.state = CoreState.starting
     hass.config.components.add('recorder')
 
     yield from async_setup_component(hass, DOMAIN, {

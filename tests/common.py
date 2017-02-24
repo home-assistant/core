@@ -108,8 +108,6 @@ def async_test_home_assistant(loop):
     if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
         yield from loop.run_in_executor(None, loader.prepare, hass)
 
-    hass.state = ha.CoreState.running
-
     # Mock async_start
     orig_start = hass.async_start
 
@@ -237,6 +235,7 @@ def mock_http_component(hass, api_password=None):
 
 def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
+    hass.state = ha.CoreState.running
     if 'http' not in hass.config.components:
         mock_http_component(hass, api_password)
     app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
@@ -475,5 +474,4 @@ def mock_restore_cache(hass, states):
     _LOGGER.debug('Restore cache: %s', hass.data[DATA_RESTORE_CACHE])
     assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
         "Duplicate entity_id? {}".format(states)
-    hass.state = ha.CoreState.starting
     hass.config.components.add(recorder.DOMAIN)

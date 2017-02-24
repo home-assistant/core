@@ -3,7 +3,7 @@
 import asyncio
 import unittest
 
-from homeassistant.core import State, CoreState
+from homeassistant.core import State
 from homeassistant.bootstrap import setup_component, async_setup_component
 import homeassistant.components.light as light
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
@@ -69,7 +69,6 @@ class TestDemoLight(unittest.TestCase):
 def test_restore_state(hass):
     """Test state gets restored."""
     hass.config.components.add('recorder')
-    hass.state = CoreState.starting
     hass.data[DATA_RESTORE_CACHE] = {
         'light.bed_light': State('light.bed_light', 'on', {
             'brightness': 'value-brightness',
