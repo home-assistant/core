@@ -89,6 +89,7 @@ sensor:
 tts:
   platform: google
 
+group: !include groups.yaml
 """
 
 
@@ -147,8 +148,12 @@ def create_default_config(config_dir, detect_location=True):
     Return path to new config file if success, None if failed.
     This method needs to run in an executor.
     """
+    from homeassistant.components.config.group import (
+        CONFIG_PATH as GROUP_CONFIG_PATH)
+
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
+    group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -186,6 +191,9 @@ def create_default_config(config_dir, detect_location=True):
 
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
+
+        with open(group_yaml_path, 'w'):
+            pass
 
         return config_path
 
