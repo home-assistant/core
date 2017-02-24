@@ -36,7 +36,6 @@ DEVICE_MAPPINGS = {
 def get_device(hass, value, **kwargs):
     """Create zwave entity device."""
     temp_unit = hass.config.units.temperature_unit
-    value.set_change_verified(False)
     return ZWaveClimate(value, temp_unit)
 
 

@@ -21,8 +21,6 @@ DEPENDENCIES = []
 
 def get_device(value, **kwargs):
     """Create zwave entity device."""
-    value.set_change_verified(False)
-
     device_mapping = workaround.get_device_mapping(value)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
         # Default the multiplier to 4
