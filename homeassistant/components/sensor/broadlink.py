@@ -127,7 +127,8 @@ class BroadlinkData(object):
         if retry > 0 and self._auth():
             self._update(retry-1)
 
-    def _validate(self, data):
+    @staticmethod
+    def _validate(data):
         if data is None:
             return False
         if not data.get('temperature', 0) <= 100:
