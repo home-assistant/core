@@ -175,12 +175,6 @@ def get_device(hass, node, value, **kwargs):
             _LOGGER.info('Usercode at slot %s is cleared', value.index)
             break
 
-    if value.command_class != zwave.const.COMMAND_CLASS_DOOR_LOCK:
-        return None
-    if value.type != zwave.const.TYPE_BOOL:
-        return None
-    if value.genre != zwave.const.GENRE_USER:
-        return None
     if node.has_command_class(zwave.const.COMMAND_CLASS_USER_CODE):
         hass.services.register(DOMAIN,
                                SERVICE_SET_USERCODE,
@@ -197,7 +191,6 @@ def get_device(hass, node, value, **kwargs):
                                clear_usercode,
                                descriptions.get(SERVICE_CLEAR_USERCODE),
                                schema=CLEAR_USERCODE_SCHEMA)
-    value.set_change_verified(False)
     return ZwaveLock(value)
 
 
