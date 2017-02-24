@@ -5,9 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.zamg/
 """
 import csv
+from datetime import datetime, timedelta
+import gzip
+import json
 import logging
-from datetime import timedelta
+import os
 
+import pytz
 import requests
 import voluptuous as vol
 
@@ -17,7 +21,8 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_TEMPERATURE, ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED)
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_NAME, __version__)
+    CONF_MONITORED_CONDITIONS, CONF_NAME, __version__,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -29,15 +34,8 @@ CONF_STATION_ID = 'station_id'
 
 DEFAULT_NAME = 'zamg'
 
-# Data source only updates once per hour, so throttle to 30 min to have
-# reasonably recent data
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
-VALID_STATION_IDS = (
-    '11010', '11012', '11022', '11035', '11036', '11101', '11121', '11126',
-    '11130', '11150', '11155', '11157', '11171', '11190', '11204', '11240',
-    '11244', '11265', '11331', '11343', '11389'
-)
+# Data source updates once per hour, so we do nothing if it's been less time
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     ATTR_WEATHER_PRESSURE: ('Pressure', 'hPa', 'LDstat hPa', float),
@@ -62,24 +60,33 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
-    vol.Required(CONF_STATION_ID):
-        vol.All(cv.string, vol.In(VALID_STATION_IDS)),
+    vol.Optional(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the ZAMG sensor platform."""
-    station_id = config.get(CONF_STATION_ID)
-    name = config.get(CONF_NAME)
-
     logger = logging.getLogger(__name__)
+
+    station_id = config.get(CONF_STATION_ID) or closest_station(
+        config.get(CONF_LATITUDE),
+        config.get(CONF_LONGITUDE),
+        hass.config.config_dir)
+    if station_id not in zamg_stations(hass.config.config_dir):
+        logger.error("Configured ZAMG %s (%s) is not a known station",
+                     CONF_STATION_ID, station_id)
+        return False
+
     probe = ZamgData(station_id=station_id, logger=logger)
+    try:
+        probe.update()
+    except ValueError as err:
+        logger.error("Received error from ZAMG: %s", err)
+        return False
 
-    sensors = [ZamgSensor(probe, variable, name)
-               for variable in config[CONF_MONITORED_CONDITIONS]]
-
-    add_devices(sensors, True)
+    add_devices([ZamgSensor(probe, variable, config.get(CONF_NAME))
+                 for variable in config[CONF_MONITORED_CONDITIONS]], True)
 
 
 class ZamgSensor(Entity):
@@ -117,8 +124,7 @@ class ZamgSensor(Entity):
         return {
             ATTR_WEATHER_ATTRIBUTION: ATTRIBUTION,
             ATTR_STATION: self.probe.get_data('station_name'),
-            ATTR_UPDATED: '{} {}'.format(self.probe.get_data('update_date'),
-                                         self.probe.get_data('update_time')),
+            ATTR_UPDATED: self.probe.last_update.isoformat(),
         }
 
 
@@ -126,10 +132,6 @@ class ZamgData(object):
     """The class for handling the data retrieval."""
 
     API_URL = 'http://www.zamg.ac.at/ogd/'
-    API_FIELDS = {
-        v[2]: (k, v[3])
-        for k, v in SENSOR_TYPES.items()
-    }
     API_HEADERS = {
         'User-Agent': '{} {}'.format('home-assistant.zamg/', __version__),
     }
@@ -140,40 +142,97 @@ class ZamgData(object):
         self._station_id = station_id
         self.data = {}
 
+    @property
+    def last_update(self):
+        """Return the timestamp of the most recent data."""
+        date, time = self.data.get('update_date'), self.data.get('update_time')
+        if date is not None and time is not None:
+            return datetime.strptime(date + time, '%d-%m-%Y%H:%M').replace(
+                tzinfo=pytz.timezone('Europe/Vienna'))
+
+    @classmethod
+    def current_observations(cls):
+        """Fetch the latest CSV data."""
+        try:
+            response = requests.get(
+                cls.API_URL, headers=cls.API_HEADERS, timeout=15)
+            response.raise_for_status()
+            return csv.DictReader(response.text.splitlines(),
+                                  delimiter=';', quotechar='"')
+        except Exception:  # pylint:disable=broad-except
+            logging.getLogger(__name__).exception("While fetching data")
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from ZAMG."""
-        try:
-            response = requests.get(
-                self.API_URL, headers=self.API_HEADERS, timeout=15)
-        except requests.exceptions.RequestException:
-            self._logger.exception("While fetching data from server")
-            return
+        if self.last_update and (self.last_update + timedelta(hours=1) >
+                                 datetime.utcnow().replace(tzinfo=pytz.utc)):
+            return  # Not time to update yet; data is only hourly
 
-        if response.status_code != 200:
-            self._logger.error("API call returned with status %s",
-                               response.status_code)
-            return
-
-        content_type = response.headers.get('Content-Type', 'whatever')
-        if content_type != 'text/csv':
-            self._logger.error("Expected text/csv but got %s", content_type)
-            return
-
-        response.encoding = 'UTF8'
-        content = response.text
-        data = (line for line in content.split('\n'))
-        reader = csv.DictReader(data, delimiter=';', quotechar='"')
-        for row in reader:
-            if row.get("Station", None) == self._station_id:
+        for row in self.current_observations():
+            if row.get('Station') == self._station_id:
+                api_fields = {col_heading: (standard_name, dtype)
+                              for standard_name, (_, _, col_heading, dtype)
+                              in SENSOR_TYPES.items()}
                 self.data = {
-                    self.API_FIELDS.get(k)[0]:
-                        self.API_FIELDS.get(k)[1](v.replace(',', '.'))
-                    for k, v in row.items()
-                    if v and k in self.API_FIELDS
-                }
+                    api_fields.get(col_heading)[0]:
+                        api_fields.get(col_heading)[1](v.replace(',', '.'))
+                    for col_heading, v in row.items()
+                    if col_heading in api_fields and v}
                 break
+        else:
+            raise ValueError('No weather data for station {}'
+                             .format(self._station_id))
 
     def get_data(self, variable):
         """Generic accessor for data."""
         return self.data.get(variable)
+
+
+def _get_zamg_stations():
+    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config."""
+    capital_stations = {r['Station'] for r in ZamgData.current_observations()}
+    req = requests.get('https://www.zamg.ac.at/cms/en/documents/climate/'
+                       'doc_metnetwork/zamg-observation-points', timeout=15)
+    stations = {}
+    for row in csv.DictReader(req.text.splitlines(),
+                              delimiter=';', quotechar='"'):
+        if row.get('synnr') in capital_stations:
+            try:
+                stations[row['synnr']] = tuple(
+                    float(row[coord].replace(',', '.'))
+                    for coord in ['breite_dezi', 'länge_dezi'])
+            except KeyError:
+                logging.getLogger(__name__).exception(
+                    'ZAMG schema changed again, cannot autodetect station.')
+    return stations
+
+
+def zamg_stations(cache_dir):
+    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
+
+    Results from internet requests are cached as compressed json, making
+    subsequent calls very much faster.
+    """
+    cache_file = os.path.join(cache_dir, '.zamg-stations.json.gz')
+    if not os.path.isfile(cache_file):
+        stations = _get_zamg_stations()
+        with gzip.open(cache_file, 'wt') as cache:
+            json.dump(stations, cache, sort_keys=True)
+        return stations
+    with gzip.open(cache_file, 'rt') as cache:
+        return {k: tuple(v) for k, v in json.load(cache).items()}
+
+
+def closest_station(lat, lon, cache_dir):
+    """Return the ZONE_ID.WMO_ID of the closest station to our lat/lon."""
+    if lat is None or lon is None or not os.path.isdir(cache_dir):
+        return
+    stations = zamg_stations(cache_dir)
+
+    def comparable_dist(zamg_id):
+        """A fast key function for psudeo-distance from lat/lon."""
+        station_lat, station_lon = stations[zamg_id]
+        return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
+
+    return min(stations, key=comparable_dist)

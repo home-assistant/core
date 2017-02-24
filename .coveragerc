@@ -411,6 +411,7 @@ omit =
     homeassistant/components/upnp.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/openweathermap.py
+    homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
 
 
