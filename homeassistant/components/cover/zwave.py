@@ -24,14 +24,9 @@ def get_device(value, **kwargs):
     """Create zwave entity device."""
     if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and value.index == 0):
-        value.set_change_verified(False)
         return ZwaveRollershutter(value)
     elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
           value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
-        if (value.type != zwave.const.TYPE_BOOL and
-                value.genre != zwave.const.GENRE_USER):
-            return None
-        value.set_change_verified(False)
         return ZwaveGarageDoor(value)
     return None
 
