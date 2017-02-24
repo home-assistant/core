@@ -706,6 +706,7 @@ class ZWaveDeviceEntity(Entity):
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         self._value = value
+        self._value.set_change_verified(False)
         self.entity_id = "{}.{}".format(domain, self._object_id())
         self._update_attributes()
 

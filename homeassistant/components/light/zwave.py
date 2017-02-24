@@ -57,14 +57,6 @@ def get_device(node, value, node_config, **kwargs):
     _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
                   ' CONF_REFRESH_DELAY=%s', name, node_config,
                   refresh, delay)
-    if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
-        return None
-    if value.type != zwave.const.TYPE_BYTE:
-        return None
-    if value.genre != zwave.const.GENRE_USER:
-        return None
-
-    value.set_change_verified(False)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         return ZwaveColorLight(value, refresh, delay)
