@@ -762,7 +762,7 @@ class ZWaveDeviceEntity(Entity):
     def _get_dependent_value_ids(self):
         """Return a list of value_ids this device depend on.
 
-        Returns None if it depends on the whole node.
+        Return None if it depends on the whole node.
         """
         if self.dependent_value_ids is None:
             # Device depends on node.
@@ -774,9 +774,9 @@ class ZWaveDeviceEntity(Entity):
         else:
             print('node %s ready' % self._value.node_node_id)
 
-        return self.dependent_value_ids + [val for val in [
+        return [val for val in (self.dependent_value_ids + [
             self._wakeup_value_id, self._battery_value_id,
-            self._power_value_id] if val]
+            self._power_value_id]) if val]
 
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""

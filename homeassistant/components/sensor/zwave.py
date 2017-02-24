@@ -57,6 +57,11 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity):
         """Return the unit of measurement the value is expressed in."""
         return self._units
 
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return []
+
 
 class ZWaveMultilevelSensor(ZWaveSensor):
     """Representation of a multi level sensor Z-Wave sensor."""
