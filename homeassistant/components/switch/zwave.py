@@ -39,6 +39,11 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
         self._state = self._value.data
 
     @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return []
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
