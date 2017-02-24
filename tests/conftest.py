@@ -76,3 +76,11 @@ def mqtt_mock(loop, hass):
         client = mock_mqtt()
         client.reset_mock()
         return client
+
+
+@pytest.fixture(autouse=True)
+def verify_cleanup():
+    yield
+
+    from homeassistant.components import recorder
+    assert recorder._INSTANCE is None
