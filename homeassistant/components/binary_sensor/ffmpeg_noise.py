@@ -54,9 +54,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # generate sensor object
     entity = FFmpegNoise(hass, manager, config)
-
-    # add to system
-    manager.async_register_device(entity)
     yield from async_add_devices([entity])
 
 
@@ -71,11 +68,14 @@ class FFmpegNoise(FFmpegBinarySensor):
         self.ffmpeg = SensorNoise(
             manager.binary, hass.loop, self._async_callback)
 
-    def async_start_ffmpeg(self):
+    def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.
 
         This method must be run in the event loop and returns a coroutine.
         """
+        if entity_ids is not None and self.entity_id not in entity_ids:
+            return
+
         # init config
         self.ffmpeg.set_options(
             time_duration=self._config.get(CONF_DURATION),

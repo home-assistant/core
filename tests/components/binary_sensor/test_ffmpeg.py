@@ -35,7 +35,7 @@ class TestFFmpegNoiseSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
 
     @patch('haffmpeg.SensorNoise.open_sensor', return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
@@ -44,16 +44,13 @@ class TestFFmpegNoiseSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
 
-        entity = self.hass.data['ffmpeg'].entities[0]
         self.hass.start()
         assert mock_start.called
 
-        assert entity.state == 'off'
-        run_callback_threadsafe(
-            self.hass.loop, entity._async_callback, True).result()
-        assert entity.state == 'on'
+        entity = self.hass.states.get('binary_sensor.ffmpeg_noise')
+        assert entity.state == 'unavailable'
 
 
 class TestFFmpegMotionSetup(object):
@@ -83,7 +80,7 @@ class TestFFmpegMotionSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
 
     @patch('haffmpeg.SensorMotion.open_sensor', return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
@@ -92,13 +89,10 @@ class TestFFmpegMotionSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
 
-        entity = self.hass.data['ffmpeg'].entities[0]
         self.hass.start()
         assert mock_start.called
 
-        assert entity.state == 'off'
-        run_callback_threadsafe(
-            self.hass.loop, entity._async_callback, True).result()
-        assert entity.state == 'on'
+        entity = self.hass.states.get('binary_sensor.ffmpeg_motion')
+        assert entity.state == 'unavailable'
