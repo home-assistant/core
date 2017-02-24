@@ -18,7 +18,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect, dispatcher_send)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
@@ -553,7 +553,7 @@ class MQTT(object):
                           msg.payload)
         else:
             _LOGGER.info("Received message on %s: %s", msg.topic, payload)
-            async_dispatcher_send(
+            dispatcher_send(
                 self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, payload,
                 msg.qos
             )
