@@ -30,8 +30,6 @@ class BaseTestRecorder(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        with self.assertRaises(RuntimeError):
-            recorder.get_instance()
 
     def _add_test_states(self):
         """Add multiple states to the db for testing."""

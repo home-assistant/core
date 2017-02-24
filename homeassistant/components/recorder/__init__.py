@@ -162,6 +162,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     try:
         _INSTANCE.initialize()
     except SQLAlchemyError as err:
+        _INSTANCE = None
         _LOGGER.error('Error connecting to the database: %s', err)
         return False
 
