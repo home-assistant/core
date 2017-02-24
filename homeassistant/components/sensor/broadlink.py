@@ -112,9 +112,9 @@ class BroadlinkData(object):
         self._device.timeout = timeout
         self.update = Throttle(interval)(self._update)
         if not self._auth():
-            _LOGGER.error("Failed to connect to device.")
+            _LOGGER.warning("Failed to connect to device.")
 
-    def _update(self, retry=2):
+    def _update(self, retry=3):
         try:
             data = self._device.check_sensors_raw()
             if (data is not None and data.get('humidity', 0) <= 100 and
@@ -127,11 +127,10 @@ class BroadlinkData(object):
             if retry < 1:
                 _LOGGER.error(error)
                 return
-        if retry < 1 or not self._auth():
-            return
-        self._update(retry-1)
+        if retry > 0 and self._auth():
+            self._update(retry-1)
 
-    def _auth(self, retry=2):
+    def _auth(self, retry=3):
         try:
             auth = self._device.auth()
         except socket.timeout:
