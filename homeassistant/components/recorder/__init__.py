@@ -22,9 +22,8 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType, QueryType
 import homeassistant.util.dt as dt_util
 
@@ -92,8 +91,6 @@ def get_instance() -> None:
     if ident is not None and ident == threading.get_ident():
         raise RuntimeError('Cannot be called from within the event loop')
 
-    _wait(_INSTANCE.db_ready, "Database not ready")
-
     return _INSTANCE
 
 
@@ -103,7 +100,6 @@ def execute(qry: QueryType) -> List[Any]:
 
     This method also retries a few times in the case of stale connections.
     """
-    get_instance()
     from sqlalchemy.exc import SQLAlchemyError
     with session_scope() as session:
         for _ in range(0, RETRIES):
@@ -144,6 +140,7 @@ def run_information(point_in_time: Optional[datetime]=None):
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup the recorder."""
+    from sqlalchemy.exc import SQLAlchemyError
     global _INSTANCE  # pylint: disable=global-statement
 
     if _INSTANCE is not None:
@@ -161,7 +158,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     exclude = config.get(DOMAIN, {}).get(CONF_EXCLUDE, {})
     _INSTANCE = Recorder(hass, purge_days=purge_days, uri=db_url,
                          include=include, exclude=exclude)
-    _INSTANCE.start()
+
+    try:
+        _INSTANCE.initialize()
+    except SQLAlchemyError as err:
+        _LOGGER.error('Error connecting to the database: %s', err)
+        return False
 
     return True
 
@@ -199,8 +201,6 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
-        self.db_ready = threading.Event()
-        self.start_recording = threading.Event()
         self.engine = None  # type: Any
         self._run = None  # type: Any
 
@@ -209,37 +209,28 @@ class Recorder(threading.Thread):
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
 
-        def start_recording(event):
-            """Start recording."""
-            self.start_recording.set()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_recording)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
-        hass.bus.listen(MATCH_ALL, self.event_listener)
-
         self.get_session = None
+
+    def initialize(self):
+        """Initialize the recorder."""
+        self._setup_connection()
+        self._setup_run()
+
+        @callback
+        def start_recording(event):
+            """Start the recorder."""
+            _INSTANCE.start()
+
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_recording)
+        self.hass.bus.listen(MATCH_ALL, self.event_listener)
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
+        if self.purge_days is not None:
+            track_time_interval(
+                self.hass, self._purge_old_data, timedelta(days=2))
 
     def run(self):
         """Start processing events to save."""
         from homeassistant.components.recorder.models import Events, States
-        from sqlalchemy.exc import SQLAlchemyError
-
-        while True:
-            try:
-                self._setup_connection()
-                self._setup_run()
-                self.db_ready.set()
-                break
-            except SQLAlchemyError as err:
-                _LOGGER.error("Error during connection setup: %s (retrying "
-                              "in %s seconds)", err, CONNECT_RETRY_WAIT)
-                time.sleep(CONNECT_RETRY_WAIT)
-
-        if self.purge_days is not None:
-            async_track_time_interval(
-                self.hass, self._purge_old_data, timedelta(days=2))
-
-        _wait(self.start_recording, "Waiting to start recording")
 
         while True:
             event = self.queue.get()
@@ -297,19 +288,12 @@ class Recorder(threading.Thread):
         """Tell the recorder to shut down."""
         global _INSTANCE  # pylint: disable=global-statement
         self.queue.put(None)
-        if not self.start_recording.is_set():
-            _LOGGER.warning("Recorder never started correctly")
-            self.start_recording.set()
         self.join()
         _INSTANCE = None
 
     def block_till_done(self):
         """Block till all events processed."""
         self.queue.join()
-
-    def block_till_db_ready(self):
-        """Block until the database session is ready."""
-        _wait(self.db_ready, "Database not ready")
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
@@ -448,11 +432,6 @@ class Recorder(threading.Thread):
         """Purge events and states older than purge_days ago."""
         from homeassistant.components.recorder.models import Events, States
 
-        if not self.purge_days or self.purge_days < 1:
-            _LOGGER.debug("purge_days set to %s, will not purge any old data.",
-                          self.purge_days)
-            return
-
         purge_before = dt_util.utcnow() - timedelta(days=self.purge_days)
 
         def _purge_states(session):
@@ -497,15 +476,3 @@ class Recorder(threading.Thread):
                 session.rollback()
                 time.sleep(QUERY_RETRY_WAIT)
         return False
-
-
-def _wait(event, message):
-    """Event wait helper."""
-    for retry in (10, 20, 30):
-        event.wait(10)
-        if event.is_set():
-            return
-        msg = message + " ({} seconds)".format(retry)
-        _LOGGER.warning(msg)
-    if not event.is_set():
-        raise HomeAssistantError(msg)

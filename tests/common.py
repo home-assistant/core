@@ -22,7 +22,7 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
@@ -463,8 +463,16 @@ def init_recorder_component(hass, add_config=None, db_ready_callback=None):
 
     assert setup_component(hass, recorder.DOMAIN,
                            {recorder.DOMAIN: config})
-    assert recorder.DOMAIN in hass.config.components
-    recorder.get_instance().block_till_db_ready()
+
+    def cleanup_recorder(event):
+        """Clean up recorder component."""
+        ins = loader.get_component('recorder')._INSTANCE
+
+        if ins is not None:
+            ins.join()
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_STOP, cleanup_recorder)
+
     _LOGGER.info("In-memory recorder successfully started")
 
 

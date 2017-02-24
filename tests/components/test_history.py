@@ -29,7 +29,6 @@ class TestComponentHistory(unittest.TestCase):
         """Initialize the recorder."""
         init_recorder_component(self.hass)
         self.hass.start()
-        recorder.get_instance().block_till_db_ready()
         self.wait_recording_done()
 
     def wait_recording_done(self):
