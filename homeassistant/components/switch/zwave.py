@@ -14,15 +14,8 @@ from homeassistant.components.zwave import async_setup_platform  # noqa # pylint
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
-def get_device(node, value, **kwargs):
+def get_device(value, **kwargs):
     """Create zwave entity device."""
-    if not node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_BINARY):
-        return None
-    if value.type != zwave.const.TYPE_BOOL or value.genre != \
-            zwave.const.GENRE_USER:
-        return None
-    value.set_change_verified(False)
     return ZwaveSwitch(value)
 
 
