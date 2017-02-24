@@ -2,7 +2,7 @@
 import asyncio
 
 from homeassistant.components.config import EditKeyBasedConfigView
-from homeassistant.components.group import GROUP_SCHEMA, async_reload
+from homeassistant.components.group import GROUP_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 
@@ -14,6 +14,6 @@ def async_setup(hass):
     """Setup the Group config API."""
     hass.http.register_view(EditKeyBasedConfigView(
         'group', 'config', CONFIG_PATH, cv.slug,
-        GROUP_SCHEMA, post_write_hook=async_reload
+        GROUP_SCHEMA
     ))
     return True
