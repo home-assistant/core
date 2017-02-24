@@ -112,7 +112,7 @@ class BroadlinkData(object):
         self._device.timeout = timeout
         self._schema = vol.Schema({
             vol.Optional('temperature'): vol.Range(min=-50, max=150),
-            vol.Optional('humidity'): vol.Range(min=-50, max=150),
+            vol.Optional('humidity'): vol.Range(min=0, max=100),
             vol.Optional('light'): vol.Any(0, 1, 2, 3),
             vol.Optional('air_quality'): vol.Any(0, 1, 2, 3),
             vol.Optional('noise'): vol.Any(0, 1, 2),
