@@ -54,7 +54,7 @@ class ZamgWeather(WeatherEntity):
     def __init__(self, zamg_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
         self.zamg_data = zamg_data
-        self.stationname = stationname or self.zamg_data.data.get('Name')
+        self.stationname = stationname
 
     def update(self):
         """Update current conditions."""
@@ -63,7 +63,8 @@ class ZamgWeather(WeatherEntity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'ZAMG {}'.format(self.stationname or '(unknown station)')
+        return self.stationname or 'ZAMG {}'.format(
+            self.zamg_data.data.get('Name') or '(unknown station)')
 
     @property
     def condition(self):
