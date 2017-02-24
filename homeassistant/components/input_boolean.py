@@ -146,7 +146,7 @@ class InputBoolean(ToggleEntity):
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
-        self._state = state.state == 'on'
+        self._state = state.state == STATE_ON
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
