@@ -34,6 +34,8 @@ CONF_DAY = 'day'
 CONF_SERVER_ID = 'server_id'
 CONF_MANUAL = 'manual'
 
+ICON = 'mdi:speedometer'
+
 SENSOR_TYPES = {
     'ping': ['Ping', 'ms'],
     'download': ['Download', 'Mbit/s'],
@@ -102,6 +104,11 @@ class SpeedtestSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
+
+    @property
+    def icon(self):
+        """Return icon."""
+        return ICON
 
     def update(self):
         """Get the latest data and update the states."""
