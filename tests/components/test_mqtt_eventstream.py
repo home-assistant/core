@@ -1,11 +1,9 @@
 """The tests for the MQTT eventstream component."""
-from collections import namedtuple
 import json
 from unittest.mock import ANY, patch
 
 from homeassistant.bootstrap import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
-import homeassistant.components.mqtt as mqtt
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
 from homeassistant.remote import JSONEncoder
