@@ -40,8 +40,8 @@ class HMSwitch(HMDevice, SwitchDevice):
             return False
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
+    def today_energy_kwh(self):
+        """Return the current power usage in kWh."""
         if "ENERGY_COUNTER" in self._data:
             try:
                 return self._data["ENERGY_COUNTER"] / 1000

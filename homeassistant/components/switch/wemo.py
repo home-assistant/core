@@ -8,6 +8,7 @@ import logging
 from datetime import datetime, timedelta
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
@@ -136,16 +137,18 @@ class WemoSwitch(SwitchDevice):
                                                             uptime.second)
 
     @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
+    def current_power_w(self):
+        """Current power usage in W."""
         if self.insight_params:
-            return self.insight_params['currentpower']
+            return convert(
+                self.insight_params['currentpower'], float, 0.0
+                ) / 1000.0
 
     @property
-    def today_power_mw(self):
-        """Today total power usage in mW."""
+    def today_energy_kwh(self):
+        """Today total energy usage in kWh."""
         if self.insight_params:
-            return self.insight_params['todaymw']
+            return convert(self.insight_params['todaymw'], float, 0.0) / 1000.0
 
     @property
     def detail_state(self):
