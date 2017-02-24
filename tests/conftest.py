@@ -80,6 +80,7 @@ def mqtt_mock(loop, hass):
 
 @pytest.fixture(autouse=True)
 def verify_cleanup():
+    """Verify that the test has cleaned up resources correctly."""
     yield
 
     from homeassistant.components import recorder
