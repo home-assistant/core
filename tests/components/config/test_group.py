@@ -80,6 +80,7 @@ def test_update_device_config(hass, test_client):
         resp = yield from client.post(
             '/api/config/group/config/hello_beer', data=json.dumps({
                 'name': 'Beer',
+                'entities': ['light.top', 'light.bottom'],
             }))
 
     assert resp.status == 200
@@ -87,6 +88,7 @@ def test_update_device_config(hass, test_client):
     assert result == {'result': 'ok'}
 
     orig_data['hello_beer']['name'] = 'Beer'
+    orig_data['hello_beer']['entities'] = ['light.top', 'light.bottom']
 
     assert written[0] == orig_data
 
