@@ -32,7 +32,7 @@ SENSOR_TYPES = {
     'air_quality': ['Air Quality', ' '],
     'humidity': ['Humidity', '%'],
     'light': ['Light', ' '],
-    'noise': ['Noise', ' ']
+    'noise': ['Noise', ' '],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -110,6 +110,13 @@ class BroadlinkData(object):
         self.data = None
         self._device = broadlink.a1((ip_addr, 80), mac_addr)
         self._device.timeout = timeout
+        self._schema = vol.Schema({
+            vol.Optional('temperature'): vol.Range(min=-50, max=150),
+            vol.Optional('humidity'): vol.Range(min=-50, max=150),
+            vol.Optional('light'): vol.Any(0, 1, 2, 3),
+            vol.Optional('air_quality'): vol.Any(0, 1, 2, 3),
+            vol.Optional('noise'): vol.Any(0, 1, 2),
+            })
         self.update = Throttle(interval)(self._update)
         if not self._auth():
             _LOGGER.warning("Failed to connect to device.")
@@ -117,8 +124,8 @@ class BroadlinkData(object):
     def _update(self, retry=3):
         try:
             data = self._device.check_sensors_raw()
-            if self._validate(data):
-                self.data = data
+            if data is not None:
+                self.data = self._schema(data)
                 return
         except socket.timeout as error:
             if retry < 1:
@@ -126,22 +133,6 @@ class BroadlinkData(object):
                 return
         if retry > 0 and self._auth():
             self._update(retry-1)
-
-    @staticmethod
-    def _validate(data):
-        if data is None:
-            return False
-        if not data.get('temperature', 0) <= 100:
-            return False
-        if not data.get('humidity', 0) <= 100:
-            return False
-        if not data.get('light', 0) in [0, 1, 2, 3]:
-            return False
-        if not data.get('air_quality', 0) in [0, 1, 2, 3]:
-            return False
-        if not data.get('noise', 0) in [0, 1, 2]:
-            return False
-        return True
 
     def _auth(self, retry=3):
         try:
