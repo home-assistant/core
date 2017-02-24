@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from homeassistant.bootstrap import setup_component
-from homeassistant.util.async import run_callback_threadsafe
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)
