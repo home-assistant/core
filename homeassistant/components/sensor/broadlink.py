@@ -117,14 +117,14 @@ class BroadlinkData(object):
     def _update(self, retry=3):
         try:
             data = self._device.check_sensors_raw()
-            if (data is not None and
-                    data.get('temperature', 0) <= 100 and
-                    data.get('humidity', 0) <= 100 and
-                    data.get('light', 0) in [0, 1, 2, 3] and
-                    data.get('air_quality', 0) in [0, 1, 2, 3] and
-                    data.get('noise', 0) in [0, 1, 2]):
-                self.data = data
-                return
+            if data is not None:
+                if data.get('temperature', 0) <= 100 and
+                   data.get('humidity', 0) <= 100 and
+                   data.get('light', 0) in [0, 1, 2, 3] and
+                   data.get('air_quality', 0) in [0, 1, 2, 3] and
+                   data.get('noise', 0) in [0, 1, 2]):
+                    self.data = data
+                    return
         except socket.timeout as error:
             if retry < 1:
                 _LOGGER.error(error)
