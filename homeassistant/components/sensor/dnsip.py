@@ -14,7 +14,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['dnspython==1.15.0']
 
