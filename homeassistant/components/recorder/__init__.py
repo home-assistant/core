@@ -236,7 +236,7 @@ class Recorder(threading.Thread):
                 self._setup_connection()
                 self._setup_run()
                 self.db_ready.set()
-                self.async_db_ready.set()
+                self.hass.loop.call_soon_threadsafe(self.async_db_ready.set)
                 break
             except SQLAlchemyError as err:
                 _LOGGER.error("Error during connection setup: %s (retrying "
