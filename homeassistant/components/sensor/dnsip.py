@@ -74,7 +74,6 @@ class WanIpSensor(Entity):
 
     def update(self):
         """Get the current DNS IP address for hostname."""
-        _LOGGER.error("Updating IP")
         response = self.resolver.query(self._name, self.querytype)
         if response:
             self._state = \
