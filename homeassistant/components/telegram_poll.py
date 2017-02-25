@@ -75,6 +75,7 @@ def _setup(hass, config, bot):
 
 
 class IncomingChecker:
+    """Threaded telegram incoming message handler."""
     def __init__(self, bot, hass, allowed_ids):
         self.update_id = None
         self.bot = bot
