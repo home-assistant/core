@@ -1,5 +1,6 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
+import asyncio
 import json
 from datetime import datetime, timedelta
 import unittest
@@ -9,6 +10,7 @@ import pytest
 from sqlalchemy import create_engine
 
 from homeassistant.core import callback
+from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import MATCH_ALL
 from homeassistant.components import recorder
 from tests.common import get_test_home_assistant, init_recorder_component
@@ -28,8 +30,6 @@ class BaseTestRecorder(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        with self.assertRaises(RuntimeError):
-            recorder.get_instance()
 
     def _add_test_states(self):
         """Add multiple states to the db for testing."""
@@ -174,25 +174,6 @@ class TestRecorder(BaseTestRecorder):
 
         # now we should only have 3 events left
         self.assertEqual(events.count(), 3)
-
-    def test_purge_disabled(self):
-        """Test leaving purge_days disabled."""
-        self._add_test_states()
-        self._add_test_events()
-        # make sure we start with 5 states and events
-        states = recorder.query('States')
-        events = recorder.query('Events').filter(
-            recorder.get_model('Events').event_type.like("EVENT_TEST%"))
-        self.assertEqual(states.count(), 5)
-        self.assertEqual(events.count(), 5)
-
-        # run purge_old_data()
-        recorder._INSTANCE.purge_days = None
-        recorder._INSTANCE._purge_old_data()
-
-        # we should have all of our states still
-        self.assertEqual(states.count(), 5)
-        self.assertEqual(events.count(), 5)
 
     def test_schema_no_recheck(self):
         """Test that schema is not double-checked when up-to-date."""
@@ -392,3 +373,13 @@ def test_recorder_bad_execute(hass_recorder):
         res = recorder.execute((mck1,))
     assert res == []
     assert e_mock.call_count == 3
+
+
+@asyncio.coroutine
+def test_recorder_fails_setup_when_connection_fails(hass):
+    """Test recorder fails to setup when SQLAlchemy fails."""
+    from sqlalchemy.exc import SQLAlchemyError
+    with patch('homeassistant.components.recorder.Recorder.initialize',
+               side_effect=SQLAlchemyError('Bad auth, yo')):
+        result = yield from async_setup_component(hass, 'recorder', {})
+        assert not result
