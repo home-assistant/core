@@ -14,6 +14,7 @@ from aiohttp import web
 from homeassistant import core as ha, loader
 from homeassistant.bootstrap import (
     setup_component, async_prepare_setup_component)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -158,11 +159,8 @@ def mock_service(hass, domain, service):
 @ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
-    hass.bus.async_fire(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, {
-        mqtt.ATTR_TOPIC: topic,
-        mqtt.ATTR_PAYLOAD: payload,
-        mqtt.ATTR_QOS: qos,
-    })
+    async_dispatcher_send(
+        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic, payload, qos)
 
 
 def fire_mqtt_message(hass, topic, payload, qos=0):
