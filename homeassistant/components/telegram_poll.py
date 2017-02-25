@@ -16,7 +16,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     EVENT_HOMEASSISTANT_STOP
-from telegram.error import NetworkError, Unauthorized
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup is called when Home Assistant is loading our component."""
+    """ Setup is called when Home Assistant is loading our component."""
     import telegram
     bot_token = config[DOMAIN].get(BOT_TOKEN)
     bot = telegram.Bot(bot_token)
@@ -52,13 +51,16 @@ def setup(hass, config):
 
 
 def _setup(hass, config, bot):
+    """ The actual setup of the telegram component"""
     allowed_chat_ids = config[DOMAIN].get(ALLOWED_CHAT_IDS)
     checker = IncomingChecker(bot, hass, allowed_chat_ids)
 
     def _start_bot(_event):
+        """ Starts the thread"""
         checker.check_thread.start()
 
     def _stop_bot(_event):
+        """ Stops the thread"""
         checker.checking = False
 
     hass.bus.listen_once(
@@ -119,7 +121,7 @@ class IncomingChecker:
         while self.checking:
             try:
                 self.handle()
-            except NetworkError:
+            except telegram.NetworkError:
                 sleep(1)
-            except Unauthorized:
+            except telegram.Unauthorized:
                 self.update_id += 1
