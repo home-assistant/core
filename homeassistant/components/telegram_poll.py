@@ -114,6 +114,7 @@ class IncomingChecker:
         # get the first pending update_id, this is so
         # we can skip over it in case
         # we get an "Unauthorized" exception.
+        import telegram
         try:
             self.update_id = self.bot.getUpdates()[0].update_id
         except IndexError:
@@ -121,7 +122,7 @@ class IncomingChecker:
         while self.checking:
             try:
                 self.handle()
-            except telegram.NetworkError:
+            except telegram.error.NetworkError:
                 sleep(1)
-            except telegram.Unauthorized:
+            except telegram.error.Unauthorized:
                 self.update_id += 1
