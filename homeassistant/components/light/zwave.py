@@ -197,7 +197,7 @@ class ZwaveColorLight(ZwaveDimmer):
     def dependent_value_ids(self):
         """List of value IDs a device depends on."""
         return [val.value_id for val in [
-            self._value_color, self._value_color] if val]
+            self._value_color, self._value_color_channels] if val]
 
     def _get_color_values(self):
         """Search for color values available on this node."""
