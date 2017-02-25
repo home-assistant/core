@@ -10,6 +10,8 @@ import asyncio
 from homeassistant import bootstrap, core
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.loader import DEPENDENCY_BLACKLIST
 from homeassistant.util.async import run_callback_threadsafe
 
 EVENT_LOAD_PLATFORM = 'load_platform.{}'
@@ -56,6 +58,10 @@ def discover(hass, service, discovered=None, component=None, hass_config=None):
 def async_discover(hass, service, discovered=None, component=None,
                    hass_config=None):
     """Fire discovery event. Can ensure a component is loaded."""
+    if component in DEPENDENCY_BLACKLIST:
+        raise HomeAssistantError(
+            'Cannot discover the {} component.'.format(component))
+
     if component is not None and component not in hass.config.components:
         did_lock = False
         setup_lock = hass.data.get('setup_lock')
@@ -150,6 +156,10 @@ def async_load_platform(hass, component, platform, discovered=None,
 
     This method is a coroutine.
     """
+    if component in DEPENDENCY_BLACKLIST:
+        raise HomeAssistantError(
+            'Cannot discover the {} component.'.format(component))
+
     did_lock = False
     setup_lock = hass.data.get('setup_lock')
     if setup_lock and setup_lock.locked():

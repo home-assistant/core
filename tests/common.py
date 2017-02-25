@@ -15,6 +15,7 @@ from homeassistant import core as ha, loader
 from homeassistant.bootstrap import (
     setup_component, async_prepare_setup_component)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -22,7 +23,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT)
-from homeassistant.components import sun, mqtt
+from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
@@ -86,7 +87,14 @@ def async_test_home_assistant(loop):
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
-    hass.async_track_tasks()
+
+    def async_add_job(target, *args):
+        """Add a magic mock."""
+        if isinstance(target, MagicMock):
+            return
+        hass._async_add_job_tracking(target, *args)
+
+    hass.async_add_job = async_add_job
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -210,10 +218,10 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass):
+def mock_http_component(hass, api_password=None):
     """Mock the HTTP component."""
-    hass.http = MagicMock()
-    hass.config.components.append('http')
+    hass.http = MagicMock(api_password=api_password)
+    hass.config.components.add('http')
     hass.http.views = {}
 
     def mock_register_view(view):
@@ -229,7 +237,8 @@ def mock_http_component(hass):
 
 def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
-    hass.http = MagicMock(api_password=api_password)
+    if 'http' not in hass.config.components:
+        mock_http_component(hass, api_password)
     app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
@@ -241,6 +250,7 @@ def mock_http_component_app(hass, api_password=None):
 def mock_mqtt_component(hass):
     """Mock the MQTT component."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
+        mock_mqtt().async_connect.return_value = mock_coro(True)
         setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',
@@ -392,12 +402,17 @@ def mock_coro(return_value=None):
         """Fake coroutine."""
         return return_value
 
+    return coro()
+
+
+def mock_coro_func(return_value=None):
+    """Helper method to return a coro that returns a value."""
+    @asyncio.coroutine
+    def coro(*args, **kwargs):
+        """Fake coroutine."""
+        return return_value
+
     return coro
-
-
-def mock_generator(return_value=None):
-    """Helper method to return a coro generator that returns a value."""
-    return mock_coro(return_value)()
 
 
 @contextmanager
@@ -439,3 +454,26 @@ def assert_setup_component(count, domain=None):
     res_len = 0 if res is None else len(res)
     assert res_len == count, 'setup_component failed, expected {} got {}: {}' \
         .format(count, res_len, res)
+
+
+def init_recorder_component(hass, add_config=None, db_ready_callback=None):
+    """Initialize the recorder."""
+    config = dict(add_config) if add_config else {}
+    config[recorder.CONF_DB_URL] = 'sqlite://'  # In memory DB
+
+    assert setup_component(hass, recorder.DOMAIN,
+                           {recorder.DOMAIN: config})
+    assert recorder.DOMAIN in hass.config.components
+    recorder.get_instance().block_till_db_ready()
+    _LOGGER.info("In-memory recorder successfully started")
+
+
+def mock_restore_cache(hass, states):
+    """Mock the DATA_RESTORE_CACHE."""
+    hass.data[DATA_RESTORE_CACHE] = {
+        state.entity_id: state for state in states}
+    _LOGGER.debug('Restore cache: %s', hass.data[DATA_RESTORE_CACHE])
+    assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
+        "Duplicate entity_id? {}".format(states)
+    hass.state = ha.CoreState.starting
+    hass.config.components.add(recorder.DOMAIN)

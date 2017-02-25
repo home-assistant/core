@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.5.3']
+REQUIREMENTS = ['pyhydroquebec==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hydroquebec_data = HydroquebecData(username, password)
         hydroquebec_data.update()
     except requests.exceptions.HTTPError as error:
-        _LOGGER.error(error)
+        _LOGGER.error("Failt login: %s", error)
         return False
 
     name = config.get(CONF_NAME)
@@ -155,166 +155,20 @@ class HydroquebecData(object):
 
     def __init__(self, username, password):
         """Initialize the data object."""
-        self.username = username
-        self.password = password
-        self.data = None
-        self.cookies = None
-
-    def _get_login_page(self):
-        """Go to the login page."""
-        from bs4 import BeautifulSoup
-        try:
-            raw_res = requests.get(HOME_URL, timeout=REQUESTS_TIMEOUT)
-        except OSError:
-            _LOGGER.error("Can not connect to login page")
-            return False
-        # Get cookies
-        self.cookies = raw_res.cookies
-        # Get login url
-        soup = BeautifulSoup(raw_res.content, 'html.parser')
-        form_node = soup.find('form', {'name': 'fm'})
-        if form_node is None:
-            _LOGGER.error("No login form find")
-            return False
-        login_url = form_node.attrs.get('action')
-        if login_url is None:
-            _LOGGER.error("Can not found login url")
-            return False
-        return login_url
-
-    def _post_login_page(self, login_url):
-        """Login to HydroQuebec website."""
-        data = {"login": self.username,
-                "_58_password": self.password}
-
-        try:
-            raw_res = requests.post(login_url,
-                                    data=data,
-                                    cookies=self.cookies,
-                                    allow_redirects=False,
-                                    timeout=REQUESTS_TIMEOUT)
-        except OSError:
-            _LOGGER.error("Can not submit login form")
-            return False
-        if raw_res.status_code != 302:
-            _LOGGER.error("Bad HTTP status code")
-            return False
-
-        # Update cookies
-        self.cookies.update(raw_res.cookies)
-        return True
-
-    def _get_p_p_id(self):
-        """Get id of consumption profile."""
-        from bs4 import BeautifulSoup
-        try:
-            raw_res = requests.get(PROFILE_URL,
-                                   cookies=self.cookies,
-                                   timeout=REQUESTS_TIMEOUT)
-        except OSError:
-            _LOGGER.error("Can not get profile page")
-            return False
-        # Update cookies
-        self.cookies.update(raw_res.cookies)
-        # Looking for p_p_id
-        soup = BeautifulSoup(raw_res.content, 'html.parser')
-        p_p_id = None
-        for node in soup.find_all('span'):
-            node_id = node.attrs.get('id', "")
-            print(node_id)
-            if node_id.startswith("p_portraitConsommation_WAR"):
-                p_p_id = node_id[2:]
-                break
-
-        if p_p_id is None:
-            _LOGGER.error("Could not get p_p_id")
-            return False
-
-        return p_p_id
-
-    def _get_monthly_data(self, p_p_id):
-        """Get monthly data."""
-        params = {"p_p_id": p_p_id,
-                  "p_p_lifecycle": 2,
-                  "p_p_resource_id": ("resourceObtenirDonnees"
-                                      "PeriodesConsommation")}
-        try:
-            raw_res = requests.get(PROFILE_URL,
-                                   params=params,
-                                   cookies=self.cookies,
-                                   timeout=REQUESTS_TIMEOUT)
-        except OSError:
-            _LOGGER.error("Can not get monthly data")
-            return False
-        try:
-            json_output = raw_res.json()
-        except OSError:
-            _LOGGER.error("Could not get monthly data")
-            return False
-
-        if not json_output.get('success'):
-            _LOGGER.error("Could not get monthly data")
-            return False
-
-        return json_output.get('results')
-
-    def _get_daily_data(self, p_p_id, start_date, end_date):
-        """Get daily data."""
-        params = {"p_p_id": p_p_id,
-                  "p_p_lifecycle": 2,
-                  "p_p_resource_id":
-                  "resourceObtenirDonneesQuotidiennesConsommation",
-                  "dateDebutPeriode": start_date,
-                  "dateFinPeriode": end_date}
-        try:
-            raw_res = requests.get(PROFILE_URL,
-                                   params=params,
-                                   cookies=self.cookies,
-                                   timeout=REQUESTS_TIMEOUT)
-        except OSError:
-            _LOGGER.error("Can not get daily data")
-            return False
-        try:
-            json_output = raw_res.json()
-        except OSError:
-            _LOGGER.error("Could not get daily data")
-            return False
-
-        if not json_output.get('success'):
-            _LOGGER.error("Could not get daily data")
-            return False
-
-        return json_output.get('results')
+        from pyhydroquebec import HydroQuebecClient
+        self.client = HydroQuebecClient(username,
+                                        password,
+                                        REQUESTS_TIMEOUT)
+        self.data = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from HydroQuebec."""
-        # Get login page
-        login_url = self._get_login_page()
-        if not login_url:
+        from pyhydroquebec.client import PyHydroQuebecError
+        try:
+            self.client.fetch_data()
+        except PyHydroQuebecError as exp:
+            _LOGGER.error("Error on receive last Hydroquebec data: %s", exp)
             return
-        # Post login page
-        if not self._post_login_page(login_url):
-            return
-        # Get p_p_id
-        p_p_id = self._get_p_p_id()
-        if not p_p_id:
-            return
-        # Get Monthly data
-        monthly_data = self._get_monthly_data(p_p_id)[0]
-        if not monthly_data:
-            return
-        # Get daily data
-        start_date = monthly_data.get('dateDebutPeriode')
-        end_date = monthly_data.get('dateFinPeriode')
-        daily_data = self._get_daily_data(p_p_id, start_date, end_date)
-        if not daily_data:
-            return
-        daily_data = daily_data[0]['courant']
-
-        # format data
-        self.data = {}
-        for key1, key2 in MONTHLY_MAP:
-            self.data[key1] = monthly_data[key2]
-        for key1, key2 in DAILY_MAP:
-            self.data[key1] = daily_data[key2]
+        # Update data
+        self.data = self.client.get_data()

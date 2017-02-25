@@ -46,14 +46,14 @@ Polymer({
     var bounds;
 
     if (this._mapItems.length === 0) {
-      bounds = new window.L.latLngBounds(
-        [window.L.latLng(this.locationGPS.latitude, this.locationGPS.longitude)]);
+      this._map.setView(
+        new window.L.LatLng(this.hass.config.core.latitude, this.hass.config.core.longitude),
+        14);
     } else {
       bounds = new window.L.latLngBounds(
         this._mapItems.map(function (item) { return item.getLatLng(); }));
+      this._map.fitBounds(bounds.pad(0.5));
     }
-
-    this._map.fitBounds(bounds.pad(0.5));
   },
 
   drawEntities: function (hass) {

@@ -45,7 +45,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_setup_fails(self): \
             # pylint: disable=invalid-name
         """Test that setup fails with missing required configuration items."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(0):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -58,7 +58,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_state_change_via_topic(self): \
             # pylint: disable=invalid-name
         """Test state change via topic."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -93,7 +93,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_state_brightness_color_effect_change_via_topic(self): \
             # pylint: disable=invalid-name
         """Test state, brightness, color and effect change via topic."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -170,7 +170,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_optimistic(self): \
             # pylint: disable=invalid-name
         """Test optimistic mode."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -196,7 +196,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'on,,--', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
@@ -205,7 +205,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('test_light_rgb/set', 'off', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
@@ -215,12 +215,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(2, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(2, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,50,75-75-75', payload)
 
         # check the state
@@ -232,7 +232,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_flash(self): \
             # pylint: disable=invalid-name
         """Test flash."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -253,12 +253,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,short', payload)
 
         # long flash
@@ -266,17 +266,17 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,long', payload)
 
     def test_transition(self):
         """Test for transition time being sent when included."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -296,12 +296,12 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('on,10', payload)
 
         # transition off
@@ -309,18 +309,18 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
-                         self.mock_publish.mock_calls[-1][1][0])
-        self.assertEqual(0, self.mock_publish.mock_calls[-1][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-1][1][3])
+                         self.mock_publish.mock_calls[-2][1][0])
+        self.assertEqual(0, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
-        payload = self.mock_publish.mock_calls[-1][1][1]
+        payload = self.mock_publish.mock_calls[-2][1][1]
         self.assertEqual('off,4', payload)
 
     def test_invalid_values(self): \
             # pylint: disable=invalid-name
         """Test that invalid values are ignored."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {

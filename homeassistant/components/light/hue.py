@@ -356,6 +356,11 @@ class HueLight(Light):
         """Flag supported features."""
         return SUPPORT_HUE
 
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return [EFFECT_COLORLOOP, EFFECT_RANDOM]
+
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         command = {'on': True}

@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 DOMAIN = 'ffmpeg'
-REQUIREMENTS = ["ha-ffmpeg==1.4"]
+REQUIREMENTS = ["ha-ffmpeg==1.5"]
 
 _LOGGER = logging.getLogger(__name__)
 

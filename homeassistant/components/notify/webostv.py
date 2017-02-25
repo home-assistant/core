@@ -34,14 +34,15 @@ def get_service(hass, config, discovery_info=None):
     path = hass.config.path(config.get(CONF_FILENAME))
     client = WebOsClient(config.get(CONF_HOST), key_file_path=path)
 
-    try:
-        client.register()
-    except PyLGTVPairException:
-        _LOGGER.error("Pairing with TV failed")
-        return None
-    except OSError:
-        _LOGGER.error("TV unreachable")
-        return None
+    if not client.is_registered():
+        try:
+            client.register()
+        except PyLGTVPairException:
+            _LOGGER.error("Pairing with TV failed")
+            return None
+        except OSError:
+            _LOGGER.error("TV unreachable")
+            return None
 
     return LgWebOSNotificationService(client)
 

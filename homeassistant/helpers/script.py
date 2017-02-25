@@ -6,11 +6,12 @@ from typing import Optional, Sequence
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant
-from homeassistant.const import CONF_CONDITION
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
 from homeassistant.helpers import (
     service, condition, template, config_validation as cv)
-from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.event import (
+    async_track_point_in_utc_time, async_track_template)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as date_util
 from homeassistant.util.async import (
@@ -25,6 +26,7 @@ CONF_SEQUENCE = "sequence"
 CONF_EVENT = "event"
 CONF_EVENT_DATA = "event_data"
 CONF_DELAY = "delay"
+CONF_WAIT_TEMPLATE = "wait_template"
 
 
 def call_from_config(hass: HomeAssistant, config: ConfigType,
@@ -47,9 +49,9 @@ class Script():
         self._cur = -1
         self.last_action = None
         self.last_triggered = None
-        self.can_cancel = any(CONF_DELAY in action for action
-                              in self.sequence)
-        self._async_unsub_delay_listener = None
+        self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
+                              in action for action in self.sequence)
+        self._async_listener = []
         self._template_cache = {}
         self._config_cache = {}
 
@@ -74,19 +76,21 @@ class Script():
             self._log('Running script')
             self._cur = 0
 
-        # Unregister callback if we were in a delay but turn on is called
-        # again. In that case we just continue execution.
+        # Unregister callback if we were in a delay or wait but turn on is
+        # called again. In that case we just continue execution.
         self._async_remove_listener()
 
-        for cur, action in islice(enumerate(self.sequence), self._cur,
-                                  None):
+        for cur, action in islice(enumerate(self.sequence), self._cur, None):
 
             if CONF_DELAY in action:
                 # Call ourselves in the future to continue work
-                @asyncio.coroutine
-                def script_delay(now):
+                unsub = None
+
+                @callback
+                def async_script_delay(now):
                     """Called after delay is done."""
-                    self._async_unsub_delay_listener = None
+                    # pylint: disable=cell-var-from-loop
+                    self._async_listener.remove(unsub)
                     self.hass.async_add_job(self.async_run(variables))
 
                 delay = action[CONF_DELAY]
@@ -97,13 +101,43 @@ class Script():
                         cv.positive_timedelta)(
                             delay.async_render(variables))
 
-                self._async_unsub_delay_listener = \
-                    async_track_point_in_utc_time(
-                        self.hass, script_delay,
-                        date_util.utcnow() + delay)
+                unsub = async_track_point_in_utc_time(
+                    self.hass, async_script_delay,
+                    date_util.utcnow() + delay
+                )
+                self._async_listener.append(unsub)
+
                 self._cur = cur + 1
                 if self._change_listener:
                     self.hass.async_add_job(self._change_listener)
+                return
+
+            elif CONF_WAIT_TEMPLATE in action:
+                # Call ourselves in the future to continue work
+                wait_template = action[CONF_WAIT_TEMPLATE]
+                wait_template.hass = self.hass
+
+                # check if condition allready okay
+                if condition.async_template(
+                        self.hass, wait_template, variables):
+                    continue
+
+                @callback
+                def async_script_wait(entity_id, from_s, to_s):
+                    """Called after template condition is true."""
+                    self._async_remove_listener()
+                    self.hass.async_add_job(self.async_run(variables))
+
+                self._async_listener.append(async_track_template(
+                    self.hass, wait_template, async_script_wait))
+
+                self._cur = cur + 1
+                if self._change_listener:
+                    self.hass.async_add_job(self._change_listener)
+
+                if CONF_TIMEOUT in action:
+                    self._async_set_timeout(action, variables)
+
                 return
 
             elif CONF_CONDITION in action:
@@ -166,11 +200,29 @@ class Script():
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 
+    def _async_set_timeout(self, action, variables):
+        """Schedule a timeout to abort script."""
+        timeout = action[CONF_TIMEOUT]
+        unsub = None
+
+        @callback
+        def async_script_timeout(now):
+            """Call after timeout is retrieve stop script."""
+            self._async_listener.remove(unsub)
+            self._log("Timout reach, abort script.")
+            self.async_stop()
+
+        unsub = async_track_point_in_utc_time(
+            self.hass, async_script_timeout,
+            date_util.utcnow() + timeout
+        )
+        self._async_listener.append(unsub)
+
     def _async_remove_listener(self):
         """Remove point in time listener, if any."""
-        if self._async_unsub_delay_listener:
-            self._async_unsub_delay_listener()
-            self._async_unsub_delay_listener = None
+        for unsub in self._async_listener:
+            unsub()
+        self._async_listener.clear()
 
     def _log(self, msg):
         """Logger helper."""

@@ -48,19 +48,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
-    def __init__(self, value, sensor_class):
+    def __init__(self, value, device_class):
         """Initialize the sensor."""
-        self._sensor_type = sensor_class
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self._sensor_type = device_class
+        self._state = self._value.data
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
 
     @property
     def is_on(self):
         """Return True if the binary sensor is on."""
-        return self._value.data
+        return self._state
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._sensor_type
 
     @property
@@ -72,34 +77,31 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, value, sensor_class, hass, re_arm_sec=60):
+    def __init__(self, value, device_class, hass, re_arm_sec=60):
         """Initialize the sensor."""
-        super(ZWaveTriggerSensor, self).__init__(value, sensor_class)
+        super(ZWaveTriggerSensor, self).__init__(value, device_class)
         self._hass = hass
         self.re_arm_sec = re_arm_sec
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
         # If it's active make sure that we set the timeout tracker
-        if value.data:
-            track_point_in_time(
-                self._hass, self.async_update_ha_state,
-                self.invalidate_after)
+        track_point_in_time(
+            self._hass, self.async_update_ha_state,
+            self.invalidate_after)
 
-    def value_changed(self, value):
+    def update_properties(self):
         """Called when a value for this entity's node has changed."""
-        if self._value.value_id == value.value_id:
-            self.schedule_update_ha_state()
-            if value.data:
-                # only allow this value to be true for re_arm secs
-                self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-                    seconds=self.re_arm_sec)
-                track_point_in_time(
-                    self._hass, self.async_update_ha_state,
-                    self.invalidate_after)
+        self._state = self._value.data
+        # only allow this value to be true for re_arm secs
+        self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
+            seconds=self.re_arm_sec)
+        track_point_in_time(
+            self._hass, self.async_update_ha_state,
+            self.invalidate_after)
 
     @property
     def is_on(self):
         """Return True if movement has happened within the rearm time."""
-        return self._value.data and \
+        return self._state and \
             (self.invalidate_after is None or
              self.invalidate_after > dt_util.utcnow())

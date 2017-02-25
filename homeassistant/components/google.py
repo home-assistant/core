@@ -25,8 +25,8 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
-    'google-api-python-client==1.5.5',
-    'oauth2client==3.0.0',
+    'google-api-python-client==1.6.2',
+    'oauth2client==4.0.0',
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -247,7 +247,8 @@ class GoogleCalendarService(object):
         from googleapiclient import discovery as google_discovery
         credentials = Storage(self.token_file).get()
         http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build('calendar', 'v3', http=http)
+        service = google_discovery.build('calendar', 'v3', http=http,
+                                         cache_discovery=False)
         return service
 
 

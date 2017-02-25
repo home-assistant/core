@@ -22,7 +22,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',
@@ -52,7 +52,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',
@@ -72,7 +72,7 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'beer on', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
@@ -80,13 +80,13 @@ class TestSensorMQTT(unittest.TestCase):
         self.hass.block_till_done()
 
         self.assertEqual(('command-topic', 'beer off', 2, False),
-                         self.mock_publish.mock_calls[-1][1])
+                         self.mock_publish.mock_calls[-2][1])
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',

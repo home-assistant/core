@@ -234,11 +234,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self.get_value(class_id=zwave
-                                     .const.COMMAND_CLASS_DOOR_LOCK,
-                                     type=zwave.const.TYPE_BOOL,
-                                     genre=zwave.const.GENRE_USER,
-                                     member='data')
+        self._state = self._value.data
         _LOGGER.debug('Lock state set from Bool value and'
                       ' is %s', self._state)
         notification_data = self.get_value(class_id=zwave.const

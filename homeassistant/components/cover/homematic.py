@@ -10,28 +10,26 @@ properly configured.
 
 import logging
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.components.cover import CoverDevice,\
-    ATTR_POSITION
-from homeassistant.components.homematic import HMDevice
-from homeassistant.loader import get_component
+from homeassistant.components.cover import CoverDevice, ATTR_POSITION
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the platform."""
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
-    return homematic.setup_hmdevice_discovery_helper(
-        hass,
-        HMCover,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMCover(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
 class HMCover(HMDevice, CoverDevice):
@@ -44,18 +42,15 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self.available:
-            return int(self._hm_get_state() * 100)
-        return None
+        return int(self._hm_get_state() * 100)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if self.available:
-            if ATTR_POSITION in kwargs:
-                position = float(kwargs[ATTR_POSITION])
-                position = min(100, max(0, position))
-                level = position / 100.0
-                self._hmdevice.set_level(level, self._channel)
+        if ATTR_POSITION in kwargs:
+            position = float(kwargs[ATTR_POSITION])
+            position = min(100, max(0, position))
+            level = position / 100.0
+            self._hmdevice.set_level(level, self._channel)
 
     @property
     def is_closed(self):
@@ -68,18 +63,15 @@ class HMCover(HMDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.available:
-            self._hmdevice.move_up(self._channel)
+        self._hmdevice.move_up(self._channel)
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.available:
-            self._hmdevice.move_down(self._channel)
+        self._hmdevice.move_down(self._channel)
 
     def stop_cover(self, **kwargs):
         """Stop the device if in motion."""
-        if self.available:
-            self._hmdevice.stop(self._channel)
+        self._hmdevice.stop(self._channel)
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""
