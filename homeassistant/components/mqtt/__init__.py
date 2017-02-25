@@ -17,6 +17,8 @@ from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
@@ -31,7 +33,7 @@ DOMAIN = 'mqtt'
 DATA_MQTT = 'mqtt'
 
 SERVICE_PUBLISH = 'publish'
-EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
+SIGNAL_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
 
 REQUIREMENTS = ['paho-mqtt==1.2']
 
@@ -195,16 +197,15 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
     """Subscribe to an MQTT topic."""
     @callback
-    def async_mqtt_topic_subscriber(event):
+    def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
         """Match subscribed MQTT topic."""
-        if not _match_topic(topic, event.data[ATTR_TOPIC]):
+        if not _match_topic(topic, dp_topic):
             return
 
-        hass.async_run_job(msg_callback, event.data[ATTR_TOPIC],
-                           event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
+        hass.async_run_job(msg_callback, dp_topic, dp_payload, dp_qos)
 
-    async_remove = hass.bus.async_listen(
-        EVENT_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
+    async_remove = async_dispatcher_connect(
+        hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
 
     yield from hass.data[DATA_MQTT].async_subscribe(topic, qos)
     return async_remove
@@ -551,13 +552,11 @@ class MQTT(object):
                           "MQTT topic: %s, Payload: %s", msg.topic,
                           msg.payload)
         else:
-            _LOGGER.debug("Received message on %s: %s",
-                          msg.topic, payload)
-            self.hass.bus.fire(EVENT_MQTT_MESSAGE_RECEIVED, {
-                ATTR_TOPIC: msg.topic,
-                ATTR_QOS: msg.qos,
-                ATTR_PAYLOAD: payload,
-            })
+            _LOGGER.info("Received message on %s: %s", msg.topic, payload)
+            dispatcher_send(
+                self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, payload,
+                msg.qos
+            )
 
     def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Unsubscribe successful callback."""
