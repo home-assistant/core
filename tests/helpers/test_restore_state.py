@@ -11,7 +11,8 @@ from homeassistant.components import input_boolean, recorder
 from homeassistant.helpers.restore_state import (
     async_get_last_state, DATA_RESTORE_CACHE)
 
-from tests.common import get_test_home_assistant, init_recorder_component
+from tests.common import (
+    get_test_home_assistant, mock_coro, init_recorder_component)
 
 
 @asyncio.coroutine
@@ -29,7 +30,9 @@ def test_caching_data(hass):
     with patch('homeassistant.helpers.restore_state.last_recorder_run',
                return_value=MagicMock(end=dt_util.utcnow())), \
             patch('homeassistant.helpers.restore_state.get_states',
-                  return_value=states):
+                  return_value=states), \
+            patch('homeassistant.helpers.restore_state.async_get_instance',
+                  return_value=mock_coro()):
         state = yield from async_get_last_state(hass, 'input_boolean.b1')
 
     assert DATA_RESTORE_CACHE in hass.data
