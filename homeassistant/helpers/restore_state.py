@@ -6,7 +6,8 @@ from datetime import timedelta
 from homeassistant.core import HomeAssistant, CoreState, callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.history import get_states, last_recorder_run
-from homeassistant.components.recorder import DOMAIN as _RECORDER
+from homeassistant.components.recorder import (
+    async_get_instance, DOMAIN as _RECORDER)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +57,8 @@ def async_get_last_state(hass, entity_id: str):
         _LOGGER.error("Cache can only be loaded during startup, not %s",
                       hass.state)
         return None
+
+    yield from async_get_instance()  # Ensure recorder ready
 
     if _LOCK not in hass.data:
         hass.data[_LOCK] = asyncio.Lock(loop=hass.loop)
