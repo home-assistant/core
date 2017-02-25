@@ -7,6 +7,7 @@ to query this database.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
+import asyncio
 import logging
 import queue
 import threading
@@ -20,7 +21,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
@@ -83,7 +84,18 @@ def session_scope():
         session.close()
 
 
-def get_instance() -> None:
+@asyncio.coroutine
+def async_get_instance():
+    """Throw error if recorder not initialized."""
+    if _INSTANCE is None:
+        raise RuntimeError("Recorder not initialized.")
+
+    yield from _INSTANCE.async_db_ready.wait()
+
+    return _INSTANCE
+
+
+def get_instance():
     """Throw error if recorder not initialized."""
     if _INSTANCE is None:
         raise RuntimeError("Recorder not initialized.")
@@ -200,7 +212,7 @@ class Recorder(threading.Thread):
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
         self.db_ready = threading.Event()
-        self.start_recording = threading.Event()
+        self.async_db_ready = asyncio.Event(loop=hass.loop)
         self.engine = None  # type: Any
         self._run = None  # type: Any
 
@@ -209,11 +221,6 @@ class Recorder(threading.Thread):
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
 
-        def start_recording(event):
-            """Start recording."""
-            self.start_recording.set()
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_recording)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.shutdown)
         hass.bus.listen(MATCH_ALL, self.event_listener)
 
@@ -229,6 +236,7 @@ class Recorder(threading.Thread):
                 self._setup_connection()
                 self._setup_run()
                 self.db_ready.set()
+                self.async_db_ready.set()
                 break
             except SQLAlchemyError as err:
                 _LOGGER.error("Error during connection setup: %s (retrying "
@@ -238,8 +246,6 @@ class Recorder(threading.Thread):
         if self.purge_days is not None:
             async_track_time_interval(
                 self.hass, self._purge_old_data, timedelta(days=2))
-
-        _wait(self.start_recording, "Waiting to start recording", 90)
 
         while True:
             event = self.queue.get()
@@ -297,9 +303,6 @@ class Recorder(threading.Thread):
         """Tell the recorder to shut down."""
         global _INSTANCE  # pylint: disable=global-statement
         self.queue.put(None)
-        if not self.start_recording.is_set():
-            _LOGGER.warning("Recorder never started correctly")
-            self.start_recording.set()
         self.join()
         _INSTANCE = None
 
@@ -499,13 +502,13 @@ class Recorder(threading.Thread):
         return False
 
 
-def _wait(event, message, interval=15):
+def _wait(event, message):
     """Event wait helper."""
-    for mult in range(1, 4):
-        event.wait(interval)
+    for retry in (10, 20, 30):
+        event.wait(10)
         if event.is_set():
             return
-        msg = "{} ({} seconds)".format(message, interval*mult)
+        msg = "{} ({} seconds)".format(message, retry)
         _LOGGER.warning(msg)
     if not event.is_set():
         raise HomeAssistantError(msg)
