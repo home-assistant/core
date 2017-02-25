@@ -1,15 +1,18 @@
 """Test the bootstrapping."""
 # pylint: disable=protected-access
+import asyncio
 import os
 from unittest import mock
 import threading
 import logging
 
 import voluptuous as vol
+import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.config as config_util
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant import bootstrap, loader
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -61,7 +64,7 @@ class TestBootstrap:
     @mock.patch('homeassistant.bootstrap.async_register_signal_handling')
     def test_from_config_file(self, mock_upgrade, mock_detect, mock_signal):
         """Test with configuration file."""
-        components = ['browser', 'conversation', 'script']
+        components = set(['browser', 'conversation', 'script'])
         files = {
             'config.yaml': ''.join(
                 '{}:\n'.format(comp)
@@ -71,13 +74,13 @@ class TestBootstrap:
 
         with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
                 mock.patch('os.access', mock.Mock(return_value=True)), \
-                mock.patch('homeassistant.bootstrap.enable_logging',
+                mock.patch('homeassistant.bootstrap.async_enable_logging',
                            mock.Mock(return_value=True)), \
                 patch_yaml_files(files, True):
             self.hass = bootstrap.from_config_file('config.yaml')
 
-        components.append('group')
-        assert sorted(components) == sorted(self.hass.config.components)
+        components.add('group')
+        assert components == self.hass.config.components
 
     def test_handle_setup_circular_dependency(self):
         """Test the setup of circular dependencies."""
@@ -91,7 +94,7 @@ class TestBootstrap:
         loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
 
         bootstrap.setup_component(self.hass, 'comp_a')
-        assert ['comp_a'] == self.hass.config.components
+        assert set(['comp_a']) == self.hass.config.components
 
     def test_validate_component_config(self):
         """Test validating component configuration."""
@@ -251,7 +254,7 @@ class TestBootstrap:
 
         thread = threading.Thread(target=setup_component)
         thread.start()
-        self.hass.config.components.append('comp')
+        self.hass.config.components.add('comp')
 
         thread.join()
 
@@ -289,7 +292,7 @@ class TestBootstrap:
         assert not bootstrap.setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
-    @mock.patch('homeassistant.bootstrap.enable_logging')
+    @mock.patch('homeassistant.bootstrap.async_enable_logging')
     @mock.patch('homeassistant.bootstrap.async_register_signal_handling')
     def test_home_assistant_core_config_validation(self, log_mock, sig_mock):
         """Test if we pass in wrong information for HA conf."""
@@ -440,3 +443,27 @@ class TestBootstrap:
         self.hass.start()
 
         assert call_order == [1, 1, 2]
+
+
+@asyncio.coroutine
+def test_component_cannot_depend_config(hass):
+    """Test config is not allowed to be a dependency."""
+    loader.set_component(
+        'test_component1',
+        MockModule('test_component1', dependencies=['config']))
+
+    with pytest.raises(HomeAssistantError):
+        yield from bootstrap.async_from_config_dict(
+            {'test_component1': None}, hass)
+
+
+@asyncio.coroutine
+def test_platform_cannot_depend_config():
+    """Test config is not allowed to be a dependency."""
+    loader.set_component(
+        'test_component1.test',
+        MockPlatform('whatever', dependencies=['config']))
+
+    with pytest.raises(HomeAssistantError):
+        yield from bootstrap.async_prepare_setup_platform(
+            mock.MagicMock(), {}, 'test_component1', 'test')

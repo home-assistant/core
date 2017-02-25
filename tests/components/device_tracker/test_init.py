@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import os
 
 from homeassistant.components import zone
-from homeassistant.core import callback
+from homeassistant.core import callback, State
 from homeassistant.bootstrap import setup_component
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
@@ -24,7 +24,7 @@ from homeassistant.remote import JSONEncoder
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
-    patch_yaml_files, assert_setup_component)
+    patch_yaml_files, assert_setup_component, mock_restore_cache)
 
 from ...test_util.aiohttp import mock_aiohttp_client
 
@@ -48,10 +48,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
-        try:
+        if os.path.isfile(self.yaml_devices):
             os.remove(self.yaml_devices)
-        except FileNotFoundError:
-            pass
 
         self.hass.stop()
 
@@ -658,3 +656,33 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             setup_component(self.hass, device_tracker.DOMAIN,
                             {device_tracker.DOMAIN: {
                                 device_tracker.CONF_CONSIDER_HOME: -1}})
+
+
+@asyncio.coroutine
+def test_async_added_to_hass(hass):
+    """Test resoring state."""
+    attr = {
+        device_tracker.ATTR_LONGITUDE: 18,
+        device_tracker.ATTR_LATITUDE: -33,
+        device_tracker.ATTR_LATITUDE: -33,
+        device_tracker.ATTR_SOURCE_TYPE: 'gps',
+        device_tracker.ATTR_GPS_ACCURACY: 2,
+        device_tracker.ATTR_BATTERY: 100
+    }
+    mock_restore_cache(hass, [State('device_tracker.jk', 'home', attr)])
+
+    path = hass.config.path(device_tracker.YAML_DEVICES)
+
+    files = {
+        path: 'jk:\n  name: JK Phone\n  track: True',
+    }
+    with patch_yaml_files(files):
+        yield from device_tracker.async_setup(hass, {})
+
+    state = hass.states.get('device_tracker.jk')
+    assert state
+    assert state.state == 'home'
+
+    for key, val in attr.items():
+        atr = state.attributes.get(key)
+        assert atr == val, "{}={} expected: {}".format(key, atr, val)

@@ -43,7 +43,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
 
             dev_id = 'paulus'
             topic = '/location/paulus'
-            self.hass.config.components = ['mqtt', 'zone']
+            self.hass.config.components = set(['mqtt', 'zone'])
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'mqtt',
@@ -59,7 +59,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         topic = '/location/paulus'
         location = 'work'
 
-        self.hass.config.components = ['mqtt', 'zone']
+        self.hass.config.components = set(['mqtt', 'zone'])
         assert setup_component(self.hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'mqtt',

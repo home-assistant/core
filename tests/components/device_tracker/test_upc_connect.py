@@ -30,7 +30,7 @@ class TestUPCConnect(object):
     def setup_method(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['zone']
+        self.hass.config.components = set(['zone'])
 
         self.host = "127.0.0.1"
 

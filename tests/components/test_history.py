@@ -1,5 +1,5 @@
 """The tests the History component."""
-# pylint: disable=protected-access
+# pylint: disable=protected-access,invalid-name
 from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
@@ -10,68 +10,47 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder
 
 from tests.common import (
-    mock_http_component, mock_state_change_event, get_test_home_assistant)
+    init_recorder_component, mock_http_component, mock_state_change_event,
+    get_test_home_assistant)
 
 
 class TestComponentHistory(unittest.TestCase):
     """Test History component."""
 
-    # pylint: disable=invalid-name
-    def setUp(self):
+    def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
-    # pylint: disable=invalid-name
-    def tearDown(self):
+    def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
 
     def init_recorder(self):
         """Initialize the recorder."""
-        db_uri = 'sqlite://'
-        with patch('homeassistant.core.Config.path', return_value=db_uri):
-            setup_component(self.hass, recorder.DOMAIN, {
-                "recorder": {
-                    "db_url": db_uri}})
+        init_recorder_component(self.hass)
         self.hass.start()
-        recorder._INSTANCE.block_till_db_ready()
+        recorder.get_instance().block_till_db_ready()
         self.wait_recording_done()
 
     def wait_recording_done(self):
         """Block till recording is done."""
         self.hass.block_till_done()
-        recorder._INSTANCE.block_till_done()
+        recorder.get_instance().block_till_done()
 
     def test_setup(self):
         """Test setup method of history."""
         mock_http_component(self.hass)
         config = history.CONFIG_SCHEMA({
-            ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
+            # ha.DOMAIN: {},
+            history.DOMAIN: {
+                history.CONF_INCLUDE: {
                     history.CONF_DOMAINS: ['media_player'],
                     history.CONF_ENTITIES: ['thermostat.test']},
                 history.CONF_EXCLUDE: {
                     history.CONF_DOMAINS: ['thermostat'],
                     history.CONF_ENTITIES: ['media_player.test']}}})
-        self.assertTrue(setup_component(self.hass, history.DOMAIN, config))
-
-    def test_last_5_states(self):
-        """Test retrieving the last 5 states."""
         self.init_recorder()
-        states = []
-
-        entity_id = 'test.last_5_states'
-
-        for i in range(7):
-            self.hass.states.set(entity_id, "State {}".format(i))
-
-            self.wait_recording_done()
-
-            if i > 1:
-                states.append(self.hass.states.get(entity_id))
-
-        self.assertEqual(
-            list(reversed(states)), history.last_5_states(entity_id))
+        self.assertTrue(setup_component(self.hass, history.DOMAIN, config))
 
     def test_get_states(self):
         """Test getting states at a specific point in time."""
@@ -121,6 +100,7 @@ class TestComponentHistory(unittest.TestCase):
         entity_id = 'media_player.test'
 
         def set_state(state):
+            """Set the state."""
             self.hass.states.set(entity_id, state)
             self.wait_recording_done()
             return self.hass.states.get(entity_id)
@@ -311,7 +291,8 @@ class TestComponentHistory(unittest.TestCase):
 
         config = history.CONFIG_SCHEMA({
             ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
+            history.DOMAIN: {
+                history.CONF_INCLUDE: {
                     history.CONF_DOMAINS: ['media_player']},
                 history.CONF_EXCLUDE: {
                     history.CONF_DOMAINS: ['media_player']}}})
@@ -332,7 +313,8 @@ class TestComponentHistory(unittest.TestCase):
 
         config = history.CONFIG_SCHEMA({
             ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
+            history.DOMAIN: {
+                history.CONF_INCLUDE: {
                     history.CONF_ENTITIES: ['media_player.test']},
                 history.CONF_EXCLUDE: {
                     history.CONF_ENTITIES: ['media_player.test']}}})
@@ -351,7 +333,8 @@ class TestComponentHistory(unittest.TestCase):
 
         config = history.CONFIG_SCHEMA({
             ha.DOMAIN: {},
-            history.DOMAIN: {history.CONF_INCLUDE: {
+            history.DOMAIN: {
+                history.CONF_INCLUDE: {
                     history.CONF_DOMAINS: ['media_player'],
                     history.CONF_ENTITIES: ['thermostat.test']},
                 history.CONF_EXCLUDE: {
@@ -359,7 +342,8 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
-    def check_significant_states(self, zero, four, states, config):
+    def check_significant_states(self, zero, four, states, config): \
+            # pylint: disable=no-self-use
         """Check if significant states are retrieved."""
         filters = history.Filters()
         exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)
@@ -390,6 +374,7 @@ class TestComponentHistory(unittest.TestCase):
         script_c = 'script.can_cancel_this_one'
 
         def set_state(entity_id, state, **kwargs):
+            """Set the state."""
             self.hass.states.set(entity_id, state, **kwargs)
             self.wait_recording_done()
             return self.hass.states.get(entity_id)

@@ -15,12 +15,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDevice,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    SENSOR_CLASSES_SCHEMA)
+    DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ENTITY_ID,
     CONF_SENSOR_CLASS,
+    CONF_DEVICE_CLASS,
     STATE_UNKNOWN,)
+from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_state_change
 
@@ -34,8 +36,8 @@ SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_ATTRIBUTE): cv.string,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_INVERT, default=False): cv.boolean,
-    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA
-
+    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -52,7 +54,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entity_id = device_config[ATTR_ENTITY_ID]
         attribute = device_config.get(CONF_ATTRIBUTE)
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
-        sensor_class = device_config[CONF_SENSOR_CLASS]
+        device_class = get_deprecated(
+            device_config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
         invert = device_config[CONF_INVERT]
 
         sensors.append(
@@ -62,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 friendly_name,
                 entity_id,
                 attribute,
-                sensor_class,
+                device_class,
                 invert)
             )
     if not sensors:
@@ -76,7 +79,7 @@ class SensorTrend(BinarySensorDevice):
     """Representation of a trend Sensor."""
 
     def __init__(self, hass, device_id, friendly_name,
-                 target_entity, attribute, sensor_class, invert):
+                 target_entity, attribute, device_class, invert):
         """Initialize the sensor."""
         self._hass = hass
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id,
@@ -84,7 +87,7 @@ class SensorTrend(BinarySensorDevice):
         self._name = friendly_name
         self._target_entity = target_entity
         self._attribute = attribute
-        self._sensor_class = sensor_class
+        self._device_class = device_class
         self._invert = invert
         self._state = None
         self.from_state = None
@@ -111,9 +114,9 @@ class SensorTrend(BinarySensorDevice):
         return self._state
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the sensor class of the sensor."""
-        return self._sensor_class
+        return self._device_class
 
     @property
     def should_poll(self):

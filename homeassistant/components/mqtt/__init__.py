@@ -4,6 +4,7 @@ Support for MQTT message handling.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
+import asyncio
 import logging
 import os
 import socket
@@ -12,11 +13,12 @@ import time
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import prepare_setup_platform
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv
-from homeassistant.helpers.event import threaded_listener_factory
+from homeassistant.util.async import (
+    run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
     CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
@@ -26,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt'
 
-MQTT_CLIENT = None
+DATA_MQTT = 'mqtt'
 
 SERVICE_PUBLISH = 'publish'
 EVENT_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
@@ -171,9 +173,15 @@ def _build_publish_data(topic, qos, retain):
 
 def publish(hass, topic, payload, qos=None, retain=None):
     """Publish message to an MQTT topic."""
+    hass.add_job(async_publish, hass, topic, payload, qos, retain)
+
+
+@callback
+def async_publish(hass, topic, payload, qos=None, retain=None):
+    """Publish message to an MQTT topic."""
     data = _build_publish_data(topic, qos, retain)
     data[ATTR_PAYLOAD] = payload
-    hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_PUBLISH, data))
 
 
 def publish_template(hass, topic, payload_template, qos=None, retain=None):
@@ -183,11 +191,11 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
     hass.services.call(DOMAIN, SERVICE_PUBLISH, data)
 
 
-@callback
+@asyncio.coroutine
 def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
     """Subscribe to an MQTT topic."""
     @callback
-    def mqtt_topic_subscriber(event):
+    def async_mqtt_topic_subscriber(event):
         """Match subscribed MQTT topic."""
         if not _match_topic(topic, event.data[ATTR_TOPIC]):
             return
@@ -195,61 +203,82 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
         hass.async_run_job(msg_callback, event.data[ATTR_TOPIC],
                            event.data[ATTR_PAYLOAD], event.data[ATTR_QOS])
 
-    async_remove = hass.bus.async_listen(EVENT_MQTT_MESSAGE_RECEIVED,
-                                         mqtt_topic_subscriber)
+    async_remove = hass.bus.async_listen(
+        EVENT_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
 
-    # Future: track subscriber count and unsubscribe in remove
-    MQTT_CLIENT.subscribe(topic, qos)
-
+    yield from hass.data[DATA_MQTT].async_subscribe(topic, qos)
     return async_remove
 
 
-# pylint: disable=invalid-name
-subscribe = threaded_listener_factory(async_subscribe)
+def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+    """Subscribe to an MQTT topic."""
+    async_remove = run_coroutine_threadsafe(
+        async_subscribe(hass, topic, msg_callback, qos),
+        hass.loop
+    ).result()
+
+    def remove():
+        """Remove listener convert."""
+        run_callback_threadsafe(hass.loop, async_remove).result()
+
+    return remove
 
 
-def _setup_server(hass, config):
-    """Try to start embedded MQTT broker."""
+@asyncio.coroutine
+def _async_setup_server(hass, config):
+    """Try to start embedded MQTT broker.
+
+    This method is a coroutine.
+    """
     conf = config.get(DOMAIN, {})
 
-    # Only setup if embedded config passed in or no broker specified
-    if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
-        return None
-
-    server = prepare_setup_platform(hass, config, DOMAIN, 'server')
+    server = yield from async_prepare_setup_platform(
+        hass, config, DOMAIN, 'server')
 
     if server is None:
         _LOGGER.error("Unable to load embedded server")
         return None
 
-    success, broker_config = server.start(hass, conf.get(CONF_EMBEDDED))
+    success, broker_config = \
+        yield from server.async_start(hass, conf.get(CONF_EMBEDDED))
 
     return success and broker_config
 
 
-def _setup_discovery(hass, config):
-    """Try to start the discovery of MQTT devices."""
+@asyncio.coroutine
+def _async_setup_discovery(hass, config):
+    """Try to start the discovery of MQTT devices.
+
+    This method is a coroutine.
+    """
     conf = config.get(DOMAIN, {})
 
-    discovery = prepare_setup_platform(hass, config, DOMAIN, 'discovery')
+    discovery = yield from async_prepare_setup_platform(
+        hass, config, DOMAIN, 'discovery')
 
     if discovery is None:
         _LOGGER.error("Unable to load MQTT discovery")
         return None
 
-    success = discovery.async_start(hass, conf[CONF_DISCOVERY_PREFIX], config)
+    success = yield from discovery.async_start(
+        hass, conf[CONF_DISCOVERY_PREFIX], config)
 
     return success
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Start the MQTT protocol service."""
     conf = config.get(DOMAIN, {})
 
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
 
-    broker_config = _setup_server(hass, config)
+    # Only setup if embedded config passed in or no broker specified
+    if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
+        broker_config = None
+    else:
+        broker_config = yield from _async_setup_server(hass, config)
 
     if CONF_BROKER in conf:
         broker = conf[CONF_BROKER]
@@ -283,27 +312,36 @@ def setup(hass, config):
     will_message = conf.get(CONF_WILL_MESSAGE)
     birth_message = conf.get(CONF_BIRTH_MESSAGE)
 
-    global MQTT_CLIENT
     try:
-        MQTT_CLIENT = MQTT(hass, broker, port, client_id, keepalive,
-                           username, password, certificate, client_key,
-                           client_cert, tls_insecure, protocol, will_message,
-                           birth_message)
+        hass.data[DATA_MQTT] = MQTT(
+            hass, broker, port, client_id, keepalive, username, password,
+            certificate, client_key, client_cert, tls_insecure, protocol,
+            will_message, birth_message)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker itself")
         return False
 
-    def stop_mqtt(event):
+    @asyncio.coroutine
+    def async_stop_mqtt(event):
         """Stop MQTT component."""
-        MQTT_CLIENT.stop()
+        yield from hass.data[DATA_MQTT].async_stop()
 
-    def start_mqtt(event):
+    @asyncio.coroutine
+    def async_start_mqtt(event):
         """Launch MQTT component when Home Assistant starts up."""
-        MQTT_CLIENT.start()
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_mqtt)
+        yield from hass.data[DATA_MQTT].async_start()
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
-    def publish_service(call):
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_mqtt)
+
+    success = yield from hass.data[DATA_MQTT].async_connect()
+
+    if not success:
+        return False
+
+    @asyncio.coroutine
+    def async_publish_service(call):
         """Handle MQTT publish service calls."""
         msg_topic = call.data[ATTR_TOPIC]
         payload = call.data.get(ATTR_PAYLOAD)
@@ -312,26 +350,28 @@ def setup(hass, config):
         retain = call.data[ATTR_RETAIN]
         try:
             if payload_template is not None:
-                payload = template.Template(payload_template, hass).render()
+                payload = \
+                    template.Template(payload_template, hass).async_render()
         except template.jinja2.TemplateError as exc:
             _LOGGER.error(
                 "Unable to publish to '%s': rendering payload template of "
                 "'%s' failed because %s",
                 msg_topic, payload_template, exc)
             return
-        MQTT_CLIENT.publish(msg_topic, payload, qos, retain)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_mqtt)
+        yield from hass.data[DATA_MQTT].async_publish(
+            msg_topic, payload, qos, retain)
 
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
 
-    hass.services.register(DOMAIN, SERVICE_PUBLISH, publish_service,
-                           descriptions.get(SERVICE_PUBLISH),
-                           schema=MQTT_PUBLISH_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_PUBLISH, async_publish_service,
+        descriptions.get(SERVICE_PUBLISH), schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
-        _setup_discovery(hass, config)
+        yield from _async_setup_discovery(hass, config)
 
     return True
 
@@ -346,9 +386,15 @@ class MQTT(object):
         import paho.mqtt.client as mqtt
 
         self.hass = hass
+        self.broker = broker
+        self.port = port
+        self.keepalive = keepalive
         self.topics = {}
         self.progress = {}
         self.birth_message = birth_message
+        self._mqttc = None
+        self._subscribe_lock = asyncio.Lock(loop=hass.loop)
+        self._publish_lock = asyncio.Lock(loop=hass.loop)
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31
@@ -364,8 +410,8 @@ class MQTT(object):
             self._mqttc.username_pw_set(username, password)
 
         if certificate is not None:
-            self._mqttc.tls_set(certificate, certfile=client_cert,
-                                keyfile=client_key)
+            self._mqttc.tls_set(
+                certificate, certfile=client_cert, keyfile=client_key)
 
         if tls_insecure is not None:
             self._mqttc.tls_insecure_set(tls_insecure)
@@ -375,40 +421,86 @@ class MQTT(object):
         self._mqttc.on_connect = self._mqtt_on_connect
         self._mqttc.on_disconnect = self._mqtt_on_disconnect
         self._mqttc.on_message = self._mqtt_on_message
+
         if will_message:
             self._mqttc.will_set(will_message.get(ATTR_TOPIC),
                                  will_message.get(ATTR_PAYLOAD),
                                  will_message.get(ATTR_QOS),
                                  will_message.get(ATTR_RETAIN))
-        self._mqttc.connect(broker, port, keepalive)
 
-    def publish(self, topic, payload, qos, retain):
-        """Publish a MQTT message."""
-        self._mqttc.publish(topic, payload, qos, retain)
+    @asyncio.coroutine
+    def async_publish(self, topic, payload, qos, retain):
+        """Publish a MQTT message.
 
-    def start(self):
-        """Run the MQTT client."""
-        self._mqttc.loop_start()
+        This method must be run in the event loop and returns a coroutine.
+        """
+        with (yield from self._publish_lock):
+            yield from self.hass.loop.run_in_executor(
+                None, self._mqttc.publish, topic, payload, qos, retain)
 
-    def stop(self):
-        """Stop the MQTT client."""
-        self._mqttc.disconnect()
-        self._mqttc.loop_stop()
+    @asyncio.coroutine
+    def async_connect(self):
+        """Connect to the host. Does not process messages yet.
 
-    def subscribe(self, topic, qos):
-        """Subscribe to a topic."""
-        assert isinstance(topic, str)
+        This method must be run in the event loop and returns a coroutine.
+        """
+        result = yield from self.hass.loop.run_in_executor(
+            None, self._mqttc.connect, self.broker, self.port, self.keepalive)
+
+        if result != 0:
+            import paho.mqtt.client as mqtt
+            _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
+
+        return not result
+
+    def async_start(self):
+        """Run the MQTT client.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(None, self._mqttc.loop_start)
+
+    def async_stop(self):
+        """Stop the MQTT client.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        def stop():
+            """Stop the MQTT client."""
+            self._mqttc.disconnect()
+            self._mqttc.loop_stop()
+
+        return self.hass.loop.run_in_executor(None, stop)
+
+    @asyncio.coroutine
+    def async_subscribe(self, topic, qos):
+        """Subscribe to a topic.
+
+        This method is a coroutine.
+        """
+        if not isinstance(topic, str):
+            raise HomeAssistantError("topic need to be a string!")
 
         if topic in self.topics:
             return
-        result, mid = self._mqttc.subscribe(topic, qos)
+
+        with (yield from self._subscribe_lock):
+            result, mid = yield from self.hass.loop.run_in_executor(
+                None, self._mqttc.subscribe, topic, qos)
+
         _raise_on_error(result)
         self.progress[mid] = topic
         self.topics[topic] = None
 
-    def unsubscribe(self, topic):
-        """Unsubscribe from topic."""
-        result, mid = self._mqttc.unsubscribe(topic)
+    @asyncio.coroutine
+    def async_unsubscribe(self, topic):
+        """Unsubscribe from topic.
+
+        This method is a coroutine.
+        """
+        result, mid = yield from self.hass.loop.run_in_executor(
+            None, self._mqttc.unsubscribe, topic)
+
         _raise_on_error(result)
         self.progress[mid] = topic
 
@@ -418,14 +510,11 @@ class MQTT(object):
         Resubscribe to all topics we were subscribed to and publish birth
         message.
         """
-        if result_code != 0:
-            _LOGGER.error('Unable to connect to the MQTT broker: %s', {
-                1: 'Incorrect protocol version',
-                2: 'Invalid client identifier',
-                3: 'Server unavailable',
-                4: 'Bad username or password',
-                5: 'Not authorised'
-            }.get(result_code, 'Unknown reason'))
+        import paho.mqtt.client as mqtt
+
+        if result_code != mqtt.CONNACK_ACCEPTED:
+            _LOGGER.error('Unable to connect to the MQTT broker: %s',
+                          mqtt.connack_string(result_code))
             self._mqttc.disconnect()
             return
 
@@ -437,12 +526,14 @@ class MQTT(object):
         for topic, qos in old_topics.items():
             # qos is None if we were in process of subscribing
             if qos is not None:
-                self.subscribe(topic, qos)
+                self.hass.add_job(self.async_subscribe, topic, qos)
+
         if self.birth_message:
-            self.publish(self.birth_message.get(ATTR_TOPIC),
-                         self.birth_message.get(ATTR_PAYLOAD),
-                         self.birth_message.get(ATTR_QOS),
-                         self.birth_message.get(ATTR_RETAIN))
+            self.hass.add_job(self.async_publish(
+                self.birth_message.get(ATTR_TOPIC),
+                self.birth_message.get(ATTR_PAYLOAD),
+                self.birth_message.get(ATTR_QOS),
+                self.birth_message.get(ATTR_RETAIN)))
 
     def _mqtt_on_subscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Subscribe successful callback."""
@@ -513,7 +604,10 @@ class MQTT(object):
 def _raise_on_error(result):
     """Raise error if error result."""
     if result != 0:
-        raise HomeAssistantError('Error talking to MQTT: {}'.format(result))
+        import paho.mqtt.client as mqtt
+
+        raise HomeAssistantError(
+            'Error talking to MQTT: {}'.format(mqtt.error_string(result)))
 
 
 def _match_topic(subscription, topic):

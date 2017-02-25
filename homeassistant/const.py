@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 38
-PATCH_VERSION = '4'
+MINOR_VERSION = 39
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -77,7 +77,10 @@ CONF_COMMAND_STOP = 'command_stop'
 CONF_CONDITION = 'condition'
 CONF_COVERS = 'covers'
 CONF_CUSTOMIZE = 'customize'
+CONF_CUSTOMIZE_DOMAIN = 'customize_domain'
+CONF_CUSTOMIZE_GLOB = 'customize_glob'
 CONF_DEVICE = 'device'
+CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
@@ -155,6 +158,7 @@ CONF_ZONE = 'zone'
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'
 EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
+EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
@@ -253,6 +257,7 @@ ATTR_DISCOVERED = 'discovered'
 ATTR_LOCATION = 'location'
 
 ATTR_BATTERY_LEVEL = 'battery_level'
+ATTR_WAKEUP = 'wake_up_interval'
 
 # For devices which support a code attribute
 ATTR_CODE = 'code'
@@ -289,6 +294,9 @@ ATTR_OPTION = 'option'
 
 # Bitfield of supported component features for the entity
 ATTR_SUPPORTED_FEATURES = 'supported_features'
+
+# Class of device within its domain
+ATTR_DEVICE_CLASS = 'device_class'
 
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'

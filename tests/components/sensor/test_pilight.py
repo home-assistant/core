@@ -23,7 +23,7 @@ def setup_function():
     global HASS
 
     HASS = get_test_home_assistant()
-    HASS.config.components = ['pilight']
+    HASS.config.components = set(['pilight'])
 
 
 # pylint: disable=invalid-name

@@ -30,6 +30,8 @@ if False:
 
 PREPARED = False
 
+DEPENDENCY_BLACKLIST = set(('config',))
+
 # List of available components
 AVAILABLE_COMPONENTS = []  # type: List[str]
 
@@ -195,8 +197,8 @@ def load_order_components(components: Sequence[str]) -> OrderedSet:
         load_order.update(comp_load_order)
 
     # Push some to first place in load order
-    for comp in ('mqtt_eventstream', 'mqtt', 'logger',
-                 'recorder', 'introduction'):
+    for comp in ('mqtt_eventstream', 'mqtt', 'recorder',
+                 'introduction', 'logger'):
         if comp in load_order:
             load_order.promote(comp)
 

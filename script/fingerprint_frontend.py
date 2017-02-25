@@ -14,7 +14,8 @@ def fingerprint():
     """Fingerprint the frontend files."""
     files = (glob.glob(base_dir + '**/*.html') +
              glob.glob(base_dir + '*.html') +
-             glob.glob(base_dir + 'core.js'))
+             glob.glob(base_dir + 'core.js') +
+             glob.glob(base_dir + 'compatibility.js'))
 
     md5s = OrderedDict()
 
