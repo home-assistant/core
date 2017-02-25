@@ -309,7 +309,7 @@ def async_process_ha_core_config(hass, config):
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
     cust_domain = dict(config[CONF_CUSTOMIZE_DOMAIN])
-    cust_glob = dict(config[CONF_CUSTOMIZE_GLOB])
+    cust_glob = OrderedDict(config[CONF_CUSTOMIZE_GLOB])
 
     for name, pkg in config[CONF_PACKAGES].items():
         pkg_cust = pkg.get(CONF_CORE)
