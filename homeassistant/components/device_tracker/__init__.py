@@ -25,6 +25,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -132,6 +133,12 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
 
+    # added_to_hass
+    add_tasks = [device.async_added_to_hass() for device in devices
+                 if device.track]
+    if add_tasks:
+        yield from asyncio.wait(add_tasks, loop=hass.loop)
+
     # update tracked devices
     update_tasks = [device.async_update_ha_state() for device in devices
                     if device.track]
@@ -167,8 +174,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                 raise HomeAssistantError("Invalid device_tracker platform.")
 
             if scanner:
-                yield from async_setup_scanner_platform(
-                    hass, p_config, scanner, tracker.async_see)
+                async_setup_scanner_platform(
+                    hass, p_config, scanner, tracker.async_see, p_type)
                 return
 
             if not setup:
@@ -561,6 +568,26 @@ class Device(Entity):
             if resp is not None:
                 yield from resp.release()
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._state = state.state
+
+        for attr, var in (
+                (ATTR_SOURCE_TYPE, 'source_type'),
+                (ATTR_GPS_ACCURACY, 'gps_accuracy'),
+                (ATTR_BATTERY, 'battery'),
+        ):
+            if attr in state.attributes:
+                setattr(self, var, state.attributes[attr])
+
+        if ATTR_LONGITUDE in state.attributes:
+            self.gps = (state.attributes[ATTR_LATITUDE],
+                        state.attributes[ATTR_LONGITUDE])
+
 
 class DeviceScanner(object):
     """Device scanner object."""
@@ -638,14 +665,16 @@ def async_load_config(path: str, hass: HomeAssistantType,
         return []
 
 
-@asyncio.coroutine
+@callback
 def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
-                                 scanner: Any, async_see_device: Callable):
+                                 scanner: Any, async_see_device: Callable,
+                                 platform: str):
     """Helper method to connect scanner-based platform to device tracker.
 
-    This method is a coroutine.
+    This method must be run in the event loop.
     """
     interval = config.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
+    update_lock = asyncio.Lock(loop=hass.loop)
     scanner.hass = hass
 
     # Initial scan of each mac we also tell about host name for config
@@ -654,7 +683,14 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     @asyncio.coroutine
     def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Called when interval matches."""
-        found_devices = yield from scanner.async_scan_devices()
+        if update_lock.locked():
+            _LOGGER.warning(
+                "Updating device list from %s took longer than the scheduled "
+                "scan interval %s", platform, interval)
+            return
+
+        with (yield from update_lock):
+            found_devices = yield from scanner.async_scan_devices()
 
         for mac in found_devices:
             if mac in seen:
@@ -678,7 +714,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
             hass.async_add_job(async_see_device(**kwargs))
 
     async_track_time_interval(hass, async_device_tracker_scan, interval)
-    hass.async_add_job(async_device_tracker_scan, None)
+    hass.async_add_job(async_device_tracker_scan(None))
 
 
 def update_config(path: str, dev_id: str, device: Device):

@@ -13,9 +13,9 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
-    CONF_TIME_ZONE, CONF_CUSTOMIZE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
+    CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
-    __version__)
+    __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB)
 from homeassistant.core import DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
@@ -23,13 +23,14 @@ from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
-from homeassistant.helpers import customize
+from homeassistant.helpers.entity_values import EntityValues
 
 _LOGGER = logging.getLogger(__name__)
 
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
+DATA_CUSTOMIZE = 'hass_customize'
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
@@ -52,6 +53,9 @@ introduction:
 
 # Enables the frontend
 frontend:
+
+# Enables configuration UI
+config:
 
 http:
   # Uncomment this to add a password (recommended!)
@@ -93,7 +97,16 @@ PACKAGES_CONFIG_SCHEMA = vol.Schema({
         {cv.slug: vol.Any(dict, list)})  # Only slugs for component names
 })
 
-CORE_CONFIG_SCHEMA = vol.Schema({
+CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
+    vol.Optional(CONF_CUSTOMIZE, default={}):
+        vol.Schema({cv.entity_id: dict}),
+    vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
+        vol.Schema({cv.string: dict}),
+    vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
+        vol.Schema({cv.string: dict}),
+})
+
+CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
     CONF_NAME: vol.Coerce(str),
     CONF_LATITUDE: cv.latitude,
     CONF_LONGITUDE: cv.longitude,
@@ -101,7 +114,6 @@ CORE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
-    vol.Optional(CONF_CUSTOMIZE, default=[]): customize.CUSTOMIZE_SCHEMA,
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -286,9 +298,29 @@ def async_process_ha_core_config(hass, config):
     if CONF_TIME_ZONE in config:
         set_time_zone(config.get(CONF_TIME_ZONE))
 
-    merged_customize = merge_packages_customize(
-        config[CONF_CUSTOMIZE], config[CONF_PACKAGES])
-    customize.set_customize(hass, CONF_CORE, merged_customize)
+    # Customize
+    cust_exact = dict(config[CONF_CUSTOMIZE])
+    cust_domain = dict(config[CONF_CUSTOMIZE_DOMAIN])
+    cust_glob = OrderedDict(config[CONF_CUSTOMIZE_GLOB])
+
+    for name, pkg in config[CONF_PACKAGES].items():
+        pkg_cust = pkg.get(CONF_CORE)
+
+        if pkg_cust is None:
+            continue
+
+        try:
+            pkg_cust = CUSTOMIZE_CONFIG_SCHEMA(pkg_cust)
+        except vol.Invalid:
+            _LOGGER.warning('Package %s contains invalid customize', name)
+            continue
+
+        cust_exact.update(pkg_cust[CONF_CUSTOMIZE])
+        cust_domain.update(pkg_cust[CONF_CUSTOMIZE_DOMAIN])
+        cust_glob.update(pkg_cust[CONF_CUSTOMIZE_GLOB])
+
+    hass.data[DATA_CUSTOMIZE] = \
+        EntityValues(cust_exact, cust_domain, cust_glob)
 
     if CONF_UNIT_SYSTEM in config:
         if config[CONF_UNIT_SYSTEM] == CONF_UNIT_SYSTEM_IMPERIAL:
@@ -443,41 +475,21 @@ def merge_packages_config(config, packages):
     return config
 
 
-def merge_packages_customize(core_customize, packages):
-    """Merge customize from packages."""
-    schema = vol.Schema({
-        vol.Optional(CONF_CORE): vol.Schema({
-            CONF_CUSTOMIZE: customize.CUSTOMIZE_SCHEMA}),
-    }, extra=vol.ALLOW_EXTRA)
-
-    cust = list(core_customize)
-    for pkg in packages.values():
-        conf = schema(pkg)
-        cust.extend(conf.get(CONF_CORE, {}).get(CONF_CUSTOMIZE, []))
-    return cust
-
-
 @asyncio.coroutine
 def async_check_ha_config_file(hass):
     """Check if HA config file valid.
 
     This method is a coroutine.
     """
-    import homeassistant.components.persistent_notification as pn
-
     proc = yield from asyncio.create_subprocess_exec(
         sys.executable, '-m', 'homeassistant', '--script',
         'check_config', '--config', hass.config.config_dir,
         stdout=asyncio.subprocess.PIPE, loop=hass.loop)
     # Wait for the subprocess exit
-    (stdout_data, dummy) = yield from proc.communicate()
+    stdout_data, dummy = yield from proc.communicate()
     result = yield from proc.wait()
-    if result:
-        content = re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
-        # Put error cleaned from color codes in the error log so it
-        # will be visible at the UI.
-        _LOGGER.error(content)
-        pn.async_create(
-            hass, "Config error. See dev-info panel for details.",
-            "Config validating", "{0}.check_config".format(CONF_CORE))
-        raise HomeAssistantError("Invalid config")
+
+    if not result:
+        return None
+
+    return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))

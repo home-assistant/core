@@ -78,6 +78,16 @@
     </div>
     <home-assistant icons='{{ icons }}'></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
+    <script>
+      var compatibilityRequired = (
+        typeof Object.assign != 'function');
+      if (compatibilityRequired) {
+        var e = document.createElement('script');
+        e.onerror = initError;
+        e.src = '{{ compatibility_url }}';
+        document.head.appendChild(e);
+      }
+    </script>
     <script src='{{ core_url }}'></script>
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}

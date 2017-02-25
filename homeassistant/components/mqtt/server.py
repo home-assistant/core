@@ -4,15 +4,14 @@ Support for a local MQTT broker.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/#use-the-embedded-broker
 """
+import asyncio
 import logging
 import tempfile
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
 
 REQUIREMENTS = ['hbmqtt==0.8']
 DEPENDENCIES = ['http']
@@ -29,8 +28,12 @@ HBMQTT_CONFIG_SCHEMA = vol.Any(None, vol.Schema({
 }, extra=vol.ALLOW_EXTRA))
 
 
-def start(hass, server_config):
-    """Initialize MQTT Server."""
+@asyncio.coroutine
+def async_start(hass, server_config):
+    """Initialize MQTT Server.
+
+    This method is a coroutine.
+    """
     from hbmqtt.broker import Broker, BrokerException
 
     try:
@@ -42,19 +45,20 @@ def start(hass, server_config):
             client_config = None
 
         broker = Broker(server_config, hass.loop)
-        run_coroutine_threadsafe(broker.start(), hass.loop).result()
+        yield from broker.start()
     except BrokerException:
         logging.getLogger(__name__).exception('Error initializing MQTT server')
         return False, None
     finally:
         passwd.close()
 
-    @callback
-    def shutdown_mqtt_server(event):
+    @asyncio.coroutine
+    def async_shutdown_mqtt_server(event):
         """Shut down the MQTT server."""
-        hass.async_add_job(broker.shutdown())
+        yield from broker.shutdown()
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, shutdown_mqtt_server)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STOP, async_shutdown_mqtt_server)
 
     return True, client_config
 

@@ -176,3 +176,44 @@ def test_reconnecting_after_failure(hass, monkeypatch):
 
     # we expect 3 calls, the initial and 2 reconnects
     assert mock_create.call_count == 3
+
+
+@asyncio.coroutine
+def test_error_when_not_connected(hass, monkeypatch):
+    """Sending command should error when not connected."""
+    domain = 'switch'
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+            CONF_RECONNECT_INTERVAL: 0,
+        },
+        domain: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                        'name': 'test',
+                        'aliasses': ['test_alias_0_0'],
+                },
+            },
+        },
+    }
+
+    # success first time but fail second
+    failures = [False, True, False]
+
+    # setup mocking rflink module
+    _, mock_create, _, disconnect_callback = yield from mock_rflink(
+        hass, config, domain, monkeypatch, failures=failures)
+
+    assert hass.states.get('rflink.connection_status').state == 'connected'
+
+    # rflink initiated disconnect
+    disconnect_callback(None)
+
+    yield from asyncio.sleep(0, loop=hass.loop)
+
+    assert hass.states.get('rflink.connection_status').state == 'error'
+
+    success = yield from hass.services.async_call(
+        domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: 'switch.test'})
+    assert not success, 'changing state should not succeed when disconnected'

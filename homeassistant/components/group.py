@@ -57,14 +57,16 @@ def _conf_preprocess(value):
     return value
 
 
+GROUP_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+    CONF_VIEW: cv.boolean,
+    CONF_NAME: cv.string,
+    CONF_ICON: cv.icon,
+    CONF_CONTROL: cv.string,
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, {
-        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-        CONF_VIEW: cv.boolean,
-        CONF_NAME: cv.string,
-        CONF_ICON: cv.icon,
-        CONF_CONTROL: cv.string,
-    }, cv.match_all))
+    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, GROUP_SCHEMA))
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
@@ -97,6 +99,12 @@ def is_on(hass, entity_id):
 def reload(hass):
     """Reload the automation from config."""
     hass.services.call(DOMAIN, SERVICE_RELOAD)
+
+
+@asyncio.coroutine
+def async_reload(hass):
+    """Reload the automation from config."""
+    yield from hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
 
 def set_visibility(hass, entity_id=None, visible=True):
