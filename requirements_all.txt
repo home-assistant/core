@@ -111,6 +111,9 @@ dlipower==0.7.165
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
 
+# homeassistant.components.sensor.dnsip
+dnspython==1.15.0
+
 # homeassistant.components.sensor.dovado
 dovado==0.4.0
 
