@@ -112,7 +112,7 @@ dlipower==0.7.165
 dnspython3==1.15.0
 
 # homeassistant.components.sensor.dovado
-dovado==0.4.0
+dovado==0.4.1
 
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.6
