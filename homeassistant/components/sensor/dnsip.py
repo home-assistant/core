@@ -94,6 +94,7 @@ class Resolver(object):
         """Update the IP address."""
         response = self.resolver.query(self.hostname, self.querytype)
         if response:
-            self.currentip = response.response.answer[0].to_rdataset().items[0].address
+            self.currentip = \
+                response.response.answer[0].to_rdataset().items[0].address
         else:
             self.currentip = STATE_UNKNOWN
