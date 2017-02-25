@@ -56,18 +56,21 @@ SERVICE_FFMPEG_SCHEMA = vol.Schema({
 })
 
 
+@callback
 def async_start(hass, entity_id=None):
     """Start a ffmpeg process on entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_START, data))
 
 
+@callback
 def async_stop(hass, entity_id=None):
     """Stop a ffmpeg process on entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_STOP, data))
 
 
+@callback
 def async_restart(hass, entity_id=None):
     """Restart a ffmpeg process on entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -161,19 +164,23 @@ class FFmpegManager(object):
 class FFmpegBase(Entity):
     """Interface object for ffmpeg."""
 
-    def __init__(self, hass, initial_state=True):
+    def __init__(self, initial_state=True):
         """Initialize ffmpeg base object."""
-        self.hass = hass
         self.ffmpeg = None
         self.initial_state = initial_state
 
-        # init dispatcher for service routing
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register dispatcher & events.
+
+        This method is a coroutine.
+        """
         async_dispatcher_connect(
-            hass, SIGNAL_FFMPEG_START, self._async_start_ffmpeg)
+            self.hass, SIGNAL_FFMPEG_START, self._async_start_ffmpeg)
         async_dispatcher_connect(
-            hass, SIGNAL_FFMPEG_STOP, self._async_stop_ffmpeg)
+            self.hass, SIGNAL_FFMPEG_STOP, self._async_stop_ffmpeg)
         async_dispatcher_connect(
-            hass, SIGNAL_FFMPEG_RESTART, self._async_restart_ffmpeg)
+            self.hass, SIGNAL_FFMPEG_RESTART, self._async_restart_ffmpeg)
 
         # register start/stop
         self._async_register_events()
@@ -192,7 +199,7 @@ class FFmpegBase(Entity):
     def _async_start_ffmpeg(self, entity_ids):
         """Start a ffmpeg process.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         raise NotImplementedError()
 
@@ -200,14 +207,17 @@ class FFmpegBase(Entity):
     def _async_stop_ffmpeg(self, entity_ids):
         """Stop a ffmpeg process.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         if entity_ids is None or self.entity_id in entity_ids:
             yield from self.ffmpeg.close()
 
     @asyncio.coroutine
     def _async_restart_ffmpeg(self, entity_ids):
-        """Stop a ffmpeg process."""
+        """Stop a ffmpeg process.
+
+        This method is a coroutine.
+        """
         if entity_ids is None or self.entity_id in entity_ids:
             yield from self._async_stop_ffmpeg(None)
             yield from self._async_start_ffmpeg(None)

@@ -15,8 +15,9 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
     def __init__(self, hass, initial_state=True,
                  entity_id='test.ffmpeg_device'):
         """Initialize mock."""
-        super().__init__(hass, initial_state)
+        super().__init__(initial_state)
 
+        self.hass = hass
         self.entity_id = entity_id
         self.ffmpeg = MagicMock
         self.called_stop = False
@@ -73,7 +74,8 @@ def test_setup_component_test_register(hass):
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     hass.bus.async_listen_once = MagicMock()
-    MockFFmpegDev(hass)
+    ffmpeg_dev = MockFFmpegDev(hass)
+    yield from ffmpeg_dev.async_added_to_hass()
 
     assert hass.bus.async_listen_once.called
     assert hass.bus.async_listen_once.call_count == 2
@@ -87,7 +89,8 @@ def test_setup_component_test_register_no_startup(hass):
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     hass.bus.async_listen_once = MagicMock()
-    MockFFmpegDev(hass, False)
+    ffmpeg_dev = MockFFmpegDev(hass, False)
+    yield from ffmpeg_dev.async_added_to_hass()
 
     assert hass.bus.async_listen_once.called
     assert hass.bus.async_listen_once.call_count == 1
@@ -101,6 +104,7 @@ def test_setup_component_test_servcie_start(hass):
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
+    yield from ffmpeg_dev.async_added_to_hass()
 
     ffmpeg.async_start(hass)
     yield from hass.async_block_till_done()
@@ -116,6 +120,7 @@ def test_setup_component_test_servcie_stop(hass):
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
+    yield from ffmpeg_dev.async_added_to_hass()
 
     ffmpeg.async_stop(hass)
     yield from hass.async_block_till_done()
@@ -131,6 +136,7 @@ def test_setup_component_test_servcie_restart(hass):
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
+    yield from ffmpeg_dev.async_added_to_hass()
 
     ffmpeg.async_restart(hass)
     yield from hass.async_block_till_done()
@@ -147,6 +153,7 @@ def test_setup_component_test_servcie_start_with_entity(hass):
             hass, ffmpeg.DOMAIN, {ffmpeg.DOMAIN: {}})
 
     ffmpeg_dev = MockFFmpegDev(hass, False)
+    yield from ffmpeg_dev.async_added_to_hass()
 
     ffmpeg.async_start(hass, 'test.ffmpeg_device')
     yield from hass.async_block_till_done()

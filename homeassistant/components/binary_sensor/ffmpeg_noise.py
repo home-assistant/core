@@ -64,14 +64,15 @@ class FFmpegNoise(FFmpegBinarySensor):
         """Initialize ffmpeg noise binary sensor."""
         from haffmpeg import SensorNoise
 
-        super().__init__(hass, config)
+        super().__init__(config)
         self.ffmpeg = SensorNoise(
             manager.binary, hass.loop, self._async_callback)
 
+    @asyncio.coroutine
     def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         if entity_ids is not None and self.entity_id not in entity_ids:
             return
@@ -84,7 +85,7 @@ class FFmpegNoise(FFmpegBinarySensor):
         )
 
         # run
-        return self.ffmpeg.open_sensor(
+        yield from self.ffmpeg.open_sensor(
             input_source=self._config.get(CONF_INPUT),
             output_dest=self._config.get(CONF_OUTPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
