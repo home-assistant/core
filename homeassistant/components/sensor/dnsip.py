@@ -12,7 +12,6 @@ import voluptuous as vol
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['dnspython==1.15.0']
@@ -29,7 +28,7 @@ DEFAULT_RESOLVER = '208.67.222.222'
 DEFAULT_RESOLVER_IPV6 = '2620:0:ccc::2'
 DEFAULT_IPV6 = False
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
@@ -56,8 +55,11 @@ class WanIpSensor(Entity):
 
     def __init__(self, hostname, resolver, ipv6):
         """Initialize the sensor."""
+        import dns.resolver
         self._name = hostname
-        self.resolver = Resolver(hostname, resolver, ipv6)
+        self.resolver = dns.resolver.Resolver()
+        self.resolver.nameservers = [resolver]
+        self.querytype = 'aaaa' if ipv6 else 'a'
         self._state = STATE_UNKNOWN
 
     @property
@@ -72,29 +74,10 @@ class WanIpSensor(Entity):
 
     def update(self):
         """Get the current DNS IP address for hostname."""
-        self.resolver.update()
-        self._state = self.resolver.currentip
-
-
-class Resolver(object):
-    """Resolve the provided hostname to an IP address."""
-
-    def __init__(self, hostname, resolver, ipv6):
-        """Initialize the sensor."""
-        import dns.resolver
-
-        self.hostname = hostname
-        self.resolver = dns.resolver.Resolver()
-        self.resolver.nameservers = [resolver]
-        self.currentip = STATE_UNKNOWN
-        self.querytype = 'aaaa' if ipv6 else 'a'
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update the IP address."""
-        response = self.resolver.query(self.hostname, self.querytype)
+        _LOGGER.error("Updating IP")
+        response = self.resolver.query(self._name, self.querytype)
         if response:
-            self.currentip = \
+            self._state = \
                 response.response.answer[0].to_rdataset().items[0].address
         else:
-            self.currentip = STATE_UNKNOWN
+            self._state = STATE_UNKNOWN
