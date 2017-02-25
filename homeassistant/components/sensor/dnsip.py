@@ -29,7 +29,7 @@ DEFAULT_RESOLVER = '208.67.222.222'
 DEFAULT_RESOLVER_IPV6 = '2620:0:ccc::2'
 DEFAULT_IPV6 = False
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
