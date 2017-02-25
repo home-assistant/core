@@ -15,7 +15,7 @@ class TestAutomationTemplate(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('group')
+        self.hass.config.components.add('group')
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 

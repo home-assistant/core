@@ -41,7 +41,7 @@ class EntityComponent(object):
         self.config = None
 
         self._platforms = {
-            'core': EntityPlatform(self, self.scan_interval, None),
+            'core': EntityPlatform(self, domain, self.scan_interval, None),
         }
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
@@ -134,8 +134,8 @@ class EntityComponent(object):
         key = (platform_type, scan_interval, entity_namespace)
 
         if key not in self._platforms:
-            self._platforms[key] = EntityPlatform(self, scan_interval,
-                                                  entity_namespace)
+            self._platforms[key] = EntityPlatform(
+                self, platform_type, scan_interval, entity_namespace)
         entity_platform = self._platforms[key]
 
         try:
@@ -151,7 +151,7 @@ class EntityComponent(object):
                     entity_platform.add_entities, discovery_info
                 )
 
-            self.hass.config.components.append(
+            self.hass.config.components.add(
                 '{}.{}'.format(self.domain, platform_type))
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
@@ -202,6 +202,10 @@ class EntityComponent(object):
                 'Invalid entity id: {}'.format(entity.entity_id))
 
         self.entities[entity.entity_id] = entity
+
+        if hasattr(entity, 'async_added_to_hass'):
+            yield from entity.async_added_to_hass()
+
         yield from entity.async_update_ha_state()
 
         return True
@@ -284,14 +288,15 @@ class EntityComponent(object):
 class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
-    def __init__(self, component, scan_interval, entity_namespace):
+    def __init__(self, component, platform, scan_interval, entity_namespace):
         """Initalize the entity platform."""
         self.component = component
+        self.platform = platform
         self.scan_interval = scan_interval
         self.entity_namespace = entity_namespace
         self.platform_entities = []
         self._async_unsub_polling = None
-        self._process_updates = False
+        self._process_updates = asyncio.Lock(loop=component.hass.loop)
 
     def add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
@@ -364,11 +369,14 @@ class EntityPlatform(object):
 
         This method must be run in the event loop.
         """
-        if self._process_updates:
+        if self._process_updates.locked():
+            self.component.logger.warning(
+                "Updating %s %s took longer than the scheduled update "
+                "interval %s", self.platform, self.component.domain,
+                self.scan_interval)
             return
-        self._process_updates = True
 
-        try:
+        with (yield from self._process_updates):
             tasks = []
             to_update = []
 
@@ -384,9 +392,12 @@ class EntityPlatform(object):
                     to_update.append(update_coro)
 
             for update_coro in to_update:
-                yield from update_coro
+                try:
+                    yield from update_coro
+                except Exception:  # pylint: disable=broad-except
+                    self.component.logger.exception(
+                        'Error while update entity from %s in %s',
+                        self.platform, self.component.domain)
 
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.component.hass.loop)
-        finally:
-            self._process_updates = False

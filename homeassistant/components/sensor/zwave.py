@@ -53,16 +53,27 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity):
     def __init__(self, value):
         """Initialize the sensor."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.update_properties()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
+        self._units = self._value.units
+
+    @property
+    def force_update(self):
+        """Return force_update."""
+        return True
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._value.data
+        return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
-        return self._value.units
+        return self._units
 
 
 class ZWaveMultilevelSensor(ZWaveSensor):
@@ -71,26 +82,22 @@ class ZWaveMultilevelSensor(ZWaveSensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = self._value.data
+        if self._units in ('C', 'F'):
+            return round(self._state, 1)
+        elif isinstance(self._state, float):
+            return round(self._state, 2)
 
-        if self._value.units in ('C', 'F'):
-            return round(value, 1)
-        elif isinstance(value, float):
-            return round(value, 2)
-
-        return value
+        return self._state
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        unit = self._value.units
-
-        if unit == 'C':
+        if self._units == 'C':
             return TEMP_CELSIUS
-        elif unit == 'F':
+        elif self._units == 'F':
             return TEMP_FAHRENHEIT
         else:
-            return unit
+            return self._units
 
 
 class ZWaveAlarmSensor(ZWaveSensor):

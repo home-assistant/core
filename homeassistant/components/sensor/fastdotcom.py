@@ -4,15 +4,16 @@ Support for Fast.com internet speed testing sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fastdotcom/
 """
+import asyncio
 import logging
 import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import recorder
 from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.restore_state import async_get_last_state
 
 REQUIREMENTS = ['fastdotcom==0.0.1']
 
@@ -80,24 +81,17 @@ class SpeedtestSensor(Entity):
         """Get the latest data and update the states."""
         data = self.speedtest_client.data
         if data is None:
-            entity_id = 'sensor.fastcom_speedtest'
-            states = recorder.get_model('States')
-            try:
-                last_state = recorder.execute(
-                    recorder.query('States').filter(
-                        (states.entity_id == entity_id) &
-                        (states.last_changed == states.last_updated) &
-                        (states.state != 'unknown')
-                    ).order_by(states.state_id.desc()).limit(1))
-            except TypeError:
-                return
-            except RuntimeError:
-                return
-            if not last_state:
-                return
-            self._state = last_state[0].state
-        else:
-            self._state = data['download']
+            return
+
+        self._state = data['download']
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity is about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._state = state.state
 
 
 class SpeedtestData(object):

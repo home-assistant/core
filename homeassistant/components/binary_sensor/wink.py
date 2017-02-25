@@ -92,13 +92,13 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
         super().__init__(wink, hass)
-        try:
+        if hasattr(self.wink, 'unit'):
             self._unit_of_measurement = self.wink.unit()
-        except AttributeError:
+        else:
             self._unit_of_measurement = None
-        try:
+        if hasattr(self.wink, 'capability'):
             self.capability = self.wink.capability()
-        except AttributeError:
+        else:
             self.capability = None
 
     @property
@@ -107,8 +107,8 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
         return self.wink.state()
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return SENSOR_TYPES.get(self.capability)
 
 
@@ -161,8 +161,8 @@ class WinkRemote(WinkBinarySensorDevice):
         }
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return None
 
 

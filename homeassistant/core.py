@@ -13,6 +13,7 @@ import os
 import re
 import sys
 import threading
+from time import monotonic
 
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
@@ -25,7 +26,7 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
@@ -43,9 +44,6 @@ except ImportError:
 
 DOMAIN = 'homeassistant'
 
-# How often time_changed event should fire
-TIMER_INTERVAL = 1  # seconds
-
 # How long we wait for the result of a service call
 SERVICE_CALL_LIMIT = 10  # seconds
 
@@ -55,8 +53,6 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
-# AsyncHandler for logging
-DATA_ASYNCHANDLER = 'log_asynchandler'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,6 +77,22 @@ def callback(func: Callable[..., None]) -> Callable[..., None]:
 def is_callback(func: Callable[..., Any]) -> bool:
     """Check if function is safe to be called in the event loop."""
     return '_hass_callback' in func.__dict__
+
+
+@callback
+def async_loop_exception_handler(loop, context):
+    """Handle all exception inside the core loop."""
+    kwargs = {}
+    exception = context.get('exception')
+    if exception:
+        # Do not report on shutting down exceptions.
+        if isinstance(exception, ShuttingDown):
+            return
+
+        kwargs['exc_info'] = (type(exception), exception,
+                              exception.__traceback__)
+
+    _LOGGER.error("Error doing job: %s", context['message'], **kwargs)
 
 
 class CoreState(enum.Enum):
@@ -108,7 +120,7 @@ class HomeAssistant(object):
 
         self.executor = ThreadPoolExecutor(max_workers=EXECUTOR_POOL_SIZE)
         self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(self._async_exception_handler)
+        self.loop.set_exception_handler(async_loop_exception_handler)
         self._pending_tasks = []
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
@@ -265,42 +277,20 @@ class HomeAssistant(object):
 
         This method is a coroutine.
         """
-        import homeassistant.helpers.aiohttp_client as aiohttp_client
-
+        # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
         self.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         yield from self.async_block_till_done()
-        self.executor.shutdown()
+
+        # stage 2
         self.state = CoreState.not_running
-
-        # cleanup connector pool from aiohttp
-        yield from aiohttp_client.async_cleanup_websession(self)
-
-        # cleanup async layer from python logging
-        if self.data.get(DATA_ASYNCHANDLER):
-            handler = self.data.pop(DATA_ASYNCHANDLER)
-            logging.getLogger('').removeHandler(handler)
-            yield from handler.async_close(blocking=True)
+        self.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+        yield from self.async_block_till_done()
+        self.executor.shutdown()
 
         self.exit_code = exit_code
         self.loop.stop()
-
-    # pylint: disable=no-self-use
-    @callback
-    def _async_exception_handler(self, loop, context):
-        """Handle all exception inside the core loop."""
-        kwargs = {}
-        exception = context.get('exception')
-        if exception:
-            # Do not report on shutting down exceptions.
-            if isinstance(exception, ShuttingDown):
-                return
-
-            kwargs['exc_info'] = (type(exception), exception,
-                                  exception.__traceback__)
-
-        _LOGGER.error("Error doing job: %s", context['message'], **kwargs)
 
 
 class EventOrigin(enum.Enum):
@@ -399,11 +389,11 @@ class EventBus(object):
                 self._hass.state == CoreState.stopping:
             raise ShuttingDown("Home Assistant is shutting down")
 
-        # Copy the list of the current listeners because some listeners
-        # remove themselves as a listener while being executed which
-        # causes the iterator to be confused.
-        get = self._listeners.get
-        listeners = get(MATCH_ALL, []) + get(event_type, [])
+        listeners = self._listeners.get(event_type, [])
+
+        # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
+        if event_type != EVENT_HOMEASSISTANT_CLOSE:
+            listeners = self._listeners.get(MATCH_ALL, []) + listeners
 
         event = Event(event_type, event_data, origin)
 
@@ -494,7 +484,6 @@ class EventBus(object):
             # This will make sure the second time it does nothing.
             setattr(onetime_listener, 'run', True)
             self._async_remove_listener(event_type, onetime_listener)
-
             self._hass.async_run_job(listener, event)
 
         return self.async_listen(event_type, onetime_listener)
@@ -542,7 +531,6 @@ class State(object):
         self.state = str(state)
         self.attributes = MappingProxyType(attributes or {})
         self.last_updated = last_updated or dt_util.utcnow()
-
         self.last_changed = last_changed or self.last_updated
 
     @property
@@ -673,7 +661,6 @@ class StateMachine(object):
         Async friendly.
         """
         state_obj = self.get(entity_id)
-
         return state_obj and state_obj.state == state
 
     def is_state_attr(self, entity_id, name, value):
@@ -682,7 +669,6 @@ class StateMachine(object):
         Async friendly.
         """
         state_obj = self.get(entity_id)
-
         return state_obj and state_obj.attributes.get(name, None) == value
 
     def remove(self, entity_id):
@@ -702,20 +688,16 @@ class StateMachine(object):
         This method must be run in the event loop.
         """
         entity_id = entity_id.lower()
-
         old_state = self._states.pop(entity_id, None)
 
         if old_state is None:
             return False
 
-        event_data = {
+        self._bus.async_fire(EVENT_STATE_CHANGED, {
             'entity_id': entity_id,
             'old_state': old_state,
             'new_state': None,
-        }
-
-        self._bus.async_fire(EVENT_STATE_CHANGED, event_data)
-
+        })
         return True
 
     def set(self, entity_id, new_state, attributes=None, force_update=False):
@@ -746,9 +728,7 @@ class StateMachine(object):
         entity_id = entity_id.lower()
         new_state = str(new_state)
         attributes = attributes or {}
-
         old_state = self._states.get(entity_id)
-
         is_existing = old_state is not None
         same_state = (is_existing and old_state.state == new_state and
                       not force_update)
@@ -757,19 +737,14 @@ class StateMachine(object):
         if same_state and same_attr:
             return
 
-        # If state did not exist or is different, set it
         last_changed = old_state.last_changed if same_state else None
-
         state = State(entity_id, new_state, attributes, last_changed)
         self._states[entity_id] = state
-
-        event_data = {
+        self._bus.async_fire(EVENT_STATE_CHANGED, {
             'entity_id': entity_id,
             'old_state': old_state,
             'new_state': state,
-        }
-
-        self._bus.async_fire(EVENT_STATE_CHANGED, event_data)
+        })
 
 
 class Service(object):
@@ -823,8 +798,16 @@ class ServiceRegistry(object):
         """Initialize a service registry."""
         self._services = {}
         self._hass = hass
-        self._cur_id = 0
         self._async_unsub_call_event = None
+
+        def _gen_unique_id():
+            cur_id = 1
+            while True:
+                yield '{}-{}'.format(id(self), cur_id)
+                cur_id += 1
+
+        gen = _gen_unique_id()
+        self._generate_unique_id = lambda: next(gen)
 
     @property
     def services(self):
@@ -1025,11 +1008,6 @@ class ServiceRegistry(object):
 
             self._hass.async_add_job(execute_service)
 
-    def _generate_unique_id(self):
-        """Generate a unique service call id."""
-        self._cur_id += 1
-        return '{}-{}'.format(id(self), self._cur_id)
-
 
 class Config(object):
     """Configuration settings for Home Assistant."""
@@ -1047,7 +1025,7 @@ class Config(object):
         self.skip_pip = False  # type: bool
 
         # List of loaded components
-        self.components = []
+        self.components = set()
 
         # Remote.API object pointing at local API
         self.api = None
@@ -1092,66 +1070,38 @@ class Config(object):
         }
 
 
-def _async_create_timer(hass, interval=TIMER_INTERVAL):
+def _async_create_timer(hass):
     """Create a timer that will start on HOMEASSISTANT_START."""
-    stop_event = asyncio.Event(loop=hass.loop)
+    handle = None
 
-    # Setting the Event inside the loop by marking it as a coroutine
+    @callback
+    def fire_time_event(nxt):
+        """Fire next time event."""
+        nonlocal handle
+
+        hass.bus.async_fire(EVENT_TIME_CHANGED,
+                            {ATTR_NOW: dt_util.utcnow()})
+        nxt += 1
+        slp_seconds = nxt - monotonic()
+
+        if slp_seconds < 0:
+            _LOGGER.error('Timer got out of sync. Resetting')
+            nxt = monotonic() + 1
+            slp_seconds = 1
+
+        handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
+
+    @callback
+    def start_timer(event):
+        """Create an async timer."""
+        _LOGGER.info("Timer:starting")
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
+        fire_time_event(monotonic())
+
     @callback
     def stop_timer(event):
         """Stop the timer."""
-        stop_event.set()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
-
-    @asyncio.coroutine
-    def timer(interval, stop_event):
-        """Create an async timer."""
-        _LOGGER.info("Timer:starting")
-
-        last_fired_on_second = -1
-
-        calc_now = dt_util.utcnow
-
-        while not stop_event.is_set():
-            now = calc_now()
-
-            # First check checks if we are not on a second matching the
-            # timer interval. Second check checks if we did not already fire
-            # this interval.
-            if now.second % interval or \
-               now.second == last_fired_on_second:
-
-                # Sleep till it is the next time that we have to fire an event.
-                # Aim for halfway through the second that fits TIMER_INTERVAL.
-                # If TIMER_INTERVAL is 10 fire at .5, 10.5, 20.5, etc seconds.
-                # This will yield the best results because time.sleep() is not
-                # 100% accurate because of non-realtime OS's
-                slp_seconds = interval - now.second % interval + \
-                    .5 - now.microsecond/1000000.0
-
-                yield from asyncio.sleep(slp_seconds, loop=hass.loop)
-
-                now = calc_now()
-
-            last_fired_on_second = now.second
-
-            # Event might have been set while sleeping
-            if not stop_event.is_set():
-                try:
-                    # Schedule the bus event
-                    hass.loop.call_soon(
-                        hass.bus.async_fire,
-                        EVENT_TIME_CHANGED,
-                        {ATTR_NOW: now}
-                    )
-                except ShuttingDown:
-                    # HA raises error if firing event after it has shut down
-                    break
-
-    @asyncio.coroutine
-    def start_timer(event):
-        """Start our async timer."""
-        hass.loop.create_task(timer(interval, stop_event))
+        if handle is not None:
+            handle.cancel()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_timer)

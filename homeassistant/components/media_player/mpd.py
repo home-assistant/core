@@ -266,5 +266,6 @@ class MpdDevice(MediaPlayerDevice):
             self.client.load(media_id)
             self.client.play()
         else:
-            _LOGGER.error(str.format("Invalid media type. Expected: {0}",
-                                     MEDIA_TYPE_PLAYLIST))
+            self.client.clear()
+            self.client.add(media_id)
+            self.client.play()

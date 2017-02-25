@@ -8,49 +8,42 @@ import asyncio
 from collections import defaultdict
 from datetime import timedelta
 from itertools import groupby
+import logging
+import time
+
 import voluptuous as vol
 
 from homeassistant.const import (
     HTTP_BAD_REQUEST, CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE)
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components import recorder, script
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'history'
 DEPENDENCIES = ['recorder', 'http']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        CONF_EXCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        }),
-        CONF_INCLUDE: vol.Schema({
-            vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]):
-                vol.All(cv.ensure_list, [cv.string])
-        })
-    }),
+    DOMAIN: recorder.FILTER_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
 
 SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 
-def last_5_states(entity_id):
-    """Return the last 5 states for entity_id."""
-    entity_id = entity_id.lower()
-
-    states = recorder.get_model('States')
-    return recorder.execute(
-        recorder.query('States').filter(
-            (states.entity_id == entity_id) &
-            (states.last_changed == states.last_updated)
-        ).order_by(states.state_id.desc()).limit(5))
+def last_recorder_run():
+    """Retireve the last closed recorder run from the DB."""
+    recorder.get_instance()
+    rec_runs = recorder.get_model('RecorderRuns')
+    with recorder.session_scope() as session:
+        res = recorder.query(rec_runs).order_by(rec_runs.end.desc()).first()
+        if res is None:
+            return None
+        session.expunge(res)
+        return res
 
 
 def get_significant_states(start_time, end_time=None, entity_id=None,
@@ -86,7 +79,7 @@ def get_significant_states(start_time, end_time=None, entity_id=None,
 def state_changes_during_period(start_time, end_time=None, entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
     states = recorder.get_model('States')
-    query = recorder.query('States').filter(
+    query = recorder.query(states).filter(
         (states.last_changed == states.last_updated) &
         (states.last_changed > start_time))
 
@@ -127,7 +120,7 @@ def get_states(utc_point_in_time, entity_ids=None, run=None, filters=None):
     most_recent_state_ids = most_recent_state_ids.group_by(
         states.entity_id).subquery()
 
-    query = recorder.query('States').join(most_recent_state_ids, and_(
+    query = recorder.query(states).join(most_recent_state_ids, and_(
         states.state_id == most_recent_state_ids.c.max_state_id))
 
     for state in recorder.execute(query):
@@ -180,25 +173,11 @@ def setup(hass, config):
         filters.included_entities = include[CONF_ENTITIES]
         filters.included_domains = include[CONF_DOMAINS]
 
-    hass.http.register_view(Last5StatesView)
+    recorder.get_instance()
     hass.http.register_view(HistoryPeriodView(filters))
     register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
 
     return True
-
-
-class Last5StatesView(HomeAssistantView):
-    """Handle last 5 state view requests."""
-
-    url = '/api/history/entity/{entity_id}/recent_states'
-    name = 'api:history:entity-recent-states'
-
-    @asyncio.coroutine
-    def get(self, request, entity_id):
-        """Retrieve last 5 states of entity."""
-        result = yield from request.app['hass'].loop.run_in_executor(
-            None, last_5_states, entity_id)
-        return self.json(result)
 
 
 class HistoryPeriodView(HomeAssistantView):
@@ -215,6 +194,7 @@ class HistoryPeriodView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, datetime=None):
         """Return history over a period of time."""
+        timer_start = time.perf_counter()
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
 
@@ -224,7 +204,6 @@ class HistoryPeriodView(HomeAssistantView):
         now = dt_util.utcnow()
 
         one_day = timedelta(days=1)
-
         if datetime:
             start_time = dt_util.as_utc(datetime)
         else:
@@ -233,14 +212,25 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = start_time + one_day
+        end_time = request.GET.get('end_time')
+        if end_time:
+            end_time = dt_util.as_utc(
+                dt_util.parse_datetime(end_time))
+            if end_time is None:
+                return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
+        else:
+            end_time = start_time + one_day
         entity_id = request.GET.get('filter_entity_id')
 
         result = yield from request.app['hass'].loop.run_in_executor(
             None, get_significant_states, start_time, end_time, entity_id,
             self.filters)
-
-        return self.json(result.values())
+        result = result.values()
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            elapsed = time.perf_counter() - timer_start
+            _LOGGER.debug(
+                'Extracted %d states in %fs', sum(map(len, result)), elapsed)
+        return self.json(result)
 
 
 class Filters(object):

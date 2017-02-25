@@ -16,6 +16,7 @@ import homeassistant.components as core_components
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
 from homeassistant.util.async import (
@@ -166,7 +167,7 @@ def _async_setup_component(hass: core.HomeAssistant,
             loader.set_component(domain, None)
             return False
 
-        hass.config.components.append(component.DOMAIN)
+        hass.config.components.add(component.DOMAIN)
 
         hass.bus.async_fire(
             EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
@@ -298,6 +299,10 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     # Load dependencies
     for component in getattr(platform, 'DEPENDENCIES', []):
+        if component in loader.DEPENDENCY_BLACKLIST:
+            raise HomeAssistantError(
+                '{} is not allowed to be a dependency.'.format(component))
+
         res = yield from async_setup_component(hass, component, config)
         if not res:
             _LOGGER.error(
@@ -386,7 +391,7 @@ def async_from_config_dict(config: Dict[str, Any],
         None, conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
-        enable_logging(hass, verbose, log_rotate_days)
+        async_enable_logging(hass, verbose, log_rotate_days)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -429,7 +434,13 @@ def async_from_config_dict(config: Dict[str, Any],
     service.HASS = hass
 
     # Setup the components
+    dependency_blacklist = loader.DEPENDENCY_BLACKLIST - set(components)
+
     for domain in loader.load_order_components(components):
+        if domain in dependency_blacklist:
+            raise HomeAssistantError(
+                '{} is not allowed to be a dependency'.format(domain))
+
         yield from _async_setup_component(hass, domain, config)
 
     setup_lock.release()
@@ -488,7 +499,7 @@ def async_from_config_file(config_path: str,
     yield from hass.loop.run_in_executor(
         None, mount_local_lib_path, config_dir)
 
-    enable_logging(hass, verbose, log_rotate_days)
+    async_enable_logging(hass, verbose, log_rotate_days)
 
     try:
         config_dict = yield from hass.loop.run_in_executor(
@@ -503,11 +514,12 @@ def async_from_config_file(config_path: str,
     return hass
 
 
-def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
-                   log_rotate_days=None) -> None:
+@core.callback
+def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                         log_rotate_days=None) -> None:
     """Setup the logging.
 
-    Async friendly.
+    This method must be run in the event loop.
     """
     logging.basicConfig(level=logging.INFO)
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
@@ -537,10 +549,6 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     except ImportError:
         pass
 
-    # AsyncHandler allready exists?
-    if hass.data.get(core.DATA_ASYNCHANDLER):
-        return
-
     # Log errors to a file if we have write access to file or config dir
     err_log_path = hass.config.path(ERROR_LOG_FILENAME)
     err_path_exists = os.path.isfile(err_log_path)
@@ -561,7 +569,15 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
 
         async_handler = AsyncHandler(hass.loop, err_handler)
-        hass.data[core.DATA_ASYNCHANDLER] = async_handler
+
+        @asyncio.coroutine
+        def async_stop_async_handler(event):
+            """Cleanup async handler."""
+            logging.getLogger('').removeHandler(async_handler)
+            yield from async_handler.async_close(blocking=True)
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
 
         logger = logging.getLogger('')
         logger.addHandler(async_handler)

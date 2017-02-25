@@ -68,7 +68,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._unit = temp_unit
         _LOGGER.debug("temp_unit is %s", self._unit)
         self._zxt_120 = None
-        self.update_properties()
         # Make sure that we have values for the key before converting to int
         if (value.node.manufacturer_id.strip() and
                 value.node.product_id.strip()):
@@ -79,6 +78,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                     _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
                                   " workaround")
                     self._zxt_120 = 1
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""

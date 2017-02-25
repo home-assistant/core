@@ -11,15 +11,17 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.helpers import discovery, customize
+from homeassistant.helpers import discovery
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, CONF_CUSTOMIZE,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_ENTITY_ID)
+    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
+
 from . import const
 from . import workaround
 
@@ -37,6 +39,11 @@ CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
+CONF_DEVICE_CONFIG = 'device_config'
+CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
+CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
+
+ATTR_POWER = 'power_consumption'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -44,10 +51,11 @@ DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_REFRESH_VALUE = False
-DEFAULT_CONF_REFRESH_DELAY = 2
+DEFAULT_CONF_REFRESH_DELAY = 5
 DOMAIN = 'zwave'
 
 NETWORK = None
+DATA_DEVICE_CONFIG = 'zwave_device_config'
 
 # List of tuple (DOMAIN, discovered service, supported command classes,
 # value type, genre type, specific device class).
@@ -144,6 +152,10 @@ PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
 })
 
+PRINT_NODE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -152,8 +164,13 @@ CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_INSTANCE, default=0x00): vol.Coerce(int)
 })
 
-_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY = vol.Schema({
-    vol.Required(CONF_ENTITY_ID): cv.match_all,
+SET_WAKEUP_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE):
+        vol.All(vol.Coerce(int), cv.positive_int),
+})
+
+DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
@@ -166,9 +183,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
-        vol.Optional(CONF_CUSTOMIZE, default=[]):
-            vol.All(customize.CUSTOMIZE_SCHEMA,
-                    [_ZWAVE_CUSTOMIZE_SCHEMA_ENTRY]),
+        vol.Optional(CONF_DEVICE_CONFIG, default={}):
+            vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
+        vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
         vol.Optional(CONF_POLLING_INTERVAL, default=DEFAULT_POLLING_INTERVAL):
             cv.positive_int,
@@ -229,7 +249,7 @@ def nice_print_node(node):
     print("\n\n\n")
 
 
-def get_config_value(node, value_index):
+def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
@@ -239,7 +259,9 @@ def get_config_value(node, value_index):
     except RuntimeError:
         # If we get an runtime error the dict has changed while
         # we was looking for a value, just do it again
-        return get_config_value(node, value_index)
+        return None if tries <= 0 else get_config_value(
+            node, value_index, tries=tries - 1)
+    return None
 
 
 # pylint: disable=R0914
@@ -271,8 +293,11 @@ def setup(hass, config):
 
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
-    customize.set_customize(hass, DOMAIN, config[DOMAIN].get(CONF_CUSTOMIZE))
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
+    hass.data[DATA_DEVICE_CONFIG] = EntityValues(
+        config[DOMAIN][CONF_DEVICE_CONFIG],
+        config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
+        config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
 
     # Setup options
     options = ZWaveOption(
@@ -352,15 +377,20 @@ def setup(hass, config):
             workaround_component = workaround.get_device_component_mapping(
                 value)
             if workaround_component and workaround_component != component:
+                if workaround_component == workaround.WORKAROUND_IGNORE:
+                    _LOGGER.info("Ignoring device %s due to workaround.",
+                                 "{}.{}".format(component, object_id(value)))
+                    continue
                 _LOGGER.debug("Using %s instead of %s",
                               workaround_component, component)
                 component = workaround_component
 
             name = "{}.{}".format(component, object_id(value))
-            node_config = customize.get_overrides(hass, DOMAIN, name)
+            node_config = hass.data[DATA_DEVICE_CONFIG].get(name)
 
             if node_config.get(CONF_IGNORED):
-                _LOGGER.info("Ignoring device %s", name)
+                _LOGGER.info(
+                    "Ignoring device %s due to device settings.", name)
                 return
 
             polling_intensity = convert(
@@ -503,6 +533,25 @@ def setup(hass, config):
         _LOGGER.info("Config parameter %s on Node %s : %s",
                      param, node_id, get_config_value(node, param))
 
+    def print_node(service):
+        """Print all information about z-wave node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        nice_print_node(node)
+
+    def set_wakeup(service):
+        """Set wake-up interval of a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        value = service.data.get(const.ATTR_CONFIG_VALUE)
+        if node.can_wake_up():
+            for value_id in node.get_values(
+                    class_id=const.COMMAND_CLASS_WAKE_UP):
+                node.values[value_id].data = value
+                _LOGGER.info("Node %s wake-up set to %d", node_id, value)
+        else:
+            _LOGGER.info("Node %s is not wakeable", node_id)
+
     def change_association(service):
         """Change an association in the zwave network."""
         association_type = service.data.get(const.ATTR_ASSOCIATION)
@@ -598,6 +647,16 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_CHANGE_ASSOCIATION],
                                schema=CHANGE_ASSOCIATION_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_SET_WAKEUP,
+                               set_wakeup,
+                               descriptions[
+                                   const.SERVICE_SET_WAKEUP],
+                               schema=SET_WAKEUP_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_PRINT_NODE,
+                               print_node,
+                               descriptions[
+                                   const.SERVICE_PRINT_NODE],
+                               schema=PRINT_NODE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -619,6 +678,7 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self.entity_id = "{}.{}".format(domain, self._object_id())
+        self._update_attributes()
 
         dispatcher.connect(
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
@@ -632,22 +692,48 @@ class ZWaveDeviceEntity(Entity):
 
     def value_changed(self, value):
         """Called when a value for this entity's node has changed."""
+        self._update_attributes()
         self.update_properties()
         self.schedule_update_ha_state()
 
+    def _update_attributes(self):
+        """Update the node attributes. May only be used inside callback."""
+        self.node_id = self._value.node.node_id
+        self.location = self._value.node.location
+        self.battery_level = self._value.node.get_battery_level()
+        self.wakeup_interval = None
+        if self._value.node.can_wake_up():
+            self.wakeup_interval = self.get_value(
+                class_id=const.COMMAND_CLASS_WAKE_UP,
+                member='data')
+        power_value = self.get_value(
+            class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+                      const.COMMAND_CLASS_METER],
+            label=['Power'])
+        self.power_consumption = round(
+            power_value.data, power_value.precision) if power_value else None
+
     def _value_handler(self, method=None, class_id=None, index=None,
                        label=None, data=None, member=None, **kwargs):
-        """Get the values for a given command_class with arguments."""
-        if class_id is not None:
-            kwargs[CLASS_ID] = class_id
+        """Get the values for a given command_class with arguments.
+
+        May only be used inside callback.
+
+        """
+        values = []
+        if class_id is None:
+            values.extend(self._value.node.get_values(**kwargs).values())
+        else:
+            if not isinstance(class_id, list):
+                class_id = [class_id]
+            for cid in class_id:
+                values.extend(self._value.node.get_values(
+                    class_id=cid, **kwargs).values())
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
                       ' member=%s, kwargs=%s',
                       method, class_id, index, label, data, member, kwargs)
-        values = self._value.node.get_values(**kwargs).values()
         _LOGGER.debug('values=%s', values)
         results = None
-        if not values:
-            return None
         for value in values:
             if index is not None and value.index != index:
                 continue
@@ -673,7 +759,7 @@ class ZWaveDeviceEntity(Entity):
         return results
 
     def get_value(self, **kwargs):
-        """Simplifyer to get values."""
+        """Simplifyer to get values. May only be used inside callback."""
         return self._value_handler(method='get', **kwargs)
 
     def set_value(self, **kwargs):
@@ -712,22 +798,19 @@ class ZWaveDeviceEntity(Entity):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         attrs = {
-            const.ATTR_NODE_ID: self._value.node.node_id,
+            const.ATTR_NODE_ID: self.node_id,
         }
 
-        try:
-            battery_level = self._value.node.get_battery_level()
-        except RuntimeError:
-            # If we get an runtime error the dict has changed while
-            # we was looking for a value, just do it again
-            battery_level = self._value.node.get_battery_level()
+        if self.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = self.battery_level
 
-        if battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = battery_level
+        if self.location:
+            attrs[ATTR_LOCATION] = self.location
 
-        location = self._value.node.location
+        if self.wakeup_interval is not None:
+            attrs[ATTR_WAKEUP] = self.wakeup_interval
 
-        if location:
-            attrs[ATTR_LOCATION] = location
+        if self.power_consumption is not None:
+            attrs[ATTR_POWER] = self.power_consumption
 
         return attrs
