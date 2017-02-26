@@ -14,8 +14,6 @@ QUERY_RETRY_WAIT = 0.1
 @contextmanager
 def session_scope(*, hass=None, session=None):
     """Provide a transactional scope around a series of operations."""
-    from sqlalchemy.exc import SQLAlchemyError
-
     if session is None and hass is not None:
         session = hass.data[DATA_INSTANCE].get_session()
 
@@ -25,7 +23,7 @@ def session_scope(*, hass=None, session=None):
     try:
         yield session
         session.commit()
-    except SQLAlchemyError as err:
+    except Exception as err:  # pylint: disable=broad-except
         _LOGGER.error('Error executing query: %s', err)
         session.rollback()
         raise
