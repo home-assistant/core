@@ -272,15 +272,14 @@ class Recorder(threading.Thread):
     def _setup_run(self):
         """Log the start of the current run."""
         recorder_runs = models.RecorderRuns
-        with session_scope(session=self.get_session()) as session:
+        with session_scope(
+                session=self.get_session(expire_on_commit=False)) as session:
             for run in session.query(recorder_runs).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start
                 _LOGGER.warning("Ended unfinished session (id=%s from %s)",
                                 run.run_id, run.start)
                 session.add(run)
-
-                _LOGGER.warning("Found unfinished sessions")
 
             self.run_info = recorder_runs(
                 start=self.recording_start,
