@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, CoreState, callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.history import get_states, last_recorder_run
 from homeassistant.components.recorder import (
-    async_get_instance, DOMAIN as _RECORDER)
+    wait_connection_ready, DOMAIN as _RECORDER)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +58,7 @@ def async_get_last_state(hass, entity_id: str):
                       hass.state)
         return None
 
-    yield from async_get_instance()  # Ensure recorder ready
+    yield from wait_connection_ready(hass)
 
     if _LOCK not in hass.data:
         hass.data[_LOCK] = asyncio.Lock(loop=hass.loop)
