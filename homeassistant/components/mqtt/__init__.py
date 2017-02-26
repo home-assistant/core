@@ -436,6 +436,7 @@ class MQTT(object):
         with (yield from self._paho_lock):
             yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.publish, topic, payload, qos, retain)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
 
     @asyncio.coroutine
     def async_connect(self):
@@ -486,6 +487,7 @@ class MQTT(object):
         with (yield from self._paho_lock):
             result, mid = yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.subscribe, topic, qos)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
 
         _raise_on_error(result)
         self.progress[mid] = topic
