@@ -7,6 +7,7 @@ import yaml
 import os
 import paho.mqtt.client as mqtt
 import time
+import json
 
 ATTRIBUTES = {
     'battery': (0, 100, 5),
@@ -35,8 +36,9 @@ def main():
     while True:
         for name,params in ATTRIBUTES.items():
             values[name] = (values[name] + params[2]) % params[1]
-            client.publish('test/simulated_plant/{}'.format(name),values[name])
-            print('published {}={}'.format(name,values[name]))
+        json_payload = json.dumps(values)
+        client.publish('test/simulated_plant',json_payload)
+        print('published {}'.format(json_payload))
         time.sleep(5)
 
 
