@@ -237,8 +237,11 @@ class Thermostat(ClimateDevice):
 
     @property
     def mode(self):
-        """Return current mode ie. home, away, sleep."""
-        return self.thermostat['program']['currentClimateRef']
+        """Return current mode (as the user-defined name)."""
+        cur = self.thermostat['program']['currentClimateRef']
+        climates = self.thermostat['program']['climates']
+        current = list(filter(lambda x: x['climateRef'] == cur, climates))
+        return current[0]['name']
 
     @property
     def fan_min_on_time(self):
