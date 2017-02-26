@@ -381,9 +381,9 @@ class PlexClient(MediaPlayerDevice):
 
         if self.session and self.session.player:
             if ((frozen_seconds >
-                int(self.optional_config[CONF_MAX_FROZEN_PAUSED])) and
-                (self.session.player.state == 'paused' or
-                    self._frozen_fixed_state in (STATE_PAUSED, STATE_IDLE))):
+                 int(self.optional_config[CONF_MAX_FROZEN_PAUSED])) and
+                    (self.session.player.state == 'paused' or
+                     self._frozen_fixed_state in (STATE_PAUSED, STATE_IDLE))):
                 _LOGGER.debug('Frozen paused client detected, forcing idle '
                               'state: %s', self.entity_id)
                 self._frozen_fixed_state = STATE_IDLE
