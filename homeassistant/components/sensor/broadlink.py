@@ -35,10 +35,15 @@ SENSOR_TYPES = {
     'noise': ['Noise', ' '],
 }
 
+_MONITORED_CONDITIONS_SCHEMA = vol.Schema({
+    vol.In(SENSOR_TYPES): cv.template
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): vol.Coerce(str),
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.All(cv.ensure_list, [vol.Any(vol.In(SENSOR_TYPES),
+                                         _MONITORED_CONDITIONS_SCHEMA)]),
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Required(CONF_HOST): cv.string,
@@ -59,23 +64,37 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dev = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BroadlinkSensor(
-            config.get(CONF_NAME),
-            broadlink_data,
-            variable))
+        if isinstance(variable, dict):
+            for condition, template in variable.items():
+                dev.append(BroadlinkSensor(
+                    hass,
+                    config.get(CONF_NAME),
+                    broadlink_data,
+                    condition,
+                    template))
+        else:
+            dev.append(BroadlinkSensor(
+                hass,
+                config.get(CONF_NAME),
+                broadlink_data,
+                variable))
     add_devices(dev)
 
 
 class BroadlinkSensor(Entity):
     """Representation of a Broadlink device sensor."""
 
-    def __init__(self, name, broadlink_data, sensor_type):
+    def __init__(self, hass, name, broadlink_data, sensor_type,
+                 value_template=None):
         """Initialize the sensor."""
         self._name = "%s %s" % (name, SENSOR_TYPES[sensor_type][0])
         self._state = None
         self._type = sensor_type
         self._broadlink_data = broadlink_data
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._value_template = value_template
+        if self._value_template:
+            self._value_template.hass = hass
         self.update()
 
     @property
@@ -98,7 +117,11 @@ class BroadlinkSensor(Entity):
         self._broadlink_data.update()
         if self._broadlink_data.data is None:
             return
-        self._state = self._broadlink_data.data[self._type]
+        if self._value_template:
+            self._state = self._value_template.render_with_possible_json_value(
+                str(self._broadlink_data.data[self._type]))
+        else:
+            self._state = self._broadlink_data.data[self._type]
 
 
 class BroadlinkData(object):
