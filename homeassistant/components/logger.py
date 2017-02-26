@@ -76,7 +76,7 @@ class HomeAssistantLogFilter(logging.Filter):
 
 
 @asyncio.coroutine
-def async_setup(hass, config=None):
+def async_setup(hass, config):
     """Setup the logger component."""
     logfilter = {}
 
