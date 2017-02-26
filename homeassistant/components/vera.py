@@ -5,7 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/vera/
 """
 import logging
-from collections import Counter, defaultdict
+from collections import defaultdict
 
 import voluptuous as vol
 
@@ -84,17 +84,13 @@ def setup(hass, base_config):
     devices = [device for device in devices
                if device.device_id not in exclude_ids]
 
-    # Count the different device names.
-    counts = Counter(getattr(device, 'name').lower() for device in devices)
-
     for device in devices:
         device_type = map_vera_device(device, light_ids)
         if device_type is None:
             continue
 
-        if counts[device.name.lower()] > 1:
-            # Non-unique device name, append id to prevent name clashes in HA.
-            device.name += ' ' + str(device.device_id)
+        # Append id to prevent name clashes in HA.
+        device.name += ' ' + str(device.device_id)
 
         VERA_DEVICES[device_type].append(device)
 
