@@ -2,24 +2,28 @@
 Sensor for monitoring plants with Xiaomi Mi Plant sensors
 """
 
-#import logging
+import logging
 import voluptuous as vol
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, ATTR_BATTERY_LEVEL, TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE)
+    CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL, TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
+    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
+import json
+import asyncio
 
 DEFAULT_NAME = 'MiGardener'
 DEPENDENCIES = ['mqtt']
 
-READING_BATTERY = ATTR_BATTERY_LEVEL
+READING_BATTERY = 'battery'
 READING_TEMPERATURE = ATTR_TEMPERATURE
 READING_MOISTURE = 'moisture'
 READING_CONDUCTIVITY = 'conductivity'
 READING_BRIGHTNESS = 'brightness'
+CAST_FUNCTION = 'cast_function'
 
 CONF_MIN_BATTERY_LEVEL = 'min_' + READING_BATTERY
 CONF_MIN_TEMPERATURE = 'min_' + READING_TEMPERATURE
@@ -36,8 +40,16 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_MIN_BATTERY_LEVEL): cv.string,
     vol.Optional(ATTR_SERVICE): cv.string,
+    vol.Optional(CONF_MIN_BATTERY_LEVEL): cv.positive_int,
+    vol.Optional(CONF_MIN_TEMPERATURE): cv.small_float,
+    vol.Optional(CONF_MAX_TEMPERATURE): cv.small_float,
+    vol.Optional(CONF_MIN_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MAX_MOISTURE): cv.positive_int,
+    vol.Optional(CONF_MIN_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MAX_CONDUCTIVITY): cv.positive_int,
+    vol.Optional(CONF_MIN_BRIGHTNESS): cv.positive_int,
+    vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
 })
 
 
@@ -46,41 +58,106 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
-    mg = MiGardener(hass,config)
-
-    readings = [
-        mg.add_reading(READING_BATTERY,  '%', int),
-        mg.add_reading(READING_TEMPERATURE, TEMP_CELSIUS, float),
-        mg.add_reading(READING_MOISTURE,  '%', int),
-        mg.add_reading(READING_CONDUCTIVITY, 'µS/cm', int),
-        mg.add_reading(READING_BRIGHTNESS, 'lux', int),
-    ]
-
+    mg = MiGardener(hass, config)
     add_devices([mg])
-    add_devices(readings)
-    mg.create_group()
 
 
 class MiGardener(Entity):
+
+
+    READINGS =  {
+        READING_BATTERY: {
+            ATTR_UNIT_OF_MEASUREMENT:  '%',
+            CAST_FUNCTION:int,
+            'min':CONF_MIN_BATTERY_LEVEL},
+        READING_TEMPERATURE: {
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            CAST_FUNCTION:float,
+            'min': CONF_MIN_TEMPERATURE ,
+            'max': CONF_MAX_TEMPERATURE,
+        },
+        READING_MOISTURE: {
+            ATTR_UNIT_OF_MEASUREMENT: '%',
+            CAST_FUNCTION: int,
+            'min': CONF_MIN_MOISTURE,
+            'max': CONF_MAX_MOISTURE,
+        },
+        READING_CONDUCTIVITY: {
+            ATTR_UNIT_OF_MEASUREMENT: 'µS/cm',
+            CAST_FUNCTION: int,
+            'min': CONF_MIN_CONDUCTIVITY,
+            'max': CONF_MAX_CONDUCTIVITY,
+        },
+        READING_BRIGHTNESS: {
+            ATTR_UNIT_OF_MEASUREMENT: 'lux',
+            CAST_FUNCTION: int,
+            'min': CONF_MIN_BRIGHTNESS,
+            'max': CONF_MAX_BRIGHTNESS,
+        }
+    }
 
     def __init__(self, hass, config):
         self._hass = hass
         self._config = config
         self._state = STATE_UNKNOWN
         self._name = config[CONF_NAME]
-        self._state_topic = '{}/+'.format(config[CONF_STATE_TOPIC])
-        self._readings = []
+        self._state_topic = config[CONF_STATE_TOPIC]
+        self._attrib = { ATTR_FRIENDLY_NAME: 'status' }
+        self._create_group()
 
-    def add_reading(self, name, unit_of_measurement, cast_function):
-        r = _MiGardenerReading(self._hass, self._config, name, unit_of_measurement, cast_function)
-        self._readings.append(name)
-        return r
+        @callback
+        def message_received(topic, payload, qos):
+            """A new MQTT message has been received."""
+            data = json.loads(payload)
+            for sensor_name,params in self.READINGS.items():
+                value = params[CAST_FUNCTION](data[sensor_name])
+                self._set_sensor(sensor_name, value)
+            self._hass.async_add_job(self.check_state())
 
-    def create_group(self):
-        entity_ids = []
-        for reading_name in self._readings:
-            entity_ids.append('sensor.{}_{}'.format(self._name, reading_name))
-        self._hass.states.set('group.{}'.format(self._name), 'test', attributes={'entity_id': entity_ids})
+        mqtt.subscribe(hass, self._state_topic, message_received)
+
+    def _create_group(self):
+        entity_ids = [self._sensor_entity_id()]
+        for sensor_name in self.READINGS:
+            entity_ids.append(self._sensor_entity_id(sensor_name))
+        self._hass.states.set('group.{}'.format(self._name), STATE_UNKNOWN, attributes={'entity_id': entity_ids})
+
+    def _sensor_entity_id(self, sensor_name=None):
+        if sensor_name is None:
+            return 'sensor.{}'.format(self._name)
+        return 'sensor.{}_{}'.format(self._name, sensor_name)
+
+    def _set_sensor(self, sensor_name, value):
+        attrib = {
+            ATTR_UNIT_OF_MEASUREMENT : self.READINGS[sensor_name][ATTR_UNIT_OF_MEASUREMENT],
+            ATTR_FRIENDLY_NAME : sensor_name,
+        }
+        self._hass.states.async_set(self._sensor_entity_id(sensor_name), value, attributes=attrib)
+
+    @asyncio.coroutine
+    def check_state(self,):
+        result = []
+        for sensor_name,params in self.READINGS.items():
+            state = self._hass.states.get(self._sensor_entity_id(sensor_name))
+            value = params[CAST_FUNCTION](state.state)
+
+            if 'min' in params and params['min'] in self._config:
+                min_value = self._config[params['min']]
+                if value < min_value:
+                    result.append('{} low'.format(sensor_name))
+
+            if 'max' in params and params['max'] in self._config:
+                max_value = self._config[params['max']]
+                if value > max_value:
+                    result.append('{} high'.format(sensor_name))
+
+
+        if len(result) == 0:
+            self._state = 'ok'
+        else:
+            self._state = ', '.join(result)
+        self._hass.async_add_job(self.async_update_ha_state())
+
 
     @property
     def should_poll(self):
@@ -104,50 +181,4 @@ class MiGardener(Entity):
 
     @property
     def state_attributes(self):
-        return self._readings
-
-
-class _MiGardenerReading(Entity):
-
-    def __init__(self, hass, config, name, unit_of_measurement, cast_function):
-        self._hass = hass
-        self._config = config
-        self._name = '{}_{}'.format(config[CONF_NAME],name)
-        if name == ATTR_BATTERY_LEVEL:
-            self._state_topic = '{}/{}'.format(config[CONF_STATE_TOPIC], 'battery')
-        else:
-            self._state_topic = '{}/{}'.format(config[CONF_STATE_TOPIC], name)
-        self._short_name = name
-        self._unit_of_measurement = unit_of_measurement
-        self._cast_function = cast_function
-        self._state = STATE_UNKNOWN
-        #self._min_value = config['min_{}'.format(name)] or None
-        #self._max_value = config['max_{}'.format(name)] or None
-
-        @callback
-        def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
-            self._state = self._cast_function(payload)
-            self._hass.async_add_job(self.async_update_ha_state())
-
-        mqtt.subscribe(hass, self._state_topic, message_received)
-
-
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
-
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return self._state
+        return self._attrib
