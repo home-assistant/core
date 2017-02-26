@@ -1,15 +1,13 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 import unittest
-from unittest.mock import patch, MagicMock
 
 import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
-from homeassistant.components import recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.util import session_scope, execute
+from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.models import States, Events
 from tests.common import get_test_home_assistant, init_recorder_component
 

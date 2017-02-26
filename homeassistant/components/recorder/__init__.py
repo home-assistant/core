@@ -272,8 +272,8 @@ class Recorder(threading.Thread):
     def _setup_run(self):
         """Log the start of the current run."""
         recorder_runs = models.RecorderRuns
-        with session_scope(
-                session=self.get_session(expire_on_commit=False)) as session:
+        with session_scope(session=self.get_session(expire_on_commit=False)) \
+                as session:
             for run in session.query(recorder_runs).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start

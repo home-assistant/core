@@ -4,8 +4,25 @@ from unittest.mock import patch, MagicMock
 import pytest
 
 from homeassistant.components.recorder import util
+from homeassistant.components.recorder.const import DATA_INSTANCE
+from tests.common import get_test_home_assistant, init_recorder_component
 
-from .test_init import hass_recorder  # noqa
+
+@pytest.fixture
+def hass_recorder():
+    """HASS fixture with in-memory recorder."""
+    hass = get_test_home_assistant()
+
+    def setup_recorder(config=None):
+        """Setup with params."""
+        init_recorder_component(hass, config)
+        hass.start()
+        hass.block_till_done()
+        hass.data[DATA_INSTANCE].block_till_done()
+        return hass
+
+    yield setup_recorder
+    hass.stop()
 
 
 def test_recorder_bad_commit(hass_recorder):
