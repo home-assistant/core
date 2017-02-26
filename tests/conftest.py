@@ -38,6 +38,15 @@ location.elevation = test_real(location.elevation)
 util.get_local_ip = lambda: '127.0.0.1'
 
 
+@pytest.fixture(autouse=True)
+def verify_cleanup():
+    """Verify that the test has cleaned up resources correctly."""
+    yield
+
+    from tests import common
+    assert common.INST_COUNT < 2
+
+
 @pytest.fixture
 def hass(loop):
     """Fixture to provide a test instance of HASS."""
