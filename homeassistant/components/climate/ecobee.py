@@ -187,29 +187,27 @@ class Thermostat(ClimateDevice):
     def current_hold_mode(self):
         """Return current hold mode."""
         events = self.thermostat['events']
-        if any((event['holdClimateRef'] == 'away' and
-                int(event['endDate'][0:4])-int(event['startDate'][0:4]) <= 1)
-               or event['type'] == 'autoAway'
-               for event in events):
-            # away hold is auto away or a temporary hold from away climate
-            hold = 'away'
-        elif any(event['holdClimateRef'] == 'away' and
-                 int(event['endDate'][0:4])-int(event['startDate'][0:4]) > 1
-                 for event in events):
-            # a permanent away is not considered a hold, but away_mode
-            hold = None
-        elif any(event['holdClimateRef'] == 'home' or
-                 event['type'] == 'autoHome'
-                 for event in events):
-            # home mode is auto home or any home hold
-            hold = 'home'
-        elif any(event['type'] == 'hold' and event['running']
-                 for event in events):
-            hold = 'temp'
-            # temperature hold is any other hold not based on climate
-        else:
-            hold = None
-        return hold
+        for event in events:
+            if event['running']:
+                if event['type'] == 'hold':
+                    if event['holdClimateRef'] == 'away':
+                        if int(event['endDate'][0:4]) - \
+                           int(event['startDate'][0:4]) <= 1:
+                            # a temporary hold from away climate is a hold
+                            return 'away'
+                        else:
+                            # a premanent hold from away climate is away_mode
+                            return None
+                    elif event['holdClimateRef'] != "":
+                        # any other hold based on climate
+                        return event['holdClimateRef']
+                    else:
+                        # any hold not based on a climate is a temp hold
+                        return 'temp'
+                elif event['type'].startswith('auto'):
+                    # all auto modes are treated as holds
+                    return event['type'][4:].lower()
+        return None
 
     @property
     def current_operation(self):
@@ -280,32 +278,28 @@ class Thermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on."""
-        self.data.ecobee.set_climate_hold(self.thermostat_index,
-                                          "away", 'indefinite')
-        self.update_without_throttle = True
+        self.set_hold_mode('away')
 
     def turn_away_mode_off(self):
         """Turn away off."""
-        self.data.ecobee.resume_program(self.thermostat_index)
-        self.update_without_throttle = True
+        self.set_hold_mode(None)
 
     def set_hold_mode(self, hold_mode):
-        """Set hold mode (away, home, temp)."""
+        """Set hold mode (away, home, temp, sleep, etc.)."""
         hold = self.current_hold_mode
 
         if hold == hold_mode:
             # no change, so no action required
             return
-        elif hold_mode == 'away':
-            self.data.ecobee.set_climate_hold(self.thermostat_index,
-                                              "away", self.hold_preference())
-        elif hold_mode == 'home':
-            self.data.ecobee.set_climate_hold(self.thermostat_index,
-                                              "home", self.hold_preference())
-        elif hold_mode == 'temp':
-            self.set_temp_hold(int(self.current_temperature))
-        else:
+        elif hold_mode == 'None' or hold_mode is None:
             self.data.ecobee.resume_program(self.thermostat_index)
+        else:
+            if hold_mode == 'temp':
+                self.set_temp_hold(int(self.current_temperature))
+            else:
+                self.data.ecobee.set_climate_hold(self.thermostat_index,
+                                                  hold_mode,
+                                                  self.hold_preference())
             self.update_without_throttle = True
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
