@@ -19,7 +19,6 @@ from aiohttp.web_exceptions import HTTPUnauthorized, HTTPMovedPermanently
 import homeassistant.helpers.config_validation as cv
 import homeassistant.remote as rem
 import homeassistant.util as hass_util
-from homeassistant.components import persistent_notification
 from homeassistant.const import (
     SERVER_PORT, CONTENT_TYPE_JSON, ALLOWED_CORS_HEADERS,
     EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START)
@@ -27,7 +26,7 @@ from homeassistant.core import is_callback
 from homeassistant.util.logging import HideSensitiveDataFilter
 
 from .auth import auth_middleware
-from .ban import ban_middleware, process_wrong_login
+from .ban import ban_middleware
 from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
@@ -50,8 +49,6 @@ CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
-
-NOTIFICATION_ID_LOGIN = 'http-login'
 
 # TLS configuation follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
@@ -409,13 +406,6 @@ def request_handler_factory(view, handler):
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
         if view.requires_auth and not authenticated:
-            yield from process_wrong_login(request)
-            _LOGGER.warning('Login attempt or request with an invalid '
-                            'password from %s', remote_addr)
-            persistent_notification.async_create(
-                request.app['hass'],
-                'Invalid password used from {}'.format(remote_addr),
-                'Login attempt failed', NOTIFICATION_ID_LOGIN)
             raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',

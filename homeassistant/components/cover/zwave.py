@@ -7,21 +7,16 @@ https://home-assistant.io/components/cover.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
-from homeassistant.components.cover import DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
+from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 
-SOMFY = 0x47
-SOMFY_ZRTSI = 0x5a52
-SOMFY_ZRTSI_CONTROLLER = (SOMFY, SOMFY_ZRTSI)
-WORKAROUND = 'workaround'
-
-DEVICE_MAPPINGS = {
-    SOMFY_ZRTSI_CONTROLLER: WORKAROUND
-}
-
 _LOGGER = logging.getLogger(__name__)
+
+SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -58,16 +53,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._open_id = None
         self._close_id = None
         self._current_position = None
-        self._workaround = None
-        if (value.node.manufacturer_id.strip() and
-                value.node.product_id.strip()):
-            specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                                   int(value.node.product_type, 16))
 
-            if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND:
-                    _LOGGER.debug("Controller without positioning feedback")
-                    self._workaround = 1
+        self._workaround = workaround.get_device_mapping(value)
+        if self._workaround:
+            _LOGGER.debug("Using workaround %s", self._workaround)
+        self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -81,6 +71,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._close_id = self.get_value(
             class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
             label=['Close', 'Down'], member='value_id')
+        if self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
+            self._open_id, self._close_id = self._close_id, self._open_id
 
     @property
     def is_closed(self):
@@ -95,14 +87,15 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of Zwave roller shutter."""
-        if not self._workaround:
-            if self._current_position is not None:
-                if self._current_position <= 5:
-                    return 0
-                elif self._current_position >= 95:
-                    return 100
-                else:
-                    return self._current_position
+        if self._workaround == workaround.WORKAROUND_NO_POSITION:
+            return None
+        if self._current_position is not None:
+            if self._current_position <= 5:
+                return 0
+            elif self._current_position >= 95:
+                return 100
+            else:
+                return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -127,11 +120,16 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, value):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.update_properties()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._value.data
+        return not self._state
 
     def close_cover(self):
         """Close the garage door."""
@@ -140,3 +138,13 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def open_cover(self):
         """Open the garage door."""
         self._value.data = True
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_GARAGE

@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.1.1', 'pubnubsub-handler==1.0.0']
+REQUIREMENTS = ['python-wink==1.1.1', 'pubnubsub-handler==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,7 +139,6 @@ class WinkDevice(Entity):
         """Initialize the Wink device."""
         self.hass = hass
         self.wink = wink
-        self._battery = self.wink.battery_level()
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['entities'].append(self)
@@ -183,17 +182,24 @@ class WinkDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
-        if self._battery:
-            attributes[ATTR_BATTERY_LEVEL] = self._battery_level
-        if self._manufacturer_device_model:
-            _model = self._manufacturer_device_model
-            attributes["manufacturer_device_model"] = _model
-        if self._manufacturer_device_id:
-            attributes["manufacturer_device_id"] = self._manufacturer_device_id
-        if self._device_manufacturer:
-            attributes["device_manufacturer"] = self._device_manufacturer
-        if self._model_name:
-            attributes["model_name"] = self._model_name
+        battery = self._battery_level
+        if battery:
+            attributes[ATTR_BATTERY_LEVEL] = battery
+        man_dev_model = self._manufacturer_device_model
+        if man_dev_model:
+            attributes["manufacturer_device_model"] = man_dev_model
+        man_dev_id = self._manufacturer_device_id
+        if man_dev_id:
+            attributes["manufacturer_device_id"] = man_dev_id
+        dev_man = self._device_manufacturer
+        if dev_man:
+            attributes["device_manufacturer"] = dev_man
+        model_name = self._model_name
+        if model_name:
+            attributes["model_name"] = model_name
+        tamper = self._tamper
+        if tamper is not None:
+            attributes["tamper_detected"] = tamper
         return attributes
 
     @property
@@ -221,3 +227,11 @@ class WinkDevice(Entity):
     def _model_name(self):
         """Return the model name."""
         return self.wink.model_name()
+
+    @property
+    def _tamper(self):
+        """Return the devices tamper status."""
+        if hasattr(self.wink, 'tamper_detected'):
+            return self.wink.tamper_detected()
+        else:
+            return None

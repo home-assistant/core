@@ -4,6 +4,7 @@ Support for MQTT cover devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mqtt/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -46,13 +47,14 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the MQTT Cover."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    add_devices([MqttCover(
-        hass,
+
+    yield from async_add_devices([MqttCover(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -71,13 +73,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttCover(CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, hass, name, state_topic, command_topic, qos,
-                 retain, state_open, state_closed, payload_open, payload_close,
+    def __init__(self, name, state_topic, command_topic, qos, retain,
+                 state_open, state_closed, payload_open, payload_close,
                  payload_stop, optimistic, value_template):
         """Initialize the cover."""
         self._position = None
         self._state = None
-        self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
@@ -89,37 +90,45 @@ class MqttCover(CoverDevice):
         self._state_closed = state_closed
         self._retain = retain
         self._optimistic = optimistic or state_topic is None
+        self._template = value_template
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method is a coroutine.
+        """
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
+
             if payload == self._state_open:
                 self._state = False
-                hass.async_add_job(self.async_update_ha_state())
             elif payload == self._state_closed:
                 self._state = True
-                hass.async_add_job(self.async_update_ha_state())
             elif payload.isnumeric() and 0 <= int(payload) <= 100:
                 if int(payload) > 0:
                     self._state = False
                 else:
                     self._state = True
                 self._position = int(payload)
-                hass.async_add_job(self.async_update_ha_state())
             else:
                 _LOGGER.warning(
                     "Payload is not True, False, or integer (0-100): %s",
                     payload)
+                return
+
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            mqtt.subscribe(hass, self._state_topic, message_received,
-                           self._qos)
+            yield from mqtt.async_subscribe(
+                self.hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -144,25 +153,40 @@ class MqttCover(CoverDevice):
         """
         return self._position
 
-    def open_cover(self, **kwargs):
-        """Move the cover up."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_open,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_open_cover(self, **kwargs):
+        """Move the cover up.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_open, self._qos,
+            self._retain)
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = False
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def close_cover(self, **kwargs):
-        """Move the cover down."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_close,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_close_cover(self, **kwargs):
+        """Move the cover down.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_close, self._qos,
+            self._retain)
         if self._optimistic:
             # Optimistically assume that cover has changed state.
             self._state = True
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def stop_cover(self, **kwargs):
-        """Stop the device."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_stop,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_stop_cover(self, **kwargs):
+        """Stop the device.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_stop, self._qos,
+            self._retain)

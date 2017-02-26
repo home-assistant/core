@@ -26,5 +26,5 @@ If the code does not interact with devices:
   - [ ] Local tests with `tox` run successfully. **Your PR cannot be merged unless tests pass**
   - [ ] Tests have been added to verify that the new code works.
 
-[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L16
-[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L51
+[ex-requir]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L14
+[ex-import]: https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/keyboard.py#L54

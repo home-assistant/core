@@ -41,7 +41,7 @@ SENSOR_TYPES = {
     'icon': ['Icon', None, None, None, None, None, None,
              ['currently', 'hourly', 'daily']],
     'nearest_storm_distance': ['Nearest Storm Distance',
-                               'km', 'm', 'km', 'km', 'm',
+                               'km', 'mi', 'km', 'km', 'mi',
                                'mdi:weather-lightning', ['currently']],
     'nearest_storm_bearing': ['Nearest Storm Bearing',
                               '°', '°', '°', '°', '°',
@@ -74,7 +74,7 @@ SENSOR_TYPES = {
                  ['currently', 'hourly', 'daily']],
     'pressure': ['Pressure', 'mbar', 'mbar', 'mbar', 'mbar', 'mbar',
                  'mdi:gauge', ['currently', 'hourly', 'daily']],
-    'visibility': ['Visibility', 'km', 'm', 'km', 'km', 'm', 'mdi:eye',
+    'visibility': ['Visibility', 'km', 'mi', 'km', 'km', 'mi', 'mdi:eye',
                    ['currently', 'hourly', 'daily']],
     'ozone': ['Ozone', 'DU', 'DU', 'DU', 'DU', 'DU', 'mdi:eye',
               ['currently', 'hourly', 'daily']],
@@ -96,6 +96,20 @@ SENSOR_TYPES = {
                              'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
 }
+
+CONDITION_PICTURES = {
+    'clear-day': '/static/images/darksky/weather-sunny.svg',
+    'clear-night': '/static/images/darksky/weather-night.svg',
+    'rain': '/static/images/darksky/weather-pouring.svg',
+    'snow': '/static/images/darksky/weather-snowy.svg',
+    'sleet': '/static/images/darksky/weather-hail.svg',
+    'wind': '/static/images/darksky/weather-windy.svg',
+    'fog': '/static/images/darksky/weather-fog.svg',
+    'cloudy': '/static/images/darksky/weather-cloudy.svg',
+    'partly-cloudy-day': '/static/images/darksky/weather-partlycloudy.svg',
+    'partly-cloudy-night': '/static/images/darksky/weather-cloudy.svg',
+}
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -162,6 +176,7 @@ class DarkSkySensor(Entity):
         self.type = sensor_type
         self.forecast_day = forecast_day
         self._state = None
+        self._icon = None
         self._unit_of_measurement = None
 
     @property
@@ -187,6 +202,17 @@ class DarkSkySensor(Entity):
     def unit_system(self):
         """Return the unit system of this entity."""
         return self.forecast_data.unit_system
+
+    @property
+    def entity_picture(self):
+        """Return the entity picture to use in the frontend, if any."""
+        if self._icon is None or 'summary' not in self.type:
+            return None
+
+        if self._icon in CONDITION_PICTURES:
+            return CONDITION_PICTURES[self._icon]
+        else:
+            return None
 
     def update_unit_of_measurement(self):
         """Update units based on unit system."""
@@ -224,10 +250,12 @@ class DarkSkySensor(Entity):
             self.forecast_data.update_minutely()
             minutely = self.forecast_data.data_minutely
             self._state = getattr(minutely, 'summary', '')
+            self._icon = getattr(minutely, 'icon', '')
         elif self.type == 'hourly_summary':
             self.forecast_data.update_hourly()
             hourly = self.forecast_data.data_hourly
             self._state = getattr(hourly, 'summary', '')
+            self._icon = getattr(hourly, 'icon', '')
         elif self.forecast_day > 0 or (
                 self.type in ['daily_summary',
                               'temperature_min',
@@ -239,6 +267,7 @@ class DarkSkySensor(Entity):
             daily = self.forecast_data.data_daily
             if self.type == 'daily_summary':
                 self._state = getattr(daily, 'summary', '')
+                self._icon = getattr(daily, 'icon', '')
             else:
                 if hasattr(daily, 'data'):
                     self._state = self.get_state(
@@ -261,6 +290,9 @@ class DarkSkySensor(Entity):
 
         if state is None:
             return state
+
+        if 'summary' in self.type:
+            self._icon = getattr(data, 'icon', '')
 
         # Some state data needs to be rounded to whole values or converted to
         # percentages

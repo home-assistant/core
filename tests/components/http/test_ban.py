@@ -97,7 +97,6 @@ class TestHttp:
             with patch('homeassistant.components.http.'
                        'ban.get_real_ip',
                        return_value=ip_address("200.201.202.204")):
-                print("GETTING API")
                 return requests.get(
                     _url(const.URL_API),
                     headers={const.HTTP_HEADER_HA_AUTH: 'Wrong password'})
