@@ -25,7 +25,7 @@ def _load_restore_cache(hass: HomeAssistant):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, remove_cache)
 
-    last_run = last_recorder_run()
+    last_run = last_recorder_run(hass)
 
     if last_run is None or last_run.end is None:
         _LOGGER.debug('Not creating cache - no suitable last run found: %s',
@@ -38,7 +38,7 @@ def _load_restore_cache(hass: HomeAssistant):
     last_end_time = last_end_time.replace(tzinfo=dt_util.UTC)
     _LOGGER.debug("Last run: %s - %s", last_run.start, last_end_time)
 
-    states = get_states(last_end_time, run=last_run)
+    states = get_states(hass, last_end_time, run=last_run)
 
     # Cache the states
     hass.data[DATA_RESTORE_CACHE] = {
