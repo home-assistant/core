@@ -156,7 +156,7 @@ PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
 })
 
-PRINT_NODE_SCHEMA = vol.Schema({
+NODE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
 })
 
@@ -525,6 +525,18 @@ def setup(hass, config):
         _LOGGER.info(
             "Renamed ZWave node %d to %s", node_id, name)
 
+    def remove_failed_node(service):
+        """Remove failed node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        _LOGGER.info('Trying to remove zwave node %d', node_id)
+        NETWORK.controller.remove_failed_node(node_id)
+
+    def replace_failed_node(service):
+        """Replace failed node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        _LOGGER.info('Trying to replace zwave node %d', node_id)
+        NETWORK.controller.replace_failed_node(node_id)
+
     def set_config_parameter(service):
         """Set a config parameter to a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
@@ -671,6 +683,15 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_PRINT_CONFIG_PARAMETER],
                                schema=PRINT_CONFIG_PARAMETER_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REMOVE_FAILED_NODE,
+                               remove_failed_node,
+                               descriptions[const.SERVICE_REMOVE_FAILED_NODE],
+                               schema=NODE_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REPLACE_FAILED_NODE,
+                               replace_failed_node,
+                               descriptions[const.SERVICE_REPLACE_FAILED_NODE],
+                               schema=NODE_SERVICE_SCHEMA)
+
         hass.services.register(DOMAIN, const.SERVICE_CHANGE_ASSOCIATION,
                                change_association,
                                descriptions[
@@ -685,7 +706,7 @@ def setup(hass, config):
                                print_node,
                                descriptions[
                                    const.SERVICE_PRINT_NODE],
-                               schema=PRINT_NODE_SCHEMA)
+                               schema=NODE_SERVICE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
