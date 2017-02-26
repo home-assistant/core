@@ -155,7 +155,6 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, sensor, cam, delay):
         """Initialize the binary_sensor."""
-
         self._hass = hass
         self._cam = cam
         self._name = self._cam.name + ' ' + sensor
