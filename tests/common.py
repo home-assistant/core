@@ -28,7 +28,8 @@ from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -464,15 +465,17 @@ def assert_setup_component(count, domain=None):
         .format(count, res_len, res)
 
 
-def init_recorder_component(hass, add_config=None, db_ready_callback=None):
+def init_recorder_component(hass, add_config=None):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     config[recorder.CONF_DB_URL] = 'sqlite://'  # In memory DB
 
-    assert setup_component(hass, recorder.DOMAIN,
-                           {recorder.DOMAIN: config})
-    assert recorder.DOMAIN in hass.config.components
-    recorder.get_instance().block_till_db_ready()
+    with patch('homeassistant.components.recorder.migration.migrate_schema'):
+        assert setup_component(hass, recorder.DOMAIN,
+                               {recorder.DOMAIN: config})
+        assert recorder.DOMAIN in hass.config.components
+        run_coroutine_threadsafe(
+            recorder.wait_connection_ready(hass), hass.loop).result()
     _LOGGER.info("In-memory recorder successfully started")
 
 
