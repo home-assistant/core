@@ -4,28 +4,28 @@ Support to interface with the Plex API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex/
 """
+from datetime import datetime, timedelta
 import json
 import logging
 import os
-from datetime import datetime, timedelta
 from urllib.parse import urlparse
-import voluptuous as vol
-import homeassistant.util as util
-import homeassistant.helpers.config_validation as cv
-import asyncio
 
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
+import asyncio
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_VOLUME_SET,
-    SUPPORT_PLAY, SUPPORT_VOLUME_MUTE, SUPPORT_TURN_OFF, SUPPORT_SEEK,
-    PLATFORM_SCHEMA, MediaPlayerDevice)
-from homeassistant.const import (DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF,
-                                 STATE_PAUSED, STATE_PLAYING)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.const import (
+    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.loader import get_component
-from homeassistant.helpers.event import (track_utc_time_change)
+import homeassistant.util as util
+import voluptuous as vol
 
 REQUIREMENTS = ['plexapi==2.0.2']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -149,7 +149,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 def set_group_members(hass, group_entity_id, member_entity_id_list):
-    """Creates group if doesn't exist and sets memberships."""
+    """Create group if doesn't exist and sets memberships."""
     hass.states.set(group_entity_id, 'off',
                     {'entity_id': member_entity_id_list})
 
@@ -229,29 +229,28 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
-        # force devices to idle that do not have a valid session
+        active_entity_id_list = []
+        inactive_entity_id_list = []
+
         for machine_identifier, client in plex_clients.items():
+            # force devices to idle that do not have a valid session
             if client.session is None:
                 client.force_idle()
 
-        # add devices to dynamic groups
+            # get dynamic group memberships
+            if client.entity_id:
+                # do not add if hidden
+                client_states = hass.states.get(client.entity_id)
+                if client_states is not None:
+                    if not client_states.attributes.get('hidden'):
+                        if client.state in [STATE_IDLE, STATE_OFF]:
+                            inactive_entity_id_list.append(
+                                client.entity_id)
+                        else:
+                            active_entity_id_list.append(client.entity_id)
+
+        # store dynamic group memberships if optionally configured
         if optional_config[CONF_USE_DYNAMIC_GROUPS]:
-            active_entity_id_list = []
-            inactive_entity_id_list = []
-
-            for machine_identifier, client in plex_clients.items():
-                if client.entity_id:
-                    # do not add if hidden
-                    client_states = hass.states.get(client.entity_id)
-                    if client_states is not None:
-                        if not client_states.attributes.get('hidden'):
-                            if client.state in [STATE_IDLE, STATE_OFF]:
-                                inactive_entity_id_list.append(
-                                    client.entity_id)
-                            else:
-                                active_entity_id_list.append(client.entity_id)
-
-            # set groups with updated memberships
             set_group_members(hass, GROUP_ACTIVE_DEVICES,
                               active_entity_id_list)
             set_group_members(hass, GROUP_INACTIVE_DEVICES,
@@ -763,6 +762,7 @@ class PlexClient(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute the volume.
+
         Since we can't actually mute, we'll:
         - On mute, store volume and set volume to 0
         - On unmute, set volume to previously stored volume
@@ -813,6 +813,7 @@ class PlexClient(MediaPlayerDevice):
     @asyncio.coroutine
     def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media.
+
         This method must be run in the event loop and returns a coroutine.
         """
         if self.device:
