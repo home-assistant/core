@@ -18,7 +18,7 @@ from homeassistant.components.mqtt import CONF_STATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r'homeassistant/(?P<component>\w+)/(?P<object_id>\w+)/config')
+    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>\w+)/config')
 
 SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor']
 
@@ -26,6 +26,7 @@ SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor']
 @asyncio.coroutine
 def async_start(hass, discovery_topic, hass_config):
     """Initialization of MQTT Discovery."""
+    # pylint: disable=unused-variable
     @asyncio.coroutine
     def async_device_message_received(topic, payload, qos):
         """Process the received message."""
@@ -34,7 +35,7 @@ def async_start(hass, discovery_topic, hass_config):
         if not match:
             return
 
-        component, object_id = match.groups()
+        prefix_topic, component, object_id = match.groups()
 
         try:
             payload = json.loads(payload)

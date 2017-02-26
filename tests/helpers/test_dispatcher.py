@@ -28,8 +28,6 @@ class TestHelpersDispatcher(object):
             calls.append(data)
 
         dispatcher_connect(self.hass, 'test', test_funct)
-        self.hass.block_till_done()
-
         dispatcher_send(self.hass, 'test', 3)
         self.hass.block_till_done()
 
@@ -39,6 +37,47 @@ class TestHelpersDispatcher(object):
         self.hass.block_till_done()
 
         assert calls == [3, 'bla']
+
+    def test_simple_function_unsub(self):
+        """Test simple function (executor) and unsub."""
+        calls1 = []
+        calls2 = []
+
+        def test_funct1(data):
+            """Test function."""
+            calls1.append(data)
+
+        def test_funct2(data):
+            """Test function."""
+            calls2.append(data)
+
+        dispatcher_connect(self.hass, 'test1', test_funct1)
+        unsub = dispatcher_connect(self.hass, 'test2', test_funct2)
+        dispatcher_send(self.hass, 'test1', 3)
+        dispatcher_send(self.hass, 'test2', 4)
+        self.hass.block_till_done()
+
+        assert calls1 == [3]
+        assert calls2 == [4]
+
+        unsub()
+
+        dispatcher_send(self.hass, 'test1', 5)
+        dispatcher_send(self.hass, 'test2', 6)
+        self.hass.block_till_done()
+
+        assert calls1 == [3, 5]
+        assert calls2 == [4]
+
+        # check don't kill the flow
+        unsub()
+
+        dispatcher_send(self.hass, 'test1', 7)
+        dispatcher_send(self.hass, 'test2', 8)
+        self.hass.block_till_done()
+
+        assert calls1 == [3, 5, 7]
+        assert calls2 == [4]
 
     def test_simple_callback(self):
         """Test simple callback (async)."""
@@ -50,8 +89,6 @@ class TestHelpersDispatcher(object):
             calls.append(data)
 
         dispatcher_connect(self.hass, 'test', test_funct)
-        self.hass.block_till_done()
-
         dispatcher_send(self.hass, 'test', 3)
         self.hass.block_till_done()
 
@@ -72,8 +109,6 @@ class TestHelpersDispatcher(object):
             calls.append(data)
 
         dispatcher_connect(self.hass, 'test', test_funct)
-        self.hass.block_till_done()
-
         dispatcher_send(self.hass, 'test', 3)
         self.hass.block_till_done()
 
@@ -95,8 +130,6 @@ class TestHelpersDispatcher(object):
             calls.append(data3)
 
         dispatcher_connect(self.hass, 'test', test_funct)
-        self.hass.block_till_done()
-
         dispatcher_send(self.hass, 'test', 3, 2, 'bla')
         self.hass.block_till_done()
 

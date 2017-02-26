@@ -13,6 +13,7 @@ import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message, mock_coro)
@@ -237,11 +238,17 @@ class TestMQTTCallbacks(unittest.TestCase):
         calls = []
 
         @callback
-        def record(event):
+        def record(topic, payload, qos):
             """Helper to record calls."""
-            calls.append(event)
+            data = {
+                'topic': topic,
+                'payload': payload,
+                'qos': qos,
+            }
+            calls.append(data)
 
-        self.hass.bus.listen_once(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, record)
+        async_dispatcher_connect(
+            self.hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, record)
 
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
         message = MQTTMessage('test_topic', 1, 'Hello World!'.encode('utf-8'))
@@ -252,9 +259,9 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.assertEqual(1, len(calls))
         last_event = calls[0]
-        self.assertEqual('Hello World!', last_event.data['payload'])
-        self.assertEqual(message.topic, last_event.data['topic'])
-        self.assertEqual(message.qos, last_event.data['qos'])
+        self.assertEqual('Hello World!', last_event['payload'])
+        self.assertEqual(message.topic, last_event['topic'])
+        self.assertEqual(message.qos, last_event['qos'])
 
     def test_mqtt_failed_connection_results_in_disconnect(self):
         """Test if connection failure leads to disconnect."""
@@ -300,13 +307,20 @@ class TestMQTTCallbacks(unittest.TestCase):
         calls = []
 
         @callback
-        def record(event):
+        def record(topic, payload, qos):
             """Helper to record calls."""
-            calls.append(event)
+            data = {
+                'topic': topic,
+                'payload': payload,
+                'qos': qos,
+            }
+            calls.append(data)
+
+        async_dispatcher_connect(
+            self.hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, record)
 
         payload = 0x9a
         topic = 'test_topic'
-        self.hass.bus.listen_once(mqtt.EVENT_MQTT_MESSAGE_RECEIVED, record)
         MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
         message = MQTTMessage(topic, 1, payload)
         with self.assertLogs(level='ERROR') as test_handle:
