@@ -276,10 +276,7 @@ class Thermostat(ClimateDevice):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        events = self.thermostat['events']
-        return any(event['holdClimateRef'] == 'away' and
-                   int(event['endDate'][0:4])-int(event['startDate'][0:4]) > 1
-                   for event in events)
+        return self.current_hold_mode == 'away'
 
     def turn_away_mode_on(self):
         """Turn away on."""
