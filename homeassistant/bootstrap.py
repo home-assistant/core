@@ -7,7 +7,7 @@ import sys
 from collections import OrderedDict
 
 from types import ModuleType
-from typing import Any, Optional, Dict
+from typing import Any, Optional, Dict, List
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -35,7 +35,13 @@ ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+DATA_SETUP_EVENTS = 'setup_events'
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
+
+EV_SETUP = 'setup'
+EV_PLATFORM = 'platform'
+EV_RETURN = 'return'
+EV_PROGRESS = 'progress'
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
@@ -69,12 +75,18 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
         _async_persistent_notification(hass, domain, True)
         return False
 
+    tasks = []
     for component in components:
-        res = yield from _async_setup_component(hass, component, config)
-        if not res:
-            _LOGGER.error('Component %s failed to setup', component)
-            _async_persistent_notification(hass, component, True)
-            return False
+        tasks.append(_async_setup_component(hass, component, config))
+
+    if tasks:
+        _async_init_setup_data(hass, components)
+        yield from asyncio.wait(tasks, loop=hass.loop)
+        for component in components:
+            if not hass.data[DATA_SETUP_EVENTS][component][EV_RETURN]:
+                _LOGGER.error('Component %s failed to setup', component)
+                _async_persistent_notification(hass, component, True)
+                return False
 
     return True
 
@@ -98,6 +110,22 @@ def _handle_requirements(hass: core.HomeAssistant, component,
     return True
 
 
+def _async_init_setup_data(hass: core.HomeAssistant, components: List[str]):
+    """Initializing async setup construct."""
+    setup_events = hass.data.get(DATA_SETUP_EVENTS)
+    if setup_events is None:
+        setup_events = hass.data[DATA_SETUP_EVENTS] = {}
+
+    for domain in components:
+        if domain in setup_events:
+            continue
+
+        setup_events[domain] = {}
+        setup_events[domain][EV_SETUP] = asyncio.Event(loop=hass.loop)
+        setup_events[domain][EV_PROGRESS] = False
+        setup_events[domain][EV_RETURN] = None
+
+
 @asyncio.coroutine
 def _async_setup_component(hass: core.HomeAssistant,
                            domain: str, config) -> bool:
@@ -109,38 +137,31 @@ def _async_setup_component(hass: core.HomeAssistant,
     if domain in hass.config.components:
         return True
 
-    setup_lock = hass.data.get('setup_lock')
-    if setup_lock is None:
-        setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
+    setup_events = hass.data[DATA_SETUP_EVENTS][domain]
 
-    setup_progress = hass.data.get('setup_progress')
-    if setup_progress is None:
-        setup_progress = hass.data['setup_progress'] = []
-
-    if domain in setup_progress:
-        _LOGGER.error('Attempt made to setup %s during setup of %s',
-                      domain, domain)
-        _async_persistent_notification(hass, domain, True)
-        return False
+    # is setup or in progress
+    if setup_events[EV_PROGRESS] or setup_events[EV_SETUP].is_set():
+        yield from setup_events[EV_SETUP].wait()
+        return setup_events[EV_RETURN]
 
     try:
-        # Used to indicate to discovery that a setup is ongoing and allow it
-        # to wait till it is done.
-        did_lock = False
-        if not setup_lock.locked():
-            yield from setup_lock.acquire()
-            did_lock = True
+        component = loader.get_component(domain)
+        if component is None:
+            raise HomeAssistantError()
 
-        setup_progress.append(domain)
+        # wait until all dependencies are setup
+        if hasattr(component, 'DEPENDENCIES'):
+            all_events = hass.data[DATA_SETUP_EVENTS]
+            for dep in component.DEPENDENCIES:
+                yield from all_events[dep][EV_SETUP].wait()
+                if not all_events[dep][EV_RETURN]:
+                    raise HomeAssistantError()
+
+        setup_events[EV_PROGRESS] = True
         config = yield from async_prepare_setup_component(hass, config, domain)
 
         if config is None:
-            return False
-
-        component = loader.get_component(domain)
-        if component is None:
-            _async_persistent_notification(hass, domain)
-            return False
+            raise HomeAssistantError()
 
         async_comp = hasattr(component, 'async_setup')
 
@@ -153,19 +174,16 @@ def _async_setup_component(hass: core.HomeAssistant,
                     None, component.setup, hass, config)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error during setup of component %s', domain)
-            _async_persistent_notification(hass, domain, True)
-            return False
+            raise HomeAssistantError()
 
         if result is False:
             _LOGGER.error('component %s failed to initialize', domain)
-            _async_persistent_notification(hass, domain, True)
-            return False
+            raise HomeAssistantError()
         elif result is not True:
             _LOGGER.error('component %s did not return boolean if setup '
                           'was successful. Disabling component.', domain)
-            _async_persistent_notification(hass, domain, True)
             loader.set_component(domain, None)
-            return False
+            raise HomeAssistantError()
 
         hass.config.components.add(component.DOMAIN)
 
@@ -173,11 +191,21 @@ def _async_setup_component(hass: core.HomeAssistant,
             EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
         )
 
+        # wait until entities are setup
+        if EV_PLATFORM in setup_events:
+            yield from setup_events[EV_PLATFORM].wait()
+
+        setup_events[EV_RETURN] = True
         return True
+
+    except HomeAssistantError:
+        _async_persistent_notification(hass, domain, True)
+        setup_events[EV_RETURN] = False
+        return False
+
     finally:
-        setup_progress.remove(domain)
-        if did_lock:
-            setup_lock.release()
+        setup_events[EV_SETUP].set()
+        setup_events[EV_PROGRESS] = False
 
 
 def prepare_setup_component(hass: core.HomeAssistant, config: dict,
@@ -339,23 +367,14 @@ def from_config_dict(config: Dict[str, Any],
             hass.config.config_dir = config_dir
             mount_local_lib_path(config_dir)
 
-    @asyncio.coroutine
-    def _async_init_from_config_dict(future):
-        try:
-            re_hass = yield from async_from_config_dict(
-                config, hass, config_dir, enable_log, verbose, skip_pip,
-                log_rotate_days)
-            future.set_result(re_hass)
-        # pylint: disable=broad-except
-        except Exception as exc:
-            future.set_exception(exc)
-
     # run task
-    future = asyncio.Future(loop=hass.loop)
-    hass.async_add_job(_async_init_from_config_dict(future))
-    hass.loop.run_until_complete(future)
+    hass = hass.loop.run_until_complete(
+        async_from_config_dict(
+            config, hass, config_dir, enable_log, verbose, skip_pip,
+            log_rotate_days)
+    )
 
-    return future.result()
+    return hass
 
 
 @asyncio.coroutine
@@ -373,11 +392,6 @@ def async_from_config_dict(config: Dict[str, Any],
     This method is a coroutine.
     """
     hass.async_track_tasks()
-    setup_lock = hass.data.get('setup_lock')
-    if setup_lock is None:
-        setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
-
-    yield from setup_lock.acquire()
 
     core_config = config.get(core.DOMAIN, {})
 
@@ -436,14 +450,18 @@ def async_from_config_dict(config: Dict[str, Any],
     # Setup the components
     dependency_blacklist = loader.DEPENDENCY_BLACKLIST - set(components)
 
+    tasks = []
+    component_list = []
     for domain in loader.load_order_components(components):
         if domain in dependency_blacklist:
             raise HomeAssistantError(
                 '{} is not allowed to be a dependency'.format(domain))
+        tasks.append(_async_setup_component(hass, domain, config))
+        component_list.append(domain)
 
-        yield from _async_setup_component(hass, domain, config)
-
-    setup_lock.release()
+    if tasks:
+        _async_init_setup_data(hass, component_list)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     yield from hass.async_stop_track_tasks()
 
@@ -464,22 +482,13 @@ def from_config_file(config_path: str,
     if hass is None:
         hass = core.HomeAssistant()
 
-    @asyncio.coroutine
-    def _async_init_from_config_file(future):
-        try:
-            re_hass = yield from async_from_config_file(
-                config_path, hass, verbose, skip_pip, log_rotate_days)
-            future.set_result(re_hass)
-        # pylint: disable=broad-except
-        except Exception as exc:
-            future.set_exception(exc)
-
     # run task
-    future = asyncio.Future(loop=hass.loop)
-    hass.loop.create_task(_async_init_from_config_file(future))
-    hass.loop.run_until_complete(future)
+    hass = hass.loop.run_until_complete(
+        async_from_config_file(
+            config_path, hass, verbose, skip_pip, log_rotate_days)
+    )
 
-    return future.result()
+    return hass
 
 
 @asyncio.coroutine

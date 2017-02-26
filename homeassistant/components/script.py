@@ -130,6 +130,8 @@ def async_setup(hass, config):
                                  schema=SCRIPT_TURN_ONOFF_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_TOGGLE, toggle_service,
                                  schema=SCRIPT_TURN_ONOFF_SCHEMA)
+
+    component.async_set_ready()
     return True
 
 

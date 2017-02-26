@@ -204,6 +204,7 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_RELOAD, reload_service_handler,
         descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
 
+    component.async_set_ready()
     return True
 
 

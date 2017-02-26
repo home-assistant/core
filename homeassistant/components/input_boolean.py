@@ -107,6 +107,7 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, async_handler_service, schema=SERVICE_SCHEMA)
 
     yield from component.async_add_entities(entities)
+    component.async_set_ready()
     return True
 
 

@@ -4,7 +4,8 @@ from datetime import timedelta
 
 from homeassistant import config as conf_util
 from homeassistant.bootstrap import (
-    async_prepare_setup_platform, async_prepare_setup_component)
+    async_prepare_setup_platform, async_prepare_setup_component,
+    DATA_SETUP_EVENTS, EV_PLATFORM)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
@@ -46,15 +47,16 @@ class EntityComponent(object):
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
 
+        self._ready = asyncio.Event(loop=hass.loop)
+        if domain in hass.data.get(DATA_SETUP_EVENTS, {}):
+            hass.data[DATA_SETUP_EVENTS][domain][EV_PLATFORM] = self._ready
+
     def setup(self, config):
         """Set up a full entity component.
 
-        Loads the platforms from the config and will listen for supported
-        discovered platforms.
+        This don't block the executor for protect deadlocks.
         """
-        run_coroutine_threadsafe(
-            self.async_setup(config), self.hass.loop
-        ).result()
+        self.hass.add_job(self.async_setup(config))
 
     @asyncio.coroutine
     def async_setup(self, config):
@@ -75,6 +77,9 @@ class EntityComponent(object):
         if tasks:
             yield from asyncio.wait(tasks, loop=self.hass.loop)
 
+        # set event ready for know that component is setup
+        self._ready.set()
+
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
         @callback
@@ -85,6 +90,13 @@ class EntityComponent(object):
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
+
+    def async_set_ready(self):
+        """Set the EntityComponent ready for setup all things done.
+
+        Need to be call if async_setup will not call.
+        """
+        self._ready.set()
 
     def extract_from_service(self, service, expand_group=True):
         """Extract all known entities from a service call.
