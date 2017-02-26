@@ -115,6 +115,7 @@ class Thermostat(ClimateDevice):
         self._name = self.thermostat['name']
         self.hold_temp = hold_temp
         self.vacation = None
+        self._climate_list = self.climate_list
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
         self.update_without_throttle = False
@@ -265,6 +266,7 @@ class Thermostat(ClimateDevice):
             "fan": self.fan,
             "mode": self.mode,
             "operation": operation,
+            "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
         }
 
@@ -380,3 +382,9 @@ class Thermostat(ClimateDevice):
         # as an indefinite away hold is interpreted as away_mode
         else:
             return 'nextTransition'
+
+    @property
+    def climate_list(self):
+        """Return the list of climates currently available."""
+        climates = self.thermostat['program']['climates']
+        return list(map((lambda x: x['name']), climates))
