@@ -25,6 +25,7 @@ ATTR_FAN_MIN_ON_TIME = 'fan_min_on_time'
 ATTR_RESUME_ALL = 'resume_all'
 
 DEFAULT_RESUME_ALL = False
+TEMPERATURE_HOLD = 'temp'
 
 DEPENDENCIES = ['ecobee']
 
@@ -203,7 +204,7 @@ class Thermostat(ClimateDevice):
                         return event['holdClimateRef']
                     else:
                         # any hold not based on a climate is a temp hold
-                        return 'temp'
+                        return TEMPERATURE_HOLD
                 elif event['type'].startswith('auto'):
                     # all auto modes are treated as holds
                     return event['type'][4:].lower()
@@ -294,7 +295,7 @@ class Thermostat(ClimateDevice):
         elif hold_mode == 'None' or hold_mode is None:
             self.data.ecobee.resume_program(self.thermostat_index)
         else:
-            if hold_mode == 'temp':
+            if hold_mode == TEMPERATURE_HOLD:
                 self.set_temp_hold(int(self.current_temperature))
             else:
                 self.data.ecobee.set_climate_hold(self.thermostat_index,
