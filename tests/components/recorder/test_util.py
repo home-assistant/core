@@ -43,7 +43,7 @@ def test_recorder_bad_commit(hass_recorder):
 def test_recorder_bad_execute(hass_recorder):
     """Bad execute, retry 3 times."""
     from sqlalchemy.exc import SQLAlchemyError
-    hass = hass_recorder()
+    hass_recorder()
 
     def to_native():
         """Rasie exception."""
