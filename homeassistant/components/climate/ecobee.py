@@ -306,7 +306,7 @@ class Thermostat(ClimateDevice):
                 self.data.ecobee.set_climate_hold(self.thermostat_index,
                                                   hold_mode,
                                                   self.hold_preference())
-            self.update_without_throttle = True
+        self.update_without_throttle = True
 
     def set_auto_temp_hold(self, heat_temp, cool_temp):
         """Set temperature hold in auto mode."""
