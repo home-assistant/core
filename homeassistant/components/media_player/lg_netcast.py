@@ -4,7 +4,9 @@ Support for LG TV running on NetCast 3 or 4.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.lg_netcast/
 """
+import datetime
 from datetime import timedelta
+import hashlib
 import logging
 
 from requests import RequestException
@@ -18,7 +20,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-import homeassistant.util as util
 
 REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
                 'v0.2.0.zip#pylgnetcast==0.2.0']
@@ -27,8 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'LG TV Remote'
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
@@ -81,7 +81,6 @@ class LgTVDevice(MediaPlayerDevice):
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
         from pylgnetcast import LgNetCastError
@@ -171,6 +170,13 @@ class LgTVDevice(MediaPlayerDevice):
     def media_image_url(self):
         """URL for obtaining a screen capture."""
         return self._client.url + 'data?target=screen_image'
+
+    @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        timestamp = datetime.datetime.utcnow().timestamp()
+        tid = "%s_%s" % (self._channel_name, int(timestamp / 30.0))
+        return hashlib.md5(tid.encode('utf-8')).hexdigest()[:5]
 
     def turn_off(self):
         """Turn off media player."""
