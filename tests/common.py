@@ -23,7 +23,7 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
@@ -32,6 +32,7 @@ from homeassistant.util.async import run_callback_threadsafe
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
+INST_COUNT = 0
 
 
 def get_test_config_dir(*add_path):
@@ -85,6 +86,8 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
+    global INST_COUNT
+    INST_COUNT += 1
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
@@ -121,6 +124,13 @@ def async_test_home_assistant(loop):
             yield from orig_start()
 
     hass.async_start = mock_async_start
+
+    @ha.callback
+    def clear_instance(event):
+        global INST_COUNT
+        INST_COUNT -= 1
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, clear_instance)
 
     return hass
 
