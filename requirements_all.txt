@@ -33,6 +33,9 @@ SoCo==0.12
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.4
 
+# homeassistant.components.sensor.dnsip
+aiodns==1.1.1
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.5.0
@@ -110,9 +113,6 @@ dlipower==0.7.165
 
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
-
-# homeassistant.components.sensor.dnsip
-aiodns==1.1.1
 
 # homeassistant.components.sensor.dovado
 dovado==0.4.0
