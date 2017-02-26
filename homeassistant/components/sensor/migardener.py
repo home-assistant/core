@@ -124,8 +124,8 @@ class MiGardener(Entity):
 
     def _sensor_entity_id(self, sensor_name=None):
         if sensor_name is None:
-            return 'sensor.{}'.format(self._name)
-        return 'sensor.{}_{}'.format(self._name, sensor_name)
+            return 'sensor.{}'.format(self._name).lower()
+        return 'sensor.{}_{}'.format(self._name, sensor_name).lower()
 
     def _set_sensor(self, sensor_name, value):
         attrib = {
