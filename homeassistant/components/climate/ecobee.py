@@ -237,7 +237,7 @@ class Thermostat(ClimateDevice):
 
     @property
     def mode(self):
-        """Return current mode (as the user-defined name)."""
+        """Return current mode, as the user-visible name."""
         cur = self.thermostat['program']['currentClimateRef']
         climates = self.thermostat['program']['climates']
         current = list(filter(lambda x: x['climateRef'] == cur, climates))
