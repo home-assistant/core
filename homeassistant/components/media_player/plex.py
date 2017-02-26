@@ -241,10 +241,11 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
 
             for machine_identifier, client in plex_clients.items():
                 if client.entity_id:
-                    if client.state in [STATE_IDLE, STATE_OFF]:
-                        inactive_entity_id_list.append(client.entity_id)
-                    else:
-                        active_entity_id_list.append(client.entity_id)
+                    if not client.hidden:
+                        if client.state in [STATE_IDLE, STATE_OFF]:
+                            inactive_entity_id_list.append(client.entity_id)
+                        else:
+                            active_entity_id_list.append(client.entity_id)
 
             # set groups with updated memberships
             set_group_members(hass, GROUP_ACTIVE_DEVICES,
