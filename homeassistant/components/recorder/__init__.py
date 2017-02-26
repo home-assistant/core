@@ -8,6 +8,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/recorder/
 """
 import asyncio
+import concurrent.futures
 import logging
 import queue
 import threading
@@ -20,7 +21,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
-    CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP,
+    CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -126,7 +127,7 @@ class Recorder(threading.Thread):
     def __init__(self, hass: HomeAssistant, purge_days: int, uri: str,
                  include: Dict, exclude: Dict) -> None:
         """Initialize the recorder."""
-        threading.Thread.__init__(self)
+        threading.Thread.__init__(self, name='Recorder')
 
         self.hass = hass
         self.purge_days = purge_days
@@ -167,12 +168,20 @@ class Recorder(threading.Thread):
                 time.sleep(CONNECT_RETRY_WAIT)
 
         purge_task = object()
+        shutdown_task = object()
 
         @callback
         def register():
             """Post connection initialize."""
+            def shutdown(event):
+                """Shut down the Recorder."""
+                if not hass_started.done():
+                    hass_started.set_result(shutdown_task)
+                self.queue.put(None)
+                self.join()
+
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                            self.shutdown)
+                                            shutdown)
 
             if self.purge_days is not None:
                 @callback
@@ -184,6 +193,22 @@ class Recorder(threading.Thread):
                                           timedelta(days=2))
 
         self.hass.add_job(register)
+
+        hass_started = concurrent.futures.Future()
+
+        @callback
+        def notify_hass_started(event):
+            """Notify that hass has started."""
+            hass_started.set_result(None)
+
+        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
+                                  notify_hass_started)
+
+        result = hass_started.result()
+
+        # If shutdown happened before HASS finished starting
+        if result is shutdown_task:
+            return
 
         while True:
             event = self.queue.get()
@@ -235,11 +260,6 @@ class Recorder(threading.Thread):
     def event_listener(self, event):
         """Listen for new events and put them in the process queue."""
         self.queue.put(event)
-
-    def shutdown(self, event):
-        """Tell the recorder to shut down."""
-        self.queue.put(None)
-        self.join()
 
     def block_till_done(self):
         """Block till all events processed."""
