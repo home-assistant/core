@@ -18,7 +18,8 @@ from typing import Optional, Dict
 
 import voluptuous as vol
 
-from homeassistant.core import HomeAssistant, callback, split_entity_id
+from homeassistant.core import (
+    HomeAssistant, callback, split_entity_id, CoreState)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ENTITIES, CONF_EXCLUDE, CONF_DOMAINS,
     CONF_INCLUDE, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
@@ -169,6 +170,7 @@ class Recorder(threading.Thread):
 
         purge_task = object()
         shutdown_task = object()
+        hass_started = concurrent.futures.Future()
 
         @callback
         def register():
@@ -183,6 +185,17 @@ class Recorder(threading.Thread):
             self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                             shutdown)
 
+            if self.hass.state == CoreState.running:
+                hass_started.set_result(None)
+            else:
+                @callback
+                def notify_hass_started(event):
+                    """Notify that hass has started."""
+                    hass_started.set_result(None)
+
+                self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START,
+                                                notify_hass_started)
+
             if self.purge_days is not None:
                 @callback
                 def do_purge(now):
@@ -193,17 +206,6 @@ class Recorder(threading.Thread):
                                           timedelta(days=2))
 
         self.hass.add_job(register)
-
-        hass_started = concurrent.futures.Future()
-
-        @callback
-        def notify_hass_started(event):
-            """Notify that hass has started."""
-            hass_started.set_result(None)
-
-        self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                                  notify_hass_started)
-
         result = hass_started.result()
 
         # If shutdown happened before HASS finished starting
