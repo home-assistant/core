@@ -26,6 +26,7 @@ ATTR_RESUME_ALL = 'resume_all'
 
 DEFAULT_RESUME_ALL = False
 TEMPERATURE_HOLD = 'temp'
+VACATION_HOLD = 'vacation'
 
 DEPENDENCIES = ['ecobee']
 
@@ -113,6 +114,7 @@ class Thermostat(ClimateDevice):
             self.thermostat_index)
         self._name = self.thermostat['name']
         self.hold_temp = hold_temp
+        self.vacation = None
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
         self.update_without_throttle = False
@@ -208,6 +210,9 @@ class Thermostat(ClimateDevice):
                 elif event['type'].startswith('auto'):
                     # all auto modes are treated as holds
                     return event['type'][4:].lower()
+                elif event['type'] == 'vacation':
+                    self.vacation = event['name']
+                    return VACATION_HOLD
         return None
 
     @property
@@ -263,12 +268,6 @@ class Thermostat(ClimateDevice):
             "fan_min_on_time": self.fan_min_on_time
         }
 
-    def is_vacation_on(self):
-        """Return true if vacation mode is on."""
-        events = self.thermostat['events']
-        return any(event['type'] == 'vacation' and event['running']
-                   for event in events)
-
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
@@ -293,7 +292,11 @@ class Thermostat(ClimateDevice):
             # no change, so no action required
             return
         elif hold_mode == 'None' or hold_mode is None:
-            self.data.ecobee.resume_program(self.thermostat_index)
+            if hold == VACATION_HOLD:
+                self.data.ecobee.delete_vacation(self.thermostat_index,
+                                                 self.vacation)
+            else:
+                self.data.ecobee.resume_program(self.thermostat_index)
         else:
             if hold_mode == TEMPERATURE_HOLD:
                 self.set_temp_hold(int(self.current_temperature))
