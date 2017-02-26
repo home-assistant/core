@@ -17,7 +17,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.0.7', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyhik==0.0.9']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
@@ -29,7 +29,7 @@ DEFAULT_DELAY = 0
 
 ATTR_DELAY = 'delay'
 
-DEVICE_CLASS_MAP = {
+SENSOR_CLASS_MAP = {
     'Motion': 'motion',
     'Line Crossing': 'motion',
     'IO Trigger': None,
@@ -119,30 +119,30 @@ class HikvisionData(object):
         self._password = password
 
         # Establish camera
-        self._cam = HikCamera(self._url, self._port,
-                              self._username, self._password)
+        self.camdata = HikCamera(self._url, self._port,
+                                 self._username, self._password)
 
         if self._name is None:
-            self._name = self._cam.get_name
+            self._name = self.camdata.get_name
 
         # Start event stream
-        self._cam.start_stream()
+        self.camdata.start_stream()
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop_hik)
 
     def stop_hik(self, event):
         """Shutdown Hikvision subscriptions and subscription thread on exit."""
-        self._cam.disconnect()
+        self.camdata.disconnect()
 
     @property
     def sensors(self):
         """Return list of available sensors and their states."""
-        return self._cam.current_event_states
+        return self.camdata.current_event_states
 
     @property
     def cam_id(self):
         """Return camera id."""
-        return self._cam.get_id
+        return self.camdata.get_id
 
     @property
     def name(self):
@@ -155,7 +155,6 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, sensor, cam, delay):
         """Initialize the binary_sensor."""
-        from pydispatch import dispatcher
 
         self._hass = hass
         self._cam = cam
@@ -170,12 +169,8 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
         self._timer = None
 
-        # Form signal for dispatcher
-        signal = 'ValueChanged.{}'.format(self._cam.cam_id)
-
-        dispatcher.connect(self._update_callback,
-                           signal=signal,
-                           sender=self._sensor)
+        # Register callback function with pyHik
+        self._cam.camdata.add_update_callback(self._update_callback, self._id)
 
     def _sensor_state(self):
         """Extract sensor state."""
@@ -202,9 +197,9 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
+        """Return the class of this sensor, from SENSOR_CLASSES."""
         try:
-            return DEVICE_CLASS_MAP[self._sensor]
+            return SENSOR_CLASS_MAP[self._sensor]
         except KeyError:
             # Sensor must be unknown to us, add as generic
             return None
@@ -225,13 +220,9 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
         return attr
 
-    def _update_callback(self, signal, sender):
+    def _update_callback(self, msg):
         """Update the sensor's state, if needed."""
-        _LOGGER.debug('Dispatcher callback, signal: %s, sender: %s',
-                      signal, sender)
-
-        if sender is not self._sensor:
-            return
+        _LOGGER.debug('Callback signal from: %s', msg)
 
         if self._delay > 0 and not self.is_on:
             # Set timer to wait until updating the state
