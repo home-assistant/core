@@ -149,7 +149,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 def set_group_members(hass, group_entity_id, member_entity_id_list):
-    """Creates group if doesn't exist and sets memberships"""
+    """Creates group if doesn't exist and sets memberships."""
     hass.states.set(group_entity_id, 'off',
                     {'entity_id': member_entity_id_list})
 
@@ -357,7 +357,7 @@ class PlexClient(MediaPlayerDevice):
                         self.name.lower().replace('-', '_'))
 
     def refresh(self, device, session):
-        """Refresh key device data"""
+        """Refresh key device data."""
         # frozen detection - reset if content or position changed
         if (self._frozen_content_id is not None and
                 self.media_content_id != self._frozen_content_id) or (
@@ -381,9 +381,9 @@ class PlexClient(MediaPlayerDevice):
 
         if self.session and self.session.player:
             if ((frozen_seconds >
-                 int(self.optional_config[CONF_MAX_FROZEN_PAUSED])) and
+                int(self.optional_config[CONF_MAX_FROZEN_PAUSED])) and
                 (self.session.player.state == 'paused' or
-                 self._frozen_fixed_state in (STATE_PAUSED, STATE_IDLE))):
+                    self._frozen_fixed_state in (STATE_PAUSED, STATE_IDLE))):
                 _LOGGER.debug('Frozen paused client detected, forcing idle '
                               'state: %s', self.entity_id)
                 self._frozen_fixed_state = STATE_IDLE
@@ -405,7 +405,7 @@ class PlexClient(MediaPlayerDevice):
                 self._make = make
 
     def force_idle(self):
-        """Force client to idle"""
+        """Force client to idle."""
         self._state = STATE_IDLE
         self._session = None
 
@@ -441,7 +441,7 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def app_name(self):
-        """Library name of playing media"""
+        """Return the library name of playing media."""
         if self.state not in (STATE_IDLE, STATE_OFF):
             if self.session:
                 if self.session.librarySectionID:
@@ -719,7 +719,7 @@ class PlexClient(MediaPlayerDevice):
                     return None
 
     def local_client_control_fix(self):
-        """Detects if local client and adjusts url to allow control"""
+        """Detect if local client and adjust url to allow control."""
         if self.device:
             # if this device's machineIdentifier matches an active client
             # with a loopback address, the device must be local or casting
@@ -838,7 +838,7 @@ class PlexClient(MediaPlayerDevice):
 
     def _get_episode(self, library_name, show_name, season_number,
                      episode_number):
-        """Finds TV episode and returns a Plex media object"""
+        """Find TV episode and return a Plex media object."""
         target_season = None
         target_episode = None
 
@@ -869,7 +869,7 @@ class PlexClient(MediaPlayerDevice):
         return target_episode
 
     def _client_play_media(self, media, **params):
-        """Instructs Plex client to play a piece of media."""
+        """Instruct Plex client to play a piece of media."""
         if self.device:
             import plexapi.playqueue
             server_url = media.server.baseurl.split(':')
