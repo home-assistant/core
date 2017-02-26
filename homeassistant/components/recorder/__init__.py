@@ -272,8 +272,7 @@ class Recorder(threading.Thread):
     def _setup_run(self):
         """Log the start of the current run."""
         recorder_runs = models.RecorderRuns
-        with session_scope(session=self.get_session(expire_on_commit=False)) \
-                as session:
+        with session_scope(session=self.get_session()) as session:
             for run in session.query(recorder_runs).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start
@@ -286,6 +285,8 @@ class Recorder(threading.Thread):
                 created=dt_util.utcnow()
             )
             session.add(self.run_info)
+            session.flush()
+            session.expunge(self.run_info)
 
     def _close_run(self):
         """Save end time for current run."""
