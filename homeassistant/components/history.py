@@ -20,7 +20,6 @@ from homeassistant.components import recorder, script
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import ATTR_HIDDEN
-from homeassistant.components.recorder.models import States, RecorderRuns
 from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
@@ -38,6 +37,8 @@ IGNORE_DOMAINS = ('zone', 'scene',)
 
 def last_recorder_run(hass):
     """Retireve the last closed recorder run from the DB."""
+    from homeassistant.components.recorder.models import RecorderRuns
+
     with session_scope(hass=hass) as session:
         res = (session.query(RecorderRuns)
                .order_by(RecorderRuns.end.desc()).first())
@@ -56,6 +57,8 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
     as well as all states from certain domains (for instance
     thermostat so that we get current temperature in our graphs).
     """
+    from homeassistant.components.recorder.models import States
+
     entity_ids = (entity_id.lower(), ) if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
@@ -72,7 +75,7 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
 
         states = (
             state for state in execute(
-                hass, query.order_by(States.entity_id, States.last_updated))
+                query.order_by(States.entity_id, States.last_updated))
             if (_is_significant(state) and
                 not state.attributes.get(ATTR_HIDDEN, False)))
 
@@ -82,6 +85,8 @@ def get_significant_states(hass, start_time, end_time=None, entity_id=None,
 def state_changes_during_period(hass, start_time, end_time=None,
                                 entity_id=None):
     """Return states changes during UTC period start_time - end_time."""
+    from homeassistant.components.recorder.models import States
+
     with session_scope(hass=hass) as session:
         query = session.query(States).filter(
             (States.last_changed == States.last_updated) &
@@ -94,7 +99,7 @@ def state_changes_during_period(hass, start_time, end_time=None,
             query = query.filter_by(entity_id=entity_id.lower())
 
         states = execute(
-            hass, query.order_by(States.entity_id, States.last_updated))
+            query.order_by(States.entity_id, States.last_updated))
 
     return states_to_json(hass, states, start_time, entity_id)
 
@@ -102,6 +107,8 @@ def state_changes_during_period(hass, start_time, end_time=None,
 def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
                filters=None):
     """Return the states at a specific point in time."""
+    from homeassistant.components.recorder.models import States
+
     if run is None:
         run = recorder.run_information(hass, utc_point_in_time)
 
@@ -129,7 +136,7 @@ def get_states(hass, utc_point_in_time, entity_ids=None, run=None,
         query = session.query(States).join(most_recent_state_ids, and_(
             States.state_id == most_recent_state_ids.c.max_state_id))
 
-        return [state for state in execute(hass, query)
+        return [state for state in execute(query)
                 if not state.attributes.get(ATTR_HIDDEN, False)]
 
 
@@ -258,6 +265,8 @@ class Filters(object):
         * if include and exclude is defined - select the entities specified in
           the include and filter out the ones from the exclude list.
         """
+        from homeassistant.components.recorder.models import States
+
         # specific entities requested - do not in/exclude anything
         if entity_ids is not None:
             return query.filter(States.entity_id.in_(entity_ids))

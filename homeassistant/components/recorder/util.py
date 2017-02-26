@@ -51,7 +51,7 @@ def commit(session, work):
     return False
 
 
-def execute(hass, qry):
+def execute(qry):
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.

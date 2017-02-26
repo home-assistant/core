@@ -1,7 +1,6 @@
 """Schema migration helpers."""
 import logging
 
-from . import models
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
@@ -9,14 +8,14 @@ _LOGGER = logging.getLogger(__name__)
 
 def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
-    schema_changes = models.SchemaChanges
+    from .models import SchemaChanges, SCHEMA_VERSION
 
     with session_scope(session=instance.get_session()) as session:
-        res = session.query(schema_changes).order_by(
-            schema_changes.change_id.desc()).first()
+        res = session.query(SchemaChanges).order_by(
+            SchemaChanges.change_id.desc()).first()
         current_version = getattr(res, 'schema_version', None)
 
-        if current_version == models.SCHEMA_VERSION:
+        if current_version == SCHEMA_VERSION:
             return
 
         _LOGGER.debug("Database requires upgrade. Schema version: %s",
@@ -27,12 +26,12 @@ def migrate_schema(instance):
             _LOGGER.debug("No schema version found. Inspected version: %s",
                           current_version)
 
-        for version in range(current_version, models.SCHEMA_VERSION):
+        for version in range(current_version, SCHEMA_VERSION):
             new_version = version + 1
             _LOGGER.info("Upgrading recorder db schema to version %s",
                          new_version)
             _apply_update(instance.engine, new_version)
-            session.add(schema_changes(schema_version=new_version))
+            session.add(SchemaChanges(schema_version=new_version))
 
             _LOGGER.info("Upgrade to version %s done", new_version)
 
@@ -40,6 +39,7 @@ def migrate_schema(instance):
 def _apply_update(engine, new_version):
     """Perform operations to bring schema up to date."""
     from sqlalchemy import Table
+    from . import models
 
     if new_version == 1:
         def create_index(table_name, column_name):
@@ -70,6 +70,7 @@ def _inspect_schema_version(engine, session):
     can be removed and we can assume a new db is being created.
     """
     from sqlalchemy.engine import reflection
+    from .models import SchemaChanges, SCHEMA_VERSION
 
     inspector = reflection.Inspector.from_engine(engine)
     indexes = inspector.get_indexes("events")
@@ -77,11 +78,11 @@ def _inspect_schema_version(engine, session):
     for index in indexes:
         if index['column_names'] == ["time_fired"]:
             # Schema addition from version 1 detected. New DB.
-            session.add(models.SchemaChanges(
-                schema_version=models.SCHEMA_VERSION))
-            return models.SCHEMA_VERSION
+            session.add(SchemaChanges(
+                schema_version=SCHEMA_VERSION))
+            return SCHEMA_VERSION
 
     # Version 1 schema changes not found, this db needs to be migrated.
-    current_version = models.SchemaChanges(schema_version=0)
+    current_version = SchemaChanges(schema_version=0)
     session.add(current_version)
     return current_version.schema_version

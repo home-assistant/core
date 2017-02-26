@@ -27,7 +27,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-from . import models, purge, migration
+from . import purge, migration
 from .const import DATA_INSTANCE
 from .util import session_scope
 
@@ -82,6 +82,7 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 
     There is also the run that covers point_in_time.
     """
+    from . import models
     ins = hass.data[DATA_INSTANCE]
 
     recorder_runs = models.RecorderRuns
@@ -151,6 +152,7 @@ class Recorder(threading.Thread):
     def run(self):
         """Start processing events to save."""
         from sqlalchemy.exc import SQLAlchemyError
+        from .models import States, Events
 
         while True:
             try:
@@ -219,11 +221,11 @@ class Recorder(threading.Thread):
                     continue
 
             with session_scope(session=self.get_session()) as session:
-                dbevent = models.Events.from_event(event)
+                dbevent = Events.from_event(event)
                 session.add(dbevent)
 
                 if event.event_type == EVENT_STATE_CHANGED:
-                    dbstate = models.States.from_event(event)
+                    dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
                     session.add(dbstate)
 
@@ -248,6 +250,7 @@ class Recorder(threading.Thread):
         from sqlalchemy import create_engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
+        from . import models
 
         if self.db_url == 'sqlite://' or ':memory:' in self.db_url:
             from sqlalchemy.pool import StaticPool
@@ -271,16 +274,17 @@ class Recorder(threading.Thread):
 
     def _setup_run(self):
         """Log the start of the current run."""
-        recorder_runs = models.RecorderRuns
+        from .models import RecorderRuns
+
         with session_scope(session=self.get_session()) as session:
-            for run in session.query(recorder_runs).filter_by(end=None):
+            for run in session.query(RecorderRuns).filter_by(end=None):
                 run.closed_incorrect = True
                 run.end = self.recording_start
                 _LOGGER.warning("Ended unfinished session (id=%s from %s)",
                                 run.run_id, run.start)
                 session.add(run)
 
-            self.run_info = recorder_runs(
+            self.run_info = RecorderRuns(
                 start=self.recording_start,
                 created=dt_util.utcnow()
             )
