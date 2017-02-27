@@ -379,12 +379,27 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_XY_COLOR in kwargs:
-            command['xy'] = kwargs[ATTR_XY_COLOR]
+            if self.info['manufacturername'] == "OSRAM":
+                hsv = color_util.color_xy_brightness_to_hsv(
+                    *kwargs[ATTR_XY_COLOR],
+                    ibrightness=self.info['bri'])
+                command['hue'] = hsv[0]
+                command['sat'] = hsv[1]
+                command['bri'] = hsv[2]
+            else:
+                command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
-            xyb = color_util.color_RGB_to_xy(
-                *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
-            command['xy'] = xyb[0], xyb[1]
-            command['bri'] = xyb[2]
+            if self.info['manufacturername'] == "OSRAM":
+                hsv = color_util.color_RGB_to_hsv(
+                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+                command['hue'] = hsv[0]
+                command['sat'] = hsv[1]
+                command['bri'] = hsv[2]
+            else:
+                xyb = color_util.color_RGB_to_xy(
+                    *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
+                command['xy'] = xyb[0], xyb[1]
+                command['bri'] = xyb[2]
 
         if ATTR_BRIGHTNESS in kwargs:
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
@@ -411,7 +426,8 @@ class HueLight(Light):
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
         elif self.bridge_type == 'hue':
-            command['effect'] = 'none'
+            if self.info['manufacturername'] != "OSRAM":
+                command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
 
