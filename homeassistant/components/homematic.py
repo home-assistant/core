@@ -77,16 +77,16 @@ HM_IGNORE_DISCOVERY_NODE = [
 ]
 
 HM_ATTRIBUTE_SUPPORT = {
-    'LOWBAT': ['Battery', {0: 'High', 1: 'Low'}],
-    'ERROR': ['Sabotage', {0: 'No', 1: 'Yes'}],
-    'RSSI_DEVICE': ['RSSI', {}],
-    'VALVE_STATE': ['Valve', {}],
-    'BATTERY_STATE': ['Battery', {}],
-    'CONTROL_MODE': ['Mode', {0: 'Auto', 1: 'Manual', 2: 'Away', 3: 'Boost'}],
-    'POWER': ['Power', {}],
-    'CURRENT': ['Current', {}],
-    'VOLTAGE': ['Voltage', {}],
-    'WORKING': ['Working', {0: 'No', 1: 'Yes'}],
+    'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
+    'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'RSSI_DEVICE': ['rssi', {}],
+    'VALVE_STATE': ['valve', {}],
+    'BATTERY_STATE': ['battery', {}],
+    'CONTROL_MODE': ['mode', {0: 'Auto', 1: 'Manual', 2: 'Away', 3: 'Boost'}],
+    'POWER': ['power', {}],
+    'CURRENT': ['current', {}],
+    'VOLTAGE': ['voltage', {}],
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
 }
 
 HM_PRESS_EVENTS = [
@@ -172,7 +172,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SCHEMA_SERVICE_VIRTUALKEY = vol.Schema({
-    vol.Required(ATTR_ADDRESS): cv.string,
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
     vol.Required(ATTR_PARAM): cv.string,
     vol.Optional(ATTR_PROXY): cv.string,
@@ -185,9 +185,9 @@ SCHEMA_SERVICE_SET_VAR_VALUE = vol.Schema({
 })
 
 SCHEMA_SERVICE_SET_DEV_VALUE = vol.Schema({
-    vol.Required(ATTR_ADDRESS): cv.string,
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_CHANNEL): vol.Coerce(int),
-    vol.Required(ATTR_PARAM): cv.string,
+    vol.Required(ATTR_PARAM): vol.All(cv.string, vol.Upper),
     vol.Required(ATTR_VALUE): cv.match_all,
     vol.Optional(ATTR_PROXY): cv.string,
 })
@@ -715,7 +715,7 @@ class HMDevice(Entity):
                 attr[data[0]] = value
 
         # static attributes
-        attr['ID'] = self._hmdevice.ADDRESS
+        attr['id'] = self._hmdevice.ADDRESS
         attr['proxy'] = self._proxy
 
         return attr

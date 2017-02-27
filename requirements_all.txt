@@ -33,6 +33,9 @@ SoCo==0.12
 # homeassistant.components.notify.twitter
 TwitterAPI==2.4.4
 
+# homeassistant.components.sensor.dnsip
+aiodns==1.1.1
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.5.0
@@ -79,6 +82,9 @@ boto3==1.4.3
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
 broadlink==0.3
+
+# homeassistant.components.notify.ciscospark
+ciscosparkapi==0.4.2
 
 # homeassistant.components.sensor.coinmarketcap
 coinmarketcap==2.0.1
@@ -284,6 +290,9 @@ https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 # homeassistant.components.mysensors
 https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
 
+# homeassistant.components.sensor.modem_callerid
+https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
+
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
@@ -328,10 +337,13 @@ liffylights==0.9.4
 limitlessled==1.0.4
 
 # homeassistant.components.media_player.liveboxplaytv
-liveboxplaytv==1.4.8
+liveboxplaytv==1.4.9
 
 # homeassistant.components.notify.matrix
 matrix-client==0.0.5
+
+# homeassistant.components.maxcube
+maxcube-api==0.1.0
 
 # homeassistant.components.notify.message_bird
 messagebird==1.2.0
@@ -457,7 +469,6 @@ pycmus==0.1.0
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
-# homeassistant.components.envisalink
 # homeassistant.components.zwave
 # homeassistant.components.binary_sensor.hikvision
 pydispatcher==2.0.5
@@ -508,7 +519,7 @@ pylast==1.8.0
 pylitejet==0.1
 
 # homeassistant.components.sensor.loopenergy
-pyloopenergy==0.0.16
+pyloopenergy==0.0.17
 
 # homeassistant.components.mochad
 pymochad==0.1.1
@@ -608,7 +619,7 @@ pyunifi==1.3
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.23
+pyvera==0.2.24
 
 # homeassistant.components.notify.html5
 pywebpush==0.6.1
@@ -620,7 +631,7 @@ pywemo==0.4.13
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.2
+qnapstats==0.2.3
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
@@ -688,7 +699,7 @@ steamodd==4.21
 tellcore-py==1.1.2
 
 # homeassistant.components.tellduslive
-tellduslive==0.3.2
+tellduslive==0.3.4
 
 # homeassistant.components.sensor.temper
 temperusb==1.5.1
@@ -720,7 +731,7 @@ urllib3
 uvcclient==0.10.0
 
 # homeassistant.components.volvooncall
-volvooncall==0.3.0
+volvooncall==0.3.2
 
 # homeassistant.components.verisure
 vsure==0.11.1
@@ -761,7 +772,7 @@ yahooweather==0.8
 yeelight==0.2.2
 
 # homeassistant.components.light.yeelightsunflower
-yeelightsunflower==0.0.5
+yeelightsunflower==0.0.8
 
 # homeassistant.components.light.zengge
 zengge==0.2

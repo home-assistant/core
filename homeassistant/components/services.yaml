@@ -312,3 +312,7 @@ ffmpeg:
       entity_id:
         description: Name(s) of entites that will restart. Platform dependent.
         example: 'binary_sensor.ffmpeg_noise'
+
+logger:
+  set_level:
+    description: Set log level for components.

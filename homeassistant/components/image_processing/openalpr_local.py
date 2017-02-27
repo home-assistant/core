@@ -95,6 +95,11 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
         return plate
 
     @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'alpr'
+
+    @property
     def state_attributes(self):
         """Return device specific state attributes."""
         attr = {

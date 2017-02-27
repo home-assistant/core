@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components import recorder, sun
+from homeassistant.components import sun
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (EVENT_HOMEASSISTANT_START,
@@ -22,7 +22,6 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_START,
                                  STATE_NOT_HOME, STATE_OFF, STATE_ON,
                                  ATTR_HIDDEN, HTTP_BAD_REQUEST)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
-from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = "logbook"
 DEPENDENCIES = ['recorder', 'frontend']
@@ -68,9 +67,7 @@ LOG_MESSAGE_SCHEMA = vol.Schema({
 
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
-    run_callback_threadsafe(
-        hass.loop, async_log_entry, hass, name, message, domain, entity_id
-        ).result()
+    hass.add_job(async_log_entry, hass, name, message, domain, entity_id)
 
 
 def async_log_entry(hass, name, message, domain=None, entity_id=None):
@@ -101,7 +98,7 @@ def setup(hass, config):
         message = message.async_render()
         async_log_entry(hass, name, message, domain, entity_id)
 
-    hass.http.register_view(LogbookView(config))
+    hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
     register_built_in_panel(hass, 'logbook', 'Logbook',
                             'mdi:format-list-bulleted-type')
@@ -135,20 +132,11 @@ class LogbookView(HomeAssistantView):
 
         start_day = dt_util.as_utc(datetime)
         end_day = start_day + timedelta(days=1)
+        hass = request.app['hass']
 
-        def get_results():
-            """Query DB for results."""
-            events = recorder.get_model('Events')
-            query = recorder.query('Events').order_by(
-                events.time_fired).filter(
-                    (events.time_fired > start_day) &
-                    (events.time_fired < end_day))
-            events = recorder.execute(query)
-            return _exclude_events(events, self.config)
-
-        events = yield from request.app['hass'].loop.run_in_executor(
-            None, get_results)
-
+        events = yield from hass.loop.run_in_executor(
+            None, _get_events, hass, start_day, end_day)
+        events = _exclude_events(events, self.config)
         return self.json(humanify(events))
 
 
@@ -285,17 +273,31 @@ def humanify(events):
                     entity_id)
 
 
+def _get_events(hass, start_day, end_day):
+    """Get events for a period of time."""
+    from homeassistant.components.recorder.models import Events
+    from homeassistant.components.recorder.util import (
+        execute, session_scope)
+
+    with session_scope(hass=hass) as session:
+        query = session.query(Events).order_by(
+            Events.time_fired).filter(
+                (Events.time_fired > start_day) &
+                (Events.time_fired < end_day))
+        return execute(query)
+
+
 def _exclude_events(events, config):
     """Get lists of excluded entities and platforms."""
     excluded_entities = []
     excluded_domains = []
     included_entities = []
     included_domains = []
-    exclude = config[DOMAIN].get(CONF_EXCLUDE)
+    exclude = config.get(CONF_EXCLUDE)
     if exclude:
         excluded_entities = exclude[CONF_ENTITIES]
         excluded_domains = exclude[CONF_DOMAINS]
-    include = config[DOMAIN].get(CONF_INCLUDE)
+    include = config.get(CONF_INCLUDE)
     if include:
         included_entities = include[CONF_ENTITIES]
         included_domains = include[CONF_DOMAINS]
