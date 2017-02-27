@@ -335,10 +335,10 @@ class LocationMethods(object):
         return None
 
 
-def forgiving_round(value, precision=0):
+def forgiving_round(value, precision=0, method='common'):
     """Rounding filter that accepts strings."""
     try:
-        value = round(float(value), precision)
+        value = round(float(value), precision, method)
         return int(value) if precision == 0 else value
     except (ValueError, TypeError):
         # If value can't be converted to float
