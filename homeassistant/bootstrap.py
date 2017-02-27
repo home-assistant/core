@@ -110,13 +110,13 @@ def _async_handle_requirements(hass: core.HomeAssistant, component,
     if pip_lock is None:
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock(loop=hass.loop)
 
-    def pip_install():
+    def pip_install(mod):
         """Install packages."""
-        return pkg_util.install_package(req, target=hass.config.path('deps')
+        return pkg_util.install_package(mod, target=hass.config.path('deps'))
 
     with (yield from pip_lock):
         for req in component.REQUIREMENTS:
-            ret = yield from hass.loop.run_in_executor(None, pip_install)
+            ret = yield from hass.loop.run_in_executor(None, pip_install, req)
             if not ret:
                 _LOGGER.error('Not initializing %s because could not install '
                               'dependency %s', name, req)
