@@ -393,8 +393,7 @@ class MQTT(object):
         self.progress = {}
         self.birth_message = birth_message
         self._mqttc = None
-        self._subscribe_lock = asyncio.Lock(loop=hass.loop)
-        self._publish_lock = asyncio.Lock(loop=hass.loop)
+        self._paho_lock = asyncio.Lock(loop=hass.loop)
 
         if protocol == PROTOCOL_31:
             proto = mqtt.MQTTv31
@@ -434,9 +433,10 @@ class MQTT(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        with (yield from self._publish_lock):
+        with (yield from self._paho_lock):
             yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.publish, topic, payload, qos, retain)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
 
     @asyncio.coroutine
     def async_connect(self):
@@ -484,9 +484,10 @@ class MQTT(object):
         if topic in self.topics:
             return
 
-        with (yield from self._subscribe_lock):
+        with (yield from self._paho_lock):
             result, mid = yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.subscribe, topic, qos)
+            yield from asyncio.sleep(0, loop=self.hass.loop)
 
         _raise_on_error(result)
         self.progress[mid] = topic
