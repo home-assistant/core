@@ -10,20 +10,22 @@ import sys
 from typing import Any, List, Tuple  # NOQA
 
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB)
-from homeassistant.core import DOMAIN as CONF_CORE
+from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import get_component
+from homeassistant.loader import get_component, get_platform
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as date_util, location as loc_util
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from homeassistant.helpers.entity_values import EntityValues
+from homeassistant.helpers import config_per_platform, extract_domain_configs
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -274,6 +276,35 @@ def process_ha_config_upgrade(hass):
         outp.write(__version__)
 
 
+@callback
+def async_log_exception(ex, domain, config, hass):
+    """Generate log exception for config validation.
+
+    This method must be run in the event loop.
+    """
+    message = 'Invalid config for [{}]: '.format(domain)
+    if hass is not None:
+        _async_persistent_notification(hass, domain, True)
+
+    if 'extra keys not allowed' in ex.error_message:
+        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
+                   .format(ex.path[-1], domain, domain,
+                           '->'.join(str(m) for m in ex.path))
+    else:
+        message += '{}.'.format(humanize_error(config, ex))
+
+    domain_config = config.get(domain, config)
+    message += " (See {}, line {}). ".format(
+        getattr(domain_config, '__config_file__', '?'),
+        getattr(domain_config, '__line__', '?'))
+
+    if domain != 'homeassistant':
+        message += ('Please check the docs at '
+                    'https://home-assistant.io/components/{}/'.format(domain))
+
+    _LOGGER.error(message)
+
+
 @asyncio.coroutine
 def async_process_ha_core_config(hass, config):
     """Process the [homeassistant] section from the config.
@@ -479,6 +510,73 @@ def merge_packages_config(config, packages):
                     " and it already exist in your main config")
                 continue
             config[comp_name] = comp_conf
+
+    return config
+
+
+def log_exception(ex, domain, config, hass):
+    """Generate log exception for config validation."""
+    run_callback_threadsafe(
+        hass.loop, async_log_exception, ex, domain, config, hass).result()
+
+
+@callback
+def async_extract_component_config(hass, config, domain):
+    """Check component config and return processed config.
+
+    Raise a vol.Invalid exception on error.
+
+    This method must be run in the event loop.
+    """
+    component = get_component(domain)
+
+    if hasattr(component, 'CONFIG_SCHEMA'):
+        try:
+            config = component.CONFIG_SCHEMA(config)
+        except vol.Invalid as ex:
+            async_log_exception(ex, domain, config, hass)
+            return None
+
+    elif hasattr(component, 'PLATFORM_SCHEMA'):
+        platforms = []
+        for p_name, p_config in config_per_platform(config, domain):
+            # Validate component specific platform schema
+            try:
+                p_validated = component.PLATFORM_SCHEMA(p_config)
+            except vol.Invalid as ex:
+                async_log_exception(ex, domain, config, hass)
+                continue
+
+            # Not all platform components follow same pattern for platforms
+            # So if p_name is None we are not going to validate platform
+            # (the automation component is one of them)
+            if p_name is None:
+                platforms.append(p_validated)
+                continue
+
+            platform = get_platform(domain, p_name)
+
+            if platform is None:
+                continue
+
+            # Validate platform specific schema
+            if hasattr(platform, 'PLATFORM_SCHEMA'):
+                # pylint: disable=no-member
+                try:
+                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                except vol.Invalid as ex:
+                    async_log_exception(ex, '{}.{}'.format(domain, p_name),
+                                        p_validated, hass)
+                    continue
+
+            platforms.append(p_validated)
+
+        # Create a copy of the configuration with all config for current
+        # component removed and add validated config back in.
+        filter_keys = extract_domain_configs(config, domain)
+        config = {key: value for key, value in config.items()
+                  if key not in filter_keys}
+        config[domain] = platforms
 
     return config
 

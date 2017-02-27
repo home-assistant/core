@@ -94,6 +94,7 @@ def async_test_home_assistant(loop):
     hass = ha.HomeAssistant(loop)
 
     orig_async_add_job = hass.async_add_job
+
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, MagicMock):

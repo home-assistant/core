@@ -3,9 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from homeassistant import config as conf_util
-from homeassistant.bootstrap import (
-    async_prepare_setup_platform, async_prepare_setup_component,
-    DATA_PLATFORM)
+from homeassistant.bootstrap import async_prepare_setup_platform, DATA_PLATFORM
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
@@ -287,7 +285,7 @@ class EntityComponent(object):
             self.logger.error(err)
             return None
 
-        conf = yield from async_prepare_setup_component(
+        conf = conf_util.async_extract_component_config(
             self.hass, conf, self.domain)
 
         if conf is None:

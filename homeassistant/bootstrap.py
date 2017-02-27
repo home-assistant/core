@@ -7,10 +7,9 @@ import sys
 from collections import OrderedDict
 
 from types import ModuleType
-from typing import Any, Optional, Dict, List
+from typing import Any, Optional, Dict
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
 
 import homeassistant.components as core_components
 from homeassistant.components import persistent_notification
@@ -147,6 +146,11 @@ def _async_setup_component(hass: core.HomeAssistant,
     if component is None:
         return False
 
+    config = conf_util.async_extract_component_config(hass, config, domain)
+
+    if config is None:
+        return False
+
     # wait until all dependencies are setup
     if hasattr(component, 'DEPENDENCIES'):
         tasks = []
@@ -155,13 +159,8 @@ def _async_setup_component(hass: core.HomeAssistant,
                 tasks.append(setup_events[dep])
         if tasks:
             results = yield from asyncio.gather(*tasks, loop=hass.loop)
-            if any(res != True for res in results):
+            if any(res is not True for res in results):
                 return False
-
-    config = yield from async_prepare_setup_component(hass, config, domain)
-
-    if config is None:
-        return False
 
     async_comp = hasattr(component, 'async_setup')
 
@@ -207,80 +206,6 @@ def prepare_setup_component(hass: core.HomeAssistant, config: dict,
     return run_coroutine_threadsafe(
         async_prepare_setup_component(hass, config, domain), loop=hass.loop
     ).result()
-
-
-@asyncio.coroutine
-def async_prepare_setup_component(hass: core.HomeAssistant, config: dict,
-                                  domain: str):
-    """Prepare setup of a component and return processed config.
-
-    This method is a coroutine.
-    """
-    # pylint: disable=too-many-return-statements
-    component = loader.get_component(domain)
-    missing_deps = [dep for dep in getattr(component, 'DEPENDENCIES', [])
-                    if dep not in hass.config.components]
-
-    if missing_deps:
-        _LOGGER.error(
-            'Not initializing %s because not all dependencies loaded: %s',
-            domain, ", ".join(missing_deps))
-        return None
-
-    if hasattr(component, 'CONFIG_SCHEMA'):
-        try:
-            config = component.CONFIG_SCHEMA(config)
-        except vol.Invalid as ex:
-            async_log_exception(ex, domain, config, hass)
-            return None
-
-    elif hasattr(component, 'PLATFORM_SCHEMA'):
-        platforms = []
-        for p_name, p_config in config_per_platform(config, domain):
-            # Validate component specific platform schema
-            try:
-                p_validated = component.PLATFORM_SCHEMA(p_config)
-            except vol.Invalid as ex:
-                async_log_exception(ex, domain, config, hass)
-                continue
-
-            # Not all platform components follow same pattern for platforms
-            # So if p_name is None we are not going to validate platform
-            # (the automation component is one of them)
-            if p_name is None:
-                platforms.append(p_validated)
-                continue
-
-            platform = yield from async_prepare_setup_platform(
-                hass, config, domain, p_name)
-
-            if platform is None:
-                continue
-
-            # Validate platform specific schema
-            if hasattr(platform, 'PLATFORM_SCHEMA'):
-                try:
-                    # pylint: disable=no-member
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
-                except vol.Invalid as ex:
-                    async_log_exception(ex, '{}.{}'.format(domain, p_name),
-                                        p_validated, hass)
-                    continue
-
-            platforms.append(p_validated)
-
-        # Create a copy of the configuration with all config for current
-        # component removed and add validated config back in.
-        filter_keys = extract_domain_configs(config, domain)
-        config = {key: value for key, value in config.items()
-                  if key not in filter_keys}
-        config[domain] = platforms
-
-    res = yield from _async_handle_requirements(hass, component, domain)
-    if not res:
-        return None
-
-    return config
 
 
 def prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
@@ -389,7 +314,7 @@ def async_from_config_dict(config: Dict[str, Any],
     try:
         yield from conf_util.async_process_ha_core_config(hass, core_config)
     except vol.Invalid as ex:
-        async_log_exception(ex, 'homeassistant', core_config, hass)
+        conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
     yield from hass.loop.run_in_executor(
@@ -596,12 +521,6 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
             'Unable to setup error log %s (access denied)', err_log_path)
 
 
-def log_exception(ex, domain, config, hass):
-    """Generate log exception for config validation."""
-    run_callback_threadsafe(
-        hass.loop, async_log_exception, ex, domain, config, hass).result()
-
-
 @core.callback
 def _async_persistent_notification(hass: core.HomeAssistant, component: str,
                                    link: Optional[bool]=False):
@@ -621,35 +540,6 @@ def _async_persistent_notification(hass: core.HomeAssistant, component: str,
                '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
     persistent_notification.async_create(
         hass, message, 'Invalid config', 'invalid_config')
-
-
-@core.callback
-def async_log_exception(ex, domain, config, hass):
-    """Generate log exception for config validation.
-
-    This method must be run in the event loop.
-    """
-    message = 'Invalid config for [{}]: '.format(domain)
-    if hass is not None:
-        _async_persistent_notification(hass, domain, True)
-
-    if 'extra keys not allowed' in ex.error_message:
-        message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
-                   .format(ex.path[-1], domain, domain,
-                           '->'.join(str(m) for m in ex.path))
-    else:
-        message += '{}.'.format(humanize_error(config, ex))
-
-    domain_config = config.get(domain, config)
-    message += " (See {}, line {}). ".format(
-        getattr(domain_config, '__config_file__', '?'),
-        getattr(domain_config, '__line__', '?'))
-
-    if domain != 'homeassistant':
-        message += ('Please check the docs at '
-                    'https://home-assistant.io/components/{}/'.format(domain))
-
-    _LOGGER.error(message)
 
 
 def mount_local_lib_path(config_dir: str) -> str:
