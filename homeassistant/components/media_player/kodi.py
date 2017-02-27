@@ -392,6 +392,13 @@ class KodiDevice(MediaPlayerDevice):
             song_id = yield from self.async_find_song(song_name, artist_name)
             
         yield from self._server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
+        
+    @asyncio.coroutine
+    def async_add_album_to_playlist(self, album_id=None, media_album_name='', artist_name=''):
+        if album_id is None:
+            album_id = yield from self.async_find_album(media_album_name, artist_name)
+            
+        yield from self._server.Playlist.Add({"playlistid": 0, "item": {"albumid": int(album_id)}})
     
     @asyncio.coroutine
     def async_clear_playlist(self):
@@ -450,9 +457,9 @@ class KodiDevice(MediaPlayerDevice):
         return songs['songs'][out[0][0]]['songid']
     
     @asyncio.coroutine     
-    def async_find_album(self, album_name, artist_name=None):
+    def async_find_album(self, album_name, artist_name=''):
         artist_id = None
-        if artist_name is not None:
+        if artist_name != '':
             artist_id = yield from self.async_find_artist(artist_name)
         
         albums = yield from self.async_get_albums(artist_id)
@@ -474,13 +481,10 @@ class KodiDevice(MediaPlayerDevice):
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    songs = asyncio.get_event_loop().run_until_complete(kodi.async_get_songs())
-    
-    out = asyncio.get_event_loop().run_until_complete(kodi.async_play_song('stairway to heaven', ""))
+    asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
+    out = asyncio.get_event_loop().run_until_complete(
+        kodi.async_add_album_to_playlist(album_name='dark side moon'))
      
-    for s in songs['songs']:
-        if s['songid'] == out:
-            print(s)
-    print(out)
-    
+    asyncio.get_event_loop().run_until_complete(kodi.async_play_media("PLAYLIST", 0))
+     
     

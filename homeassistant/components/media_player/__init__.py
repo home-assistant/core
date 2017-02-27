@@ -60,6 +60,7 @@ SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 SERVICE_GET_ARTISTS = 'get_artists'
 SERVICE_PLAY_SONG = 'play_song'
 SERVICE_ADD_SONG = 'add_song_to_playlist'
+SERVICE_ADD_ALBUM = 'add_album_to_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -87,6 +88,7 @@ ATTR_MEDIA_ENQUEUE = 'enqueue'
 ATTR_MEDIA_SONG_NAME = 'song_name'
 ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_SONG_ID = 'song_id'
+ATTR_MEDIA_ALBUM_ID = 'album_id'
 
 
 MEDIA_TYPE_MUSIC = 'music'
@@ -151,6 +153,12 @@ MEDIA_PLAYER_ADD_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 
+MEDIA_PLAYER_ADD_ALBUM_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Optional(ATTR_MEDIA_ALBUM_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ALBUM_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'async_turn_on'},
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
@@ -186,6 +194,9 @@ SERVICE_TO_METHOD = {
     SERVICE_ADD_SONG: {
         'method': 'async_add_song_to_playlist',
         'schema': MEDIA_PLAYER_ADD_SONG_SCHEMA},
+    SERVICE_ADD_ALBUM: {
+        'method': 'async_add_album_to_playlist',
+        'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
