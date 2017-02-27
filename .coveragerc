@@ -312,6 +312,7 @@ omit =
     homeassistant/components/sensor/darksky.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/ebox.py
