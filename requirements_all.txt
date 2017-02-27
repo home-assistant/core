@@ -619,7 +619,7 @@ pyunifi==1.3
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.23
+pyvera==0.2.24
 
 # homeassistant.components.notify.html5
 pywebpush==0.6.1
