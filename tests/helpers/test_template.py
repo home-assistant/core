@@ -112,23 +112,23 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_roudning_value_using_ceil_method(self):
         """Test rounding value using ceil method"""
         self.hass.states.set('sensor.device_battery', 56.65)
-        
+
         self.assertEqual(
             'mdi:battery-60',
             template.Template(
                 "mdi:battery-{{ states.sensor.device_battery|round(0,'ceil') }}", 
                 self.hass).render())
-        
+
     def test_rounding_value_using_floor_method(self):
         """Test rounding value using floor method"""
         self.hass.states.set('sensor.device_battery', 56.65)
-        
+
         self.assertEqual(
-            'mdi:battery-50'
+            'mdi:battery-50',
             template.Template(
             "mdi:battery-{{ states.sensor.device_battery|round(0,'floor') }}",
             self.hass).render())
-        
+
     def test_multiply(self):
         """Test multiply."""
         tests = {
