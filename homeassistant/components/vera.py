@@ -130,9 +130,9 @@ class VeraDevice(Entity):
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller
-        
+
         # Append device id to prevent name clashes in HA.
-        self._name = self.vera_device.name + ' ' + str(self.vera_device.device_id)
+        self._name = self.vera_device.name + ' ' + str(vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()
