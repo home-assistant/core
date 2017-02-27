@@ -1,8 +1,8 @@
 """
+Allows utilizing telegram incoming commands.
+
 Inspired by : telegram_webhooks.py
 https://github.com/home-assistant/home-assistant/blob/dev/homeassistant/components/telegram_webhooks.py
-
-Allows utilizing telegram incoming commands.
 
 Once Hass will upgrade to python version >= 3.5 an async library like
 aiotg could be used for this.
@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """ Setup is called when Home Assistant is loading our component."""
+    """Setup is called when Home Assistant is loading our component."""
     import telegram
     bot_token = config[DOMAIN].get(BOT_TOKEN)
     bot = telegram.Bot(bot_token)
@@ -51,16 +51,16 @@ def setup(hass, config):
 
 
 def _setup(hass, config, bot):
-    """ The actual setup of the telegram component"""
+    """The actual setup of the telegram component."""
     allowed_chat_ids = config[DOMAIN].get(ALLOWED_CHAT_IDS)
     checker = IncomingChecker(bot, hass, allowed_chat_ids)
 
     def _start_bot(_event):
-        """ Starts the thread"""
+        """Start the polling thread."""
         checker.check_thread.start()
 
     def _stop_bot(_event):
-        """ Stops the thread"""
+        """Stop the thread."""
         checker.checking = False
 
     hass.bus.listen_once(
@@ -78,7 +78,9 @@ def _setup(hass, config, bot):
 
 class IncomingChecker:
     """Threaded telegram incoming message handler."""
+
     def __init__(self, bot, hass, allowed_ids):
+        """Initialize the thread."""
         self.update_id = None
         self.bot = bot
         self.hass = hass
@@ -109,8 +111,7 @@ class IncomingChecker:
                     })
 
     def check_incoming(self):
-        """" Loop which continuously checks for incoming telegram messages"""
-
+        """"Loop which continuously checks for incoming telegram messages."""
         # get the first pending update_id, this is so
         # we can skip over it in case
         # we get an "Unauthorized" exception.
