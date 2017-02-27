@@ -202,7 +202,7 @@ class LIFXLight(Light):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 1000
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 
@@ -238,7 +238,7 @@ class LIFXLight(Light):
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 1000
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 
