@@ -54,7 +54,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """List of value IDs a device depends on."""
         if not self._node.is_ready:
             return None
-        return [self._open_id, self._close_id, self._current_position_id]
+        return [self._current_position_id]
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -153,8 +153,3 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_GARAGE
-
-    @property
-    def dependent_value_ids(self):
-        """List of value IDs a device depends on."""
-        return []

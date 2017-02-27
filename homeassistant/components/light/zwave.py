@@ -159,11 +159,6 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         if self._value.node.set_dimmer(self._value.value_id, 0):
             self._state = STATE_OFF
 
-    @property
-    def dependent_value_ids(self):
-        """List of value IDs a device depends on."""
-        return []
-
 
 def ct_to_rgb(temp):
     """Convert color temperature (mireds) to RGB."""

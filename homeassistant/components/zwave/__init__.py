@@ -756,8 +756,11 @@ class ZWaveDeviceEntity(Entity):
 
     @property
     def dependent_value_ids(self):
-        """List of value IDs a device depends on."""
-        return None
+        """List of value IDs a device depends on.
+
+        None if depends on the whole node.
+        """
+        return []
 
     def _get_dependent_value_ids(self):
         """Return a list of value_ids this device depend on.

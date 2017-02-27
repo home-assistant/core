@@ -63,11 +63,6 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         """No polling needed."""
         return False
 
-    @property
-    def dependent_value_ids(self):
-        """List of value IDs a device depends on."""
-        return []
-
 
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
