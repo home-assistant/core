@@ -12,6 +12,7 @@ from urllib.parse import urlparse
 
 import asyncio
 import requests
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import voluptuous as vol
 from homeassistant import util
 from homeassistant.components.media_player import (
@@ -40,7 +41,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.loader import get_component
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
 
 
 REQUIREMENTS = ['plexapi==2.0.2']
