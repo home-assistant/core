@@ -15,7 +15,7 @@ from homeassistant.components.light import (Light,
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelightsunflower==0.0.6']
+REQUIREMENTS = ['yeelightsunflower==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
