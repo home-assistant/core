@@ -16,7 +16,6 @@ from homeassistant.const import (CONF_API_KEY, CONF_MONITORED_CONDITIONS)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,19 +24,19 @@ REQUIREMENTS = ['pushbullet.py==0.10.0']
 SENSOR_TYPES = {
     'application_name': ['Application name'],
     'body': ['Body'],
-    'notification_id':['Notification ID'],
-    'notification_tag':['Notification tag'],
-    'package_name':['Package name'],
-    'receiver_email':['Receiver email'],
-    'sender_email':['Sender email'],
-    'source_device_iden':['Sender device ID'],
-    'title':['Title'],
-    'type':['Type']
+    'notification_id': ['Notification ID'],
+    'notification_tag': ['Notification tag'],
+    'package_name': ['Package name'],
+    'receiver_email': ['Receiver email'],
+    'sender_email': ['Sender email'],
+    'source_device_iden': ['Sender device ID'],
+    'title': ['Title'],
+    'type': ['Type']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=['title','body']): vol.All(
-                cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
+        cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
     vol.Required(CONF_API_KEY): cv.string,
 })
 
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pushbullet = PushBullet(config.get(CONF_API_KEY))
     except InvalidKeyError:
         _LOGGER.error(
-            "Wrong API key supplied.{"+config.get(CONF_API_KEY)+ "}"
+            "Wrong API key supplied.{" + config.get(CONF_API_KEY) + "}"
             "Get it at https://www.pushbullet.com/account")
         return None
     """Create a common data provider"""
@@ -83,7 +82,8 @@ class PushBulletNotificationSensor(Entity):
     def state(self):
         return self._state
 
-class  PushBulletNotificationProvider():
+
+class PushBulletNotificationProvider():
     """Provider for an account, leading to multiple sensors"""
 
     def __init__(self, pb):
@@ -109,5 +109,4 @@ class  PushBulletNotificationProvider():
             self.listener.run_forever()
         finally:
             self.listener.close()
-
 
