@@ -47,9 +47,19 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = 'phue.conf'
 
-SUPPORT_HUE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
-               SUPPORT_FLASH | SUPPORT_RGB_COLOR | SUPPORT_TRANSITION |
-               SUPPORT_XY_COLOR)
+SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_FLASH)
+SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
+SUPPORT_HUE_COLOR_TEMP = (SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP)
+SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
+                     SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR)
+SUPPORT_HUE_EXTENDED = (SUPPORT_HUE_COLOR_TEMP | SUPPORT_HUE_COLOR)
+
+SUPPORT_HUE = {
+    'Extended color light': SUPPORT_HUE_EXTENDED,
+    'Color light': SUPPORT_HUE_COLOR,
+    'Dimmable light': SUPPORT_HUE_DIMMABLE,
+    'Color temperature light': SUPPORT_HUE_COLOR_TEMP
+    }
 
 CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
 DEFAULT_ALLOW_IN_EMULATED_HUE = True
@@ -354,7 +364,7 @@ class HueLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_HUE
+        return SUPPORT_HUE.get(self.info.get('type'), SUPPORT_HUE_EXTENDED)
 
     @property
     def effect_list(self):
