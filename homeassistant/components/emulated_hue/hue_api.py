@@ -279,16 +279,11 @@ class HueOneLightChangeView(HomeAssistantView):
             json_response.append(create_hue_success_response(
                 entity_id, HUE_API_STATE_XY, color))
 
-        _LOGGER.debug("JSON respose: %s", json_response)
-
         return self.json(json_response)
 
 
 def parse_hue_api_put_light_body(request_json, entity):
     """Parse the body of a request to change the state of a light."""
-    _LOGGER.debug("Parsing JSON request for entity %s: %s", entity.entity_id,
-                  request_json)
-
     if HUE_API_STATE_ON in request_json:
         if not isinstance(request_json[HUE_API_STATE_ON], bool):
             return None
