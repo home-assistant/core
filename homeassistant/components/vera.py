@@ -74,23 +74,20 @@ def setup(hass, base_config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
-        devices = VERA_CONTROLLER.get_devices()
+        all_devices = VERA_CONTROLLER.get_devices()
     except RequestException:
         # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
     # Exclude devices unwanted by user.
-    devices = [device for device in devices
+    devices = [device for device in all_devices
                if device.device_id not in exclude_ids]
 
     for device in devices:
         device_type = map_vera_device(device, light_ids)
         if device_type is None:
             continue
-
-        # Append id to prevent name clashes in HA.
-        device.name += ' ' + str(device.device_id)
 
         VERA_DEVICES[device_type].append(device)
 
@@ -133,7 +130,9 @@ class VeraDevice(Entity):
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller
-        self._name = self.vera_device.name
+        
+        # Append device id to prevent name clashes in HA.
+        self._name = self.vera_device.name + ' ' + str(self.vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()
