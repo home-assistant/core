@@ -341,6 +341,7 @@ omit =
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/neurio_energy.py
