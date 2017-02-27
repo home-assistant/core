@@ -33,15 +33,13 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = 'component'
 
-ERROR_LOG_FILENAME = 'home-assistant.log'
 DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
-DATA_SETUP_EVENTS = 'setup_events'
-HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
+DATA_SETUP = 'setup_tasks'
+DATA_PLATFORM = 'platform_events'
+DATA_PIP_LOCK = 'pip_lock'
 
-EV_SETUP = 'setup'
-EV_PLATFORM = 'platform'
-EV_RETURN = 'return'
-EV_PROGRESS = 'progress'
+ERROR_LOG_FILENAME = 'home-assistant.log'
+HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
@@ -75,55 +73,57 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
         _async_persistent_notification(hass, domain, True)
         return False
 
+    setup_events = hass.data.get(DATA_SETUP)
+    if setup_events is None:
+        hass.data[DATA_PLATFORM] = {}
+        setup_events = hass.data[DATA_SETUP] = {}
+
     tasks = []
     for component in components:
-        tasks.append(_async_setup_component(hass, component, config))
+        if component not in setup_events:
+            setup_events[component] = hass.async_add_job(
+                _async_setup_component(hass, component, config))
+        tasks.append(setup_events[component])
 
     if tasks:
-        _async_init_setup_data(hass, components)
-        yield from asyncio.wait(tasks, loop=hass.loop)
-        for component in components:
-            if not hass.data[DATA_SETUP_EVENTS][component][EV_RETURN]:
-                _LOGGER.error('Component %s failed to setup', component)
-                _async_persistent_notification(hass, component, True)
+        results = yield from asyncio.gather(*tasks, loop=hass.loop)
+        for idx, res in enumerate(results):
+            if not res:
+                _LOGGER.error('Component %s failed to setup', components[idx])
+                _async_persistent_notification(hass, components[idx], True)
                 return False
 
     return True
 
 
-def _handle_requirements(hass: core.HomeAssistant, component,
-                         name: str) -> bool:
+@asyncio.coroutine
+def _async_handle_requirements(hass: core.HomeAssistant, component,
+                               name: str) -> bool:
     """Install the requirements for a component.
 
-    This method needs to run in an executor.
+    This method is a coroutine.
     """
     if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
         return True
 
-    for req in component.REQUIREMENTS:
-        if not pkg_util.install_package(req, target=hass.config.path('deps')):
-            _LOGGER.error('Not initializing %s because could not install '
-                          'dependency %s', name, req)
-            _async_persistent_notification(hass, name)
-            return False
+    pip_lock = hass.data.get(DATA_PIP_LOCK)
+    if pip_lock is None:
+        pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock(loop=hass.loop)
+
+    def pip_install():
+        """Install packages."""
+        return pkg_util.install_package(req, target=hass.config.path('deps')
+
+    with (yield from pip_lock):
+        for req in component.REQUIREMENTS:
+            ret = yield from hass.loop.run_in_executor(None, pip_install)
+            if not ret:
+                _LOGGER.error('Not initializing %s because could not install '
+                              'dependency %s', name, req)
+                _async_persistent_notification(hass, name)
+                return False
 
     return True
-
-
-def _async_init_setup_data(hass: core.HomeAssistant, components: List[str]):
-    """Initializing async setup construct."""
-    setup_events = hass.data.get(DATA_SETUP_EVENTS)
-    if setup_events is None:
-        setup_events = hass.data[DATA_SETUP_EVENTS] = {}
-
-    for domain in components:
-        if domain in setup_events:
-            continue
-
-        setup_events[domain] = {}
-        setup_events[domain][EV_SETUP] = asyncio.Event(loop=hass.loop)
-        setup_events[domain][EV_PROGRESS] = False
-        setup_events[domain][EV_RETURN] = None
 
 
 @asyncio.coroutine
@@ -137,75 +137,68 @@ def _async_setup_component(hass: core.HomeAssistant,
     if domain in hass.config.components:
         return True
 
-    setup_events = hass.data[DATA_SETUP_EVENTS][domain]
+    setup_events = hass.data[DATA_SETUP]
 
     # is setup or in progress
-    if setup_events[EV_PROGRESS] or setup_events[EV_SETUP].is_set():
-        yield from setup_events[EV_SETUP].wait()
-        return setup_events[EV_RETURN]
+    if setup_events[domain].done():
+        return setup_events[domain].result()
 
-    try:
-        component = loader.get_component(domain)
-        if component is None:
-            raise HomeAssistantError()
-
-        # wait until all dependencies are setup
-        if hasattr(component, 'DEPENDENCIES'):
-            all_events = hass.data[DATA_SETUP_EVENTS]
-            for dep in component.DEPENDENCIES:
-                yield from all_events[dep][EV_SETUP].wait()
-                if not all_events[dep][EV_RETURN]:
-                    raise HomeAssistantError()
-
-        setup_events[EV_PROGRESS] = True
-        config = yield from async_prepare_setup_component(hass, config, domain)
-
-        if config is None:
-            raise HomeAssistantError()
-
-        async_comp = hasattr(component, 'async_setup')
-
-        try:
-            _LOGGER.info("Setting up %s", domain)
-            if async_comp:
-                result = yield from component.async_setup(hass, config)
-            else:
-                result = yield from hass.loop.run_in_executor(
-                    None, component.setup, hass, config)
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error during setup of component %s', domain)
-            raise HomeAssistantError()
-
-        if result is False:
-            _LOGGER.error('component %s failed to initialize', domain)
-            raise HomeAssistantError()
-        elif result is not True:
-            _LOGGER.error('component %s did not return boolean if setup '
-                          'was successful. Disabling component.', domain)
-            loader.set_component(domain, None)
-            raise HomeAssistantError()
-
-        hass.config.components.add(component.DOMAIN)
-
-        hass.bus.async_fire(
-            EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
-        )
-
-        # wait until entities are setup
-        if EV_PLATFORM in setup_events:
-            yield from setup_events[EV_PLATFORM].wait()
-
-        setup_events[EV_RETURN] = True
-        return True
-
-    except HomeAssistantError:
-        _async_persistent_notification(hass, domain, True)
-        setup_events[EV_RETURN] = False
+    component = loader.get_component(domain)
+    if component is None:
         return False
 
-    finally:
-        setup_events[EV_SETUP].set()
-        setup_events[EV_PROGRESS] = False
+    # wait until all dependencies are setup
+    if hasattr(component, 'DEPENDENCIES'):
+        tasks = []
+        for dep in component.DEPENDENCIES:
+            if dep in setup_events:
+                tasks.append(setup_events[dep])
+        if tasks:
+            results = yield from asyncio.gather(*tasks, loop=hass.loop)
+            if any(res != True for res in results):
+                return False
+
+    config = yield from async_prepare_setup_component(hass, config, domain)
+
+    if config is None:
+        return False
+
+    async_comp = hasattr(component, 'async_setup')
+
+    try:
+        _LOGGER.info("Setting up %s", domain)
+        if async_comp:
+            result = yield from component.async_setup(hass, config)
+        else:
+            result = yield from hass.loop.run_in_executor(
+                None, component.setup, hass, config)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception('Error during setup of component %s', domain)
+        _async_persistent_notification(hass, domain, True)
+        return False
+
+    if result is False:
+        _LOGGER.error('component %s failed to initialize', domain)
+        _async_persistent_notification(hass, domain, True)
+        return False
+    elif result is not True:
+        _LOGGER.error('component %s did not return boolean if setup '
+                      'was successful. Disabling component.', domain)
+        loader.set_component(domain, None)
+        _async_persistent_notification(hass, domain, True)
+        return False
+
+    hass.config.components.add(component.DOMAIN)
+
+    hass.bus.async_fire(
+        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+    )
+
+    # wait until entities are setup
+    if domain in hass.data[DATA_PLATFORM]:
+        yield from hass.data[DATA_PLATFORM][domain].wait()
+
+    return True
 
 
 def prepare_setup_component(hass: core.HomeAssistant, config: dict,
@@ -283,8 +276,7 @@ def async_prepare_setup_component(hass: core.HomeAssistant, config: dict,
                   if key not in filter_keys}
         config[domain] = platforms
 
-    res = yield from hass.loop.run_in_executor(
-        None, _handle_requirements, hass, component, domain)
+    res = yield from _async_handle_requirements(hass, component, domain)
     if not res:
         return None
 
@@ -340,8 +332,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
             _async_persistent_notification(hass, platform_path, True)
             return None
 
-    res = yield from hass.loop.run_in_executor(
-        None, _handle_requirements, hass, platform, platform_path)
+    res = yield from _async_handle_requirements(hass, platform, platform_path)
     if not res:
         return None
 
@@ -450,17 +441,25 @@ def async_from_config_dict(config: Dict[str, Any],
     # Setup the components
     dependency_blacklist = loader.DEPENDENCY_BLACKLIST - set(components)
 
+    setup_events = hass.data.get(DATA_SETUP)
+    if setup_events is None:
+        hass.data[DATA_PLATFORM] = {}
+        setup_events = hass.data[DATA_SETUP] = {}
+
     tasks = []
-    component_list = []
     for domain in loader.load_order_components(components):
         if domain in dependency_blacklist:
             raise HomeAssistantError(
                 '{} is not allowed to be a dependency'.format(domain))
-        tasks.append(_async_setup_component(hass, domain, config))
-        component_list.append(domain)
+
+        # setup task
+        if domain not in hass.data[DATA_SETUP]:
+            setup_events[domain] = hass.async_add_job(
+                _async_setup_component(hass, domain, config)
+            )
+        tasks.append(setup_events[domain])
 
     if tasks:
-        _async_init_setup_data(hass, component_list)
         yield from asyncio.wait(tasks, loop=hass.loop)
 
     yield from hass.async_stop_track_tasks()

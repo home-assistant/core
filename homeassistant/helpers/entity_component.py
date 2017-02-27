@@ -5,7 +5,7 @@ from datetime import timedelta
 from homeassistant import config as conf_util
 from homeassistant.bootstrap import (
     async_prepare_setup_platform, async_prepare_setup_component,
-    DATA_SETUP_EVENTS, EV_PLATFORM)
+    DATA_PLATFORM)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
@@ -48,8 +48,8 @@ class EntityComponent(object):
         self.add_entities = self._platforms['core'].add_entities
 
         self._ready = asyncio.Event(loop=hass.loop)
-        if domain in hass.data.get(DATA_SETUP_EVENTS, {}):
-            hass.data[DATA_SETUP_EVENTS][domain][EV_PLATFORM] = self._ready
+        if domain in hass.data.get(DATA_PLATFORM, {}):
+            hass.data[DATA_PLATFORM][domain] = self._ready
 
     def setup(self, config):
         """Set up a full entity component.
