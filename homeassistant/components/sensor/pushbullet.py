@@ -35,8 +35,10 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=['title', 'body']): vol.All(
-        cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES.keys())]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+        default=['title', 'body']): vol.All(
+            cv.ensure_list, vol.Length(min=1),
+            [vol.In(SENSOR_TYPES.keys())]),
     vol.Required(CONF_API_KEY): cv.string,
 })
 
