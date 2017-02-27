@@ -1,0 +1,59 @@
+"""Test util methods."""
+from unittest.mock import patch, MagicMock
+
+import pytest
+
+from homeassistant.components.recorder import util
+from homeassistant.components.recorder.const import DATA_INSTANCE
+from tests.common import get_test_home_assistant, init_recorder_component
+
+
+@pytest.fixture
+def hass_recorder():
+    """HASS fixture with in-memory recorder."""
+    hass = get_test_home_assistant()
+
+    def setup_recorder(config=None):
+        """Setup with params."""
+        init_recorder_component(hass, config)
+        hass.start()
+        hass.block_till_done()
+        hass.data[DATA_INSTANCE].block_till_done()
+        return hass
+
+    yield setup_recorder
+    hass.stop()
+
+
+def test_recorder_bad_commit(hass_recorder):
+    """Bad _commit should retry 3 times."""
+    hass = hass_recorder()
+
+    def work(session):
+        """Bad work."""
+        session.execute('select * from notthere')
+
+    with patch('homeassistant.components.recorder.time.sleep') as e_mock, \
+            util.session_scope(hass=hass) as session:
+        res = util.commit(session, work)
+    assert res is False
+    assert e_mock.call_count == 3
+
+
+def test_recorder_bad_execute(hass_recorder):
+    """Bad execute, retry 3 times."""
+    from sqlalchemy.exc import SQLAlchemyError
+    hass_recorder()
+
+    def to_native():
+        """Rasie exception."""
+        raise SQLAlchemyError()
+
+    mck1 = MagicMock()
+    mck1.to_native = to_native
+
+    with pytest.raises(SQLAlchemyError), \
+            patch('homeassistant.components.recorder.time.sleep') as e_mock:
+        util.execute((mck1,))
+
+    assert e_mock.call_count == 2

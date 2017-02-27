@@ -23,15 +23,17 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
+INST_COUNT = 0
 
 
 def get_test_config_dir(*add_path):
@@ -85,6 +87,8 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
+    global INST_COUNT
+    INST_COUNT += 1
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
@@ -121,6 +125,13 @@ def async_test_home_assistant(loop):
             yield from orig_start()
 
     hass.async_start = mock_async_start
+
+    @ha.callback
+    def clear_instance(event):
+        global INST_COUNT
+        INST_COUNT -= 1
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, clear_instance)
 
     return hass
 
@@ -454,15 +465,17 @@ def assert_setup_component(count, domain=None):
         .format(count, res_len, res)
 
 
-def init_recorder_component(hass, add_config=None, db_ready_callback=None):
+def init_recorder_component(hass, add_config=None):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
     config[recorder.CONF_DB_URL] = 'sqlite://'  # In memory DB
 
-    assert setup_component(hass, recorder.DOMAIN,
-                           {recorder.DOMAIN: config})
-    assert recorder.DOMAIN in hass.config.components
-    recorder.get_instance().block_till_db_ready()
+    with patch('homeassistant.components.recorder.migration.migrate_schema'):
+        assert setup_component(hass, recorder.DOMAIN,
+                               {recorder.DOMAIN: config})
+        assert recorder.DOMAIN in hass.config.components
+        run_coroutine_threadsafe(
+            recorder.wait_connection_ready(hass), hass.loop).result()
     _LOGGER.info("In-memory recorder successfully started")
 
 
