@@ -387,7 +387,7 @@ def get_entity_state(config, entity):
 
         elif entity.domain == "media_player":
             level = entity.attributes.get(
-                ATTR_MEDIA_VOLUME_LEVEL, 1.0 if state else 0.0)
+                ATTR_MEDIA_VOLUME_LEVEL, 1.0 if is_on else 0.0)
             # Convert 0.0-1.0 to 0-255
             state[HUE_API_STATE_BRI] = round(min(1.0, level) * 255)
 
