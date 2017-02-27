@@ -412,7 +412,7 @@ plexapi==2.0.2
 
 # homeassistant.components.sensor.mhz19
 # homeassistant.components.sensor.serial_pm
-pmsensor==0.3
+pmsensor==0.4
 
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
