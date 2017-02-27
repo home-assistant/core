@@ -5,10 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.onkyoserial/
 """
 import logging
-import threading
-import re
-
 import voluptuous as vol
+from yaml import load
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
@@ -16,20 +14,48 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = []
+REQUIREMENTS = [
+    'pyserial>=3.1.2',
+    'https://github.com/rayzorben/onkyo-serial/archive/0.0.2.zip'
+    '#onkyo_serial>=0.0.2'
+]
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_SOURCES = 'sources'
-
-DEFAULT_NAME = 'Onkyo Serial Receiver'
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-KNOWN_HOSTS = []  # type: List[str]
+CONF_SOURCES = 'sources'
 CONF_ZONES = 'zones'
 CONF_PORT = 'port'
+
+DEFAULT_NAME = 'Onkyo Serial Receiver'
+DEFAULT_PORT = '/dev/ttyUSB0'
+DEFAULT_ZONES = load("""
+master:
+    commands:
+        power:  'PWR'
+        volume: 'MVL'
+        source: 'SLI'
+        mute:   'AMT'
+    queries:
+        power:  'PWRQSTN'
+        volume: 'MVLQSTN'
+        source: 'SLIQSTN'
+        mute:   'AMTQSTN'
+zone2:
+    commands:
+        power:  'ZPW'
+        volume: 'ZVL'
+        source: 'SLZ'
+        mute:   'ZMT'
+    queries:
+        power:  'ZPWQSTN'
+        volume: 'ZVLQSTN'
+        source: 'SLZQSTN'
+        mute:   'ZMTQSTN'
+""")
+
 ZONE_SETUP_SCHEMA = vol.Schema({
     vol.Required('commands'):
         vol.Schema({vol.All(cv.string): vol.Any(cv.string)}),
@@ -38,223 +64,80 @@ ZONE_SETUP_SCHEMA = vol.Schema({
 })
 ZONE_SCHEMA = vol.Schema({vol.All(cv.string): ZONE_SETUP_SCHEMA})
 
-DEFAULT_SOURCES = {
-    "00": "VIDEO1,VCR/DVR,STB/DVR",
-    "01": "VIDEO2,CBL/SAT",
-    "02": "VIDEO3,GAME/TV,GAME,GAME1",
-    "03": "VIDEO4,AUX1,AUX",
-    "04": "VIDEO5,AUX2,GAME2",
-    "05": "VIDEO6,PC",
-    "06": "VIDEO7",
-    "07": "Hidden1,EXTRA1",
-    "08": "Hidden2,EXTRA2",
-    "09": "Hidden3,EXTRA3",
-    "10": "DVD,BD/DVD",
-    "20": "TAPE,TAPE(1),TV/TAPE",
-    "21": "TAPE2",
-    "22": "PHONO",
-    "23": "CD,TV/CD",
-    "24": "FM",
-    "25": "AM",
-    "26": "TUNER",
-    "27": "MUSIC SERVER,P4S,DLNA*2",
-    "28": "INTERNET RADIO,iRadio Favorite*3",
-    "29": "USB/USB (Front)",
-    "2A": "USB (Rear)",
-    "2B": "NETWORK,NET",
-    "2C": "USB (toggle)",
-    "2D": "Aiplay",
-    "40": "UniversalPORT",
-    "30": "MULTICH",
-    "31": "XM*1",
-    "32": "SIRIUS*1",
-    "33": "DAB*5"
-}
-
-'''
-Example Format:
-
-media_player:
-    platform: onkyo_serial
-    port: '/dev/ttyUSB0'
-    zones:
-        master:
-            commands:
-                power: 'MPW'
-            queries:
-                volume: 'MVL'
-
-        zone2:
-            commands:
-                power: 'ZPW'
-            queries:
-                volume: 'ZVOL'
-'''
+SOURCES_SCHEMA = vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT): cv.string,
+    vol.Required(CONF_PORT): DEFAULT_PORT,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ZONES): ZONE_SCHEMA,
-    vol.Optional(CONF_SOURCES, default=DEFAULT_SOURCES):
+    vol.Optional(CONF_SOURCES, SOURCES_SCHEMA):
         {cv.string: cv.string},
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Onkyo platform."""
-    import serial
-
     port = config.get(CONF_PORT)
 
-    ser = serial.Serial(
-        port=port,
-        baudrate=9600,
-        timeout=10,
-        rtscts=0,
-        xonxoff=0
-    )
+    # merge the default zones overridden with the configuration.yaml
+    # and create one device per zone
+    zones = DEFAULT_ZONES
+    if CONF_ZONES in config:
+        zones = dict(zones.items() + config.get(CONF_ZONES))
 
-    devices = []
-    zones = {}
+    devices = list()
+    for key in zones.keys():
+        device = OnkyoSerialDevice(
+            zones,
+            key,
+            port=port,
+            sources=config.get(CONF_SOURCES),
+            name="Onkyo-{zone}".format(zone=key)
+        )
+        devices.append(device)
 
-    if ser:
-        if CONF_ZONES in config:
-            for key, value in config[CONF_ZONES].items():
-                zones[key] = OnkyoSerialDevice(
-                    ser,
-                    config.get(CONF_SOURCES),
-                    value,
-                    name="onkyo-{zone}".format(zone=key)
-                )
-                devices.append(zones[key])
-    else:
-        _LOGGER.error('Unable to connect to serial port %s', port)
-
-    commands = {}
-    for key, value in config[CONF_ZONES].items():
-        commands[key] = config[CONF_ZONES][key]['commands']
-
-    update_thread = OnkyoBackgroundWorker(ser, commands, zones)
-    update_thread.start()
     add_devices(devices)
-
-
-class OnkyoBackgroundWorker(threading.Thread):
-    """Listens for incoming messages from the serial port and updates status in the background."""
-
-    def __init__(self, port, commands, devices):
-        """Initialize the thread."""
-        threading.Thread.__init__(self)
-        self.daemon = True
-        self._port = port
-        self._commands = commands
-        self._devices = devices
-        self._pattern = '!1([A-Z]{3})(.{2})?'
-
-        self.messages = {
-            'power': self.power,
-            'volume': self.volume,
-            'source': self.source,
-            'mute': self.mute
-        }
-
-    def _readline(self):
-        """Read a single line from the serial port suffixed with a ^Z."""
-        eol = b'\x1a'
-        leneol = len(eol)
-        line = bytearray()
-        while True:
-            cread = self._port.read(1)
-            if cread:
-                line += cread
-                if line[-leneol:] == eol:
-                    break
-            else:
-                break
-
-        return bytes(line)
-
-    def process(self, message, value):
-        """Call the process handler for a specific message."""
-        return self.messages[message](value)
-
-    #pylint: disable=R
-    def power(self, value):
-        """Process power state."""
-        if value == '00':
-            return STATE_OFF
-        else:
-            return STATE_ON
-
-    def mute(self, value):
-        """Process mute status."""
-        return value == '01'
-
-    def volume(self, value):
-        """Process volume state."""
-        return int(value, 16) / 100
-
-    def source(self, value):
-        """Process the current input source."""
-        return DEFAULT_SOURCES[value]
-
-    def run(self):
-        """Override run handler for the thread."""
-        while True:
-            out = self._readline().decode('utf-8')
-            match = re.search(self._pattern, out)
-            if match:
-                cmd = match.group(1)
-                val = match.group(2)
-                zone = None
-                prop = None
-
-                #pylint: disable=C,W
-                for z, c in self._commands.items():
-                    for child_key, child_cmd in self._commands[z].items():
-                        if child_cmd == cmd:
-                            zone = z
-                            prop = child_key
-                            break
-
-                if zone and prop:
-                    device = self._devices[zone]
-                    device.__dict__['_' + prop] = self.process(prop, val)
 
 
 class OnkyoSerialDevice(MediaPlayerDevice):
     """Representation of an Onkyo device."""
 
-    def __init__(self, port, sources, cmdquery, name=None):
+    def __init__(self, config, zone, port=None, sources=None, name=None):
         """Initialize the Onkyo Receiver."""
-        self._port = port
-        self._commands = cmdquery['commands']
-        self._queries = cmdquery['queries']
-        self._muted = False
+        from onkyo_serial import OnkyoSerial
+        from onkyo_serial import ONKYO_SOURCES
+        self._zone = zone
+        self._mute = False
         self._volume = 0
         self._source = None
         self._power = STATE_OFF
         self._name = name
-        self._current_source = None
-        self._source_list = list(sources.values())
-        self._source_mapping = sources
-        self._reverse_mapping = {value: key for key, value in sources.items()}
+        self._sources = ONKYO_SOURCES
+        if sources:
+            self._sources = dict(self._sources.items() + sources.items())
+        self._source_list = list(self._sources.values())
+        #pylint: disable=E
+        self._device = OnkyoSerial(config, zone, port=port)
+        self._device.on_state_change += self.state_changed
         self.update()
 
-    def command(self, command):
-        """Send a command to the serial port."""
-        if self._port.isOpen():
-            out = ''.join(['!1', command, '\r'])
-            self._port.write(str.encode(out))
-        else:
-            return False
-        return True
+    def state_changed(self, prop, value):
+        """State has changed in the remote device, signalling an update."""
+        if prop == 'power':
+            self._power = STATE_ON if value else STATE_OFF
+
+        if prop == 'volume':
+            self._volume = value / 100
+
+        if prop == 'source':
+            self._source = value
+
+        if prop == 'mute':
+            self._mute = value
 
     def update(self):
-        """Udpate request for status."""
-        #pylint: disable=W
-        for query, cmd in self._queries.items():
-            self.command(cmd)
+        """Update request for status."""
+        self._device.update()
 
     @property
     def name(self):
@@ -274,12 +157,7 @@ class OnkyoSerialDevice(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        return self._muted
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_ONKYO
+        return self._mute
 
     @property
     def source(self):
@@ -287,37 +165,34 @@ class OnkyoSerialDevice(MediaPlayerDevice):
         return self._source
 
     @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return SUPPORT_ONKYO
+
+    @property
     def source_list(self):
         """List of available input sources."""
         return self._source_list
 
+    def turn_on(self):
+        """Turn the media player on."""
+        self._device.power_on()
+
     def turn_off(self):
         """Turn off media player."""
-        self.command(self._commands['power'] + '00')
+        self._device.power_off()
 
     def set_volume_level(self, volume):
         """Set volume level, input is range 0..1."""
-        self.command(self._commands['volume'] + format(int(volume*100), '02X'))
+        self._device.volume(int(volume*100))
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.command(self._commands['mute'] + '01')
+            self._device.mute_on()
         else:
-            self.command(self._commands['mute'] + '00')
-
-    def turn_on(self):
-        """Turn the media player on."""
-        self.command(self._commands['power'] + '01')
+            self._device.mute_off()
 
     def select_source(self, source):
         """Set the input source."""
-        #pylint: disable=W
-        sel = self._reverse_mapping.get(source.upper(), None)
-        if not sel:
-            for key, val in self._reverse_mapping.items():
-                if source.upper() in key.split(','):
-                    sel = self._reverse_mapping[key]
-
-        if sel:
-            self.command(self._commands['source'] + sel)
+        self._device.source(source)
