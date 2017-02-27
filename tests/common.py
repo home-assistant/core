@@ -93,13 +93,15 @@ def async_test_home_assistant(loop):
 
     hass = ha.HomeAssistant(loop)
 
+    orig_async_add_job = hass.async_add_job
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, MagicMock):
             return
-        hass._async_add_job_tracking(target, *args)
+        orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
+    hass.async_track_tasks()
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
