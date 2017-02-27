@@ -86,7 +86,7 @@ PROP_TO_ATTR = {
 }
 
 # Service call validation schemas
-VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=900))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({

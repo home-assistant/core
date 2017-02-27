@@ -269,7 +269,7 @@ class MqttTemplate(Light):
 
         # transition
         if ATTR_TRANSITION in kwargs:
-            values['transition'] = kwargs[ATTR_TRANSITION]
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
@@ -293,7 +293,7 @@ class MqttTemplate(Light):
 
         # transition
         if ATTR_TRANSITION in kwargs:
-            values['transition'] = kwargs[ATTR_TRANSITION]
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
