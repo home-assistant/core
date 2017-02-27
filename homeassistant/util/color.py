@@ -1,6 +1,7 @@
 """Color util methods."""
 import logging
 import math
+import colorsys
 
 from typing import Tuple
 
@@ -257,6 +258,18 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     ir, ig, ib = map(lambda x: int(x * 255), [r, g, b])
 
     return (ir, ig, ib)
+
+
+def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
+    """Convert an rgb color to its hsv representation."""
+    fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
+    return (int(fHSV[0]*65536), int(fHSV[1]*255), int(fHSV[2]*255))
+
+
+def color_xy_brightness_to_hsv(vX: float, vY: float,
+                               ibrightness: int) -> Tuple[int, int, int]:
+    """Convert an xy brightness color to its hsv representation."""
+    return color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, ibrightness))
 
 
 def _match_max_scale(input_colors: Tuple[int, ...],
