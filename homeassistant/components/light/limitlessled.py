@@ -143,7 +143,7 @@ def state(new_state):
                 pipeline.on()
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
-                transition_time = kwargs[ATTR_TRANSITION]
+                transition_time = int(kwargs[ATTR_TRANSITION])
             # Do group type-specific work.
             function(self, transition_time, pipeline, **kwargs)
             # Update state.
