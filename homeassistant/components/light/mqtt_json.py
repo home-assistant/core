@@ -215,7 +215,7 @@ class MqttJson(Light):
                 message['flash'] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
         if ATTR_TRANSITION in kwargs:
-            message['transition'] = kwargs[ATTR_TRANSITION]
+            message['transition'] = int(kwargs[ATTR_TRANSITION])
 
         if ATTR_BRIGHTNESS in kwargs:
             message['brightness'] = int(kwargs[ATTR_BRIGHTNESS])
@@ -245,7 +245,7 @@ class MqttJson(Light):
         message = {'state': 'OFF'}
 
         if ATTR_TRANSITION in kwargs:
-            message['transition'] = kwargs[ATTR_TRANSITION]
+            message['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),
