@@ -106,6 +106,12 @@ class TestNX584SensorSetup(unittest.TestCase):
             requests.exceptions.ConnectionError
         self._test_assert_graceful_fail({})
 
+    def test_setup_no_partitions(self):
+        """Test the setup with connection failure."""
+        nx584_client.Client.return_value.list_zones.side_effect = \
+            IndexError
+        self._test_assert_graceful_fail({})
+
     def test_setup_version_too_old(self):
         """"Test if version is too old."""
         nx584_client.Client.return_value.get_version.return_value = '1.0'
@@ -137,7 +143,7 @@ class TestNX584ZoneSensor(unittest.TestCase):
 class TestNX584Watcher(unittest.TestCase):
     """Test the NX584 watcher."""
 
-    @mock.patch.object(nx584.NX584ZoneSensor, 'update_ha_state')
+    @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event(self, mock_update):
         """Test the processing of zone events."""
         zone1 = {'number': 1, 'name': 'foo', 'state': True}
@@ -151,7 +157,7 @@ class TestNX584Watcher(unittest.TestCase):
         self.assertFalse(zone1['state'])
         self.assertEqual(1, mock_update.call_count)
 
-    @mock.patch.object(nx584.NX584ZoneSensor, 'update_ha_state')
+    @mock.patch.object(nx584.NX584ZoneSensor, 'schedule_update_ha_state')
     def test_process_zone_event_missing_zone(self, mock_update):
         """Test the processing of zone events with missing zones."""
         watcher = nx584.NX584Watcher(None, {})
@@ -179,6 +185,7 @@ class TestNX584Watcher(unittest.TestCase):
 
         @mock.patch.object(watcher, '_process_zone_event')
         def run(fake_process):
+            """Run a fake process."""
             fake_process.side_effect = StopMe
             self.assertRaises(StopMe, watcher._run)
             self.assertEqual(fake_process.call_count, 1)
@@ -193,6 +200,7 @@ class TestNX584Watcher(unittest.TestCase):
         empty_me = [1, 2]
 
         def fake_run():
+            """Fake runner."""
             if empty_me:
                 empty_me.pop()
                 raise requests.exceptions.ConnectionError()

@@ -15,7 +15,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_SENDER, CONF_RECIPIENT
 
 REQUIREMENTS = ['sleekxmpp==1.3.1',
                 'dnspython3==1.15.0',
-                'pyasn1==0.1.9',
+                'pyasn1==0.2.2',
                 'pyasn1-modules==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
         config.get('sender'),

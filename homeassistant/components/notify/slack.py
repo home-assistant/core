@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_USERNAME, CONF_ICON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['slacker==0.9.29']
+REQUIREMENTS = ['slacker==0.9.42']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 # pylint: disable=unused-variable
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
     import slacker
 

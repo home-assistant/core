@@ -1,14 +1,16 @@
 """Setup some common test helper things."""
 import functools
 import logging
+from unittest.mock import patch
 
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import util
+from homeassistant import util, bootstrap
 from homeassistant.util import location
+from homeassistant.components import mqtt
 
-from .common import async_test_home_assistant
+from .common import async_test_home_assistant, mock_coro
 from .test_util.aiohttp import mock_aiohttp_client
 
 logging.basicConfig()
@@ -29,10 +31,20 @@ def test_real(func):
 
     return guard_func
 
+
 # Guard a few functions that would make network connections
 location.detect_location_info = test_real(location.detect_location_info)
 location.elevation = test_real(location.elevation)
 util.get_local_ip = lambda: '127.0.0.1'
+
+
+@pytest.fixture(autouse=True)
+def verify_cleanup():
+    """Verify that the test has cleaned up resources correctly."""
+    yield
+
+    from tests import common
+    assert common.INST_COUNT < 2
 
 
 @pytest.fixture
@@ -57,3 +69,19 @@ def aioclient_mock():
     """Fixture to mock aioclient calls."""
     with mock_aiohttp_client() as mock_session:
         yield mock_session
+
+
+@pytest.fixture
+def mqtt_mock(loop, hass):
+    """Fixture to mock MQTT."""
+    with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
+        mock_mqtt().async_connect.return_value = mock_coro(True)
+        assert loop.run_until_complete(bootstrap.async_setup_component(
+            hass, mqtt.DOMAIN, {
+                mqtt.DOMAIN: {
+                    mqtt.CONF_BROKER: 'mock-broker',
+                }
+            }))
+        client = mock_mqtt()
+        client.reset_mock()
+        return client

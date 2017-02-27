@@ -2,7 +2,7 @@
 Native Home Assistant iOS app component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/ios/
+https://home-assistant.io/ecosystem/ios/
 """
 import asyncio
 import os
@@ -244,17 +244,14 @@ def setup(hass, config):
     if CONFIG_FILE == {}:
         CONFIG_FILE[ATTR_DEVICES] = {}
 
-    # Notify needs to have discovery
-    # notify_config = {"notify": {CONF_PLATFORM: "ios"}}
-    # bootstrap.setup_component(hass, "notify", notify_config)
+    discovery.load_platform(hass, "notify", DOMAIN, {}, config)
 
     discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
-    hass.http.register_view(iOSIdentifyDeviceView(hass))
+    hass.http.register_view(iOSIdentifyDeviceView)
 
     app_config = config.get(DOMAIN, {})
-    hass.http.register_view(iOSPushConfigView(hass,
-                                              app_config.get(CONF_PUSH, {})))
+    hass.http.register_view(iOSPushConfigView(app_config.get(CONF_PUSH, {})))
 
     return True
 
@@ -266,9 +263,8 @@ class iOSPushConfigView(HomeAssistantView):
     url = "/api/ios/push"
     name = "api:ios:push"
 
-    def __init__(self, hass, push_config):
+    def __init__(self, push_config):
         """Init the view."""
-        super().__init__(hass)
         self.push_config = push_config
 
     @callback
@@ -282,10 +278,6 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
     url = "/api/ios/identify"
     name = "api:ios:identify"
-
-    def __init__(self, hass):
-        """Init the view."""
-        super().__init__(hass)
 
     @asyncio.coroutine
     def post(self, request):

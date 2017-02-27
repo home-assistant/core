@@ -210,6 +210,7 @@ class TestAutomatic(unittest.TestCase):
 
     def tearDown(self):
         """Tear down test data."""
+        self.hass.stop()
 
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)

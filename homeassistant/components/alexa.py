@@ -118,7 +118,7 @@ class AlexaIntentsView(HomeAssistantView):
 
     def __init__(self, hass, intents):
         """Initialize Alexa view."""
-        super().__init__(hass)
+        super().__init__()
 
         intents = copy.deepcopy(intents)
         template.attach(hass, intents)
@@ -150,7 +150,7 @@ class AlexaIntentsView(HomeAssistantView):
             return None
 
         intent = req.get('intent')
-        response = AlexaResponse(self.hass, intent)
+        response = AlexaResponse(request.app['hass'], intent)
 
         if req_type == 'LaunchRequest':
             response.add_speech(
@@ -203,11 +203,12 @@ class AlexaResponse(object):
         self.reprompt = None
         self.session_attributes = {}
         self.should_end_session = True
+        self.variables = {}
         if intent is not None and 'slots' in intent:
-            self.variables = {key: value['value'] for key, value
-                              in intent['slots'].items() if 'value' in value}
-        else:
-            self.variables = {}
+            for key, value in intent['slots'].items():
+                if 'value' in value:
+                    underscored_key = key.replace('.', '_')
+                    self.variables[underscored_key] = value['value']
 
     def add_card(self, card_type, title, content):
         """Add a card to the response."""
@@ -282,7 +283,7 @@ class AlexaFlashBriefingView(HomeAssistantView):
 
     def __init__(self, hass, flash_briefings):
         """Initialize Alexa view."""
-        super().__init__(hass)
+        super().__init__()
         self.flash_briefings = copy.deepcopy(flash_briefings)
         template.attach(hass, self.flash_briefings)
 

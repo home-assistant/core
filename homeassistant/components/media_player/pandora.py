@@ -15,7 +15,7 @@ import shutil
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
     SUPPORT_SELECT_SOURCE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
     MediaPlayerDevice)
@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 PANDORA_SUPPORT = \
     SUPPORT_PAUSE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 CMD_MAP = {SERVICE_MEDIA_NEXT_TRACK: 'n',
            SERVICE_MEDIA_PLAY_PAUSE: 'p',
@@ -120,7 +120,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         self.update_playing_status()
 
         self._player_state = STATE_IDLE
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the media player off."""
@@ -138,28 +138,28 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.info('Killed Pianobar subprocess')
         self._pianobar = None
         self._player_state = STATE_OFF
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_play(self):
         """Send play command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PLAYING
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_pause(self):
         """Send pause command."""
         self._send_pianobar_command(SERVICE_MEDIA_PLAY_PAUSE)
         self._player_state = STATE_PAUSED
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_next_track(self):
         """Go to next track."""
         self._send_pianobar_command(SERVICE_MEDIA_NEXT_TRACK)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
-    def supported_media_commands(self):
-        """Show what this supports."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return PANDORA_SUPPORT
 
     @property
@@ -349,6 +349,8 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             while not self._pianobar.expect('.+', timeout=0.1):
                 pass
         except pexpect.exceptions.TIMEOUT:
+            pass
+        except pexpect.exceptions.EOF:
             pass
 
 

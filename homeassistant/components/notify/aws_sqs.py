@@ -16,7 +16,7 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["boto3==1.3.1"]
+REQUIREMENTS = ["boto3==1.4.3"]
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the AWS SQS notification service."""
     # pylint: disable=import-error
     import boto3

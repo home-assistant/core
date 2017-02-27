@@ -1,15 +1,19 @@
 """The tests for the Entity component helper."""
 # pylint: disable=protected-access
+import asyncio
 from collections import OrderedDict
 import logging
 import unittest
 from unittest.mock import patch, Mock
+from datetime import timedelta
 
 import homeassistant.core as ha
 import homeassistant.loader as loader
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import (
+    EntityComponent, DEFAULT_SCAN_INTERVAL)
+
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
 
@@ -93,7 +97,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
-        component = EntityComponent(_LOGGER, DOMAIN, self.hass, 20)
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
 
         no_poll_ent = EntityTest(should_poll=False)
         no_poll_ent.async_update = Mock()
@@ -105,7 +110,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         no_poll_ent.async_update.reset_mock()
         poll_ent.async_update.reset_mock()
 
-        fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=20))
         self.hass.block_till_done()
 
         assert not no_poll_ent.async_update.called
@@ -122,7 +127,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert 1 == len(self.hass.states.entity_ids())
         ent2.update = lambda *_: component.add_entities([ent1])
 
-        fire_time_changed(self.hass, dt_util.utcnow().replace(second=0))
+        fire_time_changed(
+            self.hass, dt_util.utcnow() + DEFAULT_SCAN_INTERVAL
+        )
         self.hass.block_till_done()
 
         assert 2 == len(self.hass.states.entity_ids())
@@ -152,6 +159,30 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert 1 == len(self.hass.states.entity_ids())
         assert not ent.update.called
+
+    def test_adds_entities_with_update_befor_add_true_deadlock_protect(self):
+        """Test if call update befor add to state machine.
+
+        It need to run update inside executor and never call
+        async_add_entities with True
+        """
+        call = []
+        component = EntityComponent(_LOGGER, DOMAIN, self.hass)
+
+        @asyncio.coroutine
+        def async_add_entities_fake(entities, update_befor_add):
+            """Fake add_entities_call."""
+            call.append(update_befor_add)
+        component._platforms['core'].async_add_entities = \
+            async_add_entities_fake
+
+        ent = EntityTest()
+        ent.update = Mock(spec_set=True)
+        component.add_entities([ent], True)
+
+        assert ent.update.called
+        assert len(call) == 1
+        assert not call[0]
 
     def test_not_adding_duplicate_entities(self):
         """Test for not adding duplicate entities."""
@@ -267,9 +298,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert platform2_setup.called
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
-           '._async_setup_platform')
+           '._async_setup_platform', return_value=mock_coro())
     @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           return_value=mock_coro(True))
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -286,7 +317,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             mock_setup.call_args[0]
 
     @patch('homeassistant.helpers.entity_component.'
-           'async_track_utc_time_change')
+           'async_track_time_interval')
     def test_set_scan_interval_via_config(self, mock_track):
         """Test the setting of the scan interval via configuration."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
@@ -301,15 +332,15 @@ class TestHelpersEntityComponent(unittest.TestCase):
         component.setup({
             DOMAIN: {
                 'platform': 'platform',
-                'scan_interval': 30,
+                'scan_interval': timedelta(seconds=30),
             }
         })
 
         assert mock_track.called
-        assert [0, 30] == list(mock_track.call_args[1]['second'])
+        assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
     @patch('homeassistant.helpers.entity_component.'
-           'async_track_utc_time_change')
+           'async_track_time_interval')
     def test_set_scan_interval_via_platform(self, mock_track):
         """Test the setting of the scan interval via platform."""
         def platform_setup(hass, config, add_devices, discovery_info=None):
@@ -317,7 +348,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             add_devices([EntityTest(should_poll=True)])
 
         platform = MockPlatform(platform_setup)
-        platform.SCAN_INTERVAL = 30
+        platform.SCAN_INTERVAL = timedelta(seconds=30)
 
         loader.set_component('test_domain.platform', platform)
 
@@ -330,7 +361,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         })
 
         assert mock_track.called
-        assert [0, 30] == list(mock_track.call_args[1]['second'])
+        assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
     def test_set_entity_namespace_via_config(self):
         """Test setting an entity namespace."""

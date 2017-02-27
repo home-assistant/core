@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['schiene==0.17']
+REQUIREMENTS = ['schiene==0.18']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class DeutscheBahnSensor(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         connections = self.data.connections[0]
         connections['next'] = self.data.connections[1]['departure']

@@ -9,6 +9,7 @@ from tests.common import (get_test_home_assistant, assert_setup_component)
 from homeassistant.bootstrap import setup_component
 from homeassistant.components.sensor import tcp
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 
 TEST_CONFIG = {
     'sensor': {
@@ -19,7 +20,7 @@ TEST_CONFIG = {
         tcp.CONF_TIMEOUT: tcp.DEFAULT_TIMEOUT + 1,
         tcp.CONF_PAYLOAD: 'test_payload',
         tcp.CONF_UNIT_OF_MEASUREMENT: 'test_unit',
-        tcp.CONF_VALUE_TEMPLATE: 'test_template',
+        tcp.CONF_VALUE_TEMPLATE: Template('test_template'),
         tcp.CONF_VALUE_ON: 'test_on',
         tcp.CONF_BUFFER_SIZE: tcp.DEFAULT_BUFFER_SIZE + 1
     },
@@ -252,7 +253,7 @@ class TestTCPSensor(unittest.TestCase):
         mock_socket = mock_socket().__enter__()
         mock_socket.recv.return_value = test_value.encode()
         config = copy(TEST_CONFIG['sensor'])
-        config[tcp.CONF_VALUE_TEMPLATE] = '{{ value }} {{ 1+1 }}'
+        config[tcp.CONF_VALUE_TEMPLATE] = Template('{{ value }} {{ 1+1 }}')
         sensor = tcp.TcpSensor(self.hass, config)
         assert sensor._state == '%s 2' % test_value
 
@@ -265,6 +266,6 @@ class TestTCPSensor(unittest.TestCase):
         mock_socket = mock_socket().__enter__()
         mock_socket.recv.return_value = test_value.encode()
         config = copy(TEST_CONFIG['sensor'])
-        config[tcp.CONF_VALUE_TEMPLATE] = "{{ this won't work"
+        config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ this won't work")
         sensor = tcp.TcpSensor(self.hass, config)
         assert sensor.update() is None

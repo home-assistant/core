@@ -1,23 +1,25 @@
-"""Support for collecting data from the ARWN project.
+"""
+Support for collecting data from the ARWN project.
 
-For more details about this platform, please refer to the
-documentation at https://home-assistant.io/components/sensor.arwn/
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.arwn/
 """
 import json
 import logging
-from homeassistant.helpers.entity import Entity
+
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-DEPENDENCIES = ['mqtt']
+_LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "arwn"
-TOPIC = 'arwn/#'
+DEPENDENCIES = ['mqtt']
+DOMAIN = 'arwn'
+
 SENSORS = {}
 
-_LOGGER = logging.getLogger(__name__)
+TOPIC = 'arwn/#'
 
 
 def discover_sensors(topic, payload):
@@ -25,23 +27,24 @@ def discover_sensors(topic, payload):
     parts = topic.split('/')
     unit = payload.get('units', '')
     domain = parts[1]
-    if domain == "temperature":
+    if domain == 'temperature':
         name = parts[2]
-        if unit == "F":
+        if unit == 'F':
             unit = TEMP_FAHRENHEIT
         else:
             unit = TEMP_CELSIUS
-        return (ArwnSensor(name, 'temp', unit),)
-    if domain == "barometer":
-        return (ArwnSensor("Barometer", 'pressure', unit),)
-    if domain == "wind":
-        return (ArwnSensor("Wind Speed", 'speed', unit),
-                ArwnSensor("Wind Gust", 'gust', unit),
-                ArwnSensor("Wind Direction", 'direction', '°'))
+        return ArwnSensor(name, 'temp', unit)
+    if domain == 'barometer':
+        return ArwnSensor('Barometer', 'pressure', unit,
+                          "mdi:thermometer-lines")
+    if domain == 'wind':
+        return (ArwnSensor('Wind Speed', 'speed', unit, "mdi:speedometer"),
+                ArwnSensor('Wind Gust', 'gust', unit, "mdi:speedometer"),
+                ArwnSensor('Wind Direction', 'direction', '°', "mdi:compass"))
 
 
 def _slug(name):
-    return "sensor.arwn_%s" % slugify(name)
+    return 'sensor.arwn_{}'.format(slugify(name))
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -64,6 +67,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not sensors:
             return
 
+        if isinstance(sensors, ArwnSensor):
+            sensors = (sensors, )
+
         if 'timestamp' in event:
             del event['timestamp']
 
@@ -84,9 +90,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ArwnSensor(Entity):
-    """Represents an ARWN sensor."""
+    """Representation of an ARWN sensor."""
 
-    def __init__(self, name, state_key, units):
+    def __init__(self, name, state_key, units, icon=None):
         """Initialize the sensor."""
         self.hass = None
         self.entity_id = _slug(name)
@@ -94,6 +100,7 @@ class ArwnSensor(Entity):
         self._state_key = state_key
         self.event = {}
         self._unit_of_measurement = units
+        self._icon = icon
 
     def set_event(self, event):
         """Update the sensor with the most recent event."""
@@ -124,3 +131,11 @@ class ArwnSensor(Entity):
     def should_poll(self):
         """Should we poll."""
         return False
+
+    @property
+    def icon(self):
+        """Icon of device based on its type."""
+        if self._icon:
+            return self._icon
+        else:
+            return super().icon

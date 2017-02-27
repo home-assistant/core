@@ -26,7 +26,8 @@ Examples of devices Home Assistant can interface with:
    `Netgear <http://netgear.com>`__,
    `DD-WRT <http://www.dd-wrt.com/site/index>`__,
    `TPLink <http://www.tp-link.us/>`__,
-   `ASUSWRT <http://event.asus.com/2013/nw/ASUSWRT/>`__ and any SNMP
+   `ASUSWRT <http://event.asus.com/2013/nw/ASUSWRT/>`__,
+   `Xiaomi <http://miwifi.com/>`__ and any SNMP
    capable Linksys WAP/WRT
 -  `Philips Hue <http://meethue.com>`__ lights,
    `WeMo <http://www.belkin.com/us/Products/home-automation/c/wemo-home-automation/>`__
@@ -74,7 +75,8 @@ Build home automation on top of your devices:
    `Instapush <https://instapush.im>`__, `Notify My Android
    (NMA) <http://www.notifymyandroid.com/>`__,
    `PushBullet <https://www.pushbullet.com/>`__,
-   `PushOver <https://pushover.net/>`__, `Slack <https://slack.com/>`__,
+   `PushOver <https://pushover.net/>`__,
+   `Slack <https://slack.com/>`__,
    `Telegram <https://telegram.org/>`__, `Join <http://joaoapps.com/join/>`__, and `Jabber
    (XMPP) <http://xmpp.org>`__
 
@@ -86,7 +88,7 @@ components <https://home-assistant.io/developers/creating_components/>`__.
 
 If you run into issues while using Home Assistant or during development
 of a component, check the `Home Assistant help
-section <https://home-assistant.io/help/>`__ how to reach us.
+section <https://home-assistant.io/help/>`__ of our website for further help and information.
 
 .. |Build Status| image:: https://travis-ci.org/home-assistant/home-assistant.svg?branch=master
    :target: https://travis-ci.org/home-assistant/home-assistant

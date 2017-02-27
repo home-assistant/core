@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.mysensors/
 import logging
 
 from homeassistant.components import mysensors
-from homeassistant.components.binary_sensor import (SENSOR_CLASSES,
+from homeassistant.components.binary_sensor import (DEVICE_CLASSES,
                                                     BinarySensorDevice)
 from homeassistant.const import STATE_ON
 
@@ -22,7 +22,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    for gateway in mysensors.GATEWAYS.values():
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         # Define the S_TYPES and V_TYPES that the platform should handle as
         # states. Map them in a dict of lists.
         pres = gateway.const.Presentation
@@ -43,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsBinarySensor))
+            map_sv_types, devices, MySensorsBinarySensor, add_devices))
 
 
 class MySensorsBinarySensor(
@@ -58,8 +62,8 @@ class MySensorsBinarySensor(
         return False
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         pres = self.gateway.const.Presentation
         class_map = {
             pres.S_DOOR: 'opening',
@@ -74,5 +78,5 @@ class MySensorsBinarySensor(
                 pres.S_VIBRATION: 'vibration',
                 pres.S_MOISTURE: 'moisture',
             })
-        if class_map.get(self.child_type) in SENSOR_CLASSES:
+        if class_map.get(self.child_type) in DEVICE_CLASSES:
             return class_map.get(self.child_type)

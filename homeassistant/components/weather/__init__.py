@@ -4,8 +4,11 @@ Weather component that handles meteorological data for your location.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/weather/
 """
+import asyncio
 import logging
+from numbers import Number
 
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -26,13 +29,17 @@ ATTR_WEATHER_PRESSURE = 'pressure'
 ATTR_WEATHER_TEMPERATURE = 'temperature'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
+ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TIME = 'datetime'
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Setup the weather component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    component.setup(config)
 
+    yield from component.async_setup(config)
     return True
 
 
@@ -81,13 +88,15 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def forecast(self):
+        """Return the forecast."""
+        return None
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         data = {
-            ATTR_WEATHER_TEMPERATURE:
-                convert_temperature(
-                    self.temperature, self.temperature_unit,
-                    self.hass.config.units.temperature_unit),
+            ATTR_WEATHER_TEMPERATURE: self._temp_for_display(self.temperature),
             ATTR_WEATHER_HUMIDITY: self.humidity,
         }
 
@@ -111,6 +120,16 @@ class WeatherEntity(Entity):
         if attribution is not None:
             data[ATTR_WEATHER_ATTRIBUTION] = attribution
 
+        if self.forecast is not None:
+            forecast = []
+            for forecast_entry in self.forecast:
+                forecast_entry = dict(forecast_entry)
+                forecast_entry[ATTR_FORECAST_TEMP] = self._temp_for_display(
+                    forecast_entry[ATTR_FORECAST_TEMP])
+                forecast.append(forecast_entry)
+
+            data[ATTR_FORECAST] = forecast
+
         return data
 
     @property
@@ -123,7 +142,19 @@ class WeatherEntity(Entity):
         """Return the current condition."""
         raise NotImplementedError()
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return None
+    def _temp_for_display(self, temp):
+        """Convert temperature into preferred units for display purposes."""
+        unit = self.temperature_unit
+        hass_unit = self.hass.config.units.temperature_unit
+
+        if (temp is None or not isinstance(temp, Number) or
+                unit == hass_unit):
+            return temp
+
+        value = convert_temperature(temp, unit, hass_unit)
+
+        if hass_unit == TEMP_CELSIUS:
+            return round(value, 1)
+        else:
+            # Users of fahrenheit generally expect integer units.
+            return round(value)

@@ -9,6 +9,7 @@ from tests.common import load_fixture, get_test_home_assistant
 
 
 def mock_responses(mock):
+    """Mock responses for SleepIQ."""
     base_url = 'https://api.sleepiq.sleepnumber.com/rest/'
     mock.put(
         base_url + 'login',

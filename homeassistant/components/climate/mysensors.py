@@ -24,7 +24,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors climate."""
     if discovery_info is None:
         return
-    for gateway in mysensors.GATEWAYS.values():
+
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         if float(gateway.protocol_version) < 1.5:
             continue
         pres = gateway.const.Presentation
@@ -34,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         }
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsHVAC))
+            map_sv_types, devices, MySensorsHVAC, add_devices))
 
 
 class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
@@ -130,7 +135,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # optimistically assume that switch has changed state
                 self._values[value_type] = value
-                self.update_ha_state()
+                self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
@@ -140,7 +145,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_SPEED] = fan
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
@@ -151,7 +156,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""

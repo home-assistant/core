@@ -14,7 +14,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['batinfo==0.3']
+REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class LinuxBatterySensor(Entity):
         return ICON
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         return {
             ATTR_NAME: self._battery_stat.name,

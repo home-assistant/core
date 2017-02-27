@@ -12,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_PAUSE, SUPPORT_STOP, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_STEP, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_OFF, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, CONF_NAME, CONF_HOST,
     CONF_PORT)
@@ -25,7 +25,8 @@ DEFAULT_NAME = 'MPC-HC'
 DEFAULT_PORT = 13579
 
 SUPPORT_MPCHC = SUPPORT_VOLUME_MUTE | SUPPORT_PAUSE | SUPPORT_STOP | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_STEP
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_STEP | \
+    SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -125,8 +126,8 @@ class MpcHcDevice(MediaPlayerDevice):
             int(duration[2])
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_MPCHC
 
     def volume_up(self):

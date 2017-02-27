@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.concord232/
 """
 import datetime
+from datetime import timedelta
 import logging
 
 import requests
@@ -25,7 +26,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = 1
+SCAN_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
@@ -70,11 +71,6 @@ class Concord232Alarm(alarm.AlarmControlPanel):
         self._alarm.partitions = self._alarm.list_partitions()
         self._alarm.last_partition_update = datetime.datetime.now()
         self.update()
-
-    @property
-    def should_poll(self):
-        """Polling needed."""
-        return True
 
     @property
     def name(self):
@@ -126,7 +122,3 @@ class Concord232Alarm(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._alarm.arm('auto')
-
-    def alarm_trigger(self, code=None):
-        """Alarm trigger command."""
-        raise NotImplementedError()

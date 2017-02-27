@@ -9,15 +9,20 @@ import urllib
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+import homeassistant.loader as loader
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 
 # Unifi package doesn't list urllib3 as a requirement
-REQUIREMENTS = ['urllib3', 'unifi==1.2.5']
+REQUIREMENTS = ['urllib3', 'pyunifi==1.3']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
+
+NOTIFICATION_ID = 'unifi_notification'
+NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default='localhost'): cv.string,
@@ -30,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Setup Unifi device_tracker."""
-    from unifi.controller import Controller
+    from pyunifi.controller import Controller
 
     host = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -38,16 +43,24 @@ def get_scanner(hass, config):
     site_id = config[DOMAIN].get(CONF_SITE_ID)
     port = config[DOMAIN].get(CONF_PORT)
 
+    persistent_notification = loader.get_component('persistent_notification')
     try:
         ctrl = Controller(host, username, password, port, 'v4', site_id)
     except urllib.error.HTTPError as ex:
-        _LOGGER.error('Failed to connect to unifi: %s', ex)
+        _LOGGER.error('Failed to connect to Unifi: %s', ex)
+        persistent_notification.create(
+            hass, 'Failed to connect to Unifi. '
+            'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
         return False
 
     return UnifiScanner(ctrl)
 
 
-class UnifiScanner(object):
+class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller):

@@ -10,7 +10,7 @@ properly configured.
 
 import logging
 from homeassistant.const import STATE_UNKNOWN
-import homeassistant.components.homematic as homematic
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,30 +40,40 @@ HM_UNIT_HA_CAST = {
     "SUNSHINEDURATION": "#",
     "AIR_PRESSURE": "hPa",
     "FREQUENCY": "Hz",
+    "VALUE": "#",
+}
+
+HM_ICON_HA_CAST = {
+    "WIND_SPEED": 'mdi:weather-windy',
+    "HUMIDITY": 'mdi:water-percent',
+    "TEMPERATURE": 'mdi:thermometer',
+    "LUX": 'mdi:weather-sunny',
+    "BRIGHTNESS": 'mdi:invert-colors',
+    "POWER": 'mdi:flash-red-eye',
+    "CURRENT": "mdi:flash-red-eye",
 }
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the platform."""
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(
-        HMSensor,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMSensor(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
-class HMSensor(homematic.HMDevice):
+class HMSensor(HMDevice):
     """Represents various Homematic sensors in Home Assistant."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if not self.available:
-            return STATE_UNKNOWN
-
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
@@ -75,10 +85,12 @@ class HMSensor(homematic.HMDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if not self.available:
-            return None
-
         return HM_UNIT_HA_CAST.get(self._state, None)
+
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return HM_ICON_HA_CAST.get(self._state, None)
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from hm metadata."""

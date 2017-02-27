@@ -2,7 +2,7 @@
 iOS push notification platform for notify component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/notify.ios/
+https://home-assistant.io/ecosystem/ios/notifications/
 """
 import logging
 from datetime import datetime, timezone
@@ -39,17 +39,17 @@ def log_rate_limits(target, resp, level=20):
                 str(resetsAtTime).split(".")[0])
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the iOS notification service."""
     if "notify.ios" not in hass.config.components:
         # Need this to enable requirements checking in the app.
-        hass.config.components.append("notify.ios")
+        hass.config.components.add("notify.ios")
 
     if not ios.devices_with_push():
         _LOGGER.error(("The notify.ios platform was loaded but no "
                        "devices exist! Please check the documentation at "
-                       "https://home-assistant.io/components/notify.ios/ "
-                       "for more information"))
+                       "https://home-assistant.io/ecosystem/ios/notifications"
+                       "/ for more information"))
         return None
 
     return iOSNotificationService()

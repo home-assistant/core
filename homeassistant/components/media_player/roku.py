@@ -11,23 +11,27 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.loader as loader
 
 REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.2.zip'
-    '#roku==3.1.2']
+    'https://github.com/bah2830/python-roku/archive/3.1.3.zip'
+    '#roku==3.1.3']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
+
+NOTIFICATION_ID = 'roku_notification'
+NOTIFICATION_TITLE = 'Roku Media Player Setup'
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
@@ -48,15 +52,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
 
+    persistent_notification = loader.get_component('persistent_notification')
     rokus = []
     for host in hosts:
         new_roku = RokuDevice(host)
 
-        if new_roku.name is None:
+        try:
+            if new_roku.name is not None:
+                rokus.append(RokuDevice(host))
+                KNOWN_HOSTS.append(host)
+            else:
+                _LOGGER.error("Unable to initialize roku at %s", host)
+
+        except AttributeError:
             _LOGGER.error("Unable to initialize roku at %s", host)
-        else:
-            rokus.append(RokuDevice(host))
-            KNOWN_HOSTS.append(host)
+            persistent_notification.create(
+                hass, 'Error: Unable to initialize roku at {}<br />'
+                'Check its network connection or consider '
+                'using auto discovery.<br />'
+                'You will need to restart hass after fixing.'
+                ''.format(config.get(CONF_HOST)),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
 
     add_devices(rokus)
 
@@ -69,10 +86,10 @@ class RokuDevice(MediaPlayerDevice):
         from roku import Roku
 
         self.roku = Roku(host)
-        self.roku_name = None
         self.ip_address = host
         self.channels = []
         self.current_app = None
+        self.device_info = {}
 
         self.update()
 
@@ -81,7 +98,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.roku_name = "roku_" + self.roku.device_info.sernum
+            self.device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -106,7 +123,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.roku_name
+        return self.device_info.userdevicename
 
     @property
     def state(self):
@@ -114,7 +131,8 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is None:
             return STATE_UNKNOWN
 
-        if self.current_app.name in ["Power Saver", "Default screensaver"]:
+        if (self.current_app.name == "Power Saver" or
+                self.current_app.is_screensaver):
             return STATE_IDLE
         elif self.current_app.name == "Roku":
             return STATE_HOME
@@ -124,8 +142,8 @@ class RokuDevice(MediaPlayerDevice):
         return STATE_UNKNOWN
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_ROKU
 
     @property

@@ -20,8 +20,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'group'
 
@@ -29,11 +28,13 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
+CONF_CONTROL = 'control'
 
 ATTR_AUTO = 'auto'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
+ATTR_CONTROL = 'control'
 
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
@@ -55,13 +56,16 @@ def _conf_preprocess(value):
     return value
 
 
+GROUP_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+    CONF_VIEW: cv.boolean,
+    CONF_NAME: cv.string,
+    CONF_ICON: cv.icon,
+    CONF_CONTROL: cv.string,
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, {
-        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-        CONF_VIEW: cv.boolean,
-        CONF_NAME: cv.string,
-        CONF_ICON: cv.icon,
-    }, cv.match_all))
+    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, GROUP_SCHEMA))
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
@@ -93,7 +97,13 @@ def is_on(hass, entity_id):
 
 def reload(hass):
     """Reload the automation from config."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
+    hass.add_job(async_reload, hass)
+
+
+@asyncio.coroutine
+def async_reload(hass):
+    """Reload the automation from config."""
+    yield from hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
 
 def set_visibility(hass, entity_id=None, visible=True):
@@ -184,7 +194,7 @@ def async_setup(hass, config):
         tasks = [group.async_set_visible(visible) for group
                  in component.async_extract_from_service(service,
                                                          expand_group=False)]
-        yield from asyncio.gather(*tasks, loop=hass.loop)
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -206,21 +216,24 @@ def _async_process_config(hass, config, component):
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
+        control = conf.get(CONF_CONTROL)
 
-        # This order is important as groups get a number based on creation
-        # order.
+        # Don't create tasks and await them all. The order is important as
+        # groups get a number based on creation order.
         group = yield from Group.async_create_group(
-            hass, name, entity_ids, icon=icon, view=view, object_id=object_id)
+            hass, name, entity_ids, icon=icon, view=view,
+            control=control, object_id=object_id)
         groups.append(group)
 
-    yield from component.async_add_entities(groups)
+    if groups:
+        yield from component.async_add_entities(groups)
 
 
 class Group(Entity):
     """Track a group of entity ids."""
 
     def __init__(self, hass, name, order=None, user_defined=True, icon=None,
-                 view=False):
+                 view=False, control=None):
         """Initialize a group.
 
         This Object has factory function for creation.
@@ -238,20 +251,22 @@ class Group(Entity):
         self._assumed_state = False
         self._async_unsub_state_changed = None
         self._visible = True
+        self._control = control
 
     @staticmethod
     def create_group(hass, name, entity_ids=None, user_defined=True,
-                     icon=None, view=False, object_id=None):
+                     icon=None, view=False, control=None, object_id=None):
         """Initialize a group."""
         return run_coroutine_threadsafe(
             Group.async_create_group(hass, name, entity_ids, user_defined,
-                                     icon, view, object_id),
+                                     icon, view, control, object_id),
             hass.loop).result()
 
     @staticmethod
     @asyncio.coroutine
     def async_create_group(hass, name, entity_ids=None, user_defined=True,
-                           icon=None, view=False, object_id=None):
+                           icon=None, view=False, control=None,
+                           object_id=None):
         """Initialize a group.
 
         This method must be run in the event loop.
@@ -259,7 +274,8 @@ class Group(Entity):
         group = Group(
             hass, name,
             order=len(hass.states.async_entity_ids(DOMAIN)),
-            user_defined=user_defined, icon=icon, view=view)
+            user_defined=user_defined, icon=icon, view=view,
+            control=control)
 
         group.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id or name, hass=hass)
@@ -318,6 +334,8 @@ class Group(Entity):
             data[ATTR_AUTO] = True
         if self._view:
             data[ATTR_VIEW] = True
+        if self._control:
+            data[ATTR_CONTROL] = self._control
         return data
 
     @property
@@ -346,16 +364,18 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        run_callback_threadsafe(self.hass.loop, self.async_start).result()
+        self.hass.add_job(self.async_start)
 
+    @callback
     def async_start(self):
         """Start tracking members.
 
         This method must be run in the event loop.
         """
-        self._async_unsub_state_changed = async_track_state_change(
-            self.hass, self.tracking, self._state_changed_listener
-        )
+        if self._async_unsub_state_changed is None:
+            self._async_unsub_state_changed = async_track_state_change(
+                self.hass, self.tracking, self._async_state_changed_listener
+            )
 
     def stop(self):
         """Unregister the group from Home Assistant."""
@@ -381,20 +401,24 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        yield from super().async_remove()
-
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
 
-    @callback
-    def _state_changed_listener(self, entity_id, old_state, new_state):
+        yield from super().async_remove()
+
+    @asyncio.coroutine
+    def _async_state_changed_listener(self, entity_id, old_state, new_state):
         """Respond to a member state changing.
 
         This method must be run in the event loop.
         """
+        # removed
+        if self._async_unsub_state_changed is None:
+            return
+
         self._async_update_group_state(new_state)
-        self.hass.loop.create_task(self.async_update_ha_state())
+        yield from self.async_update_ha_state()
 
     @property
     def _tracking_states(self):

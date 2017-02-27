@@ -8,7 +8,6 @@ from homeassistant.bootstrap import setup_component
 @asyncio.coroutine
 def test_fetching_url(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
-    hass.allow_pool = True
     aioclient_mock.get('http://example.com', text='hello world')
 
     def setup_platform():
@@ -28,8 +27,8 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 
     resp = yield from client.get('/api/camera_proxy/camera.config_test')
 
-    assert aioclient_mock.call_count == 1
     assert resp.status == 200
+    assert aioclient_mock.call_count == 1
     body = yield from resp.text()
     assert body == 'hello world'
 
@@ -40,7 +39,6 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 @asyncio.coroutine
 def test_limit_refetch(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
-    hass.allow_pool = True
     aioclient_mock.get('http://example.com/5a', text='hello world')
     aioclient_mock.get('http://example.com/10a', text='hello world')
     aioclient_mock.get('http://example.com/15a', text='hello planet')

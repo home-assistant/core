@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Pushetta notification service."""
     pushetta_service = PushettaNotificationService(config[CONF_API_KEY],
                                                    config[CONF_CHANNEL_NAME],

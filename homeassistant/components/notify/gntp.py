@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the GNTP notification service."""
     if config.get(CONF_APP_ICON) is None:
         icon_file = os.path.join(os.path.dirname(__file__), "..", "frontend",

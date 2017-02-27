@@ -163,7 +163,7 @@ class MoldIndicator(Entity):
             self._indoor_hum = MoldIndicator._update_hum_sensor(new_state)
 
         self.update()
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def _calc_dewpoint(self):
         """Calculate the dewpoint for the indoor air."""
@@ -238,7 +238,7 @@ class MoldIndicator(Entity):
         return self._state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes."""
         if self._is_metric:
             return {

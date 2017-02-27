@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.5.1']
+REQUIREMENTS = ['beautifulsoup4==4.5.3']
 
 _LOGGER = logging.getLogger(__name__)
 

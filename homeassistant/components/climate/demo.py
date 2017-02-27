@@ -12,11 +12,11 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Demo climate devices."""
     add_devices([
-        DemoClimate("HeatPump", 68, TEMP_FAHRENHEIT, None, 77, "Auto Low",
-                    None, None, "Auto", "heat", None, None, None),
-        DemoClimate("Hvac", 21, TEMP_CELSIUS, True, 22, "On High",
+        DemoClimate("HeatPump", 68, TEMP_FAHRENHEIT, None, None, 77,
+                    "Auto Low", None, None, "Auto", "heat", None, None, None),
+        DemoClimate("Hvac", 21, TEMP_CELSIUS, True, None, 22, "On High",
                     67, 54, "Off", "cool", False, None, None),
-        DemoClimate("Ecobee", None, TEMP_CELSIUS, None, 23, "Auto Low",
+        DemoClimate("Ecobee", None, TEMP_CELSIUS, None, None, 23, "Auto Low",
                     None, None, "Auto", "auto", None, 24, 21)
     ])
 
@@ -25,7 +25,7 @@ class DemoClimate(ClimateDevice):
     """Representation of a demo climate device."""
 
     def __init__(self, name, target_temperature, unit_of_measurement,
-                 away, current_temperature, current_fan_mode,
+                 away, hold, current_temperature, current_fan_mode,
                  target_humidity, current_humidity, current_swing_mode,
                  current_operation, aux, target_temp_high, target_temp_low):
         """Initialize the climate device."""
@@ -34,6 +34,7 @@ class DemoClimate(ClimateDevice):
         self._target_humidity = target_humidity
         self._unit_of_measurement = unit_of_measurement
         self._away = away
+        self._hold = hold
         self._current_temperature = current_temperature
         self._current_humidity = current_humidity
         self._current_fan_mode = current_fan_mode
@@ -107,6 +108,11 @@ class DemoClimate(ClimateDevice):
         return self._away
 
     @property
+    def current_hold_mode(self):
+        """Return hold mode setting."""
+        return self._hold
+
+    @property
     def is_aux_heat_on(self):
         """Return true if away mode is on."""
         return self._aux
@@ -129,27 +135,27 @@ class DemoClimate(ClimateDevice):
            kwargs.get(ATTR_TARGET_TEMP_LOW) is not None:
             self._target_temperature_high = kwargs.get(ATTR_TARGET_TEMP_HIGH)
             self._target_temperature_low = kwargs.get(ATTR_TARGET_TEMP_LOW)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_humidity(self, humidity):
         """Set new target temperature."""
         self._target_humidity = humidity
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_swing_mode(self, swing_mode):
         """Set new target temperature."""
         self._current_swing_mode = swing_mode
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
         self._current_fan_mode = fan
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self._current_operation = operation_mode
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def current_swing_mode(self):
@@ -164,19 +170,24 @@ class DemoClimate(ClimateDevice):
     def turn_away_mode_on(self):
         """Turn away mode on."""
         self._away = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
         self._away = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()
+
+    def set_hold_mode(self, hold):
+        """Update hold mode on."""
+        self._hold = hold
+        self.schedule_update_ha_state()
 
     def turn_aux_heat_on(self):
         """Turn away auxillary heater on."""
         self._aux = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
         self._aux = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

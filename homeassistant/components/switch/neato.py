@@ -1,148 +1,113 @@
 """
-Support for Neato Connected Vaccums.
+Support for Neato Connected Vaccums switches.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
-import time
 import logging
-from datetime import timedelta
-from urllib.error import HTTPError
-from requests.exceptions import HTTPError as req_HTTPError
 
-import voluptuous as vol
-
-from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME, STATE_OFF,
-                                 STATE_ON, STATE_UNAVAILABLE)
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.1.zip'
-                '#pybotvac==0.0.1']
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
-
-MIN_TIME_TO_WAIT = timedelta(seconds=10)
-MIN_TIME_TO_LOCK_UPDATE = 10
+SWITCH_TYPE_CLEAN = 'clean'
+SWITCH_TYPE_SCHEDULE = 'scedule'
 
 SWITCH_TYPES = {
-    'clean': ['Clean']
+    SWITCH_TYPE_CLEAN: ['Clean'],
+    SWITCH_TYPE_SCHEDULE: ['Schedule']
 }
-
-DOMAIN = 'neato'
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-    })
-}, extra=vol.ALLOW_EXTRA)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Neato platform."""
-    from pybotvac import Account
-
-    try:
-        auth = Account(config[CONF_USERNAME], config[CONF_PASSWORD])
-    except HTTPError:
-        _LOGGER.error("Unable to connect to Neato API")
+    """Setup the Neato switches."""
+    if not hass.data[NEATO_ROBOTS]:
         return False
 
     dev = []
-    for robot in auth.robots:
+    for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
-            dev.append(NeatoConnectedSwitch(robot, type_name))
+            dev.append(NeatoConnectedSwitch(hass, robot, type_name))
+    _LOGGER.debug('Adding switches %s', dev)
     add_devices(dev)
 
 
 class NeatoConnectedSwitch(ToggleEntity):
-    """Neato Connected Switch (clean)."""
+    """Neato Connected Switches."""
 
-    def __init__(self, robot, switch_type):
-        """Initialize the Neato Connected switch."""
+    def __init__(self, hass, robot, switch_type):
+        """Initialize the Neato Connected switches."""
         self.type = switch_type
         self.robot = robot
-        self.lock = False
-        self.last_lock_time = None
-        self.graceful_state = False
-        self._state = None
+        self.neato = hass.data[NEATO_LOGIN]
+        self._robot_name = self.robot.name + ' ' + SWITCH_TYPES[self.type][0]
+        self._state = self.robot.state
+        self._schedule_state = None
+        self._clean_state = None
 
-    def lock_update(self):
-        """Lock the update since Neato clean takes some time to start."""
-        if self.is_update_locked():
-            return
-        self.lock = True
-        self.last_lock_time = time.time()
-
-    def reset_update_lock(self):
-        """Reset the update lock."""
-        self.lock = False
-        self.last_lock_time = None
-
-    def set_graceful_lock(self, state):
-        """Set the graceful state."""
-        self.graceful_state = state
-        self.reset_update_lock()
-        self.lock_update()
-
-    def is_update_locked(self):
-        """Check if the update method is locked."""
-        if self.last_lock_time is None:
-            return False
-
-        if time.time() - self.last_lock_time >= MIN_TIME_TO_LOCK_UPDATE:
-            self.last_lock_time = None
-            return False
-
-        return True
-
-    @property
-    def state(self):
-        """Return the state."""
+    def update(self):
+        """Update the states of Neato switches."""
+        _LOGGER.debug('Running switch update')
+        self.neato.update_robots()
         if not self._state:
-            return STATE_UNAVAILABLE
-        if not self._state['availableCommands']['start'] and \
-           not self._state['availableCommands']['stop'] and \
-           not self._state['availableCommands']['pause'] and \
-           not self._state['availableCommands']['resume'] and \
-           not self._state['availableCommands']['goToBase']:
-            return STATE_UNAVAILABLE
-        return STATE_ON if self.is_on else STATE_OFF
+            return
+        self._state = self.robot.state
+        _LOGGER.debug('self._state=%s', self._state)
+        if self.type == SWITCH_TYPE_CLEAN:
+            if (self.robot.state['action'] == 1 or
+                    self.robot.state['action'] == 2 or
+                    self.robot.state['action'] == 3 and
+                    self.robot.state['state'] == 2):
+                self._clean_state = STATE_ON
+            else:
+                self._clean_state = STATE_OFF
+            _LOGGER.debug('schedule_state=%s', self._schedule_state)
+        if self.type == SWITCH_TYPE_SCHEDULE:
+            _LOGGER.debug('self._state=%s', self._state)
+            if self.robot.schedule_enabled:
+                self._schedule_state = STATE_ON
+            else:
+                self._schedule_state = STATE_OFF
+            _LOGGER.debug('schedule_state=%s', self._schedule_state)
 
     @property
     def name(self):
-        """Return the name of the sensor."""
-        return self.robot.name + ' ' + SWITCH_TYPES[self.type][0]
+        """Return the name of the switch."""
+        return self._robot_name
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        if not self._state:
+            return False
+        else:
+            return True
 
     @property
     def is_on(self):
-        """Return true if device is on."""
-        if self.is_update_locked():
-            return self.graceful_state
-        if self._state['action'] == 1 and self._state['state'] == 2:
-            return True
-        return False
+        """Return true if switch is on."""
+        if self.type == SWITCH_TYPE_CLEAN:
+            if self._clean_state == STATE_ON:
+                return True
+            return False
+        elif self.type == SWITCH_TYPE_SCHEDULE:
+            if self._schedule_state == STATE_ON:
+                return True
+            return False
 
     def turn_on(self, **kwargs):
-        """Turn the device on."""
-        self.set_graceful_lock(True)
-        self.robot.start_cleaning()
+        """Turn the switch on."""
+        if self.type == SWITCH_TYPE_CLEAN:
+            self.robot.start_cleaning()
+        elif self.type == SWITCH_TYPE_SCHEDULE:
+            self.robot.enable_schedule()
 
     def turn_off(self, **kwargs):
-        """Turn the device off (Return Robot to base)."""
-        self.robot.pause_cleaning()
-        time.sleep(1)
-        self.robot.send_to_base()
-
-    def update(self):
-        """Refresh Robot state from Neato API."""
-        try:
-            self._state = self.robot.state
-        except req_HTTPError:
-            _LOGGER.error("Unable to retrieve to Robot State.")
-            self._state = None
-            return False
+        """Turn the switch off."""
+        if self.type == SWITCH_TYPE_CLEAN:
+            self.robot.pause_cleaning()
+            self.robot.send_to_base()
+        elif self.type == SWITCH_TYPE_SCHEDULE:
+            self.robot.disable_schedule()

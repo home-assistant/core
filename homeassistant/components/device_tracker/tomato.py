@@ -14,7 +14,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
@@ -38,7 +39,7 @@ def get_scanner(hass, config):
     return TomatoDeviceScanner(config[DOMAIN])
 
 
-class TomatoDeviceScanner(object):
+class TomatoDeviceScanner(DeviceScanner):
     """This class queries a wireless router running Tomato firmware."""
 
     def __init__(self, config):

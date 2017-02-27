@@ -70,6 +70,11 @@ class PowerViewScene(Scene):
         """Return the state attributes."""
         return {"roomName": self.scene_data["roomName"]}
 
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return 'mdi:blinds'
+
     def activate(self):
         """Activate the scene. Tries to get entities into requested state."""
         self.pv_instance.activate_scene(self.scene_data["id"])

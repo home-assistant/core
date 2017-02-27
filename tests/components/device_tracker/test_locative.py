@@ -9,7 +9,8 @@ import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
 from homeassistant.const import CONF_PLATFORM
 
-from tests.common import get_test_home_assistant, get_test_instance_port
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, get_test_instance_port)
 
 SERVER_PORT = get_test_instance_port()
 HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
@@ -31,6 +32,7 @@ def setUpModule():
     global hass
 
     hass = get_test_home_assistant()
+    # http is not platform based, assert_setup_component not applicable
     bootstrap.setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
             http.CONF_SERVER_PORT: SERVER_PORT
@@ -38,11 +40,12 @@ def setUpModule():
     })
 
     # Set up device tracker
-    bootstrap.setup_component(hass, device_tracker.DOMAIN, {
-        device_tracker.DOMAIN: {
-            CONF_PLATFORM: 'locative'
-        }
-    })
+    with assert_setup_component(1, device_tracker.DOMAIN):
+        bootstrap.setup_component(hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'locative'
+            }
+        })
 
     hass.start()
 
@@ -102,6 +105,13 @@ class TestLocative(unittest.TestCase):
         # Test message
         copy = data.copy()
         copy['trigger'] = 'test'
+        req = requests.get(_url(copy))
+        self.assertEqual(200, req.status_code)
+
+        # Test message, no location
+        copy = data.copy()
+        copy['trigger'] = 'test'
+        del copy['id']
         req = requests.get(_url(copy))
         self.assertEqual(200, req.status_code)
 

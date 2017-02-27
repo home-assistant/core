@@ -63,7 +63,7 @@ def setup_proximity_component(hass, name, config):
     proximity_zone = name
     unit_of_measurement = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit)
-    zone_id = 'zone.{}'.format(proximity_zone)
+    zone_id = 'zone.{}'.format(config.get(CONF_ZONE))
 
     proximity = Proximity(hass, proximity_zone, DEFAULT_DIST_TO_ZONE,
                           DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
@@ -141,6 +141,10 @@ class Proximity(Entity):
         # Check for devices in the monitored zone.
         for device in self.proximity_devices:
             device_state = self.hass.states.get(device)
+
+            if device_state is None:
+                devices_to_calculate = True
+                continue
 
             if device_state.state not in self.ignored_zones:
                 devices_to_calculate = True

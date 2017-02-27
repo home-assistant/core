@@ -6,27 +6,29 @@ https://home-assistant.io/components/switch.homematic/
 """
 import logging
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import STATE_UNKNOWN
-import homeassistant.components.homematic as homematic
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Homematic switch platform."""
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(
-        HMSwitch,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMSwitch(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
-class HMSwitch(homematic.HMDevice, SwitchDevice):
+class HMSwitch(HMDevice, SwitchDevice):
     """Representation of a Homematic switch."""
 
     @property
@@ -50,13 +52,11 @@ class HMSwitch(homematic.HMDevice, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        if self.available:
-            self._hmdevice.on(self._channel)
+        self._hmdevice.on(self._channel)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        if self.available:
-            self._hmdevice.off(self._channel)
+        self._hmdevice.off(self._channel)
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""

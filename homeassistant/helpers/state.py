@@ -1,4 +1,5 @@
 """Helpers that help with state related things."""
+import asyncio
 import json
 import logging
 from collections import defaultdict
@@ -15,13 +16,14 @@ from homeassistant.components.sun import (
 from homeassistant.components.switch.mysensors import (
     ATTR_IR_CODE, SERVICE_SEND_IR_CODE)
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HUMIDITY,
-    ATTR_OPERATION_MODE, ATTR_SWING_MODE,
-    SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE, SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE)
+    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HOLD_MODE,
+    ATTR_HUMIDITY, ATTR_OPERATION_MODE, ATTR_SWING_MODE,
+    SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE, SERVICE_SET_HOLD_MODE,
+    SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE)
 from homeassistant.components.climate.ecobee import (
-    ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME)
+    ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
+    ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_DISARM, SERVICE_ALARM_TRIGGER,
@@ -31,8 +33,9 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_CLOSED, STATE_LOCKED,
     STATE_OFF, STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING,
-    STATE_UNKNOWN, STATE_UNLOCKED)
+    STATE_UNKNOWN, STATE_UNLOCKED, SERVICE_SELECT_OPTION, ATTR_OPTION)
 from homeassistant.core import State
+from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,13 +53,16 @@ SERVICE_ATTRIBUTES = {
     SERVICE_SET_AWAY_MODE: [ATTR_AWAY_MODE],
     SERVICE_SET_FAN_MODE: [ATTR_FAN_MODE],
     SERVICE_SET_FAN_MIN_ON_TIME: [ATTR_FAN_MIN_ON_TIME],
+    SERVICE_RESUME_PROGRAM: [ATTR_RESUME_ALL],
     SERVICE_SET_TEMPERATURE: [ATTR_TEMPERATURE],
     SERVICE_SET_HUMIDITY: [ATTR_HUMIDITY],
     SERVICE_SET_SWING_MODE: [ATTR_SWING_MODE],
+    SERVICE_SET_HOLD_MODE: [ATTR_HOLD_MODE],
     SERVICE_SET_OPERATION_MODE: [ATTR_OPERATION_MODE],
     SERVICE_SET_AUX_HEAT: [ATTR_AUX_HEAT],
     SERVICE_SELECT_SOURCE: [ATTR_INPUT_SOURCE],
-    SERVICE_SEND_IR_CODE: [ATTR_IR_CODE]
+    SERVICE_SEND_IR_CODE: [ATTR_IR_CODE],
+    SERVICE_SELECT_OPTION: [ATTR_OPTION]
 }
 
 # Update this dict when new services are added to HA.
@@ -112,6 +118,13 @@ def get_changed_since(states, utc_point_in_time):
 
 def reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
+    return run_coroutine_threadsafe(
+        async_reproduce_state(hass, states, blocking), hass.loop).result()
+
+
+@asyncio.coroutine
+def async_reproduce_state(hass, states, blocking=False):
+    """Reproduce given state."""
     if isinstance(states, State):
         states = [states]
 
@@ -129,7 +142,7 @@ def reproduce_state(hass, states, blocking=False):
         else:
             service_domain = state.domain
 
-        domain_services = hass.services.services[service_domain]
+        domain_services = hass.services.async_services()[service_domain]
 
         service = None
         for _service in domain_services.keys():
@@ -154,10 +167,28 @@ def reproduce_state(hass, states, blocking=False):
                json.dumps(dict(state.attributes), sort_keys=True))
         to_call[key].append(state.entity_id)
 
+    domain_tasks = {}
     for (service_domain, service, service_data), entity_ids in to_call.items():
         data = json.loads(service_data)
         data[ATTR_ENTITY_ID] = entity_ids
-        hass.services.call(service_domain, service, data, blocking)
+
+        if service_domain not in domain_tasks:
+            domain_tasks[service_domain] = []
+
+        domain_tasks[service_domain].append(
+            hass.services.async_call(service_domain, service, data, blocking)
+        )
+
+    @asyncio.coroutine
+    def async_handle_service_calls(coro_list):
+        """Handle service calls by domain sequence."""
+        for coro in coro_list:
+            yield from coro
+
+    execute_tasks = [async_handle_service_calls(coro_list)
+                     for coro_list in domain_tasks.values()]
+    if execute_tasks:
+        yield from asyncio.wait(execute_tasks, loop=hass.loop)
 
 
 def state_as_number(state):

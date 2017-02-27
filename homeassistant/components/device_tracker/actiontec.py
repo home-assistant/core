@@ -14,7 +14,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.components.device_tracker import (
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
@@ -42,10 +43,11 @@ def get_scanner(hass, config):
     scanner = ActiontecDeviceScanner(config[DOMAIN])
     return scanner if scanner.success_init else None
 
+
 Device = namedtuple("Device", ["mac", "ip", "last_update"])
 
 
-class ActiontecDeviceScanner(object):
+class ActiontecDeviceScanner(DeviceScanner):
     """This class queries a an actiontec router for connected devices."""
 
     def __init__(self, config):

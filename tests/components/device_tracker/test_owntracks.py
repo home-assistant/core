@@ -377,7 +377,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         message = REGION_ENTER_MESSAGE.copy()
         message['desc'] = "inner 2"
         self.send_message(EVENT_TOPIC, message)
-        self.assert_location_state('inner_2')
+        self.assert_location_state('inner 2')
 
         message = REGION_LEAVE_MESSAGE.copy()
         message['desc'] = "inner 2"
@@ -690,6 +690,10 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
+
+    def teardown_method(self, method):
+        """Tear down resources."""
+        self.hass.stop()
 
     def mock_cipher():  # pylint: disable=no-method-argument
         """Return a dummy pickle-based cipher."""

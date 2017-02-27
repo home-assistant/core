@@ -4,7 +4,7 @@ import logging
 import logging.handlers
 import os
 import sys
-from collections import defaultdict
+from collections import OrderedDict
 
 from types import ModuleType
 from typing import Any, Optional, Dict
@@ -16,22 +16,25 @@ import homeassistant.components as core_components
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
 import homeassistant.core as core
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     event_decorators, service, config_per_platform, extract_domain_configs)
+from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
-_PERSISTENT_ERRORS = {}
+DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 
 
@@ -57,7 +60,7 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
     if config is None:
-        config = defaultdict(dict)
+        config = {}
 
     components = loader.load_order_component(domain)
 
@@ -142,6 +145,7 @@ def _async_setup_component(hass: core.HomeAssistant,
         async_comp = hasattr(component, 'async_setup')
 
         try:
+            _LOGGER.info("Setting up %s", domain)
             if async_comp:
                 result = yield from component.async_setup(hass, config)
             else:
@@ -163,16 +167,7 @@ def _async_setup_component(hass: core.HomeAssistant,
             loader.set_component(domain, None)
             return False
 
-        hass.config.components.append(component.DOMAIN)
-
-        # Assumption: if a component does not depend on groups
-        # it communicates with devices
-        if (not async_comp and
-                'group' not in getattr(component, 'DEPENDENCIES', [])):
-            if hass.pool is None:
-                hass.async_init_pool()
-            if hass.pool.worker_count <= 10:
-                hass.pool.add_worker()
+        hass.config.components.add(component.DOMAIN)
 
         hass.bus.async_fire(
             EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
@@ -304,6 +299,10 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     # Load dependencies
     for component in getattr(platform, 'DEPENDENCIES', []):
+        if component in loader.DEPENDENCY_BLACKLIST:
+            raise HomeAssistantError(
+                '{} is not allowed to be a dependency.'.format(component))
+
         res = yield from async_setup_component(hass, component, config)
         if not res:
             _LOGGER.error(
@@ -353,7 +352,7 @@ def from_config_dict(config: Dict[str, Any],
 
     # run task
     future = asyncio.Future(loop=hass.loop)
-    hass.loop.create_task(_async_init_from_config_dict(future))
+    hass.async_add_job(_async_init_from_config_dict(future))
     hass.loop.run_until_complete(future)
 
     return future.result()
@@ -373,6 +372,13 @@ def async_from_config_dict(config: Dict[str, Any],
     Dynamically loads required components and its dependencies.
     This method is a coroutine.
     """
+    hass.async_track_tasks()
+    setup_lock = hass.data.get('setup_lock')
+    if setup_lock is None:
+        setup_lock = hass.data['setup_lock'] = asyncio.Lock(loop=hass.loop)
+
+    yield from setup_lock.acquire()
+
     core_config = config.get(core.DOMAIN, {})
 
     try:
@@ -385,7 +391,7 @@ def async_from_config_dict(config: Dict[str, Any],
         None, conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
-        enable_logging(hass, verbose, log_rotate_days)
+        async_enable_logging(hass, verbose, log_rotate_days)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -395,11 +401,17 @@ def async_from_config_dict(config: Dict[str, Any],
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
 
+    # Merge packages
+    conf_util.merge_packages_config(
+        config, core_config.get(conf_util.CONF_PACKAGES, {}))
+
     # Make a copy because we are mutating it.
-    # Convert it to defaultdict so components can always have config dict
+    # Use OrderedDict in case original one was one.
     # Convert values to dictionaries if they are None
-    config = defaultdict(
-        dict, {key: value or {} for key, value in config.items()})
+    new_config = OrderedDict()
+    for key, value in config.items():
+        new_config[key] = value or {}
+    config = new_config
 
     # Filter out the repeating and common config section [homeassistant]
     components = set(key.split(' ')[0] for key in config.keys()
@@ -422,9 +434,20 @@ def async_from_config_dict(config: Dict[str, Any],
     service.HASS = hass
 
     # Setup the components
+    dependency_blacklist = loader.DEPENDENCY_BLACKLIST - set(components)
+
     for domain in loader.load_order_components(components):
+        if domain in dependency_blacklist:
+            raise HomeAssistantError(
+                '{} is not allowed to be a dependency'.format(domain))
+
         yield from _async_setup_component(hass, domain, config)
 
+    setup_lock.release()
+
+    yield from hass.async_stop_track_tasks()
+
+    async_register_signal_handling(hass)
     return hass
 
 
@@ -476,7 +499,7 @@ def async_from_config_file(config_path: str,
     yield from hass.loop.run_in_executor(
         None, mount_local_lib_path, config_dir)
 
-    enable_logging(hass, verbose, log_rotate_days)
+    async_enable_logging(hass, verbose, log_rotate_days)
 
     try:
         config_dict = yield from hass.loop.run_in_executor(
@@ -491,15 +514,18 @@ def async_from_config_file(config_path: str,
     return hass
 
 
-def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
-                   log_rotate_days=None) -> None:
+@core.callback
+def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+                         log_rotate_days=None) -> None:
     """Setup the logging.
 
-    Async friendly.
+    This method must be run in the event loop.
     """
     logging.basicConfig(level=logging.INFO)
-    fmt = ("%(log_color)s%(asctime)s %(levelname)s (%(threadName)s) "
-           "[%(name)s] %(message)s%(reset)s")
+    fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
+           "[%(name)s] %(message)s")
+    colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
+    datefmt = '%y-%m-%d %H:%M:%S'
 
     # suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
@@ -509,8 +535,8 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     try:
         from colorlog import ColoredFormatter
         logging.getLogger().handlers[0].setFormatter(ColoredFormatter(
-            fmt,
-            datefmt='%y-%m-%d %H:%M:%S',
+            colorfmt,
+            datefmt=datefmt,
             reset=True,
             log_colors={
                 'DEBUG': 'cyan',
@@ -540,11 +566,21 @@ def enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                 err_log_path, mode='w', delay=True)
 
         err_handler.setLevel(logging.INFO if verbose else logging.WARNING)
-        err_handler.setFormatter(
-            logging.Formatter('%(asctime)s %(name)s: %(message)s',
-                              datefmt='%y-%m-%d %H:%M:%S'))
+        err_handler.setFormatter(logging.Formatter(fmt, datefmt=datefmt))
+
+        async_handler = AsyncHandler(hass.loop, err_handler)
+
+        @asyncio.coroutine
+        def async_stop_async_handler(event):
+            """Cleanup async handler."""
+            logging.getLogger('').removeHandler(async_handler)
+            yield from async_handler.async_close(blocking=True)
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_CLOSE, async_stop_async_handler)
+
         logger = logging.getLogger('')
-        logger.addHandler(err_handler)
+        logger.addHandler(async_handler)
         logger.setLevel(logging.INFO)
 
     else:
@@ -565,9 +601,14 @@ def _async_persistent_notification(hass: core.HomeAssistant, component: str,
 
     This method must be run in the event loop.
     """
-    _PERSISTENT_ERRORS[component] = _PERSISTENT_ERRORS.get(component) or link
+    errors = hass.data.get(DATA_PERSISTENT_ERRORS)
+
+    if errors is None:
+        errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
+
+    errors[component] = errors.get(component) or link
     _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
-            if link else name for name, link in _PERSISTENT_ERRORS.items()]
+            if link else name for name, link in errors.items()]
     message = ('The following components and platforms could not be set up:\n'
                '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
     persistent_notification.async_create(
@@ -592,7 +633,7 @@ def async_log_exception(ex, domain, config, hass):
         message += '{}.'.format(humanize_error(config, ex))
 
     domain_config = config.get(domain, config)
-    message += " (See {}:{}). ".format(
+    message += " (See {}, line {}). ".format(
         getattr(domain_config, '__config_file__', '?'),
         getattr(domain_config, '__line__', '?'))
 

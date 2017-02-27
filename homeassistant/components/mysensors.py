@@ -5,14 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mysensors/
 """
 import logging
+import os
 import socket
+import sys
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_OPTIMISTIC,
-                                 EVENT_HOMEASSISTANT_START,
+from homeassistant.bootstrap import setup_component
+from homeassistant.components.mqtt import (valid_publish_topic,
+                                           valid_subscribe_topic)
+from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_NAME,
+                                 CONF_OPTIMISTIC, EVENT_HOMEASSISTANT_START,
                                  EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON)
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
@@ -38,28 +42,89 @@ DEFAULT_VERSION = 1.4
 DEFAULT_BAUD_RATE = 115200
 DEFAULT_TCP_PORT = 5003
 DOMAIN = 'mysensors'
-GATEWAYS = None
+MYSENSORS_GATEWAYS = 'mysensors_gateways'
 MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
     '0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8']
 
+
+def is_socket_address(value):
+    """Validate that value is a valid address."""
+    try:
+        socket.getaddrinfo(value, None)
+        return value
+    except OSError:
+        raise vol.Invalid('Device is not a valid domain name or ip address')
+
+
+def has_parent_dir(value):
+    """Validate that value is in an existing directory which is writetable."""
+    parent = os.path.dirname(os.path.realpath(value))
+    is_dir_writable = os.path.isdir(parent) and os.access(parent, os.W_OK)
+    if not is_dir_writable:
+        raise vol.Invalid(
+            '{} directory does not exist or is not writetable'.format(parent))
+    return value
+
+
+def has_all_unique_files(value):
+    """Validate that all persistence files are unique and set if any is set."""
+    persistence_files = [
+        gateway.get(CONF_PERSISTENCE_FILE) for gateway in value]
+    if None in persistence_files and any(
+            name is not None for name in persistence_files):
+        raise vol.Invalid(
+            'persistence file name of all devices must be set if any is set')
+    if not all(name is None for name in persistence_files):
+        schema = vol.Schema(vol.Unique())
+        schema(persistence_files)
+    return value
+
+
+def is_persistence_file(value):
+    """Validate that persistence file path ends in either .pickle or .json."""
+    if value.endswith(('.json', '.pickle')):
+        return value
+    else:
+        raise vol.Invalid(
+            '{} does not end in either `.json` or `.pickle`'.format(value))
+
+
+def is_serial_port(value):
+    """Validate that value is a windows serial port or a unix device."""
+    if sys.platform.startswith('win'):
+        ports = ('COM{}'.format(idx + 1) for idx in range(256))
+        if value in ports:
+            return value
+        else:
+            raise vol.Invalid(
+                '{} is not a serial port'.format(value))
+    else:
+        return cv.isdevice(value)
+
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_GATEWAYS): vol.All(cv.ensure_list, [
-            {
-                vol.Required(CONF_DEVICE): cv.string,
-                vol.Optional(CONF_PERSISTENCE_FILE): cv.string,
+        vol.Required(CONF_GATEWAYS): vol.All(
+            cv.ensure_list, has_all_unique_files,
+            [{
+                vol.Required(CONF_DEVICE):
+                    vol.Any(MQTT_COMPONENT, is_socket_address, is_serial_port),
+                vol.Optional(CONF_PERSISTENCE_FILE):
+                    vol.All(cv.string, is_persistence_file, has_parent_dir),
                 vol.Optional(
                     CONF_BAUD_RATE,
                     default=DEFAULT_BAUD_RATE): cv.positive_int,
                 vol.Optional(
                     CONF_TCP_PORT,
                     default=DEFAULT_TCP_PORT): cv.port,
-                vol.Optional(CONF_TOPIC_IN_PREFIX, default=''): cv.string,
-                vol.Optional(CONF_TOPIC_OUT_PREFIX, default=''): cv.string,
-            },
-        ]),
+                vol.Optional(
+                    CONF_TOPIC_IN_PREFIX, default=''): valid_subscribe_topic,
+                vol.Optional(
+                    CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
+            }]
+        ),
         vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
         vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
@@ -100,7 +165,7 @@ def setup(hass, config):
                 out_prefix=out_prefix, retain=retain)
         else:
             try:
-                socket.inet_aton(device)
+                socket.getaddrinfo(device, None)
                 # valid ip address
                 gateway = mysensors.TCPGateway(
                     device, event_callback=None, persistence=persistence,
@@ -132,9 +197,15 @@ def setup(hass, config):
 
         return gateway
 
+    gateways = hass.data.get(MYSENSORS_GATEWAYS)
+    if gateways is not None:
+        _LOGGER.error(
+            '%s already exists in %s, will not setup %s component',
+            MYSENSORS_GATEWAYS, hass.data, DOMAIN)
+        return False
+
     # Setup all devices from config
-    global GATEWAYS
-    GATEWAYS = {}
+    gateways = []
     conf_gateways = config[DOMAIN][CONF_GATEWAYS]
 
     for index, gway in enumerate(conf_gateways):
@@ -146,25 +217,33 @@ def setup(hass, config):
         tcp_port = gway.get(CONF_TCP_PORT)
         in_prefix = gway.get(CONF_TOPIC_IN_PREFIX)
         out_prefix = gway.get(CONF_TOPIC_OUT_PREFIX)
-        GATEWAYS[device] = setup_gateway(
+        ready_gateway = setup_gateway(
             device, persistence_file, baud_rate, tcp_port, in_prefix,
             out_prefix)
-        if GATEWAYS[device] is None:
-            GATEWAYS.pop(device)
+        if ready_gateway is not None:
+            gateways.append(ready_gateway)
 
-    if not GATEWAYS:
+    if not gateways:
         _LOGGER.error(
             'No devices could be setup as gateways, check your configuration')
         return False
+
+    hass.data[MYSENSORS_GATEWAYS] = gateways
 
     for component in ['sensor', 'switch', 'light', 'binary_sensor', 'climate',
                       'cover']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
+    discovery.load_platform(
+        hass, 'device_tracker', DOMAIN, {}, config)
+
+    discovery.load_platform(
+        hass, 'notify', DOMAIN, {CONF_NAME: DOMAIN}, config)
+
     return True
 
 
-def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
+def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
     """Return a new callback for the platform."""
     def mysensors_callback(gateway, node_id):
         """Callback for mysensors platform."""
@@ -179,7 +258,10 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                         value_type not in map_sv_types[child.type]:
                     continue
                 if key in devices:
-                    devices[key].update_ha_state(True)
+                    if add_devices:
+                        devices[key].schedule_update_ha_state(True)
+                    else:
+                        devices[key].update()
                     continue
                 name = '{} {} {}'.format(
                     gateway.sensors[node_id].sketch_name, node_id, child.id)
@@ -189,11 +271,12 @@ def pf_callback_factory(map_sv_types, devices, add_devices, entity_class):
                     device_class = entity_class
                 devices[key] = device_class(
                     gateway, node_id, child.id, name, value_type, child.type)
-
-                _LOGGER.info('Adding new devices: %s', devices[key])
-                add_devices([devices[key]])
-                if key in devices:
-                    devices[key].update_ha_state(True)
+                if add_devices:
+                    _LOGGER.info('Adding new devices: %s', devices[key])
+                    add_devices([devices[key]])
+                    devices[key].schedule_update_ha_state(True)
+                else:
+                    devices[key].update()
     return mysensors_callback
 
 

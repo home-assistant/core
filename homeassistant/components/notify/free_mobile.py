@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['freesms==0.1.0']
+REQUIREMENTS = ['freesms==0.1.1']
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Free Mobile SMS notification service."""
     return FreeSMSNotificationService(config[CONF_USERNAME],
                                       config[CONF_ACCESS_TOKEN])

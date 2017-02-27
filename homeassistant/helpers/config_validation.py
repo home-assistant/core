@@ -1,6 +1,6 @@
 """Helpers for config validation using voluptuous."""
 from collections import OrderedDict
-from datetime import timedelta
+from datetime import timedelta, datetime as datetime_sys
 import os
 import re
 from urllib.parse import urlparse
@@ -14,7 +14,7 @@ from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
+    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -70,6 +70,15 @@ def boolean(value: Any) -> bool:
     return bool(value)
 
 
+def isdevice(value):
+    """Validate that value is a real device."""
+    try:
+        os.stat(value)
+        return str(value)
+    except OSError:
+        raise vol.Invalid('No device at {} found'.format(value))
+
+
 def isfile(value: Any) -> str:
     """Validate that the value is an existing file."""
     if value is None:
@@ -85,6 +94,8 @@ def isfile(value: Any) -> str:
 
 def ensure_list(value: Union[T, Sequence[T]]) -> Sequence[T]:
     """Wrap value in list if it is not one."""
+    if value is None:
+        return []
     return value if isinstance(value, list) else [value]
 
 
@@ -297,6 +308,22 @@ def time(value):
     return time_val
 
 
+def datetime(value):
+    """Validate datetime."""
+    if isinstance(value, datetime_sys):
+        return value
+
+    try:
+        date_val = dt_util.parse_datetime(value)
+    except TypeError:
+        date_val = None
+
+    if date_val is None:
+        raise vol.Invalid('Invalid datetime specified: {}'.format(value))
+
+    return date_val
+
+
 def time_zone(value):
     """Validate timezone."""
     if dt_util.get_time_zone(value) is not None:
@@ -304,6 +331,7 @@ def time_zone(value):
     raise vol.Invalid(
         'Invalid time zone passed in. Valid options can be found here: '
         'http://en.wikipedia.org/wiki/List_of_tz_database_time_zones')
+
 
 weekdays = vol.All(ensure_list, [vol.In(WEEKDAYS)])
 
@@ -357,6 +385,8 @@ def ordered_dict(value_validator, key_validator=match_all):
         """Validate ordered dict."""
         config = OrderedDict()
 
+        if not isinstance(value, dict):
+            raise vol.Invalid('Value {} is not a dictionary'.format(value))
         for key, val in value.items():
             v_res = item_validator({key: val})
             config.update(v_res)
@@ -364,6 +394,13 @@ def ordered_dict(value_validator, key_validator=match_all):
         return config
 
     return validator
+
+
+def ensure_list_csv(value: Any) -> Sequence:
+    """Ensure that input is a list or make one from comma-separated string."""
+    if isinstance(value, str):
+        return [member.strip() for member in value.split(',')]
+    return ensure_list(value)
 
 
 # Validator helpers
@@ -386,8 +423,7 @@ def key_dependency(key, dependency):
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): string,
-    vol.Optional(CONF_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_SCAN_INTERVAL): time_period
 }, extra=vol.ALLOW_EXTRA)
 
 EVENT_SCHEMA = vol.Schema({
@@ -488,8 +524,14 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
         template)
 })
 
+_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("wait_template"): template,
+    vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+})
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
-    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA,
-             CONDITION_SCHEMA)],
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
+             _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
 )

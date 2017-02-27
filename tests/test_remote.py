@@ -23,7 +23,7 @@ HTTP_BASE_URL = 'http://127.0.0.1:{}'.format(MASTER_PORT)
 
 HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
 
-broken_api = remote.API('127.0.0.1', "bladiebla")
+broken_api = remote.API('127.0.0.1', "bladybla", port=get_test_instance_port())
 hass, slave, master_api = None, None, None
 
 
@@ -61,6 +61,7 @@ def setUpModule():
                      target=loop.run_forever).start()
 
     slave = remote.HomeAssistant(master_api, loop=loop)
+    slave.async_track_tasks()
     slave.config.config_dir = get_test_config_dir()
     slave.config.skip_pip = True
     bootstrap.setup_component(
@@ -116,6 +117,7 @@ class TestRemoteMethods(unittest.TestCase):
         """Test Python API fire_event."""
         test_value = []
 
+        @ha.callback
         def listener(event):
             """Helper method that will verify our event got called."""
             test_value.append(1)
@@ -200,6 +202,7 @@ class TestRemoteMethods(unittest.TestCase):
         """Test Python API services.call."""
         test_value = []
 
+        @ha.callback
         def listener(service_call):
             """Helper method that will verify that our service got called."""
             test_value.append(1)

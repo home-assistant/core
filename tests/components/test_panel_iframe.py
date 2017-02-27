@@ -14,12 +14,10 @@ class TestPanelIframe(unittest.TestCase):
     def setup_method(self, method):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        frontend.PANELS = {}
 
     def teardown_method(self, method):
         """Stop everything that was started."""
         self.hass.stop()
-        frontend.PANELS = {}
 
     def test_wrong_config(self):
         """Test setup with wrong configuration."""
@@ -55,9 +53,9 @@ class TestPanelIframe(unittest.TestCase):
                 },
             })
 
-        # 5 dev tools + map are automatically loaded
-        assert len(frontend.PANELS) == 8
-        assert frontend.PANELS['router'] == {
+        # 5 dev tools + map are automatically loaded + 2 iframe panels
+        assert len(self.hass.data[frontend.DATA_PANELS]) == 8
+        assert self.hass.data[frontend.DATA_PANELS]['router'] == {
             'component_name': 'iframe',
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
@@ -66,7 +64,7 @@ class TestPanelIframe(unittest.TestCase):
             'url_path': 'router'
         }
 
-        assert frontend.PANELS['weather'] == {
+        assert self.hass.data[frontend.DATA_PANELS]['weather'] == {
             'component_name': 'iframe',
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',

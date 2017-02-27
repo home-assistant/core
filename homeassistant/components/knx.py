@@ -136,8 +136,8 @@ class KNXGroupAddress(Entity):
             information relating to this device.
             """
             if (addr == self.state_address) or (addr == self.address):
-                self._state = data
-                self.update_ha_state()
+                self._state = data[0]
+                self.schedule_update_ha_state()
 
         KNXTUNNEL.register_listener(self.address, handle_knx_message)
         if self.state_address:
@@ -161,8 +161,6 @@ class KNXGroupAddress(Entity):
     @property
     def is_on(self):
         """Return True if the value is not 0 is on, else False."""
-        if self.should_poll:
-            self.update()
         return self._state != 0
 
     @property

@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the aREST sensor."""
+    """Set up the aREST sensor."""
     resource = config.get(CONF_RESOURCE)
     var_conf = config.get(CONF_MONITORED_VARIABLES)
     pins = config.get(CONF_PINS)
@@ -54,12 +54,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL.")
+                      "Add http:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device at %s. "
-                      "Please check the IP address in the configuration file.",
-                      resource)
+        _LOGGER.error("No route to device at %s", resource)
         return False
 
     arest = ArestData(resource)
@@ -75,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             try:
                 return value_template.async_render({'value': value})
             except TemplateError:
-                _LOGGER.exception('Error parsing value')
+                _LOGGER.exception("Error parsing value")
                 return value
 
         return _render
@@ -91,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             renderer = make_renderer(var_data.get(CONF_VALUE_TEMPLATE))
             dev.append(ArestSensor(
                 arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-                variable, variable=variable,
+                var_data.get(CONF_NAME, variable), variable=variable,
                 unit_of_measurement=var_data.get(CONF_UNIT_OF_MEASUREMENT),
                 renderer=renderer))
 
@@ -127,7 +125,7 @@ class ArestSensor(Entity):
             request = requests.get(
                 '{}/mode/{}/i'.format(self._resource, self._pin), timeout=10)
             if request.status_code is not 200:
-                _LOGGER.error("Can't set mode. Is device offline?")
+                _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property
     def name(self):
@@ -184,15 +182,11 @@ class ArestData(object):
                         response = requests.get('{}/analog/{}'.format(
                             self._resource, self._pin[1:]), timeout=10)
                         self.data = {'value': response.json()['return_value']}
-                    else:
-                        _LOGGER.error("Wrong pin naming. "
-                                      "Please check your configuration file.")
                 except TypeError:
                     response = requests.get('{}/digital/{}'.format(
                         self._resource, self._pin), timeout=10)
                     self.data = {'value': response.json()['return_value']}
             self.available = True
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to device %s. Is device offline?",
-                          self._resource)
+            _LOGGER.error("No route to device %s", self._resource)
             self.available = False

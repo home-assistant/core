@@ -13,13 +13,14 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
     STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==0.7.6']
+REQUIREMENTS = ['pychromecast==0.8.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +31,13 @@ DEFAULT_PORT = 8009
 
 SUPPORT_CAST = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP
+    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
 
 KNOWN_HOSTS = []
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_IGNORE_CEC): [cv.string],
 })
 
 
@@ -45,11 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pychromecast
 
     # import CEC IGNORE attributes
-    ignore_cec = config.get(CONF_IGNORE_CEC, [])
-    if isinstance(ignore_cec, list):
-        pychromecast.IGNORE_CEC += ignore_cec
-    else:
-        _LOGGER.error('CEC config "%s" must be a list.', CONF_IGNORE_CEC)
+    pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
 
     hosts = []
 
@@ -81,6 +79,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 KNOWN_HOSTS.append(host)
             except pychromecast.ChromecastConnectionError:
                 pass
+        else:
+            try:
+                # add the device anyway, get_chromecasts couldn't find it
+                casts.append(CastDevice(pychromecast.Chromecast(*host)))
+                KNOWN_HOSTS.append(host)
+            except pychromecast.ChromecastConnectionError:
+                pass
 
     add_devices(casts)
 
@@ -98,6 +103,7 @@ class CastDevice(MediaPlayerDevice):
 
         self.cast_status = self.cast.status
         self.media_status = self.cast.media_controller.status
+        self.media_status_received = None
 
     @property
     def should_poll(self):
@@ -220,9 +226,33 @@ class CastDevice(MediaPlayerDevice):
         return self.cast.app_display_name
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CAST
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        if self.media_status is None or self.media_status_received is None or \
+                not (self.media_status.player_is_playing or
+                     self.media_status.player_is_idle):
+            return None
+
+        position = self.media_status.current_time
+
+        if self.media_status.player_is_playing:
+            position += (dt_util.utcnow() -
+                         self.media_status_received).total_seconds()
+
+        return position
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self.media_status_received
 
     def turn_on(self):
         """Turn on the ChromeCast."""
@@ -280,9 +310,10 @@ class CastDevice(MediaPlayerDevice):
     def new_cast_status(self, status):
         """Called when a new cast status is received."""
         self.cast_status = status
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def new_media_status(self, status):
         """Called when a new media status is received."""
         self.media_status = status
-        self.update_ha_state()
+        self.media_status_received = dt_util.utcnow()
+        self.schedule_update_ha_state()

@@ -69,6 +69,12 @@ class TestPilight(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.skip_teardown_stop = False
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        if not self.skip_teardown_stop:
+            self.hass.stop()
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_failed_error(self, mock_error):
@@ -208,6 +214,7 @@ class TestPilight(unittest.TestCase):
                 'PilightDaemonSim start' in str(error_log_call))
 
             # Test stop
+            self.skip_teardown_stop = True
             self.hass.stop()
             error_log_call = mock_pilight_error.call_args_list[-1]
             self.assertTrue(
@@ -343,6 +350,10 @@ class TestPilightCallrateThrottler(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
     def test_call_rate_delay_throttle_disabled(self):
         """Test that the limiter is a noop if no delay set."""

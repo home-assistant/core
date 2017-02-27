@@ -49,6 +49,9 @@ class SmartPlugSwitch(SwitchDevice):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
+        self._now_power = None
+        self._now_energy_day = None
+        self._state = False
 
     @property
     def name(self):
@@ -58,27 +61,17 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def current_power_mwh(self):
         """Return the current power usage in mWh."""
-        try:
-            return float(self.smartplug.now_power) / 1000000.0
-        except ValueError:
-            return None
-        except TypeError:
-            return None
+        return self._now_power
 
     @property
     def today_power_mw(self):
         """Return the today total power usage in mW."""
-        try:
-            return float(self.smartplug.now_energy_day) / 1000.0
-        except ValueError:
-            return None
-        except TypeError:
-            return None
+        return self._now_energy_day
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.state == 'ON'
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -87,3 +80,18 @@ class SmartPlugSwitch(SwitchDevice):
     def turn_off(self):
         """Turn the switch off."""
         self.smartplug.state = 'OFF'
+
+    def update(self):
+        """Update edimax switch."""
+        try:
+            self._now_power = float(self.smartplug.now_power) / 1000000.0
+        except (TypeError, ValueError):
+            self._now_power = None
+
+        try:
+            self._now_energy_day = (float(self.smartplug.now_energy_day) /
+                                    1000.0)
+        except (TypeError, ValueError):
+            self._now_energy_day = None
+
+        self._state = self.smartplug.state == 'ON'

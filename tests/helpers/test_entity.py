@@ -2,11 +2,14 @@
 # pylint: disable=protected-access
 import asyncio
 from unittest.mock import MagicMock
+from unittest.mock import patch
 
 import pytest
 
 import homeassistant.helpers.entity as entity
-from homeassistant.const import ATTR_HIDDEN
+from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
+from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.helpers.entity_values import EntityValues
 
 from tests.common import get_test_home_assistant
 
@@ -78,7 +81,6 @@ class TestHelpersEntity(object):
 
     def teardown_method(self, method):
         """Stop everything that was started."""
-        entity.set_customize({})
         self.hass.stop()
 
     def test_default_hidden_not_in_attributes(self):
@@ -88,7 +90,8 @@ class TestHelpersEntity(object):
 
     def test_overwriting_hidden_property_to_true(self):
         """Test we can overwrite hidden property to True."""
-        entity.set_customize({self.entity.entity_id: {ATTR_HIDDEN: True}})
+        self.hass.data[DATA_CUSTOMIZE] = EntityValues({
+            self.entity.entity_id: {ATTR_HIDDEN: True}})
         self.entity.update_ha_state()
 
         state = self.hass.states.get(self.entity.entity_id)
@@ -116,3 +119,13 @@ class TestHelpersEntity(object):
         ent = AsyncEntity()
         ent.update()
         assert len(async_update) == 1
+
+    def test_device_class(self):
+        """Test device class attribute."""
+        state = self.hass.states.get(self.entity.entity_id)
+        assert state.attributes.get(ATTR_DEVICE_CLASS) is None
+        with patch('homeassistant.helpers.entity.Entity.device_class',
+                   new='test_class'):
+            self.entity.update_ha_state()
+        state = self.hass.states.get(self.entity.entity_id)
+        assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'

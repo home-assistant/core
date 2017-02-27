@@ -14,8 +14,8 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, SUPPORT_PLAY,
+    MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
 from homeassistant.loader import get_component
@@ -33,7 +33,7 @@ DEFAULT_PORT = 5672
 GPMDP_CONFIG_FILE = 'gpmpd.conf'
 
 SUPPORT_GPMDP = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_SEEK | SUPPORT_VOLUME_SET
+    SUPPORT_SEEK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
 PLAYBACK_DICT = {'0': STATE_PAUSED,  # Stopped
                  '1': STATE_PAUSED,
@@ -295,8 +295,8 @@ class GPMDP(MediaPlayerDevice):
         return self._name
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_GPMDP
 
     def media_next_track(self):
@@ -311,13 +311,13 @@ class GPMDP(MediaPlayerDevice):
         """Send media_play command to media player."""
         self.send_gpmdp_msg('playback', 'playPause', False)
         self._status = STATE_PLAYING
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_pause(self):
         """Send media_pause command to media player."""
         self.send_gpmdp_msg('playback', 'playPause', False)
         self._status = STATE_PAUSED
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def media_seek(self, position):
         """Send media_seek command to media player."""
@@ -327,7 +327,7 @@ class GPMDP(MediaPlayerDevice):
         websocket.send(json.dumps({'namespace': 'playback',
                                    'method': 'setCurrentTime',
                                    'arguments': [position*1000]}))
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def volume_up(self):
         """Send volume_up command to media player."""
@@ -335,7 +335,7 @@ class GPMDP(MediaPlayerDevice):
         if websocket is None:
             return
         websocket.send('{"namespace": "volume", "method": "increaseVolume"}')
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def volume_down(self):
         """Send volume_down command to media player."""
@@ -343,7 +343,7 @@ class GPMDP(MediaPlayerDevice):
         if websocket is None:
             return
         websocket.send('{"namespace": "volume", "method": "decreaseVolume"}')
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_volume_level(self, volume):
         """Set volume on media player, range(0..1)."""
@@ -353,4 +353,4 @@ class GPMDP(MediaPlayerDevice):
         websocket.send(json.dumps({'namespace': 'volume',
                                    'method': 'setVolume',
                                    'arguments': [volume*100]}))
-        self.update_ha_state()
+        self.schedule_update_ha_state()

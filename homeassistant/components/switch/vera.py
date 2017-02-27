@@ -36,13 +36,13 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         """Turn device on."""
         self.vera_device.switch_on()
         self._state = STATE_ON
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
         self.vera_device.switch_off()
         self._state = STATE_OFF
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def current_power_mwh(self):

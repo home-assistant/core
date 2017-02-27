@@ -66,9 +66,9 @@ class DemoSwitch(SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn the switch on."""
         self._state = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()

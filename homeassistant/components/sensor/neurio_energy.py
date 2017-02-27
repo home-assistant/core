@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_API_KEY, CONF_NAME)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['neurio==0.2.10']
+REQUIREMENTS = ['neurio==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,7 +66,7 @@ class NeurioEnergy(Entity):
 
     @property
     def name(self):
-        """Return the name of th sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -94,5 +94,5 @@ class NeurioEnergy(Entity):
             sample = neurio_client.get_samples_live_last(
                 sensor_id=self.sensor_id)
             self._state = sample['consumptionPower']
-        except (requests.exceptions.RequestException, ValueError):
+        except (requests.exceptions.RequestException, ValueError, KeyError):
             _LOGGER.warning('Could not update status for %s', self.name)

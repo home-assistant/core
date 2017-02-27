@@ -39,6 +39,40 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 83, 255),
                          color_util.color_xy_brightness_to_RGB(0, 0, 255))
 
+    def test_color_RGB_to_hsv(self):
+        """Test color_RGB_to_hsv."""
+        self.assertEqual((0, 0, 0),
+                         color_util.color_RGB_to_hsv(0, 0, 0))
+
+        self.assertEqual((0, 0, 255),
+                         color_util.color_RGB_to_hsv(255, 255, 255))
+
+        self.assertEqual((43690, 255, 255),
+                         color_util.color_RGB_to_hsv(0, 0, 255))
+
+        self.assertEqual((21845, 255, 255),
+                         color_util.color_RGB_to_hsv(0, 255, 0))
+
+        self.assertEqual((0, 255, 255),
+                         color_util.color_RGB_to_hsv(255, 0, 0))
+
+    def test_color_xy_brightness_to_hsv(self):
+        """Test color_RGB_to_xy."""
+        self.assertEqual(color_util.color_RGB_to_hsv(0, 0, 0),
+                         color_util.color_xy_brightness_to_hsv(1, 1, 0))
+
+        self.assertEqual(color_util.color_RGB_to_hsv(255, 235, 214),
+                         color_util.color_xy_brightness_to_hsv(.35, .35, 255))
+
+        self.assertEqual(color_util.color_RGB_to_hsv(255, 0, 45),
+                         color_util.color_xy_brightness_to_hsv(1, 0, 255))
+
+        self.assertEqual(color_util.color_RGB_to_hsv(0, 255, 0),
+                         color_util.color_xy_brightness_to_hsv(0, 1, 255))
+
+        self.assertEqual(color_util.color_RGB_to_hsv(0, 83, 255),
+                         color_util.color_xy_brightness_to_hsv(0, 0, 255))
+
     def test_rgb_hex_to_rgb_list(self):
         """Test rgb_hex_to_rgb_list."""
         self.assertEqual([255, 255, 255],
@@ -67,8 +101,20 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 0, 255),
                          color_util.color_name_to_rgb('blue'))
 
-        self.assertEqual((0, 255, 0),
+        self.assertEqual((0, 128, 0),
                          color_util.color_name_to_rgb('green'))
+
+        # spaces in the name
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('dark slate blue'))
+
+        # spaces removed from name
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('darkslateblue'))
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('dark slateblue'))
+        self.assertEqual((72, 61, 139),
+                         color_util.color_name_to_rgb('darkslate blue'))
 
     def test_color_name_to_rgb_unknown_name_default_white(self):
         """Test color_name_to_rgb."""

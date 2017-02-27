@@ -77,14 +77,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(TRANSPARENCIES.keys()),
     vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
         vol.In(COLORS.keys()),
-    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
     vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
 })
 
 
 # pylint: disable=unused-argument
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Notifications for Android TV notification service."""
     remoteip = config.get(CONF_IP)
     duration = config.get(CONF_DURATION)

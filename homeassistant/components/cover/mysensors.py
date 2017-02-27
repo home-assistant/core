@@ -18,7 +18,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the mysensors platform for covers."""
     if discovery_info is None:
         return
-    for gateway in mysensors.GATEWAYS.values():
+
+    gateways = hass.data.get(mysensors.MYSENSORS_GATEWAYS)
+    if not gateways:
+        return
+
+    for gateway in gateways:
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {
@@ -30,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             })
         devices = {}
         gateway.platform_callbacks.append(mysensors.pf_callback_factory(
-            map_sv_types, devices, add_devices, MySensorsCover))
+            map_sv_types, devices, MySensorsCover, add_devices))
 
 
 class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
@@ -70,7 +75,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 100
             else:
                 self._values[set_req.V_LIGHT] = STATE_ON
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Move the cover down."""
@@ -83,7 +88,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
                 self._values[set_req.V_DIMMER] = 0
             else:
                 self._values[set_req.V_LIGHT] = STATE_OFF
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -94,7 +99,7 @@ class MySensorsCover(mysensors.MySensorsDeviceEntity, CoverDevice):
         if self.gateway.optimistic:
             # Optimistically assume that cover has changed state.
             self._values[set_req.V_DIMMER] = position
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the device."""

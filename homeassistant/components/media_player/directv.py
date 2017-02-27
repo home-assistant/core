@@ -9,7 +9,8 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice)
+    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
+    MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +22,7 @@ DEFAULT_PORT = 8080
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PREVIOUS_TRACK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
 KNOWN_HOSTS = []
 
@@ -132,8 +133,8 @@ class DirecTvDevice(MediaPlayerDevice):
                 return None
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_DTV
 
     @property

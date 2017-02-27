@@ -2,7 +2,7 @@
 Support for Home Assistant iOS app sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.ios/
+https://home-assistant.io/ecosystem/ios/
 """
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity

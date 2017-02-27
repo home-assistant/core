@@ -35,8 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     time_zone = dt_util.get_time_zone(config.get(CONF_TIME_ZONE))
 
-    hass.loop.create_task(async_add_devices(
-        [WorldClockSensor(time_zone, name)], True))
+    yield from async_add_devices([WorldClockSensor(time_zone, name)], True)
     return True
 
 

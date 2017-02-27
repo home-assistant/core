@@ -7,6 +7,7 @@ https://home-assistant.io/components/verisure/
 import logging
 import threading
 import time
+import os.path
 from datetime import timedelta
 
 import voluptuous as vol
@@ -14,12 +15,14 @@ import voluptuous as vol
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
+import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['vsure==0.11.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DEVICE_SERIAL = 'device_serial'
 CONF_ALARM = 'alarm'
 CONF_CODE_DIGITS = 'code_digits'
 CONF_HYDROMETERS = 'hygrometers'
@@ -29,6 +32,7 @@ CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
 CONF_SMARTCAM = 'smartcam'
 DOMAIN = 'verisure'
+SERVICE_CAPTURE_SMARTCAM = 'capture_smartcam'
 
 HUB = None
 
@@ -47,6 +51,10 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+CAPTURE_IMAGE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_DEVICE_SERIAL): cv.string
+})
+
 
 def setup(hass, config):
     """Setup the Verisure component."""
@@ -59,6 +67,20 @@ def setup(hass, config):
     for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
                       'camera'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
+
+    descriptions = conf_util.load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    def capture_smartcam(service):
+        """Capture a new picture from a smartcam."""
+        device_id = service.data.get(ATTR_DEVICE_SERIAL)
+        HUB.smartcam_capture(device_id)
+        _LOGGER.debug('Capturing new image from %s', ATTR_DEVICE_SERIAL)
+
+    hass.services.register(DOMAIN, SERVICE_CAPTURE_SMARTCAM,
+                           capture_smartcam,
+                           descriptions[DOMAIN][SERVICE_CAPTURE_SMARTCAM],
+                           schema=CAPTURE_IMAGE_SCHEMA)
 
     return True
 
@@ -149,6 +171,11 @@ class VerisureHub(object):
         _LOGGER.debug('Running update imagelist')
         self.smartcam_dict = self.my_pages.smartcam.get_imagelist()
         _LOGGER.debug('New dict: %s', self.smartcam_dict)
+
+    @Throttle(timedelta(seconds=30))
+    def smartcam_capture(self, device_id):
+        """Capture a new image from a smartcam."""
+        self.my_pages.smartcam.capture(device_id)
 
     @property
     def available(self):

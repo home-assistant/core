@@ -5,12 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.homematic/
 """
 import logging
-import homeassistant.components.homematic as homematic
 from homeassistant.components.climate import ClimateDevice, STATE_AUTO
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.util.temperature import convert
 from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
 
 DEPENDENCIES = ['homematic']
+
+_LOGGER = logging.getLogger(__name__)
 
 STATE_MANUAL = "manual"
 STATE_BOOST = "boost"
@@ -21,22 +23,34 @@ HM_STATE_MAP = {
     "BOOST_MODE": STATE_BOOST,
 }
 
-_LOGGER = logging.getLogger(__name__)
+HM_TEMP_MAP = [
+    'ACTUAL_TEMPERATURE',
+    'TEMPERATURE',
+]
+
+HM_HUMI_MAP = [
+    'ACTUAL_HUMIDITY',
+    'HUMIDITY',
+]
+
+HM_CONTROL_MODE = 'CONTROL_MODE'
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Homematic thermostat platform."""
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(
-        HMThermostat,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMThermostat(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
-class HMThermostat(homematic.HMDevice, ClimateDevice):
+class HMThermostat(HMDevice, ClimateDevice):
     """Representation of a Homematic thermostat."""
 
     @property
@@ -47,7 +61,7 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        if not self.available:
+        if HM_CONTROL_MODE not in self._data:
             return None
 
         # read state and search
@@ -59,8 +73,6 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        if not self.available:
-            return None
         op_list = []
 
         # generate list
@@ -73,35 +85,29 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
     @property
     def current_humidity(self):
         """Return the current humidity."""
-        if not self.available:
-            return None
-        return self._data.get('ACTUAL_HUMIDITY', None)
+        for node in HM_HUMI_MAP:
+            if node in self._data:
+                return self._data[node]
 
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        if not self.available:
-            return None
-        return self._data.get('ACTUAL_TEMPERATURE', None)
+        for node in HM_TEMP_MAP:
+            if node in self._data:
+                return self._data[node]
 
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        if not self.available:
-            return None
-        return self._data.get('SET_TEMPERATURE', None)
+        return self._data.get(self._state)
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
-        if not self.available:
-            return None
         if temperature is None:
-            return
+            return None
 
-        if self.current_operation == STATE_AUTO:
-            return self._hmdevice.actionNodeData('MANU_MODE', temperature)
-        self._hmdevice.set_temperature(temperature)
+        self._hmdevice.writeNodeData(self._state, float(temperature))
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -123,10 +129,12 @@ class HMThermostat(homematic.HMDevice, ClimateDevice):
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
         # Add state to data dict
-        self._data.update({"CONTROL_MODE": STATE_UNKNOWN,
-                           "SET_TEMPERATURE": STATE_UNKNOWN,
-                           "ACTUAL_TEMPERATURE": STATE_UNKNOWN})
+        self._state = next(iter(self._hmdevice.WRITENODE.keys()))
+        self._data[self._state] = STATE_UNKNOWN
 
-        # support humidity
-        if 'ACTUAL_HUMIDITY' in self._hmdevice.SENSORNODE:
-            self._data.update({'ACTUAL_HUMIDITY': STATE_UNKNOWN})
+        # support state
+        if HM_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
+            self._data[HM_CONTROL_MODE] = STATE_UNKNOWN
+
+        for node in self._hmdevice.SENSORNODE.keys():
+            self._data[node] = STATE_UNKNOWN

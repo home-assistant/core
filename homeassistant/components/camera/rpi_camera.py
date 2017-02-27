@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FILE_PATH): cv.string,
     vol.Optional(CONF_HORIZONTAL_FLIP, default=DEFAULT_HORIZONTAL_FLIP):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=1)),
-    vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_HORIZONTAL_FLIP):
+    vol.Optional(CONF_IMAGE_HEIGHT, default=DEFAULT_IMAGE_HEIGHT):
         vol.Coerce(int),
     vol.Optional(CONF_IMAGE_QUALITY, default=DEFAULT_IMAGE_QUALITIY):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),

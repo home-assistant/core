@@ -8,6 +8,8 @@ from homeassistant.components.insteon_hub import INSTEON
 from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 
+DEPENDENCIES = ['insteon_hub']
+
 SUPPORT_INSTEON_HUB = SUPPORT_BRIGHTNESS
 
 

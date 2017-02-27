@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sendgrid==3.6.0']
+REQUIREMENTS = ['sendgrid==3.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the SendGrid notification service."""
     api_key = config.get(CONF_API_KEY)
     sender = config.get(CONF_SENDER)

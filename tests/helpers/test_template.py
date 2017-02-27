@@ -1,4 +1,5 @@
 """Test Home Assistant template helper methods."""
+from datetime import datetime
 import unittest
 from unittest.mock import patch
 
@@ -122,6 +123,32 @@ class TestHelpersTemplate(unittest.TestCase):
                 template.Template('{{ %s | multiply(10) | round }}' % inp,
                                   self.hass).render())
 
+    def test_strptime(self):
+        """Test the parse timestamp method."""
+        tests = [
+            ('2016-10-19 15:22:05.588122 UTC',
+             '%Y-%m-%d %H:%M:%S.%f %Z', None),
+            ('2016-10-19 15:22:05.588122+0100',
+             '%Y-%m-%d %H:%M:%S.%f%z', None),
+            ('2016-10-19 15:22:05.588122',
+             '%Y-%m-%d %H:%M:%S.%f', None),
+            ('2016-10-19', '%Y-%m-%d', None),
+            ('2016', '%Y', None),
+            ('15:22:05', '%H:%M:%S', None),
+            ('1469119144', '%Y', '1469119144'),
+            ('invalid', '%Y', 'invalid')
+        ]
+
+        for inp, fmt, expected in tests:
+            if expected is None:
+                expected = datetime.strptime(inp, fmt)
+
+            temp = '{{ strptime(\'%s\', \'%s\') }}' % (inp, fmt)
+
+            self.assertEqual(
+                str(expected),
+                template.Template(temp, self.hass).render())
+
     def test_timestamp_custom(self):
         """Test the timestamps to custom filter."""
         tests = [
@@ -158,6 +185,20 @@ class TestHelpersTemplate(unittest.TestCase):
                 out,
                 template.Template('{{ %s | timestamp_local }}' % inp,
                                   self.hass).render())
+
+    def test_min(self):
+        """Test the min filter."""
+        self.assertEqual(
+            '1',
+            template.Template('{{ [1, 2, 3] | min }}',
+                              self.hass).render())
+
+    def test_max(self):
+        """Test the max filter."""
+        self.assertEqual(
+            '3',
+            template.Template('{{ [1, 2, 3] | max }}',
+                              self.hass).render())
 
     def test_timestamp_utc(self):
         """Test the timestamps to local filter."""
@@ -661,3 +702,14 @@ is_state_attr('device_tracker.phone_2', 'battery', 40)
     states.sensor.pick_humidity.state ~ „ %“
 }}
             """)))
+
+        self.assertListEqual(
+            sorted([
+                'sensor.luftfeuchtigkeit_mean',
+                'input_slider.luftfeuchtigkeit',
+            ]),
+            sorted(template.extract_entities(
+                "{% if (states('sensor.luftfeuchtigkeit_mean') | int)"
+                " > (states('input_slider.luftfeuchtigkeit') | int +1.5)"
+                " %}true{% endif %}"
+            )))

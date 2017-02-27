@@ -7,7 +7,8 @@ https://home-assistant.io/components/light.litejet/
 import logging
 
 import homeassistant.components.litejet as litejet
-from homeassistant.components.light import ATTR_BRIGHTNESS, Light
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
 DEPENDENCIES = ['litejet']
 
@@ -47,7 +48,12 @@ class LiteJetLight(Light):
     def _on_load_changed(self):
         """Called on a LiteJet thread when a load's state changes."""
         _LOGGER.debug("Updating due to notification for %s", self._name)
-        self._hass.loop.create_task(self.async_update_ha_state(True))
+        self._hass.async_add_job(self.async_update_ha_state(True))
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
 
     @property
     def name(self):

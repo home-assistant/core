@@ -9,7 +9,7 @@ import logging
 from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN, DeviceScanner
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pybbox==0.0.5-alpha']
@@ -29,7 +29,7 @@ def get_scanner(hass, config):
 Device = namedtuple('Device', ['mac', 'name', 'ip', 'last_update'])
 
 
-class BboxDeviceScanner(object):
+class BboxDeviceScanner(DeviceScanner):
     """This class scans for devices connected to the bbox."""
 
     def __init__(self, config):

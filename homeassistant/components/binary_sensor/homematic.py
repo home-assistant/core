@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.homematic/
 import logging
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import BinarySensorDevice
-import homeassistant.components.homematic as homematic
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,6 +16,7 @@ DEPENDENCIES = ['homematic']
 SENSOR_TYPES_CLASS = {
     "Remote": None,
     "ShutterContact": "opening",
+    "MaxShutterContact": "opening",
     "IPShutterContact": "opening",
     "Smoke": "smoke",
     "SmokeV2": "smoke",
@@ -27,19 +28,21 @@ SENSOR_TYPES_CLASS = {
 }
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Homematic binary sensor platform."""
     if discovery_info is None:
         return
 
-    return homematic.setup_hmdevice_discovery_helper(
-        HMBinarySensor,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMBinarySensor(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
-class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
+class HMBinarySensor(HMDevice, BinarySensorDevice):
     """Representation of a binary Homematic device."""
 
     @property
@@ -50,11 +53,8 @@ class HMBinarySensor(homematic.HMDevice, BinarySensorDevice):
         return bool(self._hm_get_state())
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
-        if not self.available:
-            return None
-
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         # If state is MOTION (RemoteMotion works only)
         if self._state == "MOTION":
             return "motion"

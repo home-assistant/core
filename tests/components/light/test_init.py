@@ -271,8 +271,7 @@ class TestLight(unittest.TestCase):
             user_file.write('I,WILL,NOT,WORK\n')
 
         self.assertFalse(setup_component(
-            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-        ))
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}))
 
     def test_light_profiles(self):
         """Test light profiles."""

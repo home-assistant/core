@@ -25,17 +25,18 @@ CONF_CURRENCY = 'currency'
 CONF_PERIOD = 'period'
 
 CONF_INSTANT = 'instant_readings'
+CONF_AMOUNT = 'amount'
 CONF_BUDGET = 'budget'
 CONF_COST = 'cost'
 
 SENSOR_TYPES = {
     CONF_INSTANT: ['Energy Usage', 'kW'],
+    CONF_AMOUNT: ['Energy Consumed', 'kWh'],
     CONF_BUDGET: ['Energy Budget', None],
     CONF_COST: ['Energy Cost', None],
 }
 
-TYPES_SCHEMA = vol.In(
-    [CONF_INSTANT, CONF_BUDGET, CONF_COST])
+TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 
 SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
@@ -100,17 +101,23 @@ class EfergySensor(Entity):
         try:
             if self.type == 'instant_readings':
                 url_string = _RESOURCE + 'getInstant?token=' + self.app_token
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['reading'] / 1000
+            elif self.type == 'amount':
+                url_string = _RESOURCE + 'getEnergy?token=' + self.app_token \
+                    + '&offset=' + self.utc_offset + '&period=' \
+                    + self.period
+                response = get(url_string, timeout=10)
+                self._state = response.json()['sum']
             elif self.type == 'budget':
                 url_string = _RESOURCE + 'getBudget?token=' + self.app_token
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['status']
             elif self.type == 'cost':
                 url_string = _RESOURCE + 'getCost?token=' + self.app_token \
                     + '&offset=' + self.utc_offset + '&period=' \
                     + self.period
-                response = get(url_string)
+                response = get(url_string, timeout=10)
                 self._state = response.json()['sum']
             else:
                 self._state = 'Unknown'

@@ -274,7 +274,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         hass.http.register_redirect(FITBIT_AUTH_START, fitbit_auth_start_url)
         hass.http.register_view(FitbitAuthCallbackView(
-            hass, config, add_devices, oauth))
+            config, add_devices, oauth))
 
         request_oauth_completion(hass)
 
@@ -286,9 +286,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
     url = '/auth/fitbit/callback'
     name = 'auth:fitbit:callback'
 
-    def __init__(self, hass, config, add_devices, oauth):
+    def __init__(self, config, add_devices, oauth):
         """Initialize the OAuth callback view."""
-        super().__init__(hass)
         self.config = config
         self.add_devices = add_devices
         self.oauth = oauth
@@ -299,6 +298,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         from oauthlib.oauth2.rfc6749.errors import MismatchingStateError
         from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 
+        hass = request.app['hass']
         data = request.GET
 
         response_message = """Fitbit has been successfully authorized!
@@ -306,7 +306,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
 
         if data.get('code') is not None:
             redirect_uri = '{}{}'.format(
-                self.hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH)
+                hass.config.api.base_url, FITBIT_AUTH_CALLBACK_PATH)
 
             try:
                 self.oauth.fetch_access_token(data.get('code'), redirect_uri)
@@ -336,12 +336,11 @@ class FitbitAuthCallbackView(HomeAssistantView):
             ATTR_CLIENT_ID: self.oauth.client_id,
             ATTR_CLIENT_SECRET: self.oauth.client_secret
         }
-        if not config_from_file(self.hass.config.path(FITBIT_CONFIG_FILE),
+        if not config_from_file(hass.config.path(FITBIT_CONFIG_FILE),
                                 config_contents):
             _LOGGER.error("Failed to save config file")
 
-        self.hass.async_add_job(setup_platform, self.hass, self.config,
-                                self.add_devices)
+        hass.async_add_job(setup_platform, hass, self.config, self.add_devices)
 
         return html_response
 

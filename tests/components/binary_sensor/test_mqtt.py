@@ -23,7 +23,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_setting_sensor_value_via_mqtt_message(self):
         """Test the setting of the value via MQTT."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, binary_sensor.DOMAIN, {
             binary_sensor.DOMAIN: {
                 'platform': 'mqtt',
@@ -47,32 +47,32 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test')
         self.assertEqual(STATE_OFF, state.state)
 
-    def test_valid_sensor_class(self):
+    def test_valid_device_class(self):
         """Test the setting of a valid sensor class."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, binary_sensor.DOMAIN, {
             binary_sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
-                'sensor_class': 'motion',
+                'device_class': 'motion',
                 'state_topic': 'test-topic',
             }
         })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertEqual('motion', state.attributes.get('sensor_class'))
+        self.assertEqual('motion', state.attributes.get('device_class'))
 
-    def test_invalid_sensor_class(self):
+    def test_invalid_device_class(self):
         """Test the setting of an invalid sensor class."""
-        self.hass.config.components = ['mqtt']
+        self.hass.config.components = set(['mqtt'])
         assert setup_component(self.hass, binary_sensor.DOMAIN, {
             binary_sensor.DOMAIN: {
                 'platform': 'mqtt',
                 'name': 'test',
-                'sensor_class': 'abc123',
+                'device_class': 'abc123',
                 'state_topic': 'test-topic',
             }
         })
 
         state = self.hass.states.get('binary_sensor.test')
-        self.assertIsNone(state.attributes.get('sensor_class'))
+        self.assertIsNone(state)

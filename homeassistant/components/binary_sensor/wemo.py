@@ -45,10 +45,10 @@ class WemoBinarySensor(BinarySensorDevice):
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
+        self.update()
         if not hasattr(self, 'hass'):
-            self.update()
             return
-        self.update_ha_state(True)
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self):

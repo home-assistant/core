@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["twilio==5.4.0"]
+REQUIREMENTS = ["twilio==5.7.0"]
 
 
 CONF_ACCOUNT_SID = "account_sid"
@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Twilio SMS notification service."""
     # pylint: disable=import-error
     from twilio.rest import TwilioRestClient

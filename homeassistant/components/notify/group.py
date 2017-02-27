@@ -4,15 +4,15 @@ Group platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.group/
 """
+import asyncio
 import collections
 from copy import deepcopy
 import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_SERVICE
-from homeassistant.components.notify import (DOMAIN, ATTR_MESSAGE, ATTR_DATA,
-                                             PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    DOMAIN, ATTR_MESSAGE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,7 +28,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def update(input_dict, update_source):
-    """Deep update a dictionary."""
+    """Deep update a dictionary.
+
+    Async friendly.
+    """
     for key, val in update_source.items():
         if isinstance(val, collections.Mapping):
             recurse = update(input_dict.get(key, {}), val)
@@ -38,27 +41,33 @@ def update(input_dict, update_source):
     return input_dict
 
 
-def get_service(hass, config):
+@asyncio.coroutine
+def async_get_service(hass, config, discovery_info=None):
     """Get the Group notification service."""
     return GroupNotifyPlatform(hass, config.get(CONF_SERVICES))
 
 
 class GroupNotifyPlatform(BaseNotificationService):
-    """Implement the notification service for the group notify playform."""
+    """Implement the notification service for the group notify platform."""
 
     def __init__(self, hass, entities):
         """Initialize the service."""
         self.hass = hass
         self.entities = entities
 
-    def send_message(self, message="", **kwargs):
+    @asyncio.coroutine
+    def async_send_message(self, message="", **kwargs):
         """Send message to all entities in the group."""
         payload = {ATTR_MESSAGE: message}
         payload.update({key: val for key, val in kwargs.items() if val})
 
+        tasks = []
         for entity in self.entities:
             sending_payload = deepcopy(payload.copy())
             if entity.get(ATTR_DATA) is not None:
                 update(sending_payload, entity.get(ATTR_DATA))
-            self.hass.services.call(DOMAIN, entity.get(ATTR_SERVICE),
-                                    sending_payload)
+            tasks.append(self.hass.services.async_call(
+                DOMAIN, entity.get(ATTR_SERVICE), sending_payload))
+
+        if tasks:
+            yield from asyncio.wait(tasks, loop=self.hass.loop)
