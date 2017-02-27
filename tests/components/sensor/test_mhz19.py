@@ -84,6 +84,7 @@ class TestMHZ19Sensor(unittest.TestCase):
         from pmsensor import co2sensor
         client = mhz19.MHZClient(co2sensor, 'test.serial')
         sensor = mhz19.MHZ19Sensor(client, mhz19.SENSOR_CO2, None, 'name')
+        sensor.update()
 
         self.assertEqual('name: CO2', sensor.name)
         self.assertEqual(1000, sensor.state)
@@ -99,6 +100,7 @@ class TestMHZ19Sensor(unittest.TestCase):
         client = mhz19.MHZClient(co2sensor, 'test.serial')
         sensor = mhz19.MHZ19Sensor(
             client, mhz19.SENSOR_TEMPERATURE, None, 'name')
+        sensor.update()
 
         self.assertEqual('name: Temperature', sensor.name)
         self.assertEqual(24, sensor.state)
@@ -115,5 +117,6 @@ class TestMHZ19Sensor(unittest.TestCase):
         client = mhz19.MHZClient(co2sensor, 'test.serial')
         sensor = mhz19.MHZ19Sensor(
             client, mhz19.SENSOR_TEMPERATURE, TEMP_FAHRENHEIT, 'name')
+        sensor.update()
 
         self.assertEqual(75.2, sensor.state)

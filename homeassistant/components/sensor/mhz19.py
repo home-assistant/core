@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(
             MHZ19Sensor(data, variable, SENSOR_TYPES[variable][1], name))
 
-    add_devices(dev)
+    add_devices(dev, True)
     return True
 
 
@@ -78,7 +78,6 @@ class MHZ19Sensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._ppm = None
         self._temperature = None
-        self.update()
 
     @property
     def name(self):
@@ -107,10 +106,6 @@ class MHZ19Sensor(Entity):
                 celsius_to_fahrenheit(self._temperature), 1)
         self._ppm = data.get(SENSOR_CO2)
 
-    def should_poll(self):
-        """Sensor needs polling."""
-        return True
-
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
@@ -134,7 +129,7 @@ class MHZClient(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the MH-Z19 sensor."""
-        self.data = dict()
+        self.data = {}
         try:
             result = self.co2sensor.read_mh_z19_with_temperature(self._serial)
             if result is None:
