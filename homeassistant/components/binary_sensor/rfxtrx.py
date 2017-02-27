@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if device_id in rfxtrx.RFX_DEVICES:
             continue
 
-        if not entity[ATTR_DATA_BITS] is None:
+        if entity[ATTR_DATA_BITS] is not None:
             _LOGGER.info("Masked device id: %s",
                          rfxtrx.get_pt2262_deviceid(device_id,
                                                     entity[ATTR_DATA_BITS]))
@@ -83,6 +83,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if sensor is None:
             # Add the entity if not exists and automatic_add is True
             if config[ATTR_AUTOMATIC_ADD]:
+                possible_device = rfxtrx.find_possible_pt2262_device(device_id)
+
+                if possible_device is not None:
+                    possible_id = slugify(possible_device.event.device.id_string.lower())
+                    _LOGGER.info ("Found possible matching deviceid %s.",
+                                  possible_id)
+
                 pkt_id = "".join("{0:02x}".format(x) for x in event.data)
                 sensor = RfxtrxBinarySensor(event, pkt_id)
                 rfxtrx.RFX_DEVICES[device_id] = sensor

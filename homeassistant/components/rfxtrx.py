@@ -256,6 +256,34 @@ def get_pt2262_device(device_id):
     return None
 
 
+# pylint: disable=unused-variable
+def find_possible_pt2262_device(device_id):
+    """Look for the device which id matches the given device_id parameter."""
+
+    for dev_id, device in RFX_DEVICES.items():
+        if len(dev_id) == len(device_id):
+            sz = None
+            for i in range(0, len(dev_id)):
+                if (dev_id[i] != device_id[i]):
+                    break;
+                sz = i;
+
+            if sz is not None:
+                sz = len(dev_id) - sz
+                _LOGGER.info("rfxtrx: found possible device %s for %s " \
+                             "with the following configuration:\n" \
+                             "data_bits=%d\n" \
+                             "command_on=0x%s\n" \
+                             "command_off=0x%s\n",
+                             device_id,
+                             dev_id,
+                             sz * 4,
+                             dev_id[-sz:], device_id[-sz:])
+                return device
+
+    return None
+
+
 def get_devices_from_config(config, device):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
