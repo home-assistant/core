@@ -178,7 +178,7 @@ class FSAPIDevice(MediaPlayerDevice):
         info_name = fs_device.play_info_name
         info_text = fs_device.play_info_text
 
-        self._title = '- '.join(filter(None, [info_name, info_text]))
+        self._title = ' - '.join(filter(None, [info_name, info_text]))
         self._artist = fs_device.play_info_artist
         self._album_name = fs_device.play_info_album
 
