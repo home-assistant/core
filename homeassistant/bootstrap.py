@@ -37,8 +37,8 @@ DATA_PIP_LOCK = 'pip_lock'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
-FIRST_INIT_COMPONENT = set(
-    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction')
+FIRST_INIT_COMPONENT = set((
+    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction'))
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
