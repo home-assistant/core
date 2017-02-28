@@ -155,7 +155,6 @@ class HomeAssistant(ha.HomeAssistant):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 
-        self.state = ha.CoreState.starting
         # pylint: disable=protected-access
         ha._async_create_timer(self)
 

@@ -3,7 +3,7 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from homeassistant.core import HomeAssistant, CoreState, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.history import get_states, last_recorder_run
 from homeassistant.components.recorder import (
@@ -22,7 +22,6 @@ def _load_restore_cache(hass: HomeAssistant):
     def remove_cache(event):
         """Remove the states cache."""
         hass.data.pop(DATA_RESTORE_CACHE, None)
-
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, remove_cache)
 
     last_run = last_recorder_run(hass)
@@ -49,14 +48,14 @@ def _load_restore_cache(hass: HomeAssistant):
 @asyncio.coroutine
 def async_get_last_state(hass, entity_id: str):
     """Helper to restore state."""
-    if DATA_RESTORE_CACHE in hass.data:
-        return hass.data[DATA_RESTORE_CACHE].get(entity_id)
-
-    if (_RECORDER not in hass.config.components or
-            hass.state not in (CoreState.starting, CoreState.not_running)):
-        _LOGGER.error("Cache can only be loaded during startup, not %s",
+    if _RECORDER not in hass.config.components:
+        return None
+    elif hass.is_running:
+        _LOGGER.debug("Cache can only be loaded during startup, not %s",
                       hass.state)
         return None
+    elif DATA_RESTORE_CACHE in hass.data:
+        return hass.data[DATA_RESTORE_CACHE].get(entity_id)
 
     yield from wait_connection_ready(hass)
 
@@ -68,14 +67,16 @@ def async_get_last_state(hass, entity_id: str):
             yield from hass.loop.run_in_executor(
                 None, _load_restore_cache, hass)
 
-    return hass.data.get(DATA_RESTORE_CACHE, {}).get(entity_id)
+    return hass.data[DATA_RESTORE_CACHE].get(entity_id)
 
 
 @asyncio.coroutine
 def async_restore_state(entity, extract_info):
     """Helper to call entity.async_restore_state with cached info."""
-    if entity.hass.state != CoreState.starting:
-        _LOGGER.debug("Not restoring state: State is not starting: %s",
+    if _RECORDER not in entity.hass.config.components:
+        return
+    elif entity.hass.is_running:
+        _LOGGER.debug("Not restoring state: hass is already running: %s",
                       entity.hass.state)
         return
 

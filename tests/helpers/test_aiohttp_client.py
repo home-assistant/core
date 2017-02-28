@@ -4,7 +4,7 @@ import unittest
 
 import aiohttp
 
-from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
+from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE, CoreState
 from homeassistant.bootstrap import setup_component
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.async import run_callback_threadsafe
@@ -121,6 +121,7 @@ class TestHelpersAiohttpClient(unittest.TestCase):
 @asyncio.coroutine
 def test_fetching_url(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
+    hass.state = CoreState.running
     aioclient_mock.get('http://example.com/mjpeg_stream', content=[
         b'Frame1', b'Frame2', b'Frame3'
     ])

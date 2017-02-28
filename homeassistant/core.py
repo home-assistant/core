@@ -99,7 +99,6 @@ class CoreState(enum.Enum):
     """Represent the current state of Home Assistant."""
 
     not_running = 'NOT_RUNNING'
-    starting = 'STARTING'
     running = 'RUNNING'
     stopping = 'STOPPING'
 
@@ -134,7 +133,7 @@ class HomeAssistant(object):
     @property
     def is_running(self) -> bool:
         """Return if Home Assistant is running."""
-        return self.state in (CoreState.starting, CoreState.running)
+        return self.state == CoreState.running
 
     def start(self) -> None:
         """Start home assistant."""
@@ -159,13 +158,11 @@ class HomeAssistant(object):
         This method is a coroutine.
         """
         _LOGGER.info("Starting Home Assistant")
-        self.state = CoreState.starting
-
         # pylint: disable=protected-access
+        self.state = CoreState.running
         self.loop._thread_ident = threading.get_ident()
         _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        self.state = CoreState.running
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the executor pool.

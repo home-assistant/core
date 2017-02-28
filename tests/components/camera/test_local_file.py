@@ -6,6 +6,7 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
+from homeassistant.core import CoreState
 from homeassistant.bootstrap import setup_component
 
 from tests.common import mock_http_component
@@ -15,6 +16,8 @@ import logging
 @asyncio.coroutine
 def test_loading_file(hass, test_client):
     """Test that it loads image from disk."""
+    hass.state = CoreState.running
+
     @mock.patch('os.path.isfile', mock.Mock(return_value=True))
     @mock.patch('os.access', mock.Mock(return_value=True))
     def setup_platform():
