@@ -71,13 +71,19 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
     def test_measure(self):
         """Test the history statistics sensor measure."""
-        later = dt_util.utcnow() - timedelta(seconds=15)
-        earlier = later - timedelta(minutes=30)
+        t0 = dt_util.utcnow() - timedelta(minutes=40)
+        t1 = t0 + timedelta(minutes=20)
+        t2 = dt_util.utcnow() - timedelta(minutes=10)
+
+        # Start     t0        t1        t2        End
+        # |--20min--|--20min--|--10min--|--10min--|
+        # |---off---|---on----|---off---|---on----|
 
         fake_states = {
             'binary_sensor.test_id': [
-                ha.State('binary_sensor.test_id', 'on', last_changed=earlier),
-                ha.State('binary_sensor.test_id', 'off', last_changed=later),
+                ha.State('binary_sensor.test_id', 'on', last_changed=t0),
+                ha.State('binary_sensor.test_id', 'off', last_changed=t1),
+                ha.State('binary_sensor.test_id', 'on', last_changed=t2),
             ]
         }
 
@@ -97,8 +103,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 sensor1.update()
                 sensor2.update()
 
-        self.assertEqual(sensor1.value, 0.5)
-        self.assertEqual(sensor2.value, 0)
+        self.assertEqual(round(sensor1.value, 3), 0.5)
+        self.assertEqual(round(sensor2.value, 3), 0)
         self.assertEqual(sensor1.device_state_attributes['ratio'], '50.0%')
 
     def test_wrong_date(self):

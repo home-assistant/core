@@ -187,6 +187,12 @@ class HistoryStatsSensor(Entity):
             last_state = current_state
             last_time = current_time
 
+        # Count time elapsed between last history state and end of measure
+        if last_state:
+            measure_end = min(dt_util.as_timestamp(end), dt_util.as_timestamp(
+                datetime.datetime.now()))
+            elapsed += measure_end - last_time
+
         # Save value in hours
         self.value = elapsed / 3600
 
