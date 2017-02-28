@@ -139,12 +139,12 @@ class EntityComponent(object):
             if getattr(platform, 'async_setup_platform', None):
                 yield from platform.async_setup_platform(
                     self.hass, platform_config,
-                    entity_platform.async_add_platform_entities, discovery_info
+                    entity_platform.async_schedule_add_entities, discovery_info
                 )
             else:
                 yield from self.hass.loop.run_in_executor(
                     None, platform.setup_platform, self.hass, platform_config,
-                    entity_platform.add_platform_entities, discovery_info
+                    entity_platform.schedule_add_entities, discovery_info
                 )
 
             yield from entity_platform.async_block_entities_done()
@@ -307,7 +307,7 @@ class EntityPlatform(object):
             if pending:
                 yield from asyncio.wait(pending, loop=self.component.hass.loop)
 
-    def add_platform_entities(self, new_entities, update_before_add=False):
+    def schedule_add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
         if update_before_add:
             for entity in new_entities:
@@ -315,11 +315,11 @@ class EntityPlatform(object):
 
         run_callback_threadsafe(
             self.component.hass.loop,
-            self.async_add_platform_entities, list(new_entities), False
+            self.async_schedule_add_entities, list(new_entities), False
         ).result()
 
     @callback
-    def async_add_platform_entities(self, new_entities,
+    def async_schedule_add_entities(self, new_entities,
                                     update_before_add=False):
         """Add entities for a single platform async."""
         self._tasks.append(self.component.hass.async_add_job(
