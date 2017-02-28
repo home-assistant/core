@@ -224,7 +224,7 @@ class AutomationEntity(ToggleEntity):
     """Entity to show status of entity."""
 
     def __init__(self, name, async_attach_triggers, cond_func, async_action,
-                 hidden):
+                 hidden, initial_state):
         """Initialize an automation entity."""
         self._name = name
         self._async_attach_triggers = async_attach_triggers
@@ -234,6 +234,7 @@ class AutomationEntity(ToggleEntity):
         self._enabled = False
         self._last_triggered = None
         self._hidden = hidden
+        self._initial_state = initial_state
 
     @property
     def name(self):
@@ -261,6 +262,12 @@ class AutomationEntity(ToggleEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._enabled
+
+    @asyncio.coroutine
+    def async_added_to_hass(self) -> None:
+        """Startup if initial_state."""
+        if self._initial_state:
+            yield from self.async_enable()
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs) -> None:
@@ -320,7 +327,6 @@ def _async_process_config(hass, config, component):
     This method is a coroutine.
     """
     entities = []
-    tasks = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
         conf = config[config_key]
@@ -330,6 +336,7 @@ def _async_process_config(hass, config, component):
                                                                   list_no)
 
             hidden = config_block[CONF_HIDE_ENTITY]
+            initial_state = config_block[CONF_INITIAL_STATE]
 
             action = _async_get_action(hass, config_block.get(CONF_ACTION, {}),
                                        name)
@@ -349,16 +356,13 @@ def _async_process_config(hass, config, component):
                 config_block.get(CONF_TRIGGER, []), name
             )
             entity = AutomationEntity(
-                name, async_attach_triggers, cond_func, action, hidden)
+                name, async_attach_triggers, cond_func, action, hidden,
+                initial_state)
 
-            if config_block[CONF_INITIAL_STATE]:
-                tasks.append(entity.async_enable())
             entities.append(entity)
 
     if entities:
         yield from component.async_add_entities(entities)
-    if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
 
     return len(entities) > 0
 
