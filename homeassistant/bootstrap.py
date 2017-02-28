@@ -59,9 +59,6 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
         result = yield from setup_tasks[domain]
         return result
 
-    if not loader.PREPARED:
-        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
-
     if config is None:
         config = {}
 
@@ -228,9 +225,6 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     This method is a coroutine.
     """
-    if not loader.PREPARED:
-        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
-
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
 
     platform = loader.get_platform(domain, platform_name)
