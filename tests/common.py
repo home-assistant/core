@@ -277,9 +277,8 @@ def mock_component(hass, component):
     if setup_tasks is None:
         setup_tasks = hass.data[DATA_SETUP] = {}
 
-    # assert will not work!
     if component not in setup_tasks:
-        RuntimeError("Component {} is allready setup".format(component))
+        AssertionError("Component {} is allready setup".format(component))
 
     hass.config.components.add(component)
     setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
