@@ -273,12 +273,13 @@ def mock_mqtt_component(hass):
 
 def mock_component(hass, component):
     """Mock a component is setup."""
-    # TODO Raise if component already loaded
-    hass.config.components.add(component)
     setup_tasks = hass.data.get(DATA_SETUP)
-
     if setup_tasks is None:
         setup_tasks = hass.data[DATA_SETUP] = {}
+
+    if component in setup_tasks:
+        raise RuntimeError("{} allready loaded".format(component))
+    hass.config.components.add(component)
 
     setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 

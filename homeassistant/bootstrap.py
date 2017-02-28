@@ -37,6 +37,9 @@ DATA_PIP_LOCK = 'pip_lock'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
 
+FIRST_INIT_COMPONENT = set(
+    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'instroduction')
+
 
 def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Optional[Dict]=None) -> bool:
@@ -358,7 +361,18 @@ def async_from_config_dict(config: Dict[str, Any],
     event_decorators.HASS = hass
     service.HASS = hass
 
+    # stage 1
     for component in components:
+        if component not in FIRST_INIT_COMPONENT:
+            continue
+        hass.async_add_job(async_setup_component(hass, component, config))
+
+    yield from hass.async_block_till_done()
+
+    # stage 2
+    for component in components:
+        if component in FIRST_INIT_COMPONENT:
+            continue
         hass.async_add_job(async_setup_component(hass, component, config))
 
     yield from hass.async_stop_track_tasks()
