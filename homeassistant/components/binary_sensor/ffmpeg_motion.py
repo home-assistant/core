@@ -57,7 +57,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # generate sensor object
     entity = FFmpegMotion(hass, manager, config)
-    yield from async_add_devices([entity])
+    async_add_devices([entity])
 
 
 class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
