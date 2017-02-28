@@ -25,7 +25,6 @@ from homeassistant.helpers.script import Script
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 GROUP_NAME_ALL_SCRIPTS = 'all scripts'
-DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
 

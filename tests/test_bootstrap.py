@@ -77,23 +77,7 @@ class TestBootstrap:
                 patch_yaml_files(files, True):
             self.hass = bootstrap.from_config_file('config.yaml')
 
-        components.add('group')
         assert components == self.hass.config.components
-
-    # We no longer know what is in progress and who depends on what.
-    # def test_handle_setup_circular_dependency(self):
-    #     """Test the setup of circular dependencies."""
-    #     loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
-
-    #     def setup_a(hass, config):
-    #         """Setup the another component."""
-    #         bootstrap.setup_component(hass, 'comp_b')
-    #         return True
-
-    #     loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
-
-    #     bootstrap.setup_component(self.hass, 'comp_a')
-    #     assert set(['comp_a']) == self.hass.config.components
 
     def test_validate_component_config(self):
         """Test validating component configuration."""

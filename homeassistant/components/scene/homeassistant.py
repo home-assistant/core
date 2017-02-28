@@ -13,7 +13,6 @@ from homeassistant.const import (
 from homeassistant.core import State
 from homeassistant.helpers.state import async_reproduce_state
 
-DEPENDENCIES = ['group']
 STATE = 'scening'
 
 CONF_ENTITIES = "entities"

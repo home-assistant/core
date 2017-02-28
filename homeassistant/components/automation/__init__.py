@@ -28,8 +28,6 @@ import homeassistant.helpers.config_validation as cv
 DOMAIN = 'automation'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-DEPENDENCIES = ['group']
-
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
 
 CONF_ALIAS = 'alias'
