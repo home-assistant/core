@@ -6,7 +6,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.lock import PLATFORM_SCHEMA
-from homeassistant.const import CONF_ACCESS_TOKEN, SERVICE_LOCK, SERVICE_UNLOCK, CONF_ID
+from homeassistant.const import CONF_ACCESS_TOKEN, SERVICE_LOCK, \
+    SERVICE_UNLOCK, CONF_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +17,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ACCESS_TOKEN): cv.string,
     vol.Required(CONF_ID): cv.string
 })
-
-API_STATE_URL = 'https://api.lockitron.com/v2/locks/{}?access_token={}'
-API_ACTION_URL = 'https://api.lockitron.com/v2/locks/{}?access_token={}&state={}'
+BASE_URL = 'https://api.lockitron.com'
+API_STATE_URL = BASE_URL + '/v2/locks/{}?access_token={}'
+API_ACTION_URL = BASE_URL + '/v2/locks/{}?access_token={}&state={}'
 
 
 # pylint: disable=unused-argument
@@ -27,9 +28,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_id = config.get(CONF_ID)
     response = requests.get(API_STATE_URL.format(device_id, access_token))
     if response.status_code == 200:
-        add_devices([Lockitron(response.json()['state'], access_token, device_id)])
+        add_devices([Lockitron(response.json()['state'], access_token,
+                               device_id)])
     else:
-        _LOGGER.error('Error retrieving lock status during init: %s', response.text)
+        _LOGGER.error('Error retrieving lock status during init: %s',
+                      response.text)
 
 
 class Lockitron(LockDevice):
@@ -69,9 +72,11 @@ class Lockitron(LockDevice):
             _LOGGER.error('Error retrieving lock status: %s', response.text)
 
     def do_change_request(self, requested_state):
-        response = requests.put(API_ACTION_URL.format(self.device_id, self.access_token, requested_state))
+        response = requests.put(API_ACTION_URL.format(self.device_id,
+                                                      self.access_token, requested_state))
         if response.status_code == 200:
             return response.json()['state']
         else:
-            _LOGGER.error('Error setting lock state: %s\n%s', requested_state, response.text)
+            _LOGGER.error('Error setting lock state: %s\n%s',
+                          requested_state, response.text)
             return self._state
