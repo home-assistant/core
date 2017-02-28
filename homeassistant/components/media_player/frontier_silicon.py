@@ -237,13 +237,11 @@ class FSAPIDevice(MediaPlayerDevice):
     # volume
     def volume_up(self):
         """Send volume up command."""
-        fs_device = self.fs_device
-        fs_device.volume = (fs_device.volume + 1)
+        self.fs_device.volume += 1
 
     def volume_down(self):
         """Send volume down command."""
-        fs_device = self.fs_device
-        fs_device.volume = (fs_device.volume - 1)
+        self.fs_device.volume -= 1
 
     def set_volume_level(self, volume):
         """Set volume command."""
