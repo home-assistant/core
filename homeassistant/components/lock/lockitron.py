@@ -65,7 +65,8 @@ class Lockitron(LockDevice):
         self.update_ha_state()
 
     def async_update(self):
-        response = requests.get(API_STATE_URL.format(self.device_id, self.access_token))
+        response = requests\
+            .get(API_STATE_URL.format(self.device_id, self.access_token))
         if response.status_code == 200:
             self._state = response.json()['state']
         else:
