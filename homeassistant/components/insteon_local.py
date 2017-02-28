@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['insteonlocal==0.44']
+REQUIREMENTS = ['insteonlocal==0.45']
 
 _LOGGER = logging.getLogger(__name__)
 
