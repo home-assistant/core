@@ -757,18 +757,15 @@ class MediaPlayerDevice(Entity):
         """Boolean if clear playlist command supported."""
         return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
 
-    def toggle(self):
-        """Toggle the power on the media player."""
-        if self.state in [STATE_OFF, STATE_IDLE]:
-            self.turn_on()
-        else:
-            self.turn_off()
-
     def async_toggle(self):
         """Toggle the power on the media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
+        if hasattr(self, 'toggle'):
+            # pylint: disable=no-member
+            return self.hass.loop.run_in_executor(None, self.toggle)
+
         if self.state in [STATE_OFF, STATE_IDLE]:
             return self.async_turn_on()
         else:
@@ -804,18 +801,15 @@ class MediaPlayerDevice(Entity):
             yield from self.async_set_volume_level(
                 max(0, self.volume_level - .1))
 
-    def media_play_pause(self):
-        """Play or pause the media player."""
-        if self.state == STATE_PLAYING:
-            self.media_pause()
-        else:
-            self.media_play()
-
     def async_media_play_pause(self):
         """Play or pause the media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
+        if hasattr(self, 'media_play_pause'):
+            # pylint: disable=no-member
+            return self.hass.loop.run_in_executor(None, self.media_play_pause)
+
         if self.state == STATE_PLAYING:
             return self.async_media_pause()
         else:
