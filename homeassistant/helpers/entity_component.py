@@ -52,7 +52,7 @@ class EntityComponent(object):
     def setup(self, config):
         """Set up a full entity component.
 
-        This don't block the executor for protect deadlocks.
+        This doesn't block the executor to protect from deadlocks.
         """
         self.hass.add_job(self.async_setup(config))
 
@@ -75,7 +75,7 @@ class EntityComponent(object):
         if tasks:
             yield from asyncio.wait(tasks, loop=self.hass.loop)
 
-        # set event ready for know that component is setup
+        # set event ready to indicate that component is setup
         self._ready.set()
 
         # Generic discovery listener for loading platform dynamically
@@ -90,9 +90,9 @@ class EntityComponent(object):
             self.hass, self.domain, component_platform_discovered)
 
     def async_set_ready(self):
-        """Set the EntityComponent ready for setup all things done.
+        """Mark the EntityComponent as ready.
 
-        Need to be call if async_setup will not call.
+        Need to be called if component does not call async_setup.
         """
         self._ready.set()
 

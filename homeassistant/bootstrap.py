@@ -15,31 +15,28 @@ import voluptuous as vol
 import homeassistant.components as core_components
 from homeassistant.components import persistent_notification
 import homeassistant.config as conf_util
+from homeassistant.config import async_notify_setup_error
 import homeassistant.core as core
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.loader as loader
 import homeassistant.util.package as pkg_util
-from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import (
-    event_decorators, service, config_per_platform, extract_domain_configs)
+from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_COMPONENT = 'component'
 
-DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
 DATA_SETUP = 'setup_tasks'
 DATA_PLATFORM = 'platform_events'
 DATA_PIP_LOCK = 'pip_lock'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
-HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 
 
 def setup_component(hass: core.HomeAssistant, domain: str,
@@ -103,7 +100,7 @@ def _async_handle_requirements(hass: core.HomeAssistant, component,
             if not ret:
                 _LOGGER.error('Not initializing %s because could not install '
                               'dependency %s', name, req)
-                _async_persistent_notification(hass, name)
+                async_notify_setup_error(hass, name)
                 return False
 
     return True
@@ -151,7 +148,7 @@ def _async_setup_component(hass: core.HomeAssistant,
     def log_error(msg):
         """Log helper."""
         _LOGGER.error('Setup failed for %s: %s', domain, msg)
-        _async_persistent_notification(hass, domain, True)
+        async_notify_setup_error(hass, domain, True)
 
     # Validate no circular dependencies
     components = loader.load_order_component(domain)
@@ -164,7 +161,7 @@ def _async_setup_component(hass: core.HomeAssistant,
     component = loader.get_component(domain)
 
     processed_config = \
-        conf_util.async_extract_component_config(hass, config, domain)
+        conf_util.async_process_component_config(hass, config, domain)
 
     if processed_config is None:
         return False
@@ -188,7 +185,7 @@ def _async_setup_component(hass: core.HomeAssistant,
                 None, component.setup, hass, processed_config)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception('Error during setup of component %s', domain)
-        _async_persistent_notification(hass, domain, True)
+        async_notify_setup_error(hass, domain, True)
         return False
 
     if result is False:
@@ -231,7 +228,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     # Not found
     if platform is None:
         _LOGGER.error('Unable to find platform %s', platform_path)
-        _async_persistent_notification(hass, platform_path)
+        async_notify_setup_error(hass, platform_path)
         return None
 
     # Already loaded
@@ -246,7 +243,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
         if not dep_success:
             _LOGGER.error('Unable to prepare setup for platform %s: '
                           'Could not setup all dependencies.')
-            _async_persistent_notification(hass, platform_path)
+            async_notify_setup_error(hass, platform_path)
             return False
 
     res = yield from _async_handle_requirements(hass, platform, platform_path)
@@ -494,27 +491,6 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     else:
         _LOGGER.error(
             'Unable to setup error log %s (access denied)', err_log_path)
-
-
-@core.callback
-def _async_persistent_notification(hass: core.HomeAssistant, component: str,
-                                   link: Optional[bool]=False):
-    """Print a persistent notification.
-
-    This method must be run in the event loop.
-    """
-    errors = hass.data.get(DATA_PERSISTENT_ERRORS)
-
-    if errors is None:
-        errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
-
-    errors[component] = errors.get(component) or link
-    _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
-            if link else name for name, link in errors.items()]
-    message = ('The following components and platforms could not be set up:\n'
-               '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
-    persistent_notification.async_create(
-        hass, message, 'Invalid config', 'invalid_config')
 
 
 def mount_local_lib_path(config_dir: str) -> str:

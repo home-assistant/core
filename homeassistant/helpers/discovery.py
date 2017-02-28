@@ -63,9 +63,8 @@ def async_discover(hass, service, discovered=None, component=None,
             'Cannot discover the {} component.'.format(component))
 
     if component is not None and component not in hass.config.components:
-        if component not in hass.config.components:
-            yield from bootstrap.async_setup_component(
-                hass, component, hass_config)
+        yield from bootstrap.async_setup_component(
+            hass, component, hass_config)
 
     data = {
         ATTR_SERVICE: service

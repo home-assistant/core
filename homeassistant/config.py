@@ -29,6 +29,8 @@ from homeassistant.helpers import config_per_platform, extract_domain_configs
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
+HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 YAML_CONFIG_FILE = 'configuration.yaml'
 VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
@@ -284,7 +286,7 @@ def async_log_exception(ex, domain, config, hass):
     """
     message = 'Invalid config for [{}]: '.format(domain)
     if hass is not None:
-        _async_persistent_notification(hass, domain, True)
+        async_notify_setup_error(hass, domain, True)
 
     if 'extra keys not allowed' in ex.error_message:
         message += '[{}] is an invalid option for [{}]. Check: {}->{}.'\
@@ -514,14 +516,8 @@ def merge_packages_config(config, packages):
     return config
 
 
-def log_exception(ex, domain, config, hass):
-    """Generate log exception for config validation."""
-    run_callback_threadsafe(
-        hass.loop, async_log_exception, ex, domain, config, hass).result()
-
-
 @callback
-def async_extract_component_config(hass, config, domain):
+def async_process_component_config(hass, config, domain):
     """Check component config and return processed config.
 
     Raise a vol.Invalid exception on error.
@@ -599,3 +595,25 @@ def async_check_ha_config_file(hass):
         return None
 
     return re.sub(r'\033\[[^m]*m', '', str(stdout_data, 'utf-8'))
+
+
+@callback
+def async_notify_setup_error(hass, component, link=False):
+    """Print a persistent notification.
+
+    This method must be run in the event loop.
+    """
+    from homeassistant.components import persistent_notification
+
+    errors = hass.data.get(DATA_PERSISTENT_ERRORS)
+
+    if errors is None:
+        errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
+
+    errors[component] = errors.get(component) or link
+    _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
+            if link else name for name, link in errors.items()]
+    message = ('The following components and platforms could not be set up:\n'
+               '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
+    persistent_notification.async_create(
+        hass, message, 'Invalid config', 'invalid_config')
