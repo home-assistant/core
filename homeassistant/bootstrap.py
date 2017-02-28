@@ -165,6 +165,7 @@ def _async_setup_component(hass: core.HomeAssistant,
         conf_util.async_process_component_config(hass, config, domain)
 
     if processed_config is None:
+        log_error('Invalid config')
         return False
 
     requirements = yield from _async_handle_requirements(hass, component,
