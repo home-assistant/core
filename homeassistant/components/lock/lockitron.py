@@ -73,7 +73,8 @@ class Lockitron(LockDevice):
 
     def do_change_request(self, requested_state):
         response = requests.put(
-            API_ACTION_URL.format(self.device_id, self.access_token, requested_state))
+            API_ACTION_URL.format(self.device_id, self.access_token,
+                                  requested_state))
         if response.status_code == 200:
             return response.json()['state']
         else:
