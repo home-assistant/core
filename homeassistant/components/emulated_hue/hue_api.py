@@ -201,7 +201,7 @@ class HueOneLightChangeView(HomeAssistantView):
                     else:
                         final_brightness = entity.attributes.get(
                             ATTR_BRIGHTNESS, 255 if result else 0)
-                    data[ATTR_XY_COLOR] = \
+                    data[ATTR_RGB_COLOR] = \
                         color_util.color_xy_brightness_to_RGB(color[0],
                                                               color[1],
                                                               final_brightness)
