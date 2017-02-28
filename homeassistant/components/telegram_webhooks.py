@@ -24,7 +24,7 @@ REQUIREMENTS = ['python-telegram-bot==5.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_TELEGRAM_COMMAND = 'telegram.command'
+EVENT_TELEGRAM_COMMAND = 'telegram_command'
 EVENT_TELEGRAM_TEXT = 'telegram_text'
 
 TELEGRAM_HANDLER_URL = '/api/telegram_webhooks'
