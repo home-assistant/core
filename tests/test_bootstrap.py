@@ -451,6 +451,6 @@ class TestBootstrap:
 @asyncio.coroutine
 def test_component_cannot_depend_config(hass):
     """Test config is not allowed to be a dependency."""
-    result = yield from bootstrap._process_dependencies(
+    result = yield from bootstrap._async_process_dependencies(
         hass, None, 'test', ['config'])
     assert not result

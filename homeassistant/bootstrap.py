@@ -74,13 +74,13 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
 
 
 @asyncio.coroutine
-def _async_handle_requirements(hass: core.HomeAssistant, component,
-                               name: str) -> bool:
+def _async_process_requirements(hass: core.HomeAssistant, name: str,
+                                requirements) -> bool:
     """Install the requirements for a component.
 
     This method is a coroutine.
     """
-    if hass.config.skip_pip or not hasattr(component, 'REQUIREMENTS'):
+    if hass.config.skip_pip:
         return True
 
     pip_lock = hass.data.get(DATA_PIP_LOCK)
@@ -92,7 +92,7 @@ def _async_handle_requirements(hass: core.HomeAssistant, component,
         return pkg_util.install_package(mod, target=hass.config.path('deps'))
 
     with (yield from pip_lock):
-        for req in component.REQUIREMENTS:
+        for req in requirements:
             ret = yield from hass.loop.run_in_executor(None, pip_install, req)
             if not ret:
                 _LOGGER.error('Not initializing %s because could not install '
@@ -104,7 +104,7 @@ def _async_handle_requirements(hass: core.HomeAssistant, component,
 
 
 @asyncio.coroutine
-def _process_dependencies(hass, config, name, dependencies):
+def _async_process_dependencies(hass, config, name, dependencies):
     """Ensure all dependencies are set up."""
     blacklisted = [dep for dep in dependencies
                    if dep in loader.DEPENDENCY_BLACKLIST]
@@ -168,14 +168,15 @@ def _async_setup_component(hass: core.HomeAssistant,
         log_error('Invalid config')
         return False
 
-    requirements = yield from _async_handle_requirements(hass, component,
-                                                         domain)
-    if not requirements:
-        log_error('Could not install all requirements.')
-        return False
+    if not hass.config.skip_pip and hasattr(component, 'REQUIREMENTS'):
+        req_success = yield from _async_process_requirements(
+            hass, domain, component.REQUIREMENTS)
+        if not req_success:
+            log_error('Could not install all requirements.')
+            return False
 
     if hasattr(component, 'DEPENDENCIES'):
-        dep_success = yield from _process_dependencies(
+        dep_success = yield from _async_process_dependencies(
             hass, config, domain, component.DEPENDENCIES)
 
         if not dep_success:
@@ -228,12 +229,17 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     """
     platform_path = PLATFORM_FORMAT.format(domain, platform_name)
 
+    def log_error(msg):
+        """Log helper."""
+        _LOGGER.error('Unable to prepare setup for platform %s: %s',
+                      platform_path)
+        async_notify_setup_error(hass, platform_path)
+
     platform = loader.get_platform(domain, platform_name)
 
     # Not found
     if platform is None:
-        _LOGGER.error('Unable to find platform %s', platform_path)
-        async_notify_setup_error(hass, platform_path)
+        log_error('Unable to find platform')
         return None
 
     # Already loaded
@@ -242,18 +248,20 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     # Load dependencies
     if hasattr(platform, 'DEPENDENCIES'):
-        dep_success = yield from _process_dependencies(
+        dep_success = yield from _async_process_dependencies(
             hass, config, platform_path, platform.DEPENDENCIES)
 
         if not dep_success:
-            _LOGGER.error('Unable to prepare setup for platform %s: '
-                          'Could not setup all dependencies.')
-            async_notify_setup_error(hass, platform_path)
+            log_error('Could not setup all dependencies.')
             return False
 
-    res = yield from _async_handle_requirements(hass, platform, platform_path)
-    if not res:
-        return None
+    if not hass.config.skip_pip and hasattr(platform, 'REQUIREMENTS'):
+        req_success = yield from _async_process_requirements(
+            hass, platform_path, platform.REQUIREMENTS)
+
+        if not req_success:
+            log_error('Could not install all requirements.')
+            return None
 
     return platform
 
