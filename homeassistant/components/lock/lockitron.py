@@ -72,8 +72,8 @@ class Lockitron(LockDevice):
             _LOGGER.error('Error retrieving lock status: %s', response.text)
 
     def do_change_request(self, requested_state):
-        response = requests.put(API_ACTION_URL.format(self.device_id,
-                                                      self.access_token, requested_state))
+        response = requests.put(
+            API_ACTION_URL.format(self.device_id, self.access_token, requested_state))
         if response.status_code == 200:
             return response.json()['state']
         else:
