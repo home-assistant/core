@@ -4,20 +4,24 @@ Support for Envisalink devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/envisalink/
 """
+import asyncio
 import logging
-import time
+
 import voluptuous as vol
+
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.discovery import load_platform
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==2.0', 'pydispatcher==2.0.5']
+REQUIREMENTS = ['pyenvisalink==2.0']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'envisalink'
 
-EVL_CONTROLLER = None
+DATA_EVL = 'envisalink'
 
 CONF_EVL_HOST = 'host'
 CONF_EVL_PORT = 'port'
@@ -43,9 +47,9 @@ DEFAULT_ZONEDUMP_INTERVAL = 30
 DEFAULT_ZONETYPE = 'opening'
 DEFAULT_PANIC = 'Police'
 
-SIGNAL_ZONE_UPDATE = 'zones_updated'
-SIGNAL_PARTITION_UPDATE = 'partition_updated'
-SIGNAL_KEYPAD_UPDATE = 'keypad_updated'
+SIGNAL_ZONE_UPDATE = 'envisalink.zones_updated'
+SIGNAL_PARTITION_UPDATE = 'envisalink.partition_updated'
+SIGNAL_KEYPAD_UPDATE = 'envisalink.keypad_updated'
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONENAME): cv.string,
@@ -77,119 +81,111 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument
-def setup(hass, base_config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Common setup for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel
-    from pydispatch import dispatcher
 
-    global EVL_CONTROLLER
+    conf = config.get(DOMAIN)
 
-    config = base_config.get(DOMAIN)
+    host = conf.get(CONF_EVL_HOST)
+    port = conf.get(CONF_EVL_PORT)
+    code = conf.get(CONF_CODE)
+    panel_type = conf.get(CONF_PANEL_TYPE)
+    panic_type = conf.get(CONF_PANIC)
+    version = conf.get(CONF_EVL_VERSION)
+    user = conf.get(CONF_USERNAME)
+    password = conf.get(CONF_PASS)
+    keep_alive = conf.get(CONF_EVL_KEEPALIVE)
+    zone_dump = conf.get(CONF_ZONEDUMP_INTERVAL)
+    zones = conf.get(CONF_ZONES)
+    partitions = conf.get(CONF_PARTITIONS)
+    sync_connect = asyncio.Future(loop=hass.loop)
 
-    _host = config.get(CONF_EVL_HOST)
-    _port = config.get(CONF_EVL_PORT)
-    _code = config.get(CONF_CODE)
-    _panel_type = config.get(CONF_PANEL_TYPE)
-    _panic_type = config.get(CONF_PANIC)
-    _version = config.get(CONF_EVL_VERSION)
-    _user = config.get(CONF_USERNAME)
-    _pass = config.get(CONF_PASS)
-    _keep_alive = config.get(CONF_EVL_KEEPALIVE)
-    _zone_dump = config.get(CONF_ZONEDUMP_INTERVAL)
-    _zones = config.get(CONF_ZONES)
-    _partitions = config.get(CONF_PARTITIONS)
-    _connect_status = {}
-    EVL_CONTROLLER = EnvisalinkAlarmPanel(_host,
-                                          _port,
-                                          _panel_type,
-                                          _version,
-                                          _user,
-                                          _pass,
-                                          _zone_dump,
-                                          _keep_alive,
-                                          hass.loop)
+    controller = EnvisalinkAlarmPanel(
+        host, port, panel_type, version, user, password, zone_dump,
+        keep_alive, hass.loop)
+    hass.data[DATA_EVL] = controller
 
+    @callback
     def login_fail_callback(data):
         """Callback for when the evl rejects our login."""
         _LOGGER.error("The envisalink rejected your credentials.")
-        _connect_status['fail'] = 1
+        sync_connect.set_result(False)
 
+    @callback
     def connection_fail_callback(data):
         """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the envisalink.")
-        _connect_status['fail'] = 1
+        sync_connect.set_result(False)
 
+    @callback
     def connection_success_callback(data):
         """Callback for a successful connection."""
         _LOGGER.info("Established a connection with the envisalink.")
-        _connect_status['success'] = 1
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
+        sync_connect.set_result(True)
 
+    @callback
     def zones_updated_callback(data):
         """Handle zone timer updates."""
         _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
-        dispatcher.send(signal=SIGNAL_ZONE_UPDATE,
-                        sender=None,
-                        zone=data)
+        async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
+    @callback
     def alarm_data_updated_callback(data):
         """Handle non-alarm based info updates."""
         _LOGGER.info("Envisalink sent new alarm info. Updating alarms...")
-        dispatcher.send(signal=SIGNAL_KEYPAD_UPDATE,
-                        sender=None,
-                        partition=data)
+        async_dispatcher_send(hass, SIGNAL_KEYPAD_UPDATE, data)
 
+    @callback
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
         _LOGGER.info("The envisalink sent a partition update event.")
-        dispatcher.send(signal=SIGNAL_PARTITION_UPDATE,
-                        sender=None,
-                        partition=data)
+        async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
+    @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
         _LOGGER.info("Shutting down envisalink.")
-        EVL_CONTROLLER.stop()
+        controller.stop()
 
-    def start_envisalink(event):
-        """Startup process for the Envisalink."""
-        hass.loop.call_soon_threadsafe(EVL_CONTROLLER.start)
-        for _ in range(10):
-            if 'success' in _connect_status:
-                hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
-                return True
-            elif 'fail' in _connect_status:
-                return False
-            else:
-                time.sleep(1)
+    controller.callback_zone_timer_dump = zones_updated_callback
+    controller.callback_zone_state_change = zones_updated_callback
+    controller.callback_partition_state_change = partition_updated_callback
+    controller.callback_keypad_update = alarm_data_updated_callback
+    controller.callback_login_failure = login_fail_callback
+    controller.callback_login_timeout = connection_fail_callback
+    controller.callback_login_success = connection_success_callback
 
-        _LOGGER.error("Timeout occurred while establishing evl connection.")
-        return False
+    _LOGGER.info("Start envisalink.")
+    controller.start()
 
-    EVL_CONTROLLER.callback_zone_timer_dump = zones_updated_callback
-    EVL_CONTROLLER.callback_zone_state_change = zones_updated_callback
-    EVL_CONTROLLER.callback_partition_state_change = partition_updated_callback
-    EVL_CONTROLLER.callback_keypad_update = alarm_data_updated_callback
-    EVL_CONTROLLER.callback_login_failure = login_fail_callback
-    EVL_CONTROLLER.callback_login_timeout = connection_fail_callback
-    EVL_CONTROLLER.callback_login_success = connection_success_callback
-
-    _result = start_envisalink(None)
-    if not _result:
+    result = yield from sync_connect
+    if not result:
         return False
 
     # Load sub-components for Envisalink
-    if _partitions:
-        load_platform(hass, 'alarm_control_panel', 'envisalink',
-                      {CONF_PARTITIONS: _partitions,
-                       CONF_CODE: _code,
-                       CONF_PANIC: _panic_type}, base_config)
-        load_platform(hass, 'sensor', 'envisalink',
-                      {CONF_PARTITIONS: _partitions,
-                       CONF_CODE: _code}, base_config)
-    if _zones:
-        load_platform(hass, 'binary_sensor', 'envisalink',
-                      {CONF_ZONES: _zones}, base_config)
+    if partitions:
+        hass.async_add_job(async_load_platform(
+            hass, 'alarm_control_panel', 'envisalink', {
+                CONF_PARTITIONS: partitions,
+                CONF_CODE: code,
+                CONF_PANIC: panic_type
+            }, config
+        ))
+        hass.async_add_job(async_load_platform(
+            hass, 'sensor', 'envisalink', {
+                CONF_PARTITIONS: partitions,
+                CONF_CODE: code
+            }, config
+        ))
+    if zones:
+        hass.async_add_job(async_load_platform(
+            hass, 'binary_sensor', 'envisalink', {
+                CONF_ZONES: zones
+            }, config
+        ))
 
     return True
 

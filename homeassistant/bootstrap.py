@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT = 'component'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
-_PERSISTENT_ERRORS = {}
+DATA_PERSISTENT_ERRORS = 'bootstrap_persistent_errors'
 HA_COMPONENT_URL = '[{}](https://home-assistant.io/components/{}/)'
 
 
@@ -601,9 +601,14 @@ def _async_persistent_notification(hass: core.HomeAssistant, component: str,
 
     This method must be run in the event loop.
     """
-    _PERSISTENT_ERRORS[component] = _PERSISTENT_ERRORS.get(component) or link
+    errors = hass.data.get(DATA_PERSISTENT_ERRORS)
+
+    if errors is None:
+        errors = hass.data[DATA_PERSISTENT_ERRORS] = {}
+
+    errors[component] = errors.get(component) or link
     _lst = [HA_COMPONENT_URL.format(name.replace('_', '-'), name)
-            if link else name for name, link in _PERSISTENT_ERRORS.items()]
+            if link else name for name, link in errors.items()]
     message = ('The following components and platforms could not be set up:\n'
                '* ' + '\n* '.join(list(_lst)) + '\nPlease check your config')
     persistent_notification.async_create(

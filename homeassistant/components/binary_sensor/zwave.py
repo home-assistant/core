@@ -10,6 +10,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
 from homeassistant.components.zwave import workaround
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)
@@ -18,31 +19,20 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Z-Wave platform for binary sensors."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-    value.set_change_verified(False)
-
+def get_device(value, **kwargs):
+    """Create zwave entity device."""
     device_mapping = workaround.get_device_mapping(value)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
         # Default the multiplier to 4
         re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
-        add_devices([
-            ZWaveTriggerSensor(value, "motion",
-                               hass, re_arm_multiplier * 8)
-        ])
-        return
+        return ZWaveTriggerSensor(value, "motion", re_arm_multiplier * 8)
 
     if workaround.get_device_component_mapping(value) == DOMAIN:
-        add_devices([ZWaveBinarySensor(value, None)])
-        return
+        return ZWaveBinarySensor(value, None)
 
     if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
-        add_devices([ZWaveBinarySensor(value, None)])
+        return ZWaveBinarySensor(value, None)
+    return None
 
 
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
@@ -77,26 +67,23 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, value, device_class, hass, re_arm_sec=60):
+    def __init__(self, value, device_class, re_arm_sec=60):
         """Initialize the sensor."""
         super(ZWaveTriggerSensor, self).__init__(value, device_class)
-        self._hass = hass
         self.re_arm_sec = re_arm_sec
-        self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
-            seconds=self.re_arm_sec)
-        # If it's active make sure that we set the timeout tracker
-        track_point_in_time(
-            self._hass, self.async_update_ha_state,
-            self.invalidate_after)
+        self.invalidate_after = None
 
     def update_properties(self):
         """Called when a value for this entity's node has changed."""
         self._state = self._value.data
         # only allow this value to be true for re_arm secs
+        if not self.hass:
+            return
+
         self.invalidate_after = dt_util.utcnow() + datetime.timedelta(
             seconds=self.re_arm_sec)
         track_point_in_time(
-            self._hass, self.async_update_ha_state,
+            self.hass, self.async_update_ha_state,
             self.invalidate_after)
 
     @property

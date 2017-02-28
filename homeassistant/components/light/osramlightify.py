@@ -145,7 +145,7 @@ class OsramLightifyLight(Light):
         self._state = self._light.on()
 
         if ATTR_TRANSITION in kwargs:
-            transition = kwargs[ATTR_TRANSITION] * 10
+            transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_on requested transition time for light:"
                           " %s is: %s ",
                           self._name, transition)
@@ -196,7 +196,7 @@ class OsramLightifyLight(Light):
         _LOGGER.debug("turn_off Attempting to turn off light: %s ",
                       self._name)
         if ATTR_TRANSITION in kwargs:
-            transition = kwargs[ATTR_TRANSITION] * 10
+            transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_off requested transition time for light:"
                           " %s is: %s ",
                           self._name, transition)

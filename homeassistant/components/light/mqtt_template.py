@@ -4,10 +4,11 @@ Support for MQTT Template lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt_template/
 """
-
+import asyncio
 import logging
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR, ATTR_TRANSITION,
@@ -60,9 +61,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MQTT Template light."""
-    add_devices([MqttTemplate(
+    yield from async_add_devices([MqttTemplate(
         hass,
         config.get(CONF_NAME),
         config.get(CONF_EFFECT_LIST),
@@ -96,14 +98,10 @@ class MqttTemplate(Light):
     def __init__(self, hass, name, effect_list, topics, templates, optimistic,
                  qos, retain):
         """Initialize MQTT Template light."""
-        self._hass = hass
         self._name = name
         self._effect_list = effect_list
         self._topics = topics
         self._templates = templates
-        for tpl in self._templates.values():
-            if tpl is not None:
-                tpl.hass = hass
         self._optimistic = optimistic or topics[CONF_STATE_TOPIC] is None \
             or templates[CONF_STATE_TEMPLATE] is None
         self._qos = qos
@@ -124,11 +122,23 @@ class MqttTemplate(Light):
             self._rgb = None
         self._effect = None
 
+        # init hass to template
+        for tpl in self._templates.values():
+            if tpl is not None:
+                tpl.hass = hass
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method is a coroutine.
+        """
+        @callback
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
             # read state
             state = self._templates[CONF_STATE_TEMPLATE].\
-                render_with_possible_json_value(payload)
+                async_render_with_possible_json_value(payload)
             if state == STATE_ON:
                 self._state = True
             elif state == STATE_OFF:
@@ -141,7 +151,7 @@ class MqttTemplate(Light):
                 try:
                     self._brightness = int(
                         self._templates[CONF_BRIGHTNESS_TEMPLATE].
-                        render_with_possible_json_value(payload)
+                        async_render_with_possible_json_value(payload)
                     )
                 except ValueError:
                     _LOGGER.warning('Invalid brightness value received')
@@ -151,20 +161,20 @@ class MqttTemplate(Light):
                 try:
                     self._rgb[0] = int(
                         self._templates[CONF_RED_TEMPLATE].
-                        render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(payload))
                     self._rgb[1] = int(
                         self._templates[CONF_GREEN_TEMPLATE].
-                        render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(payload))
                     self._rgb[2] = int(
                         self._templates[CONF_BLUE_TEMPLATE].
-                        render_with_possible_json_value(payload))
+                        async_render_with_possible_json_value(payload))
                 except ValueError:
                     _LOGGER.warning('Invalid color value received')
 
             # read effect
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\
-                    render_with_possible_json_value(payload)
+                    async_render_with_possible_json_value(payload)
 
                 # validate effect value
                 if effect in self._effect_list:
@@ -172,11 +182,12 @@ class MqttTemplate(Light):
                 else:
                     _LOGGER.warning('Unsupported effect value received')
 
-            self.update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topics[CONF_STATE_TOPIC] is not None:
-            mqtt.subscribe(self._hass, self._topics[CONF_STATE_TOPIC],
-                           state_received, self._qos)
+            yield from mqtt.async_subscribe(
+                self.hass, self._topics[CONF_STATE_TOPIC], state_received,
+                self._qos)
 
     @property
     def brightness(self):
@@ -221,8 +232,12 @@ class MqttTemplate(Light):
         """Return the current effect."""
         return self._effect
 
-    def turn_on(self, **kwargs):
-        """Turn the entity on."""
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the entity on.
+
+        This method is a coroutine.
+        """
         # state
         values = {'state': True}
         if self._optimistic:
@@ -254,19 +269,23 @@ class MqttTemplate(Light):
 
         # transition
         if ATTR_TRANSITION in kwargs:
-            values['transition'] = kwargs[ATTR_TRANSITION]
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
-        mqtt.publish(
-            self._hass, self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_ON_TEMPLATE].render(**values),
+        mqtt.async_publish(
+            self.hass, self._topics[CONF_COMMAND_TOPIC],
+            self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
             self._qos, self._retain
         )
 
         if self._optimistic:
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def turn_off(self, **kwargs):
-        """Turn the entity off."""
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the entity off.
+
+        This method is a coroutine.
+        """
         # state
         values = {'state': False}
         if self._optimistic:
@@ -274,16 +293,16 @@ class MqttTemplate(Light):
 
         # transition
         if ATTR_TRANSITION in kwargs:
-            values['transition'] = kwargs[ATTR_TRANSITION]
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
-        mqtt.publish(
-            self._hass, self._topics[CONF_COMMAND_TOPIC],
-            self._templates[CONF_COMMAND_OFF_TEMPLATE].render(**values),
+        mqtt.async_publish(
+            self.hass, self._topics[CONF_COMMAND_TOPIC],
+            self._templates[CONF_COMMAND_OFF_TEMPLATE].async_render(**values),
             self._qos, self._retain
         )
 
         if self._optimistic:
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def supported_features(self):
