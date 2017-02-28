@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from homeassistant import config as conf_util
-from homeassistant.bootstrap import async_prepare_setup_platform, DATA_PLATFORM
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
@@ -45,10 +45,6 @@ class EntityComponent(object):
         self.async_add_entities = self._platforms['core'].async_add_entities
         self.add_entities = self._platforms['core'].add_entities
 
-        self._ready = asyncio.Event(loop=hass.loop)
-        if domain in hass.data.get(DATA_PLATFORM, {}):
-            hass.data[DATA_PLATFORM][domain] = self._ready
-
     def setup(self, config):
         """Set up a full entity component.
 
@@ -75,9 +71,6 @@ class EntityComponent(object):
         if tasks:
             yield from asyncio.wait(tasks, loop=self.hass.loop)
 
-        # set event ready to indicate that component is setup
-        self._ready.set()
-
         # Generic discovery listener for loading platform dynamically
         # Refer to: homeassistant.components.discovery.load_platform()
         @callback
@@ -88,13 +81,6 @@ class EntityComponent(object):
 
         discovery.async_listen_platform(
             self.hass, self.domain, component_platform_discovered)
-
-    def async_set_ready(self):
-        """Mark the EntityComponent as ready.
-
-        Need to be called if component does not call async_setup.
-        """
-        self._ready.set()
 
     def extract_from_service(self, service, expand_group=True):
         """Extract all known entities from a service call.

@@ -33,7 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_COMPONENT = 'component'
 
 DATA_SETUP = 'setup_tasks'
-DATA_PLATFORM = 'platform_events'
 DATA_PIP_LOCK = 'pip_lock'
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
@@ -56,21 +55,18 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
     setup_tasks = hass.data.get(DATA_SETUP)
 
     if setup_tasks is not None and domain in setup_tasks:
-        result = yield from setup_tasks[domain]
-        return result
+        return (yield from setup_tasks[domain])
 
     if config is None:
         config = {}
 
     if setup_tasks is None:
-        hass.data[DATA_PLATFORM] = {}
         setup_tasks = hass.data[DATA_SETUP] = {}
 
     task = setup_tasks[domain] = hass.async_add_job(
         _async_setup_component(hass, domain, config))
 
-    result = yield from task
-    return result
+    return (yield from task)
 
 
 @asyncio.coroutine
@@ -212,10 +208,6 @@ def _async_setup_component(hass: core.HomeAssistant,
         EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
     )
 
-    # wait until entities are setup
-    if domain in hass.data[DATA_PLATFORM]:
-        yield from hass.data[DATA_PLATFORM][domain].wait()
-
     return True
 
 
@@ -232,7 +224,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
     def log_error(msg):
         """Log helper."""
         _LOGGER.error('Unable to prepare setup for platform %s: %s',
-                      platform_path)
+                      platform_path, msg)
         async_notify_setup_error(hass, platform_path)
 
     platform = loader.get_platform(domain, platform_name)

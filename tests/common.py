@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import setup_component, DATA_SETUP, DATA_PLATFORM
+from homeassistant.bootstrap import setup_component, DATA_SETUP
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -279,7 +279,6 @@ def mock_component(hass, component):
 
     if setup_tasks is None:
         setup_tasks = hass.data[DATA_SETUP] = {}
-        hass.data[DATA_PLATFORM] = {}
 
     setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 
