@@ -30,8 +30,8 @@ MOCKS = {
                bootstrap.async_log_exception),
     'package_error': ("homeassistant.config._log_pkg_error",
                       config_util._log_pkg_error),
-    'logger_exception': ("homeassistant.bootstrap._LOGGER.exception",
-                         bootstrap._LOGGER.exception),
+    'logger_exception': ("homeassistant.bootstrap._LOGGER.error",
+                         bootstrap._LOGGER.error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
@@ -226,9 +226,10 @@ def check(config_path):
         res['except'][pkg_key] = config.get('homeassistant', {}) \
             .get('packages', {}).get(package)
 
-    def mock_logger_exception(msg):
+    def mock_logger_exception(msg, *params):
         """Log logger.exceptions."""
-        res['except'].setdefault(ERROR_STR, []).append(msg)
+        res['except'].setdefault(ERROR_STR, []).append(msg % params)
+        MOCKS['logger_exception'][1](msg, *params)
 
     # Patches to skip functions
     for sil in SILENCE:
