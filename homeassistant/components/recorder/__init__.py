@@ -156,7 +156,7 @@ class Recorder(threading.Thread):
         from .models import States, Events
         from homeassistant.components import persistent_notification
 
-        for _ in range(10):
+        while True:
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
@@ -167,11 +167,11 @@ class Recorder(threading.Thread):
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
                 time.sleep(CONNECT_RETRY_WAIT)
-
-        if not self.async_db_ready.is_set():
-            msg = "The recorder could not start, please check the log"
-            persistent_notification.create(self.hass, msg, 'Recorder')
-            return
+                retry = locals().setdefault('retry', 10) - 1
+                if retry == 0:
+                    msg = "The recorder could not start, please check the log"
+                    persistent_notification.create(self.hass, msg, 'Recorder')
+                    return
 
         purge_task = object()
         shutdown_task = object()
@@ -216,6 +216,7 @@ class Recorder(threading.Thread):
         # If shutdown happened before HASS finished starting
         if result is shutdown_task:
             return
+
         while True:
             event = self.queue.get()
 
