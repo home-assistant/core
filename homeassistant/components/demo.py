@@ -80,10 +80,10 @@ def async_setup(hass, config):
     # Set up input boolean
     tasks.append(bootstrap.async_setup_component(
         hass, 'input_boolean',
-        {'input_boolean': {'notify': {'icon': 'mdi:car',
-                                      'initial': False,
-                                      'name': 'Notify Anne Therese is home'}}})
-    )
+        {'input_boolean': {'notify': {
+            'icon': 'mdi:car',
+            'initial': False,
+            'name': 'Notify Anne Therese is home'}}}))
 
     # Set up input boolean
     tasks.append(bootstrap.async_setup_component(

@@ -7,12 +7,10 @@ import threading
 import logging
 
 import voluptuous as vol
-import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.config as config_util
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant import bootstrap, loader
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
@@ -20,7 +18,8 @@ from homeassistant.helpers import discovery
 
 from tests.common import \
     get_test_home_assistant, MockModule, MockPlatform, \
-    assert_setup_component, patch_yaml_files, get_test_config_dir
+    assert_setup_component, patch_yaml_files, get_test_config_dir, \
+    mock_component
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
@@ -82,19 +81,20 @@ class TestBootstrap:
         components.add('group')
         assert components == self.hass.config.components
 
-    def test_handle_setup_circular_dependency(self):
-        """Test the setup of circular dependencies."""
-        loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
+    # We no longer know what is in progress and who depends on what.
+    # def test_handle_setup_circular_dependency(self):
+    #     """Test the setup of circular dependencies."""
+    #     loader.set_component('comp_b', MockModule('comp_b', ['comp_a']))
 
-        def setup_a(hass, config):
-            """Setup the another component."""
-            bootstrap.setup_component(hass, 'comp_b')
-            return True
+    #     def setup_a(hass, config):
+    #         """Setup the another component."""
+    #         bootstrap.setup_component(hass, 'comp_b')
+    #         return True
 
-        loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
+    #     loader.set_component('comp_a', MockModule('comp_a', setup=setup_a))
 
-        bootstrap.setup_component(self.hass, 'comp_a')
-        assert set(['comp_a']) == self.hass.config.components
+    #     bootstrap.setup_component(self.hass, 'comp_a')
+    #     assert set(['comp_a']) == self.hass.config.components
 
     def test_validate_component_config(self):
         """Test validating component configuration."""
@@ -109,15 +109,21 @@ class TestBootstrap:
         with assert_setup_component(0):
             assert not bootstrap.setup_component(self.hass, 'comp_conf', {})
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
+
         with assert_setup_component(0):
             assert not bootstrap.setup_component(self.hass, 'comp_conf', {
                 'comp_conf': None
             })
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
+
         with assert_setup_component(0):
             assert not bootstrap.setup_component(self.hass, 'comp_conf', {
                 'comp_conf': {}
             })
+
+        self.hass.data.pop(bootstrap.DATA_SETUP)
 
         with assert_setup_component(0):
             assert not bootstrap.setup_component(self.hass, 'comp_conf', {
@@ -126,6 +132,8 @@ class TestBootstrap:
                     'invalid': 'extra',
                 }
             })
+
+        self.hass.data.pop(bootstrap.DATA_SETUP)
 
         with assert_setup_component(1):
             assert bootstrap.setup_component(self.hass, 'comp_conf', {
@@ -154,6 +162,7 @@ class TestBootstrap:
                 }
             })
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
 
         with assert_setup_component(1):
@@ -167,6 +176,7 @@ class TestBootstrap:
                 }
             })
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
 
         with assert_setup_component(0):
@@ -177,6 +187,7 @@ class TestBootstrap:
                 }
             })
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
 
         with assert_setup_component(1):
@@ -187,6 +198,7 @@ class TestBootstrap:
                 }
             })
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
 
         with assert_setup_component(1):
@@ -197,6 +209,7 @@ class TestBootstrap:
                 }]
             })
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('platform_conf')
 
         # Any falsey platform config will be ignored (None, {}, etc)
@@ -254,12 +267,11 @@ class TestBootstrap:
 
         thread = threading.Thread(target=setup_component)
         thread.start()
-        self.hass.config.components.add('comp')
+        mock_component(self.hass, 'comp')
 
         thread.join()
 
-        assert len(result) == 1
-        assert result[0]
+        assert len(result) == 0
 
     def test_component_not_setup_missing_dependencies(self):
         """Test we do not setup a component if not all dependencies loaded."""
@@ -269,8 +281,9 @@ class TestBootstrap:
         assert not bootstrap.setup_component(self.hass, 'comp', {})
         assert 'comp' not in self.hass.config.components
 
-        loader.set_component('non_existing', MockModule('non_existing'))
+        self.hass.data.pop(bootstrap.DATA_SETUP)
 
+        loader.set_component('non_existing', MockModule('non_existing'))
         assert bootstrap.setup_component(self.hass, 'comp', {})
 
     def test_component_failing_setup(self):
@@ -349,6 +362,7 @@ class TestBootstrap:
             })
             assert mock_setup.call_count == 0
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('switch')
 
         with assert_setup_component(0):
@@ -361,6 +375,7 @@ class TestBootstrap:
             })
             assert mock_setup.call_count == 0
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         self.hass.config.components.remove('switch')
 
         with assert_setup_component(1):
@@ -382,6 +397,7 @@ class TestBootstrap:
         assert loader.get_component('disabled_component') is None
         assert 'disabled_component' not in self.hass.config.components
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         loader.set_component(
             'disabled_component',
             MockModule('disabled_component', setup=lambda hass, config: False))
@@ -390,6 +406,7 @@ class TestBootstrap:
         assert loader.get_component('disabled_component') is not None
         assert 'disabled_component' not in self.hass.config.components
 
+        self.hass.data.pop(bootstrap.DATA_SETUP)
         loader.set_component(
             'disabled_component',
             MockModule('disabled_component', setup=lambda hass, config: True))
@@ -441,29 +458,12 @@ class TestBootstrap:
         bootstrap.from_config_dict({'test_component1': None}, self.hass)
 
         self.hass.start()
-
         assert call_order == [1, 1, 2]
 
 
 @asyncio.coroutine
 def test_component_cannot_depend_config(hass):
     """Test config is not allowed to be a dependency."""
-    loader.set_component(
-        'test_component1',
-        MockModule('test_component1', dependencies=['config']))
-
-    with pytest.raises(HomeAssistantError):
-        yield from bootstrap.async_from_config_dict(
-            {'test_component1': None}, hass)
-
-
-@asyncio.coroutine
-def test_platform_cannot_depend_config():
-    """Test config is not allowed to be a dependency."""
-    loader.set_component(
-        'test_component1.test',
-        MockPlatform('whatever', dependencies=['config']))
-
-    with pytest.raises(HomeAssistantError):
-        yield from bootstrap.async_prepare_setup_platform(
-            mock.MagicMock(), {}, 'test_component1', 'test')
+    result = yield from bootstrap._process_dependencies(
+        hass, None, 'test', ['config'])
+    assert not result

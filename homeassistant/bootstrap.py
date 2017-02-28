@@ -144,6 +144,10 @@ def _async_setup_component(hass: core.HomeAssistant,
     """Setup a component for Home Assistant.
 
     This method is a coroutine.
+
+    hass: Home Assistant instance.
+    domain: Domain of component to setup.
+    config: The Home Assistant configuration.
     """
     def log_error(msg):
         """Log helper."""
@@ -164,6 +168,12 @@ def _async_setup_component(hass: core.HomeAssistant,
         conf_util.async_process_component_config(hass, config, domain)
 
     if processed_config is None:
+        return False
+
+    requirements = yield from _async_handle_requirements(hass, component,
+                                                         domain)
+    if not requirements:
+        log_error('Could not install all requirements.')
         return False
 
     if hasattr(component, 'DEPENDENCIES'):

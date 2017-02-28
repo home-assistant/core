@@ -12,8 +12,8 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import (
-    setup_component, async_prepare_setup_component)
+from homeassistant.bootstrap import setup_component, DATA_SETUP, DATA_PLATFORM
+from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
@@ -99,7 +99,7 @@ def async_test_home_assistant(loop):
         """Add a magic mock."""
         if isinstance(target, MagicMock):
             return
-        orig_async_add_job(target, *args)
+        return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
     hass.async_track_tasks()
@@ -233,7 +233,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 def mock_http_component(hass, api_password=None):
     """Mock the HTTP component."""
     hass.http = MagicMock(api_password=api_password)
-    hass.config.components.add('http')
+    mock_component(hass, 'http')
     hass.http.views = {}
 
     def mock_register_view(view):
@@ -269,6 +269,19 @@ def mock_mqtt_component(hass):
             }
         })
         return mock_mqtt
+
+
+def mock_component(hass, component):
+    """Mock a component is setup."""
+    # TODO Raise if component already loaded
+    hass.config.components.add(component)
+    setup_tasks = hass.data.get(DATA_SETUP)
+
+    if setup_tasks is None:
+        setup_tasks = hass.data[DATA_SETUP] = {}
+        hass.data[DATA_PLATFORM] = {}
+
+    setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 
 
 class MockModule(object):
@@ -442,10 +455,10 @@ def assert_setup_component(count, domain=None):
     """
     config = {}
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_psc(hass, config_input, domain):
         """Mock the prepare_setup_component to capture config."""
-        res = yield from async_prepare_setup_component(
+        res = async_process_component_config(
             hass, config_input, domain)
         config[domain] = None if res is None else res.get(domain)
         _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
@@ -453,7 +466,7 @@ def assert_setup_component(count, domain=None):
         return res
 
     assert isinstance(config, dict)
-    with patch('homeassistant.bootstrap.async_prepare_setup_component',
+    with patch('homeassistant.config.async_process_component_config',
                mock_psc):
         yield config
 

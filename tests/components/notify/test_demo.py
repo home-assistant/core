@@ -8,19 +8,14 @@ from homeassistant.bootstrap import setup_component
 from homeassistant.components.notify import demo
 from homeassistant.core import callback
 from homeassistant.helpers import discovery, script
-from tests.common import assert_setup_component, get_test_home_assistant
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, mock_coro)
 
 CONFIG = {
     notify.DOMAIN: {
         'platform': 'demo'
     }
 }
-
-
-@asyncio.coroutine
-def mock_setup_platform():
-    """Mock prepare_setup_platform."""
-    return None
 
 
 class TestNotifyDemo(unittest.TestCase):
@@ -53,7 +48,7 @@ class TestNotifyDemo(unittest.TestCase):
         self._setup_notify()
 
     @patch('homeassistant.bootstrap.async_prepare_setup_platform',
-           return_value=mock_setup_platform())
+           return_value=mock_coro())
     def test_no_prepare_setup_platform(self, mock_prep_setup_platform):
         """Test missing notify platform."""
         with assert_setup_component(0):

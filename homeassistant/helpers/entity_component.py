@@ -285,7 +285,7 @@ class EntityComponent(object):
             self.logger.error(err)
             return None
 
-        conf = conf_util.async_extract_component_config(
+        conf = conf_util.async_process_component_config(
             self.hass, conf, self.domain)
 
         if conf is None:

@@ -9,7 +9,8 @@ from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 
 from tests.common import (
-    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
+    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
+    mock_component)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,6 +22,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
+        mock_component(self.hass, 'mqtt')
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -43,7 +45,6 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
 
             dev_id = 'paulus'
             topic = '/location/paulus'
-            self.hass.config.components = set(['mqtt', 'zone'])
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'mqtt',
