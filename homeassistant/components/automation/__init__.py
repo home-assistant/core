@@ -346,17 +346,19 @@ def _async_process_config(hass, config, component):
 
             async_attach_triggers = partial(
                 _async_process_trigger, hass, config,
-                config_block.get(CONF_TRIGGER, []), name)
-            entity = AutomationEntity(name, async_attach_triggers, cond_func,
-                                      action, hidden)
+                config_block.get(CONF_TRIGGER, []), name
+            )
+            entity = AutomationEntity(
+                name, async_attach_triggers, cond_func, action, hidden)
+
             if config_block[CONF_INITIAL_STATE]:
                 tasks.append(entity.async_enable())
             entities.append(entity)
 
-    if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
     if entities:
         yield from component.async_add_entities(entities)
+    if tasks:
+        yield from asyncio.wait(tasks, loop=hass.loop)
 
     return len(entities) > 0
 
