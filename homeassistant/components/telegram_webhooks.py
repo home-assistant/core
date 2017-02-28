@@ -133,11 +133,11 @@ class BotPushReceiver(HomeAssistantView):
                 ATTR_ARGS: " ".join(pieces[1:]),
                 ATTR_USER_ID: data['from']['id'],
                 })
-        else:
-            # telegram text "bla bla"
-            request.app['hass'].bus.async_fire(EVENT_TELEGRAM_TEXT, {
-                ATTR_TEXT: data['text'],
-                ATTR_USER_ID: data['from']['id'],
-                })
+
+        # telegram text "bla bla"
+        request.app['hass'].bus.async_fire(EVENT_TELEGRAM_TEXT, {
+            ATTR_TEXT: data['text'],
+            ATTR_USER_ID: data['from']['id'],
+            })
 
         return self.json({})
