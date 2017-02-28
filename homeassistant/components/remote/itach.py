@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.components.remote import (
     PLATFORM_SCHEMA, ATTR_COMMAND)
 
-REQUIREMENTS = ['pyitachip2ir==0.0.5']
+REQUIREMENTS = ['pyitachip2ir==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
