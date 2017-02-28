@@ -3,6 +3,8 @@ import datetime
 import unittest
 from unittest import mock
 
+from voluptuous import Invalid
+
 from homeassistant.core import callback
 from homeassistant.bootstrap import setup_component
 from homeassistant.const import (
@@ -15,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.components import climate
+from homeassistant.components.climate import generic_thermostat
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -25,6 +28,7 @@ ENT_SWITCH = 'switch.test'
 MIN_TEMP = 3.0
 MAX_TEMP = 65.0
 TARGET_TEMP = 42.0
+AWAY_TEMP = 30.0
 TOLERANCE = 0.5
 
 
@@ -50,13 +54,66 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
                 'climate': config})
 
     def test_valid_conf(self):
-        """Test set up genreic_thermostat with valid config values."""
+        """Test set up generic_thermostat with valid config values."""
         self.assertTrue(setup_component(self.hass, 'climate',
                         {'climate': {
                             'platform': 'generic_thermostat',
                             'name': 'test',
                             'heater': ENT_SWITCH,
                             'target_sensor': ENT_SENSOR}}))
+
+    def test_valid_conf_with_hold_temps(self):
+        """Test set up generic_thermostat with valid hold_temps values."""
+        self.assertTrue(setup_component(self.hass, 'climate',
+                        {'climate': {
+                            'platform': 'generic_thermostat',
+                            'name': 'test',
+                            'hold_temps': {
+                                'away': 18,
+                                'vacation': 9,
+                            },
+                            'heater': ENT_SWITCH,
+                            'target_sensor': ENT_SENSOR}}))
+
+    def test_valid_hold_conf_with_schema(self):
+        """Test a valid config (with hold_temps) with the voluptuous Schema."""
+        # If it works, it should not raise any exception
+        generic_thermostat.PLATFORM_SCHEMA({
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'hold_temps': {
+                'away': 18,
+                'vacation': 9,
+            },
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR
+        })
+
+    def test_invalid_hold_conf_with_schema(self):
+        """Test some invalid configs against the voluptuous Schema."""
+        with self.assertRaises(Invalid):
+            generic_thermostat.PLATFORM_SCHEMA({
+                'platform': 'generic_thermostat',
+                'name': 'test',
+                'hold_temps': {
+                    'away': 12,
+                    'invalid-name': 9,
+                },
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR,
+            })
+
+        with self.assertRaises(Invalid):
+            generic_thermostat.PLATFORM_SCHEMA({
+                'platform': 'generic_thermostat',
+                'name': 'test',
+                'hold_temps': {
+                    # target_temp should be used instead of this hold mode
+                    'home': 9,
+                },
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR,
+            })
 
     def test_setup_with_sensor(self):
         """Test set up heat_control with sensor to trigger update at init."""
@@ -518,6 +575,107 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         call = self.calls[0]
         self.assertEqual('switch', call.domain)
         self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
+        """Setup the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp, {
+            ATTR_UNIT_OF_MEASUREMENT: unit
+        })
+
+    def _setup_switch(self, is_on):
+        """Setup the test switch."""
+        self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
+        self.calls = []
+
+        @callback
+        def log_call(call):
+            """Log service calls."""
+            self.calls.append(call)
+
+        self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
+        self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+
+
+class TestClimateGenericThermostatHoldModeTemp(unittest.TestCase):
+    """Test the Generic thermostat."""
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.hass.config.units = METRIC_SYSTEM
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'tolerance': TOLERANCE,
+            'heater': ENT_SWITCH,
+            'target_temp': TARGET_TEMP,
+            'hold_temps': {
+                'away': AWAY_TEMP,
+            },
+            'target_sensor': ENT_SENSOR
+        }})
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    def test_set_away_heater_off(self):
+        """Test if target heater is set off when transition to away."""
+        self._setup_switch(True)
+        self._setup_sensor(35)
+        self.hass.block_till_done()
+        climate.set_hold_mode(self.hass, 'away')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_away_mode_heater_on(self):
+        """Test if in away mode heater switches on."""
+        self._setup_switch(False)
+        self._setup_sensor(65)
+        self.hass.block_till_done()
+        climate.set_hold_mode(self.hass, 'away')
+        # Now trigger the temperature
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_away_mode_heater_off(self):
+        """Test if heater switches off when temperature rises above target."""
+        self._setup_switch(True)
+        self._setup_sensor(25)
+        self.hass.block_till_done()
+        climate.set_hold_mode(self.hass, 'away')
+        # Now trigger the temperature
+        self._setup_sensor(35)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_OFF, call.service)
+        self.assertEqual(ENT_SWITCH, call.data['entity_id'])
+
+    def test_home_heater_on(self):
+        """Test if the heater switches on when hold mode becomes 'home'."""
+        climate.set_hold_mode(self.hass, 'away')
+        self._setup_switch(False)
+        self._setup_sensor(35)
+        self.hass.block_till_done()
+        # Now trigger the temperature
+        climate.set_hold_mode(self.hass, 'home')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        call = self.calls[0]
+        self.assertEqual('switch', call.domain)
+        self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
     def _setup_sensor(self, temp, unit=TEMP_CELSIUS):

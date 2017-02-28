@@ -44,6 +44,11 @@ STATE_AUTO = "auto"
 STATE_DRY = "dry"
 STATE_FAN_ONLY = "fan_only"
 
+HOLD_MODE_AWAY = "away"
+HOLD_MODE_HOME = "home"
+HOLD_MODE_SLEEP = "sleep"
+HOLD_MODE_VACATION = "vacation"
+
 ATTR_CURRENT_TEMPERATURE = "current_temperature"
 ATTR_MAX_TEMP = "max_temp"
 ATTR_MIN_TEMP = "min_temp"
@@ -58,6 +63,7 @@ ATTR_HUMIDITY = "humidity"
 ATTR_MAX_HUMIDITY = "max_humidity"
 ATTR_MIN_HUMIDITY = "min_humidity"
 ATTR_HOLD_MODE = "hold_mode"
+ATTR_HOLD_LIST = "hold_list"
 ATTR_OPERATION_MODE = "operation_mode"
 ATTR_OPERATION_LIST = "operation_list"
 ATTR_SWING_MODE = "swing_mode"
@@ -90,6 +96,7 @@ SET_TEMPERATURE_SCHEMA = vol.Schema({
     vol.Inclusive(ATTR_TARGET_TEMP_LOW, 'temperature'): vol.Coerce(float),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_OPERATION_MODE): cv.string,
+    vol.Optional(ATTR_HOLD_MODE): cv.string,
 })
 SET_FAN_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -151,7 +158,7 @@ def set_aux_heat(hass, aux_heat, entity_id=None):
 
 def set_temperature(hass, temperature=None, entity_id=None,
                     target_temp_high=None, target_temp_low=None,
-                    operation_mode=None):
+                    operation_mode=None, hold_mode=None):
     """Set new target temperature."""
     kwargs = {
         key: value for key, value in [
@@ -159,7 +166,8 @@ def set_temperature(hass, temperature=None, entity_id=None,
             (ATTR_TARGET_TEMP_HIGH, target_temp_high),
             (ATTR_TARGET_TEMP_LOW, target_temp_low),
             (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OPERATION_MODE, operation_mode)
+            (ATTR_OPERATION_MODE, operation_mode),
+            (ATTR_HOLD_MODE, hold_mode),
         ] if value is not None
     }
     _LOGGER.debug("set_temperature start data=%s", kwargs)
@@ -445,9 +453,11 @@ class ClimateDevice(Entity):
             if self.operation_list:
                 data[ATTR_OPERATION_LIST] = self.operation_list
 
-        is_hold = self.current_hold_mode
-        if is_hold is not None:
-            data[ATTR_HOLD_MODE] = is_hold
+        hold_mode = self.current_hold_mode
+        if hold_mode is not None:
+            data[ATTR_HOLD_MODE] = hold_mode
+            if self.hold_list:
+                data[ATTR_HOLD_LIST] = self.hold_list
 
         swing_mode = self.current_swing_mode
         if swing_mode is not None:
@@ -523,6 +533,11 @@ class ClimateDevice(Entity):
     @property
     def current_hold_mode(self):
         """Return the current hold mode, e.g., home, away, temp."""
+        return None
+
+    @property
+    def hold_list(self):
+        """List of available hold modes."""
         return None
 
     @property
