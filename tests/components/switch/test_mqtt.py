@@ -5,8 +5,7 @@ from homeassistant.bootstrap import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.switch as switch
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant,
-    mock_component)
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -23,7 +22,6 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
-        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',
@@ -53,7 +51,6 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
-        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',
@@ -87,7 +84,6 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
-        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, switch.DOMAIN, {
             switch.DOMAIN: {
                 'platform': 'mqtt',

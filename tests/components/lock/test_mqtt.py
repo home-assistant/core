@@ -6,8 +6,7 @@ from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
                                  ATTR_ASSUMED_STATE)
 import homeassistant.components.lock as lock
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant,
-    mock_component)
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
 
 
 class TestLockMQTT(unittest.TestCase):
@@ -24,7 +23,6 @@ class TestLockMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic(self):
         """Test the controlling state via topic."""
-        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
@@ -54,7 +52,6 @@ class TestLockMQTT(unittest.TestCase):
 
     def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending MQTT commands in optimistic mode."""
-        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',
@@ -88,7 +85,6 @@ class TestLockMQTT(unittest.TestCase):
 
     def test_controlling_state_via_topic_and_json_message(self):
         """Test the controlling state via topic and JSON message."""
-        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, lock.DOMAIN, {
             lock.DOMAIN: {
                 'platform': 'mqtt',

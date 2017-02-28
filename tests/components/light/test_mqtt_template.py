@@ -27,7 +27,7 @@ from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.light as light
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
-    assert_setup_component, mock_component)
+    assert_setup_component)
 
 
 class TestLightMQTTTemplate(unittest.TestCase):
@@ -45,7 +45,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_setup_fails(self): \
             # pylint: disable=invalid-name
         """Test that setup fails with missing required configuration items."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(0):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -58,7 +57,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_state_change_via_topic(self): \
             # pylint: disable=invalid-name
         """Test state change via topic."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -93,7 +91,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_state_brightness_color_effect_change_via_topic(self): \
             # pylint: disable=invalid-name
         """Test state, brightness, color and effect change via topic."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -170,7 +167,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_optimistic(self): \
             # pylint: disable=invalid-name
         """Test optimistic mode."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -232,7 +228,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_flash(self): \
             # pylint: disable=invalid-name
         """Test flash."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -276,7 +271,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
 
     def test_transition(self):
         """Test for transition time being sent when included."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
@@ -320,7 +314,6 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_invalid_values(self): \
             # pylint: disable=invalid-name
         """Test that invalid values are ignored."""
-        mock_component(self.hass, 'mqtt')
         with assert_setup_component(1):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
