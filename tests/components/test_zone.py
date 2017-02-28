@@ -63,11 +63,12 @@ class TestComponentZone(unittest.TestCase):
                 },
             ]
         })
-
+        self.hass.block_till_done()
         active = zone.active_zone(self.hass, 32.880600, -117.237561)
         assert active is None
 
-        self.hass.config.components.remove('zone')
+    def test_active_zone_skips_passive_zones_2(self):
+        """Test active and passive zones."""
         assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {
@@ -78,7 +79,7 @@ class TestComponentZone(unittest.TestCase):
                 },
             ]
         })
-
+        self.hass.block_till_done()
         active = zone.active_zone(self.hass, 32.880700, -117.237561)
         assert 'zone.active_zone' == active.entity_id
 
@@ -106,7 +107,10 @@ class TestComponentZone(unittest.TestCase):
         active = zone.active_zone(self.hass, latitude, longitude)
         assert 'zone.small_zone' == active.entity_id
 
-        self.hass.config.components.remove('zone')
+    def test_active_zone_prefers_smaller_zone_if_same_distance_2(self):
+        """Test zone size preferences."""
+        latitude = 32.880600
+        longitude = -117.237561
         assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {

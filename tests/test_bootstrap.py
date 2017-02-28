@@ -18,8 +18,7 @@ from homeassistant.helpers import discovery
 
 from tests.common import \
     get_test_home_assistant, MockModule, MockPlatform, \
-    assert_setup_component, patch_yaml_files, get_test_config_dir, \
-    mock_component
+    assert_setup_component, patch_yaml_files, get_test_config_dir
 
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 VERSION_PATH = os.path.join(get_test_config_dir(), config_util.VERSION_FILE)
@@ -257,21 +256,27 @@ class TestBootstrap:
 
     def test_component_not_setup_twice_if_loaded_during_other_setup(self):
         """Test component setup while waiting for lock is not setup twice."""
-        loader.set_component('comp', MockModule('comp'))
-
         result = []
+
+        @asyncio.coroutine
+        def async_setup(hass, config):
+            """Tracking Setup."""
+            result.append(1)
+
+        loader.set_component(
+            'comp', MockModule('comp', async_setup=async_setup))
 
         def setup_component():
             """Setup the component."""
-            result.append(bootstrap.setup_component(self.hass, 'comp'))
+            bootstrap.setup_component(self.hass, 'comp')
 
         thread = threading.Thread(target=setup_component)
         thread.start()
-        mock_component(self.hass, 'comp')
+        bootstrap.setup_component(self.hass, 'comp')
 
         thread.join()
 
-        assert len(result) == 0
+        assert len(result) == 1
 
     def test_component_not_setup_missing_dependencies(self):
         """Test we do not setup a component if not all dependencies loaded."""
@@ -452,11 +457,9 @@ class TestBootstrap:
 
         self.hass.bus.listen_once(EVENT_HOMEASSISTANT_START, track_start)
 
-        self.hass.loop.run_until_complete = \
-            lambda _: self.hass.block_till_done()
-
-        bootstrap.from_config_dict({'test_component1': None}, self.hass)
-
+        self.hass.add_job(bootstrap.async_setup_component(
+            self.hass, 'test_component1', {}))
+        self.hass.block_till_done()
         self.hass.start()
         assert call_order == [1, 1, 2]
 

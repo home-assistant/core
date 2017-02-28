@@ -1,7 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 import asyncio
 import requests
-from unittest.mock import MagicMock
 
 from homeassistant import bootstrap, const
 import homeassistant.components.http as http
@@ -157,46 +156,48 @@ def test_registering_view_while_running(hass, test_client):
     assert text == 'hello'
 
 
-def test_api_base_url(loop):
+@asyncio.coroutine
+def test_api_base_url_with_domain(hass):
     """Test setting api url."""
-    hass = MagicMock()
-    hass.loop = loop
-
-    assert loop.run_until_complete(
-        bootstrap.async_setup_component(hass, 'http', {
-            'http': {
-                'base_url': 'example.com'
-            }
-        })
-    )
-
+    result = yield from bootstrap.async_setup_component(hass, 'http', {
+        'http': {
+            'base_url': 'example.com'
+        }
+    })
+    assert result
     assert hass.config.api.base_url == 'http://example.com'
 
-    assert loop.run_until_complete(
-        bootstrap.async_setup_component(hass, 'http', {
-            'http': {
-                'server_host': '1.1.1.1'
-            }
-        })
-    )
 
+@asyncio.coroutine
+def test_api_base_url_with_ip(hass):
+    """Test setting api url."""
+    result = yield from bootstrap.async_setup_component(hass, 'http', {
+        'http': {
+            'server_host': '1.1.1.1'
+        }
+    })
+    assert result
     assert hass.config.api.base_url == 'http://1.1.1.1:8123'
 
-    assert loop.run_until_complete(
-        bootstrap.async_setup_component(hass, 'http', {
-            'http': {
-                'server_host': '1.1.1.1'
-            }
-        })
-    )
 
-    assert hass.config.api.base_url == 'http://1.1.1.1:8123'
+@asyncio.coroutine
+def test_api_base_url_with_ip_port(hass):
+    """Test setting api url."""
+    result = yield from bootstrap.async_setup_component(hass, 'http', {
+        'http': {
+            'base_url': '1.1.1.1:8124'
+        }
+    })
+    assert result
+    assert hass.config.api.base_url == 'http://1.1.1.1:8124'
 
-    assert loop.run_until_complete(
-        bootstrap.async_setup_component(hass, 'http', {
-            'http': {
-            }
-        })
-    )
 
+@asyncio.coroutine
+def test_api_no_base_url(hass):
+    """Test setting api url."""
+    result = yield from bootstrap.async_setup_component(hass, 'http', {
+        'http': {
+        }
+    })
+    assert result
     assert hass.config.api.base_url == 'http://127.0.0.1:8123'
