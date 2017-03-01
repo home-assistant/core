@@ -98,9 +98,8 @@ class TelldusLiveClient(object):
         try:
             self._sync()
         finally:
-            track_point_in_utc_time(self._hass,
-                                    self.update,
-                                    now + self._interval)
+            track_point_in_utc_time(
+                self._hass, self.update, utcnow() + self._interval)
 
     def _sync(self):
         """Update local list of devices."""
@@ -123,11 +122,8 @@ class TelldusLiveClient(object):
 
         def discover(device_id, component):
             """Discover the component."""
-            discovery.load_platform(self._hass,
-                                    component,
-                                    DOMAIN,
-                                    [device_id],
-                                    self._config)
+            discovery.load_platform(
+                self._hass, component, DOMAIN, [device_id], self._config)
 
         known_ids = set([entity.device_id for entity in self.entities])
         for device in self._client.devices:
