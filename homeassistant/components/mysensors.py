@@ -186,12 +186,12 @@ def setup(hass, config):
 
         def gw_start(event):
             """Callback to trigger start of gateway and any persistence."""
-            gateway.start()
-            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                                 lambda event: gateway.stop())
             if persistence:
                 for node_id in gateway.sensors:
                     gateway.event_callback('persistence', node_id)
+            gateway.start()
+            hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                                 lambda event: gateway.stop())
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, gw_start)
 
@@ -251,6 +251,7 @@ def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
             _LOGGER.info('No sketch_name: node %s', node_id)
             return
 
+        new_devices = []
         for child in gateway.sensors[node_id].children.values():
             for value_type in child.values.keys():
                 key = node_id, child.id, value_type
@@ -272,11 +273,12 @@ def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
                 devices[key] = device_class(
                     gateway, node_id, child.id, name, value_type, child.type)
                 if add_devices:
-                    _LOGGER.info('Adding new devices: %s', devices[key])
-                    add_devices([devices[key]])
-                    devices[key].schedule_update_ha_state(True)
+                    new_devices.append(devices[key])
                 else:
                     devices[key].update()
+        if add_devices and new_devices:
+            _LOGGER.info('Adding new devices: %s', new_devices)
+            add_devices(new_devices, True)
     return mysensors_callback
 
 
