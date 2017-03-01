@@ -170,7 +170,7 @@ class HueOneLightChangeView(HomeAssistantView):
             _LOGGER.error('Unable to parse data: %s', request_json)
             return web.Response(text="Bad request", status=400)
 
-        result, brightness, color = parsed
+        result, brightness, color, color_temp = parsed
 
         # Choose general HA domain
         domain = core.DOMAIN
@@ -205,6 +205,9 @@ class HueOneLightChangeView(HomeAssistantView):
                         color_util.color_xy_brightness_to_RGB(color[0],
                                                               color[1],
                                                               final_brightness)
+            if entity_features & SUPPORT_COLOR_TEMP:
+                if color_temp is not None:
+                    data[ATTR_COLOR_TEMP] = color_temp
 
         # If the requested entity is a script add some variables
         elif entity.domain == "script":
@@ -279,70 +282,74 @@ class HueOneLightChangeView(HomeAssistantView):
             json_response.append(create_hue_success_response(
                 entity_id, HUE_API_STATE_XY, color))
 
+        if color_temp is not None:
+            json_response.append(create_hue_success_response(
+                entity_id, HUE_API_STATE_CT, color_temp))
+
         return self.json(json_response)
 
 
 def parse_hue_api_put_light_body(request_json, entity):
     """Parse the body of a request to change the state of a light."""
+    result = None
+    brightness = None
+    color = None
+    color_temp = None
+
     if HUE_API_STATE_ON in request_json:
         if not isinstance(request_json[HUE_API_STATE_ON], bool):
             return None
 
-        if request_json['on']:
-            # Echo requested device be turned on
-            brightness = None
-            report_brightness = False
-            color = None
-            result = True
-        else:
-            # Echo requested device be turned off
-            brightness = None
-            report_brightness = False
-            color = None
-            result = False
+        result = request_json['on']
+
+    # Make sure the entity actually supports color temperature
+    entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
     if HUE_API_STATE_BRI in request_json:
         try:
             # Clamp brightness from 0 to 255
-            brightness = \
+            hue_brightness = \
                 max(0, min(int(request_json[HUE_API_STATE_BRI]), 255))
         except ValueError:
             return None
 
-        # Make sure the entity actually supports brightness
-        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-
         if entity.domain == "light":
             if entity_features & SUPPORT_BRIGHTNESS:
-                report_brightness = True
+                brightness = hue_brightness
                 result = (brightness > 0)
 
         elif (entity.domain == "script" or
               entity.domain == "media_player" or
               entity.domain == "fan"):
             # Convert 0-255 to 0-100
-            level = brightness / 255 * 100
+            level = hue_brightness / 255 * 100
             brightness = round(level)
-            report_brightness = True
             result = True
 
     if HUE_API_STATE_XY in request_json:
-        if not isinstance(request_json[HUE_API_STATE_XY], list) and \
+        if not isinstance(request_json[HUE_API_STATE_XY], list) or \
                 len(request_json[HUE_API_STATE_XY]) != 2:
             return None
-
-        # Make sure the entity actually supports color
-        entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if entity.domain == "light":
             if entity_features & SUPPORT_XY_COLOR or \
                     entity_features & SUPPORT_RGB_COLOR:
-                report_brightness = True
-                xy = request_json[HUE_API_STATE_XY]
-                color = (xy[0], xy[1])
+                color = tuple(request_json[HUE_API_STATE_XY])
 
-    return (result, brightness, color) if report_brightness else (result, None,
-                                                                  color)
+    if HUE_API_STATE_CT in request_json:
+        try:
+            # Clamp to supported range
+            hue_ct = max(color_util.HASS_COLOR_MIN, min(
+                int(request_json[HUE_API_STATE_CT]),
+                color_util.HASS_COLOR_MAX))
+        except ValueError:
+            return None
+
+        if entity.domain == "light":
+            if entity_features & SUPPORT_COLOR_TEMP:
+                color_temp = hue_ct
+
+    return (result, brightness, color, color_temp)
 
 
 def get_entity_state(config, entity):
