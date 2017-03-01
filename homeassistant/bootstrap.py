@@ -238,7 +238,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     # Not found
     if platform is None:
-        log_error('Unable to find platform.')
+        log_error('Platform not found.')
         return None
 
     # Already loaded
