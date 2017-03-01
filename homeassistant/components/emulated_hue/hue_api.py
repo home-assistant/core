@@ -347,10 +347,10 @@ def parse_hue_api_put_light_body(request_json, entity):
 def get_entity_state(config, entity):
     """Retrieve and convert state and brightness values for an entity."""
     cached_state = config.cached_states.get(entity.entity_id, None)
+    device_type = HUE_API_DEVICE_TYPE_DIMMABLE
 
     if cached_state is None:
         is_on = entity.state != STATE_OFF
-        device_type = HUE_API_DEVICE_TYPE_DIMMABLE
 
         state = {HUE_API_STATE_ON: is_on}
         brightness = entity.attributes.get(ATTR_BRIGHTNESS,
@@ -403,7 +403,6 @@ def get_entity_state(config, entity):
                 state[HUE_API_STATE_BRI] = 255
 
     else:
-        device_type = HUE_API_DEVICE_TYPE_DIMMABLE
         final_state, final_brightness = cached_state
 
         state = {HUE_API_STATE_ON: final_state}
