@@ -70,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    yield from async_add_devices([MqttLight(
+    async_add_devices([MqttLight(
         config.get(CONF_NAME),
         {
             key: config.get(key) for key in (

@@ -66,7 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error('No sensors added')
         return False
 
-    yield from async_add_devices(sensors, True)
+    async_add_devices(sensors, True)
     return True
 
 
