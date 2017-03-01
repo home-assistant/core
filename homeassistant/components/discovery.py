@@ -52,14 +52,15 @@ SERVICE_HANDLERS = {
 CONF_IGNORE = 'ignore'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    vol.Required(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
             vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Start a discovery service."""
     from netdisco.discovery import NetworkDiscovery
 
@@ -95,24 +96,11 @@ def setup(hass, config):
             yield from async_load_platform(
                 hass, component, platform, info, config)
 
-    def discover():
-        """Discover devices."""
-        results = []
-        try:
-            netdisco.scan()
-
-            for disc in netdisco.discover():
-                for service in netdisco.get_info(disc):
-                    results.append((disc, service))
-        finally:
-            netdisco.stop()
-
-        return results
-
     @asyncio.coroutine
     def scan_devices(_):
         """Scan for devices."""
-        results = yield from hass.loop.run_in_executor(None, discover)
+        results = yield from hass.loop.run_in_executor(
+            None, _discover, netdisco)
 
         for result in results:
             hass.async_add_job(new_service_found(*result))
@@ -120,6 +108,21 @@ def setup(hass, config):
         async_track_point_in_utc_time(hass, scan_devices,
                                       dt_util.utcnow() + SCAN_INTERVAL)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, scan_devices)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, scan_devices)
 
     return True
+
+
+def _discover(netdisco):
+    """Discover devices."""
+    results = []
+    try:
+        netdisco.scan()
+
+        for disc in netdisco.discover():
+            for service in netdisco.get_info(disc):
+                results.append((disc, service))
+    finally:
+        netdisco.stop()
+
+    return results
