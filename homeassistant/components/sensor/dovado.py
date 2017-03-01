@@ -22,7 +22,7 @@ from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dovado==0.4.0']
+REQUIREMENTS = ['dovado==0.4.1']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
