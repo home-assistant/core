@@ -6,20 +6,23 @@ Will emit EVENT_PLATFORM_DISCOVERED whenever a new service has been discovered.
 Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
+import asyncio
+from datetime import timedelta
 import logging
-import threading
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_START
-from homeassistant.helpers.discovery import load_platform, discover
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.discovery import async_load_platform, async_discover
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==0.8.2']
+REQUIREMENTS = ['netdisco==0.9.0']
 
 DOMAIN = 'discovery'
 
-SCAN_INTERVAL = 300  # seconds
+SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HASS_IOS_APP = 'hass_ios'
@@ -49,18 +52,20 @@ SERVICE_HANDLERS = {
 CONF_IGNORE = 'ignore'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    vol.Required(DOMAIN): vol.Schema({
         vol.Optional(CONF_IGNORE, default=[]):
             vol.All(cv.ensure_list, [vol.In(SERVICE_HANDLERS)])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Start a discovery service."""
-    logger = logging.getLogger(__name__)
+    from netdisco.discovery import NetworkDiscovery
 
-    from netdisco.service import DiscoveryService
+    logger = logging.getLogger(__name__)
+    netdisco = NetworkDiscovery()
 
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
@@ -68,37 +73,56 @@ def setup(hass, config):
     # Platforms ignore by config
     ignored_platforms = config[DOMAIN][CONF_IGNORE]
 
-    lock = threading.Lock()
-
-    def new_service_listener(service, info):
+    @asyncio.coroutine
+    def new_service_found(service, info):
         """Called when a new service is found."""
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
             return
 
-        with lock:
-            logger.info("Found new service: %s %s", service, info)
+        logger.info("Found new service: %s %s", service, info)
 
-            comp_plat = SERVICE_HANDLERS.get(service)
+        comp_plat = SERVICE_HANDLERS.get(service)
 
-            # We do not know how to handle this service.
-            if not comp_plat:
-                return
+        # We do not know how to handle this service.
+        if not comp_plat:
+            return
 
-            component, platform = comp_plat
+        component, platform = comp_plat
 
-            if platform is None:
-                discover(hass, service, info, component, config)
-            else:
-                load_platform(hass, component, platform, info, config)
+        if platform is None:
+            yield from async_discover(hass, service, info, component, config)
+        else:
+            yield from async_load_platform(
+                hass, component, platform, info, config)
 
-    # pylint: disable=unused-argument
-    def start_discovery(event):
-        """Start discovering."""
-        netdisco = DiscoveryService(SCAN_INTERVAL)
-        netdisco.add_listener(new_service_listener)
-        netdisco.start()
+    @asyncio.coroutine
+    def scan_devices(_):
+        """Scan for devices."""
+        results = yield from hass.loop.run_in_executor(
+            None, _discover, netdisco)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_discovery)
+        for result in results:
+            hass.async_add_job(new_service_found(*result))
+
+        async_track_point_in_utc_time(hass, scan_devices,
+                                      dt_util.utcnow() + SCAN_INTERVAL)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, scan_devices)
 
     return True
+
+
+def _discover(netdisco):
+    """Discover devices."""
+    results = []
+    try:
+        netdisco.scan()
+
+        for disc in netdisco.discover():
+            for service in netdisco.get_info(disc):
+                results.append((disc, service))
+    finally:
+        netdisco.stop()
+
+    return results
