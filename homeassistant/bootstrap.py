@@ -145,26 +145,30 @@ def _async_setup_component(hass: core.HomeAssistant,
     domain: Domain of component to setup.
     config: The Home Assistant configuration.
     """
-    def log_error(msg):
+    def log_error(msg, link=True):
         """Log helper."""
         _LOGGER.error('Setup failed for %s: %s', domain, msg)
-        async_notify_setup_error(hass, domain, True)
+        async_notify_setup_error(hass, domain, link)
+
+    component = loader.get_component(domain)
+
+    if not component:
+        log_error('Component not found.', False)
+        return False
 
     # Validate no circular dependencies
     components = loader.load_order_component(domain)
 
     # OrderedSet is empty if component or dependencies could not be resolved
     if not components:
-        log_error('Unable to resolve component or dependencies')
+        log_error('Unable to resolve component or dependencies.')
         return False
-
-    component = loader.get_component(domain)
 
     processed_config = \
         conf_util.async_process_component_config(hass, config, domain)
 
     if processed_config is None:
-        log_error('Invalid config')
+        log_error('Invalid config.')
         return False
 
     if not hass.config.skip_pip and hasattr(component, 'REQUIREMENTS'):
@@ -234,7 +238,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
     # Not found
     if platform is None:
-        log_error('Unable to find platform')
+        log_error('Platform not found.')
         return None
 
     # Already loaded
