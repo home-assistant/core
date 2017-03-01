@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.helpers.discovery import load_platform, discover
 
-REQUIREMENTS = ['netdisco==0.8.3']
+REQUIREMENTS = ['netdisco==0.8.2']
 
 DOMAIN = 'discovery'
 
