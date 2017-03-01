@@ -39,6 +39,7 @@ class TestPanelCustom(unittest.TestCase):
 
         path = self.hass.config.path(panel_custom.PANEL_DIR)
         os.mkdir(path)
+        self.hass.data.pop(bootstrap.DATA_SETUP)
 
         with open(os.path.join(path, 'todomvc.html'), 'a'):
             assert bootstrap.setup_component(self.hass, 'panel_custom', config)
@@ -65,6 +66,8 @@ class TestPanelCustom(unittest.TestCase):
                 self.hass, 'panel_custom', config
             )
             assert not mock_register.called
+
+        self.hass.data.pop(bootstrap.DATA_SETUP)
 
         with patch('os.path.isfile', Mock(return_value=True)):
             with patch('os.access', Mock(return_value=True)):

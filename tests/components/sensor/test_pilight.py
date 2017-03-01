@@ -5,7 +5,8 @@ from homeassistant.bootstrap import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components import pilight
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import (
+    get_test_home_assistant, assert_setup_component, mock_component)
 
 HASS = None
 
@@ -23,7 +24,7 @@ def setup_function():
     global HASS
 
     HASS = get_test_home_assistant()
-    HASS.config.components = set(['pilight'])
+    mock_component(HASS, 'pilight')
 
 
 # pylint: disable=invalid-name

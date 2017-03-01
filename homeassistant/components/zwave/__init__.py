@@ -276,7 +276,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     device = hass.data[DATA_ZWAVE_DICT].pop(
         discovery_info[const.DISCOVERY_DEVICE])
     if device:
-        yield from async_add_devices([device])
+        async_add_devices([device])
         return True
     else:
         return False

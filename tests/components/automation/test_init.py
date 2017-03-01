@@ -11,7 +11,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
 from tests.common import get_test_home_assistant, assert_setup_component, \
-    fire_time_changed
+    fire_time_changed, mock_component
 
 
 # pylint: disable=invalid-name
@@ -21,7 +21,7 @@ class TestAutomation(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.add('group')
+        mock_component(self.hass, 'group')
         self.calls = []
 
         @callback

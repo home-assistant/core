@@ -1,10 +1,11 @@
 """The tests for the generic_thermostat."""
+import asyncio
 import datetime
 import unittest
 from unittest import mock
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
@@ -104,23 +105,6 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(7, state.attributes.get('min_temp'))
         self.assertEqual(35, state.attributes.get('max_temp'))
         self.assertEqual(None, state.attributes.get('temperature'))
-
-    def test_custom_setup_params(self):
-        """Test the setup with custom parameters."""
-        self.hass.config.components.remove(climate.DOMAIN)
-        assert setup_component(self.hass, climate.DOMAIN, {'climate': {
-            'platform': 'generic_thermostat',
-            'name': 'test',
-            'heater': ENT_SWITCH,
-            'target_sensor': ENT_SENSOR,
-            'min_temp': MIN_TEMP,
-            'max_temp': MAX_TEMP,
-            'target_temp': TARGET_TEMP,
-        }})
-        state = self.hass.states.get(ENTITY)
-        self.assertEqual(MIN_TEMP, state.attributes.get('min_temp'))
-        self.assertEqual(MAX_TEMP, state.attributes.get('max_temp'))
-        self.assertEqual(TARGET_TEMP, state.attributes.get('temperature'))
 
     def test_set_target_temp(self):
         """Test the setting of the target temperature."""
@@ -538,3 +522,23 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
 
         self.hass.services.register('switch', SERVICE_TURN_ON, log_call)
         self.hass.services.register('switch', SERVICE_TURN_OFF, log_call)
+
+
+@asyncio.coroutine
+def test_custom_setup_params(hass):
+    """Test the setup with custom parameters."""
+    result = yield from async_setup_component(
+        hass, climate.DOMAIN, {'climate': {
+            'platform': 'generic_thermostat',
+            'name': 'test',
+            'heater': ENT_SWITCH,
+            'target_sensor': ENT_SENSOR,
+            'min_temp': MIN_TEMP,
+            'max_temp': MAX_TEMP,
+            'target_temp': TARGET_TEMP,
+        }})
+    assert result
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get('min_temp') == MIN_TEMP
+    assert state.attributes.get('max_temp') == MAX_TEMP
+    assert state.attributes.get('temperature') == TARGET_TEMP

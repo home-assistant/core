@@ -1,6 +1,5 @@
 """Test discovery helpers."""
 import asyncio
-from collections import OrderedDict
 from unittest.mock import patch
 
 import pytest
@@ -9,7 +8,6 @@ from homeassistant import loader, bootstrap
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
-from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, MockModule, MockPlatform, mock_coro)
@@ -145,10 +143,6 @@ class TestHelpersDiscovery:
             }],
         })
 
-        # We wait for the setup_lock to finish
-        run_coroutine_threadsafe(
-            self.hass.data['setup_lock'].acquire(), self.hass.loop).result()
-
         self.hass.block_till_done()
 
         # test_component will only be setup once
@@ -171,6 +165,7 @@ class TestHelpersDiscovery:
 
         def component1_setup(hass, config):
             """Setup mock component."""
+            print('component1 setup')
             discovery.discover(hass, 'test_component2',
                                component='test_component2')
             return True
@@ -188,15 +183,15 @@ class TestHelpersDiscovery:
             'test_component2',
             MockModule('test_component2', setup=component2_setup))
 
-        config = OrderedDict()
-        config['test_component1'] = {}
-        config['test_component2'] = {}
+        @callback
+        def setup():
+            """Setup 2 components."""
+            self.hass.async_add_job(bootstrap.async_setup_component(
+                self.hass, 'test_component1', {}))
+            self.hass.async_add_job(bootstrap.async_setup_component(
+                self.hass, 'test_component2', {}))
 
-        self.hass.loop.run_until_complete = \
-            lambda _: self.hass.block_till_done()
-
-        bootstrap.from_config_dict(config, self.hass)
-
+        self.hass.add_job(setup)
         self.hass.block_till_done()
 
         # test_component will only be setup once
