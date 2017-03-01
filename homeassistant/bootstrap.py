@@ -428,7 +428,8 @@ def async_from_config_file(config_path: str,
     try:
         config_dict = yield from hass.loop.run_in_executor(
             None, conf_util.load_yaml_config_file, config_path)
-    except HomeAssistantError:
+    except HomeAssistantError as err:
+        _LOGGER.error('Error loading %s: %s', config_path, err)
         return None
     finally:
         clear_secret_cache()
