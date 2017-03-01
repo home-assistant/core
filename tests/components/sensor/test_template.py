@@ -205,7 +205,8 @@ def test_restore_state(hass):
     state = hass.states.get('sensor.test_template_sensor')
     assert state.state == 'It Test.'
 
-    hass.start()
+    yield from hass.async_start()
+    yield from hass.async_block_till_done()
 
     state = hass.states.get('sensor.test_template_sensor')
     assert state.state == 'It .'
