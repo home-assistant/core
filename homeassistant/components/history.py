@@ -186,7 +186,7 @@ def setup(hass, config):
         filters.included_domains = include[CONF_DOMAINS]
 
     hass.http.register_view(HistoryPeriodView(filters))
-    register_built_in_panel(hass, 'history', 'History', 'mdi:poll-box')
+    register_built_in_panel(hass, 'history', 'panel.history', 'mdi:poll-box')
 
     return True
 

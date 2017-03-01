@@ -11,7 +11,8 @@ rm -rf homeassistant/components/frontend/www_static/core.js* \
        homeassistant/components/frontend/www_static/compatibility.js* \
        homeassistant/components/frontend/www_static/frontend.html* \
        homeassistant/components/frontend/www_static/webcomponents-lite.min.js* \
-       homeassistant/components/frontend/www_static/panels
+       homeassistant/components/frontend/www_static/panels \
+       homeassistant/components/frontend/www_static/translations
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
 npm run clean
 
@@ -24,7 +25,7 @@ cp build/service_worker.js ..
 cd ..
 
 # Pack frontend
-gzip -f -k -9 *.html *.js ./panels/*.html
+gzip -f -k -9 *.html *.js ./panels/*.html ./translations/*.json
 cd ../../../..
 
 # Generate the MD5 hash of the new frontend

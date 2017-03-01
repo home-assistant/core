@@ -149,13 +149,17 @@ def setup(hass, config):
 
     if hass.http.development:
         sw_path = "home-assistant-polymer/build/service_worker.js"
+        trans_path = "home-assistant-polymer/build/translations"
     else:
         sw_path = "service_worker.js"
+        trans_path = "translations"
 
     hass.http.register_static_path("/service_worker.js",
                                    os.path.join(STATIC_PATH, sw_path), 0)
     hass.http.register_static_path("/robots.txt",
                                    os.path.join(STATIC_PATH, "robots.txt"))
+    hass.http.register_static_path("/static/translations",
+                                   os.path.join(STATIC_PATH, trans_path))
     hass.http.register_static_path("/static", STATIC_PATH)
 
     local = hass.config.path('www')
@@ -174,7 +178,7 @@ def setup(hass, config):
     else:
         hass.data[DATA_PANELS] = {}
 
-    register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
+    register_built_in_panel(hass, 'map', 'panel.map', 'mdi:account-location')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
                   'dev-template'):

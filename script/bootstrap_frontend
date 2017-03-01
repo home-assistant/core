@@ -17,4 +17,9 @@ yarn install
 # Install bower web components. Allow to download the components as root since the user in docker is root.
 ./node_modules/.bin/bower install --allow-root
 
+# Development mode reads translation files from build directory since inherited
+# language tags must be compiled to one file. Build the translations so that
+# development mode frontend can run.
+npm run frontend_trans
+
 cd ../../../../..
