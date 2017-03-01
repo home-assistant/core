@@ -85,6 +85,7 @@ class TestCheckConfig(unittest.TestCase):
             change_yaml_files(res)
 
             self.assertDictEqual({}, res['components'])
+            res['except'].pop(check_config.ERROR_STR)
             self.assertDictEqual(
                 {'http': {'password': 'err123'}},
                 res['except']
@@ -111,6 +112,7 @@ class TestCheckConfig(unittest.TestCase):
                  'light': []},
                 res['components']
             )
+            res['except'].pop(check_config.ERROR_STR)
             self.assertDictEqual(
                 {'light.mqtt_json': {'platform': 'mqtt_json'}},
                 res['except']
@@ -138,10 +140,12 @@ class TestCheckConfig(unittest.TestCase):
 
             res = check_config.check(get_test_config_dir('badplatform.yaml'))
             change_yaml_files(res)
-            self.assertDictEqual({'light': []}, res['components'])
-            self.assertDictEqual({check_config.ERROR_STR:
-                                  ['Platform not found: light.beer']},
-                                 res['except'])
+            assert res['components'] == {'light': []}
+            assert res['except'] == {
+                check_config.ERROR_STR: [
+                    'Platform not found: light.beer',
+                    'Unable to find platform light.beer'
+                ]}
             self.assertDictEqual({}, res['secret_cache'])
             self.assertDictEqual({}, res['secrets'])
             self.assertListEqual(['.../badplatform.yaml'], res['yaml_files'])
