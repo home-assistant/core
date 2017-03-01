@@ -112,7 +112,6 @@ class TestCheckConfig(unittest.TestCase):
                  'light': []},
                 res['components']
             )
-            res['except'].pop(check_config.ERROR_STR)
             self.assertDictEqual(
                 {'light.mqtt_json': {'platform': 'mqtt_json'}},
                 res['except']
@@ -131,9 +130,11 @@ class TestCheckConfig(unittest.TestCase):
             res = check_config.check(get_test_config_dir('badcomponent.yaml'))
             change_yaml_files(res)
             self.assertDictEqual({}, res['components'])
-            self.assertDictEqual({check_config.ERROR_STR:
-                                  ['Component not found: beer']},
-                                 res['except'])
+            self.assertDictEqual({
+                    check_config.ERROR_STR: [
+                        'Component not found: beer',
+                        'Setup failed for beer: Component not found.']
+                }, res['except'])
             self.assertDictEqual({}, res['secret_cache'])
             self.assertDictEqual({}, res['secrets'])
             self.assertListEqual(['.../badcomponent.yaml'], res['yaml_files'])
@@ -144,7 +145,6 @@ class TestCheckConfig(unittest.TestCase):
             assert res['except'] == {
                 check_config.ERROR_STR: [
                     'Platform not found: light.beer',
-                    'Unable to find platform light.beer'
                 ]}
             self.assertDictEqual({}, res['secret_cache'])
             self.assertDictEqual({}, res['secrets'])
