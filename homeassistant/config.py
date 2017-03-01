@@ -239,7 +239,11 @@ def load_yaml_config_file(config_path):
 
     This method needs to run in an executor.
     """
-    conf_dict = load_yaml(config_path)
+    try:
+        conf_dict = load_yaml(config_path)
+    except FileNotFoundError as err:
+        raise HomeAssistantError("Config file not found: {}".format(
+            getattr(err, 'filename', err)))
 
     if not isinstance(conf_dict, dict):
         msg = 'The configuration file {} does not contain a dictionary'.format(
