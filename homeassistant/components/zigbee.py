@@ -6,9 +6,7 @@ https://home-assistant.io/components/zigbee/
 """
 import asyncio
 import logging
-import pickle
 from binascii import hexlify, unhexlify
-from base64 import b64encode, b64decode
 
 import voluptuous as vol
 
