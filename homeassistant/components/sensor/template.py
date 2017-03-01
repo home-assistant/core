@@ -105,7 +105,7 @@ class SensorTemplate(Entity):
 
         @callback
         def template_sensor_startup(event):
-            """Update Template on startup."""
+            """Update template on startup."""
             async_track_state_change(
                 self.hass, self._entities, template_sensor_state_listener)
 
