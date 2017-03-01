@@ -78,7 +78,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup MQTT fan platform."""
-    yield from async_add_devices([MqttFan(
+    async_add_devices([MqttFan(
         config.get(CONF_NAME),
         {
             key: config.get(key) for key in (

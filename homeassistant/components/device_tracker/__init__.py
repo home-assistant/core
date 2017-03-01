@@ -14,12 +14,11 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.bootstrap import (
-    async_prepare_setup_platform, async_log_exception)
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
-from homeassistant.config import load_yaml_config_file
+from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
