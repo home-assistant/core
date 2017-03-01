@@ -101,12 +101,12 @@ class SensorTemplate(Entity):
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            self.hass.async_add_job(self.async_update_ha_state, True)
+            self.hass.async_add_job(self.async_update_ha_state(True))
 
         async_track_state_change(
             self.hass, self._entities, template_sensor_state_listener)
 
-        self.hass.bus.listen_once(
+        self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, self.async_update())
 
     @property
