@@ -338,7 +338,8 @@ def parse_hue_api_put_light_body(request_json, entity):
             if entity_features & SUPPORT_XY_COLOR or \
                     entity_features & SUPPORT_RGB_COLOR:
                 report_brightness = True
-                color = request_json[HUE_API_STATE_XY]
+                xy = request_json[HUE_API_STATE_XY]
+                color = (xy[0], xy[1])
 
     return (result, brightness, color) if report_brightness else (result, None,
                                                                   color)
@@ -372,7 +373,7 @@ def get_entity_state(config, entity):
                 rgb_color = entity.attributes.get(ATTR_RGB_COLOR, [0, 0, 0])
                 xy_color = color_util.color_RGB_to_xy(
                     *(int(val) for val in rgb_color))
-                state[HUE_API_STATE_XY] = xy_color
+                state[HUE_API_STATE_XY] = (xy_color[0], xy_color[1])
 
             if entity_features & SUPPORT_XY_COLOR or \
                     entity_features & SUPPORT_RGB_COLOR:
