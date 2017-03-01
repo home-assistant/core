@@ -97,7 +97,7 @@ class TestStateHelpers(unittest.TestCase):
         """Test reproduce_state with no entity."""
         calls = mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on'))
+        state.reproduce_state(self.hass, [[ha.State('light.test', 'on')]])
 
         self.hass.block_till_done()
 
@@ -110,7 +110,7 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.states.set('light.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on'))
+        state.reproduce_state(self.hass, [[ha.State('light.test', 'on')]])
 
         self.hass.block_till_done()
 
@@ -126,7 +126,7 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.states.set('light.test', 'on')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'off'))
+        state.reproduce_state(self.hass, [[ha.State('light.test', 'off')]])
 
         self.hass.block_till_done()
 
@@ -144,9 +144,9 @@ class TestStateHelpers(unittest.TestCase):
 
         complex_data = ['hello', {'11': '22'}]
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'on', {
+        state.reproduce_state(self.hass, [[ha.State('light.test', 'on', {
             'complex': complex_data
-        }))
+        })]])
 
         self.hass.block_till_done()
 
@@ -165,8 +165,9 @@ class TestStateHelpers(unittest.TestCase):
         media_attributes = {'media_content_type': 'movie',
                             'media_content_id': 'batman'}
 
-        state.reproduce_state(self.hass, ha.State('media_player.test', 'None',
-                                                  media_attributes))
+        state.reproduce_state(
+            self.hass,
+            [[ha.State('media_player.test', 'None', media_attributes)]])
 
         self.hass.block_till_done()
 
@@ -184,7 +185,7 @@ class TestStateHelpers(unittest.TestCase):
         self.hass.states.set('media_player.test', 'off')
 
         state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'playing'))
+            self.hass, [[ha.State('media_player.test', 'playing')]])
 
         self.hass.block_till_done()
 
@@ -202,7 +203,7 @@ class TestStateHelpers(unittest.TestCase):
         self.hass.states.set('media_player.test', 'playing')
 
         state.reproduce_state(
-            self.hass, ha.State('media_player.test', 'paused'))
+            self.hass, [[ha.State('media_player.test', 'paused')]])
 
         self.hass.block_till_done()
 
@@ -219,7 +220,7 @@ class TestStateHelpers(unittest.TestCase):
 
         self.hass.states.set('light.test', 'off')
 
-        state.reproduce_state(self.hass, ha.State('light.test', 'bad'))
+        state.reproduce_state(self.hass, [[ha.State('light.test', 'bad')]])
 
         self.hass.block_till_done()
 
@@ -233,7 +234,7 @@ class TestStateHelpers(unittest.TestCase):
         self.hass.states.set('group.test', 'off', {
             'entity_id': ['light.test1', 'light.test2']})
 
-        state.reproduce_state(self.hass, ha.State('group.test', 'on'))
+        state.reproduce_state(self.hass, [[ha.State('group.test', 'on')]])
 
         self.hass.block_till_done()
 
@@ -252,8 +253,8 @@ class TestStateHelpers(unittest.TestCase):
         self.hass.states.set('light.test2', 'off')
 
         state.reproduce_state(self.hass, [
-            ha.State('light.test1', 'on', {'brightness': 95}),
-            ha.State('light.test2', 'on', {'brightness': 95})])
+            [ha.State('light.test1', 'on', {'brightness': 95})],
+            [ha.State('light.test2', 'on', {'brightness': 95})]])
 
         self.hass.block_till_done()
 

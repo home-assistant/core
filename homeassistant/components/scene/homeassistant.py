@@ -5,29 +5,42 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
 import asyncio
-from collections import namedtuple
+from collections import defaultdict, namedtuple
 
-from homeassistant.components.scene import Scene
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.scene import Scene, STATES
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, ATTR_STATE, CONF_ENTITIES, CONF_NAME, CONF_PLATFORM,
+    STATE_OFF, STATE_ON)
 from homeassistant.core import State
-from homeassistant.helpers.state import async_reproduce_state
+from homeassistant.helpers.state import async_reproduce_state, HASS_DOMAIN
 
 DEPENDENCIES = ['group']
-STATE = 'scening'
 
-CONF_ENTITIES = "entities"
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): HASS_DOMAIN,
+    vol.Required(STATES): vol.All(
+        cv.ensure_list,
+        [{
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_ENTITIES): {
+                cv.entity_id: vol.All(
+                    cv.ensure_list,
+                    [vol.Any(str, bool, dict)])
+            },
+        }]
+    ),
+}, extra=vol.ALLOW_EXTRA)
 
-SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
+SCENECONFIG = namedtuple('SceneConfig', [CONF_NAME, STATES])
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup home assistant scene entries."""
-    scene_config = config.get("states")
-
-    if not isinstance(scene_config, list):
-        scene_config = [scene_config]
+    scene_config = config.get(STATES)
 
     yield from async_add_devices(HomeAssistantScene(
         hass, _process_config(scene)) for scene in scene_config)
@@ -39,30 +52,32 @@ def _process_config(scene_config):
 
     Async friendly.
     """
-    name = scene_config.get('name')
+    name = scene_config.get(CONF_NAME)
 
-    states = {}
+    states = defaultdict(list)
     c_entities = dict(scene_config.get(CONF_ENTITIES, {}))
 
-    for entity_id in c_entities:
-        if isinstance(c_entities[entity_id], dict):
-            entity_attrs = c_entities[entity_id].copy()
-            state = entity_attrs.pop('state', None)
-            attributes = entity_attrs
-        else:
-            state = c_entities[entity_id]
-            attributes = {}
+    for entity_id, state_list in c_entities.items():
+        for state_task in state_list:
+            if isinstance(state_task, dict):
+                entity_attrs = state_task.copy()
+                state = entity_attrs.pop(ATTR_STATE, None)
+                attributes = entity_attrs
+            else:
+                state = state_task
+                attributes = {}
 
-        # YAML translates 'on' to a boolean
-        # http://yaml.org/type/bool.html
-        if isinstance(state, bool):
-            state = STATE_ON if state else STATE_OFF
-        else:
-            state = str(state)
+            # YAML translates 'on' to a boolean
+            # http://yaml.org/type/bool.html
+            if isinstance(state, bool):
+                state = STATE_ON if state else STATE_OFF
+            else:
+                state = str(state)
 
-        states[entity_id.lower()] = State(entity_id, state, attributes)
+            states[entity_id.lower()].append(
+                State(entity_id, state, attributes))
 
-    return SceneConfig(name, states)
+    return SCENECONFIG(name, states)
 
 
 class HomeAssistantScene(Scene):
