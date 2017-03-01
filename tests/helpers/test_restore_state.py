@@ -13,13 +13,14 @@ from homeassistant.helpers.restore_state import (
 from homeassistant.components.recorder.models import RecorderRuns, States
 
 from tests.common import (
-    get_test_home_assistant, mock_coro, init_recorder_component)
+    get_test_home_assistant, mock_coro, init_recorder_component,
+    mock_component)
 
 
 @asyncio.coroutine
 def test_caching_data(hass):
     """Test that we cache data."""
-    hass.config.components.add('recorder')
+    mock_component(hass, 'recorder')
     hass.state = CoreState.starting
 
     states = [

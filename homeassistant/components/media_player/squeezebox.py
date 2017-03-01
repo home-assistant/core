@@ -85,7 +85,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     players = yield from lms.create_players()
-    yield from async_add_devices(players)
+    async_add_devices(players)
 
     return True
 

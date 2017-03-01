@@ -26,8 +26,8 @@ MOCKS = {
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
-    'except': ("homeassistant.bootstrap.async_log_exception",
-               bootstrap.async_log_exception),
+    'except': ("homeassistant.config.async_log_exception",
+               config_util.async_log_exception),
     'package_error': ("homeassistant.config._log_pkg_error",
                       config_util._log_pkg_error),
 }
@@ -211,7 +211,7 @@ def check(config_path):
 
     def mock_except(ex, domain, config,  # pylint: disable=unused-variable
                     hass=None):
-        """Mock bootstrap.log_exception."""
+        """Mock config.log_exception."""
         MOCKS['except'][1](ex, domain, config, hass)
         res['except'][domain] = config.get(domain, config)
 
