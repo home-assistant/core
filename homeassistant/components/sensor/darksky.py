@@ -118,8 +118,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
-    vol.Inclusive(CONF_LATITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates', 'Latitude and longitude must exist together'): cv.longitude,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_FORECAST):
