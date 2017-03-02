@@ -292,3 +292,8 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         if self._lock_status:
             data[ATTR_LOCK_STATUS] = self._lock_status
         return data
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return None
