@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_AUX_HEAT)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
@@ -253,13 +253,15 @@ class Thermostat(ClimateDevice):
         """Return device specific state attributes."""
         # Move these to Thermostat Device and make them global
         status = self.thermostat['equipmentStatus']
-        operation = None
+        operation = 'off'
+        aux_heat = False
         if status == '':
             operation = STATE_IDLE
         elif 'Cool' in status:
             operation = STATE_COOL
         elif 'auxHeat' in status:
             operation = STATE_HEAT
+            aux_heat = 'on'
         elif 'heatPump' in status:
             operation = STATE_HEAT
         else:
@@ -269,6 +271,7 @@ class Thermostat(ClimateDevice):
             "fan": self.fan,
             "mode": self.mode,
             "operation": operation,
+            ATTR_AUX_HEAT: aux_heat,
             "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
         }
