@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.apple_tv/
 import asyncio
 import logging
 import hashlib
-from concurrent.futures import _base
 
 import voluptuous as vol
 
@@ -71,8 +70,9 @@ def async_setup_platform(hass, config, async_add_entities,
     details = pyatv.AppleTVDevice(name, host, login_id)
     session = async_get_clientsession(hass)
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
-    entity = AppleTvDevice(hass, atv, name, start_off)
+    entity = AppleTvDevice(atv, name, start_off)
 
+    @callback
     def on_hass_stop(event):
         """Stop push updates when hass stops."""
         atv.push_updater.stop()
@@ -85,15 +85,18 @@ def async_setup_platform(hass, config, async_add_entities,
 class AppleTvDevice(MediaPlayerDevice):
     """Representation of an Apple TV device."""
 
-    def __init__(self, hass, atv, name, is_off):
+    def __init__(self, atv, name, is_off):
         """Initialize the Apple TV device."""
-        self._hass = hass
         self._atv = atv
         self._name = name
         self._is_off = is_off
         self._playing = None
         self._artwork_hash = None
         self._atv.push_updater.listener = self
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity is about to be added to HASS."""
         self._atv.push_updater.start()
 
     @callback
@@ -105,7 +108,7 @@ class AppleTvDevice(MediaPlayerDevice):
             self._atv.push_updater.stop()
         else:
             self._atv.push_updater.start()
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
@@ -139,6 +142,7 @@ class AppleTvDevice(MediaPlayerDevice):
             else:
                 return STATE_STANDBY  # Bad or unknown state?
 
+    @callback
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
         if self.state == STATE_IDLE:
@@ -150,7 +154,7 @@ class AppleTvDevice(MediaPlayerDevice):
                 base.encode('utf-8')).hexdigest()
 
         self._playing = playing
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update_ha_state())
 
     def _has_playing_media_changed(self, new_playing):
         if self._playing is None:
@@ -159,21 +163,20 @@ class AppleTvDevice(MediaPlayerDevice):
         return new_playing.media_type != old_playing.media_type or \
             new_playing.title != old_playing.title
 
+    @callback
     def playstatus_error(self, updater, exception):
         """Inform about an error and restart push updates."""
-        if isinstance(exception, _base.TimeoutError):
-            _LOGGER.warning(
-                'Timed out while connecting to device, trying again')
-        else:
-            _LOGGER.warning('A %s error occurred: %s',
-                            exception.__class__, exception)
+        _LOGGER.warning('A %s error occurred: %s',
+                        exception.__class__, exception)
 
         # This will wait 10 seconds before restarting push updates. If the
         # connection continues to fail, it will flood the log (every 10
         # seconds) until it succeeds. A better approach should probably be
         # implemented here later.
         updater.start(initial_delay=10)
-        self._hass.async_add_job(self.async_update_ha_state())
+        self._playing = None
+        self._artwork_hash = None
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def media_content_type(self):
