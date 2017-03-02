@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.onkyoserial/
 """
 import logging
 import voluptuous as vol
-from yaml import load
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
@@ -31,30 +30,37 @@ CONF_PORT = 'port'
 
 DEFAULT_NAME = 'Onkyo Serial Receiver'
 DEFAULT_PORT = '/dev/ttyUSB0'
-DEFAULT_ZONES = load("""
-master:
-    commands:
-        power:  'PWR'
-        volume: 'MVL'
-        source: 'SLI'
-        mute:   'AMT'
-    queries:
-        power:  'PWRQSTN'
-        volume: 'MVLQSTN'
-        source: 'SLIQSTN'
-        mute:   'AMTQSTN'
-zone2:
-    commands:
-        power:  'ZPW'
-        volume: 'ZVL'
-        source: 'SLZ'
-        mute:   'ZMT'
-    queries:
-        power:  'ZPWQSTN'
-        volume: 'ZVLQSTN'
-        source: 'SLZQSTN'
-        mute:   'ZMTQSTN'
-""")
+
+DEFAULT_ZONES = {
+    'master': {
+        'commands': {
+            'power': 'PWR',
+            'volume': 'MVL',
+            'source': 'SLI',
+            'mute': 'AMT'
+            },
+        'queries': {
+            'power': 'PWRQSTN',
+            'volume': 'MVLQSTN',
+            'source': 'SLIQSTN',
+            'mute': 'AMTQSTN'
+            }
+        },
+    'zone2': {
+        'commands': {
+            'power': 'ZPW',
+            'volume': 'ZVL',
+            'source': 'SLZ',
+            'mute': 'ZMT'
+            },
+        'queries': {
+            'power': 'ZPWQSTN',
+            'volume': 'ZVLQSTN',
+            'source': 'SLZQSTN',
+            'mute': 'ZMTQSTN'
+        }
+    }
+}
 
 ZONE_SETUP_SCHEMA = vol.Schema({
     vol.Required('commands'):
@@ -96,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
         devices.append(device)
 
-    add_devices(devices)
+    add_devices(devices, True)
 
 
 class OnkyoSerialDevice(MediaPlayerDevice):
@@ -119,7 +125,6 @@ class OnkyoSerialDevice(MediaPlayerDevice):
         #pylint: disable=E
         self._device = OnkyoSerial(config, zone, port=port)
         self._device.on_state_change += self.state_changed
-        self.update()
 
     def state_changed(self, prop, value):
         """State has changed in the remote device, signalling an update."""
