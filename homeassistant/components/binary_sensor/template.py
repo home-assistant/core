@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
     CONF_SENSOR_CLASS, CONF_SENSORS, CONF_DEVICE_CLASS,
-    EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_START, STATE_ON)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
@@ -92,7 +92,7 @@ class BinarySensorTemplate(BinarySensorDevice):
         """Register callbacks."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if state:
-            self._state = state.state
+            self._state = state.state == STATE_ON
 
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
