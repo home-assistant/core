@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.4']
+REQUIREMENTS = ['limitlessled==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
