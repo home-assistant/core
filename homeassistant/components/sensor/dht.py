@@ -19,7 +19,7 @@ from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
 REQUIREMENTS = ['http://github.com/adafruit/Adafruit_Python_DHT/archive/'
-                '310c59b0293354d07d94375f1365f7b9b9110c7d.zip'
+                'da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip'
                 '#Adafruit_DHT==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
