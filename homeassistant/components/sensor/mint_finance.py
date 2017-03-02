@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+    ATTR_ATTRIBUTION, CONF_ID, CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -26,7 +26,6 @@ CONF_ATTRIBUTION = "Intuit Mint"
 CONF_ACCOUNTS = 'accounts'
 CONF_THX_GUID = 'thx_guid'
 CONF_SESSION = 'ius_session'
-CONF_ID = "id"
 CONF_CURRENCY = "currency"
 
 DEFAULT_NAME = 'Mint'
