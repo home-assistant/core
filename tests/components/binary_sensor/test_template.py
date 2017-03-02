@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 
 from homeassistant.core import CoreState, State
-from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
+from homeassistant.const import MATCH_ALL
 import homeassistant.bootstrap as bootstrap
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
