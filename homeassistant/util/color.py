@@ -220,7 +220,7 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(vX: float, vY: float,
                                ibrightness: int) -> Tuple[int, int, int]:
-    
+
     """Convert from XYZ to RGB."""
     brightness = ibrightness / 255.
     if brightness == 0:
