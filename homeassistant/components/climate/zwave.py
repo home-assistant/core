@@ -246,3 +246,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self._fan_state:
             data[ATTR_FAN_STATE] = self._fan_state
         return data
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return None
