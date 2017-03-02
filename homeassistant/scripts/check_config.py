@@ -26,10 +26,12 @@ MOCKS = {
     'load*': ("homeassistant.config.load_yaml", yaml.load_yaml),
     'get': ("homeassistant.loader.get_component", loader.get_component),
     'secrets': ("homeassistant.util.yaml._secret_yaml", yaml._secret_yaml),
-    'except': ("homeassistant.bootstrap.async_log_exception",
-               bootstrap.async_log_exception),
+    'except': ("homeassistant.config.async_log_exception",
+               config_util.async_log_exception),
     'package_error': ("homeassistant.config._log_pkg_error",
                       config_util._log_pkg_error),
+    'logger_exception': ("homeassistant.bootstrap._LOGGER.error",
+                         bootstrap._LOGGER.error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',
@@ -180,9 +182,9 @@ def check(config_path):
 
         if module is None:
             # Ensure list
-            res['except'][ERROR_STR] = res['except'].get(ERROR_STR, [])
-            res['except'][ERROR_STR].append('{} not found: {}'.format(
-                'Platform' if '.' in comp_name else 'Component', comp_name))
+            msg = '{} not found: {}'.format(
+                'Platform' if '.' in comp_name else 'Component', comp_name)
+            res['except'].setdefault(ERROR_STR, []).append(msg)
             return None
 
         # Test if platform/component and overwrite setup
@@ -211,7 +213,7 @@ def check(config_path):
 
     def mock_except(ex, domain, config,  # pylint: disable=unused-variable
                     hass=None):
-        """Mock bootstrap.log_exception."""
+        """Mock config.log_exception."""
         MOCKS['except'][1](ex, domain, config, hass)
         res['except'][domain] = config.get(domain, config)
 
@@ -223,6 +225,11 @@ def check(config_path):
         pkg_key = 'homeassistant.packages.{}'.format(package)
         res['except'][pkg_key] = config.get('homeassistant', {}) \
             .get('packages', {}).get(package)
+
+    def mock_logger_exception(msg, *params):
+        """Log logger.exceptions."""
+        res['except'].setdefault(ERROR_STR, []).append(msg % params)
+        MOCKS['logger_exception'][1](msg, *params)
 
     # Patches to skip functions
     for sil in SILENCE:

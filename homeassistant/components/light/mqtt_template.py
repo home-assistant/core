@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MQTT Template light."""
-    yield from async_add_devices([MqttTemplate(
+    async_add_devices([MqttTemplate(
         hass,
         config.get(CONF_NAME),
         config.get(CONF_EFFECT_LIST),
@@ -269,7 +269,7 @@ class MqttTemplate(Light):
 
         # transition
         if ATTR_TRANSITION in kwargs:
-            values['transition'] = kwargs[ATTR_TRANSITION]
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
@@ -293,7 +293,7 @@ class MqttTemplate(Light):
 
         # transition
         if ATTR_TRANSITION in kwargs:
-            values['transition'] = kwargs[ATTR_TRANSITION]
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],

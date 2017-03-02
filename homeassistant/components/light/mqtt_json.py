@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MQTT JSON Light."""
-    yield from async_add_devices([MqttJson(
+    async_add_devices([MqttJson(
         config.get(CONF_NAME),
         {
             key: config.get(key) for key in (
@@ -215,7 +215,7 @@ class MqttJson(Light):
                 message['flash'] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
         if ATTR_TRANSITION in kwargs:
-            message['transition'] = kwargs[ATTR_TRANSITION]
+            message['transition'] = int(kwargs[ATTR_TRANSITION])
 
         if ATTR_BRIGHTNESS in kwargs:
             message['brightness'] = int(kwargs[ATTR_BRIGHTNESS])
@@ -245,7 +245,7 @@ class MqttJson(Light):
         message = {'state': 'OFF'}
 
         if ATTR_TRANSITION in kwargs:
-            message['transition'] = kwargs[ATTR_TRANSITION]
+            message['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),

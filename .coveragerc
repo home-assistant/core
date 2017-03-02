@@ -132,6 +132,9 @@ omit =
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
 
+    homeassistant/components/maxcube.py
+    homeassistant/components/*/maxcube.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -231,6 +234,7 @@ omit =
     homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
+    homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
     homeassistant/components/media_player/hdmi_cec.py
@@ -309,6 +313,7 @@ omit =
     homeassistant/components/sensor/darksky.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/ebox.py
@@ -336,8 +341,8 @@ omit =
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
-    homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/neurio_energy.py

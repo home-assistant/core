@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.23']
+REQUIREMENTS = ['pyvera==0.2.24']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,35 +57,39 @@ def setup(hass, base_config):
     global VERA_CONTROLLER
     import pyvera as veraApi
 
-    config = base_config.get(DOMAIN)
-    base_url = config.get(CONF_CONTROLLER)
-    VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
-
     def stop_subscription(event):
         """Shutdown Vera subscriptions and subscription thread on exit."""
         _LOGGER.info("Shutting down subscriptions.")
         VERA_CONTROLLER.stop()
 
+    config = base_config.get(DOMAIN)
+
+    # Get Vera specific configuration.
+    base_url = config.get(CONF_CONTROLLER)
+    light_ids = config.get(CONF_LIGHTS)
+    exclude_ids = config.get(CONF_EXCLUDE)
+
+    # Initialize the Vera controller.
+    VERA_CONTROLLER, _ = veraApi.init_controller(base_url)
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_subscription)
 
     try:
         all_devices = VERA_CONTROLLER.get_devices()
     except RequestException:
-        # There was a network related error connecting to the vera controller.
+        # There was a network related error connecting to the Vera controller.
         _LOGGER.exception("Error communicating with Vera API")
         return False
 
-    exclude = config.get(CONF_EXCLUDE)
+    # Exclude devices unwanted by user.
+    devices = [device for device in all_devices
+               if device.device_id not in exclude_ids]
 
-    lights_ids = config.get(CONF_LIGHTS)
+    for device in devices:
+        device_type = map_vera_device(device, light_ids)
+        if device_type is None:
+            continue
 
-    for device in all_devices:
-        if device.device_id in exclude:
-            continue
-        dev_type = map_vera_device(device, lights_ids)
-        if dev_type is None:
-            continue
-        VERA_DEVICES[dev_type].append(device)
+        VERA_DEVICES[device_type].append(device)
 
     for component in VERA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, base_config)
@@ -120,13 +124,15 @@ def map_vera_device(vera_device, remap):
 
 
 class VeraDevice(Entity):
-    """Representation of a Vera devicetity."""
+    """Representation of a Vera device entity."""
 
     def __init__(self, vera_device, controller):
         """Initialize the device."""
         self.vera_device = vera_device
         self.controller = controller
-        self._name = self.vera_device.name
+
+        # Append device id to prevent name clashes in HA.
+        self._name = self.vera_device.name + ' ' + str(vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()

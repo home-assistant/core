@@ -16,13 +16,12 @@ from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_HOST, CONF_PORT,
-                                 CONF_SENSORS, STATE_UNKNOWN,
-                                 DEVICE_DEFAULT_NAME)
+                                 CONF_SENSORS, DEVICE_DEFAULT_NAME)
 from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dovado==0.4.0']
+REQUIREMENTS = ['dovado==0.4.1']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -88,7 +87,7 @@ class Dovado:
                           number, message)
             self._dovado.send_sms(number, message)
 
-        if self.state["sms"] == "enabled":
+        if self.state.get("sms") == "enabled":
             service_name = slugify("{} {}".format(self.name,
                                                   "send_sms"))
             hass.services.register(DOMAIN, service_name, send_sms)
@@ -125,10 +124,29 @@ class DovadoSensor(Entity):
         """Initialize the sensor."""
         self._dovado = dovado
         self._sensor = sensor
+        self._state = self._compute_state()
+
+    def _compute_state(self):
+        state = self._dovado.state.get(SENSORS[self._sensor][0])
+        if self._sensor == SENSOR_NETWORK:
+            match = re.search(r"\((.+)\)", state)
+            return match.group(1) if match else None
+        elif self._sensor == SENSOR_SIGNAL:
+            try:
+                return int(state.split()[0])
+            except ValueError:
+                return 0
+        elif self._sensor == SENSOR_SMS_UNREAD:
+            return int(state)
+        elif self._sensor in [SENSOR_UPLOAD, SENSOR_DOWNLOAD]:
+            return round(float(state) / 1e6, 1)
+        else:
+            return state
 
     def update(self):
         """Update sensor values."""
         self._dovado.update()
+        self._state = self._compute_state()
 
     @property
     def name(self):
@@ -139,24 +157,7 @@ class DovadoSensor(Entity):
     @property
     def state(self):
         """Return the sensor state."""
-        key = SENSORS[self._sensor][0]
-        result = self._dovado.state.get(key)
-        if not result:
-            return STATE_UNKNOWN
-        elif self._sensor == SENSOR_NETWORK:
-            match = re.search(r"\((.+)\)", result)
-            return match.group(1) if match else STATE_UNKNOWN
-        elif self._sensor == SENSOR_SIGNAL:
-            try:
-                return int(result.split()[0])
-            except ValueError:
-                return 0
-        elif self._sensor == SENSOR_SMS_UNREAD:
-            return int(result)
-        elif self._sensor in [SENSOR_UPLOAD, SENSOR_DOWNLOAD]:
-            return round(float(result) / 1e6, 1)
-        else:
-            return result
+        return self._state
 
     @property
     def icon(self):
