@@ -122,7 +122,7 @@ class OnkyoSerialDevice(MediaPlayerDevice):
         if sources:
             self._sources = dict(self._sources.items() + sources.items())
         self._source_list = list(self._sources.values())
-        #pylint: disable=E
+        # pylint: disable=E
         self._device = OnkyoSerial(config, zone, port=port)
         self._device.on_state_change += self.state_changed
 
