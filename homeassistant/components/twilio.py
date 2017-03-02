@@ -50,5 +50,5 @@ class TwilioReceiveDataView(HomeAssistantView):
         from twilio.twiml import Response
         hass = request.app['hass']
         data = yield from request.post()
-        hass.bus.fire(RECEIVED_DATA, dict(data))
+        hass.bus.async_fire(RECEIVED_DATA, dict(data))
         return Response().toxml()
