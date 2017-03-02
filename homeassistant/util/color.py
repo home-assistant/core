@@ -216,11 +216,11 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     return round(x, 3), round(y, 3), brightness
 
 
-# taken from
-# https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
-# Copyright (c) 2014 Benjamin Knight / MIT License.
+# Converted to Python from Obj-C, original source from:
+# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(vX: float, vY: float,
                                ibrightness: int) -> Tuple[int, int, int]:
+    
     """Convert from XYZ to RGB."""
     brightness = ibrightness / 255.
     if brightness == 0:
