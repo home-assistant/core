@@ -4,6 +4,8 @@ Sensor for Steam account status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.steam_online/
 """
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -12,6 +14,8 @@ from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['steamodd==4.21']
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_ACCOUNTS = 'accounts'
 
@@ -46,7 +50,7 @@ class SteamSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._profile.persona
+        return self._name
 
     @property
     def entity_id(self):
@@ -61,19 +65,28 @@ class SteamSensor(Entity):
     # pylint: disable=no-member
     def update(self):
         """Update device state."""
-        self._profile = self._steamod.user.profile(self._account)
-        if self._profile.current_game[2] is None:
-            self._game = 'None'
-        else:
-            self._game = self._profile.current_game[2]
-        self._state = {
-            1: 'Online',
-            2: 'Busy',
-            3: 'Away',
-            4: 'Snooze',
-            5: 'Trade',
-            6: 'Play',
-        }.get(self._profile.status, 'Offline')
+        try:
+            self._profile = self._steamod.user.profile(self._account)
+            if self._profile.current_game[2] is None:
+                self._game = 'None'
+            else:
+                self._game = self._profile.current_game[2]
+            self._state = {
+                1: 'Online',
+                2: 'Busy',
+                3: 'Away',
+                4: 'Snooze',
+                5: 'Trade',
+                6: 'Play',
+            }.get(self._profile.status, 'Offline')
+            self._name = self._profile.persona
+            self._avatar = self._profile.avatar_medium
+        except self._steamod.api.HTTPTimeoutError as error:
+            _LOGGER.warning(error)
+            self._game = 'Unknown'
+            self._state = 'Unknown'
+            self._name = 'Unknown'
+            self._avatar = None
 
     @property
     def device_state_attributes(self):
@@ -83,7 +96,7 @@ class SteamSensor(Entity):
     @property
     def entity_picture(self):
         """Avatar of the account."""
-        return self._profile.avatar_medium
+        return self._avatar
 
     @property
     def icon(self):
