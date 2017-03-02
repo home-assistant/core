@@ -16,6 +16,9 @@ rm -rf homeassistant/components/frontend/www_static/core.js* \
 cd homeassistant/components/frontend/www_static/home-assistant-polymer
 npm run clean
 
+# Run gulp tasks
+node_modules/gulp-cli/bin/gulp.js
+
 # Build frontend
 npm run frontend_prod
 cp bower_components/webcomponentsjs/webcomponents-lite.min.js ..
