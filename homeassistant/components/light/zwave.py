@@ -107,7 +107,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # Brightness
         self._brightness, self._state = brightness_state(self._value)
 
-    def value_changed(self, value):
+    def value_changed(self):
         """Called when a value for this entity's node has changed."""
         if self._refresh_value:
             if self._refreshing:
@@ -124,7 +124,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                 self._timer = Timer(self._delay, _refresh_value)
                 self._timer.start()
                 return
-        super().value_changed(value)
+        super().value_changed()
 
     @property
     def brightness(self):
@@ -187,6 +187,12 @@ class ZwaveColorLight(ZwaveDimmer):
         dispatcher.connect(
             self._value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED)
         self._get_color_values()
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return [val.value_id for val in [
+            self._value_color, self._value_color_channels] if val]
 
     def _get_color_values(self):
         """Search for color values available on this node."""

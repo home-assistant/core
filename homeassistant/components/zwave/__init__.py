@@ -708,6 +708,10 @@ class ZWaveDeviceEntity(Entity):
         self._value = value
         self._value.set_change_verified(False)
         self.entity_id = "{}.{}".format(domain, self._object_id())
+
+        self._wakeup_value_id = None
+        self._battery_value_id = None
+        self._power_value_id = None
         self._update_attributes()
 
         dispatcher.connect(
@@ -715,13 +719,19 @@ class ZWaveDeviceEntity(Entity):
 
     def network_value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id or \
-           self._value.node == value.node:
-            _LOGGER.debug('Value changed for label %s', self._value.label)
-            self.value_changed(value)
+        if self._value.value_id == value.value_id:
+            return self.value_changed()
 
-    def value_changed(self, value):
+        dependent_ids = self._get_dependent_value_ids()
+        if dependent_ids is None and self._value.node == value.node:
+            return self.value_changed()
+        if dependent_ids is not None and value.value_id in dependent_ids:
+            return self.value_changed()
+
+    def value_changed(self):
         """Called when a value for this entity's node has changed."""
+        if not self._value.node.is_ready:
+            self._update_ids()
         self._update_attributes()
         self.update_properties()
         # If value changed after device was created but before setup_platform
@@ -729,25 +739,64 @@ class ZWaveDeviceEntity(Entity):
         if self.hass:
             self.schedule_update_ha_state()
 
+    def _update_ids(self):
+        """Update value_ids from which to pull attributes."""
+        if self._wakeup_value_id is None:
+            self._wakeup_value_id = self.get_value(
+                class_id=const.COMMAND_CLASS_WAKE_UP, member='value_id')
+        if self._battery_value_id is None:
+            self._battery_value_id = self.get_value(
+                class_id=const.COMMAND_CLASS_BATTERY, member='value_id')
+        if self._power_value_id is None:
+            self._power_value_id = self.get_value(
+                class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+                          const.COMMAND_CLASS_METER],
+                label=['Power'], member='value_id',
+                instance=self._value.instance)
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on.
+
+        None if depends on the whole node.
+        """
+        return []
+
+    def _get_dependent_value_ids(self):
+        """Return a list of value_ids this device depend on.
+
+        Return None if it depends on the whole node.
+        """
+        if self.dependent_value_ids is None:
+            # Device depends on node.
+            return None
+        if not self._value.node.is_ready:
+            # Node is not ready, so depend on the whole node.
+            return None
+
+        return [val for val in (self.dependent_value_ids + [
+            self._wakeup_value_id, self._battery_value_id,
+            self._power_value_id]) if val]
+
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
         self.node_id = self._value.node.node_id
         self.location = self._value.node.location
-        self.battery_level = self._value.node.get_battery_level()
+        self.battery_level = self._value.node.get_battery_level(
+            self._battery_value_id)
         self.wakeup_interval = None
-        if self._value.node.can_wake_up():
-            self.wakeup_interval = self.get_value(
-                class_id=const.COMMAND_CLASS_WAKE_UP,
-                member='data')
-        power_value = self.get_value(
-            class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
-                      const.COMMAND_CLASS_METER],
-            label=['Power'])
+        if self._wakeup_value_id:
+            self.wakeup_interval = self._value.node.values[
+                self._wakeup_value_id].data
+        power_value = None
+        if self._power_value_id:
+            power_value = self._value.node.values[self._power_value_id]
         self.power_consumption = round(
             power_value.data, power_value.precision) if power_value else None
 
     def _value_handler(self, method=None, class_id=None, index=None,
-                       label=None, data=None, member=None, **kwargs):
+                       label=None, data=None, member=None, instance=None,
+                       **kwargs):
         """Get the values for a given command_class with arguments.
 
         May only be used inside callback.
@@ -763,8 +812,9 @@ class ZWaveDeviceEntity(Entity):
                 values.extend(self._value.node.get_values(
                     class_id=cid, **kwargs).values())
         _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
-                      ' member=%s, kwargs=%s',
-                      method, class_id, index, label, data, member, kwargs)
+                      ' member=%s, instance=%d, kwargs=%s',
+                      method, class_id, index, label, data, member, instance,
+                      kwargs)
         _LOGGER.debug('values=%s', values)
         results = None
         for value in values:
@@ -782,6 +832,8 @@ class ZWaveDeviceEntity(Entity):
                 value.data = data
                 return
             if data is not None and value.data != data:
+                continue
+            if instance is not None and value.instance != instance:
                 continue
             if member is not None:
                 results = getattr(value, member)
