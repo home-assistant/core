@@ -1,8 +1,8 @@
 """
-Support for ComEd RRTP pricing data.
+Support for ComEd Hourly Pricing data.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.comed_rrtp/
+https://home-assistant.io/components/sensor.comed_hourly_pricing/
 """
 from datetime import timedelta
 import logging
@@ -19,11 +19,11 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://hourlypricing.comed.com/api'
 
-CONF_ATTRIBUTION = "Data provided by ComEd RRTP service"
+CONF_ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
-CONF_MONITORED_VARIABLES = 'monitored_variables'
+CONF_MONITORED_FEEDS = 'monitored_feeds'
 CONF_SENSOR_TYPE = 'type'
 CONF_OFFSET = 'offset'
 CONF_NAME = 'name'
@@ -45,23 +45,23 @@ SENSORS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA]
+    vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA]
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ComEd RRTP sensor."""
+    """Setup the ComEd Hourly Pricing sensor."""
     dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(ComedRRTPSensor(
+    for variable in config[CONF_MONITORED_FEEDS]:
+        dev.append(ComedHourlyPricingSensor(
             variable[CONF_SENSOR_TYPE], variable[CONF_OFFSET],
             variable[CONF_NAME]))
 
     add_devices(dev)
 
 
-class ComedRRTPSensor(Entity):
-    """Implementation of a ComEd RRTP sensor."""
+class ComedHourlyPricingSensor(Entity):
+    """Implementation of a ComEd Hourly Pricing sensor."""
 
     def __init__(self, sensor_type, offset, name):
         """Initialize the sensor."""
@@ -98,7 +98,7 @@ class ComedRRTPSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the ComEd RRTP data from the web service."""
+        """Get the ComEd Hourly Pricing data from the web service."""
         try:
             if self.type == 'five_minute':
                 url_string = _RESOURCE + '?type=5minutefeed'
