@@ -27,16 +27,16 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 0, 0),
                          color_util.color_xy_brightness_to_RGB(1, 1, 0))
 
-        self.assertEqual((255, 235, 214),
+        self.assertEqual((255, 243, 222),
                          color_util.color_xy_brightness_to_RGB(.35, .35, 255))
 
-        self.assertEqual((255, 0, 45),
+        self.assertEqual((255, 0, 60),
                          color_util.color_xy_brightness_to_RGB(1, 0, 255))
 
         self.assertEqual((0, 255, 0),
                          color_util.color_xy_brightness_to_RGB(0, 1, 255))
 
-        self.assertEqual((0, 83, 255),
+        self.assertEqual((0, 63, 255),
                          color_util.color_xy_brightness_to_RGB(0, 0, 255))
 
     def test_rgb_hex_to_rgb_list(self):
