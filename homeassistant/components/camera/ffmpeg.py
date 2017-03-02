@@ -34,7 +34,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a FFmpeg Camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_INPUT)):
         return
-    yield from async_add_devices([FFmpegCamera(hass, config)])
+    async_add_devices([FFmpegCamera(hass, config)])
 
 
 class FFmpegCamera(Camera):

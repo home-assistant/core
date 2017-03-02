@@ -14,17 +14,17 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.bootstrap import (
-    async_prepare_setup_platform, async_log_exception)
+from homeassistant.bootstrap import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
-from homeassistant.config import load_yaml_config_file
+from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -131,6 +131,12 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
+
+    # added_to_hass
+    add_tasks = [device.async_added_to_hass() for device in devices
+                 if device.track]
+    if add_tasks:
+        yield from asyncio.wait(add_tasks, loop=hass.loop)
 
     # update tracked devices
     update_tasks = [device.async_update_ha_state() for device in devices
@@ -560,6 +566,26 @@ class Device(Entity):
         finally:
             if resp is not None:
                 yield from resp.release()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._state = state.state
+
+        for attr, var in (
+                (ATTR_SOURCE_TYPE, 'source_type'),
+                (ATTR_GPS_ACCURACY, 'gps_accuracy'),
+                (ATTR_BATTERY, 'battery'),
+        ):
+            if attr in state.attributes:
+                setattr(self, var, state.attributes[attr])
+
+        if ATTR_LONGITUDE in state.attributes:
+            self.gps = (state.attributes[ATTR_LATITUDE],
+                        state.attributes[ATTR_LONGITUDE])
 
 
 class DeviceScanner(object):

@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MJPEG IP Camera."""
-    yield from async_add_devices([MjpegCamera(hass, config)])
+    async_add_devices([MjpegCamera(hass, config)])
 
 
 def extract_image_from_mjpeg(stream):

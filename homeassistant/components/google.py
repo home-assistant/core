@@ -247,7 +247,8 @@ class GoogleCalendarService(object):
         from googleapiclient import discovery as google_discovery
         credentials = Storage(self.token_file).get()
         http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build('calendar', 'v3', http=http)
+        service = google_discovery.build('calendar', 'v3', http=http,
+                                         cache_discovery=False)
         return service
 
 

@@ -36,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     minimum = config.get(CONF_MINIMUM)
     maximum = config.get(CONF_MAXIMUM)
 
-    yield from async_add_devices([RandomSensor(name, minimum, maximum)], True)
+    async_add_devices([RandomSensor(name, minimum, maximum)], True)
     return True
 
 

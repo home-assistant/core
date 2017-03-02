@@ -288,7 +288,7 @@ class Entity(object):
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
-        """Remove entitiy from HASS."""
+        """Remove entity from HASS."""
         run_coroutine_threadsafe(
             self.async_remove(), self.hass.loop
         ).result()

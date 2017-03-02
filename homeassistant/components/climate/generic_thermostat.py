@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     min_cycle_duration = config.get(CONF_MIN_DUR)
     tolerance = config.get(CONF_TOLERANCE)
 
-    yield from async_add_devices([GenericThermostat(
+    async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
         target_temp, ac_mode, min_cycle_duration, tolerance)])
 

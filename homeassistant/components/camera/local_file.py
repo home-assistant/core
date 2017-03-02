@@ -20,7 +20,7 @@ CONF_FILE_PATH = 'file_path'
 DEFAULT_NAME = 'Local File'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.isfile,
+    vol.Required(CONF_FILE_PATH): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
@@ -31,8 +31,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # check filepath given is readable
     if not os.access(file_path, os.R_OK):
-        _LOGGER.error("file path is not readable")
-        return False
+        _LOGGER.warning("Could not read camera %s image from file: %s",
+                        config[CONF_NAME], file_path)
 
     add_devices([LocalFile(config[CONF_NAME], file_path)])
 
@@ -49,8 +49,12 @@ class LocalFile(Camera):
 
     def camera_image(self):
         """Return image response."""
-        with open(self._file_path, 'rb') as file:
-            return file.read()
+        try:
+            with open(self._file_path, 'rb') as file:
+                return file.read()
+        except FileNotFoundError:
+            _LOGGER.warning("Could not read camera %s image from file: %s",
+                            self._name, self._file_path)
 
     @property
     def name(self):

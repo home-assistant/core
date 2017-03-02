@@ -10,7 +10,8 @@ from homeassistant.components import sun
 import homeassistant.components.automation as automation
 import homeassistant.util.dt as dt_util
 
-from tests.common import fire_time_changed, get_test_home_assistant
+from tests.common import (
+    fire_time_changed, get_test_home_assistant, mock_component)
 
 
 # pylint: disable=invalid-name
@@ -20,8 +21,8 @@ class TestAutomationSun(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.add('group')
-        self.hass.config.components.add('sun')
+        mock_component(self.hass, 'group')
+        mock_component(self.hass, 'sun')
 
         self.calls = []
 

@@ -64,7 +64,7 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual(color_util.color_RGB_to_hsv(255, 243, 222),
                          color_util.color_xy_brightness_to_hsv(.35, .35, 255))
 
-        self.assertEqual(color_util.color_RGB_to_hsv(255, 0, 60),
+        self.assertEqual(color_util.color_RGB_to_hsv(255, 0, 45),
                          color_util.color_xy_brightness_to_hsv(1, 0, 255))
 
         self.assertEqual(color_util.color_RGB_to_hsv(0, 255, 0),

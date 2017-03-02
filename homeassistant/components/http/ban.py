@@ -5,7 +5,7 @@ from datetime import datetime
 from ipaddress import ip_address
 import logging
 
-from aiohttp.web_exceptions import HTTPForbidden
+from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
 
 from homeassistant.components import persistent_notification
@@ -19,6 +19,7 @@ from .const import (
 from .util import get_real_ip
 
 NOTIFICATION_ID_BAN = 'ip-ban'
+NOTIFICATION_ID_LOGIN = 'http-login'
 
 IP_BANS_FILE = 'ip_bans.yaml'
 ATTR_BANNED_AT = "banned_at"
@@ -52,7 +53,11 @@ def ban_middleware(app, handler):
         if is_banned:
             raise HTTPForbidden()
 
-        return handler(request)
+        try:
+            return (yield from handler(request))
+        except HTTPUnauthorized:
+            yield from process_wrong_login(request)
+            raise
 
     return ban_middleware_handler
 
@@ -60,14 +65,21 @@ def ban_middleware(app, handler):
 @asyncio.coroutine
 def process_wrong_login(request):
     """Process a wrong login attempt."""
+    remote_addr = get_real_ip(request)
+
+    msg = ('Login attempt or request with invalid authentication '
+           'from {}'.format(remote_addr))
+    _LOGGER.warning(msg)
+    persistent_notification.async_create(
+        request.app['hass'], msg, 'Login attempt failed',
+        NOTIFICATION_ID_LOGIN)
+
     if (not request.app[KEY_BANS_ENABLED] or
             request.app[KEY_LOGIN_THRESHOLD] < 1):
         return
 
     if KEY_FAILED_LOGIN_ATTEMPTS not in request.app:
         request.app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict(int)
-
-    remote_addr = get_real_ip(request)
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
 

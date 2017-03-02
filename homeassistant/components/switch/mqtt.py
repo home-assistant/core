@@ -4,6 +4,7 @@ Support for MQTT switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.mqtt/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -35,14 +36,14 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the MQTT switch."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-    add_devices([MqttSwitch(
-        hass,
+
+    async_add_devices([MqttSwitch(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -58,11 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using MQTT."""
 
-    def __init__(self, hass, name, state_topic, command_topic, qos, retain,
+    def __init__(self, name, state_topic, command_topic, qos, retain,
                  payload_on, payload_off, optimistic, value_template):
         """Initialize the MQTT switch."""
         self._state = False
-        self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
@@ -71,26 +71,33 @@ class MqttSwitch(SwitchDevice):
         self._payload_on = payload_on
         self._payload_off = payload_off
         self._optimistic = optimistic
+        self._template = value_template
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method is a coroutine.
+        """
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
-            if value_template is not None:
-                payload = value_template.async_render_with_possible_json_value(
+            if self._template is not None:
+                payload = self._template.async_render_with_possible_json_value(
                     payload)
             if payload == self._payload_on:
                 self._state = True
-                hass.async_add_job(self.async_update_ha_state())
             elif payload == self._payload_off:
                 self._state = False
-                hass.async_add_job(self.async_update_ha_state())
+
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._state_topic is None:
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            mqtt.subscribe(
-                hass, self._state_topic, message_received, self._qos)
+            yield from mqtt.async_subscribe(
+                self.hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -112,20 +119,30 @@ class MqttSwitch(SwitchDevice):
         """Return true if we do optimistic updates."""
         return self._optimistic
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_on,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the device on.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_on, self._qos,
+            self._retain)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = True
-            self.update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
-        mqtt.publish(self.hass, self._command_topic, self._payload_off,
-                     self._qos, self._retain)
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the device off.
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_off, self._qos,
+            self._retain)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._state = False
-            self.update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
