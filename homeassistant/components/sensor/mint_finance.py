@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['mintapi==1.22']
+REQUIREMENTS = ['mintapi==1.23']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Mint sensor."""
     from mintapi import Mint
+    from mintapi.api import MintException
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -68,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Update accounts
             mint_client.initiate_account_refresh()
             break
-        except Exception as exp:  # pylint: disable=W0703
+        except MintException as exp:
             if retries > INIT_RETRIES:
                 _LOGGER.exception(exp)
                 return
@@ -154,6 +155,7 @@ class MintData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
+        from mintapi.api import MintException
         retries = 1
         while retries <= INIT_RETRIES:
             try:
@@ -168,7 +170,7 @@ class MintData(object):
                 # Get accounts
                 raw_accounts = self._client.get_accounts()
                 break
-            except Exception as exp:  # pylint: disable=W0703
+            except MintException as exp:
                 _LOGGER.info("Mint get account failed. Retrying "
                              "(Try %s/%s)", retries, INIT_RETRIES)
                 if retries >= INIT_RETRIES:

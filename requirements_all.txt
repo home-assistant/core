@@ -356,7 +356,7 @@ mficlient==0.3.0
 miflora==0.1.16
 
 # homeassistant.components.sensor.mint_finance
-mintapi==1.22
+mintapi==1.23
 
 # homeassistant.components.tts
 mutagen==1.36.2
