@@ -44,8 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Apple TV platform."""
     import pyatv
 
@@ -79,7 +78,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
-    yield from async_add_entities([entity])
+    async_add_devices([entity])
 
 
 class AppleTvDevice(MediaPlayerDevice):
