@@ -39,6 +39,7 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'It .'
@@ -68,6 +69,7 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert 'icon' not in state.attributes
@@ -93,6 +95,7 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
         assert self.hass.states.all() == []
 
     def test_template_attribute_missing(self):
@@ -111,6 +114,7 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_template_sensor')
         assert state.state == 'unknown'
@@ -131,6 +135,8 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_invalid_sensor_does_not_create(self):
@@ -146,6 +152,7 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+
         assert self.hass.states.all() == []
 
     def test_no_sensors_does_not_create(self):
@@ -158,6 +165,8 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_missing_template_does_not_create(self):
@@ -176,6 +185,8 @@ class TestTemplateSensor:
             })
 
         self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
 
