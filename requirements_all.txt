@@ -436,7 +436,7 @@ pushetta==1.0.15
 pwaqi==2.0
 
 # homeassistant.components.sensor.cpuspeed
-py-cpuinfo==0.2.3
+py-cpuinfo==0.2.6
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
