@@ -31,7 +31,7 @@ PyMata==2.13
 SoCo==0.12
 
 # homeassistant.components.notify.twitter
-TwitterAPI==2.4.4
+TwitterAPI==2.4.5
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
