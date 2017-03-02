@@ -411,4 +411,4 @@ def test_restore_state(hass):
     yield from hass.async_block_till_done()
 
     state = hass.states.get('switch.test_template_switch')
-    assert state.state == 'off'
+    assert state.state == 'unavailable'
