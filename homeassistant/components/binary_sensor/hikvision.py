@@ -15,7 +15,8 @@ from homeassistant.components.binary_sensor import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_SSL, EVENT_HOMEASSISTANT_STOP, ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
+    CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
+    ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
 REQUIREMENTS = ['pyhik==0.0.9']
 _LOGGER = logging.getLogger(__name__)
@@ -125,14 +126,16 @@ class HikvisionData(object):
         if self._name is None:
             self._name = self.camdata.get_name
 
-        # Start event stream
-        self.camdata.start_stream()
-
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, self.stop_hik)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, self.start_hik)
 
     def stop_hik(self, event):
         """Shutdown Hikvision subscriptions and subscription thread on exit."""
         self.camdata.disconnect()
+
+    def start_hik(self, event):
+        """Start Hikvision event stream thread."""
+        self.camdata.start_stream()
 
     @property
     def sensors(self):
