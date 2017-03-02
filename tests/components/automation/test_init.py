@@ -601,12 +601,13 @@ def test_automation_restore_state(hass):
     assert state
     assert state.state == STATE_ON
 
-    calls = mock_service(hass, 'test', 'automation')
-
     state = hass.states.get('automation.bye')
     assert state
     assert state.state == STATE_OFF
     assert state.attributes.get('last_triggered') == time
+
+    calls = mock_service(hass, 'test', 'automation')
+
     hass.bus.fire('test_event_bye')
     yield from hass.async_block_till_done()
     assert len(calls) == 0
