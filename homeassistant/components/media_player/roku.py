@@ -123,7 +123,10 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device_info.userdevicename
+        if self.device_info.userdevicename:
+            return self.device_info.userdevicename
+        else:
+            return "roku_" + self.roku.device_info.sernum
 
     @property
     def state(self):
