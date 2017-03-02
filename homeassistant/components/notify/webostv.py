@@ -13,8 +13,8 @@ from homeassistant.components.notify import (
     BaseNotificationService, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_FILENAME, CONF_HOST)
 
-REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv/archive/v0.1.3.zip'
-                '#pylgtv==0.1.3']
+REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv/archive/v0.1.4.zip'
+                '#pylgtv==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
