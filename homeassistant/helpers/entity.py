@@ -280,11 +280,6 @@ class Entity(object):
 
         That is only needed on executor to not block.
         """
-        # We're already in a thread, do the force refresh here.
-        if force_refresh and not hasattr(self, 'async_update'):
-            self.update()
-            force_refresh = False
-
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:

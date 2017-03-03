@@ -246,4 +246,4 @@ class EmailContentSensor(Entity):
                     ATTR_DATE:
                         email_message['Date']
                 }
-                self.update_ha_state()
+                self.schedule_update_ha_state()
