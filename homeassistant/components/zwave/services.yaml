@@ -65,6 +65,20 @@ print_node:
     node_id:
       description: Node id of the device to print.
 
+refresh_entity:
+  description: Refresh zwave entity.
+  fields:
+    entity_id:
+      description: Name of the entity to refresh.
+      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+
+refresh_node:
+  description: Refresh zwave node.
+  fields:
+    entity_id:
+      description: ID of the node to refresh.
+      example: 10
+
 set_wakeup:
   description: Sets wake-up interval of a node.
   fields:
