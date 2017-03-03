@@ -21,7 +21,7 @@ _RESOURCE = 'https://hourlypricing.comed.com/api'
 
 CONF_ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 CONF_MONITORED_FEEDS = 'monitored_feeds'
 CONF_SENSOR_TYPE = 'type'
@@ -41,7 +41,7 @@ TYPES_SCHEMA = vol.In(SENSOR_TYPES)
 SENSORS_SCHEMA = vol.Schema({
     vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
     vol.Optional(CONF_OFFSET, default=0.0): vol.Coerce(float),
-    vol.Optional(CONF_NAME, default=""): cv.string
+    vol.Optional(CONF_NAME): cv.string
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_FEEDS]:
         dev.append(ComedHourlyPricingSensor(
             variable[CONF_SENSOR_TYPE], variable[CONF_OFFSET],
-            variable[CONF_NAME]))
+            variable.get(CONF_NAME)))
 
     add_devices(dev)
 
@@ -92,23 +92,21 @@ class ComedHourlyPricingSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {}
-        attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         return attrs
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the ComEd Hourly Pricing data from the web service."""
         try:
-            if self.type == 'five_minute':
+            if self.type == CONF_FIVE_MINUTE:
                 url_string = _RESOURCE + '?type=5minutefeed'
                 response = get(url_string, timeout=10)
                 self._state = float(response.json()[0]['price']) + self.offset
-            elif self.type == 'current_hour_average':
+            elif self.type == CONF_CURRENT_HOUR_AVERAGE:
                 url_string = _RESOURCE + '?type=currenthouraverage'
                 response = get(url_string, timeout=10)
                 self._state = float(response.json()[0]['price']) + self.offset
             else:
-                self._state = 'Unknown'
+                self._state = STATE_UNKNOWN
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning('Could not update status for %s', self.name)
