@@ -23,6 +23,8 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
 from . import workaround
@@ -188,6 +190,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
         cv.positive_int
 })
+
+SIGNAL_REFRESH_ENTITY_FORMAT = 'refresh_entity_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -619,12 +623,12 @@ def setup(hass, config):
                          "target node:%s, instance=%s", node_id, group,
                          target_node_id, instance)
 
-    def refresh_entity(service):
+    @asyncio.coroutine
+    def async_refresh_entity(service):
         """Refresh values that specific entity depends on."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
-        entity = hass.data[DATA_ZWAVE_DICT].get(entity_id)
-        if entity:
-            entity.refresh_from_network()
+        async_dispatcher_send(
+            hass, SIGNAL_REFRESH_ENTITY_FORMAT.format(entity_id))
 
     def refresh_node(service):
         """Refresh all node info."""
@@ -727,7 +731,7 @@ def setup(hass, config):
                                    const.SERVICE_PRINT_NODE],
                                schema=NODE_SERVICE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_REFRESH_ENTITY,
-                               refresh_entity,
+                               async_refresh_entity,
                                descriptions[
                                    const.SERVICE_REFRESH_ENTITY],
                                schema=REFRESH_ENTITY_SCHEMA)
@@ -818,7 +822,10 @@ class ZWaveDeviceEntity(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add device to dict."""
-        self.hass.data[DATA_ZWAVE_DICT][self.entity_id] = self
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_REFRESH_ENTITY_FORMAT.format(self.entity_id),
+            self.refresh_from_network)
 
     def _get_dependent_value_ids(self):
         """Return a list of value_ids this device depend on.
