@@ -226,7 +226,7 @@ class FluxLight(Light):
         effect = kwargs.get(ATTR_EFFECT)
         effect_speed = kwargs.get(ATTR_EFFECT_SPEED)
 
-        if effect_speed is None
+        if effect_speed is None:
             effect_speed = 50
 
         if rgb is not None and brightness is not None:
