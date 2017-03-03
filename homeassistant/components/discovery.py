@@ -7,6 +7,7 @@ Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
 import asyncio
+import json
 from datetime import timedelta
 import logging
 
@@ -86,10 +87,11 @@ def async_setup(hass, config):
         if not comp_plat:
             return
 
-        if (service, info) in already_discovered:
+        discovery_hash = json.dumps([service, info], sort_keys=True)
+        if discovery_hash in already_discovered:
             return
 
-        already_discovered.add((service, info))
+        already_discovered.add(discovery_hash)
 
         logger.info("Found new service: %s %s", service, info)
 
