@@ -224,6 +224,11 @@ class FluxLight(Light):
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         effect = kwargs.get(ATTR_EFFECT)
+        effect_speed = kwargs.get(ATTR_EFFECT_SPEED)
+
+        if effect_speed is None
+            effect_speed = 50
+
         if rgb is not None and brightness is not None:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
         elif rgb is not None:
