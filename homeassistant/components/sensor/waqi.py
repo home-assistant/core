@@ -16,7 +16,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pwaqi==2.0']
+REQUIREMENTS = ['pwaqi==3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -162,7 +162,7 @@ class WaqiData(object):
         """Get the data from World Air Quality Index and updates the states."""
         import pwaqi
         try:
-            self.data = pwaqi.getStationObservation(
+            self.data = pwaqi.get_station_observation(
                 self._station_id, self._token)
         except AttributeError:
             _LOGGER.exception("Unable to fetch data from WAQI")
