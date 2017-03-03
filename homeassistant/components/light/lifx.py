@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['liffylights==0.9.4']
+REQUIREMENTS = ['liffylights2==0.1.0']
 
 BYTE_MAX = 255
 
@@ -63,13 +63,13 @@ class LIFX(object):
     def __init__(self, add_devices_callback, server_addr=None,
                  broadcast_addr=None):
         """Initialize the light."""
-        import liffylights
+        import liffylights2
 
         self._devices = []
 
         self._add_devices_callback = add_devices_callback
 
-        self._liffylights = liffylights.LiffyLights(
+        self._liffylights = liffylights2.LiffyLights(
             self.on_device, self.on_power, self.on_color, server_addr,
             broadcast_addr)
 
