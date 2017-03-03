@@ -1,3 +1,4 @@
+"""Zwave util methods."""
 import logging
 
 _LOGGER = logging.getLogger(__name__)
