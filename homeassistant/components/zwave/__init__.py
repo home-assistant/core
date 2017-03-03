@@ -162,6 +162,10 @@ NODE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
 })
 
+REFRESH_ENTITY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -615,6 +619,19 @@ def setup(hass, config):
                          "target node:%s, instance=%s", node_id, group,
                          target_node_id, instance)
 
+    def refresh_entity(service):
+        """Refresh values that specific entity depends on."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        entity = hass.data[DATA_ZWAVE_DICT].get(entity_id)
+        if entity:
+            entity.refresh_from_network()
+
+    def refresh_node(service):
+        """Refresh all node info."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        node.refresh_info()
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting ZWave network.")
@@ -709,6 +726,16 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_PRINT_NODE],
                                schema=NODE_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_ENTITY,
+                               refresh_entity,
+                               descriptions[
+                                   const.SERVICE_REFRESH_ENTITY],
+                               schema=REFRESH_ENTITY_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_NODE,
+                               refresh_node,
+                               descriptions[
+                                   const.SERVICE_REFRESH_NODE],
+                               schema=NODE_SERVICE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -787,6 +814,11 @@ class ZWaveDeviceEntity(Entity):
         None if depends on the whole node.
         """
         return []
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Add device to dict."""
+        self.hass.data[DATA_ZWAVE_DICT][self.entity_id] = self
 
     def _get_dependent_value_ids(self):
         """Return a list of value_ids this device depend on.
@@ -867,3 +899,13 @@ class ZWaveDeviceEntity(Entity):
             attrs[ATTR_POWER] = self.power_consumption
 
         return attrs
+
+    def refresh_from_network(self):
+        """Refresh all dependent values from zwave network."""
+        dependent_ids = self._get_dependent_value_ids()
+        if dependent_ids is None:
+            # Entity depends on the whole node
+            self._value.node.refresh_info()
+            return
+        for value_id in dependent_ids + [self._value.value_id]:
+            self._value.node.refresh_value(value_id)
