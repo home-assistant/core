@@ -411,6 +411,16 @@ class KodiDevice(MediaPlayerDevice):
             album_id = yield from self.async_find_album(media_album_name, artist_name)
             
         yield from self._server.Playlist.Add({"playlistid": 0, "item": {"albumid": int(album_id)}})
+        
+    @asyncio.coroutine
+    def async_add_all_albums_to_playlist(self, artist_name):
+        artist_id = yield from self.async_find_artist(artist_name)
+        
+        albums = yield from self.async_get_albums(artist_id)
+            
+        for a in albums['albums']:
+            yield from self._server.Playlist.Add(
+                {"playlistid": 0, "item": {"albumid": int(a['albumid'])}})
     
     @asyncio.coroutine
     def async_clear_playlist(self):
@@ -493,6 +503,8 @@ class KodiDevice(MediaPlayerDevice):
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    albums = asyncio.get_event_loop().run_until_complete(kodi.async_shuffle())
-     
+    asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
+    asyncio.get_event_loop().run_until_complete(kodi.async_add_all_albums_to_playlist('pink floyd'))
+    asyncio.get_event_loop().run_until_complete(kodi.async_set_shuffle())
+    asyncio.get_event_loop().run_until_complete(kodi.async_play_media("PLAYLIST", 0))
     

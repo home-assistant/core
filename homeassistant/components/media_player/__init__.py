@@ -63,6 +63,7 @@ SERVICE_ADD_SONG = 'add_song_to_playlist'
 SERVICE_ADD_ALBUM = 'add_album_to_playlist'
 SERVICE_SET_SHUFFLE = 'set_shuffle'
 SERVICE_UNSET_SHUFFLE = 'unset_shuffle'
+SERVICE_ADD_ALL_ALBUMS = 'add_all_albums_to_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -161,6 +162,10 @@ MEDIA_PLAYER_ADD_ALBUM_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 
+MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'async_turn_on'},
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
@@ -201,6 +206,9 @@ SERVICE_TO_METHOD = {
         'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
     SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle'},
     SERVICE_UNSET_SHUFFLE: {'method': 'async_unset_shuffle'},
+    SERVICE_ADD_ALL_ALBUMS: {
+        'method': 'async_add_all_albums_to_playlist',
+        'schema': MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
