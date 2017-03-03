@@ -207,7 +207,7 @@ class FluxLight(Light):
         return SUPPORT_FLUX_LED
 
     @property
-    def effect_speed(self)
+    def effect_speed(self):
         """Return Speed of Effects"""
         return self._bulb.getSpeed()
 
