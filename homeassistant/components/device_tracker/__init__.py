@@ -348,8 +348,7 @@ class DeviceTracker(object):
 
     @asyncio.coroutine
     def async_setup_tracked_device(self):
-        """Setup at the end of device_tracker component all not exists and
-        tracked devices. It restore also his data.
+        """Setup all not exists tracked devices.
 
         This method is a coroutine.
         """
