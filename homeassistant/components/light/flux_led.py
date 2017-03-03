@@ -15,7 +15,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
     EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
     SUPPORT_RGB_COLOR, Light,
-    PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, ATTR_EFFECT_SPEED, SUPPORT_EFFECT_SPEED)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['flux_led==0.13']
@@ -207,6 +207,11 @@ class FluxLight(Light):
         return SUPPORT_FLUX_LED
 
     @property
+    def effect_speed(self)
+        """Return Speed of Effects"""
+        return self._bulb.getSpeed()
+
+    @property
     def effect_list(self):
         """Return the list of supported effects."""
         return FLUX_EFFECT_LIST
@@ -234,45 +239,45 @@ class FluxLight(Light):
                               random.randrange(0, 255),
                               random.randrange(0, 255))
         elif effect == EFFECT_COLORLOOP:
-            self._bulb.setPresetPattern(0x25, 50)
+            self._bulb.setPresetPattern(0x25, effect_speed)
         elif effect == EFFECT_RED_FADE:
-            self._bulb.setPresetPattern(0x26, 50)
+            self._bulb.setPresetPattern(0x26, effect_speed)
         elif effect == EFFECT_GREEN_FADE:
-            self._bulb.setPresetPattern(0x27, 50)
+            self._bulb.setPresetPattern(0x27, effect_speed)
         elif effect == EFFECT_BLUE_FADE:
-            self._bulb.setPresetPattern(0x28, 50)
+            self._bulb.setPresetPattern(0x28, effect_speed)
         elif effect == EFFECT_YELLOW_FADE:
-            self._bulb.setPresetPattern(0x29, 50)
+            self._bulb.setPresetPattern(0x29, effect_speed)
         elif effect == EFFECT_CYAN_FADE:
-            self._bulb.setPresetPattern(0x2a, 50)
+            self._bulb.setPresetPattern(0x2a, effect_speed)
         elif effect == EFFECT_PURPLE_FADE:
-            self._bulb.setPresetPattern(0x2b, 50)
+            self._bulb.setPresetPattern(0x2b, effect_speed)
         elif effect == EFFECT_WHITE_FADE:
-            self._bulb.setPresetPattern(0x2c, 50)
+            self._bulb.setPresetPattern(0x2c, effect_speed)
         elif effect == EFFECT_RED_GREEN_CROSS_FADE:
-            self._bulb.setPresetPattern(0x2d, 50)
+            self._bulb.setPresetPattern(0x2d, effect_speed)
         elif effect == EFFECT_RED_BLUE_CROSS_FADE:
-            self._bulb.setPresetPattern(0x2e, 50)
+            self._bulb.setPresetPattern(0x2e, effect_speed)
         elif effect == EFFECT_GREEN_BLUE_CROSS_FADE:
-            self._bulb.setPresetPattern(0x2f, 50)
+            self._bulb.setPresetPattern(0x2f, effect_speed)
         elif effect == EFFECT_COLORSTROBE:
-            self._bulb.setPresetPattern(0x30, 50)
+            self._bulb.setPresetPattern(0x30, effect_speed)
         elif effect == EFFECT_RED_STROBE:
-            self._bulb.setPresetPattern(0x31, 50)
+            self._bulb.setPresetPattern(0x31, effect_speed)
         elif effect == EFFECT_GREEN_STROBE:
-            self._bulb.setPresetPattern(0x32, 50)
+            self._bulb.setPresetPattern(0x32, effect_speed)
         elif effect == EFFECT_BLUE_STOBE:
-            self._bulb.setPresetPattern(0x33, 50)
+            self._bulb.setPresetPattern(0x33, effect_speed)
         elif effect == EFFECT_YELLOW_STROBE:
-            self._bulb.setPresetPattern(0x34, 50)
+            self._bulb.setPresetPattern(0x34, effect_speed)
         elif effect == EFFECT_CYAN_STROBE:
-            self._bulb.setPresetPattern(0x35, 50)
+            self._bulb.setPresetPattern(0x35, effect_speed)
         elif effect == EFFECT_PURPLE_STROBE:
-            self._bulb.setPresetPattern(0x36, 50)
+            self._bulb.setPresetPattern(0x36, effect_speed)
         elif effect == EFFECT_WHITE_STROBE:
-            self._bulb.setPresetPattern(0x37, 50)
+            self._bulb.setPresetPattern(0x37, effect_speed)
         elif effect == EFFECT_COLORJUMP:
-            self._bulb.setPresetPattern(0x38, 50)
+            self._bulb.setPresetPattern(0x38, effect_speed)
 
     def turn_off(self, **kwargs):
         """Turn the specified or all lights off."""
