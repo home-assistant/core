@@ -608,14 +608,15 @@ def test_automation_restore_state(hass):
 
     calls = mock_service(hass, 'test', 'automation')
 
-    hass.bus.fire('test_event_bye')
+    assert automation.is_on(hass, 'automation.bye') is False
+
+    hass.bus.async_fire('test_event_bye')
     yield from hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.fire('test_event_hello')
-    yield from hass.async_block_till_done()
+    assert automation.is_on(hass, 'automation.hello')
 
-    import time
-    time.sleep(1)
+    hass.bus.async_fire('test_event_hello')
+    yield from hass.async_block_till_done()
 
     assert len(calls) == 1
