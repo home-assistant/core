@@ -28,7 +28,7 @@ ATTR_MODE = 'mode'
 DOMAIN = 'flux_led'
 
 SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_RGB_COLOR)
+                    SUPPORT_RGB_COLOR | SUPPORT_EFFECT_SPEED)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
@@ -208,7 +208,7 @@ class FluxLight(Light):
 
     @property
     def effect_speed(self):
-        """Return Speed of Effects"""
+        """Return Speed of Effects."""
         return self._bulb.getSpeed()
 
     @property

@@ -148,7 +148,8 @@ def is_on(hass, entity_id=None):
 
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None, effect_speed=None):
+            profile=None, flash=None, effect=None, color_name=None, 
+            effect_speed=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness,
