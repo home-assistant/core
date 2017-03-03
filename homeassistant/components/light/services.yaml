@@ -52,6 +52,10 @@ turn_on:
         - colorloop
         - random
 
+    effect_speed:
+        description: Number between 0..100 indicating effect speed
+        example: 70
+
 turn_off:
   description: Turn a light off
 
