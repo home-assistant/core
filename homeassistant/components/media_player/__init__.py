@@ -61,6 +61,8 @@ SERVICE_GET_ARTISTS = 'get_artists'
 SERVICE_PLAY_SONG = 'play_song'
 SERVICE_ADD_SONG = 'add_song_to_playlist'
 SERVICE_ADD_ALBUM = 'add_album_to_playlist'
+SERVICE_SET_SHUFFLE = 'set_shuffle'
+SERVICE_UNSET_SHUFFLE = 'unset_shuffle'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -197,6 +199,8 @@ SERVICE_TO_METHOD = {
     SERVICE_ADD_ALBUM: {
         'method': 'async_add_album_to_playlist',
         'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
+    SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle'},
+    SERVICE_UNSET_SHUFFLE: {'method': 'async_unset_shuffle'},
 }
 
 ATTR_TO_PROPERTY = [

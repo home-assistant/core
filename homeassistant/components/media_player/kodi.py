@@ -387,6 +387,18 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
             
     @asyncio.coroutine
+    def async_set_shuffle(self): 
+        players = yield from self._get_players()
+        
+        yield from self._server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": True})
+        
+    @asyncio.coroutine
+    def async_unset_shuffle(self): 
+        players = yield from self._get_players()
+        
+        yield from self._server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": False})
+            
+    @asyncio.coroutine
     def async_add_song_to_playlist(self, song_id=None, song_name='', artist_name=''):
         if song_id is None:
             song_id = yield from self.async_find_song(song_name, artist_name)
@@ -481,10 +493,6 @@ class KodiDevice(MediaPlayerDevice):
 if __name__ == '__main__':
     kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
     
-    asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
-    out = asyncio.get_event_loop().run_until_complete(
-        kodi.async_add_album_to_playlist(album_name='dark side moon'))
-     
-    asyncio.get_event_loop().run_until_complete(kodi.async_play_media("PLAYLIST", 0))
+    albums = asyncio.get_event_loop().run_until_complete(kodi.async_shuffle())
      
     
