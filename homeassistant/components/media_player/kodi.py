@@ -60,8 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Kodi platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -84,7 +83,7 @@ def async_setup_platform(hass, config, async_add_entities,
         password=config.get(CONF_PASSWORD),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION), websocket=websocket)
 
-    yield from async_add_entities([entity], update_before_add=True)
+    async_add_devices([entity], update_before_add=True)
 
 
 class KodiDevice(MediaPlayerDevice):

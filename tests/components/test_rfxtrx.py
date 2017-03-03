@@ -50,8 +50,8 @@ class TestRFXTRX(unittest.TestCase):
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}}))
 
-        self.hass.config.components.remove('rfxtrx')
-
+    def test_valid_config2(self):
+        """Test configuration."""
         self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +

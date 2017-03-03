@@ -122,6 +122,7 @@ class HomeAssistant(object):
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(async_loop_exception_handler)
         self._pending_tasks = []
+        self._track_task = False
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -178,28 +179,7 @@ class HomeAssistant(object):
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
     @callback
-    def _async_add_job(self, target: Callable[..., None], *args: Any) -> None:
-        """Add a job from within the eventloop.
-
-        This method must be run in the event loop.
-
-        target: target to call.
-        args: parameters for method to call.
-        """
-        if asyncio.iscoroutine(target):
-            self.loop.create_task(target)
-        elif is_callback(target):
-            self.loop.call_soon(target, *args)
-        elif asyncio.iscoroutinefunction(target):
-            self.loop.create_task(target(*args))
-        else:
-            self.loop.run_in_executor(None, target, *args)
-
-    async_add_job = _async_add_job
-
-    @callback
-    def _async_add_job_tracking(self, target: Callable[..., None],
-                                *args: Any) -> None:
+    def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add a job from within the eventloop.
 
         This method must be run in the event loop.
@@ -219,19 +199,21 @@ class HomeAssistant(object):
             task = self.loop.run_in_executor(None, target, *args)
 
         # if a task is sheduled
-        if task is not None:
+        if self._track_task and task is not None:
             self._pending_tasks.append(task)
+
+        return task
 
     @callback
     def async_track_tasks(self):
         """Track tasks so you can wait for all tasks to be done."""
-        self.async_add_job = self._async_add_job_tracking
+        self._track_task = True
 
     @asyncio.coroutine
     def async_stop_track_tasks(self):
         """Track tasks so you can wait for all tasks to be done."""
         yield from self.async_block_till_done()
-        self.async_add_job = self._async_add_job
+        self._track_task = False
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:

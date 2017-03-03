@@ -49,7 +49,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     else:
         resolver = config.get(CONF_RESOLVER)
 
-    yield from async_add_devices([WanIpSensor(
+    async_add_devices([WanIpSensor(
         hass, hostname, resolver, ipv6)], True)
 
 

@@ -118,8 +118,8 @@ def do_authentication(hass, config):
         return False
 
     persistent_notification.create(
-        hass, 'In order to authorize Home-Assistant to view your calendars'
-              'You must visit: <a href="{}" target="_blank">{}</a> and enter'
+        hass, 'In order to authorize Home-Assistant to view your calendars '
+              'you must visit: <a href="{}" target="_blank">{}</a> and enter '
               'code: {}'.format(dev_flow.verification_url,
                                 dev_flow.verification_url,
                                 dev_flow.user_code),

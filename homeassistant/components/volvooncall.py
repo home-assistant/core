@@ -109,7 +109,7 @@ def setup(hass, config):
 
             return True
         finally:
-            track_point_in_utc_time(hass, update, now + interval)
+            track_point_in_utc_time(hass, update, utcnow() + interval)
 
     _LOGGER.info('Logging in to service')
     return update(utcnow())

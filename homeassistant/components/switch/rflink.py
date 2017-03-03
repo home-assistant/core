@@ -52,7 +52,7 @@ def devices_from_config(domain_config, hass=None):
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Rflink platform."""
-    yield from async_add_devices(devices_from_config(config, hass))
+    async_add_devices(devices_from_config(config, hass))
 
 
 class RflinkSwitch(SwitchableRflinkDevice, SwitchDevice):

@@ -14,12 +14,13 @@ from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, CONF_SWITCHES)
+    ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
+from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.script import Script
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
@@ -70,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No switches added")
         return False
 
-    yield from async_add_devices(switches, True)
+    async_add_devices(switches, True)
     return True
 
 
@@ -88,14 +89,30 @@ class SwitchTemplate(SwitchDevice):
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
         self._state = False
+        self._entities = entity_ids
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if state:
+            self._state = state.state == STATE_ON
 
         @callback
         def template_switch_state_listener(entity, old_state, new_state):
             """Called when the target device changes state."""
-            hass.async_add_job(self.async_update_ha_state(True))
+            self.hass.async_add_job(self.async_update_ha_state(True))
 
-        async_track_state_change(
-            hass, entity_ids, template_switch_state_listener)
+        @callback
+        def template_switch_startup(event):
+            """Update template on startup."""
+            async_track_state_change(
+                self.hass, self._entities, template_switch_state_listener)
+
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, template_switch_startup)
 
     @property
     def name(self):
