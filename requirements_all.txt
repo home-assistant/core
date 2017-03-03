@@ -473,7 +473,6 @@ pycmus==0.1.0
 # pycups==1.9.73
 
 # homeassistant.components.zwave
-# homeassistant.components.binary_sensor.hikvision
 pydispatcher==2.0.5
 
 # homeassistant.components.sensor.ebox
@@ -498,7 +497,7 @@ pygatt==3.0.0
 pyharmony==1.0.12
 
 # homeassistant.components.binary_sensor.hikvision
-pyhik==0.0.7
+pyhik==0.1.0
 
 # homeassistant.components.homematic
 pyhomematic==0.1.22
