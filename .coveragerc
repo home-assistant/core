@@ -85,6 +85,10 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/twilio.py
+    homeassistant/components/notify/twilio_sms.py
+    homeassistant/components/notify/twilio_call.py
+
     homeassistant/components/vera.py
     homeassistant/components/*/vera.py
 
@@ -291,8 +295,6 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/telstra.py
-    homeassistant/components/notify/twilio_sms.py
-    homeassistant/components/notify/twilio_call.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
