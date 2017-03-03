@@ -87,6 +87,7 @@ PROP_TO_ATTR = {
     'white_value': ATTR_WHITE_VALUE,
     'effect_list': ATTR_EFFECT_LIST,
     'effect': ATTR_EFFECT,
+    'effect_speed': ATTR_EFFECT_SPEED,
 }
 
 # Service call validation schemas
