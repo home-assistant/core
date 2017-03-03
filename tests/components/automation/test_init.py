@@ -614,4 +614,8 @@ def test_automation_restore_state(hass):
 
     hass.bus.fire('test_event_hello')
     yield from hass.async_block_till_done()
+
+    import time
+    time.sleep(1)
+
     assert len(calls) == 1
