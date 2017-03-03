@@ -361,14 +361,12 @@ class DeviceTracker(object):
 
         tasks = []
         for device in self.devices.values():
-            if not device.track or device.last_seen:
-                continue
-            tasks.append(self.hass.async_add_job(
-                async_init_single_device(device)
-            ))
+            if device.track and not device.last_seen:
+                tasks.append(self.hass.async_add_job(
+                    async_init_single_device(device)))
 
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            yield from asyncio.wait(tasks, loop=self.hass.loop)
 
 
 class Device(Entity):
