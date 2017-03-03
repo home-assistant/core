@@ -34,7 +34,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     dev_id_lookup = {}
 
     @callback
-    def async_device_tracker_message_received(topic, payload, qos):
+    def async_tracker_message_received(topic, payload, qos):
         """MQTT message received."""
         hass.async_add_job(
             async_see(dev_id=dev_id_lookup[topic], location_name=payload))
@@ -42,6 +42,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     for dev_id, topic in devices.items():
         dev_id_lookup[topic] = dev_id
         yield from mqtt.async_subscribe(
-            hass, topic, async_device_tracker_message_received, qos)
+            hass, topic, async_tracker_message_received, qos)
 
     return True
