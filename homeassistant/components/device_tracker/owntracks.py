@@ -55,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@callback
 def get_cipher():
     """Return decryption function and length of key.
 
@@ -81,7 +80,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     mobile_beacons_active = defaultdict(list)
     regions_entered = defaultdict(list)
 
-    @callback
     def decrypt_payload(topic, ciphertext):
         """Decrypt encrypted payload."""
         try:
@@ -119,7 +117,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             return None
 
     # pylint: disable=too-many-return-statements
-    @callback
     def validate_payload(topic, payload, data_type):
         """Validate the OwnTracks payload."""
         try:
@@ -201,7 +198,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
         dev_id, kwargs = _parse_see_args(topic, data)
 
-        @callback
         def enter_event():
             """Execute enter event."""
             zone = hass.states.get("zone.{}".format(slugify(location)))
@@ -222,7 +218,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             hass.async_add_job(async_see(**kwargs))
             async_see_beacons(dev_id, kwargs)
 
-        @callback
         def leave_event():
             """Execute leave event."""
             regions = regions_entered[dev_id]
@@ -336,7 +331,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     return True
 
 
-@callback
 def parse_topic(topic, pretty=False):
     """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple.
 
@@ -353,7 +347,6 @@ def parse_topic(topic, pretty=False):
     return (host_name, dev_id)
 
 
-@callback
 def _parse_see_args(topic, data):
     """Parse the OwnTracks location parameters, into the format see expects.
 
@@ -372,7 +365,6 @@ def _parse_see_args(topic, data):
     return dev_id, kwargs
 
 
-@callback
 def _set_gps_from_zone(kwargs, location, zone):
     """Set the see parameters from the zone parameters.
 
