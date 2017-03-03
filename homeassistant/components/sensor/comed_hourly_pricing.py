@@ -18,8 +18,6 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://hourlypricing.comed.com/api'
 
-CONF_ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
-
 SCAN_INTERVAL = timedelta(minutes=5)
 
 CONF_MONITORED_FEEDS = 'monitored_feeds'
@@ -91,7 +89,8 @@ class ComedHourlyPricingSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
+        attrs = {ATTR_ATTRIBUTION: 'Data provided by ComEd Hourly '
+                                   'Pricing service'}
         return attrs
 
     def update(self):
