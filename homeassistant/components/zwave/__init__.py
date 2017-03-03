@@ -728,8 +728,11 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self._value.set_change_verified(False)
-        self.entity_id = "{}.{}".format(domain, self._object_id())
+        self.entity_id = "{}.{}".format(domain, object_id(value))
 
+        self._name = _value_name(self._value)
+        self._unique_id = "ZWAVE-{}-{}".format(self._value.node.node_id,
+                                               self._value.object_id)
         self._wakeup_value_id = None
         self._battery_value_id = None
         self._power_value_id = None
@@ -884,21 +887,12 @@ class ZWaveDeviceEntity(Entity):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return "ZWAVE-{}-{}".format(self._value.node.node_id,
-                                    self._value.object_id)
+        return self._unique_id
 
     @property
     def name(self):
         """Return the name of the device."""
-        return _value_name(self._value)
-
-    def _object_id(self):
-        """Return the object_id of the device value.
-
-        The object_id contains node_id and value instance id to not collide
-        with other entity_ids.
-        """
-        return object_id(self._value)
+        return self._name
 
     @property
     def device_state_attributes(self):
