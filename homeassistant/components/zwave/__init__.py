@@ -26,6 +26,7 @@ import homeassistant.helpers.config_validation as cv
 
 from . import const
 from . import workaround
+from .util import value_handler
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
@@ -818,62 +819,13 @@ class ZWaveDeviceEntity(Entity):
         self.power_consumption = round(
             power_value.data, power_value.precision) if power_value else None
 
-    def _value_handler(self, method=None, class_id=None, index=None,
-                       label=None, data=None, member=None, instance=None,
-                       **kwargs):
-        """Get the values for a given command_class with arguments.
-
-        May only be used inside callback.
-
-        """
-        values = []
-        if class_id is None:
-            values.extend(self._value.node.get_values(**kwargs).values())
-        else:
-            if not isinstance(class_id, list):
-                class_id = [class_id]
-            for cid in class_id:
-                values.extend(self._value.node.get_values(
-                    class_id=cid, **kwargs).values())
-        _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
-                      ' member=%s, instance=%d, kwargs=%s',
-                      method, class_id, index, label, data, member, instance,
-                      kwargs)
-        _LOGGER.debug('values=%s', values)
-        results = None
-        for value in values:
-            if index is not None and value.index != index:
-                continue
-            if label is not None:
-                label_found = False
-                for entry in label:
-                    if value.label == entry:
-                        label_found = True
-                        break
-                if not label_found:
-                    continue
-            if method == 'set':
-                value.data = data
-                return
-            if data is not None and value.data != data:
-                continue
-            if instance is not None and value.instance != instance:
-                continue
-            if member is not None:
-                results = getattr(value, member)
-            else:
-                results = value
-            break
-        _LOGGER.debug('final result=%s', results)
-        return results
-
     def get_value(self, **kwargs):
         """Simplifyer to get values. May only be used inside callback."""
-        return self._value_handler(method='get', **kwargs)
+        return value_handler(self._value, method='get', **kwargs)
 
     def set_value(self, **kwargs):
         """Simplifyer to set a value."""
-        return self._value_handler(method='set', **kwargs)
+        return value_handler(self._value, method='set', **kwargs)
 
     def update_properties(self):
         """Callback on data changes for node values."""
