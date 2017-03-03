@@ -11,6 +11,7 @@ from datetime import timedelta
 import re
 
 from homeassistant.components.google import (CONF_OFFSET,
+                                             CONF_DEFAULT_OFFSET,
                                              CONF_DEVICE_ID,
                                              CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -55,6 +56,7 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
+        self._default_offset = time_period_str(data.get(CONF_DEFAULT_OFFSET, "00:00"))
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT,
                                             self.dev_id,
                                             hass=hass)
@@ -173,7 +175,7 @@ class CalendarEventDevice(Entity):
             summary = (summary[:search.start()] + summary[search.end():]) \
                 .strip()
         else:
-            offset_time = dt.dt.timedelta()  # default it
+            offset_time = self._default_offset
 
         # cleanup the string so we don't have a bunch of double+ spaces
         self._cal_data['message'] = re.sub('  +', '', summary).strip()

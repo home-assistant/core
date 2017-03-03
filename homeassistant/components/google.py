@@ -45,6 +45,7 @@ CONF_ENTITIES = 'entities'
 CONF_TRACK = 'track'
 CONF_SEARCH = 'search'
 CONF_OFFSET = 'offset'
+CONF_DEFAULT_OFFSET = 'default_offset'
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
@@ -77,6 +78,7 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Optional(CONF_TRACK): cv.boolean,
     vol.Optional(CONF_SEARCH): vol.Any(cv.string, None),
     vol.Optional(CONF_OFFSET): cv.string,
+    vol.Optional(CONF_DEFAULT_OFFSET): cv.string,
 })
 
 DEVICE_SCHEMA = vol.Schema({
