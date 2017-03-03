@@ -73,7 +73,7 @@ ZONE_SCHEMA = vol.Schema({vol.All(cv.string): ZONE_SETUP_SCHEMA})
 SOURCES_SCHEMA = vol.Schema({vol.All(cv.string): vol.Any(cv.string)})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_PORT): DEFAULT_PORT,
+    vol.Required(CONF_PORT): cv.isdevice,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_ZONES): ZONE_SCHEMA,
     vol.Optional(CONF_SOURCES, SOURCES_SCHEMA):
