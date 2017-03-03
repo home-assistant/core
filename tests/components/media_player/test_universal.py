@@ -140,10 +140,10 @@ class TestMediaPlayer(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
         self.mock_mp_1 = MockMediaPlayer(self.hass, 'mock1')
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
 
         self.mock_mp_2 = MockMediaPlayer(self.hass, 'mock2')
-        self.mock_mp_2.schedule_ha_state()
+        self.mock_mp_2.schedule_update_ha_state()
 
         self.hass.block_till_done()
 
@@ -317,21 +317,21 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertEqual(None, ump._child_state)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(self.mock_mp_1.entity_id,
                          ump._child_state.entity_id)
 
         self.mock_mp_2._state = STATE_PLAYING
-        self.mock_mp_2.schedule_ha_state()
+        self.mock_mp_2.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(self.mock_mp_1.entity_id,
                          ump._child_state.entity_id)
 
         self.mock_mp_1._state = STATE_OFF
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(self.mock_mp_2.entity_id,
@@ -367,7 +367,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertTrue(ump.state, STATE_OFF)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(STATE_PLAYING, ump.state)
@@ -388,7 +388,7 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertEqual(STATE_ON, ump.state)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(STATE_PLAYING, ump.state)
@@ -409,13 +409,13 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertEqual(None, ump.volume_level)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(0, ump.volume_level)
 
         self.mock_mp_1._volume_level = 1
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(1, ump.volume_level)
@@ -434,7 +434,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         self.mock_mp_1._state = STATE_PLAYING
         self.mock_mp_1._media_image_url = TEST_URL
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         # mock_mp_1 will convert the url to the api proxy url. This test
@@ -453,13 +453,13 @@ class TestMediaPlayer(unittest.TestCase):
         self.assertFalse(ump.is_volume_muted)
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertFalse(ump.is_volume_muted)
 
         self.mock_mp_1._is_volume_muted = True
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertTrue(ump.is_volume_muted)
@@ -525,7 +525,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         self.mock_mp_1._supported_features = 512
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
         self.assertEqual(512, ump.supported_features)
@@ -547,7 +547,7 @@ class TestMediaPlayer(unittest.TestCase):
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_1._state = STATE_PLAYING
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
@@ -567,9 +567,9 @@ class TestMediaPlayer(unittest.TestCase):
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_1._state = STATE_OFF
-        self.mock_mp_1.schedule_ha_state()
+        self.mock_mp_1.schedule_update_ha_state()
         self.mock_mp_2._state = STATE_OFF
-        self.mock_mp_2.schedule_ha_state()
+        self.mock_mp_2.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
@@ -589,7 +589,7 @@ class TestMediaPlayer(unittest.TestCase):
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_2._state = STATE_PLAYING
-        self.mock_mp_2.schedule_ha_state()
+        self.mock_mp_2.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
@@ -688,7 +688,7 @@ class TestMediaPlayer(unittest.TestCase):
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
         self.mock_mp_2._state = STATE_PLAYING
-        self.mock_mp_2.schedule_ha_state()
+        self.mock_mp_2.schedule_update_ha_state()
         self.hass.block_till_done()
         run_coroutine_threadsafe(ump.async_update(), self.hass.loop).result()
 
