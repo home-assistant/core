@@ -65,6 +65,7 @@ def async_setup(hass, config):
 
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()
+    already_discovered = set()
 
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
@@ -86,6 +87,11 @@ def async_setup(hass, config):
         # We do not know how to handle this service.
         if not comp_plat:
             return
+
+        if (service, info) in already_discovered:
+            return
+
+        already_discovered.add((service, info))
 
         component, platform = comp_plat
 
