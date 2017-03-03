@@ -80,8 +80,6 @@ def async_setup(hass, config):
             logger.info("Ignoring service: %s %s", service, info)
             return
 
-        logger.info("Found new service: %s %s", service, info)
-
         comp_plat = SERVICE_HANDLERS.get(service)
 
         # We do not know how to handle this service.
@@ -92,6 +90,8 @@ def async_setup(hass, config):
             return
 
         already_discovered.add((service, info))
+
+        logger.info("Found new service: %s %s", service, info)
 
         component, platform = comp_plat
 
