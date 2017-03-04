@@ -55,6 +55,9 @@ def async_setup_component(hass: core.HomeAssistant, domain: str,
 
     This method is a coroutine.
     """
+    if domain in hass.config.components:
+        return True
+
     setup_tasks = hass.data.get(DATA_SETUP)
 
     if setup_tasks is not None and domain in setup_tasks:
@@ -210,6 +213,10 @@ def _async_setup_component(hass: core.HomeAssistant,
         return False
 
     hass.config.components.add(component.DOMAIN)
+
+    # cleanup
+    if domain in hass.data[DATA_SETUP]:
+        hass.data[DATA_SETUP].pop(domain)
 
     hass.bus.async_fire(
         EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
