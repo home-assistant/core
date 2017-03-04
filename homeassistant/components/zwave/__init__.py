@@ -750,6 +750,7 @@ class ZWaveDeviceEntity(Entity):
         self._battery_value_id = None
         self._power_value_id = None
         self._fetch_power = True
+        self.power_consumption = None
         self._update_attributes()
 
         dispatcher.connect(
