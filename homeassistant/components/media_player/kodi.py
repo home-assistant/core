@@ -390,12 +390,16 @@ class KodiDevice(MediaPlayerDevice):
     def async_set_shuffle(self): 
         players = yield from self._get_players()
         
+        if len(players) < 1:
+            raise RuntimeError("Error: No active player.")
         yield from self._server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": True})
         
     @asyncio.coroutine
     def async_unset_shuffle(self): 
         players = yield from self._get_players()
         
+        if len(players) < 1:
+            raise RuntimeError("Error: No active player.")
         yield from self._server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": False})
             
     @asyncio.coroutine
