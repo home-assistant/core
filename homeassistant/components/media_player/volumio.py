@@ -1,5 +1,5 @@
 """
-Volumio Component.
+Volumio Platform.
 
 The volumio platform allows you to control a Volumio media player
 from Home Assistant.
