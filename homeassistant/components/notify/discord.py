@@ -27,6 +27,7 @@ def get_service(hass, config, discovery_info=None):
     token = config.get(CONF_TOKEN)
     return DiscordNotificationService(hass, token)
 
+
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord."""
 
@@ -44,10 +45,10 @@ class DiscordNotificationService(BaseNotificationService):
         @discord_bot.event
         @asyncio.coroutine
         def on_ready():
+            """sends the messages when the bot is ready"""
             for channelid in kwargs[ATTR_TARGET]:
                 channel = discord.Object(id=channelid)
                 yield from discord_bot.send_message(channel, message)
             yield from discord_bot.logout()
 
         yield from discord_bot.start(self.token)
-
