@@ -23,6 +23,8 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
 from . import workaround
@@ -162,6 +164,10 @@ NODE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
 })
 
+REFRESH_ENTITY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -184,6 +190,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
         cv.positive_int
 })
+
+SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -615,6 +623,19 @@ def setup(hass, config):
                          "target node:%s, instance=%s", node_id, group,
                          target_node_id, instance)
 
+    @asyncio.coroutine
+    def async_refresh_entity(service):
+        """Refresh values that specific entity depends on."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        async_dispatcher_send(
+            hass, SIGNAL_REFRESH_ENTITY_FORMAT.format(entity_id))
+
+    def refresh_node(service):
+        """Refresh all node info."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        node.refresh_info()
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting ZWave network.")
@@ -709,6 +730,16 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_PRINT_NODE],
                                schema=NODE_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_ENTITY,
+                               async_refresh_entity,
+                               descriptions[
+                                   const.SERVICE_REFRESH_ENTITY],
+                               schema=REFRESH_ENTITY_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_NODE,
+                               refresh_node,
+                               descriptions[
+                                   const.SERVICE_REFRESH_NODE],
+                               schema=NODE_SERVICE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -787,6 +818,14 @@ class ZWaveDeviceEntity(Entity):
         None if depends on the whole node.
         """
         return []
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Add device to dict."""
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_REFRESH_ENTITY_FORMAT.format(self.entity_id),
+            self.refresh_from_network)
 
     def _get_dependent_value_ids(self):
         """Return a list of value_ids this device depend on.
@@ -867,3 +906,13 @@ class ZWaveDeviceEntity(Entity):
             attrs[ATTR_POWER] = self.power_consumption
 
         return attrs
+
+    def refresh_from_network(self):
+        """Refresh all dependent values from zwave network."""
+        dependent_ids = self._get_dependent_value_ids()
+        if dependent_ids is None:
+            # Entity depends on the whole node
+            self._value.node.refresh_info()
+            return
+        for value_id in dependent_ids + [self._value.value_id]:
+            self._value.node.refresh_value(value_id)
