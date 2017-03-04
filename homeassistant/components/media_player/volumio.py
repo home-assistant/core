@@ -24,7 +24,7 @@ import logging
 import asyncio
 import aiohttp
 import async_timeout
-import voluptuous as vol
+import voluptuous
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
@@ -53,9 +53,9 @@ SUPPORT_VOLUMIA = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    voluptuous.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    voluptuous.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    voluptuous.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
