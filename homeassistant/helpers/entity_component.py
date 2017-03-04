@@ -309,13 +309,10 @@ class EntityPlatform(object):
 
     def schedule_add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
-        if update_before_add:
-            for entity in new_entities:
-                entity.update()
-
         run_callback_threadsafe(
             self.component.hass.loop,
-            self.async_schedule_add_entities, list(new_entities), False
+            self.async_schedule_add_entities, list(new_entities),
+            update_before_add
         ).result()
 
     @callback

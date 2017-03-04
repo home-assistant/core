@@ -180,14 +180,9 @@ class Entity(object):
 
         If force_refresh == True will update entity before setting state.
         """
-        # We're already in a thread, do the force refresh here.
-        if force_refresh and not hasattr(self, 'async_update'):
-            self.update()
-            force_refresh = False
-
-        run_coroutine_threadsafe(
-            self.async_update_ha_state(force_refresh), self.hass.loop
-        ).result()
+        _LOGGER.warning("'update_ha_state' is deprecated. "
+                        "Use 'schedule_update_ha_state' instead.")
+        self.schedule_update_ha_state(force_refresh)
 
     @asyncio.coroutine
     def async_update_ha_state(self, force_refresh=False):
@@ -280,11 +275,6 @@ class Entity(object):
 
         That is only needed on executor to not block.
         """
-        # We're already in a thread, do the force refresh here.
-        if force_refresh and not hasattr(self, 'async_update'):
-            self.update()
-            force_refresh = False
-
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:
