@@ -4,7 +4,6 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import datetime
-from threading import Event
 import unittest
 
 from homeassistant.helpers.template import Template

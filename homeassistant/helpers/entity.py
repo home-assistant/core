@@ -180,7 +180,7 @@ class Entity(object):
 
         If force_refresh == True will update entity before setting state.
         """
-        _LOGGER.warning("'update_ha_state' is dedicated. "
+        _LOGGER.warning("'update_ha_state' is deprecated. "
                         "Use 'schedule_update_ha_state' instead.")
         self.schedule_update_ha_state(force_refresh)
 
