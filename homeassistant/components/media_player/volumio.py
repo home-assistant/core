@@ -1,4 +1,25 @@
-"""Support for controlling a Volumia network audio device in Home Assistant."""
+"""
+Volumio Platform.
+
+The volumio platform allows you to control a Volumio media player
+from Home Assistant.
+
+
+To add a Volumio player to your installation, add the following to
+your configuration.yaml file.
+
+# Example configuration.yaml entry
+media_player:
+  - platform: volumio
+    name: 'Volumio Home Audio'
+    host: homeaudio.local
+    port: 3000
+Configuration variables:
+
+- **name** (*Optional*): Name of the device
+- **host** (*Required*): IP address or hostname of the device
+- **port** (*Required*): Port number of Volumio service
+"""
 import logging
 import asyncio
 import aiohttp
