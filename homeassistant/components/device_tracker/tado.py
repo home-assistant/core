@@ -142,7 +142,7 @@ class TadoDeviceScanner(DeviceScanner):
 
         # Find devices that have geofencing enabled, and are currently at home.
         for mobile_device in tado_json:
-            if 'location' in mobile_device:
+            if mobile_device.get('location'):
                 if mobile_device['location']['atHome']:
                     device_id = mobile_device['id']
                     device_name = mobile_device['name']
