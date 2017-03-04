@@ -230,10 +230,12 @@ class LIFXLight(Light):
                       hue, saturation, brightness, kelvin, fade)
 
         if self._power == 0:
+            self._liffylights.set_color(self._ip, hue, saturation,
+                                        brightness, kelvin, 0)
             self._liffylights.set_power(self._ip, 65535, fade)
-
-        self._liffylights.set_color(self._ip, hue, saturation,
-                                    brightness, kelvin, fade)
+        else:
+            self._liffylights.set_color(self._ip, hue, saturation,
+                                        brightness, kelvin, fade)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
