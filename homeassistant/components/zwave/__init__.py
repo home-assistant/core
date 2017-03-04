@@ -191,7 +191,7 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
         cv.positive_int
 })
 
-SIGNAL_REFRESH_ENTITY_FORMAT = 'refresh_entity_{}'
+SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
