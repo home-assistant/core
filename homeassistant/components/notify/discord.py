@@ -27,7 +27,6 @@ def get_service(hass, config, discovery_info=None):
     token = config.get(CONF_TOKEN)
     return DiscordNotificationService(hass, token)
 
-
 class DiscordNotificationService(BaseNotificationService):
     """Implement the notification service for Discord."""
 
@@ -35,14 +34,13 @@ class DiscordNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.token = token
         self.hass = hass
-        self.loggedin = 0
 
     @asyncio.coroutine
     def async_send_message(self, message, **kwargs):
         """Login to Discord, send message to channel(s) and log out."""
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
-        
+
         @discord_bot.event
         @asyncio.coroutine
         def on_ready():
