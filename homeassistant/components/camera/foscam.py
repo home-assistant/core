@@ -61,7 +61,7 @@ class FoscamCamera(Camera):
         self._name = device_info.get(CONF_NAME)
 
         _LOGGER.info('Using the following URL for %s: %s',
-                        self._name, uri_template.format('***', '***'))
+                     self._name, uri_template.format('***', '***'))
 
     def camera_image(self):
         """Return a still image reponse from the camera."""
