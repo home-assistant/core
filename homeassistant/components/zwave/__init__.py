@@ -427,12 +427,13 @@ def setup(hass, config):
                 node=node, value=value, node_config=node_config, hass=hass)
             if not device:
                 continue
-                
-            # If CONF_GET_POWER_CONSUMPTION is explicitly false or it is missing and
-            # CONF_POLLING_INTENSITY is set - cancel fetching power consumption attribute.
+
+            # If CONF_GET_POWER_CONSUMPTION is explicitly false or it is
+            # missing and CONF_POLLING_INTENSITY is set - cancel fetching power
+            # consumption attribute.
             get_power_consumption = node_config.get(CONF_GET_POWER_CONSUMPTION)
-            if (get_power_consumption is False) or (get_power_consumption is None and 
-                                                    polling_intensity):
+            if (get_power_consumption is False) or (
+                    get_power_consumption is None and polling_intensity):
                 device.cancel_fetch_power()
 
             dict_id = value.value_id
