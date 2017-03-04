@@ -34,6 +34,8 @@ SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
+SERVICE_REFRESH_ENTITY = "refresh_entity"
+SERVICE_REFRESH_NODE = "refresh_node"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
