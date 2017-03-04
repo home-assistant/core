@@ -131,6 +131,7 @@ def async_test_home_assistant(loop):
 
     @ha.callback
     def clear_instance(event):
+        """Clear global instance."""
         global INST_COUNT
         INST_COUNT -= 1
 
@@ -140,20 +141,18 @@ def async_test_home_assistant(loop):
 
 
 def mock_service(hass, domain, service):
-    """Setup a fake service.
-
-    Return a list that logs all calls to fake service.
-    """
+    """Setup a fake service & return a list that logs calls to this service."""
     calls = []
 
-    # pylint: disable=redefined-outer-name
-    @ha.callback
-    def mock_service(call):
+    @asyncio.coroutine
+    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """"Mocked service call."""
         calls.append(call)
 
-    # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, mock_service)
+    if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
+        hass.services.async_register(domain, service, mock_service_log)
+    else:
+        hass.services.register(domain, service, mock_service_log)
 
     return calls
 
