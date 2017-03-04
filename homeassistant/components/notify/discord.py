@@ -45,7 +45,7 @@ class DiscordNotificationService(BaseNotificationService):
         @discord_bot.event
         @asyncio.coroutine
         def on_ready():
-            """sends the messages when the bot is ready"""
+            """Send the messages when the bot is ready."""
             for channelid in kwargs[ATTR_TARGET]:
                 channel = discord.Object(id=channelid)
                 yield from discord_bot.send_message(channel, message)
