@@ -106,6 +106,13 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         """Return the state of the entity."""
         return len(self._matches)
 
+    @property
+    def state_attributes(self):
+        """Return device specific state attributes."""
+        return {
+            ATTR_MATCHES: str(self._matches)
+        }
+
     @asyncio.coroutine
     def _process_classifier(self, cv2, cv_image, classifer_config):
         """Process the given classifier."""
@@ -148,10 +155,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         import cv2
         import numpy
 
-        _LOGGER.info('Processing image size %i', len(str(image)))
-
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
-        _LOGGER.info('CV Image %i', len(str(cv_image)))
         matches = []
         for classifier_confg in self._classifier_configs:
             match = yield from self._process_classifier(cv2, cv_image, classifier_confg)
