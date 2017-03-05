@@ -362,6 +362,7 @@ omit =
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/qnap.py
+    homeassistant/components/sensor/ring.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
