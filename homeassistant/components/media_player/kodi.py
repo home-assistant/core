@@ -7,12 +7,11 @@ https://home-assistant.io/components/media_player.kodi/
 import asyncio
 import logging
 import urllib
+import re
+import warnings
 
 import aiohttp
 import voluptuous as vol
-
-import re
-import warnings
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
@@ -26,7 +25,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.core import HomeAssistant
 
 REQUIREMENTS = ['jsonrpc-async==0.4', 'jsonrpc-websocket==0.2']
 
@@ -518,131 +516,158 @@ class KodiDevice(MediaPlayerDevice):
         else:
             return self.server.Player.Open(
                 {"item": {"file": str(media_id)}})
-            
+
     @asyncio.coroutine
-    def async_set_shuffle(self): 
+    def async_set_shuffle(self):
+        """Set shuffle mode on, for the first player."""
         players = yield from self._get_players()
-        
+
         if len(players) < 1:
             raise RuntimeError("Error: No active player.")
-        yield from self.server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": True})
-        
+        yield from self.server.Player.SetShuffle(
+            {"playerid": players[0]['playerid'], "shuffle": True})
+
     @asyncio.coroutine
-    def async_unset_shuffle(self): 
+    def async_unset_shuffle(self):
+        """Set shuffle mode off, for the first player."""
         players = yield from self._get_players()
-        
+
         if len(players) < 1:
             raise RuntimeError("Error: No active player.")
-        yield from self.server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": False})
-            
+        yield from self.server.Player.SetShuffle(
+            {"playerid": players[0]['playerid'], "shuffle": False})
+
     @asyncio.coroutine
-    def async_add_song_to_playlist(self, song_id=None, song_name='', artist_name=''):
+    def async_add_song_to_playlist(
+            self, song_id=None, song_name='', artist_name=''):
+        """Add a song to default playlist (i.e. playlistid=0).
+
+        The song can be specified in terms of id or
+        name and optionally artist name.
+        """
         if song_id is None:
             song_id = yield from self.async_find_song(song_name, artist_name)
-            
-        yield from self.server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
-        
+
+        yield from self.server.Playlist.Add(
+            {"playlistid": 0, "item": {"songid": int(song_id)}})
+
     @asyncio.coroutine
-    def async_add_album_to_playlist(self, album_id=None, media_album_name='', artist_name=''):
+    def async_add_album_to_playlist(
+            self, album_id=None, media_album_name='', artist_name=''):
+        """Add an album to default playlist (i.e. playlistid=0).
+
+        The album can be specified in terms of id
+        or name and optionally artist name.
+        """
         if album_id is None:
-            album_id = yield from self.async_find_album(media_album_name, artist_name)
-            
-        yield from self.server.Playlist.Add({"playlistid": 0, "item": {"albumid": int(album_id)}})
-        
+            album_id = yield from self.async_find_album(
+                media_album_name, artist_name)
+
+        yield from self.server.Playlist.Add(
+            {"playlistid": 0, "item": {"albumid": int(album_id)}})
+
     @asyncio.coroutine
     def async_add_all_albums_to_playlist(self, artist_name):
+        """Add all albums of an artist to default playlist (i.e. playlistid=0).
+
+        The artist is specified in terms of name.
+        """
         artist_id = yield from self.async_find_artist(artist_name)
-        
+
         albums = yield from self.async_get_albums(artist_id)
-            
-        for a in albums['albums']:
+
+        for alb in albums['albums']:
             yield from self.server.Playlist.Add(
-                {"playlistid": 0, "item": {"albumid": int(a['albumid'])}})
-    
+                {"playlistid": 0, "item": {"albumid": int(alb['albumid'])}})
+
     @asyncio.coroutine
     def async_clear_playlist(self):
+        """Clear default playlist (i.e. playlistid=0)."""
         return self.server.Playlist.Clear({"playlistid": 0})
-    
+
     @asyncio.coroutine
     def async_play_song(self, song_name, artist_name=''):
+        """Play a single song.
+
+        Specified in terms of artist name and song name.
+        """
         song_id = yield from self.async_find_song(song_name, artist_name)
         if song_id is None:
             warnings.warn("no song found.", RuntimeWarning)
             return
-        
+
         yield from self.async_media_stop()
         yield from self.async_clear_playlist()
         yield from self.async_add_song_to_playlist(song_id)
-        
+
         yield from self.async_play_media("PLAYLIST", 0)
-    
+
     @asyncio.coroutine
     def async_get_artists(self):
+        """Get artists list."""
         return (yield from self.server.AudioLibrary.GetArtists())
-    
+
     @asyncio.coroutine
     def async_get_albums(self, artist_id=None):
+        """Get albums list."""
         if artist_id is None:
             return (yield from self.server.AudioLibrary.GetAlbums())
         else:
             return (yield from self.server.AudioLibrary.GetAlbums(
                 {"filter": {"artistid": int(artist_id)}}))
-                
+
     @asyncio.coroutine
     def async_find_artist(self, artist_name):
+        """Find artist by name."""
         artists = yield from self.async_get_artists()
-        out = self._find(artist_name, [a['artist'] for a in artists['artists']])
+        out = self._find(
+            artist_name, [a['artist'] for a in artists['artists']])
         return artists['artists'][out[0][0]]['artistid']
 
     @asyncio.coroutine
     def async_get_songs(self, artist_id=None):
+        """Get songs list."""
         if artist_id is None:
             return (yield from self.server.AudioLibrary.GetSongs())
         else:
             return (yield from self.server.AudioLibrary.GetSongs(
                 {"filter": {"artistid": int(artist_id)}}))
-    
-    @asyncio.coroutine     
+
+    @asyncio.coroutine
     def async_find_song(self, song_name, artist_name=''):
+        """Find song by name and optionally artist name."""
         artist_id = None
         if artist_name != '':
             artist_id = yield from self.async_find_artist(artist_name)
-        
+
         songs = yield from self.async_get_songs(artist_id)
-        if songs['limits']['total']==0:
+        if songs['limits']['total'] == 0:
             return None
-        
+
         out = self._find(song_name, [a['label'] for a in songs['songs']])
         return songs['songs'][out[0][0]]['songid']
-    
-    @asyncio.coroutine     
+
+    @asyncio.coroutine
     def async_find_album(self, album_name, artist_name=''):
+        """Find album by name and optionally artist name."""
         artist_id = None
         if artist_name != '':
             artist_id = yield from self.async_find_artist(artist_name)
-        
+
         albums = yield from self.async_get_albums(artist_id)
         out = self._find(album_name, [a['label'] for a in albums['albums']])
         return albums['albums'][out[0][0]]['albumid']
-                
-    def _find(self, key_word, words):
+
+    @staticmethod
+    def _find(key_word, words):
         key_word = key_word.split(' ')
-        patt = [re.compile('(^| )' + k + '( |$)', re.IGNORECASE) for k in key_word]
-         
+        patt = [re.compile(
+            '(^| )' + k + '( |$)', re.IGNORECASE) for k in key_word]
+
         out = [[i, 0] for i in range(len(words))]
         for i in range(len(words)):
-            mt = [p.search(words[i]) for p in patt]
-            l = [m is not None for m in mt].count(True)
-            out[i][1] = l
-            
-        return sorted(out, key=lambda out: out[1], reverse=True)    
-    
-if __name__ == '__main__':
-    kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080', '9090')
-    
-    asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
-    asyncio.get_event_loop().run_until_complete(kodi.async_add_all_albums_to_playlist('pink floyd'))
-    asyncio.get_event_loop().run_until_complete(kodi.async_play_media("PLAYLIST", 0))
-    asyncio.get_event_loop().run_until_complete(kodi.async_set_shuffle())
-    
-    
+            mtc = [p.search(words[i]) for p in patt]
+            rate = [m is not None for m in mtc].count(True)
+            out[i][1] = rate
+
+        return sorted(out, key=lambda out: out[1], reverse=True)

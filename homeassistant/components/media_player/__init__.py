@@ -756,25 +756,28 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.loop.run_in_executor(
             None, self.clear_playlist)
-        
+
     def async_set_shuffle(self):
-        '''Set shuffle mode on'''
+        """Set shuffle mode on."""
         raise NotImplementedError()
-    
+
     def async_unset_shuffle(self):
-        '''Set shuffle mode off'''
+        """Set shuffle mode off."""
         raise NotImplementedError()
-    
-    def async_add_song_to_playlist(self, song_id=None, song_name='', artist_name=''):
-        '''Add song to default playlist'''
+
+    def async_add_song_to_playlist(self,
+                                   song_id=None, song_name='', artist_name=''):
+        """Add song to default playlist."""
         raise NotImplementedError()
-    
-    def async_add_album_to_playlist(self, album_id=None, album_name='', artist_name=''):
-        '''Add album to default playlist'''
+
+    def async_add_album_to_playlist(self,
+                                    album_id=None,
+                                    album_name='', artist_name=''):
+        """Add album to default playlist."""
         raise NotImplementedError()
-    
+
     def async_add_all_albums_to_playlist(self, artist_name):
-        '''Add all albums of a certain artist to playlist'''
+        """Add all albums of a certain artist to playlist."""
         raise NotImplementedError()
 
     # No need to overwrite these.
