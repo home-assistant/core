@@ -190,7 +190,6 @@ class ApnsNotificationService(BaseNotificationService):
         has a tracking id specified.
         """
         self.device_states[entity_id] = str(to_s.state)
-        return
 
     def write_devices(self):
         """Write all known devices to file."""
