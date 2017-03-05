@@ -922,7 +922,7 @@ class ZWaveDeviceEntity(Entity):
     @callback
     def _schedule_update(self):
         """Schedule delayed update."""
-        if not self._scheduled_update:
+        if self._scheduled_update:
             return
 
         @callback
