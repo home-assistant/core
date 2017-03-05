@@ -3,6 +3,8 @@ import asyncio
 import logging
 from datetime import timedelta
 
+import async_timeout
+
 from homeassistant.core import HomeAssistant, CoreState, callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.history import get_states, last_recorder_run
@@ -10,10 +12,10 @@ from homeassistant.components.recorder import (
     wait_connection_ready, DOMAIN as _RECORDER)
 import homeassistant.util.dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
+RECORDER_TIMEOUT = 10
 DATA_RESTORE_CACHE = 'restore_state_cache'
 _LOCK = 'restore_lock'
+_LOGGER = logging.getLogger(__name__)
 
 
 def _load_restore_cache(hass: HomeAssistant):
@@ -58,7 +60,14 @@ def async_get_last_state(hass, entity_id: str):
                       hass.state)
         return None
 
-    yield from wait_connection_ready(hass)
+    try:
+        with async_timeout.timeout(RECORDER_TIMEOUT, loop=hass.loop):
+            connected = yield from wait_connection_ready(hass)
+    except asyncio.TimeoutError:
+        return None
+
+    if not connected:
+        return None
 
     if _LOCK not in hass.data:
         hass.data[_LOCK] = asyncio.Lock(loop=hass.loop)
