@@ -166,6 +166,7 @@ EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
+EVENT_SERVICE_REMOVED = 'service_removed'
 
 # #### STATES ####
 STATE_ON = 'on'

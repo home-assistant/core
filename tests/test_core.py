@@ -698,6 +698,12 @@ class TestServiceRegistry(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
+    def test_remove_service(self):
+        """Test remove service."""
+        assert self.services.has_service('test_Domain', 'test_Service')
+        self.services.remove('test_Domain', 'test_Service')
+        assert not self.services.has_service('test_Domain', 'test_Service')
+
 
 class TestConfig(unittest.TestCase):
     """Test configuration methods."""
