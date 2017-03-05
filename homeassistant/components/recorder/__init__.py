@@ -76,7 +76,7 @@ def wait_connection_ready(hass):
 
     Returns a coroutine object.
     """
-    return hass.data[DATA_INSTANCE].async_db_ready.wait()
+    return hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime]=None):
@@ -113,13 +113,13 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
-    hass.data[DATA_INSTANCE] = Recorder(
+    instance = hass.data[DATA_INSTANCE] = Recorder(
         hass, purge_days=purge_days, uri=db_url, include=include,
         exclude=exclude)
-    hass.data[DATA_INSTANCE].async_initialize()
-    hass.data[DATA_INSTANCE].start()
+    instance.async_initialize()
+    instance.start()
 
-    return True
+    return (yield from instance.async_db_ready)
 
 
 class Recorder(threading.Thread):
@@ -135,7 +135,7 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
-        self.async_db_ready = asyncio.Event(loop=hass.loop)
+        self.async_db_ready = asyncio.Future(loop=hass.loop)
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 
@@ -156,22 +156,33 @@ class Recorder(threading.Thread):
         from .models import States, Events
         from homeassistant.components import persistent_notification
 
-        while True:
+        tries = 1
+        connected = False
+
+        while not connected and tries < 5:
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
                 self._setup_run()
-                self.hass.loop.call_soon_threadsafe(self.async_db_ready.set)
-                break
+                connected = True
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
                 time.sleep(CONNECT_RETRY_WAIT)
-                retry = locals().setdefault('retry', 10) - 1
-                if retry == 0:
-                    msg = "The recorder could not start, please check the log"
-                    persistent_notification.create(self.hass, msg, 'Recorder')
-                    return
+                tries += 1
+
+        if not connected:
+            @callback
+            def connection_failed():
+                """Connection failed tasks."""
+                self.async_db_ready.set_result(False)
+                persistent_notification.async_create(
+                    self.hass,
+                    "The recorder could not start, please check the log",
+                    "Recorder")
+
+            self.hass.add_job(connection_failed)
+            return
 
         purge_task = object()
         shutdown_task = object()
@@ -180,6 +191,8 @@ class Recorder(threading.Thread):
         @callback
         def register():
             """Post connection initialize."""
+            self.async_db_ready.set_result(True)
+
             def shutdown(event):
                 """Shut down the Recorder."""
                 if not hass_started.done():
@@ -279,19 +292,20 @@ class Recorder(threading.Thread):
         from sqlalchemy.orm import sessionmaker
         from . import models
 
+        kwargs = {}
+
         if self.db_url == 'sqlite://' or ':memory:' in self.db_url:
             from sqlalchemy.pool import StaticPool
-            self.engine = create_engine(
-                'sqlite://',
-                connect_args={'check_same_thread': False},
-                poolclass=StaticPool,
-                pool_reset_on_return=None)
-        else:
-            self.engine = create_engine(self.db_url, echo=False)
 
+            kwargs['connect_args'] = {'check_same_thread': False}
+            kwargs['poolclass'] = StaticPool
+            kwargs['pool_reset_on_return'] = None
+        else:
+            kwargs['echo'] = False
+
+        self.engine = create_engine(self.db_url, **kwargs)
         models.Base.metadata.create_all(self.engine)
-        session_factory = sessionmaker(bind=self.engine)
-        self.get_session = scoped_session(session_factory)
+        self.get_session = scoped_session(sessionmaker(bind=self.engine))
 
     def _close_connection(self):
         """Close the connection."""
