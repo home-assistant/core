@@ -95,7 +95,7 @@ class LIFX(object):
             _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
                           ipaddr, name, power, hue, sat, bri, kel)
             bulb = LIFXLight(self._liffylights, self.probe,
-                ipaddr, name, power, hue, sat, bri, kel)
+                             ipaddr, name, power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
         else:
@@ -132,6 +132,7 @@ class LIFX(object):
         """Probe all lights."""
         self._liffylights.probe()
 
+
 def convert_rgb_to_hsv(rgb):
     """Convert Home Assistant RGB values to HSV values."""
     red, green, blue = [_ / BYTE_MAX for _ in rgb]
@@ -146,8 +147,8 @@ def convert_rgb_to_hsv(rgb):
 class LIFXLight(Light):
     """Representation of a LIFX light."""
 
-    def __init__(self, liffy, probe, ipaddr, name, power, hue, saturation, brightness,
-                 kelvin):
+    def __init__(self, liffy, probe, ipaddr, name, power,
+                 hue, saturation, brightness, kelvin):
         """Initialize the light."""
         _LOGGER.debug("LIFXLight: %s %s", ipaddr, name)
 
