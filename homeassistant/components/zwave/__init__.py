@@ -798,7 +798,8 @@ class ZWaveDeviceEntity(Entity):
         if self.hass and not self._scheduled_update:
             self._schedule_update()
         else:
-            _LOGGER.info('Skip update for %s. It is already scheduled', self.entity_id)
+            _LOGGER.info('Skip update for %s. It is already scheduled',
+                         self.entity_id)
 
     def _update_ids(self):
         """Update value_ids from which to pull attributes."""
