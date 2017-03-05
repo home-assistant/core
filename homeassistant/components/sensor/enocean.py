@@ -54,7 +54,7 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     def value_changed(self, value):
         """Update the internal state of the device."""
         self.power = value
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def state(self):

@@ -1,5 +1,6 @@
 """The tests for the logbook component."""
-# pylint: disable=protected-access
+# pylint: disable=protected-access,invalid-name
+import logging
 from datetime import timedelta
 import unittest
 from unittest.mock import patch
@@ -11,9 +12,13 @@ from homeassistant.const import (
     ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
-from tests.common import mock_http_component, get_test_home_assistant
+from tests.common import (
+    mock_http_component, init_recorder_component, get_test_home_assistant)
+
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TestComponentLogbook(unittest.TestCase):
@@ -24,12 +29,14 @@ class TestComponentLogbook(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        init_recorder_component(self.hass)  # Force an in memory DB
         mock_http_component(self.hass)
-        self.hass.config.components += ['frontend', 'recorder', 'api']
+        self.hass.config.components |= set(['frontend', 'recorder', 'api'])
         with patch('homeassistant.components.logbook.'
                    'register_built_in_panel'):
             assert setup_component(self.hass, logbook.DOMAIN,
                                    self.EMPTY_CONFIG)
+        self.hass.start()
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -41,6 +48,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         @ha.callback
         def event_listener(event):
+            """Append on event."""
             calls.append(event)
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
@@ -72,6 +80,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         @ha.callback
         def event_listener(event):
+            """Append on event."""
             calls.append(event)
 
         self.hass.bus.listen(logbook.EVENT_LOGBOOK_ENTRY, event_listener)
@@ -129,7 +138,7 @@ class TestComponentLogbook(unittest.TestCase):
         eventA.data['old_state'] = None
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), self.EMPTY_CONFIG)
+                                          eventA, eventB), {})
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -151,7 +160,7 @@ class TestComponentLogbook(unittest.TestCase):
         eventA.data['new_state'] = None
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), self.EMPTY_CONFIG)
+                                          eventA, eventB), {})
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -173,7 +182,7 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointB, entity_id2, 20)
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), self.EMPTY_CONFIG)
+                                          eventA, eventB), {})
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -197,8 +206,9 @@ class TestComponentLogbook(unittest.TestCase):
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), config)
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
+            config[logbook.DOMAIN])
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -222,8 +232,9 @@ class TestComponentLogbook(unittest.TestCase):
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
                 logbook.CONF_DOMAINS: ['switch', ]}}})
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_START),
-                                          eventA, eventB), config)
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
+            config[logbook.DOMAIN])
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -242,24 +253,25 @@ class TestComponentLogbook(unittest.TestCase):
         entity_id2 = 'sensor.blu'
 
         eventA = ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
-                logbook.ATTR_NAME: name,
-                logbook.ATTR_MESSAGE: message,
-                logbook.ATTR_DOMAIN: domain,
-                logbook.ATTR_ENTITY_ID: entity_id,
-                })
+            logbook.ATTR_NAME: name,
+            logbook.ATTR_MESSAGE: message,
+            logbook.ATTR_DOMAIN: domain,
+            logbook.ATTR_ENTITY_ID: entity_id,
+        })
         eventB = ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
-                logbook.ATTR_NAME: name,
-                logbook.ATTR_MESSAGE: message,
-                logbook.ATTR_DOMAIN: domain,
-                logbook.ATTR_ENTITY_ID: entity_id2,
-                })
+            logbook.ATTR_NAME: name,
+            logbook.ATTR_MESSAGE: message,
+            logbook.ATTR_DOMAIN: domain,
+            logbook.ATTR_ENTITY_ID: entity_id2,
+        })
 
         config = logbook.CONFIG_SCHEMA({
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_EXCLUDE: {
                 logbook.CONF_ENTITIES: [entity_id, ]}}})
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), config)
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
+            config[logbook.DOMAIN])
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -283,8 +295,9 @@ class TestComponentLogbook(unittest.TestCase):
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_INCLUDE: {
                 logbook.CONF_ENTITIES: [entity_id2, ]}}})
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
-                                          eventA, eventB), config)
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
+            config[logbook.DOMAIN])
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -308,8 +321,9 @@ class TestComponentLogbook(unittest.TestCase):
             ha.DOMAIN: {},
             logbook.DOMAIN: {logbook.CONF_INCLUDE: {
                 logbook.CONF_DOMAINS: ['sensor', ]}}})
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_START),
-                                          eventA, eventB), config)
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
+            config[logbook.DOMAIN])
         entries = list(logbook.humanify(events))
 
         self.assertEqual(2, len(entries))
@@ -341,9 +355,9 @@ class TestComponentLogbook(unittest.TestCase):
                 logbook.CONF_EXCLUDE: {
                     logbook.CONF_DOMAINS: ['switch', ],
                     logbook.CONF_ENTITIES: ['sensor.bli', ]}}})
-        events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_START),
-                                          eventA1, eventA2, eventA3,
-                                          eventB1, eventB2), config)
+        events = logbook._exclude_events(
+            (ha.Event(EVENT_HOMEASSISTANT_START), eventA1, eventA2, eventA3,
+             eventB1, eventB2), config[logbook.DOMAIN])
         entries = list(logbook.humanify(events))
 
         self.assertEqual(3, len(entries))
@@ -532,7 +546,8 @@ class TestComponentLogbook(unittest.TestCase):
 
     def create_state_changed_event(self, event_time_fired, entity_id, state,
                                    attributes=None, last_changed=None,
-                                   last_updated=None):
+                                   last_updated=None): \
+            # pylint: disable=no-self-use
         """Create state changed event."""
         # Logbook only cares about state change events that
         # contain an old state but will not actually act on it.

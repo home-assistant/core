@@ -12,13 +12,13 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
+    CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 import voluptuous as vol
 
-REQUIREMENTS = ['qnapstats==0.2.1']
+REQUIREMENTS = ['qnapstats==0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,11 +44,16 @@ CONF_NICS = 'nics'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'QNAP'
 DEFAULT_PORT = 8080
+DEFAULT_TIMEOUT = 5
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-_HEALTH_MON_COND = {
+NOTIFICATION_ID = 'qnap_notification'
+NOTIFICATION_TITLE = 'QNAP Sensor Setup'
+
+_SYSTEM_MON_COND = {
     'status': ['Status', None, 'mdi:checkbox-marked-circle-outline'],
+    'system_temp': ['System Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 _CPU_MON_COND = {
     'cpu_temp': ['CPU Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
@@ -76,7 +81,7 @@ _VOLUME_MON_COND = {
     'volume_percentage_used': ['Volume Used', '%', 'mdi:chart-pie'],
 }
 
-_MONITORED_CONDITIONS = list(_HEALTH_MON_COND.keys()) + \
+_MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
                         list(_CPU_MON_COND.keys()) + \
                         list(_MEMORY_MON_COND.keys()) + \
                         list(_NETWORK_MON_COND.keys()) + \
@@ -86,7 +91,9 @@ _MONITORED_CONDITIONS = list(_HEALTH_MON_COND.keys()) + \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
@@ -103,13 +110,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     api = QNAPStatsAPI(config)
     api.update()
 
+    if not api.data:
+        import homeassistant.loader as loader
+        loader.get_component('persistent_notification').create(
+            hass, 'Error: Failed to set up QNAP sensor.<br />'
+                  'Check the logs for additional information. '
+                  'You will need to restart hass after fixing.',
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
+
     sensors = []
 
     # Basic sensors
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        if variable in _HEALTH_MON_COND:
-            sensors.append(QNAPHealthStatus(api, variable,
-                                            _HEALTH_MON_COND[variable]))
+        if variable in _SYSTEM_MON_COND:
+            sensors.append(QNAPSystemSensor(api, variable,
+                                            _SYSTEM_MON_COND[variable]))
         if variable in _CPU_MON_COND:
             sensors.append(QNAPCPUSensor(api, variable,
                                          _CPU_MON_COND[variable]))
@@ -175,7 +192,10 @@ class QNAPStatsAPI(object):
             protocol + "://" + config.get(CONF_HOST),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD))
+            config.get(CONF_PASSWORD),
+            verify_ssl=config.get(CONF_VERIFY_SSL),
+            timeout=config.get(CONF_TIMEOUT),
+        )
 
         self.data = {}
 
@@ -308,13 +328,17 @@ class QNAPNetworkSensor(QNAPSensor):
             }
 
 
-class QNAPHealthStatus(QNAPSensor):
+class QNAPSystemSensor(QNAPSensor):
     """A QNAP sensor that monitors overall system health."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._api.data["system_health"]
+        if self.var_id == "status":
+            return self._api.data["system_health"]
+
+        if self.var_id == "system_temp":
+            return int(self._api.data["system_stats"]["system"]["temp_c"])
 
     @property
     def device_state_attributes(self):

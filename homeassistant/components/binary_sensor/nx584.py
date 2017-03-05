@@ -12,7 +12,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    SENSOR_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
+    DEVICE_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -28,7 +28,7 @@ DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
 
 ZONE_TYPES_SCHEMA = vol.Schema({
-    cv.positive_int: vol.In(SENSOR_CLASSES),
+    cv.positive_int: vol.In(DEVICE_CLASSES),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -85,8 +85,8 @@ class NX584ZoneSensor(BinarySensorDevice):
         self._zone_type = zone_type
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
     @property

@@ -13,26 +13,26 @@ from functools import reduce
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant import core
-from homeassistant.components import discovery
+from homeassistant.helpers import discovery
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (EVENT_HOMEASSISTANT_START, STATE_UNKNOWN,
                                  EVENT_HOMEASSISTANT_STOP, STATE_ON,
                                  STATE_OFF, CONF_DEVICES, CONF_PLATFORM,
-                                 CONF_CUSTOMIZE, STATE_PLAYING, STATE_IDLE,
+                                 STATE_PLAYING, STATE_IDLE,
                                  STATE_PAUSED, CONF_HOST)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyCEC==0.4.12']
+REQUIREMENTS = ['pyCEC==0.4.13']
 
 DOMAIN = 'hdmi_cec'
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_DISPLAY_NAME = "HomeAssistant"
+CONF_TYPES = 'types'
 
 ICON_UNKNOWN = 'mdi:help'
 ICON_AUDIO = 'mdi:speaker'
@@ -116,11 +116,6 @@ DEVICE_SCHEMA = vol.Schema({
                                       cv.string)
 })
 
-CUSTOMIZE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_PLATFORM, default=MEDIA_PLAYER): vol.Any(MEDIA_PLAYER,
-                                                               SWITCH)
-})
-
 CONF_DISPLAY_NAME = 'osd_name'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -132,6 +127,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PLATFORM): vol.Any(SWITCH, MEDIA_PLAYER),
         vol.Optional(CONF_HOST): cv.string,
         vol.Optional(CONF_DISPLAY_NAME): cv.string,
+        vol.Optional(CONF_TYPES, default={}):
+        vol.Schema({cv.entity_id: vol.Any(MEDIA_PLAYER, SWITCH)})
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -253,11 +250,9 @@ def setup(hass: HomeAssistant, base_config):
             command = CecCommand(cmd, dst, src, att)
         hdmi_network.send_command(command)
 
-    @callback
     def _standby(call):
         hdmi_network.standby()
 
-    @callback
     def _power_on(call):
         hdmi_network.power_on()
 
@@ -294,15 +289,14 @@ def setup(hass: HomeAssistant, base_config):
         """
         hdmi_network.scan()
 
-    @callback
     def _new_device(device):
         """Called when new device is detected by HDMI network."""
         key = DOMAIN + '.' + device.name
         hass.data[key] = device
-        discovery.load_platform(hass, base_config.get(core.DOMAIN).get(
-            CONF_CUSTOMIZE, {}).get(key, {}).get(CONF_PLATFORM, platform),
-                                DOMAIN, discovered={ATTR_NEW: [key]},
-                                hass_config=base_config)
+        ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
+        discovery.load_platform(
+            hass, ent_platform, DOMAIN, discovered={ATTR_NEW: [key]},
+            hass_config=base_config)
 
     def _shutdown(call):
         hdmi_network.stop()

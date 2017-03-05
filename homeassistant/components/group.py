@@ -20,8 +20,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'group'
 
@@ -57,14 +56,16 @@ def _conf_preprocess(value):
     return value
 
 
+GROUP_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
+    CONF_VIEW: cv.boolean,
+    CONF_NAME: cv.string,
+    CONF_ICON: cv.icon,
+    CONF_CONTROL: cv.string,
+})
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, {
-        vol.Optional(CONF_ENTITIES): vol.Any(cv.entity_ids, None),
-        CONF_VIEW: cv.boolean,
-        CONF_NAME: cv.string,
-        CONF_ICON: cv.icon,
-        CONF_CONTROL: cv.string,
-    }, cv.match_all))
+    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, GROUP_SCHEMA))
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
@@ -96,7 +97,13 @@ def is_on(hass, entity_id):
 
 def reload(hass):
     """Reload the automation from config."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
+    hass.add_job(async_reload, hass)
+
+
+@asyncio.coroutine
+def async_reload(hass):
+    """Reload the automation from config."""
+    yield from hass.services.async_call(DOMAIN, SERVICE_RELOAD)
 
 
 def set_visibility(hass, entity_id=None, visible=True):
@@ -357,7 +364,7 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        run_callback_threadsafe(self.hass.loop, self.async_start).result()
+        self.hass.add_job(self.async_start)
 
     @callback
     def async_start(self):

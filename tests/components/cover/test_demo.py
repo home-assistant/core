@@ -3,7 +3,7 @@ import unittest
 from datetime import timedelta
 import homeassistant.util.dt as dt_util
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import cover
 from tests.common import get_test_home_assistant, fire_time_changed
 
@@ -23,6 +23,17 @@ class TestCoverDemo(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
         self.hass.stop()
+
+    def test_supported_features(self):
+        """Test cover supported features."""
+        state = self.hass.states.get('cover.garage_door')
+        self.assertEqual(3, state.attributes.get('supported_features'))
+        state = self.hass.states.get('cover.kitchen_window')
+        self.assertEqual(11, state.attributes.get('supported_features'))
+        state = self.hass.states.get('cover.hall_window')
+        self.assertEqual(15, state.attributes.get('supported_features'))
+        state = self.hass.states.get('cover.living_room_window')
+        self.assertEqual(255, state.attributes.get('supported_features'))
 
     def test_close_cover(self):
         """Test closing the cover."""

@@ -33,7 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Moon sensor."""
     name = config.get(CONF_NAME)
 
-    yield from async_add_devices([MoonSensor(name)], True)
+    async_add_devices([MoonSensor(name)], True)
     return True
 
 
@@ -61,11 +61,6 @@ class MoonSensor(Entity):
             return 'First quarter'
         else:
             return 'New moon'
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return 'Phase'
 
     @property
     def icon(self):

@@ -18,15 +18,15 @@ from voluptuous.error import Error as VoluptuousError
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
-from homeassistant import bootstrap
+from homeassistant.setup import setup_component
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
-    'google-api-python-client==1.5.5',
-    'oauth2client==3.0.0',
+    'google-api-python-client==1.6.2',
+    'oauth2client==4.0.0',
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,8 +118,8 @@ def do_authentication(hass, config):
         return False
 
     persistent_notification.create(
-        hass, 'In order to authorize Home-Assistant to view your calendars'
-              'You must visit: <a href="{}" target="_blank">{}</a> and enter'
+        hass, 'In order to authorize Home-Assistant to view your calendars '
+              'you must visit: <a href="{}" target="_blank">{}</a> and enter '
               'code: {}'.format(dev_flow.verification_url,
                                 dev_flow.verification_url,
                                 dev_flow.user_code),
@@ -223,7 +223,7 @@ def do_setup(hass, config):
     setup_services(hass, track_new_found_calendars, calendar_service)
 
     # Ensure component is loaded
-    bootstrap.setup_component(hass, 'calendar', config)
+    setup_component(hass, 'calendar', config)
 
     for calendar in hass.data[DATA_INDEX].values():
         discovery.load_platform(hass, 'calendar', DOMAIN, calendar)
@@ -247,7 +247,8 @@ class GoogleCalendarService(object):
         from googleapiclient import discovery as google_discovery
         credentials = Storage(self.token_file).get()
         http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build('calendar', 'v3', http=http)
+        service = google_discovery.build('calendar', 'v3', http=http,
+                                         cache_discovery=False)
         return service
 
 

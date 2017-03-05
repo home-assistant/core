@@ -14,6 +14,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 from homeassistant.helpers.event import track_time_change
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -96,7 +98,7 @@ class LIFX(object):
                           ipaddr, name, power, hue, sat, bri, kel)
             bulb.set_power(power)
             bulb.set_color(hue, sat, bri, kel)
-            bulb.update_ha_state()
+            bulb.schedule_update_ha_state()
 
     def on_color(self, ipaddr, hue, sat, bri, kel):
         """Initialize the light."""
@@ -104,7 +106,7 @@ class LIFX(object):
 
         if bulb is not None:
             bulb.set_color(hue, sat, bri, kel)
-            bulb.update_ha_state()
+            bulb.schedule_update_ha_state()
 
     def on_power(self, ipaddr, power):
         """Initialize the light."""
@@ -112,7 +114,7 @@ class LIFX(object):
 
         if bulb is not None:
             bulb.set_power(power)
-            bulb.update_ha_state()
+            bulb.schedule_update_ha_state()
 
     # pylint: disable=unused-argument
     def poll(self, now):
@@ -181,8 +183,7 @@ class LIFXLight(Light):
     @property
     def color_temp(self):
         """Return the color temperature."""
-        temperature = int(TEMP_MIN_HASS + (TEMP_MAX_HASS - TEMP_MIN_HASS) *
-                          (self._kel - TEMP_MIN) / (TEMP_MAX - TEMP_MIN))
+        temperature = color_temperature_kelvin_to_mired(self._kel)
 
         _LOGGER.debug("color_temp: %d", temperature)
         return temperature
@@ -201,7 +202,7 @@ class LIFXLight(Light):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 1000
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 
@@ -219,11 +220,8 @@ class LIFXLight(Light):
             brightness = self._bri
 
         if ATTR_COLOR_TEMP in kwargs:
-            # pylint: disable=fixme
-            # TODO: Use color_temperature_mired_to_kelvin from util.color
-            kelvin = int(((TEMP_MAX - TEMP_MIN) *
-                          (kwargs[ATTR_COLOR_TEMP] - TEMP_MIN_HASS) /
-                          (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
+            kelvin = int(color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP]))
         else:
             kelvin = self._kel
 
@@ -232,15 +230,17 @@ class LIFXLight(Light):
                       hue, saturation, brightness, kelvin, fade)
 
         if self._power == 0:
+            self._liffylights.set_color(self._ip, hue, saturation,
+                                        brightness, kelvin, 0)
             self._liffylights.set_power(self._ip, 65535, fade)
-
-        self._liffylights.set_color(self._ip, hue, saturation,
-                                    brightness, kelvin, fade)
+        else:
+            self._liffylights.set_color(self._ip, hue, saturation,
+                                        brightness, kelvin, fade)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 1000
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 

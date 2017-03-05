@@ -272,6 +272,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert component_setup.called
         assert platform_setup.called
 
@@ -294,13 +295,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
             ("{} 3".format(DOMAIN), {'platform': 'mod2'}),
         ]))
 
+        self.hass.block_till_done()
         assert platform1_setup.called
         assert platform2_setup.called
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
-           '._async_setup_platform', return_value=mock_coro()())
-    @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           '._async_setup_platform', return_value=mock_coro())
+    @patch('homeassistant.setup.async_setup_component',
+           return_value=mock_coro(True))
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -336,6 +338,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert mock_track.called
         assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
@@ -360,6 +363,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert mock_track.called
         assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
@@ -384,6 +388,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
                 'entity_namespace': 'yummy'
             }
         })
+
+        self.hass.block_till_done()
 
         assert sorted(self.hass.states.entity_ids()) == \
             ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']

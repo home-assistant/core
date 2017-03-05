@@ -18,14 +18,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoBinarySensor(BinarySensorDevice):
     """A Demo binary sensor."""
 
-    def __init__(self, name, state, sensor_class):
+    def __init__(self, name, state, device_class):
         """Initialize the demo sensor."""
         self._name = name
         self._state = state
-        self._sensor_type = sensor_class
+        self._sensor_type = device_class
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of this sensor."""
         return self._sensor_type
 

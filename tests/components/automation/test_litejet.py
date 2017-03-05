@@ -4,7 +4,7 @@ import unittest
 from unittest import mock
 from datetime import timedelta
 
-from homeassistant import bootstrap
+from homeassistant import setup
 import homeassistant.util.dt as dt_util
 from homeassistant.components import litejet
 from tests.common import (fire_time_changed, get_test_home_assistant)
@@ -57,7 +57,7 @@ class TestLiteJetTrigger(unittest.TestCase):
                 'port': '/tmp/this_will_be_mocked'
             }
         }
-        assert bootstrap.setup_component(self.hass, litejet.DOMAIN, config)
+        assert setup.setup_component(self.hass, litejet.DOMAIN, config)
 
         self.hass.services.register('test', 'automation', record_call)
 
@@ -106,7 +106,7 @@ class TestLiteJetTrigger(unittest.TestCase):
 
     def setup_automation(self, trigger):
         """Test setting up the automation."""
-        assert bootstrap.setup_component(self.hass, automation.DOMAIN, {
+        assert setup.setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: [
                 {
                     'alias': 'My Test',

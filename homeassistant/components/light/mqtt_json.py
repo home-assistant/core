@@ -4,11 +4,12 @@ Support for MQTT JSON lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt_json/
 """
-
+import asyncio
 import logging
 import json
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, PLATFORM_SCHEMA,
@@ -57,10 +58,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MQTT JSON Light."""
-    add_devices([MqttJson(
-        hass,
+    async_add_devices([MqttJson(
         config.get(CONF_NAME),
         {
             key: config.get(key) for key in (
@@ -85,10 +86,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttJson(Light):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, hass, name, topic, qos, retain,
-                 optimistic, brightness, rgb, flash_times):
+    def __init__(self, name, topic, qos, retain, optimistic, brightness, rgb,
+                 flash_times):
         """Initialize MQTT JSON light."""
-        self._hass = hass
         self._name = name
         self._topic = topic
         self._qos = qos
@@ -107,6 +107,13 @@ class MqttJson(Light):
 
         self._flash_times = flash_times
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method is a coroutine.
+        """
+        @callback
         def state_received(topic, payload, qos):
             """A new MQTT message has been received."""
             values = json.loads(payload)
@@ -136,11 +143,12 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid brightness value received')
 
-            self.update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            mqtt.subscribe(self._hass, self._topic[CONF_STATE_TOPIC],
-                           state_received, self._qos)
+            yield from mqtt.async_subscribe(
+                self.hass, self._topic[CONF_STATE_TOPIC], state_received,
+                self._qos)
 
     @property
     def brightness(self):
@@ -177,8 +185,12 @@ class MqttJson(Light):
         """Flag supported features."""
         return SUPPORT_MQTT_JSON
 
-    def turn_on(self, **kwargs):
-        """Turn the device on."""
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the device on.
+
+        This method is a coroutine.
+        """
         should_update = False
 
         message = {'state': 'ON'}
@@ -203,7 +215,7 @@ class MqttJson(Light):
                 message['flash'] = self._flash_times[CONF_FLASH_TIME_SHORT]
 
         if ATTR_TRANSITION in kwargs:
-            message['transition'] = kwargs[ATTR_TRANSITION]
+            message['transition'] = int(kwargs[ATTR_TRANSITION])
 
         if ATTR_BRIGHTNESS in kwargs:
             message['brightness'] = int(kwargs[ATTR_BRIGHTNESS])
@@ -212,8 +224,9 @@ class MqttJson(Light):
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
 
-        mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
-                     json.dumps(message), self._qos, self._retain)
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),
+            self._qos, self._retain)
 
         if self._optimistic:
             # Optimistically assume that the light has changed state.
@@ -221,19 +234,24 @@ class MqttJson(Light):
             should_update = True
 
         if should_update:
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-    def turn_off(self, **kwargs):
-        """Turn the device off."""
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the device off.
+
+        This method is a coroutine.
+        """
         message = {'state': 'OFF'}
 
         if ATTR_TRANSITION in kwargs:
-            message['transition'] = kwargs[ATTR_TRANSITION]
+            message['transition'] = int(kwargs[ATTR_TRANSITION])
 
-        mqtt.publish(self._hass, self._topic[CONF_COMMAND_TOPIC],
-                     json.dumps(message), self._qos, self._retain)
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),
+            self._qos, self._retain)
 
         if self._optimistic:
             # Optimistically assume that the light has changed state.
             self._state = False
-            self.schedule_update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())

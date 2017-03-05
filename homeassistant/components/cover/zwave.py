@@ -7,44 +7,28 @@ https://home-assistant.io/components/cover.zwave/
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
 import logging
-from homeassistant.components.cover import DOMAIN
+from homeassistant.components.cover import (
+    DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
+from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
-
-SOMFY = 0x47
-SOMFY_ZRTSI = 0x5a52
-SOMFY_ZRTSI_CONTROLLER = (SOMFY, SOMFY_ZRTSI)
-WORKAROUND = 'workaround'
-
-DEVICE_MAPPINGS = {
-    SOMFY_ZRTSI_CONTROLLER: WORKAROUND
-}
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Z-Wave covers."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
 
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
+def get_device(value, **kwargs):
+    """Create zwave entity device."""
     if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and value.index == 0):
-        value.set_change_verified(False)
-        add_devices([ZwaveRollershutter(value)])
+        return ZwaveRollershutter(value)
     elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
           value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
-        if (value.type != zwave.const.TYPE_BOOL and
-                value.genre != zwave.const.GENRE_USER):
-            return
-        value.set_change_verified(False)
-        add_devices([ZwaveGarageDoor(value)])
-    else:
-        return
+        return ZwaveGarageDoor(value)
+    return None
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
@@ -52,33 +36,48 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def __init__(self, value):
         """Initialize the zwave rollershutter."""
-        import libopenzwave
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         # pylint: disable=no-member
-        self._lozwmgr = libopenzwave.PyManager()
-        self._lozwmgr.create()
         self._node = value.node
+        self._open_id = None
+        self._close_id = None
+        self._current_position_id = None
         self._current_position = None
-        self._workaround = None
-        if (value.node.manufacturer_id.strip() and
-                value.node.product_id.strip()):
-            specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                                   int(value.node.product_type, 16))
 
-            if specific_sensor_key in DEVICE_MAPPINGS:
-                if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND:
-                    _LOGGER.debug("Controller without positioning feedback")
-                    self._workaround = 1
+        self._workaround = workaround.get_device_mapping(value)
+        if self._workaround:
+            _LOGGER.debug("Using workaround %s", self._workaround)
+        self.update_properties()
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        if not self._node.is_ready:
+            return None
+        return [self._current_position_id]
 
     def update_properties(self):
         """Callback on data changes for node values."""
         # Position value
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and \
-               value.label == 'Level':
-                self._current_position = value.data
+        if not self._node.is_ready:
+            if self._current_position_id is None:
+                self._current_position_id = self.get_value(
+                    class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
+                    label=['Level'], member='value_id')
+            if self._open_id is None:
+                self._open_id = self.get_value(
+                    class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
+                    label=['Open', 'Up'], member='value_id')
+            if self._close_id is None:
+                self._close_id = self.get_value(
+                    class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
+                    label=['Close', 'Down'], member='value_id')
+        if self._open_id and self._close_id and \
+                self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
+            self._open_id, self._close_id = self._close_id, self._open_id
+            self._workaround = None
+        self._current_position = self._node.get_dimmer_level(
+            self._current_position_id)
 
     @property
     def is_closed(self):
@@ -93,38 +92,23 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of Zwave roller shutter."""
-        if not self._workaround:
-            if self._current_position is not None:
-                if self._current_position <= 5:
-                    return 0
-                elif self._current_position >= 95:
-                    return 100
-                else:
-                    return self._current_position
+        if self._workaround == workaround.WORKAROUND_NO_POSITION:
+            return None
+        if self._current_position is not None:
+            if self._current_position <= 5:
+                return 0
+            elif self._current_position >= 95:
+                return 100
+            else:
+                return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Open' or value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Up':
-                self._lozwmgr.pressButton(value.value_id)
-                break
+        zwave.NETWORK.manager.pressButton(self._open_id)
 
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Down' or value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Close':
-                self._lozwmgr.pressButton(value.value_id)
-                break
+        zwave.NETWORK.manager.pressButton(self._close_id)
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
@@ -132,15 +116,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
-        for value in self._node.get_values(
-                class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL).values():
-            if value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Open' or value.command_class == \
-               zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and value.label == \
-               'Down':
-                self._lozwmgr.releaseButton(value.value_id)
-                break
+        zwave.NETWORK.manager.releaseButton(self._open_id)
 
 
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
@@ -149,11 +125,16 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def __init__(self, value):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.update_properties()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
 
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._value.data
+        return not self._state
 
     def close_cover(self):
         """Close the garage door."""
@@ -162,3 +143,13 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     def open_cover(self):
         """Open the garage door."""
         self._value.data = True
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_GARAGE

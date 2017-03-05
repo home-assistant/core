@@ -18,6 +18,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
+from homeassistant.components.http.ban import process_wrong_login
 
 DOMAIN = 'websocket_api'
 
@@ -256,9 +257,9 @@ class ActiveConnection:
                 else:
                     self.debug('Invalid password')
                     self.send_message(auth_invalid_message('Invalid password'))
-                    return wsock
 
             if not authenticated:
+                yield from process_wrong_login(self.request)
                 return wsock
 
             self.send_message(auth_ok_message())

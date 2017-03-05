@@ -23,7 +23,7 @@ CONF_CHANNEL_ID = 'channel_id'
 
 DEFAULT_NAME = 'ELIQ Online'
 
-ICON = 'mdi:speedometer'
+ICON = 'mdi:gauge'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -95,4 +95,4 @@ class EliqSensor(Entity):
             self._state = int(response.power)
             _LOGGER.debug("Updated power from server %d W", self._state)
         except URLError:
-            _LOGGER.error("Could not connect to the ELIQ Online API")
+            _LOGGER.warning("Could not connect to the ELIQ Online API")

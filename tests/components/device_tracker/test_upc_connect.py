@@ -4,7 +4,7 @@ import os
 from unittest.mock import patch
 import logging
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST, CONF_PASSWORD)
@@ -13,7 +13,8 @@ import homeassistant.components.device_tracker.upc_connect as platform
 from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, load_fixture)
+    get_test_home_assistant, assert_setup_component, load_fixture,
+    mock_component)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +31,7 @@ class TestUPCConnect(object):
     def setup_method(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['zone']
+        mock_component(self.hass, 'zone')
 
         self.host = "127.0.0.1"
 

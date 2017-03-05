@@ -169,4 +169,4 @@ class FritzBoxCallMonitor(object):
             self._sensor.set_state(VALUE_DISCONNECT)
             att = {"duration": line[3], "closed": isotime}
             self._sensor.set_attributes(att)
-        self._sensor.update_ha_state()
+        self._sensor.schedule_update_ha_state()

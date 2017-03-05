@@ -21,8 +21,7 @@ from typing import Optional
 
 import requests
 
-import homeassistant.bootstrap as bootstrap
-import homeassistant.core as ha
+from homeassistant import setup, core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
@@ -133,7 +132,7 @@ class HomeAssistant(ha.HomeAssistant):
         self.loop = loop or asyncio.get_event_loop()
         self.executor = ThreadPoolExecutor(max_workers=5)
         self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(self._async_exception_handler)
+        self.loop.set_exception_handler(ha.async_loop_exception_handler)
         self._pending_tasks = []
         self._pending_sheduler = None
 
@@ -151,7 +150,7 @@ class HomeAssistant(ha.HomeAssistant):
         """Start the instance."""
         # Ensure a local API exists to connect with remote
         if 'api' not in self.config.components:
-            if not bootstrap.setup_component(self, 'api'):
+            if not setup.setup_component(self, 'api'):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 
@@ -312,6 +311,8 @@ class JSONEncoder(json.JSONEncoder):
         """
         if isinstance(obj, datetime):
             return obj.isoformat()
+        elif isinstance(obj, set):
+            return list(obj)
         elif hasattr(obj, 'as_dict'):
             return obj.as_dict()
 
@@ -548,7 +549,13 @@ def get_config(api):
     try:
         req = api(METHOD_GET, URL_API_CONFIG)
 
-        return req.json() if req.status_code == 200 else {}
+        if req.status_code != 200:
+            return {}
+
+        result = req.json()
+        if 'components' in result:
+            result['components'] = set(result['components'])
+        return result
 
     except (HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the JSON

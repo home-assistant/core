@@ -22,9 +22,8 @@ from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
-from homeassistant.util.async import run_callback_threadsafe
-
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -87,7 +86,7 @@ PROP_TO_ATTR = {
 }
 
 # Service call validation schemas
-VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=900))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
@@ -126,6 +125,14 @@ PROFILE_SCHEMA = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
+def extract_info(state):
+    """Extract light parameters from a state object."""
+    params = {key: state.attributes[key] for key in PROP_TO_ATTR
+              if key in state.attributes}
+    params['is_on'] = state.state == STATE_ON
+    return params
+
+
 def is_on(hass, entity_id=None):
     """Return if the lights are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_LIGHTS
@@ -136,10 +143,10 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
             profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_on, hass, entity_id, transition, brightness,
+    hass.add_job(
+        async_turn_on, hass, entity_id, transition, brightness,
         rgb_color, xy_color, color_temp, white_value,
-        profile, flash, effect, color_name).result()
+        profile, flash, effect, color_name)
 
 
 @callback
@@ -169,8 +176,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
 
 def turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_off, hass, entity_id, transition).result()
+    hass.add_job(async_turn_off, hass, entity_id, transition)
 
 
 @callback
@@ -369,3 +375,9 @@ class Light(ToggleEntity):
     def supported_features(self):
         """Flag supported features."""
         return 0
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Component added, restore_state using platforms."""
+        if hasattr(self, 'async_restore_state'):
+            yield from async_restore_state(self, extract_info)

@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.components.sun as sun

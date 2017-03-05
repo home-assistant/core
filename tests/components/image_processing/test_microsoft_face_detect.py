@@ -3,7 +3,7 @@ from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.microsoft_face as mf
 
@@ -23,7 +23,7 @@ class TestMicrosoftFaceDetectSetup(object):
         self.hass.stop()
 
     @patch('homeassistant.components.microsoft_face.'
-           'MicrosoftFace.update_store', return_value=mock_coro()())
+           'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform(self, store_mock):
         """Setup platform with one entity."""
         config = {
@@ -49,7 +49,7 @@ class TestMicrosoftFaceDetectSetup(object):
             'image_processing.microsoftface_demo_camera')
 
     @patch('homeassistant.components.microsoft_face.'
-           'MicrosoftFace.update_store', return_value=mock_coro()())
+           'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform_name(self, store_mock):
         """Setup platform with one entity and set name."""
         config = {

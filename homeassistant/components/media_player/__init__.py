@@ -20,6 +20,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
+from homeassistant.helpers.deprecation import deprecated_substitute
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -450,6 +451,25 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        url = self.media_image_url
+
+        if url is not None:
+            return hashlib.md5(url.encode('utf-8')).hexdigest()[:5]
+
+        return None
+
+    @asyncio.coroutine
+    def async_get_media_image(self):
+        """Fetch media image of current playing image."""
+        url = self.media_image_url
+        if url is None:
+            return None, None
+
+        return (yield from _async_fetch_image(self.hass, url))
+
+    @property
     def media_title(self):
         """Title of current playing media."""
         return None
@@ -520,40 +540,9 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def supported_media_commands(self):
-        """Flag media commands that are supported.
-
-        DEPRECATED: Included for temporary custom platform compatibility.
-        """
-        return None
-
-    @property
+    @deprecated_substitute('supported_media_commands')
     def supported_features(self):
         """Flag media player features that are supported."""
-        # Begin temporary transition logic
-
-        if self.supported_media_commands is not None:
-            # If this platform is still using supported_media_commands, issue
-            # a logger warning once with instructions on how to fix it.
-            if not getattr(self, '_supported_features_warned', False):
-                def show_warning():
-                    """Show a deprecation warning in the log for this class."""
-                    import inspect
-                    _LOGGER.warning(
-                        "supported_media_commands is deprecated. Please "
-                        "rename supported_media_commands to "
-                        "supported_features in '%s' to ensure future support.",
-                        inspect.getfile(self.__class__))
-                # This is a temporary attribute. We don't want to pollute
-                # __init__ so it can be easily removed.
-                # pylint: disable=attribute-defined-outside-init
-                self._supported_features_warned = True
-                self.hass.add_job(show_warning)
-
-            # Return the old property
-            return self.supported_media_commands
-
-        # End temporary transition logic
         return 0
 
     def turn_on(self):
@@ -768,18 +757,15 @@ class MediaPlayerDevice(Entity):
         """Boolean if clear playlist command supported."""
         return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
 
-    def toggle(self):
-        """Toggle the power on the media player."""
-        if self.state in [STATE_OFF, STATE_IDLE]:
-            self.turn_on()
-        else:
-            self.turn_off()
-
     def async_toggle(self):
         """Toggle the power on the media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
+        if hasattr(self, 'toggle'):
+            # pylint: disable=no-member
+            return self.hass.loop.run_in_executor(None, self.toggle)
+
         if self.state in [STATE_OFF, STATE_IDLE]:
             return self.async_turn_on()
         else:
@@ -815,18 +801,15 @@ class MediaPlayerDevice(Entity):
             yield from self.async_set_volume_level(
                 max(0, self.volume_level - .1))
 
-    def media_play_pause(self):
-        """Play or pause the media player."""
-        if self.state == STATE_PLAYING:
-            self.media_pause()
-        else:
-            self.media_play()
-
     def async_media_play_pause(self):
         """Play or pause the media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
+        if hasattr(self, 'media_play_pause'):
+            # pylint: disable=no-member
+            return self.hass.loop.run_in_executor(None, self.media_play_pause)
+
         if self.state == STATE_PLAYING:
             return self.async_media_pause()
         else:
@@ -838,14 +821,13 @@ class MediaPlayerDevice(Entity):
         if self.state == STATE_OFF:
             return None
 
-        url = self.media_image_url
+        image_hash = self.media_image_hash
 
-        if url is None:
+        if image_hash is None:
             return None
 
         return ENTITY_IMAGE_URL.format(
-            self.entity_id, self.access_token,
-            hashlib.md5(url.encode('utf-8')).hexdigest()[:5])
+            self.entity_id, self.access_token, image_hash)
 
     @property
     def state_attributes(self):
@@ -939,8 +921,7 @@ class MediaPlayerImageView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        data, content_type = yield from _async_fetch_image(
-            request.app['hass'], player.media_image_url)
+        data, content_type = yield from player.async_get_media_image()
 
         if data is None:
             return web.Response(status=500)

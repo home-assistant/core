@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from astral import Astral
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (
@@ -16,9 +16,11 @@ from homeassistant.helpers.event import (
     track_time_change,
     track_state_change,
     track_time_interval,
+    track_template,
     track_sunrise,
     track_sunset,
 )
+from homeassistant.helpers.template import Template
 from homeassistant.components import sun
 import homeassistant.util.dt as dt_util
 
@@ -187,6 +189,77 @@ class TestEventHelpers(unittest.TestCase):
         self.assertEqual(1, len(specific_runs))
         self.assertEqual(5, len(wildcard_runs))
         self.assertEqual(6, len(wildercard_runs))
+
+    def test_track_template(self):
+        """Test tracking template."""
+        specific_runs = []
+        wildcard_runs = []
+        wildercard_runs = []
+
+        template_condition = Template(
+            "{{states.switch.test.state == 'on'}}",
+            self.hass
+        )
+        template_condition_var = Template(
+            "{{states.switch.test.state == 'on' and test == 5}}",
+            self.hass
+        )
+
+        self.hass.states.set('switch.test', 'off')
+
+        def specific_run_callback(entity_id, old_state, new_state):
+            specific_runs.append(1)
+
+        track_template(self.hass, template_condition, specific_run_callback)
+
+        @ha.callback
+        def wildcard_run_callback(entity_id, old_state, new_state):
+            wildcard_runs.append((old_state, new_state))
+
+        track_template(self.hass, template_condition, wildcard_run_callback)
+
+        @asyncio.coroutine
+        def wildercard_run_callback(entity_id, old_state, new_state):
+            wildercard_runs.append((old_state, new_state))
+
+        track_template(
+            self.hass, template_condition_var, wildercard_run_callback,
+            {'test': 5})
+
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(1, len(wildcard_runs))
+        self.assertEqual(1, len(wildercard_runs))
+
+        self.hass.states.set('switch.test', 'on')
+        self.hass.block_till_done()
+
+        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(2, len(wildcard_runs))
+        self.assertEqual(2, len(wildercard_runs))
 
     def test_track_time_interval(self):
         """Test tracking time interval."""

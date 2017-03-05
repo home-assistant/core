@@ -13,13 +13,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (CONF_ENTITY_ID, STATE_IDLE, CONF_NAME,
-                                 CONF_STATE, STATE_ON, STATE_OFF,
-                                 SERVICE_TURN_ON, SERVICE_TURN_OFF,
-                                 SERVICE_TOGGLE, ATTR_ENTITY_ID)
+from homeassistant.const import (
+    CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import service, event
-from homeassistant.util.async import run_callback_threadsafe
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,13 +30,16 @@ CONF_NOTIFIERS = 'notifiers'
 CONF_REPEAT = 'repeat'
 CONF_SKIP_FIRST = 'skip_first'
 
+DEFAULT_CAN_ACK = True
+DEFAULT_SKIP_FIRST = False
+
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
-    vol.Required(CONF_CAN_ACK, default=True): cv.boolean,
-    vol.Required(CONF_SKIP_FIRST, default=False): cv.boolean,
+    vol.Required(CONF_CAN_ACK, default=DEFAULT_CAN_ACK): cv.boolean,
+    vol.Required(CONF_SKIP_FIRST, default=DEFAULT_SKIP_FIRST): cv.boolean,
     vol.Required(CONF_NOTIFIERS): cv.ensure_list})
 
 CONFIG_SCHEMA = vol.Schema({
@@ -60,7 +61,7 @@ def is_on(hass, entity_id):
 
 def turn_on(hass, entity_id):
     """Reset the alert."""
-    run_callback_threadsafe(hass.loop, async_turn_on, hass, entity_id)
+    hass.add_job(async_turn_on, hass, entity_id)
 
 
 @callback
@@ -73,7 +74,7 @@ def async_turn_on(hass, entity_id):
 
 def turn_off(hass, entity_id):
     """Acknowledge alert."""
-    run_callback_threadsafe(hass.loop, async_turn_off, hass, entity_id)
+    hass.add_job(async_turn_off, hass, entity_id)
 
 
 @callback
@@ -86,7 +87,7 @@ def async_turn_off(hass, entity_id):
 
 def toggle(hass, entity_id):
     """Toggle acknowledgement of alert."""
-    run_callback_threadsafe(hass.loop, async_toggle, hass, entity_id)
+    hass.add_job(async_toggle, hass, entity_id)
 
 
 @callback
@@ -99,7 +100,7 @@ def async_toggle(hass, entity_id):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup alert component."""
+    """Set up the Alert component."""
     alerts = config.get(DOMAIN)
     all_alerts = {}
 
@@ -117,7 +118,7 @@ def async_setup(hass, config):
             else:
                 yield from alert.async_turn_off()
 
-    # setup alerts
+    # Setup alerts
     for entity_id, alert in alerts.items():
         entity = Alert(hass, entity_id,
                        alert[CONF_NAME], alert[CONF_ENTITY_ID],
@@ -126,13 +127,13 @@ def async_setup(hass, config):
                        alert[CONF_CAN_ACK])
         all_alerts[entity.entity_id] = entity
 
-    # read descriptions
+    # Read descriptions
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
     descriptions = descriptions.get(DOMAIN, {})
 
-    # setup service calls
+    # Setup service calls
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_alert_service,
         descriptions.get(SERVICE_TURN_OFF), schema=ALERT_SERVICE_SCHEMA)
@@ -171,8 +172,8 @@ class Alert(ToggleEntity):
         self._cancel = None
         self.entity_id = ENTITY_ID_FORMAT.format(entity_id)
 
-        event.async_track_state_change(hass, watched_entity_id,
-                                       self.watched_entity_change)
+        event.async_track_state_change(
+            hass, watched_entity_id, self.watched_entity_change)
 
     @property
     def name(self):
@@ -201,7 +202,7 @@ class Alert(ToggleEntity):
     @asyncio.coroutine
     def watched_entity_change(self, entity, from_state, to_state):
         """Determine if the alert should start or stop."""
-        _LOGGER.debug('Watched entity (%s) has changed.', entity)
+        _LOGGER.debug("Watched entity (%s) has changed", entity)
         if to_state.state == self._alert_state and not self._firing:
             yield from self.begin_alerting()
         if to_state.state != self._alert_state and self._firing:
@@ -210,7 +211,7 @@ class Alert(ToggleEntity):
     @asyncio.coroutine
     def begin_alerting(self):
         """Begin the alert procedures."""
-        _LOGGER.debug('Beginning Alert: %s', self._name)
+        _LOGGER.debug("Beginning Alert: %s", self._name)
         self._ack = False
         self._firing = True
         self._next_delay = 0
@@ -225,7 +226,7 @@ class Alert(ToggleEntity):
     @asyncio.coroutine
     def end_alerting(self):
         """End the alert procedures."""
-        _LOGGER.debug('Ending Alert: %s', self._name)
+        _LOGGER.debug("Ending Alert: %s", self._name)
         self._cancel()
         self._ack = False
         self._firing = False
@@ -247,7 +248,7 @@ class Alert(ToggleEntity):
             return
 
         if not self._ack:
-            _LOGGER.info('Alerting: %s', self._name)
+            _LOGGER.info("Alerting: %s", self._name)
             for target in self._notifiers:
                 yield from self.hass.services.async_call(
                     'notify', target, {'message': self._name})
@@ -256,14 +257,14 @@ class Alert(ToggleEntity):
     @asyncio.coroutine
     def async_turn_on(self):
         """Async Unacknowledge alert."""
-        _LOGGER.debug('Reset Alert: %s', self._name)
+        _LOGGER.debug("Reset Alert: %s", self._name)
         self._ack = False
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self):
         """Async Acknowledge alert."""
-        _LOGGER.debug('Acknowledged Alert: %s', self._name)
+        _LOGGER.debug("Acknowledged Alert: %s", self._name)
         self._ack = True
         yield from self.async_update_ha_state()
 

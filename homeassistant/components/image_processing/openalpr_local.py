@@ -70,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], command, confidence, camera.get(CONF_NAME)
         ))
 
-    yield from async_add_devices(entities)
+    async_add_devices(entities)
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):
@@ -93,6 +93,11 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
                 confidence = i_co
                 plate = i_pl
         return plate
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'alpr'
 
     @property
     def state_attributes(self):

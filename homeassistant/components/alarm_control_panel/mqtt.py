@@ -4,10 +4,12 @@ This platform enables the possibility to control a MQTT alarm.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.mqtt/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
@@ -41,10 +43,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the MQTT platform."""
-    add_devices([MqttAlarm(
-        hass,
+    async_add_devices([MqttAlarm(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -58,11 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MqttAlarm(alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
-    def __init__(self, hass, name, state_topic, command_topic, qos,
-                 payload_disarm, payload_arm_home, payload_arm_away, code):
+    def __init__(self, name, state_topic, command_topic, qos, payload_disarm,
+                 payload_arm_home, payload_arm_away, code):
         """Initalize the MQTT alarm panel."""
         self._state = STATE_UNKNOWN
-        self._hass = hass
         self._name = name
         self._state_topic = state_topic
         self._command_topic = command_topic
@@ -72,6 +73,12 @@ class MqttAlarm(alarm.AlarmControlPanel):
         self._payload_arm_away = payload_arm_away
         self._code = code
 
+    def async_added_to_hass(self):
+        """Subscribe mqtt events.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             if payload not in (STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
@@ -80,9 +87,10 @@ class MqttAlarm(alarm.AlarmControlPanel):
                 _LOGGER.warning('Received unexpected payload: %s', payload)
                 return
             self._state = payload
-            self.update_ha_state()
+            self.hass.async_add_job(self.async_update_ha_state())
 
-        mqtt.subscribe(hass, self._state_topic, message_received, self._qos)
+        return mqtt.async_subscribe(
+            self.hass, self._state_topic, message_received, self._qos)
 
     @property
     def should_poll(self):
@@ -104,26 +112,38 @@ class MqttAlarm(alarm.AlarmControlPanel):
         """One or more characters if code is defined."""
         return None if self._code is None else '.+'
 
-    def alarm_disarm(self, code=None):
-        """Send disarm command."""
+    @asyncio.coroutine
+    def async_alarm_disarm(self, code=None):
+        """Send disarm command.
+
+        This method is a coroutine.
+        """
         if not self._validate_code(code, 'disarming'):
             return
-        mqtt.publish(self.hass, self._command_topic,
-                     self._payload_disarm, self._qos)
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_disarm, self._qos)
 
-    def alarm_arm_home(self, code=None):
-        """Send arm home command."""
+    @asyncio.coroutine
+    def async_alarm_arm_home(self, code=None):
+        """Send arm home command.
+
+        This method is a coroutine.
+        """
         if not self._validate_code(code, 'arming home'):
             return
-        mqtt.publish(self.hass, self._command_topic,
-                     self._payload_arm_home, self._qos)
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_arm_home, self._qos)
 
-    def alarm_arm_away(self, code=None):
-        """Send arm away command."""
+    @asyncio.coroutine
+    def async_alarm_arm_away(self, code=None):
+        """Send arm away command.
+
+        This method is a coroutine.
+        """
         if not self._validate_code(code, 'arming away'):
             return
-        mqtt.publish(self.hass, self._command_topic,
-                     self._payload_arm_away, self._qos)
+        mqtt.async_publish(
+            self.hass, self._command_topic, self._payload_arm_away, self._qos)
 
     def _validate_code(self, code, state):
         """Validate given code."""

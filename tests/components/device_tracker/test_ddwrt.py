@@ -8,7 +8,7 @@ import requests
 import requests_mock
 
 from homeassistant import config
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
@@ -16,7 +16,8 @@ from homeassistant.components.device_tracker import DOMAIN
 from homeassistant.util import slugify
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, load_fixture)
+    get_test_home_assistant, assert_setup_component, load_fixture,
+    mock_component)
 
 from ...test_util.aiohttp import mock_aiohttp_client
 
@@ -39,7 +40,7 @@ class TestDdwrt(unittest.TestCase):
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['zone']
+        mock_component(self.hass, 'zone')
 
     def teardown_method(self, _):
         """Stop everything that was started."""

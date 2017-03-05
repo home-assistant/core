@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 from aiohttp import web
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import setup, const
 import homeassistant.core as ha
 import homeassistant.components.http as http
 
@@ -41,12 +41,12 @@ def setUpModule():
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
          http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    bootstrap.setup_component(hass, 'api')
+    setup.setup_component(hass, 'api')
 
     hass.start()
 
@@ -235,13 +235,17 @@ class TestAPI(unittest.TestCase):
         """Test the return of the configuration."""
         req = requests.get(_url(const.URL_API_CONFIG),
                            headers=HA_HEADERS)
-        self.assertEqual(hass.config.as_dict(), req.json())
+        result = req.json()
+        if 'components' in result:
+            result['components'] = set(result['components'])
+
+        self.assertEqual(hass.config.as_dict(), result)
 
     def test_api_get_components(self):
         """Test the return of the components."""
         req = requests.get(_url(const.URL_API_COMPONENTS),
                            headers=HA_HEADERS)
-        self.assertEqual(hass.config.components, req.json())
+        self.assertEqual(hass.config.components, set(req.json()))
 
     def test_api_get_error_log(self):
         """Test the return of the error log."""

@@ -11,11 +11,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice, PLATFORM_SCHEMA, SENSOR_CLASSES_SCHEMA)
+    BinarySensorDevice, PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     CONF_NAME, CONF_ENTITY_ID, CONF_TYPE, STATE_UNKNOWN, CONF_SENSOR_CLASS,
-    ATTR_ENTITY_ID)
+    ATTR_ENTITY_ID, CONF_DEVICE_CLASS)
 from homeassistant.core import callback
+from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_THRESHOLD): vol.Coerce(float),
     vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA,
+    vol.Optional(CONF_SENSOR_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
 })
 
 
@@ -48,11 +50,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     threshold = config.get(CONF_THRESHOLD)
     limit_type = config.get(CONF_TYPE)
-    sensor_class = config.get(CONF_SENSOR_CLASS)
+    device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
 
-    yield from async_add_devices(
+    async_add_devices(
         [ThresholdSensor(hass, entity_id, name, threshold, limit_type,
-                         sensor_class)], True)
+                         device_class)], True)
     return True
 
 
@@ -60,14 +62,14 @@ class ThresholdSensor(BinarySensorDevice):
     """Representation of a Threshold sensor."""
 
     def __init__(self, hass, entity_id, name, threshold, limit_type,
-                 sensor_class):
+                 device_class):
         """Initialize the Threshold sensor."""
         self._hass = hass
         self._entity_id = entity_id
         self.is_upper = limit_type == 'upper'
         self._name = name
         self._threshold = threshold
-        self._sensor_class = sensor_class
+        self._device_class = device_class
         self._deviation = False
         self.sensor_value = 0
 
@@ -105,9 +107,9 @@ class ThresholdSensor(BinarySensorDevice):
         return False
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the sensor class of the sensor."""
-        return self._sensor_class
+        return self._device_class
 
     @property
     def device_state_attributes(self):

@@ -19,10 +19,10 @@ REQUIRES = [
     'pyyaml>=3.11,<4',
     'pytz>=2016.10',
     'pip>=7.0.0',
-    'jinja2>=2.8',
+    'jinja2>=2.9.5',
     'voluptuous==0.9.3',
     'typing>=3,<4',
-    'aiohttp==1.2',
+    'aiohttp==1.3.3',
     'async_timeout==1.1.0',
 ]
 

@@ -27,6 +27,18 @@ heal_network:
 remove_node:
   description: Remove a node from the Z-Wave network. Refer to OZW.log for details.
 
+remove_failed_node:
+  descsription: This command will remove a failed node from the network. The node should be on the controllers failed nodes list, otherwise this command will fail. Refer to OZW.log for details.
+  fields:
+    node_id:
+      description: Node id of the device to remove (integer).
+
+replace_failed_node:
+  descsription: Replace a failed node with another. If the node is not in the controller's failed nodes list, or the node responds, this command will fail. Refer to OZW.log for details.
+  fields:
+    node_id:
+      description: Node id of the device to replace (integer).
+
 set_config_parameter:
   description: Set a config parameter to a node on the Z-Wave network.
   fields:
@@ -46,6 +58,34 @@ print_config_parameter:
       description: Node id of the device to print the parameter from (integer).
     parameter:
       description: Parameter number to print (integer).
+
+print_node:
+  description: Print all information about z-wave node.
+  fields:
+    node_id:
+      description: Node id of the device to print.
+
+refresh_entity:
+  description: Refresh zwave entity.
+  fields:
+    entity_id:
+      description: Name of the entity to refresh.
+      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+
+refresh_node:
+  description: Refresh zwave node.
+  fields:
+    entity_id:
+      description: ID of the node to refresh.
+      example: 10
+
+set_wakeup:
+  description: Sets wake-up interval of a node.
+  fields:
+    node_id:
+      description: Node id of the device to set the wake-up interval for. (integer)
+    value:
+      description: Value of the interval to set. (integer)
 
 start_network:
   description: Start the Z-Wave network. This might take a while, depending on how big your Z-Wave network is.

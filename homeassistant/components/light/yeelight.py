@@ -22,7 +22,7 @@ from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.2.1']
+REQUIREMENTS = ['yeelight==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -259,7 +259,7 @@ class YeelightLight(Light):
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
 
-            transition = self.config[CONF_TRANSITION]
+            transition = int(self.config[CONF_TRANSITION])
             if flash == FLASH_LONG:
                 count = 1
                 duration = transition * 5
@@ -288,9 +288,9 @@ class YeelightLight(Light):
         rgb = kwargs.get(ATTR_RGB_COLOR)
         flash = kwargs.get(ATTR_FLASH)
 
-        duration = self.config[CONF_TRANSITION]  # in ms
+        duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
-            duration = kwargs.get(ATTR_TRANSITION) * 1000  # kwarg in s
+            duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
         self._bulb.turn_on(duration=duration)
 

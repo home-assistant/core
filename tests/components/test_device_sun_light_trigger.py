@@ -3,7 +3,7 @@
 import os
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.loader as loader
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (

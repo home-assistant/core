@@ -10,9 +10,6 @@
           href='/static/icons/favicon-apple-180x180.png'>
     <link rel="mask-icon" href="/static/icons/home-assistant-icon.svg" color="#3fbbf4">
     <link rel='preload' href='{{ core_url }}' as='script'/>
-    <link rel='prefetch' href='/static/fonts/roboto/Roboto-Regular.ttf'>
-    <link rel='prefetch' href='/static/fonts/roboto/Roboto-Light.ttf'>
-    <link rel='prefetch' href='/static/fonts/roboto/Roboto-Medium.ttf'>
     {% for panel in panels.values() -%}
       <link rel='prefetch' href='{{ panel.url }}'>
     {% endfor -%}
@@ -28,7 +25,7 @@
     <style>
       body {
         font-family: 'Roboto', 'Noto', sans-serif;
-        font-weight: 300;
+        font-weight: 400;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
         margin: 0;
@@ -60,22 +57,37 @@
     </style>
     <script>
       function initError() {
-        document
-          .getElementById('ha-init-skeleton')
-          .classList.add('error');
+        document.getElementById('ha-init-skeleton').classList.add('error');
       };
       window.noAuth = {{ no_auth }};
-      window.Polymer = {lazyRegister: true, useNativeCSSProperties: true, dom: 'shady'};
+      window.Polymer = {
+        lazyRegister: true,
+        useNativeCSSProperties: true,
+        dom: 'shady',
+        suppressTemplateNotifications: true,
+        suppressBindingNotifications: true,
+      };
     </script>
   </head>
   <body>
     <div id='ha-init-skeleton'>
       <div class='message'>
-        Home Assistant had trouble<br>connecting to the server.<br><br><a href='/'>TRY AGAIN</a>
+        Home Assistant had trouble<br>connecting to the server.<br><br>
+        <a href='/'>TRY AGAIN</a>
       </div>
     </div>
     <home-assistant icons='{{ icons }}'></home-assistant>
     {# <script src='/static/home-assistant-polymer/build/_demo_data_compiled.js'></script> #}
+    <script>
+      var compatibilityRequired = (
+        typeof Object.assign != 'function');
+      if (compatibilityRequired) {
+        var e = document.createElement('script');
+        e.onerror = initError;
+        e.src = '{{ compatibility_url }}';
+        document.head.appendChild(e);
+      }
+    </script>
     <script src='{{ core_url }}'></script>
     <link rel='import' href='{{ ui_url }}' onerror='initError()'>
     {% if panel_url -%}
