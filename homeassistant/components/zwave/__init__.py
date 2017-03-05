@@ -44,6 +44,7 @@ CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
+CONF_GET_POWER_CONSUMPTION = 'get_power_consumption'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
@@ -188,7 +189,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
-        cv.positive_int
+        cv.positive_int,
+    vol.Optional(CONF_GET_POWER_CONSUMPTION): cv.boolean,
 })
 
 SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
@@ -433,6 +435,15 @@ def setup(hass, config):
                 node=node, value=value, node_config=node_config, hass=hass)
             if not device:
                 continue
+
+            # If CONF_GET_POWER_CONSUMPTION is explicitly false or it is
+            # missing and CONF_POLLING_INTENSITY is set - cancel fetching power
+            # consumption attribute.
+            get_power_consumption = node_config.get(CONF_GET_POWER_CONSUMPTION)
+            if (get_power_consumption is False) or (
+                    get_power_consumption is None and polling_intensity):
+                device.cancel_fetch_power()
+
             dict_id = value.value_id
 
             @asyncio.coroutine
@@ -769,6 +780,8 @@ class ZWaveDeviceEntity(Entity):
         self._wakeup_value_id = None
         self._battery_value_id = None
         self._power_value_id = None
+        self._fetch_power = True
+        self.power_consumption = None
         self._update_attributes()
 
         dispatcher.connect(
@@ -804,7 +817,7 @@ class ZWaveDeviceEntity(Entity):
         if self._battery_value_id is None:
             self._battery_value_id = self.get_value(
                 class_id=const.COMMAND_CLASS_BATTERY, member='value_id')
-        if self._power_value_id is None:
+        if self._power_value_id is None and self._fetch_power:
             self._power_value_id = self.get_value(
                 class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                           const.COMMAND_CLASS_METER],
@@ -885,6 +898,12 @@ class ZWaveDeviceEntity(Entity):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    def cancel_fetch_power(self):
+        """Cancel fetching power consumption."""
+        self._fetch_power = False
+        self._power_value_id = None
+        self.power_consumption = None
 
     @property
     def device_state_attributes(self):
