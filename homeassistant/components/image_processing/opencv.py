@@ -122,35 +122,28 @@ class OpenCVImageProcessor(ImageProcessingEntity):
                                                  minSize=(30, 30))
         matches = []
         for (x, y, w, h) in detections:
+            cv2.rectangle(cv_image,
+                          (x, y),
+                          (x + w, y + h),
+                          (255, 255, 0),
+                          2)
             matches.append({
                 ATTR_MATCH_ID: len(matches),
                 ATTR_MATCH_COORDS: {
-                    'x': x,
-                    'y': y,
-                    'w': w,
-                    'h': h,
+                    'x': int(x),
+                    'y': int(y),
+                    'w': int(w),
+                    'h': int(h),
                 }
             })
 
-        return {
-            ATTR_MATCH_NAME: classifier_name,
-            ATTR_MATCHES: matches
-        }
+        if len(detections) > 0:
+            return {
+                ATTR_MATCH_NAME: classifier_name,
+                ATTR_MATCH_REGIONS: matches
+            }
 
-    @asyncio.coroutine
-    def _draw_rectangles(self, cv2, cv_image):
-        """Draw the rectangles on the image."""
-        for match in self._matches:
-            coords = match[ATTR_MATCH_COORDS]
-
-            cv2.rectangle(cv_image,
-                          (coords['x'], coords['y']),
-                          (
-                              coords['x'] + coords['w'],
-                              coords['y'] + coords['h']
-                          ),
-                          (255, 255, 0),
-                          2)
+        return None
 
     @asyncio.coroutine
     def async_process_image(self, image):
@@ -158,17 +151,19 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         import cv2
         import numpy
 
+        _LOGGER.info('Processing image size %i', len(str(image)))
+
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+        _LOGGER.info('CV Image %i', len(str(cv_image)))
         matches = []
         for classifier_confg in self._classifier_configs:
             match = yield from self._process_classifier(cv2, cv_image, classifier_confg)
-            matches.append(match)
+            if match is not None:
+                matches.append(match)
 
-        self._matches = matches # TODO : Check for diffs
+        self._matches = matches  # TODO : Check for diffs
 
         # TODO : Fire Event
-
-        yield from self._draw_rectangles(cv2, cv_image, matches)
 
         encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
         success, data = cv2.imencode('.jpg', cv_image, encode_param)
