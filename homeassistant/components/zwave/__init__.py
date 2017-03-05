@@ -12,6 +12,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.const import (
@@ -769,6 +770,7 @@ class ZWaveDeviceEntity(Entity):
         self._wakeup_value_id = None
         self._battery_value_id = None
         self._power_value_id = None
+        self._scheduled_update = False
         self._update_attributes()
 
         dispatcher.connect(
@@ -793,8 +795,8 @@ class ZWaveDeviceEntity(Entity):
         self.update_properties()
         # If value changed after device was created but before setup_platform
         # was called - skip updating state.
-        if self.hass:
-            self.schedule_update_ha_state()
+        if self.hass and not self._scheduled_update:
+            self.hass.add_job(self._schedule_update)
 
     def _update_ids(self):
         """Update value_ids from which to pull attributes."""
@@ -916,3 +918,18 @@ class ZWaveDeviceEntity(Entity):
             return
         for value_id in dependent_ids + [self._value.value_id]:
             self._value.node.refresh_value(value_id)
+
+    @callback
+    def _schedule_update(self):
+        """Schedule delayed update."""
+        if self._scheduled_update:
+            return
+
+        @callback
+        def do_update():
+            """Really update."""
+            self.hass.async_add_job(self.async_update_ha_state)
+            self._scheduled_update = False
+
+        self._scheduled_update = True
+        self.hass.loop.call_later(0.1, do_update)
