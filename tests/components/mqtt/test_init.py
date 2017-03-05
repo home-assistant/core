@@ -381,6 +381,40 @@ def test_setup_fails_if_no_connect_broker(hass):
 
 
 @asyncio.coroutine
+def test_setup_uses_certificate_on_mqtts_port(hass):
+    """Test setup uses bundled certificates when mqtts port is requested."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker',
+                                     'port': 8883}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_MQTT:
+        yield from async_setup_component(hass, mqtt.DOMAIN, test_broker_cfg)
+
+    assert mock_MQTT.called
+    assert mock_MQTT.mock_calls[0][1][2] == 8883
+
+    import requests.certs
+    expectedCertificate = requests.certs.where()
+    assert mock_MQTT.mock_calls[0][1][7] == expectedCertificate
+
+
+@asyncio.coroutine
+def test_setup_uses_certificate_not_on_mqtts_port(hass):
+    """Test setup doesn't use bundled certificates when not mqtts port."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker',
+                                     'port': 1883}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_MQTT:
+        yield from async_setup_component(hass, mqtt.DOMAIN, test_broker_cfg)
+
+    assert mock_MQTT.called
+    assert mock_MQTT.mock_calls[0][1][2] == 1883
+
+    import requests.certs
+    mqttsCertificateBundle = requests.certs.where()
+    assert mock_MQTT.mock_calls[0][1][7] != mqttsCertificateBundle
+
+
+@asyncio.coroutine
 def test_birth_message(hass):
     """Test sending birth message."""
     mqtt_client = yield from mock_mqtt_client(hass, {
