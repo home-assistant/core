@@ -12,7 +12,7 @@ import sys
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.mqtt import (valid_publish_topic,
                                            valid_subscribe_topic)
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_NAME,

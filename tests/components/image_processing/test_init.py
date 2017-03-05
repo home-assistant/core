@@ -3,7 +3,7 @@ from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.components.http as http
 import homeassistant.components.image_processing as ip

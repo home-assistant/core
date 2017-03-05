@@ -10,7 +10,7 @@ from homeassistant.components.sensor.wsdot import (
     WashingtonStateTravelTimeSensor, ATTR_DESCRIPTION,
     ATTR_TIME_UPDATED, CONF_API_KEY, CONF_NAME,
     CONF_ID, CONF_TRAVEL_TIMES, SCAN_INTERVAL)
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
 

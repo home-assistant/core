@@ -1,7 +1,7 @@
 """The tests for the MQTT lock platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED,
                                  ATTR_ASSUMED_STATE)
 import homeassistant.components.lock as lock

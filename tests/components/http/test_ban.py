@@ -5,7 +5,7 @@ from unittest.mock import patch, mock_open
 
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import setup, const
 import homeassistant.components.http as http
 from homeassistant.components.http.const import (
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD, KEY_BANNED_IPS)
@@ -38,7 +38,7 @@ def setUpModule():
 
     hass = get_test_home_assistant()
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN, {
             http.DOMAIN: {
                 http.CONF_API_PASSWORD: API_PASSWORD,
@@ -47,7 +47,7 @@ def setUpModule():
         }
     )
 
-    bootstrap.setup_component(hass, 'api')
+    setup.setup_component(hass, 'api')
 
     hass.http.app[KEY_BANNED_IPS] = [IpBan(banned_ip) for banned_ip
                                      in BANNED_IPS]

@@ -14,7 +14,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.components import group, zone
 from homeassistant.components.discovery import SERVICE_NETGEAR
