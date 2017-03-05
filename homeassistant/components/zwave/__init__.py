@@ -795,11 +795,8 @@ class ZWaveDeviceEntity(Entity):
         self.update_properties()
         # If value changed after device was created but before setup_platform
         # was called - skip updating state.
-        if self.hass and not self._scheduled_update:
-            self._schedule_update()
-        else:
-            _LOGGER.info('Skip update for %s. It is already scheduled',
-                         self.entity_id)
+        if self.hass:
+            self.hass.add_job(self._schedule_update)
 
     def _update_ids(self):
         """Update value_ids from which to pull attributes."""
@@ -922,6 +919,7 @@ class ZWaveDeviceEntity(Entity):
         for value_id in dependent_ids + [self._value.value_id]:
             self._value.node.refresh_value(value_id)
 
+    @callback
     def _schedule_update(self):
         """Schedule delayed update."""
         @callback
@@ -930,6 +928,6 @@ class ZWaveDeviceEntity(Entity):
             self.hass.add_job(self.async_update_ha_state())
             self._scheduled_update = False
 
-        self.hass.loop.call_soon_threadsafe(
-            self.hass.loop.call_later, 0.1, do_update)
-        self._scheduled_update = True
+        if not self._scheduled_update:
+            self._scheduled_update = True
+            self.hass.loop.call_later(0.1, do_update)
