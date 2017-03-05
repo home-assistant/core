@@ -4,7 +4,7 @@ from unittest import mock
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 import homeassistant.components.statsd as statsd
 from homeassistant.const import (STATE_ON, STATE_OFF, EVENT_STATE_CHANGED)

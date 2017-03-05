@@ -9,7 +9,7 @@ import requests_mock
 from datetime import timedelta
 
 from homeassistant.components.sensor import darksky
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import load_fixture, get_test_home_assistant
 

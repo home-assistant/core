@@ -5,7 +5,7 @@ from unittest import mock
 
 from homeassistant.core import CoreState, State
 from homeassistant.const import MATCH_ALL
-import homeassistant.bootstrap as bootstrap
+from homeassistant import setup
 from homeassistant.components.binary_sensor import template
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template as template_hlpr
@@ -45,13 +45,13 @@ class TestBinarySensorTemplate(unittest.TestCase):
             },
         }
         with assert_setup_component(1):
-            assert bootstrap.setup_component(
+            assert setup.setup_component(
                 self.hass, 'binary_sensor', config)
 
     def test_setup_no_sensors(self):
         """"Test setup with no sensors."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'template'
                 }
@@ -60,7 +60,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_device(self):
         """"Test the setup with invalid devices."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
@@ -72,7 +72,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_device_class(self):
         """"Test setup with invalid sensor class."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
@@ -87,7 +87,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
     def test_setup_invalid_missing_template(self):
         """"Test setup with invalid and missing template."""
         with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'binary_sensor', {
+            assert setup.setup_component(self.hass, 'binary_sensor', {
                 'binary_sensor': {
                     'platform': 'template',
                     'sensors': {
@@ -134,7 +134,7 @@ class TestBinarySensorTemplate(unittest.TestCase):
             },
         }
         with assert_setup_component(1):
-            assert bootstrap.setup_component(
+            assert setup.setup_component(
                 self.hass, 'binary_sensor', config)
 
         self.hass.start()
@@ -187,7 +187,7 @@ def test_restore_state(hass):
             },
         },
     }
-    yield from bootstrap.async_setup_component(hass, 'binary_sensor', config)
+    yield from setup.async_setup_component(hass, 'binary_sensor', config)
 
     state = hass.states.get('binary_sensor.test')
     assert state.state == 'on'

@@ -4,7 +4,7 @@ from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
     ATTR_ASSUMED_STATE, STATE_NOT_HOME, )
