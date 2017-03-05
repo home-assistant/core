@@ -436,7 +436,8 @@ class TestHoneywellUS(unittest.TestCase):
         self.assertFalse(self.honeywell.is_away_mode_on)
         self.assertEqual(self.device.hold_heat, False)
 
-    def test_retry(self):
+    @mock.patch('somecomfort.SomeComfort')
+    def test_retry(self, test_somecomfort):
         """Test retry connection."""
         old_device = self.honeywell._device
         self.honeywell._retry()

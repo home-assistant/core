@@ -401,3 +401,4 @@ class HoneywellUSThermostat(ClimateDevice):
             return False
 
         self._device = devices[0]
+        return True

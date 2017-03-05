@@ -24,7 +24,7 @@ from homeassistant.remote import JSONEncoder
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
-    patch_yaml_files, assert_setup_component, mock_restore_cache)
+    patch_yaml_files, assert_setup_component, mock_restore_cache, mock_coro)
 
 from ...test_util.aiohttp import mock_aiohttp_client
 
@@ -521,7 +521,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                             timedelta(seconds=0))
         assert len(config) == 0
 
-    def test_see_state(self):
+    @patch('homeassistant.components.device_tracker.Device'
+           '.set_vendor_for_mac', return_value=mock_coro())
+    def test_see_state(self, mock_set_vendor):
         """Test device tracker see records state correctly."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
