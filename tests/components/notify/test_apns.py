@@ -1,7 +1,7 @@
 """The tests for the APNS component."""
 import io
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, patch, mock_open
 
 from apns2.errors import Unregistered
 import yaml
@@ -23,6 +23,7 @@ CONFIG = {
 }
 
 
+@patch('homeassistant.components.notify.apns.open', mock_open(), create=True)
 class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
@@ -315,27 +316,33 @@ class TestApns(unittest.TestCase):
         """Test updating an existing device."""
         send = mock_client.return_value.send_notification
 
-        devices_path = self.hass.config.path('test_app_apns.yaml')
-        with open(devices_path, 'w+') as out:
-            out.write('1234: {name: test device 1, '
-                      'tracking_device_id: tracking123}\n')
-            out.write('5678: {name: test device 2, '
-                      'tracking_device_id: tracking456}\n')
+        yaml_file = {
+            1234: {
+                'name': 'test device 1',
+                'tracking_device_id': 'tracking123',
+            },
+            5678: {
+                'name': 'test device 2',
+                'tracking_device_id': 'tracking456',
+            },
+        }
 
-        notify_service = apns.ApnsNotificationService(
-            self.hass,
-            'test_app',
-            'testapp.appname',
-            False,
-            'test_app.pem'
-        )
+        with patch(
+            'homeassistant.components.notify.apns.load_yaml_config_file',
+                Mock(return_value=yaml_file)), \
+                patch('os.path.isfile', Mock(return_value=True)):
+            notify_service = apns.ApnsNotificationService(
+                self.hass,
+                'test_app',
+                'testapp.appname',
+                False,
+                'test_app.pem'
+            )
 
         notify_service.device_state_changed_listener(
             'device_tracker.tracking456',
             State('device_tracker.tracking456', None),
             State('device_tracker.tracking456', 'home'))
-
-        self.hass.block_till_done()
 
         notify_service.send_message(message='Hello', target='home')
 
