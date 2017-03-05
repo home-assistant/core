@@ -303,6 +303,9 @@ class Recorder(threading.Thread):
         else:
             kwargs['echo'] = False
 
+        if self.engine is not None:
+            self.engine.dispose()
+
         self.engine = create_engine(self.db_url, **kwargs)
         models.Base.metadata.create_all(self.engine)
         self.get_session = scoped_session(sessionmaker(bind=self.engine))
