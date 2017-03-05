@@ -10,7 +10,7 @@ from tests.common import (assert_setup_component, fire_mqtt_message,
                           get_test_home_assistant, mock_mqtt_component)
 
 import homeassistant.components.device_tracker.owntracks as owntracks
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
 from homeassistant.util.async import run_coroutine_threadsafe

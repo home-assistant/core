@@ -1,7 +1,7 @@
 """The tests for the MQTT sensor platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from tests.common import mock_mqtt_component, fire_mqtt_message
 

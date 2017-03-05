@@ -7,7 +7,7 @@ from unittest import mock
 
 import homeassistant.core as ha
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,

@@ -7,7 +7,7 @@ from apns2.errors import Unregistered
 import yaml
 
 import homeassistant.components.notify as notify
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.notify import apns
 from homeassistant.core import State
 

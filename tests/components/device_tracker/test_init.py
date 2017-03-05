@@ -10,7 +10,7 @@ import os
 
 from homeassistant.components import zone
 from homeassistant.core import callback, State
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
 from homeassistant.util.async import run_coroutine_threadsafe

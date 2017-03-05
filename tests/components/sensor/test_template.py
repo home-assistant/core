@@ -2,7 +2,7 @@
 import asyncio
 
 from homeassistant.core import CoreState, State
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
 from tests.common import (

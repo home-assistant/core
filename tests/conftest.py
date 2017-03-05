@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import util, bootstrap
+from homeassistant import util, setup
 from homeassistant.util import location
 from homeassistant.components import mqtt
 
@@ -76,7 +76,7 @@ def mqtt_mock(loop, hass):
     """Fixture to mock MQTT."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         mock_mqtt().async_connect.return_value = mock_coro(True)
-        assert loop.run_until_complete(bootstrap.async_setup_component(
+        assert loop.run_until_complete(setup.async_setup_component(
             hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
