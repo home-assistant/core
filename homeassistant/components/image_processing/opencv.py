@@ -63,14 +63,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config = discovery_info
 
     for camera_entity in config[CONF_ENTITY_ID]:
-        classifierConfig = config[CONF_CLASSIFIER]
+        classifier_config = config[CONF_CLASSIFIER]
         name = '{} {}'.format(
             config[CONF_NAME],
             split_entity_id(camera_entity)[1])
 
-        devices.append(None)
+        _LOGGER.info('Found %s for %s', name, camera_entity)
 
-    yield from async_add_devices(devices)
+        devices.append(OpenCVImageProcessor(
+            camera_entity,
+            name,
+            classifier_config,
+        ))
+
+    _LOGGER.info('Found %i devices', len(devices))
+    async_add_devices(devices)
 
 class OpenCVImageProcessor(ImageProcessingEntity):
     """Representation of an OpenCV image processor."""
