@@ -513,7 +513,7 @@ class KodiDevice(MediaPlayerDevice):
             return self.server.Player.Open(
                 {"item": {"channelid": int(media_id)}})
         elif media_type == "PLAYLIST":
-            return self._server.Player.Open(
+            return self.server.Player.Open(
                 {"item": {"playlistid": int(media_id)}})
         else:
             return self.server.Player.Open(
@@ -525,7 +525,7 @@ class KodiDevice(MediaPlayerDevice):
         
         if len(players) < 1:
             raise RuntimeError("Error: No active player.")
-        yield from self._server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": True})
+        yield from self.server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": True})
         
     @asyncio.coroutine
     def async_unset_shuffle(self): 
@@ -533,21 +533,21 @@ class KodiDevice(MediaPlayerDevice):
         
         if len(players) < 1:
             raise RuntimeError("Error: No active player.")
-        yield from self._server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": False})
+        yield from self.server.Player.SetShuffle({"playerid": players[0]['playerid'], "shuffle": False})
             
     @asyncio.coroutine
     def async_add_song_to_playlist(self, song_id=None, song_name='', artist_name=''):
         if song_id is None:
             song_id = yield from self.async_find_song(song_name, artist_name)
             
-        yield from self._server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
+        yield from self.server.Playlist.Add({"playlistid": 0, "item": {"songid": int(song_id)}})
         
     @asyncio.coroutine
     def async_add_album_to_playlist(self, album_id=None, media_album_name='', artist_name=''):
         if album_id is None:
             album_id = yield from self.async_find_album(media_album_name, artist_name)
             
-        yield from self._server.Playlist.Add({"playlistid": 0, "item": {"albumid": int(album_id)}})
+        yield from self.server.Playlist.Add({"playlistid": 0, "item": {"albumid": int(album_id)}})
         
     @asyncio.coroutine
     def async_add_all_albums_to_playlist(self, artist_name):
@@ -556,12 +556,12 @@ class KodiDevice(MediaPlayerDevice):
         albums = yield from self.async_get_albums(artist_id)
             
         for a in albums['albums']:
-            yield from self._server.Playlist.Add(
+            yield from self.server.Playlist.Add(
                 {"playlistid": 0, "item": {"albumid": int(a['albumid'])}})
     
     @asyncio.coroutine
     def async_clear_playlist(self):
-        return self._server.Playlist.Clear({"playlistid": 0})
+        return self.server.Playlist.Clear({"playlistid": 0})
     
     @asyncio.coroutine
     def async_play_song(self, song_name, artist_name=''):
@@ -578,14 +578,14 @@ class KodiDevice(MediaPlayerDevice):
     
     @asyncio.coroutine
     def async_get_artists(self):
-        return (yield from self._server.AudioLibrary.GetArtists())
+        return (yield from self.server.AudioLibrary.GetArtists())
     
     @asyncio.coroutine
     def async_get_albums(self, artist_id=None):
         if artist_id is None:
-            return (yield from self._server.AudioLibrary.GetAlbums())
+            return (yield from self.server.AudioLibrary.GetAlbums())
         else:
-            return (yield from self._server.AudioLibrary.GetAlbums(
+            return (yield from self.server.AudioLibrary.GetAlbums(
                 {"filter": {"artistid": int(artist_id)}}))
                 
     @asyncio.coroutine
@@ -597,9 +597,9 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_get_songs(self, artist_id=None):
         if artist_id is None:
-            return (yield from self._server.AudioLibrary.GetSongs())
+            return (yield from self.server.AudioLibrary.GetSongs())
         else:
-            return (yield from self._server.AudioLibrary.GetSongs(
+            return (yield from self.server.AudioLibrary.GetSongs(
                 {"filter": {"artistid": int(artist_id)}}))
     
     @asyncio.coroutine     
@@ -638,10 +638,11 @@ class KodiDevice(MediaPlayerDevice):
         return sorted(out, key=lambda out: out[1], reverse=True)    
     
 if __name__ == '__main__':
-    kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080')
+    kodi = KodiDevice(HomeAssistant(), '', '192.168.0.33', '8080', '9090')
     
     asyncio.get_event_loop().run_until_complete(kodi.async_clear_playlist())
     asyncio.get_event_loop().run_until_complete(kodi.async_add_all_albums_to_playlist('pink floyd'))
-    asyncio.get_event_loop().run_until_complete(kodi.async_set_shuffle())
     asyncio.get_event_loop().run_until_complete(kodi.async_play_media("PLAYLIST", 0))
+    asyncio.get_event_loop().run_until_complete(kodi.async_set_shuffle())
+    
     
