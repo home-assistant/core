@@ -1,17 +1,19 @@
 """The tests for the automation component."""
-import unittest
+import asyncio
 from datetime import timedelta
+import unittest
 from unittest.mock import patch
 
-from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.core import State
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
-from tests.common import get_test_home_assistant, assert_setup_component, \
-    fire_time_changed
+from tests.common import (
+    assert_setup_component, get_test_home_assistant, fire_time_changed,
+    mock_component, mock_service, mock_restore_cache)
 
 
 # pylint: disable=invalid-name
@@ -21,15 +23,8 @@ class TestAutomation(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.add('group')
-        self.calls = []
-
-        @callback
-        def record_call(service):
-            """Helper to record calls."""
-            self.calls.append(service)
-
-        self.hass.services.register('test', 'automation', record_call)
+        mock_component(self.hass, 'group')
+        self.calls = mock_service(self.hass, 'test', 'automation')
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -572,3 +567,56 @@ class TestAutomation(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
         assert len(self.calls) == 2
+
+
+@asyncio.coroutine
+def test_automation_restore_state(hass):
+    """Ensure states are restored on startup."""
+    time = dt_util.utcnow()
+
+    mock_restore_cache(hass, (
+        State('automation.hello', STATE_ON),
+        State('automation.bye', STATE_OFF, {'last_triggered': time}),
+    ))
+
+    config = {automation.DOMAIN: [{
+        'alias': 'hello',
+        'trigger': {
+            'platform': 'event',
+            'event_type': 'test_event_hello',
+        },
+        'action': {'service': 'test.automation'}
+    }, {
+        'alias': 'bye',
+        'trigger': {
+            'platform': 'event',
+            'event_type': 'test_event_bye',
+        },
+        'action': {'service': 'test.automation'}
+    }]}
+
+    assert (yield from async_setup_component(hass, automation.DOMAIN, config))
+
+    state = hass.states.get('automation.hello')
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get('automation.bye')
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes.get('last_triggered') == time
+
+    calls = mock_service(hass, 'test', 'automation')
+
+    assert automation.is_on(hass, 'automation.bye') is False
+
+    hass.bus.async_fire('test_event_bye')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 0
+
+    assert automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event_hello')
+    yield from hass.async_block_till_done()
+
+    assert len(calls) == 1

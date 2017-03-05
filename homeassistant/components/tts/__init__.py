@@ -18,7 +18,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.http import HomeAssistantView
@@ -247,8 +247,9 @@ class SpeechManager(object):
             for _, filename in self.file_cache.items():
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
-                except OSError:
-                    pass
+                except OSError as err:
+                    _LOGGER.warning(
+                        "Can't remove cache file '%s': %s", filename, err)
 
         yield from self.hass.loop.run_in_executor(None, remove_files)
         self.file_cache = {}

@@ -1,11 +1,9 @@
 """The tests for the MQTT eventstream component."""
-from collections import namedtuple
 import json
 from unittest.mock import ANY, patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
-import homeassistant.components.mqtt as mqtt
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
 from homeassistant.remote import JSONEncoder
@@ -57,7 +55,7 @@ class TestMqttEventStream(object):
         # Verify that the event handler has been added as a listener
         assert self.hass.bus.listeners.get('*') == 1
 
-    @patch('homeassistant.components.mqtt.subscribe')
+    @patch('homeassistant.components.mqtt.async_subscribe')
     def test_subscribe(self, mock_sub):
         """"Test the subscription."""
         sub_topic = 'foo'
@@ -67,7 +65,7 @@ class TestMqttEventStream(object):
         # Verify that the this entity was subscribed to the topic
         mock_sub.assert_called_with(self.hass, sub_topic, ANY)
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     @patch('homeassistant.core.dt_util.utcnow')
     def test_state_changed_event_sends_message(self, mock_utcnow, mock_pub):
         """"Test the sending of a new message if event changed."""
@@ -110,7 +108,7 @@ class TestMqttEventStream(object):
         # Verify that the message received was that expected
         assert json.loads(msg) == event
 
-    @patch('homeassistant.components.mqtt.publish')
+    @patch('homeassistant.components.mqtt.async_publish')
     def test_time_event_does_not_send_message(self, mock_pub):
         """"Test the sending of a new message if time event."""
         assert self.add_eventstream(pub_topic='bar')
@@ -146,45 +144,3 @@ class TestMqttEventStream(object):
         self.hass.block_till_done()
 
         assert 1 == len(calls)
-
-    @patch('homeassistant.components.mqtt.publish')
-    def test_mqtt_received_event(self, mock_pub):
-        """Don't filter events from the mqtt component about received message.
-
-        Mqtt component sends an event if a message is received. Also
-        messages that originate from an incoming eventstream.
-        Broadcasting these messages result in an infinite loop if two HA
-        instances are crossconfigured for the same mqtt topics.
-
-        """
-        SUB_TOPIC = 'from_slaves'
-        assert self.add_eventstream(
-                pub_topic='bar',
-                sub_topic=SUB_TOPIC)
-        self.hass.block_till_done()
-
-        # Reset the mock because it will have already gotten calls for the
-        # mqtt_eventstream state change on initialization, etc.
-        mock_pub.reset_mock()
-
-        # Use MQTT component message handler to simulate firing message
-        # received event.
-        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage(
-            SUB_TOPIC, 1, '{"test": "Hello World!"}'.encode('utf-8'))
-        mqtt.MQTT._mqtt_on_message(self, None, {'hass': self.hass}, message)
-
-        self.hass.block_till_done()
-
-        # 'normal' incoming mqtt messages should be broadcasted
-        assert mock_pub.call_count == 0
-
-        MQTTMessage = namedtuple('MQTTMessage', ['topic', 'qos', 'payload'])
-        message = MQTTMessage(
-            'test_topic', 1, '{"test": "Hello World!"}'.encode('utf-8'))
-        mqtt.MQTT._mqtt_on_message(self, None, {'hass': self.hass}, message)
-
-        self.hass.block_till_done()
-
-        # but event from the event stream not
-        assert mock_pub.call_count == 1

@@ -215,6 +215,21 @@ class TestHelpersTemplate(unittest.TestCase):
                 template.Template('{{ %s | timestamp_utc }}' % inp,
                                   self.hass).render())
 
+    def test_as_timestamp(self):
+        """Test the as_timestamp function."""
+        self.assertEqual("None",
+                         template.Template('{{ as_timestamp("invalid") }}',
+                                           self.hass).render())
+        self.hass.mock = None
+        self.assertEqual("None",
+                         template.Template('{{ as_timestamp(states.mock) }}',
+                                           self.hass).render())
+
+        tpl = '{{ as_timestamp(strptime("2024-02-03T09:10:24+0000", ' \
+            '"%Y-%m-%dT%H:%M:%S%z")) }}'
+        self.assertEqual("1706951424.0",
+                         template.Template(tpl, self.hass).render())
+
     def test_passing_vars_as_keywords(self):
         """Test passing variables as keywords."""
         self.assertEqual(

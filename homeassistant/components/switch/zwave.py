@@ -9,27 +9,14 @@ import logging
 # pylint: disable=import-error
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Z-Wave platform."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
-    if not node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_BINARY):
-        return
-    if value.type != zwave.const.TYPE_BOOL or value.genre != \
-       zwave.const.GENRE_USER:
-        return
-
-    value.set_change_verified(False)
-    add_devices([ZwaveSwitch(value)])
+def get_device(value, **kwargs):
+    """Create zwave entity device."""
+    return ZwaveSwitch(value)
 
 
 class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
@@ -38,11 +25,16 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     def __init__(self, value):
         """Initialize the Z-Wave switch device."""
         zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.update_properties()
+
+    def update_properties(self):
+        """Callback on data changes for node values."""
+        self._state = self._value.data
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._value.data
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the device on."""

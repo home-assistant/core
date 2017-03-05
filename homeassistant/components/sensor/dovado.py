@@ -16,12 +16,12 @@ from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  CONF_HOST, CONF_PORT,
-                                 CONF_SENSORS, STATE_UNKNOWN)
+                                 CONF_SENSORS, DEVICE_DEFAULT_NAME)
 from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dovado==0.1.15']
+REQUIREMENTS = ['dovado==0.4.1']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
@@ -38,9 +38,9 @@ SENSORS = {
                     "mdi:signal"),
     SENSOR_SMS_UNREAD: ("sms unread", "SMS unread", "",
                         "mdi:message-text-outline"),
-    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GiB",
+    SENSOR_UPLOAD: ("traffic modem tx", "Sent", "GB",
                     "mdi:cloud-upload"),
-    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GiB",
+    SENSOR_DOWNLOAD: ("traffic modem rx", "Received", "GB",
                       "mdi:cloud-download"),
 }
 
@@ -87,7 +87,7 @@ class Dovado:
                           number, message)
             self._dovado.send_sms(number, message)
 
-        if self.state["sms"] == "enabled":
+        if self.state.get("sms") == "enabled":
             service_name = slugify("{} {}".format(self.name,
                                                   "send_sms"))
             hass.services.register(DOMAIN, service_name, send_sms)
@@ -101,21 +101,20 @@ class Dovado:
     @property
     def name(self):
         """Name of the router."""
-        return self.state["product name"]
+        return self.state.get("product name", DEVICE_DEFAULT_NAME)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
         _LOGGER.info("Updating")
         try:
-            self.state = self._dovado.query_state()
+            self.state.update(self._dovado.state or {})
             self.state.update(
-                connected=self.state["modem status"] == "CONNECTED")
+                connected=self.state.get("modem status") == "CONNECTED")
             _LOGGER.debug("Received: %s", self.state)
             return True
         except OSError as error:
-            _LOGGER.error("Could not contact the router: %s", error)
-            return False
+            _LOGGER.warning("Could not contact the router: %s", error)
 
 
 class DovadoSensor(Entity):
@@ -125,10 +124,29 @@ class DovadoSensor(Entity):
         """Initialize the sensor."""
         self._dovado = dovado
         self._sensor = sensor
+        self._state = self._compute_state()
+
+    def _compute_state(self):
+        state = self._dovado.state.get(SENSORS[self._sensor][0])
+        if self._sensor == SENSOR_NETWORK:
+            match = re.search(r"\((.+)\)", state)
+            return match.group(1) if match else None
+        elif self._sensor == SENSOR_SIGNAL:
+            try:
+                return int(state.split()[0])
+            except ValueError:
+                return 0
+        elif self._sensor == SENSOR_SMS_UNREAD:
+            return int(state)
+        elif self._sensor in [SENSOR_UPLOAD, SENSOR_DOWNLOAD]:
+            return round(float(state) / 1e6, 1)
+        else:
+            return state
 
     def update(self):
         """Update sensor values."""
         self._dovado.update()
+        self._state = self._compute_state()
 
     @property
     def name(self):
@@ -139,23 +157,7 @@ class DovadoSensor(Entity):
     @property
     def state(self):
         """Return the sensor state."""
-        key = SENSORS[self._sensor][0]
-        result = self._dovado.state[key]
-        if self._sensor == SENSOR_NETWORK:
-            match = re.search(r"\((.+)\)", result)
-            return match.group(1) if match else STATE_UNKNOWN
-        elif self._sensor == SENSOR_SIGNAL:
-            try:
-                return int(result.split()[0])
-            except ValueError:
-                return 0
-        elif self._sensor == SENSOR_SMS_UNREAD:
-            return int(result)
-        elif self._sensor in [SENSOR_UPLOAD, SENSOR_DOWNLOAD]:
-            gib = pow(2, 30)
-            return round(int(result) / gib, 1)
-        else:
-            return result
+        return self._state
 
     @property
     def icon(self):

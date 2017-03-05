@@ -15,12 +15,15 @@ def test_validate_config_ok(hass, test_client):
     with patch.object(config, 'SECTIONS', ['core']):
         yield from async_setup_component(hass, 'config', {})
 
+    # yield from hass.async_block_till_done()
+    yield from asyncio.sleep(0.1, loop=hass.loop)
+
     hass.http.views[CheckConfigView.name].register(app.router)
     client = yield from test_client(app)
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',
-            return_value=mock_coro(None)()):
+            return_value=mock_coro()):
         resp = yield from client.post('/api/config/core/check_config')
 
     assert resp.status == 200
@@ -30,7 +33,7 @@ def test_validate_config_ok(hass, test_client):
 
     with patch(
         'homeassistant.components.config.core.async_check_ha_config_file',
-            return_value=mock_coro('beer')()):
+            return_value=mock_coro('beer')):
         resp = yield from client.post('/api/config/core/check_config')
 
     assert resp.status == 200

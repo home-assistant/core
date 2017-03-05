@@ -115,7 +115,7 @@ def setup(hass, config):
         """Force all devices to poll the Wink API."""
         _LOGGER.info("Refreshing Wink states from API")
         for entity in hass.data[DOMAIN]['entities']:
-            entity.update_ha_state(True)
+            entity.schedule_update_ha_state(True)
     hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
 
     def pull_new_devices(call):
@@ -139,7 +139,6 @@ class WinkDevice(Entity):
         """Initialize the Wink device."""
         self.hass = hass
         self.wink = wink
-        self._battery = self.wink.battery_level()
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
         hass.data[DOMAIN]['entities'].append(self)
@@ -151,14 +150,14 @@ class WinkDevice(Entity):
             if message is None:
                 _LOGGER.error("Error on pubnub update for %s "
                               "polling API for current state", self.name)
-                self.update_ha_state(True)
+                self.schedule_update_ha_state(True)
             else:
                 self.wink.pubnub_update(message)
-                self.update_ha_state()
+                self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error("Error in pubnub JSON for %s "
                           "polling API for current state", self.name)
-            self.update_ha_state(True)
+            self.schedule_update_ha_state(True)
 
     @property
     def name(self):
@@ -183,17 +182,24 @@ class WinkDevice(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
-        if self._battery:
-            attributes[ATTR_BATTERY_LEVEL] = self._battery_level
-        if self._manufacturer_device_model:
-            _model = self._manufacturer_device_model
-            attributes["manufacturer_device_model"] = _model
-        if self._manufacturer_device_id:
-            attributes["manufacturer_device_id"] = self._manufacturer_device_id
-        if self._device_manufacturer:
-            attributes["device_manufacturer"] = self._device_manufacturer
-        if self._model_name:
-            attributes["model_name"] = self._model_name
+        battery = self._battery_level
+        if battery:
+            attributes[ATTR_BATTERY_LEVEL] = battery
+        man_dev_model = self._manufacturer_device_model
+        if man_dev_model:
+            attributes["manufacturer_device_model"] = man_dev_model
+        man_dev_id = self._manufacturer_device_id
+        if man_dev_id:
+            attributes["manufacturer_device_id"] = man_dev_id
+        dev_man = self._device_manufacturer
+        if dev_man:
+            attributes["device_manufacturer"] = dev_man
+        model_name = self._model_name
+        if model_name:
+            attributes["model_name"] = model_name
+        tamper = self._tamper
+        if tamper is not None:
+            attributes["tamper_detected"] = tamper
         return attributes
 
     @property
@@ -221,3 +227,11 @@ class WinkDevice(Entity):
     def _model_name(self):
         """Return the model name."""
         return self.wink.model_name()
+
+    @property
+    def _tamper(self):
+        """Return the devices tamper status."""
+        if hasattr(self.wink, 'tamper_detected'):
+            return self.wink.tamper_detected()
+        else:
+            return None

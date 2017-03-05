@@ -7,8 +7,9 @@ from unittest.mock import patch
 import pytest
 
 import homeassistant.helpers.entity as entity
-from homeassistant.helpers.customize import set_customize
 from homeassistant.const import ATTR_HIDDEN, ATTR_DEVICE_CLASS
+from homeassistant.config import DATA_CUSTOMIZE
+from homeassistant.helpers.entity_values import EntityValues
 
 from tests.common import get_test_home_assistant
 
@@ -76,7 +77,8 @@ class TestHelpersEntity(object):
         self.entity = entity.Entity()
         self.entity.entity_id = 'test.overwrite_hidden_true'
         self.hass = self.entity.hass = get_test_home_assistant()
-        self.entity.update_ha_state()
+        self.entity.schedule_update_ha_state()
+        self.hass.block_till_done()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -89,11 +91,10 @@ class TestHelpersEntity(object):
 
     def test_overwriting_hidden_property_to_true(self):
         """Test we can overwrite hidden property to True."""
-        set_customize(
-            self.hass,
-            entity.CORE_DOMAIN,
-            [{'entity_id': [self.entity.entity_id], ATTR_HIDDEN: True}])
-        self.entity.update_ha_state()
+        self.hass.data[DATA_CUSTOMIZE] = EntityValues({
+            self.entity.entity_id: {ATTR_HIDDEN: True}})
+        self.entity.schedule_update_ha_state()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_HIDDEN)
@@ -127,6 +128,7 @@ class TestHelpersEntity(object):
         assert state.attributes.get(ATTR_DEVICE_CLASS) is None
         with patch('homeassistant.helpers.entity.Entity.device_class',
                    new='test_class'):
-            self.entity.update_ha_state()
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'

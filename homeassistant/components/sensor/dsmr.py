@@ -103,7 +103,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         DerivativeDSMREntity('Hourly Gas Consumption', gas_obis),
     ]
 
-    yield from async_add_devices(devices)
+    async_add_devices(devices)
 
     def update_entities_telegram(telegram):
         """Update entities with latests telegram & trigger state update."""

@@ -4,51 +4,58 @@ Support for Envisalink sensors (shows panel info).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.envisalink/
 """
+import asyncio
 import logging
-from homeassistant.components.envisalink import (EVL_CONTROLLER,
-                                                 PARTITION_SCHEMA,
-                                                 CONF_PARTITIONNAME,
-                                                 EnvisalinkDevice,
-                                                 SIGNAL_PARTITION_UPDATE,
-                                                 SIGNAL_KEYPAD_UPDATE)
+
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.envisalink import (
+    DATA_EVL, PARTITION_SCHEMA, CONF_PARTITIONNAME, EnvisalinkDevice,
+    SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
+from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
-    _configured_partitions = discovery_info['partitions']
-    for part_num in _configured_partitions:
-        _device_config_data = PARTITION_SCHEMA(
-            _configured_partitions[part_num])
-        _device = EnvisalinkSensor(
-            _device_config_data[CONF_PARTITIONNAME],
+    configured_partitions = discovery_info['partitions']
+
+    devices = []
+    for part_num in configured_partitions:
+        device_config_data = PARTITION_SCHEMA(configured_partitions[part_num])
+        device = EnvisalinkSensor(
+            hass,
+            device_config_data[CONF_PARTITIONNAME],
             part_num,
-            EVL_CONTROLLER.alarm_state['partition'][part_num],
-            EVL_CONTROLLER)
-        add_devices_callback([_device])
+            hass.data[DATA_EVL].alarm_state['partition'][part_num],
+            hass.data[DATA_EVL])
+        devices.append(device)
+
+    async_add_devices(devices)
 
 
-class EnvisalinkSensor(EnvisalinkDevice):
+class EnvisalinkSensor(EnvisalinkDevice, Entity):
     """Representation of an Envisalink keypad."""
 
-    def __init__(self, partition_name, partition_number, info, controller):
+    def __init__(self, hass, partition_name, partition_number, info,
+                 controller):
         """Initialize the sensor."""
-        from pydispatch import dispatcher
         self._icon = 'mdi:alarm'
         self._partition_number = partition_number
+
         _LOGGER.debug('Setting up sensor for partition: ' + partition_name)
-        EnvisalinkDevice.__init__(self,
-                                  partition_name + ' Keypad',
-                                  info,
-                                  controller)
-        dispatcher.connect(self._update_callback,
-                           signal=SIGNAL_PARTITION_UPDATE,
-                           sender=dispatcher.Any)
-        dispatcher.connect(self._update_callback,
-                           signal=SIGNAL_KEYPAD_UPDATE,
-                           sender=dispatcher.Any)
+        super().__init__(partition_name + ' Keypad', info, controller)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
 
     @property
     def icon(self):
@@ -65,7 +72,8 @@ class EnvisalinkSensor(EnvisalinkDevice):
         """Return the state attributes."""
         return self._info['status']
 
+    @callback
     def _update_callback(self, partition):
         """Update the partition state in HA, if needed."""
         if partition is None or int(partition) == self._partition_number:
-            self.hass.async_add_job(self.update_ha_state)
+            self.hass.async_add_job(self.async_update_ha_state())

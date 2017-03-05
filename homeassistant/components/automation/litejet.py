@@ -4,6 +4,7 @@ Trigger an automation when a LiteJet switch is released.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/automation.litejet/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -32,6 +33,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for events based on configuration."""
     number = config.get(CONF_NUMBER)

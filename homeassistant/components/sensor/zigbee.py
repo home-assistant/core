@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Unknown ZigBee sensor type: %s", typ)
         return
 
-    add_devices([sensor_class(hass, config_class(config))])
+    add_devices([sensor_class(hass, config_class(config))], True)
 
 
 class ZigBeeTemperatureSensor(Entity):
@@ -54,8 +54,6 @@ class ZigBeeTemperatureSensor(Entity):
         """Initialize the sensor."""
         self._config = config
         self._temp = None
-        # Get initial state
-        hass.add_job(self.async_update_ha_state, True)
 
     @property
     def name(self):

@@ -1,4 +1,4 @@
-"""The tests for the MQTT component."""
+"""The tests for the MQTT discovery."""
 import asyncio
 from unittest.mock import patch
 
@@ -12,9 +12,10 @@ def test_subscribing_config_topic(hass, mqtt_mock):
     """Test setting up discovery."""
     hass_config = {}
     discovery_topic = 'homeassistant'
-    async_start(hass, discovery_topic, hass_config)
-    assert mqtt_mock.subscribe.called
-    call_args = mqtt_mock.subscribe.mock_calls[0][1]
+    yield from async_start(hass, discovery_topic, hass_config)
+
+    assert mqtt_mock.async_subscribe.called
+    call_args = mqtt_mock.async_subscribe.mock_calls[0][1]
     assert call_args[0] == discovery_topic + '/#'
     assert call_args[1] == 0
 
@@ -22,9 +23,9 @@ def test_subscribing_config_topic(hass, mqtt_mock):
 @asyncio.coroutine
 @patch('homeassistant.components.mqtt.discovery.async_load_platform')
 def test_invalid_topic(mock_load_platform, hass, mqtt_mock):
-    """Test sending in invalid JSON."""
+    """Test sending to invalid topic."""
     mock_load_platform.return_value = mock_coro()
-    async_start(hass, 'homeassistant', {})
+    yield from async_start(hass, 'homeassistant', {})
 
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/not_config',
                             '{}')
@@ -37,7 +38,7 @@ def test_invalid_topic(mock_load_platform, hass, mqtt_mock):
 def test_invalid_json(mock_load_platform, hass, mqtt_mock, caplog):
     """Test sending in invalid JSON."""
     mock_load_platform.return_value = mock_coro()
-    async_start(hass, 'homeassistant', {})
+    yield from async_start(hass, 'homeassistant', {})
 
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
                             'not json')
@@ -49,9 +50,9 @@ def test_invalid_json(mock_load_platform, hass, mqtt_mock, caplog):
 @asyncio.coroutine
 @patch('homeassistant.components.mqtt.discovery.async_load_platform')
 def test_only_valid_components(mock_load_platform, hass, mqtt_mock, caplog):
-    """Test sending in invalid JSON."""
+    """Test for a valid component."""
     mock_load_platform.return_value = mock_coro()
-    async_start(hass, 'homeassistant', {})
+    yield from async_start(hass, 'homeassistant', {})
 
     async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config', '{}')
     yield from hass.async_block_till_done()
@@ -61,8 +62,8 @@ def test_only_valid_components(mock_load_platform, hass, mqtt_mock, caplog):
 
 @asyncio.coroutine
 def test_correct_config_discovery(hass, mqtt_mock, caplog):
-    """Test sending in invalid JSON."""
-    async_start(hass, 'homeassistant', {})
+    """Test sending in correct JSON."""
+    yield from async_start(hass, 'homeassistant', {})
 
     async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
                             '{ "name": "Beer" }')

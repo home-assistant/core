@@ -5,10 +5,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.bootstrap import async_setup_component, ATTR_COMPONENT
+from homeassistant.setup import async_setup_component, ATTR_COMPONENT
 from homeassistant.components import config
 
-from tests.common import mock_http_component, mock_coro
+from tests.common import mock_http_component, mock_coro, mock_component
 
 
 @pytest.fixture(autouse=True)
@@ -27,12 +27,12 @@ def test_config_setup(hass, loop):
 @asyncio.coroutine
 def test_load_on_demand_already_loaded(hass, test_client):
     """Test getting suites."""
-    hass.config.components.add('zwave')
+    mock_component(hass, 'zwave')
 
     with patch.object(config, 'SECTIONS', []), \
             patch.object(config, 'ON_DEMAND', ['zwave']), \
             patch('homeassistant.components.config.zwave.async_setup') as stp:
-        stp.return_value = mock_coro(True)()
+        stp.return_value = mock_coro(True)
 
         yield from async_setup_component(hass, 'config', {})
 
@@ -51,7 +51,7 @@ def test_load_on_demand_on_load(hass, test_client):
     assert 'config.zwave' not in hass.config.components
 
     with patch('homeassistant.components.config.zwave.async_setup') as stp:
-        stp.return_value = mock_coro(True)()
+        stp.return_value = mock_coro(True)
         hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: 'zwave'})
         yield from hass.async_block_till_done()
 
