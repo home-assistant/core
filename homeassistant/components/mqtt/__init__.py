@@ -9,6 +9,7 @@ import logging
 import os
 import socket
 import time
+import requests.certs
 
 import voluptuous as vol
 
@@ -309,6 +310,10 @@ def async_setup(hass, config):
        broker.endswith('.cloudmqtt.com'):
         certificate = os.path.join(os.path.dirname(__file__),
                                    'addtrustexternalcaroot.crt')
+
+    # When the port indicates mqtts, use bundled certificates from requests
+    if certificate is None and port == 8883:
+        certificate = requests.certs.where()
 
     will_message = conf.get(CONF_WILL_MESSAGE)
     birth_message = conf.get(CONF_BIRTH_MESSAGE)
