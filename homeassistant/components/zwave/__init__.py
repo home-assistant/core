@@ -25,6 +25,7 @@ import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.util.async import run_callback_threadsafe
 
 from . import const
 from . import workaround
@@ -769,6 +770,7 @@ class ZWaveDeviceEntity(Entity):
         self._wakeup_value_id = None
         self._battery_value_id = None
         self._power_value_id = None
+        self._scheduled_update = None
         self._update_attributes()
 
         dispatcher.connect(
@@ -794,7 +796,7 @@ class ZWaveDeviceEntity(Entity):
         # If value changed after device was created but before setup_platform
         # was called - skip updating state.
         if self.hass:
-            self.schedule_update_ha_state()
+            self._schedule_update()
 
     def _update_ids(self):
         """Update value_ids from which to pull attributes."""
@@ -916,3 +918,18 @@ class ZWaveDeviceEntity(Entity):
             return
         for value_id in dependent_ids + [self._value.value_id]:
             self._value.node.refresh_value(value_id)
+
+    def _schedule_update(self):
+        """Schedule delayed update."""
+        @asyncio.coroutine
+        def do_update():
+            """Really update."""
+            yield from self.async_update_ha_state()
+            self._scheduled_update = None
+
+        if self._scheduled_update is None:
+            self._scheduled_update = run_callback_threadsafe(
+                self.hass.loop,
+                self.hass.loop.call_later,
+                0.1,
+                do_update).result()
