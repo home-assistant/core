@@ -14,16 +14,17 @@ from homeassistant.helpers import discovery
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
-UPDATE_INTERVAL = None
 REQUIREMENTS = ['blinkpy==0.4.2']
 
 BLINKGLOB = None
+DEFAULT_UPDATE_INTERVAL = 90
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL, default=90): cv.positive_int
+        vol.Optional(CONF_SCAN_INTERVAL,
+                     default=DEFAULT_UPDATE_INTERVAL): cv.positive_int
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -36,19 +37,21 @@ class BlinkSystem(object):
         import blinkpy
         self.blink = blinkpy.Blink(username=config_info[DOMAIN][CONF_USERNAME],
                                    password=config_info[DOMAIN][CONF_PASSWORD])
+        self._update_interval = config_info[DOMAIN][CONF_SCAN_INTERVAL]
         self.blink.setup_system()
+
+    @property
+    def update_interval(self):
+        """A method to return update interval from config."""
+        return self._update_interval
 
 
 def setup(hass, config):
     """Setup Blink System."""
     global BLINKGLOB
-    global UPDATE_INTERVAL
 
     if BLINKGLOB is None:
         BLINKGLOB = BlinkSystem(config)
-
-    if UPDATE_INTERVAL is None:
-        UPDATE_INTERVAL = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)

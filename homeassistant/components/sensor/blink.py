@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = blink.BLINKGLOB.blink
     devs = list()
     index = 0
-    for name in data.cameras.keys():
+    for name in data.cameras:
         devs.append(BlinkSensor(name, 'temperature', index, data))
         devs.append(BlinkSensor(name, 'battery', index, data))
         devs.append(BlinkSensor(name, 'notifications', index, data))
@@ -48,7 +48,7 @@ class BlinkSensor(Entity):
         self.data = data
         self.index = index
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[type][1]
+        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self.update()
 
     @property
@@ -64,7 +64,7 @@ class BlinkSensor(Entity):
     @property
     def unique_id(self):
         """A unique camera sensor identifier."""
-        return "sensor_blink_{}_{}".format(self._name, self.index)
+        return "sensor_{}_{}".format(self._name, self.index)
 
     @property
     def unit_of_measurement(self):

@@ -14,7 +14,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Blink camera's controls."""
     data = blink.BLINKGLOB.blink
 
-    for name in data.cameras.keys():
+    for name in data.cameras:
         add_devices([BlinkSwitch(name, data, 'snap_picture')])
         add_devices([BlinkSwitch(name, data, 'motion')])
 
