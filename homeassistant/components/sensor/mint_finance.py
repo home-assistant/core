@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MintSensor(Entity):
-    """Representation of a Yahoo Finance sensor."""
+    """Representation of a Mint sensor."""
 
     def __init__(self, data, account_name, currency):
         """Initialize the sensor."""
