@@ -158,7 +158,7 @@ class Recorder(threading.Thread):
         tries = 1
         connected = False
 
-        while not connected and tries < 4:
+        while not connected and tries < 9:
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
