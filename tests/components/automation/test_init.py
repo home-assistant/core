@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.core import State
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.automation as automation
 from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
 from homeassistant.exceptions import HomeAssistantError

@@ -4,7 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.sensor.history_stats import HistoryStatsSensor
 import homeassistant.core as ha
 from homeassistant.helpers.template import Template

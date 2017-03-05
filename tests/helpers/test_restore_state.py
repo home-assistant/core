@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, split_entity_id, State
 import homeassistant.util.dt as dt_util

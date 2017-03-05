@@ -4,7 +4,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import homeassistant.util.dt as dt_util
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 

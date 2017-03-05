@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import setup, const
 import homeassistant.components.device_tracker as device_tracker
 import homeassistant.components.http as http
 from homeassistant.const import CONF_PLATFORM
@@ -33,7 +33,7 @@ def setUpModule():
 
     hass = get_test_home_assistant()
     # http is not platform based, assert_setup_component not applicable
-    bootstrap.setup_component(hass, http.DOMAIN, {
+    setup.setup_component(hass, http.DOMAIN, {
         http.DOMAIN: {
             http.CONF_SERVER_PORT: SERVER_PORT
         },
@@ -41,7 +41,7 @@ def setUpModule():
 
     # Set up device tracker
     with assert_setup_component(1, device_tracker.DOMAIN):
-        bootstrap.setup_component(hass, device_tracker.DOMAIN, {
+        setup.setup_component(hass, device_tracker.DOMAIN, {
             device_tracker.DOMAIN: {
                 CONF_PLATFORM: 'locative'
             }
