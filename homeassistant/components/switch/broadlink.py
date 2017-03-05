@@ -188,13 +188,13 @@ class BroadlinkRMSwitch(SwitchDevice):
         """Turn the device on."""
         if self._sendpacket(self._command_on):
             self._state = True
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._sendpacket(self._command_off):
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""

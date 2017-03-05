@@ -115,7 +115,7 @@ def setup(hass, config):
         """Force all devices to poll the Wink API."""
         _LOGGER.info("Refreshing Wink states from API")
         for entity in hass.data[DOMAIN]['entities']:
-            entity.update_ha_state(True)
+            entity.schedule_update_ha_state(True)
     hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
 
     def pull_new_devices(call):
@@ -150,14 +150,14 @@ class WinkDevice(Entity):
             if message is None:
                 _LOGGER.error("Error on pubnub update for %s "
                               "polling API for current state", self.name)
-                self.update_ha_state(True)
+                self.schedule_update_ha_state(True)
             else:
                 self.wink.pubnub_update(message)
-                self.update_ha_state()
+                self.schedule_update_ha_state()
         except (ValueError, KeyError, AttributeError):
             _LOGGER.error("Error in pubnub JSON for %s "
                           "polling API for current state", self.name)
-            self.update_ha_state(True)
+            self.schedule_update_ha_state(True)
 
     @property
     def name(self):

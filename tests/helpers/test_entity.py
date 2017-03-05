@@ -77,7 +77,8 @@ class TestHelpersEntity(object):
         self.entity = entity.Entity()
         self.entity.entity_id = 'test.overwrite_hidden_true'
         self.hass = self.entity.hass = get_test_home_assistant()
-        self.entity.update_ha_state()
+        self.entity.schedule_update_ha_state()
+        self.hass.block_till_done()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -92,7 +93,8 @@ class TestHelpersEntity(object):
         """Test we can overwrite hidden property to True."""
         self.hass.data[DATA_CUSTOMIZE] = EntityValues({
             self.entity.entity_id: {ATTR_HIDDEN: True}})
-        self.entity.update_ha_state()
+        self.entity.schedule_update_ha_state()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_HIDDEN)
@@ -126,6 +128,7 @@ class TestHelpersEntity(object):
         assert state.attributes.get(ATTR_DEVICE_CLASS) is None
         with patch('homeassistant.helpers.entity.Entity.device_class',
                    new='test_class'):
-            self.entity.update_ha_state()
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'
