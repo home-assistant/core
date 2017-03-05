@@ -43,8 +43,7 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
 
-CONNECT_RETRY_WAIT = 10
-ERROR_QUERY = "Error during query: %s"
+CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
@@ -159,7 +158,7 @@ class Recorder(threading.Thread):
         tries = 1
         connected = False
 
-        while not connected and tries < 5:
+        while not connected and tries < 4:
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
