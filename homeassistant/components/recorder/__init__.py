@@ -159,6 +159,8 @@ class Recorder(threading.Thread):
         connected = False
 
         while not connected and tries < 9:
+            if tries != 1:
+                time.sleep(CONNECT_RETRY_WAIT)
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
@@ -167,7 +169,6 @@ class Recorder(threading.Thread):
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
-                time.sleep(CONNECT_RETRY_WAIT)
                 tries += 1
 
         if not connected:
