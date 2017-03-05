@@ -21,22 +21,23 @@ from homeassistant.const import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['opencv-python>=3.2.0', 'numpy>=1.12.0']
+REQUIREMENTS = ['opencv-python==3.2.0.6', 'numpy==1.12.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCH_NAME = 'name'
 ATTR_MATCH_ID = 'id'
 ATTR_MATCH_COORDS = 'coords'
+ATTR_MATCH_REGIONS = 'regions'
 ATTR_MATCHES = 'matches'
 
-BASE_PATH = os.path.realpath(os.path.dirname(__file__))
+BASE_PATH = os.path.realpath(__file__)
 
 CONF_CLASSIFIER = 'classifier'
 
 DEFAULT_NAME = 'OpenCV'
 DEFAULT_CLASSIFIER_PATH = \
-    os.path.join(os.path.dirname(BASE_PATH), 'classifiers', 'haarcascade_frontalface_default.xml')
+    os.path.join(os.path.dirname(BASE_PATH), 'opencv_classifiers', 'haarcascade_frontalface_default.xml')
 DEFAULT_TIMEOUT = 10
 DEFAULT_CLASSIFIER = [{
     CONF_FILE_PATH: DEFAULT_CLASSIFIER_PATH,
