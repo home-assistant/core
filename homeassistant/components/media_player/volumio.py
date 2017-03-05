@@ -183,10 +183,10 @@ class Volumia(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        vol = self._state.get('volume', None)
-        if vol is not None:
-            vol = vol/100
-        return vol
+        volume = self._state.get('volume', None)
+        if volume is not None:
+            volume = volume/100
+        return volume
 
     @property
     def name(self):
