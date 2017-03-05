@@ -134,8 +134,8 @@ class MqttLight(Light):
         if topic[CONF_COMMAND_TOPIC] is not None:
             self._state_control = CONTROL_STATE
             self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
-            self._last_value = None # Last value is not used if a dedicated
-             # on/off topic is available
+            # Last value is not used if a dedicated on/off topic is available
+            self._last_value = None
         elif topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
             self._state_control = CONTROL_BRIGHTNESS
             self._optimistic = self._optimistic_brightness
@@ -299,8 +299,7 @@ class MqttLight(Light):
     def _publish_rgb(self, r, g, b):
         """ Publish RGB value via MQTT """
         mqtt.async_publish(self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
-                     '{},{},{}'.format(r, g, b),
-                      self._qos, self._retain)
+            '{},{},{}'.format(r, g, b), self._qos, self._retain)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -336,7 +335,7 @@ class MqttLight(Light):
 
         if self._state_control == CONTROL_STATE:
             mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
-                         self._payload['on'], self._qos, self._retain)
+                               self._payload['on'], self._qos, self._retain)
         elif self._state_control == CONTROL_BRIGHTNESS:
             if ATTR_BRIGHTNESS not in kwargs:
                 self._publish_brightness(self._last_value)
@@ -360,7 +359,7 @@ class MqttLight(Light):
         """
         if self._state_control == CONTROL_STATE:
             mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
-                         self._payload['off'], self._qos, self._retain)
+                               self._payload['off'], self._qos, self._retain)
         elif self._state_control == CONTROL_BRIGHTNESS:
             self._last_value = self._brightness
             self._publish_brightness(0)
