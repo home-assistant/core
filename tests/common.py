@@ -477,8 +477,6 @@ def init_recorder_component(hass, add_config=None):
         assert setup_component(hass, recorder.DOMAIN,
                                {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-        run_coroutine_threadsafe(
-            recorder.wait_connection_ready(hass), hass.loop).result()
     _LOGGER.info("In-memory recorder successfully started")
 
 
