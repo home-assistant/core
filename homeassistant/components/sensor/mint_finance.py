@@ -71,17 +71,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             break
         except MintException as exp:
             if retries > INIT_RETRIES:
-                _LOGGER.exception(exp)
+                _LOGGER.error(exp)
                 return
             # retrying
             retries += 1
-            _LOGGER.info("Mint init failed."
-                         "retrying (Try %d/%d)", retries, INIT_RETRIES)
+            _LOGGER.info("Mint init failed. "
+                         "Retrying (Try %d/%d)", retries, INIT_RETRIES)
 
     # List accounts
     account_ids = [str(acc['accountId']) for acc in mint_client.get_accounts()
                    if acc['accountId'] is not None]
-    _LOGGER.info("Mint account ids: %s", ", ".join(account_ids))
 
     # Prepare sensors
     dev = []
@@ -174,7 +173,7 @@ class MintData(object):
                 _LOGGER.info("Mint get account failed. Retrying "
                              "(Try %s/%s)", retries, INIT_RETRIES)
                 if retries >= INIT_RETRIES:
-                    _LOGGER.exception(exp)
+                    _LOGGER.error(exp)
                     return
                 # retrying
                 retries += 1
