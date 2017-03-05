@@ -29,8 +29,7 @@ from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 INST_COUNT = 0
@@ -477,8 +476,6 @@ def init_recorder_component(hass, add_config=None):
         assert setup_component(hass, recorder.DOMAIN,
                                {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-        run_coroutine_threadsafe(
-            recorder.wait_connection_ready(hass), hass.loop).result()
     _LOGGER.info("In-memory recorder successfully started")
 
 
