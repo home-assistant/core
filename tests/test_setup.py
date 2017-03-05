@@ -400,6 +400,7 @@ class TestSetup:
         self.hass.start()
         assert call_order == [1, 1, 2]
 
+
 @asyncio.coroutine
 def test_component_cannot_depend_config(hass):
     """Test config is not allowed to be a dependency."""

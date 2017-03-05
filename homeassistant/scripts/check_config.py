@@ -28,8 +28,6 @@ MOCKS = {
                config_util.async_log_exception),
     'package_error': ("homeassistant.config._log_pkg_error",
                       config_util._log_pkg_error),
-    'logger_exception': ("homeassistant.bootstrap._LOGGER.error",
-                         bootstrap._LOGGER.error),
     'logger_exception': ("homeassistant.setup._LOGGER.error",
                          setup._LOGGER.error),
 }

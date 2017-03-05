@@ -21,7 +21,7 @@ class TestComponentZone(unittest.TestCase):
     def test_setup_no_zones_still_adds_home_zone(self):
         """Test if no config is passed in we still get the home zone."""
         assert setup.setup_component(self.hass, zone.DOMAIN,
-                                         {'zone': None})
+                                     {'zone': None})
 
         assert len(self.hass.states.entity_ids('zone')) == 1
         state = self.hass.states.get('zone.home')
