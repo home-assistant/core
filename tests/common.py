@@ -10,7 +10,6 @@ import threading
 from contextlib import contextmanager
 
 from aiohttp import web
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
 
 from homeassistant import core as ha, loader
 from homeassistant.setup import setup_component, DATA_SETUP
@@ -24,13 +23,14 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 from homeassistant.util.async import run_callback_threadsafe
 
+_TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INST_COUNT = 0
 
@@ -137,6 +137,18 @@ def async_test_home_assistant(loop):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, clear_instance)
 
     return hass
+
+
+def get_test_instance_port():
+    """Return unused port for running test instance.
+
+    The socket that holds the default port does not get released when we stop
+    HA in a different test case. Until I have figured out what is going on,
+    let's run each test on a different port.
+    """
+    global _TEST_INSTANCE_PORT
+    _TEST_INSTANCE_PORT += 1
+    return _TEST_INSTANCE_PORT
 
 
 def mock_service(hass, domain, service):
