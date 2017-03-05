@@ -458,10 +458,7 @@ def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass):
         yield from async_setup_component(hass, mqtt.DOMAIN, test_broker_cfg)
 
     assert mock_MQTT.called
-
-    import sys
-    if sys.hexversion >= 0x03060000:
-        assert mock_MQTT.mock_calls[0][1][14] == ssl.PROTOCOL_TLSv1
+    assert mock_MQTT.mock_calls[0][1][14] == ssl.PROTOCOL_TLSv1
 
 
 @asyncio.coroutine
