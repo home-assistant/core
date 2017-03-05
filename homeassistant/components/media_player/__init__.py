@@ -207,7 +207,7 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle'},
     SERVICE_UNSET_SHUFFLE: {'method': 'async_unset_shuffle'},
     SERVICE_ADD_ALL_ALBUMS: {
-        'method': 'async_add_all_albums_to_playlist',
+        'method': 'async_add_all_albums',
         'schema': MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA},
 }
 
@@ -776,7 +776,7 @@ class MediaPlayerDevice(Entity):
         """Add album to default playlist."""
         raise NotImplementedError()
 
-    def async_add_all_albums_to_playlist(self, artist_name):
+    def async_add_all_albums(self, artist_name):
         """Add all albums of a certain artist to playlist."""
         raise NotImplementedError()
 

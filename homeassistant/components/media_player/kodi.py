@@ -567,7 +567,7 @@ class KodiDevice(MediaPlayerDevice):
             {"playlistid": 0, "item": {"albumid": int(album_id)}})
 
     @asyncio.coroutine
-    def async_add_all_albums_to_playlist(self, artist_name):
+    def async_add_all_albums(self, artist_name):
         """Add all albums of an artist to default playlist (i.e. playlistid=0).
 
         The artist is specified in terms of name.
