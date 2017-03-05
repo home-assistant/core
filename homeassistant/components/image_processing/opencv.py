@@ -90,7 +90,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         self._classifier_configs = classifier_configs
         self._matches = []
 
-    @@property
+    @property
     def processed_image(self):
         return self._cv_image
 
