@@ -54,10 +54,12 @@ def async_get_last_state(hass, entity_id: str):
     if DATA_RESTORE_CACHE in hass.data:
         return hass.data[DATA_RESTORE_CACHE].get(entity_id)
 
-    if (_RECORDER not in hass.config.components or
-            hass.state not in (CoreState.starting, CoreState.not_running)):
-        _LOGGER.error("Cache can only be loaded during startup, not %s",
-                      hass.state)
+    if _RECORDER not in hass.config.components:
+        return None
+
+    if hass.state not in (CoreState.starting, CoreState.not_running):
+        _LOGGER.debug("Cache for %s can only be loaded during startup, not %s",
+                      entity_id, hass.state)
         return None
 
     try:
@@ -83,9 +85,9 @@ def async_get_last_state(hass, entity_id: str):
 @asyncio.coroutine
 def async_restore_state(entity, extract_info):
     """Helper to call entity.async_restore_state with cached info."""
-    if entity.hass.state != CoreState.starting:
-        _LOGGER.debug("Not restoring state: State is not starting: %s",
-                      entity.hass.state)
+    if entity.hass.state not in (CoreState.starting, CoreState.not_running):
+        _LOGGER.debug("Not restoring state for %s: Hass is not starting: %s",
+                      entity.entity_id, entity.hass.state)
         return
 
     state = yield from async_get_last_state(entity.hass, entity.entity_id)
