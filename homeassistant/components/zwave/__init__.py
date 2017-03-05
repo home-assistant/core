@@ -770,7 +770,7 @@ class ZWaveDeviceEntity(Entity):
         self._wakeup_value_id = None
         self._battery_value_id = None
         self._power_value_id = None
-        self._scheduled_update = False
+        self._update_scheduled = False
         self._update_attributes()
 
         dispatcher.connect(
@@ -795,7 +795,7 @@ class ZWaveDeviceEntity(Entity):
         self.update_properties()
         # If value changed after device was created but before setup_platform
         # was called - skip updating state.
-        if self.hass and not self._scheduled_update:
+        if self.hass and not self._update_scheduled:
             self.hass.add_job(self._schedule_update)
 
     def _update_ids(self):
@@ -922,14 +922,14 @@ class ZWaveDeviceEntity(Entity):
     @callback
     def _schedule_update(self):
         """Schedule delayed update."""
-        if self._scheduled_update:
+        if self._update_scheduled:
             return
 
         @callback
         def do_update():
             """Really update."""
             self.hass.async_add_job(self.async_update_ha_state)
-            self._scheduled_update = False
+            self._update_scheduled = False
 
-        self._scheduled_update = True
+        self._update_scheduled = True
         self.hass.loop.call_later(0.1, do_update)
