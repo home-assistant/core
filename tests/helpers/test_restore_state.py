@@ -34,7 +34,7 @@ def test_caching_data(hass):
             patch('homeassistant.helpers.restore_state.get_states',
                   return_value=states), \
             patch('homeassistant.helpers.restore_state.wait_connection_ready',
-                  return_value=mock_coro()):
+                  return_value=mock_coro(True)):
         state = yield from async_get_last_state(hass, 'input_boolean.b1')
 
     assert DATA_RESTORE_CACHE in hass.data
