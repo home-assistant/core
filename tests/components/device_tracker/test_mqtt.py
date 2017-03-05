@@ -5,7 +5,7 @@ from unittest.mock import patch
 import logging
 import os
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 

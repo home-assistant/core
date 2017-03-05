@@ -13,7 +13,7 @@ import time
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv

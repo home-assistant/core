@@ -1,7 +1,7 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)

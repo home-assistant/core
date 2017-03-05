@@ -13,7 +13,7 @@ from aiohttp import web
 from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import setup_component, DATA_SETUP
+from homeassistant.setup import setup_component, DATA_SETUP
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -435,7 +435,7 @@ def assert_setup_component(count, domain=None):
     - domain: The domain to count is optional. It can be automatically
               determined most of the time
 
-    Use as a context manager aroung bootstrap.setup_component
+    Use as a context manager aroung setup.setup_component
         with assert_setup_component(0) as result_config:
             setup_component(hass, domain, start_config)
             # using result_config is optional

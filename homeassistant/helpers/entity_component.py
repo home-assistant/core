@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from homeassistant import config as conf_util
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)

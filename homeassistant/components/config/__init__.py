@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.bootstrap import (
+from homeassistant.setup import (
     async_prepare_setup_platform, ATTR_COMPONENT)
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView

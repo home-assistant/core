@@ -4,7 +4,7 @@ import asyncio
 import unittest
 
 from homeassistant.core import State, CoreState
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.light as light
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 

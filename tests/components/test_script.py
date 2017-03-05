@@ -3,7 +3,7 @@
 import unittest
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import script
 
 from tests.common import get_test_home_assistant, mock_component
