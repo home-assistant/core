@@ -81,6 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # List accounts
     account_ids = [str(acc['accountId']) for acc in mint_client.get_accounts()
                    if acc['accountId'] is not None]
+    _LOGGER.info("Mint account ids: %s", ", ".join(account_ids))
 
     # Prepare sensors
     dev = []
