@@ -9,6 +9,7 @@ import logging
 import os
 import socket
 import time
+import requests.certs
 
 import voluptuous as vol
 
@@ -312,7 +313,6 @@ def async_setup(hass, config):
 
     # When the port indicates mqtts, use bundled certificates from requests
     if certificate is None and port == 8883:
-        import requests.certs
         certificate = requests.certs.where()
 
     will_message = conf.get(CONF_WILL_MESSAGE)
