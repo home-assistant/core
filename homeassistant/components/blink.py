@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
-REQUIREMENTS = ['blinkpy==0.4.2']
+REQUIREMENTS = ['blinkpy==0.4.3']
 
 BLINKGLOB = None
 
