@@ -9,15 +9,14 @@ import logging
 import os
 import voluptuous as vol
 
-from homeassistant.helpers import (
-    discovery,
-    config_validation as cv,
-)
-
 from homeassistant.const import (
     CONF_NAME,
     CONF_ENTITY_ID,
     CONF_FILE_PATH
+)
+from homeassistant.helpers import (
+    discovery,
+    config_validation as cv,
 )
 
 REQUIREMENTS = ['opencv-python==3.2.0.6', 'numpy==1.12.0']
