@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_SSL)
+    CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_SERVER): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL): cv.boolean,
 })
 
 
@@ -37,8 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         config.get(CONF_USERNAME),
                         config.get(CONF_PASSWORD),
                         config.get(CONF_SERVER),
-                        config.get(CONF_PORT),
-                        config.get(CONF_SSL))
+                        config.get(CONF_PORT))
 
     if sensor.connection:
         add_devices([sensor])
@@ -49,14 +47,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ImapSensor(Entity):
     """Representation of an IMAP sensor."""
 
-    def __init__(self, name, user, password, server, port, ssl):
+    def __init__(self, name, user, password, server, port):
         """Initialize the sensor."""
         self._name = name or user
         self._user = user
         self._password = password
         self._server = server
         self._port = port
-        self._ssl = (port == 993) if ssl is None else ssl
         self._unread_count = 0
         self.connection = self._login()
         self.update()
@@ -65,10 +62,7 @@ class ImapSensor(Entity):
         """Login and return an IMAP connection."""
         import imaplib
         try:
-            if self._ssl:
-                connection = imaplib.IMAP4_SSL(self._server, self._port)
-            else:
-                connection = imaplib.IMAP4(self._server, self._port)
+            connection = imaplib.IMAP4_SSL(self._server, self._port)
             connection.login(self._user, self._password)
             return connection
         except imaplib.IMAP4.error:
