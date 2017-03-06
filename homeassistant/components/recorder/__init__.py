@@ -43,8 +43,7 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
 
-CONNECT_RETRY_WAIT = 10
-ERROR_QUERY = "Error during query: %s"
+CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
@@ -159,7 +158,9 @@ class Recorder(threading.Thread):
         tries = 1
         connected = False
 
-        while not connected and tries < 5:
+        while not connected and tries <= 10:
+            if tries != 1:
+                time.sleep(CONNECT_RETRY_WAIT)
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
@@ -168,7 +169,6 @@ class Recorder(threading.Thread):
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
-                time.sleep(CONNECT_RETRY_WAIT)
                 tries += 1
 
         if not connected:
@@ -302,6 +302,9 @@ class Recorder(threading.Thread):
             kwargs['pool_reset_on_return'] = None
         else:
             kwargs['echo'] = False
+
+        if self.engine is not None:
+            self.engine.dispose()
 
         self.engine = create_engine(self.db_url, **kwargs)
         models.Base.metadata.create_all(self.engine)
