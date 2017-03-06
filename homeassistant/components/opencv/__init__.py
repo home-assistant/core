@@ -40,7 +40,7 @@ DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
 DEFAULT_CLASSIFIER_PATH = \
     os.path.join(os.path.dirname(BASE_PATH),
-                 'opencv_classifiers',
+                 'classifiers',
                  'lbpcascade_frontalface.xml')
 DEFAULT_NAME = 'OpenCV'
 DEFAULT_MIN_SIZE = (30, 30)
