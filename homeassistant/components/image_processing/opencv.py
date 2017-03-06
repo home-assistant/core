@@ -6,6 +6,7 @@ https://home-assistant.io/components/image_processing.opencv/
 """
 import asyncio
 import logging
+import math
 import os
 import voluptuous as vol
 
@@ -29,12 +30,15 @@ from homeassistant.components.image_processing import (
 )
 from homeassistant.core import split_entity_id
 
+DEPENDENCIES = ['opencv']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(CLASSIFIER_GROUP_CONFIG)
+
+EVENT_FOUND_MATCH = 'image_processing.opencv_found_{}'
 
 
 def _create_processor_from_config(hass, camera_entity, config):
@@ -45,6 +49,7 @@ def _create_processor_from_config(hass, camera_entity, config):
         split_entity_id(camera_entity)[1])
 
     processor = OpenCVImageProcessor(
+        hass,
         camera_entity,
         name,
         classifier_config,
@@ -82,17 +87,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class OpenCVImageProcessor(ImageProcessingEntity):
     """Representation of an OpenCV image processor."""
 
-    def __init__(self, camera_entity, name, classifier_configs):
+    def __init__(self, hass, camera_entity, name, classifier_configs):
         """Initialize the OpenCV entity."""
+        self.hass = hass
         self._camera_entity = camera_entity
         self._name = name
-        self._cv_image = None
         self._classifier_configs = classifier_configs
         self._matches = []
 
     @property
-    def processed_image(self):
-        return self._cv_image
+    def matches(self):
+        return self._matches
 
     @property
     def camera_entity(self):
@@ -119,4 +124,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
     @asyncio.coroutine
     def async_process_image(self, image):
         """Process the image asynchronously."""
-        process_image(image, self._classifier_configs)
+        self._matches = yield from process_image(image, self._classifier_configs)
+
+        # TODO : Figure out if regions changed and fire event
