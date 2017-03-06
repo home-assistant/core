@@ -1,25 +1,17 @@
 """
-Component that performs OpenCV processes on images
+Component that performs OpenCV processes on images.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.opencv/
 """
 import asyncio
 import logging
-import math
-import os
-import voluptuous as vol
 
 from homeassistant.components.opencv import (
     ATTR_MATCHES,
-    ATTR_MATCH_COORDS,
-    ATTR_MATCH_ID,
-    ATTR_MATCH_NAME,
-    ATTR_MATCH_REGIONS,
     CLASSIFIER_GROUP_CONFIG,
     CONF_CLASSIFIER,
     CONF_ENTITY_ID,
-    CONF_FILE_PATH,
     CONF_NAME,
     DOMAIN as OPENCV_DOMAIN,
     process_image,
@@ -97,6 +89,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
     @property
     def matches(self):
+        """Return the matches it found."""
         return self._matches
 
     @property
@@ -124,6 +117,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
     @asyncio.coroutine
     def async_process_image(self, image):
         """Process the image asynchronously."""
-        self._matches = yield from process_image(image, self._classifier_configs)
+        self._matches = yield from process_image(image,
+                                                 self._classifier_configs)
 
         # TODO : Figure out if regions changed and fire event

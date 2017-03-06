@@ -1,5 +1,5 @@
 """
-Component that performs OpenCV processes on images
+Component that performs OpenCV processes on images.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.opencv/
@@ -16,7 +16,6 @@ from homeassistant.components.opencv import (
     ATTR_MATCH_REGIONS,
     DOMAIN as OPENCV_DOMAIN,
     CLASSIFIER_GROUP_CONFIG,
-    process_image,
     draw_regions,
     cv_image_from_bytes,
     cv_image_to_bytes
@@ -42,10 +41,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     devices = []
 
     for processor_uid in hass.data[OPENCV_DOMAIN].image_processors:
-        image_processor = hass.data[OPENCV_DOMAIN].image_processors[processor_uid]
+        image_processor = hass.data[OPENCV_DOMAIN].image_processors[
+            processor_uid]
         devices.append(OpenCVCamera(hass, image_processor))
 
     async_add_devices(devices)
+
 
 class OpenCVCamera(Camera):
     """Representation of an OpenCV camera entity."""
@@ -86,7 +87,8 @@ class OpenCVCamera(Camera):
     @asyncio.coroutine
     def _process_image(self, cv_image):
         """Process the image."""
-        image_processor = self._hass.data[OPENCV_DOMAIN].image_processors[self._image_processor_uid]
+        image_processor = self._hass.data[OPENCV_DOMAIN].image_processors[
+            self._image_processor_uid]
 
         regions = []
         for match in image_processor.matches:

@@ -41,7 +41,9 @@ CONF_NEIGHBORS = 'neighbors'
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
 DEFAULT_CLASSIFIER_PATH = \
-    os.path.join(os.path.dirname(BASE_PATH), 'opencv_classifiers', 'lbpcascade_frontalface.xml')
+    os.path.join(os.path.dirname(BASE_PATH),
+                 'opencv_classifiers',
+                 'lbpcascade_frontalface.xml')
 DEFAULT_CLASSIFIER = [{
     CONF_FILE_PATH: DEFAULT_CLASSIFIER_PATH,
     CONF_NAME: 'Face',
@@ -60,11 +62,16 @@ CLASSIFIER_GROUP_CONFIG = {
     vol.Optional(CONF_CLASSIFIER, default=DEFAULT_CLASSIFIER): vol.All(
         cv.ensure_list,
         [vol.Schema({
-            vol.Optional(CONF_FILE_PATH, default=DEFAULT_CLASSIFIER_PATH): cv.isfile,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(CONF_MIN_SIZE, default=DEFAULT_MIN_SIZE): vol.Schema((int, int)),
-            vol.Optional(CONF_SCALE, default=DEFAULT_SCALE): float,
-            vol.Optional(CONF_NEIGHBORS, default=DEFAULT_NEIGHBORS): cv.positive_int
+            vol.Optional(CONF_FILE_PATH, default=DEFAULT_CLASSIFIER_PATH):
+                cv.isfile,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME):
+                cv.string,
+            vol.Optional(CONF_MIN_SIZE, default=DEFAULT_MIN_SIZE):
+                vol.Schema((int, int)),
+            vol.Optional(CONF_SCALE, default=DEFAULT_SCALE):
+                float,
+            vol.Optional(CONF_NEIGHBORS, default=DEFAULT_NEIGHBORS):
+                cv.positive_int
         })]),
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -81,9 +88,10 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def draw_regions(cv_image, regions):
-    """Draw the regions"""
+    """Draw the regions."""
     import cv2
 
+    # pylint: disable=invalid-name
     for (x, y, w, h) in regions:
         cv2.rectangle(cv_image,
                       (x, y),
@@ -110,6 +118,7 @@ def _process_classifier(cv2, cv_image, classifier_config):
                                              minNeighbors=neighbors,
                                              minSize=min_size)
     matches = []
+    # pylint: disable=invalid-name
     for x, y, w, h in detections:
         matches.append({
             ATTR_MATCH_ID: len(matches),
@@ -157,7 +166,8 @@ def process_image(image, classifier_configs):
     import cv2
     import numpy
 
-    cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+    cv_image = cv2.imdecode(numpy.asarray(bytearray(image)),
+                            cv2.IMREAD_UNCHANGED)
     matches = []
     for classifier_config in classifier_configs:
         match = yield from _process_classifier(cv2,
@@ -172,7 +182,6 @@ def process_image(image, classifier_configs):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the OpenCV platform entities."""
-
     hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN])
 
     @asyncio.coroutine
@@ -181,7 +190,9 @@ def async_setup(hass, config):
         if platform == DOMAIN:
             discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
-    discovery.async_listen_platform(hass, 'image_processing', async_platform_discovered)
+    discovery.async_listen_platform(hass,
+                                    'image_processing',
+                                    async_platform_discovered)
     discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
 
     return True
@@ -189,8 +200,9 @@ def async_setup(hass, config):
 
 class OpenCV(object):
     """OpenCV Platform."""
+
     def __init__(self, hass, classifier_groups):
-        """Initialize the OpenCV platform"""
+        """Initialize the OpenCV platform."""
         self._classifier_groups = classifier_groups
         self._image_processors = {}
 
