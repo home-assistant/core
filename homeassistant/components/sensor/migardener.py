@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL, TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
-    ATTR_UNIT_OF_MEASUREMENT, ATTR_FRIENDLY_NAME)
+    ATTR_UNIT_OF_MEASUREMENT)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
@@ -102,7 +102,7 @@ class MiGardener(Entity):
         self._state = STATE_UNKNOWN
         self._name = config[CONF_NAME]
         self._state_topic = config[CONF_STATE_TOPIC]
-        self._attrib = { ATTR_FRIENDLY_NAME: 'status' }
+        self._attrib = dict()
         self._create_group()
 
         @callback
@@ -130,7 +130,6 @@ class MiGardener(Entity):
     def _set_sensor(self, sensor_name, value):
         attrib = {
             ATTR_UNIT_OF_MEASUREMENT : self.READINGS[sensor_name][ATTR_UNIT_OF_MEASUREMENT],
-            ATTR_FRIENDLY_NAME : sensor_name,
         }
         self._hass.states.async_set(self._sensor_entity_id(sensor_name), value, attributes=attrib)
 
