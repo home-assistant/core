@@ -141,16 +141,31 @@ def async_setup(hass, config):
     """Set up the OpenCV platform entities."""
     _LOGGER.info('Setting up OpenCV')
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN][DATA_CLASSIFIER_GROUPS] = config[DOMAIN]
+    hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN])
 
     # discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
         # discovery.load_platform(hass, 'camera', DOMAIN, {}, group)
 
     return True
-#
-# class OpenCV():
-#     """OpenCV Platform."""
-#     def __init__(self, classifier_groups):
-#         """Initialize the OpenCV platform"""
-#         self.classifier_groups = classifier_groups
+
+
+class OpenCV(object):
+    """OpenCV Platform."""
+    def __init__(self, hass, classifier_groups):
+        """Initialize the OpenCV platform"""
+        self._classifier_groups = classifier_groups
+        self._image_processors = []
+
+    @property
+    def classifier_groups(self):
+        """Return configured classifier groups."""
+        return self._classifier_groups
+
+    @property
+    def image_processors(self):
+        """Return the image processor components."""
+        return self._image_processors
+
+    def add_image_processor(self, image_processor):
+        """Add an image processor to the data store."""
+        self._image_processors.append(image_processor)
