@@ -4,10 +4,8 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.lock import LockDevice
-from homeassistant.components.lock import PLATFORM_SCHEMA
-from homeassistant.const import CONF_ACCESS_TOKEN, SERVICE_LOCK, \
-    SERVICE_UNLOCK, CONF_ID
+from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +34,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Lockitron(LockDevice):
+    LOCK_STATE = 'lock'
+    UNLOCK_STATE = 'unlock'
+
     def __init__(self, state, access_token, device_id):
         """Initialize the lock."""
         self._state = state
@@ -52,20 +53,20 @@ class Lockitron(LockDevice):
 
     @property
     def is_locked(self):
-        return self._state == SERVICE_LOCK
+        return self._state == Lockitron.LOCK_STATE
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._state = self.do_change_request(SERVICE_LOCK)
+        self._state = self.do_change_request(Lockitron.LOCK_STATE)
         self.update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._state = self.do_change_request(SERVICE_UNLOCK)
+        self._state = self.do_change_request(Lockitron.UNLOCK_STATE)
         self.update_ha_state()
 
     def update(self):
-        response = requests\
+        response = requests \
             .get(API_STATE_URL.format(self.device_id, self.access_token))
         if response.status_code == 200:
             self._state = response.json()['state']
