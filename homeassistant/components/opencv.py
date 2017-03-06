@@ -67,8 +67,18 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @asyncio.coroutine
-def draw_regions(image, ):
+def draw_regions(cv_image, regions):
     """Draw the regions"""
+    import cv2
+
+    for (x, y, w, h) in regions:
+        cv2.rectangle(cv_image,
+                      (x, y),
+                      (x + w, y + h),
+                      (255, 255, 0),  # COLOR
+                      2)
+
+    return cv_image
 
 
 @asyncio.coroutine
@@ -101,10 +111,17 @@ def _process_classifier(cv2, cv_image, classifier_path, classifier_name):
     return None
 
 
+def cv_image_from_bytes(image):
+    """Convert image bytes to OpenCV image."""
+    import cv2
+    import numpy
+
+    return cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
+
+
 @asyncio.coroutine
 def process_image(image, classifier_configs):
     import cv2
-    import numpy
 
     cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
     matches = []
