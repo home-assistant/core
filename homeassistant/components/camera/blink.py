@@ -17,6 +17,8 @@ from homeassistant.util import Throttle
 
 DEPENDENCIES = ['blink']
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -26,7 +28,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     data = blink.BLINKGLOB.blink
-
     devs = list()
     for name in data.cameras:
         devs.append(BlinkCamera(hass, config, data, name))
@@ -53,7 +54,7 @@ class BlinkCamera(Camera):
         """A camera name."""
         return self._name
 
-    @Throttle(timedelta(seconds=blink.BLINKGLOB.update_interval))
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def request_image(self):
         """An image request from Blink servers."""
         _LOGGER.info("Requesting new image from blink servers")
