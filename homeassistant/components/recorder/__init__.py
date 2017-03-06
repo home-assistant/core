@@ -158,7 +158,7 @@ class Recorder(threading.Thread):
         tries = 1
         connected = False
 
-        while not connected and tries < 9:
+        while not connected and tries <= 10:
             if tries != 1:
                 time.sleep(CONNECT_RETRY_WAIT)
             try:
