@@ -32,7 +32,6 @@ ATTR_MATCHES = 'matches'
 BASE_PATH = os.path.realpath(__file__)
 
 CONF_CLASSIFIER = 'classifier'
-CONF_COLOR = 'color'
 CONF_MIN_SIZE = 'min_size'
 CONF_SCALE = 'scale'
 CONF_NEIGHBORS = 'neighbors'
