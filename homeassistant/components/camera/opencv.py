@@ -40,9 +40,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     devices = []
 
-    for processor_uid in hass.data[OPENCV_DOMAIN].image_processors:
-        image_processor = hass.data[OPENCV_DOMAIN].image_processors[
-            processor_uid]
+    for image_processor in hass.data[OPENCV_DOMAIN].image_processors.values():
         devices.append(OpenCVCamera(hass, image_processor))
 
     async_add_devices(devices)
