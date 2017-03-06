@@ -41,7 +41,7 @@ CONF_NEIGHBORS = 'neighbors'
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
 DEFAULT_CLASSIFIER_PATH = \
-    os.path.join(os.path.dirname(BASE_PATH), 'opencv_classifiers', 'haarcascade_frontalface_default.xml')
+    os.path.join(os.path.dirname(BASE_PATH), 'opencv_classifiers', 'lbpcascade_frontalface.xml')
 DEFAULT_CLASSIFIER = [{
     CONF_FILE_PATH: DEFAULT_CLASSIFIER_PATH,
     CONF_NAME: 'Face',
