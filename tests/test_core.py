@@ -668,6 +668,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         self.services.register(
             "test_domain", "register_calls", service_handler)
+        self.hass.block_till_done()
 
         assert len(self.calls_register) == 1
         assert self.calls_register[-1].data['domain'] == 'test_domain'
@@ -698,6 +699,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         self.services.register(
             'test_domain', 'register_calls', service_handler)
+        self.hass.block_till_done()
 
         assert len(self.calls_register) == 1
         assert self.calls_register[-1].data['domain'] == 'test_domain'
@@ -719,6 +721,7 @@ class TestServiceRegistry(unittest.TestCase):
 
         self.services.register(
             'test_domain', 'register_calls', service_handler)
+        self.hass.block_till_done()
 
         assert len(self.calls_register) == 1
         assert self.calls_register[-1].data['domain'] == 'test_domain'
@@ -734,6 +737,7 @@ class TestServiceRegistry(unittest.TestCase):
         assert self.services.has_service('test_Domain', 'test_Service')
 
         self.services.remove('test_Domain', 'test_Service')
+        self.hass.block_till_done()
 
         assert not self.services.has_service('test_Domain', 'test_Service')
         assert len(self.calls_remove) == 1
@@ -744,6 +748,7 @@ class TestServiceRegistry(unittest.TestCase):
         """Test remove service that not exists."""
         assert not self.services.has_service('test_xxx', 'test_yyy')
         self.services.remove('test_xxx', 'test_yyy')
+        self.hass.block_till_done()
         assert len(self.calls_remove) == 0
 
 

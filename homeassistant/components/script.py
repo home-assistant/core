@@ -57,6 +57,11 @@ def is_on(hass, entity_id):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
+def reload(hass):
+    """Reload script component."""
+    hass.services.call(DOMAIN, SERVICE_RELOAD)
+
+
 def turn_on(hass, entity_id, variables=None):
     """Turn script on."""
     _, object_id = split_entity_id(entity_id)
@@ -205,6 +210,6 @@ class ScriptEntity(ToggleEntity):
             self.script.async_stop()
 
         # remove service
-        self.hass.service.remove(DOMAIN, self.object_id)
+        self.hass.services.async_remove(DOMAIN, self.object_id)
 
         return super().async_remove()
