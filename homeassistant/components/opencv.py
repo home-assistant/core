@@ -143,8 +143,14 @@ def async_setup(hass, config):
 
     hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN])
 
-    # discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
-        # discovery.load_platform(hass, 'camera', DOMAIN, {}, group)
+    @asyncio.coroutine
+    def async_platform_discovered(platform, info):
+        """Platform discovered listener."""
+        # discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
+        _LOGGER.info('async_platform_discovered : %s : %s', str(platform), str(info))
+
+    discovery.async_listen_platform(hass, 'image_processing', async_platform_discovered)
+    discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
 
     return True
 
