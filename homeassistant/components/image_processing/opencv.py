@@ -119,5 +119,3 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         """Process the image asynchronously."""
         self._matches = yield from process_image(image,
                                                  self._classifier_configs)
-
-        # TODO : Figure out if regions changed and fire event
