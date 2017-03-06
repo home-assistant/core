@@ -335,7 +335,7 @@ def async_setup(hass, config):
         import sys
         # Python3.6 supports automatic negotiation of highest TLS version
         if sys.hexversion >= 0x03060000:
-            tls_version = ssl.PROTOCOL_TLS
+            tls_version = ssl.PROTOCOL_TLS  # pylint: disable=no-member
         else:
             tls_version = ssl.PROTOCOL_TLSv1
 

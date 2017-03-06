@@ -427,7 +427,7 @@ def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
 
     import sys
     if sys.hexversion >= 0x03060000:
-        expectedTlsVersion = ssl.PROTOCOL_TLS
+        expectedTlsVersion = ssl.PROTOCOL_TLS  # pylint: disable=no-member
     else:
         expectedTlsVersion = ssl.PROTOCOL_TLSv1
 
