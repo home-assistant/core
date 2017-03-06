@@ -348,6 +348,7 @@ def setup(hass, config):
             print("SIGNAL *****", signal)
             if value and signal in (ZWaveNetwork.SIGNAL_VALUE_CHANGED,
                                     ZWaveNetwork.SIGNAL_VALUE_ADDED,
+                                    ZWaveNetwork.SIGNAL_NODE_QUERIES_COMPLETE,
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
                                     ZWaveNetwork.SIGNAL_NODE_EVENT,
                                     ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
@@ -358,8 +359,13 @@ def setup(hass, config):
 
         dispatcher.connect(log_all, weak=False)
 
-    def value_added(node, value):
-        """Called when a value is added to a node on the network."""
+    def node_queries_complete(node):
+        """Called when a node has been fully queried for the network."""
+        for value in node.get_values().values():
+            add_node_value(node, value)
+
+    def add_node_value(node, value):
+        """Called after a node is added on the network for each node value."""
         for (component,
              generic_device_class,
              specific_device_class,
@@ -474,7 +480,8 @@ def setup(hass, config):
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
     dispatcher.connect(
-        value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
+        node_queries_complete, ZWaveNetwork.SIGNAL_NODE_QUERIES_COMPLETE,
+        weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
     dispatcher.connect(
