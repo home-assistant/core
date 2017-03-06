@@ -11,13 +11,13 @@ import voluptuous as vol
 
 from homeassistant.helpers import (
     discovery,
-    config_validation as cv
+    config_validation as cv,
 )
 
 from homeassistant.const import (
     CONF_NAME,
     CONF_ENTITY_ID,
-    CONF_FILE_PATH,
+    CONF_FILE_PATH
 )
 
 REQUIREMENTS = ['opencv-python==3.2.0.6', 'numpy==1.12.0']
@@ -33,6 +33,10 @@ ATTR_MATCHES = 'matches'
 BASE_PATH = os.path.realpath(__file__)
 
 CONF_CLASSIFIER = 'classifier'
+CONF_COLOR = 'color'
+CONF_MIN_SIZE = 'min_size'
+CONF_SCALE = 'scale'
+CONF_NEIGHBORS = 'neighbors'
 
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
@@ -40,9 +44,15 @@ DEFAULT_CLASSIFIER_PATH = \
     os.path.join(os.path.dirname(BASE_PATH), 'opencv_classifiers', 'haarcascade_frontalface_default.xml')
 DEFAULT_CLASSIFIER = [{
     CONF_FILE_PATH: DEFAULT_CLASSIFIER_PATH,
-    CONF_NAME: 'Face'
+    CONF_NAME: 'Face',
+    CONF_MIN_SIZE: (30, 30),
+    CONF_SCALE: 1.1,
+    CONF_NEIGHBORS: 4
 }]
 DEFAULT_NAME = 'OpenCV'
+DEFAULT_MIN_SIZE = (30, 30)
+DEFAULT_SCALE = 1.1
+DEFAULT_NEIGHBORS = 4
 
 DOMAIN = 'opencv'
 
@@ -50,8 +60,11 @@ CLASSIFIER_GROUP_CONFIG = {
     vol.Optional(CONF_CLASSIFIER, default=DEFAULT_CLASSIFIER): vol.All(
         cv.ensure_list,
         [vol.Schema({
-            vol.Required(CONF_FILE_PATH): cv.isfile,
-            vol.Required(CONF_NAME): cv.string
+            vol.Optional(CONF_FILE_PATH, default=DEFAULT_CLASSIFIER_PATH): cv.isfile,
+            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+            vol.Optional(CONF_MIN_SIZE, default=DEFAULT_MIN_SIZE): vol.Schema((int, int)),
+            vol.Optional(CONF_SCALE, default=DEFAULT_SCALE): float,
+            vol.Optional(CONF_NEIGHBORS, default=DEFAULT_NEIGHBORS): cv.positive_int
         })]),
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -82,24 +95,30 @@ def draw_regions(cv_image, regions):
 
 
 @asyncio.coroutine
-def _process_classifier(cv2, cv_image, classifier_path, classifier_name):
+def _process_classifier(cv2, cv_image, classifier_config):
     """Process the given classifier."""
+    classifier_path = classifier_config[CONF_FILE_PATH]
+    classifier_name = classifier_config[CONF_NAME]
+    scale = classifier_config[CONF_SCALE]
+    neighbors = classifier_config[CONF_NEIGHBORS]
+    min_size = classifier_config[CONF_MIN_SIZE]
+
     classifier = cv2.CascadeClassifier(classifier_path)
 
     detections = classifier.detectMultiScale(cv_image,
-                                             scaleFactor=1.1,
-                                             minNeighbors=4,
-                                             minSize=(30, 30))
+                                             scaleFactor=scale,
+                                             minNeighbors=neighbors,
+                                             minSize=min_size)
     matches = []
-    for (x, y, w, h) in detections:
+    for x, y, w, h in detections:
         matches.append({
             ATTR_MATCH_ID: len(matches),
-            ATTR_MATCH_COORDS: {
-                'x': int(x),
-                'y': int(y),
-                'w': int(w),
-                'h': int(h),
-            }
+            ATTR_MATCH_COORDS: (
+                int(x),
+                int(y),
+                int(w),
+                int(h)
+            )
         })
 
     if len(detections) > 0:
@@ -107,6 +126,19 @@ def _process_classifier(cv2, cv_image, classifier_path, classifier_name):
             ATTR_MATCH_NAME: classifier_name,
             ATTR_MATCH_REGIONS: matches
         }
+
+    return None
+
+
+def cv_image_to_bytes(cv_image):
+    """Convert OpenCV image to bytes."""
+    import cv2
+
+    encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+    success, data = cv2.imencode('.jpg', cv_image, encode_param)
+
+    if success:
+        return data.tobytes()
 
     return None
 
@@ -122,14 +154,14 @@ def cv_image_from_bytes(image):
 @asyncio.coroutine
 def process_image(image, classifier_configs):
     import cv2
+    import numpy
 
     cv_image = cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
     matches = []
     for classifier_config in classifier_configs:
         match = yield from _process_classifier(cv2,
                                                cv_image,
-                                               classifier_config[CONF_FILE_PATH],
-                                               classifier_config[CONF_NAME])
+                                               classifier_config)
         if match is not None:
             matches.append(match)
 
@@ -139,15 +171,14 @@ def process_image(image, classifier_configs):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the OpenCV platform entities."""
-    _LOGGER.info('Setting up OpenCV')
 
     hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN])
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
         """Platform discovered listener."""
-        # discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-        _LOGGER.info('async_platform_discovered : %s : %s', str(platform), str(info))
+        if platform == DOMAIN:
+            discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
 
     discovery.async_listen_platform(hass, 'image_processing', async_platform_discovered)
     discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
@@ -160,7 +191,7 @@ class OpenCV(object):
     def __init__(self, hass, classifier_groups):
         """Initialize the OpenCV platform"""
         self._classifier_groups = classifier_groups
-        self._image_processors = []
+        self._image_processors = {}
 
     @property
     def classifier_groups(self):
@@ -174,4 +205,4 @@ class OpenCV(object):
 
     def add_image_processor(self, image_processor):
         """Add an image processor to the data store."""
-        self._image_processors.append(image_processor)
+        self._image_processors[image_processor.unique_id] = image_processor
