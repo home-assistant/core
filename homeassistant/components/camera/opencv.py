@@ -1,8 +1,8 @@
 """
-Component that performs OpenCV processes on images.
+Camera component that is linked to an OpenCV image processor.
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/image_processing.opencv/
+The camera's image will be identical to the camera that it's tracking with the
+edition of highlighting the detected regions.
 """
 import asyncio
 import logging
