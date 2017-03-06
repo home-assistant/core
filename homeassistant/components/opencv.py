@@ -153,6 +153,7 @@ def cv_image_from_bytes(image):
 
 @asyncio.coroutine
 def process_image(image, classifier_configs):
+    """Process the image given classifiers."""
     import cv2
     import numpy
 
