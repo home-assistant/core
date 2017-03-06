@@ -7,6 +7,11 @@ https://home-assistant.io/components/image_processing.opencv/
 import asyncio
 import logging
 
+from homeassistant.core import split_entity_id
+from homeassistant.components.image_processing import (
+    ImageProcessingEntity,
+    PLATFORM_SCHEMA,
+)
 from homeassistant.components.opencv import (
     ATTR_MATCHES,
     CLASSIFIER_GROUP_CONFIG,
@@ -16,11 +21,6 @@ from homeassistant.components.opencv import (
     DOMAIN as OPENCV_DOMAIN,
     process_image,
 )
-from homeassistant.components.image_processing import (
-    ImageProcessingEntity,
-    PLATFORM_SCHEMA,
-)
-from homeassistant.core import split_entity_id
 
 DEPENDENCIES = ['opencv']
 
