@@ -85,6 +85,8 @@ CONFIG_SCHEMA = vol.Schema({
     )
 }, extra=vol.ALLOW_EXTRA)
 
+# NOTE: pylint cannot find any of the members of cv2, disable lines to pass
+
 
 @asyncio.coroutine
 def draw_regions(cv_image, regions):
@@ -93,6 +95,7 @@ def draw_regions(cv_image, regions):
 
     # pylint: disable=invalid-name
     for (x, y, w, h) in regions:
+        # pylint: disable=no-member
         cv2.rectangle(cv_image,
                       (x, y),
                       (x + w, y + h),
@@ -143,7 +146,9 @@ def cv_image_to_bytes(cv_image):
     """Convert OpenCV image to bytes."""
     import cv2
 
+    # pylint: disable=no-member
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
+    # pylint: disable=no-member
     success, data = cv2.imencode('.jpg', cv_image, encode_param)
 
     if success:
@@ -157,6 +162,7 @@ def cv_image_from_bytes(image):
     import cv2
     import numpy
 
+    # pylint: disable=no-member
     return cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
 
@@ -166,10 +172,12 @@ def process_image(image, classifier_configs):
     import cv2
     import numpy
 
+    # pylint: disable=no-member
     cv_image = cv2.imdecode(numpy.asarray(bytearray(image)),
                             cv2.IMREAD_UNCHANGED)
     matches = []
     for classifier_config in classifier_configs:
+        # pylint: disable=no-member
         match = yield from _process_classifier(cv2,
                                                cv_image,
                                                classifier_config)
