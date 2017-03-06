@@ -20,6 +20,7 @@ from homeassistant.components.opencv import (
     CONF_ENTITY_ID,
     CONF_FILE_PATH,
     CONF_NAME,
+    DOMAIN as OPENCV_DOMAIN,
     process_image,
 )
 from homeassistant.components.image_processing import (
@@ -36,24 +37,44 @@ DEFAULT_TIMEOUT = 10
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(CLASSIFIER_GROUP_CONFIG)
 
 
+def _create_processor_from_config(hass, camera_entity, config):
+    """Create an OpenCV processor from configurtaion."""
+    classifier_config = config[CONF_CLASSIFIER]
+    name = '{} {}'.format(
+        config[CONF_NAME],
+        split_entity_id(camera_entity)[1])
+
+    processor = OpenCVImageProcessor(
+        camera_entity,
+        name,
+        classifier_config,
+    )
+    hass.data[OPENCV_DOMAIN].add_image_processor(processor)
+
+    return processor
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the OpenCV image processing platform."""
     devices = []
-    if config is None:
-        config = discovery_info
-
-    for camera_entity in config[CONF_ENTITY_ID]:
-        classifier_config = config[CONF_CLASSIFIER]
-        name = '{} {}'.format(
-            config[CONF_NAME],
-            split_entity_id(camera_entity)[1])
-
-        devices.append(OpenCVImageProcessor(
-            camera_entity,
-            name,
-            classifier_config,
-        ))
+    if discovery_info is not None:
+        # Create image processor from discovery info
+        for classifier_group in hass.data[OPENCV_DOMAIN].classifier_groups:
+            for camera_entity in classifier_group[CONF_ENTITY_ID]:
+                devices.append(
+                    _create_processor_from_config(
+                        hass,
+                        camera_entity,
+                        classifier_group))
+    else:
+        # Allow for creation of image processor directly
+        for camera_entity in config[CONF_ENTITY_ID]:
+            devices.append(
+                _create_processor_from_config(
+                    hass,
+                    camera_entity,
+                    config))
 
     async_add_devices(devices)
 
