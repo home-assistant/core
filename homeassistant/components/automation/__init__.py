@@ -15,7 +15,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE)
+    SERVICE_TOGGLE, SERVICE_RELOAD)
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
@@ -51,7 +51,6 @@ DEFAULT_INITIAL_STATE = True
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 SERVICE_TRIGGER = 'trigger'
-SERVICE_RELOAD = 'reload'
 
 _LOGGER = logging.getLogger(__name__)
 
