@@ -12,37 +12,58 @@ from homeassistant.components.camera import (
     Camera
 )
 from homeassistant.components.opencv import (
+    ATTR_MATCH_COORDS,
+    ATTR_MATCH_REGIONS,
     DOMAIN as OPENCV_DOMAIN,
     CLASSIFIER_GROUP_CONFIG,
     process_image,
     draw_regions,
-    cv_image_from_bytes
+    cv_image_from_bytes,
+    cv_image_to_bytes
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component
 
+DEPENDENCIES = ['opencv']
 
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(CLASSIFIER_GROUP_CONFIG)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an OpenCV camera."""
+    if discovery_info is None:
+        return
+
     devices = []
 
-    if discovery_info is not None:
-        for image_processor in hass.data[OPENCV_DOMAIN].image_processors:
-            devices.append(OpenCVCamera(hass))
-    else:
-        devices.append(OpenCVStandAloneCamera(hass))
+    for processor_uid in hass.data[OPENCV_DOMAIN].image_processors:
+        image_processor = hass.data[OPENCV_DOMAIN].image_processors[processor_uid]
+        devices.append(OpenCVCamera(hass, image_processor))
+
+    async_add_devices(devices)
 
 class OpenCVCamera(Camera):
     """Representation of an OpenCV camera entity."""
-    def __init__(self, hass):
+
+    timeout = DEFAULT_TIMEOUT
+
+    def __init__(self, hass, image_processor):
         """Initialize the OpenCV camera."""
+        super().__init__()
         self._hass = hass
+        self._name = image_processor.name
+        self._camera_entity = image_processor.camera_entity
+        self._image_processor_uid = image_processor.unique_id
+
+    @property
+    def name(self):
+        """Return the name of the camera."""
+        return self._name
 
     @asyncio.coroutine
     def async_camera_image(self):
@@ -58,24 +79,20 @@ class OpenCVCamera(Camera):
             _LOGGER.error("Error on receive image from entity: %s", err)
             return
 
-        return self._process_image(cv_image_from_bytes(image))
+        result = yield from self._process_image(cv_image_from_bytes(image))
 
+        return result
+
+    @asyncio.coroutine
     def _process_image(self, cv_image):
         """Process the image."""
-        self._add_regions(self, cv_image)
+        image_processor = self._hass.data[OPENCV_DOMAIN].image_processors[self._image_processor_uid]
 
-    def _add_regions(self, cv_image):
-        """Add regions to the image."""
-        # TODO : Get regions from image processor
-        draw_regions(cv_image, None)
+        regions = []
+        for match in image_processor.matches:
+            for region in match[ATTR_MATCH_REGIONS]:
+                regions.append(region[ATTR_MATCH_COORDS])
 
+        cv_result = yield from draw_regions(cv_image, regions)
 
-class OpenCVStandAloneCamera(OpenCVCamera):
-    """Represent a standalone OpenCV camera."""
-    def __init__(self, hass):
-        """Initialize the OpenCV camera."""
-        super().__init__(hass)
-
-    def _process_image(self, cv_image):
-        """Process the camera image."""
-
+        return cv_image_to_bytes(cv_result)
