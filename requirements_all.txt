@@ -734,9 +734,6 @@ uber_rides==0.2.7
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.1
 
-# homeassistant.components.device_tracker.unifi
-urllib3
-
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
 
