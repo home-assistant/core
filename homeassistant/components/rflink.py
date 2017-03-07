@@ -152,9 +152,6 @@ def async_setup(hass, config):
     def connect():
         """Set up connection and hook it into HA for reconnect/shutdown."""
         _LOGGER.info('Initiating Rflink connection')
-        hass.states.async_set(
-            '{domain}.connection_status'.format(
-                domain=DOMAIN), 'connecting')
 
         # Rflink create_rflink_connection decides based on the value of host
         # (string or None) if serial or tcp mode should be used
@@ -180,9 +177,6 @@ def async_setup(hass, config):
             _LOGGER.exception(
                 "Error connecting to Rflink, reconnecting in %s",
                 reconnect_interval)
-            hass.states.async_set(
-                '{domain}.connection_status'.format(
-                    domain=DOMAIN), 'error')
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
 
@@ -195,9 +189,6 @@ def async_setup(hass, config):
                                    lambda x: transport.close())
 
         _LOGGER.info('Connected to Rflink')
-        hass.states.async_set(
-            '{domain}.connection_status'.format(
-                domain=DOMAIN), 'connected')
 
     hass.async_add_job(connect)
     return True
