@@ -56,7 +56,6 @@ def get_test_home_assistant():
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        loop.close()
         stop_event.set()
 
     orig_start = hass.start
@@ -73,6 +72,7 @@ def get_test_home_assistant():
         """Stop hass."""
         orig_stop()
         stop_event.wait()
+        loop.close()
 
     hass.start = start_hass
     hass.stop = stop_hass
