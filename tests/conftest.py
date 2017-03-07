@@ -1,6 +1,8 @@
 """Setup some common test helper things."""
+import asyncio
 import functools
 import logging
+import os
 from unittest.mock import patch
 
 import pytest
@@ -12,6 +14,10 @@ from homeassistant.components import mqtt
 
 from .common import async_test_home_assistant, mock_coro
 from .test_util.aiohttp import mock_aiohttp_client
+
+if os.environ.get('UVLOOP') == '1':
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
