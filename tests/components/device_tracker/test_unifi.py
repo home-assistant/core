@@ -58,7 +58,7 @@ class TestUnifiScanner(unittest.TestCase):
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
                 CONF_HOST: 'myhost',
-                CONF_VERIFY_SSL: False
+                CONF_VERIFY_SSL: False,
                 'port': 123,
                 'site_id': 'abcdef01',
             })
