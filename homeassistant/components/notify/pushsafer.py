@@ -41,6 +41,7 @@ class PushsaferNotificationService(BaseNotificationService):
         """Send a message to a user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         payload = {'k': self._private_key, 't': title, 'm': message}
-        response = requests.get(_RESOURCE, params=payload, timeout=DEFAULT_TIMEOUT)
+        response = requests.get(_RESOURCE, params=payload,
+                                timeout=DEFAULT_TIMEOUT)
         if response.json()['status'] != '1':
             _LOGGER.error("Not possible to send notification")
