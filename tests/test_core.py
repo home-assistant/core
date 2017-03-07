@@ -621,20 +621,13 @@ class TestServiceRegistry(unittest.TestCase):
         self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
 
         self.calls_register = []
-        self.calls_remove = []
 
         @ha.callback
         def mock_event_register(event):
             """Mock register event."""
             self.calls_register.append(event)
 
-        @ha.callback
-        def mock_event_remove(event):
-            """Mock register event."""
-            self.calls_remove.append(event)
-
         self.hass.bus.listen(EVENT_SERVICE_REGISTERED, mock_event_register)
-        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -734,22 +727,40 @@ class TestServiceRegistry(unittest.TestCase):
 
     def test_remove_service(self):
         """Test remove service."""
+        calls_remove = []
+
+        @ha.callback
+        def mock_event_remove(event):
+            """Mock register event."""
+            calls_remove.append(event)
+
+        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
+
         assert self.services.has_service('test_Domain', 'test_Service')
 
         self.services.remove('test_Domain', 'test_Service')
         self.hass.block_till_done()
 
         assert not self.services.has_service('test_Domain', 'test_Service')
-        assert len(self.calls_remove) == 1
-        assert self.calls_remove[-1].data['domain'] == 'test_domain'
-        assert self.calls_remove[-1].data['service'] == 'test_service'
+        assert len(calls_remove) == 1
+        assert calls_remove[-1].data['domain'] == 'test_domain'
+        assert calls_remove[-1].data['service'] == 'test_service'
 
     def test_remove_service_that_not_exists(self):
         """Test remove service that not exists."""
+        calls_remove = []
+
+        @ha.callback
+        def mock_event_remove(event):
+            """Mock register event."""
+            calls_remove.append(event)
+
+        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
+
         assert not self.services.has_service('test_xxx', 'test_yyy')
         self.services.remove('test_xxx', 'test_yyy')
         self.hass.block_till_done()
-        assert len(self.calls_remove) == 0
+        assert len(calls_remove) == 0
 
 
 class TestConfig(unittest.TestCase):

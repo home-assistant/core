@@ -880,7 +880,8 @@ class ServiceRegistry(object):
         service = service.lower()
 
         if service not in self._services.get(domain, {}):
-            _LOGGER.error("No service %s fround for %s.", service, domain)
+            _LOGGER.warning(
+                "Unable to remove unknown service %s/%s.", domain, service)
             return
 
         self._services[domain].pop(service)
