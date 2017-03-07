@@ -21,7 +21,7 @@ REQUIREMENTS = ['pyunifi==2.0']
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
-DEFAULT_VERIFY_SSL = False
+DEFAULT_VERIFY_SSL = True
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
