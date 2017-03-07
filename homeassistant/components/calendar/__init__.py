@@ -56,7 +56,8 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self._default_offset = time_period_str(data.get(CONF_DEFAULT_OFFSET, "00:00"))
+        self._default_offset = time_period_str(
+            data.get(CONF_DEFAULT_OFFSET, "00:00"))
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT,
                                             self.dev_id,
                                             hass=hass)
