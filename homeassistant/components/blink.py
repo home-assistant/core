@@ -13,7 +13,7 @@ from homeassistant.helpers import discovery
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
-REQUIREMENTS = ['blinkpy==0.4.3']
+REQUIREMENTS = ['blinkpy==0.4.4']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -39,5 +39,33 @@ def setup(hass, config):
     hass.data[DOMAIN] = BlinkSystem(config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
+    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
+
+    def snap_picture(call):
+        """Take a picture."""
+        cameras = hass.data[DOMAIN].blink.cameras
+        name = call.data.get('name', '')
+        if name in cameras:
+            cameras[name].snap_picture()
+
+    def arm_camera(call):
+        """Arm a camera."""
+        cameras = hass.data[DOMAIN].blink.cameras
+        name = call.data.get('name', '')
+        value = call.data.get('value', 'True')
+        value_bool = bool(value)
+        if name in cameras:
+            cameras[name].set_motion_detect(value_bool)
+
+    def arm_system(call):
+        """Arm the system."""
+        value = call.data.get('value', 'True')
+        value_bool = bool(value)
+        hass.data[DOMAIN].blink.arm = value_bool
+        hass.data[DOMAIN].blink.refresh()
+
+    hass.services.register(DOMAIN, 'snap_picture', snap_picture)
+    hass.services.register(DOMAIN, 'arm_camera', arm_camera)
+    hass.services.register(DOMAIN, 'arm_system', arm_system)
+
     return True

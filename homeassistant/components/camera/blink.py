@@ -33,6 +33,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devs)
 
 
+def image_from_mp4(stream):
+    """Get mp4 and extract jpg."""
+    data = b''
+    for chunk in stream:
+        data += chunk
+        jpg_start = data.find(b'\xff\xd8')
+        jpg_end = data.find(b'\xff\xd9')
+        if jpg_start != -1 and jpg_end != -1:
+            jpg = data[jpg_start:jpg_end + 2]
+            return jpg
+    return False
+
+
 class BlinkCamera(Camera):
     """An implementation of a Blink Camera."""
 
@@ -68,7 +81,8 @@ class BlinkCamera(Camera):
             # We detected motion at some point
             self.data.last_motion()
             self.notifications = notifs
-            return self.data.cameras[self._name].motion['image']
+            # returning motion image currently not working
+            # return self.data.cameras[self._name].motion['image']
         elif notifs < self.notifications:
             self.notifications = notifs
 
