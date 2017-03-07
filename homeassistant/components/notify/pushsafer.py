@@ -6,65 +6,42 @@ https://home-assistant.io/components/notify.pushsafer/
 """
 import logging
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_TARGET, ATTR_DATA,
-    BaseNotificationService)
-from homeassistant.const import CONF_API_KEY
+    ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-pushsafer==0.2']
 _LOGGER = logging.getLogger(__name__)
+_RESOURCE = 'https://www.pushsafer.com/api'
 
+CONF_DEVICE_KEY = 'private_key'
 
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
+DEFAULT_TIMEOUT = 10
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DEVICE_KEY): cv.string,
 })
 
 
-# pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
-    """Get the Pushsafer notification service."""
-    from pushsafer import InitError
-
-    try:
-        return PushsaferNotificationService(config[CONF_API_KEY])
-    except InitError:
-        _LOGGER.error(
-            'Wrong private key supplied. Get it at https://www.pushsafer.com')
-        return None
+    """Get the Pushsafer.com notification service."""
+    return PushsaferNotificationService(config.get(CONF_DEVICE_KEY))
 
 
 class PushsaferNotificationService(BaseNotificationService):
-    """Implement the notification service for Pushsafer."""
+    """Implementation of the notification service for Pushsafer.com."""
 
-    def __init__(self, privatekey):
+    def __init__(self, private_key):
         """Initialize the service."""
-        from pushsafer import Client
-        self._privatekey = privatekey
-        self.pushsafer = Client(
-            "", privatekey=self._privatekey)
+        self._private_key = private_key
 
     def send_message(self, message='', **kwargs):
         """Send a message to a user."""
-        # Make a copy and use empty dict if necessary
-        data = dict(kwargs.get(ATTR_DATA) or {})
-
-        data['title'] = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
-
-        targets = kwargs.get(ATTR_TARGET)
-
-        if not isinstance(targets, list):
-            targets = [targets]
-
-        for target in targets:
-            if target is not None:
-                data['device'] = target
-
-            try:
-                self.pushsafer.send_message(message, data['title'], "", "",
-                                            "", "", "", "",
-                                            "0", "", "", "")
-            except ValueError as val_err:
-                _LOGGER.error(str(val_err))
+        title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
+        payload = {'k': self._private_key, 't': title, 'm': message}
+        response = requests.get(_RESOURCE, params=payload,
+                                timeout=DEFAULT_TIMEOUT)
+        if response.status_code != 200:
+            _LOGGER.error("Not possible to send notification")
