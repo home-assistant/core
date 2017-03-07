@@ -67,6 +67,9 @@ batinfo==0.4.2
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
 
+# homeassistant.components.blink
+blinkpy==0.4.4
+
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
 
