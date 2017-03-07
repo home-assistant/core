@@ -43,5 +43,5 @@ class PushsaferNotificationService(BaseNotificationService):
         payload = {'k': self._private_key, 't': title, 'm': message}
         response = requests.get(_RESOURCE, params=payload,
                                 timeout=DEFAULT_TIMEOUT)
-        if response.status_code != '200':
+        if response.status_code != 200:
             _LOGGER.error("Not possible to send notification")
