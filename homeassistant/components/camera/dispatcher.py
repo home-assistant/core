@@ -50,10 +50,11 @@ class DispatcherCamera(Camera):
     def async_added_to_hass(self):
         """Register dispatcher and callbacks."""
         @callback
-        def update_image(image):
+        def async_update_image(image):
+            """Update image from dispatcher call."""
             self._image = image
 
-        async_dispatcher_connect(self.hass, self._signal, update_image)
+        async_dispatcher_connect(self.hass, self._signal, async_update_image)
 
     @asyncio.coroutine
     def async_camera_image(self):
