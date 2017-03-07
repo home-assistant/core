@@ -21,7 +21,7 @@ CONF_SIGNAL = 'signal'
 DEFAULT_NAME = 'Dispatcher Camera'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SINGAL): cv.slugify,
+    vol.Required(CONF_SIGNAL): cv.slugify,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -33,7 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config = PLATFORM_SCHEMA(discovery_info)
 
     async_add_devices(
-        [DispatcherCamera(config[CONF_NAME], config[CONF_SINGAL])])
+        [DispatcherCamera(config[CONF_NAME], config[CONF_SIGNAL])])
 
 
 class DispatcherCamera(Camera):
