@@ -4,7 +4,6 @@ Component that performs OpenCV processes on images.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.opencv/
 """
-import asyncio
 import logging
 
 from homeassistant.core import split_entity_id
@@ -51,8 +50,7 @@ def _create_processor_from_config(hass, camera_entity, config):
     return processor
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the OpenCV image processing platform."""
     devices = []
     if discovery_info is not None:
@@ -73,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     camera_entity,
                     config))
 
-    async_add_devices(devices)
+    add_devices(devices)
 
 
 class OpenCVImageProcessor(ImageProcessingEntity):
@@ -114,8 +112,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             ATTR_MATCHES: str(self._matches)
         }
 
-    @asyncio.coroutine
-    def async_process_image(self, image):
+    def process_image(self, image):
         """Process the image asynchronously."""
         self._matches = yield from process_image(image,
                                                  self._classifier_configs)

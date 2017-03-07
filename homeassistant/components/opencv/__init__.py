@@ -4,7 +4,6 @@ Support for OpenCV image/video processing.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/opencv/
 """
-import asyncio
 import logging
 import os
 import voluptuous as vol
@@ -104,7 +103,6 @@ def draw_regions(cv_image, regions):
     return cv_image
 
 
-@asyncio.coroutine
 def _process_classifier(cv2, cv_image, classifier_config):
     """Process the given classifier."""
     classifier_path = classifier_config[CONF_FILE_PATH]
@@ -165,7 +163,6 @@ def cv_image_from_bytes(image):
     return cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
 
-@asyncio.coroutine
 def process_image(image, classifier_configs):
     """Process the image given classifiers."""
     import cv2
@@ -177,29 +174,19 @@ def process_image(image, classifier_configs):
     matches = []
     for classifier_config in classifier_configs:
         # pylint: disable=no-member
-        match = yield from _process_classifier(cv2,
-                                               cv_image,
-                                               classifier_config)
+        match = _process_classifier(cv2,
+                                    cv_image,
+                                    classifier_config)
         if match is not None:
             matches.append(match)
 
     return matches
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up the OpenCV platform entities."""
     hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN])
 
-    @asyncio.coroutine
-    def async_platform_discovered(platform, info):
-        """Platform discovered listener."""
-        if platform == DOMAIN:
-            discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
-
-    discovery.async_listen_platform(hass,
-                                    'image_processing',
-                                    async_platform_discovered)
     discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
 
     return True
