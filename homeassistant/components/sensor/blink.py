@@ -2,11 +2,11 @@
 Support for Blink system camera sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/blink/
+https://home-assistant.io/components/sensor.blink/
 """
 import logging
 
-from homeassistant.components import blink
+from homeassistant.components.blink import DOMAIN
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = blink.BLINKGLOB.blink
+    data = hass.data[DOMAIN].blink
     devs = list()
     index = 0
     for name in data.cameras:
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devs.append(BlinkSensor(name, 'notifications', index, data))
         index += 1
 
-    add_devices(devs)
+    add_devices(devs, True)
 
 
 class BlinkSensor(Entity):
@@ -49,7 +49,6 @@ class BlinkSensor(Entity):
         self.index = index
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):

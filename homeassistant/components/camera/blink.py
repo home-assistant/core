@@ -2,17 +2,15 @@
 Support for Blink system camera.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/blink/
+https://home-assistant.io/components/camera.blink/
 """
-import asyncio
 import logging
 
 from datetime import timedelta
 import requests
 
-from homeassistant.components import blink
+from homeassistant.components.blink import DOMAIN
 from homeassistant.components.camera import Camera
-from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.util import Throttle
 
 DEPENDENCIES = ['blink']
@@ -27,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = blink.BLINKGLOB.blink
+    data = hass.data[DOMAIN].blink
     devs = list()
     for name in data.cameras:
         devs.append(BlinkCamera(hass, config, data, name))
@@ -77,12 +75,6 @@ class BlinkCamera(Camera):
         return self.data.camera_thumbs[self._name]
 
     def camera_image(self):
-        """Return bytes of camera image."""
-        return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop).result()
-
-    @asyncio.coroutine
-    def async_camera_image(self):
         """Return a still image reponse from the camera."""
         self.request_image()
         return self.response.content

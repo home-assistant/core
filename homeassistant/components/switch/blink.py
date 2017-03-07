@@ -2,9 +2,9 @@
 Support for Blink system camera control.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/blink/
+https://home-assistant.io/components/switch.blink/
 """
-from homeassistant.components import blink
+from homeassistant.components.blink import DOMAIN
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['blink']
@@ -12,7 +12,7 @@ DEPENDENCIES = ['blink']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a Blink camera's controls."""
-    data = blink.BLINKGLOB.blink
+    data = hass.data[DOMAIN].blink
 
     for name in data.cameras:
         add_devices([BlinkSwitch(name, data, 'snap_picture')])

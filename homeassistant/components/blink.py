@@ -15,8 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'blink'
 REQUIREMENTS = ['blinkpy==0.4.3']
 
-BLINKGLOB = None
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
@@ -38,11 +36,7 @@ class BlinkSystem(object):
 
 def setup(hass, config):
     """Setup Blink System."""
-    global BLINKGLOB
-
-    if BLINKGLOB is None:
-        BLINKGLOB = BlinkSystem(config)
-
+    hass.data[DOMAIN] = BlinkSystem(config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'switch', DOMAIN, {}, config)
