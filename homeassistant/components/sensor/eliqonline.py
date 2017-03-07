@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.eliqonline/
 """
 from datetime import timedelta
 import logging
-from urllib.error import URLError
 
 import voluptuous as vol
 
@@ -49,9 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         _LOGGER.debug("Probing for access to ELIQ Online API")
         api.get_data_now(channelid=channel_id)
-    except URLError:
+    except OSError as error:
         _LOGGER.error("Could not access the ELIQ Online API. "
-                      "Is the configuration valid?")
+                      "Is the configuration valid? %s", error)
         return False
 
     add_devices([EliqSensor(api, channel_id, name)])
@@ -94,5 +93,6 @@ class EliqSensor(Entity):
             response = self._api.get_data_now(channelid=self._channel_id)
             self._state = int(response.power)
             _LOGGER.debug("Updated power from server %d W", self._state)
-        except URLError:
-            _LOGGER.warning("Could not connect to the ELIQ Online API")
+        except OSError as error:
+            _LOGGER.warning("Could not connect to the ELIQ Online API: %s",
+                            error)
