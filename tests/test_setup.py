@@ -413,14 +413,17 @@ def test_component_cannot_depend_config(hass):
 def test_component_warn_slow_setup(hass):
     """Warn we log when a component setup takes a long time."""
     loader.set_component('test_component1', MockModule('test_component1'))
-    mock_call_later = hass.loop.call_later = mock.MagicMock()
-    yield from setup.async_setup_component(hass, 'test_component1', {})
-    assert mock_call_later.called
-    assert len(mock_call_later.mock_calls) == 2
+    with mock.patch.object(hass.loop, 'call_later', mock.MagicMock()) \
+            as mock_call:
+        result = yield from setup.async_setup_component(
+            hass, 'test_component1', {})
+        assert result
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
 
-    timeout, logger_method = mock_call_later.mock_calls[0][1][:2]
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
-    assert timeout == setup.SLOW_SETUP_WARNING
-    assert logger_method == setup._LOGGER.warning
+        assert timeout == setup.SLOW_SETUP_WARNING
+        assert logger_method == setup._LOGGER.warning
 
-    assert mock_call_later().cancel.called
+        assert mock_call().cancel.called

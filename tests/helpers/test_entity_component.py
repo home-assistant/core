@@ -421,20 +421,19 @@ def test_platform_warn_slow_setup(hass):
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-    mock_call_later = hass.loop.call_later = MagicMock()
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from component.async_setup({
+            DOMAIN: {
+                'platform': 'platform',
+            }
+        })
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
 
-    yield from component.async_setup({
-        DOMAIN: {
-            'platform': 'platform',
-        }
-    })
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
 
-    assert mock_call_later.called
-    assert len(mock_call_later.mock_calls) == 2
+        assert timeout == SLOW_SETUP_WARNING
+        assert logger_method == _LOGGER.warning
 
-    timeout, logger_method = mock_call_later.mock_calls[0][1][:2]
-
-    assert timeout == SLOW_SETUP_WARNING
-    assert logger_method == _LOGGER.warning
-
-    assert mock_call_later().cancel.called
+        assert mock_call().cancel.called
