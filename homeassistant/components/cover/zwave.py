@@ -26,10 +26,9 @@ def get_device(values, **kwargs):
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
         return ZwaveRollershutter(values)
-    elif (values.primary.command_class ==
-          zwave.const.COMMAND_CLASS_SWITCH_BINARY or
-          values.primary.command_class ==
-          zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
+    elif (values.primary.command_class in [
+            zwave.const.COMMAND_CLASS_SWITCH_BINARY,
+            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
         return ZwaveGarageDoor(values)
     return None
 

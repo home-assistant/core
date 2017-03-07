@@ -65,7 +65,7 @@ DATA_ZWAVE_DICT = 'zwave_devices'
 
 NETWORK = None
 
-DEFAULT_VALUES_SCHEMA = {
+DEFAULT_NODE_VALUES_SCHEMA = {
     'wakeup': {
         const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_WAKE_UP],
         const.DISC_GENRE: const.GENRE_USER,
@@ -75,6 +75,8 @@ DEFAULT_VALUES_SCHEMA = {
         const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_BATTERY],
         const.DISC_OPTIONAL: True,
         },
+}
+DEFAULT_INSTANCE_VALUES_SCHEMA = {
     'power': {
         const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                                    const.COMMAND_CLASS_METER],
@@ -95,7 +97,8 @@ DISCOVERY_SCHEMAS = [
          const.GENERIC_TYPE_SWITCH_MULTILEVEL,
          const.GENERIC_TYPE_SENSOR_NOTIFICATION,
          const.GENERIC_TYPE_THERMOSTAT],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_BINARY],
              const.DISC_TYPE: const.TYPE_BOOL,
@@ -103,7 +106,8 @@ DISCOVERY_SCHEMAS = [
          }})},
     {const.DISC_COMPONENT: 'climate',
      const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_THERMOSTAT],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
                  const.COMMAND_CLASS_THERMOSTAT_SETPOINT],
@@ -148,7 +152,8 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
          const.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
          const.SPECIFIC_TYPE_SECURE_DOOR],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
              const.DISC_GENRE: const.GENRE_USER,
@@ -174,7 +179,8 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
          const.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
          const.SPECIFIC_TYPE_SECURE_DOOR],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
                  const.COMMAND_CLASS_BARRIER_OPERATOR,
@@ -189,7 +195,8 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
          const.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
          const.SPECIFIC_TYPE_NOT_USED],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
              const.DISC_GENRE: const.GENRE_USER,
@@ -214,7 +221,8 @@ DISCOVERY_SCHEMAS = [
      const.DISC_SPECIFIC_DEVICE_CLASS: [
          const.SPECIFIC_TYPE_ADVANCED_DOOR_LOCK,
          const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_DOOR_LOCK],
              const.DISC_TYPE: const.TYPE_BOOL,
@@ -242,7 +250,8 @@ DISCOVERY_SCHEMAS = [
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'sensor',
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
                  const.COMMAND_CLASS_SENSOR_MULTILEVEL,
@@ -266,7 +275,8 @@ DISCOVERY_SCHEMAS = [
          const.GENERIC_TYPE_REPEATER_SLAVE,
          const.GENERIC_TYPE_THERMOSTAT,
          const.GENERIC_TYPE_WALL_CONTROLLER],
-     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
+     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
+     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_BINARY],
              const.DISC_TYPE: const.TYPE_BOOL,
@@ -498,15 +508,12 @@ def setup(hass, config):
             if not check_node_schema(node, schema):
                 continue
             if not check_value_schema(
-                    value, schema[const.DISC_VALUES][const.DISC_PRIMARY]):
+                    value,
+                    schema[const.DISC_INSTANCE_VALUES][const.DISC_PRIMARY]):
                 continue
 
-            name = "{}.{}".format(
-                schema[const.DISC_COMPONENT], object_id(value))
-            node_config = device_config.get(name)
-
             values = ZWaveDeviceEntityValues(
-                hass, schema, value, config, node_config)
+                hass, schema, value, config, device_config)
             discovered_values.append(values)
 
     def scene_activated(node, scene_id):
@@ -819,17 +826,29 @@ def setup(hass, config):
 class ZWaveDeviceEntityValues():
     """Manages entity access to the underlying zwave value objects."""
 
-    def __init__(self, hass, schema, primary_value, zwave_config, node_config):
+    def __init__(self, hass, schema, primary_value, zwave_config,
+                 device_config):
         """Initialize the values object with the passed entity schema."""
         self._hass = hass
         self._zwave_config = zwave_config
-        self._node_config = node_config
+        self._device_config = device_config
         self._schema = copy.deepcopy(schema)
         self._values = {}
         self._entity = None
         self._workaround_ignore = False
-        for name in self._schema[const.DISC_VALUES].keys():
+
+        # Combine node value schemas and instance value schemas into one
+        # values schema mapping.
+        self._schema[const.DISC_VALUES] = {}
+        for name in self._schema[const.DISC_NODE_VALUES].keys():
             self._values[name] = None
+            self._schema[const.DISC_VALUES][name] = \
+                self._schema[const.DISC_NODE_VALUES][name]
+
+        for name in self._schema[const.DISC_INSTANCE_VALUES].keys():
+            self._values[name] = None
+            self._schema[const.DISC_VALUES][name] = \
+                self._schema[const.DISC_INSTANCE_VALUES][name]
             self._schema[const.DISC_VALUES][name][const.DISC_INSTANCE] = \
                 [primary_value.instance]
 
@@ -899,6 +918,9 @@ class ZWaveDeviceEntityValues():
                           workaround_component, component)
             component = workaround_component
 
+        name = "{}.{}".format(component, object_id(self.primary))
+        node_config = self._device_config.get(name)
+
         # Configure node
         _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
                       "Specific_command_class=%s, "
@@ -908,7 +930,7 @@ class ZWaveDeviceEntityValues():
                       self.primary.command_class, self.primary.type,
                       self.primary.genre, component)
 
-        if self._node_config.get(CONF_IGNORED):
+        if node_config.get(CONF_IGNORED):
             _LOGGER.info(
                 "Ignoring node %s due to device settings.", self._node.node_id)
             # No entity will be created for this value
@@ -916,7 +938,7 @@ class ZWaveDeviceEntityValues():
             return
 
         polling_intensity = convert(
-            self._node_config.get(CONF_POLLING_INTENSITY), int)
+            node_config.get(CONF_POLLING_INTENSITY), int)
         if polling_intensity:
             self.primary.enable_poll(polling_intensity)
         else:
@@ -925,7 +947,7 @@ class ZWaveDeviceEntityValues():
         platform = get_platform(component, DOMAIN)
         device = platform.get_device(
             node=self._node, values=self,
-            node_config=self._node_config, hass=self._hass)
+            node_config=node_config, hass=self._hass)
         if not device:
             # No entity will be created for this value
             self._workaround_ignore = True

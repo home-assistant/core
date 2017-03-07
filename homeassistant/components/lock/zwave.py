@@ -241,7 +241,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
         alarm_type = self.values.alarm_type.data
         _LOGGER.debug('Lock alarm_type is %s', str(alarm_type))
-        alarm_level = self.values.alarm_level and self.values.alarm_level.data
+        if self.values.alarm_level:
+            alarm_level = self.values.alarm_level.data
+        else:
+            alarm_level = None
         _LOGGER.debug('Lock alarm_level is %s', str(alarm_level))
 
         if not alarm_type:
