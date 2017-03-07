@@ -40,7 +40,7 @@ class TestUnifiScanner(unittest.TestCase):
         self.assertEqual(
             mock_ctrl.call_args,
             mock.call('localhost', 'foo', 'password', 8443,
-                      version='v4', site_id='default', ssl_verify=False)
+                      version='v4', site_id='default', ssl_verify=True)
         )
         self.assertEqual(mock_scanner.call_count, 1)
         self.assertEqual(
