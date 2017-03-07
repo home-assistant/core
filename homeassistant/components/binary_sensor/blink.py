@@ -28,7 +28,7 @@ class BlinkCameraMotionSensor(BinarySensorDevice):
 
     def __init__(self, name, data):
         """Initialize the sensor."""
-        self._name = 'blink ' + name + ' motion_enabled'
+        self._name = 'blink_' + name + '_motion_enabled'
         self._camera_name = name
         self.data = data
         self._state = self.data.cameras[self._camera_name].armed
@@ -36,7 +36,7 @@ class BlinkCameraMotionSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the blink sensor."""
-        return self._name.replace(" ", "_")
+        return self._name
 
     @property
     def is_on(self):

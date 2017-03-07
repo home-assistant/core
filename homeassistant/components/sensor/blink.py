@@ -42,7 +42,7 @@ class BlinkSensor(Entity):
 
     def __init__(self, name, sensor_type, index, data):
         """A method to initialize sensors from Blink camera."""
-        self._name = 'blink ' + name + ' ' + SENSOR_TYPES[sensor_type][0]
+        self._name = 'blink_' + name + '_' + SENSOR_TYPES[sensor_type][0]
         self._camera_name = name
         self._type = sensor_type
         self.data = data
@@ -53,7 +53,7 @@ class BlinkSensor(Entity):
     @property
     def name(self):
         """A method to return the name of the camera."""
-        return self._name.replace(" ", "_")
+        return self._name
 
     @property
     def state(self):

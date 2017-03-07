@@ -33,19 +33,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devs)
 
 
-def image_from_mp4(stream):
-    """Get mp4 and extract jpg."""
-    data = b''
-    for chunk in stream:
-        data += chunk
-        jpg_start = data.find(b'\xff\xd8')
-        jpg_end = data.find(b'\xff\xd9')
-        if jpg_start != -1 and jpg_end != -1:
-            jpg = data[jpg_start:jpg_end + 2]
-            return jpg
-    return False
-
-
 class BlinkCamera(Camera):
     """An implementation of a Blink Camera."""
 
