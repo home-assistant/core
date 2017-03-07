@@ -217,7 +217,7 @@ https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
-https://github.com/TheRealLink/pylgtv/archive/v0.1.3.zip#pylgtv==0.1.3
+https://github.com/TheRealLink/pylgtv/archive/v0.1.4.zip#pylgtv==0.1.4
 
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
