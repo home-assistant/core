@@ -44,7 +44,16 @@ DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS_SCALE = 255
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
+# Defines to select the control to turn the device on and off
+CONTROL_STATE = 0
+CONTROL_BRIGHTNESS = 1
+CONTROL_RGB = 2
+
+PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
@@ -114,12 +123,31 @@ class MqttLight(Light):
         self._payload = payload
         self._templates = templates
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
+
         self._optimistic_rgb = \
             optimistic or topic[CONF_RGB_STATE_TOPIC] is None
         self._optimistic_brightness = (
             optimistic or topic[CONF_BRIGHTNESS_STATE_TOPIC] is None)
         self._optimistic_color_temp = (
             optimistic or topic[CONF_COLOR_TEMP_STATE_TOPIC] is None)
+
+        if topic[CONF_COMMAND_TOPIC] is not None:
+            self._state_control = CONTROL_STATE
+            self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
+            # Last value is not used if a dedicated on/off topic is available
+            self._last_value = None
+        elif topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
+            self._state_control = CONTROL_BRIGHTNESS
+            self._optimistic = self._optimistic_brightness
+            self._last_value = 255
+        elif topic[CONF_RGB_COMMAND_TOPIC] is not None:
+            self._state_control = CONTROL_RGB
+            self._optimistic = self._optimistic_rgb
+            self._last_value = [255, 255, 255]
+        else:
+            raise RuntimeError("No command topic set.")
+
+
         self._brightness_scale = brightness_scale
         self._state = False
         self._brightness = None
@@ -170,6 +198,8 @@ class MqttLight(Light):
             device_value = float(templates[CONF_BRIGHTNESS](payload))
             percent_bright = device_value / self._brightness_scale
             self._brightness = int(percent_bright * 255)
+            if self._state_control == CONTROL_BRIGHTNESS:
+                self._state = self._brightness != 0
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is not None:
@@ -187,6 +217,8 @@ class MqttLight(Light):
             """A new MQTT message has been received."""
             self._rgb = [int(val) for val in
                          templates[CONF_RGB](payload).split(',')]
+            if self._state_control == CONTROL_RGB:
+                self._state = self._rgb != [0, 0, 0]
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
@@ -255,6 +287,20 @@ class MqttLight(Light):
         """Flag supported features."""
         return self._supported_features
 
+    def _publish_brightness(self, brightness):
+        """ Rescale brightness value to match device brightness range and
+            publish MQTT message to set this value. """
+        percent_bright = float(brightness) / 255
+        device_brightness = int(percent_bright * self._brightness_scale)
+        mqtt.async_publish(
+            self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
+            device_brightness, self._qos, self._retain)
+
+    def _publish_rgb(self, r, g, b):
+        """ Publish RGB value via MQTT """
+        mqtt.async_publish(self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
+            '{},{},{}'.format(r, g, b), self._qos, self._retain)
+
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on.
@@ -265,24 +311,14 @@ class MqttLight(Light):
 
         if ATTR_RGB_COLOR in kwargs and \
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
-
-            mqtt.async_publish(
-                self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
-                '{},{},{}'.format(*kwargs[ATTR_RGB_COLOR]), self._qos,
-                self._retain)
-
+            self._publish_rgb(*kwargs[ATTR_RGB_COLOR])
             if self._optimistic_rgb:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
                 should_update = True
 
         if ATTR_BRIGHTNESS in kwargs and \
            self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
-            percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
-            device_brightness = int(percent_bright * self._brightness_scale)
-            mqtt.async_publish(
-                self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
-                device_brightness, self._qos, self._retain)
-
+            self._publish_brightness(kwargs[ATTR_BRIGHTNESS])
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
@@ -297,9 +333,15 @@ class MqttLight(Light):
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
                 should_update = True
 
-        mqtt.async_publish(
-            self.hass, self._topic[CONF_COMMAND_TOPIC], self._payload['on'],
-            self._qos, self._retain)
+        if self._state_control == CONTROL_STATE:
+            mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
+                               self._payload['on'], self._qos, self._retain)
+        elif self._state_control == CONTROL_BRIGHTNESS:
+            if ATTR_BRIGHTNESS not in kwargs:
+                self._publish_brightness(self._last_value)
+        elif self._state_control == CONTROL_RGB:
+            if ATTR_RGB_COLOR not in kwargs:
+                self._publish_rgb(*self._last_value)
 
         if self._optimistic:
             # Optimistically assume that switch has changed state.
@@ -315,9 +357,15 @@ class MqttLight(Light):
 
         This method is a coroutine.
         """
-        mqtt.async_publish(
-            self.hass, self._topic[CONF_COMMAND_TOPIC], self._payload['off'],
-            self._qos, self._retain)
+        if self._state_control == CONTROL_STATE:
+            mqtt.async_publish(self.hass, self._topic[CONF_COMMAND_TOPIC],
+                               self._payload['off'], self._qos, self._retain)
+        elif self._state_control == CONTROL_BRIGHTNESS:
+            self._last_value = self._brightness
+            self._publish_brightness(0)
+        elif self._state_control == CONTROL_RGB:
+            self._last_value = self._rgb
+            self._publish_rgb(0, 0, 0)
 
         if self._optimistic:
             # Optimistically assume that switch has changed state.
