@@ -258,7 +258,7 @@ class AndroidIPCamEntity(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         state_attr = {}
-        if self._ipcam.status_data is not None:
+        if self._ipcam.status_data is None:
             return state_attr
 
         state_attr[ATTR_VID_CONNS] = \
