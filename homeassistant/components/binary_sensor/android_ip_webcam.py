@@ -50,9 +50,10 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
         """True if the binary sensor is on."""
         return self._state
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Retrieve latest state."""
-        if self._ipcam.status_data not None:
+        if self._ipcam.status_data is None:
             return
 
         container = self._ipcam.sensor_data.get(self._sensor)
