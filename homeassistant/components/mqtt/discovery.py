@@ -48,7 +48,7 @@ def async_start(hass, discovery_topic, hass_config):
             return
 
         payload = dict(payload)
-        payload[CONF_PLATFORM] = 'mqtt'
+        payload[CONF_PLATFORM] = payload.get(CONF_PLATFORM, 'mqtt')
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
