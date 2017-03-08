@@ -3,20 +3,12 @@ from unittest.mock import MagicMock
 from pydispatch import dispatcher
 
 SIGNAL_VALUE_CHANGED = 'mock_value_changed'
-SIGNAL_VALUE = 'mock_value'
 
 
 def value_changed(value):
     """Fire a value changed."""
     dispatcher.send(
         SIGNAL_VALUE_CHANGED,
-        value=value,
-        node=value.node,
-        network=value.node._network
-    )
-
-    dispatcher.send(
-        SIGNAL_VALUE,
         value=value,
         node=value.node,
         network=value.node._network
