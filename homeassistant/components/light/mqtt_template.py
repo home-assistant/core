@@ -11,9 +11,10 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, Light, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -28,36 +29,38 @@ DEPENDENCIES = ['mqtt']
 DEFAULT_NAME = 'MQTT Template Light'
 DEFAULT_OPTIMISTIC = False
 
-CONF_EFFECT_LIST = "effect_list"
-CONF_COMMAND_ON_TEMPLATE = 'command_on_template'
-CONF_COMMAND_OFF_TEMPLATE = 'command_off_template'
-CONF_STATE_TEMPLATE = 'state_template'
-CONF_BRIGHTNESS_TEMPLATE = 'brightness_template'
-CONF_RED_TEMPLATE = 'red_template'
-CONF_GREEN_TEMPLATE = 'green_template'
 CONF_BLUE_TEMPLATE = 'blue_template'
+CONF_BRIGHTNESS_TEMPLATE = 'brightness_template'
+CONF_COLOR_TEMP_TEMPLATE = 'color_temp_template'
+CONF_COMMAND_OFF_TEMPLATE = 'command_off_template'
+CONF_COMMAND_ON_TEMPLATE = 'command_on_template'
+CONF_EFFECT_LIST = 'effect_list'
 CONF_EFFECT_TEMPLATE = 'effect_template'
+CONF_GREEN_TEMPLATE = 'green_template'
+CONF_RED_TEMPLATE = 'red_template'
+CONF_STATE_TEMPLATE = 'state_template'
 
 SUPPORT_MQTT_TEMPLATE = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
                          SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
-    vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
-    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
-    vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
-    vol.Optional(CONF_RED_TEMPLATE): cv.template,
-    vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
+    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
+    vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_RED_TEMPLATE): cv.template,
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_STATE_TEMPLATE): cv.template,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
+    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean
 })
 
 
@@ -76,14 +79,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         },
         {
             key: config.get(key) for key in (
-                CONF_COMMAND_ON_TEMPLATE,
-                CONF_COMMAND_OFF_TEMPLATE,
-                CONF_STATE_TEMPLATE,
-                CONF_BRIGHTNESS_TEMPLATE,
-                CONF_RED_TEMPLATE,
-                CONF_GREEN_TEMPLATE,
                 CONF_BLUE_TEMPLATE,
-                CONF_EFFECT_TEMPLATE
+                CONF_BRIGHTNESS_TEMPLATE,
+                CONF_COLOR_TEMP_TEMPLATE,
+                CONF_COMMAND_OFF_TEMPLATE,
+                CONF_COMMAND_ON_TEMPLATE,
+                CONF_EFFECT_TEMPLATE,
+                CONF_GREEN_TEMPLATE,
+                CONF_RED_TEMPLATE,
+                CONF_STATE_TEMPLATE,
             )
         },
         config.get(CONF_OPTIMISTIC),
@@ -113,6 +117,11 @@ class MqttTemplate(Light):
             self._brightness = 255
         else:
             self._brightness = None
+
+        if self._templates[CONF_COLOR_TEMP_TEMPLATE] is not None:
+            self._color_temp = 255
+        else:
+            self._color_temp = None
 
         if (self._templates[CONF_RED_TEMPLATE] is not None and
                 self._templates[CONF_GREEN_TEMPLATE] is not None and
@@ -156,6 +165,16 @@ class MqttTemplate(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid brightness value received')
 
+            # read color temperature
+            if self._color_temp is not None:
+                try:
+                    self._color_temp = int(
+                        self._templates[CONF_COLOR_TEMP_TEMPLATE].
+                        async_render_with_possible_json_value(payload)
+                    )
+                except ValueError:
+                    _LOGGER.warning('Invalid color temperature value received')
+
             # read color
             if self._rgb is not None:
                 try:
@@ -193,6 +212,11 @@ class MqttTemplate(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    @property
+    def color_temp(self):
+        """Return the color temperature in mired."""
+        return self._color_temp
 
     @property
     def rgb_color(self):
@@ -249,6 +273,13 @@ class MqttTemplate(Light):
 
             if self._optimistic:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
+
+        # color_temp
+        if ATTR_COLOR_TEMP in kwargs:
+            values['color_temp'] = int(kwargs[ATTR_COLOR_TEMP])
+
+            if self._optimistic:
+                self._color_temp = kwargs[ATTR_COLOR_TEMP]
 
         # color
         if ATTR_RGB_COLOR in kwargs:
@@ -314,5 +345,7 @@ class MqttTemplate(Light):
             features = features | SUPPORT_RGB_COLOR
         if self._effect_list is not None:
             features = features | SUPPORT_EFFECT
+        if self._color_temp is not None:
+            features = features | SUPPORT_COLOR_TEMP
 
         return features
