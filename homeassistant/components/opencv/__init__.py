@@ -4,6 +4,7 @@ Support for OpenCV image/video processing.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/opencv/
 """
+import asyncio
 import logging
 import os
 import voluptuous as vol
@@ -95,7 +96,25 @@ CONFIG_SCHEMA = vol.Schema({
 # NOTE: pylint cannot find any of the members of cv2, disable lines to pass
 
 
-def _process_classifier(cv2, cv_image, classifier_config):
+@asyncio.coroutine
+def _async_dispatch_image(hass, cv_image, detections, signal):
+    """Asynchronously dispatch the image."""
+    import cv2
+
+    for x, y, w, h in detections:
+        # pylint: disable=no-member
+        cv2.rectangle(cv_image,
+                      (x, y),
+                      (x + w, y + h),
+                      (255, 255, 0),  # COLOR
+                      2)
+
+    dispatcher.dispatcher_send(hass,
+                               signal,
+                               cv_image_to_bytes(cv_image))
+
+
+def _process_classifier(hass, cv2, cv_image, classifier_config, signal):
     """Process the given classifier."""
     classifier_path = classifier_config[CONF_FILE_PATH]
     classifier_name = classifier_config[CONF_NAME]
@@ -109,14 +128,16 @@ def _process_classifier(cv2, cv_image, classifier_config):
                                              scaleFactor=scale,
                                              minNeighbors=neighbors,
                                              minSize=min_size)
+
+    hass.async_add_job(_async_dispatch_image,
+                       hass,
+                       cv_image,
+                       detections,
+                       signal)
+
     matches = []
     # pylint: disable=invalid-name
     for x, y, w, h in detections:
-        cv2.rectangle(cv_image,
-                      (x, y),
-                      (x + w, y + h),
-                      (255, 255, 0),  # COLOR
-                      2)
         matches.append({
             ATTR_MATCH_ID: len(matches),
             ATTR_MATCH_COORDS: (
@@ -171,14 +192,14 @@ def process_image(hass, image, classifier_configs, signal):
     matches = []
     for classifier_config in classifier_configs:
         # pylint: disable=no-member
-        match = _process_classifier(cv2,
+        match = _process_classifier(hass,
+                                    cv2,
                                     cv_image,
-                                    classifier_config)
+                                    classifier_config,
+                                    signal)
+
         if match is not None:
             matches.append(match)
-            dispatcher.dispatcher_send(hass,
-                                       signal,
-                                       cv_image_to_bytes(cv_image))
 
     return matches
 
