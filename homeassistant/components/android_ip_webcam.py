@@ -250,6 +250,11 @@ class AndroidIPCamEntity(Entity):
         return False
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._ipcam.available
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         state_attr = {}
