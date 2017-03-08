@@ -15,6 +15,8 @@ ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
 NETWORK_READY_WAIT_SECS = 30
 
+DISCOVERY_DEVICE = 'device'
+
 SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"
 SERVICE_ADD_NODE_SECURE = "add_node_secure"
@@ -26,10 +28,14 @@ SERVICE_TEST_NETWORK = "test_network"
 SERVICE_SET_CONFIG_PARAMETER = "set_config_parameter"
 SERVICE_PRINT_CONFIG_PARAMETER = "print_config_parameter"
 SERVICE_PRINT_NODE = "print_node"
+SERVICE_REMOVE_FAILED_NODE = "remove_failed_node"
+SERVICE_REPLACE_FAILED_NODE = "replace_failed_node"
 SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
+SERVICE_REFRESH_ENTITY = "refresh_entity"
+SERVICE_REFRESH_NODE = "refresh_node"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"

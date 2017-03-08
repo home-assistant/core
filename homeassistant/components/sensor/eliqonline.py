@@ -23,7 +23,7 @@ CONF_CHANNEL_ID = 'channel_id'
 
 DEFAULT_NAME = 'ELIQ Online'
 
-ICON = 'mdi:speedometer'
+ICON = 'mdi:gauge'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 

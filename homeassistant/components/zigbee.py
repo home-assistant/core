@@ -4,10 +4,9 @@ Support for ZigBee devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zigbee/
 """
+import asyncio
 import logging
-import pickle
 from binascii import hexlify, unhexlify
-from base64 import b64encode, b64decode
 
 import voluptuous as vol
 
@@ -15,6 +14,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
 
 REQUIREMENTS = ['xbee-helper==0.0.7']
 
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'zigbee'
 
-EVENT_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
+SIGNAL_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
 
 CONF_ADDRESS = 'address'
 CONF_BAUD = 'baud'
@@ -102,9 +103,7 @@ def setup(hass, config):
         Pickles the frame, then encodes it into base64 since it contains
         non JSON serializable binary.
         """
-        hass.bus.fire(
-            EVENT_ZIGBEE_FRAME_RECEIVED,
-            {ATTR_FRAME: b64encode(pickle.dumps(frame)).decode("ascii")})
+        dispatcher_send(hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, frame)
 
     DEVICE.add_frame_rx_handler(_frame_received)
 
@@ -123,16 +122,6 @@ def frame_is_relevant(entity, frame):
     if 'samples' not in frame:
         return False
     return True
-
-
-def subscribe(hass, callback):
-    """Subscribe to incoming ZigBee frames."""
-    def zigbee_frame_subscriber(event):
-        """Decode and unpickle the frame from the event bus, and call back."""
-        frame = pickle.loads(b64decode(event.data[ATTR_FRAME]))
-        callback(frame)
-
-    hass.bus.listen(EVENT_ZIGBEE_FRAME_RECEIVED, zigbee_frame_subscriber)
 
 
 class ZigBeeConfig(object):
@@ -288,6 +277,9 @@ class ZigBeeDigitalIn(Entity):
         self._config = config
         self._state = False
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -302,12 +294,10 @@ class ZigBeeDigitalIn(Entity):
                 # Doesn't contain information about our pin
                 return
             self._state = self._config.state2bool[sample[pin_name]]
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
-        subscribe(hass, handle_frame)
-
-        # Get initial state
-        hass.add_job(self.async_update_ha_state, True)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
 
     @property
     def name(self):
@@ -373,7 +363,7 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
             return
         self._state = state
         if not self.should_poll:
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         """Set the digital output to its 'on' state."""
@@ -410,6 +400,9 @@ class ZigBeeAnalogIn(Entity):
         self._config = config
         self._value = None
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -428,12 +421,10 @@ class ZigBeeAnalogIn(Entity):
                 ADC_PERCENTAGE,
                 self._config.max_voltage
             )
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
-        subscribe(hass, handle_frame)
-
-        # Get initial state
-        hass.add_job(self.async_update_ha_state, True)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
 
     @property
     def name(self):

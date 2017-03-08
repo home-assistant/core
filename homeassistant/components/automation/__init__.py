@@ -11,24 +11,23 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE)
+    SERVICE_TOGGLE, SERVICE_RELOAD)
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'automation'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
-DEPENDENCIES = ['group']
 
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
 
@@ -52,7 +51,6 @@ DEFAULT_INITIAL_STATE = True
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 SERVICE_TRIGGER = 'trigger'
-SERVICE_RELOAD = 'reload'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -226,7 +224,7 @@ class AutomationEntity(ToggleEntity):
     """Entity to show status of entity."""
 
     def __init__(self, name, async_attach_triggers, cond_func, async_action,
-                 hidden):
+                 hidden, initial_state):
         """Initialize an automation entity."""
         self._name = name
         self._async_attach_triggers = async_attach_triggers
@@ -236,6 +234,7 @@ class AutomationEntity(ToggleEntity):
         self._enabled = False
         self._last_triggered = None
         self._hidden = hidden
+        self._initial_state = initial_state
 
     @property
     def name(self):
@@ -263,6 +262,18 @@ class AutomationEntity(ToggleEntity):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._enabled
+
+    @asyncio.coroutine
+    def async_added_to_hass(self) -> None:
+        """Startup with initial state or previous state."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if state is None:
+            if self._initial_state:
+                yield from self.async_enable()
+        else:
+            self._last_triggered = state.attributes.get('last_triggered')
+            if state.state == STATE_ON:
+                yield from self.async_enable()
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs) -> None:
@@ -322,7 +333,6 @@ def _async_process_config(hass, config, component):
     This method is a coroutine.
     """
     entities = []
-    tasks = []
 
     for config_key in extract_domain_configs(config, DOMAIN):
         conf = config[config_key]
@@ -332,6 +342,7 @@ def _async_process_config(hass, config, component):
                                                                   list_no)
 
             hidden = config_block[CONF_HIDE_ENTITY]
+            initial_state = config_block[CONF_INITIAL_STATE]
 
             action = _async_get_action(hass, config_block.get(CONF_ACTION, {}),
                                        name)
@@ -348,15 +359,14 @@ def _async_process_config(hass, config, component):
 
             async_attach_triggers = partial(
                 _async_process_trigger, hass, config,
-                config_block.get(CONF_TRIGGER, []), name)
-            entity = AutomationEntity(name, async_attach_triggers, cond_func,
-                                      action, hidden)
-            if config_block[CONF_INITIAL_STATE]:
-                tasks.append(entity.async_enable())
+                config_block.get(CONF_TRIGGER, []), name
+            )
+            entity = AutomationEntity(
+                name, async_attach_triggers, cond_func, action, hidden,
+                initial_state)
+
             entities.append(entity)
 
-    if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
     if entities:
         yield from component.async_add_entities(entities)
 

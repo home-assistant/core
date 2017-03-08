@@ -21,8 +21,7 @@ from typing import Optional
 
 import requests
 
-import homeassistant.bootstrap as bootstrap
-import homeassistant.core as ha
+from homeassistant import setup, core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
@@ -151,7 +150,7 @@ class HomeAssistant(ha.HomeAssistant):
         """Start the instance."""
         # Ensure a local API exists to connect with remote
         if 'api' not in self.config.components:
-            if not bootstrap.setup_component(self, 'api'):
+            if not setup.setup_component(self, 'api'):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 

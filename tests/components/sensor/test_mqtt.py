@@ -1,11 +1,11 @@
 """The tests for the MQTT sensor platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from tests.common import mock_mqtt_component, fire_mqtt_message
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_setting_sensor_value_via_mqtt_message(self):
         """Test the setting of the value via MQTT."""
-        self.hass.config.components = set(['mqtt'])
+        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'mqtt',
@@ -42,7 +42,7 @@ class TestSensorMQTT(unittest.TestCase):
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
         """Test the setting of the value via MQTT with JSON playload."""
-        self.hass.config.components = set(['mqtt'])
+        mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
                 'platform': 'mqtt',

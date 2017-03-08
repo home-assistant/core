@@ -24,7 +24,8 @@ REQUIREMENTS = ['python-telegram-bot==5.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_TELEGRAM_COMMAND = 'telegram.command'
+EVENT_TELEGRAM_COMMAND = 'telegram_command'
+EVENT_TELEGRAM_TEXT = 'telegram_text'
 
 TELEGRAM_HANDLER_URL = '/api/telegram_webhooks'
 
@@ -40,6 +41,7 @@ DEFAULT_TRUSTED_NETWORKS = [
 ]
 
 ATTR_COMMAND = 'command'
+ATTR_TEXT = 'text'
 ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
 
@@ -104,24 +106,38 @@ class BotPushReceiver(HomeAssistantView):
 
         try:
             data = yield from request.json()
-            data = data['message']
-
-            if data['from']['id'] not in self.users:
-                _LOGGER.warning("User not allowed")
-                return self.json_message('Invalid user', HTTP_BAD_REQUEST)
-
-            if data['text'][0] != '/':
-                _LOGGER.warning('no command')
-                return self.json({})
-        except (KeyError, IndexError):
+        except ValueError:
+            _LOGGER.error("Received telegram data: %s", data)
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
-        _LOGGER.debug("Received telegram data: %s", data)
+        # check for basic message rules
+        data = data.get('message')
+        if not data or 'from' not in data or 'text' not in data:
+            return self.json({})
 
-        pieces = data['text'].split(' ')
-        request.app['hass'].bus.async_fire(EVENT_TELEGRAM_COMMAND, {
-            ATTR_COMMAND: pieces[0],
-            ATTR_ARGS: " ".join(pieces[1:]),
+        if data['from'].get('id') not in self.users:
+            _LOGGER.warning("User not allowed")
+            return self.json_message('Invalid user', HTTP_BAD_REQUEST)
+
+        _LOGGER.debug("Received telegram data: %s", data)
+        if not data['text']:
+            _LOGGER.warning('no text')
+            return self.json({})
+
+        if data['text'][:1] == '/':
+            # telegram command "/blabla arg1 arg2 ..."
+            pieces = data['text'].split(' ')
+
+            request.app['hass'].bus.async_fire(EVENT_TELEGRAM_COMMAND, {
+                ATTR_COMMAND: pieces[0],
+                ATTR_ARGS: " ".join(pieces[1:]),
+                ATTR_USER_ID: data['from']['id'],
+                })
+
+        # telegram text "bla bla"
+        request.app['hass'].bus.async_fire(EVENT_TELEGRAM_TEXT, {
+            ATTR_TEXT: data['text'],
             ATTR_USER_ID: data['from']['id'],
             })
+
         return self.json({})

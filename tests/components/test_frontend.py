@@ -5,7 +5,7 @@ import unittest
 
 import requests
 
-import homeassistant.bootstrap as bootstrap
+from homeassistant import setup
 from homeassistant.components import http
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 
@@ -31,12 +31,12 @@ def setUpModule():
 
     hass = get_test_home_assistant()
 
-    assert bootstrap.setup_component(
+    assert setup.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    assert bootstrap.setup_component(hass, 'frontend')
+    assert setup.setup_component(hass, 'frontend')
 
     hass.start()
 

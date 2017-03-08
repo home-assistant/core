@@ -6,7 +6,7 @@ from unittest import mock
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME, CONF_TRACK_NEW)
@@ -17,7 +17,8 @@ from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
 from tests.common import (
-    get_test_home_assistant, get_test_config_dir, assert_setup_component)
+    get_test_home_assistant, get_test_config_dir, assert_setup_component,
+    mock_component)
 
 FAKEFILE = None
 
@@ -43,7 +44,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = set(['zone'])
+        mock_component(self.hass, 'zone')
 
     def teardown_method(self, _):
         """Stop everything that was started."""

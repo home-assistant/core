@@ -15,6 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import async_get_last_state
 
 DOMAIN = 'input_boolean'
 
@@ -138,6 +139,14 @@ class InputBoolean(ToggleEntity):
     def is_on(self):
         """Return true if entity is on."""
         return self._state
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._state = state.state == STATE_ON
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):

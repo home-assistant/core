@@ -4,6 +4,7 @@ Support for Speedtest.net.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
+import asyncio
 import logging
 import re
 import sys
@@ -13,11 +14,11 @@ import voluptuous as vol
 
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import recorder
 from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.restore_state import async_get_last_state
 
 REQUIREMENTS = ['speedtest-cli==1.0.2']
 
@@ -32,6 +33,8 @@ CONF_HOUR = 'hour'
 CONF_DAY = 'day'
 CONF_SERVER_ID = 'server_id'
 CONF_MANUAL = 'manual'
+
+ICON = 'mdi:speedometer'
 
 SENSOR_TYPES = {
     'ping': ['Ping', 'ms'],
@@ -102,32 +105,31 @@ class SpeedtestSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def icon(self):
+        """Return icon."""
+        return ICON
+
     def update(self):
         """Get the latest data and update the states."""
         data = self.speedtest_client.data
         if data is None:
-            entity_id = 'sensor.speedtest_' + self._name.lower()
-            states = recorder.get_model('States')
-            try:
-                last_state = recorder.execute(
-                    recorder.query('States').filter(
-                        (states.entity_id == entity_id) &
-                        (states.last_changed == states.last_updated) &
-                        (states.state != 'unknown')
-                    ).order_by(states.state_id.desc()).limit(1))
-            except TypeError:
-                return
-            except RuntimeError:
-                return
-            if not last_state:
-                return
-            self._state = last_state[0].state
-        elif self.type == 'ping':
+            return
+
+        if self.type == 'ping':
             self._state = data['ping']
         elif self.type == 'download':
             self._state = data['download']
         elif self.type == 'upload':
             self._state = data['upload']
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity is about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._state = state.state
 
 
 class SpeedtestData(object):

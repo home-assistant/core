@@ -72,7 +72,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if req is not None:
             yield from req.release()
 
-    yield from async_add_devices(
+    async_add_devices(
         [RestSwitch(hass, name, resource, body_on, body_off,
                     is_on_template, timeout)])
 

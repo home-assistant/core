@@ -21,7 +21,6 @@ from homeassistant.const import (
     STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE,
     ATTR_ENTITY_ID)
 from homeassistant.components import group
-from homeassistant.util.async import run_callback_threadsafe
 
 DOMAIN = 'switch'
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -59,8 +58,7 @@ def is_on(hass, entity_id=None):
 
 def turn_on(hass, entity_id=None):
     """Turn all or specified switch on."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_on, hass, entity_id).result()
+    hass.add_job(async_turn_on, hass, entity_id)
 
 
 @callback
@@ -72,8 +70,7 @@ def async_turn_on(hass, entity_id=None):
 
 def turn_off(hass, entity_id=None):
     """Turn all or specified switch off."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_off, hass, entity_id).result()
+    hass.add_job(async_turn_off, hass, entity_id)
 
 
 @callback

@@ -1,15 +1,18 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
+import asyncio
 import unittest
 import logging
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.core import CoreState, State
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
     DOMAIN, is_on, toggle, turn_off, turn_on)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
+from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,3 +106,30 @@ class TestInputBoolean(unittest.TestCase):
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
         self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+
+
+@asyncio.coroutine
+def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+    hass.data[DATA_RESTORE_CACHE] = {
+        'input_boolean.b1': State('input_boolean.b1', 'on'),
+        'input_boolean.b2': State('input_boolean.b2', 'off'),
+        'input_boolean.b3': State('input_boolean.b3', 'on'),
+    }
+
+    hass.state = CoreState.starting
+    mock_component(hass, 'recorder')
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'b1': None,
+            'b2': None,
+        }})
+
+    state = hass.states.get('input_boolean.b1')
+    assert state
+    assert state.state == 'on'
+
+    state = hass.states.get('input_boolean.b2')
+    assert state
+    assert state.state == 'off'

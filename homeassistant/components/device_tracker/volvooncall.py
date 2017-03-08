@@ -17,7 +17,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     if discovery_info is None:
         return
 
-    vin = discovery_info
+    vin, _ = discovery_info
     vehicle = hass.data[DOMAIN].vehicles[vin]
 
     host_name = vehicle.registration_number
@@ -31,5 +31,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
                  vehicle.position['longitude']))
 
     hass.data[DOMAIN].entities[vin].append(see_vehicle)
+    see_vehicle(vehicle)
 
     return True
