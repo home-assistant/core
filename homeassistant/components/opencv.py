@@ -101,6 +101,7 @@ def _async_dispatch_image(hass, cv_image, detections, signal):
     """Asynchronously dispatch the image."""
     import cv2
 
+    # pylint: disable=invalid-name
     for x, y, w, h in detections:
         # pylint: disable=no-member
         cv2.rectangle(cv_image,
