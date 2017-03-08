@@ -151,8 +151,9 @@ class MqttLight(Light):
         self._supported_features |= (
             topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
             SUPPORT_COLOR_TEMP)
-        self._supported_features |= (effect_list is not None and
-                                     SUPPORT_EFFECT)
+        self._supported_features |= (
+            topic[CONF_EFFECT_STATE_TOPIC] is not None and
+            SUPPORT_EFFECT)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
