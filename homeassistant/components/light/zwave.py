@@ -67,7 +67,7 @@ def get_device(node, value, node_config, **kwargs):
 def brightness_state(value):
     """Return the brightness and state."""
     if value.data > 0:
-        return (value.data / 99) * 255, STATE_ON
+        return round((value.data / 99) * 255, 0), STATE_ON
     else:
         return 0, STATE_OFF
 
