@@ -54,7 +54,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         # Position value
         self._current_position = self.values.primary.data
 
-        if self.values.open and self.values.close:
+        if self.values.open and self.values.close and \
+                self._open_id is None and self._close_id is None:
             if self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
                 self._open_id = self.values.close.value_id
                 self._close_id = self.values.open.value_id
