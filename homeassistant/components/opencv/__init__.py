@@ -31,9 +31,11 @@ ATTR_MATCHES = 'matches'
 BASE_PATH = os.path.realpath(__file__)
 
 CONF_CLASSIFIER = 'classifier'
+CONF_COLOR = 'color'
+CONF_GROUPS = 'classifier_group'
 CONF_MIN_SIZE = 'min_size'
-CONF_SCALE = 'scale'
 CONF_NEIGHBORS = 'neighbors'
+CONF_SCALE = 'scale'
 
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
@@ -41,17 +43,19 @@ DEFAULT_CLASSIFIER_PATH = \
     os.path.join(os.path.dirname(BASE_PATH),
                  'classifiers',
                  'lbpcascade_frontalface.xml')
+DEFAULT_COLOR = (255, 255, 0)
 DEFAULT_NAME = 'OpenCV'
 DEFAULT_MIN_SIZE = (30, 30)
-DEFAULT_SCALE = 1.1
 DEFAULT_NEIGHBORS = 4
+DEFAULT_SCALE = 1.1
 
 DEFAULT_CLASSIFIER = [{
+    CONF_COLOR: DEFAULT_COLOR,
     CONF_FILE_PATH: DEFAULT_CLASSIFIER_PATH,
     CONF_NAME: DEFAULT_NAME,
     CONF_MIN_SIZE: DEFAULT_MIN_SIZE,
-    CONF_SCALE: DEFAULT_SCALE,
-    CONF_NEIGHBORS: DEFAULT_NEIGHBORS
+    CONF_NEIGHBORS: DEFAULT_NEIGHBORS,
+    CONF_SCALE: DEFAULT_SCALE
 }]
 
 DOMAIN = 'opencv'
@@ -60,16 +64,18 @@ CLASSIFIER_GROUP_CONFIG = {
     vol.Optional(CONF_CLASSIFIER, default=DEFAULT_CLASSIFIER): vol.All(
         cv.ensure_list,
         [vol.Schema({
+            vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
+                vol.Schema((int, int, int)),
             vol.Optional(CONF_FILE_PATH, default=DEFAULT_CLASSIFIER_PATH):
                 cv.isfile,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME):
                 cv.string,
             vol.Optional(CONF_MIN_SIZE, default=DEFAULT_MIN_SIZE):
                 vol.Schema((int, int)),
-            vol.Optional(CONF_SCALE, default=DEFAULT_SCALE):
-                float,
             vol.Optional(CONF_NEIGHBORS, default=DEFAULT_NEIGHBORS):
-                cv.positive_int
+                cv.positive_int,
+            vol.Optional(CONF_SCALE, default=DEFAULT_SCALE):
+                float
         })]),
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -185,7 +191,7 @@ def process_image(image, classifier_configs):
 
 def setup(hass, config):
     """Set up the OpenCV platform entities."""
-    hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN])
+    hass.data[DOMAIN] = OpenCV(hass, config[DOMAIN][CONF_GROUPS])
 
     discovery.load_platform(hass, 'image_processing', DOMAIN, {}, config)
 
