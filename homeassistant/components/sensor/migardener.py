@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL, TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
-    ATTR_UNIT_OF_MEASUREMENT)
+    ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
@@ -68,31 +68,32 @@ class MiGardener(Entity):
     READINGS =  {
         READING_BATTERY: {
             ATTR_UNIT_OF_MEASUREMENT:  '%',
-            CAST_FUNCTION:int,
-            'min':CONF_MIN_BATTERY_LEVEL},
+            'min':CONF_MIN_BATTERY_LEVEL,
+            'icon':'mdi:battery-outline'
+        },
         READING_TEMPERATURE: {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            CAST_FUNCTION:float,
             'min': CONF_MIN_TEMPERATURE ,
             'max': CONF_MAX_TEMPERATURE,
+            'icon':'mdi:thermometer'
         },
         READING_MOISTURE: {
             ATTR_UNIT_OF_MEASUREMENT: '%',
-            CAST_FUNCTION: int,
             'min': CONF_MIN_MOISTURE,
             'max': CONF_MAX_MOISTURE,
+            'icon':'mdi:water'
         },
         READING_CONDUCTIVITY: {
             ATTR_UNIT_OF_MEASUREMENT: 'µS/cm',
-            CAST_FUNCTION: int,
             'min': CONF_MIN_CONDUCTIVITY,
             'max': CONF_MAX_CONDUCTIVITY,
+            'icon':'mdi:emoticon-poop'
         },
         READING_BRIGHTNESS: {
             ATTR_UNIT_OF_MEASUREMENT: 'lux',
-            CAST_FUNCTION: int,
             'min': CONF_MIN_BRIGHTNESS,
             'max': CONF_MAX_BRIGHTNESS,
+            'icon':'mdi:white-balance-sunny'
         }
     }
 
@@ -102,60 +103,50 @@ class MiGardener(Entity):
         self._state = STATE_UNKNOWN
         self._name = config[CONF_NAME]
         self._state_topic = config[CONF_STATE_TOPIC]
-        self._attrib = dict()
-        self._create_group()
+        self._battery = None
+        self._moisture = None
+        self._conductivity = None
+        self._temperature = None
+        self._brightness = None
+        self._icon = None
 
         @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             data = json.loads(payload)
-            for sensor_name,params in self.READINGS.items():
-                value = params[CAST_FUNCTION](data[sensor_name])
-                self._set_sensor(sensor_name, value)
-            self._hass.async_add_job(self.check_state())
+            self._update_state(data)
+            self._hass.async_add_job(self.async_update_ha_state())
 
         mqtt.subscribe(hass, self._state_topic, message_received)
 
-    def _create_group(self):
-        entity_ids = [self._sensor_entity_id()]
-        for sensor_name in self.READINGS:
-            entity_ids.append(self._sensor_entity_id(sensor_name))
-        self._hass.states.set('group.{}'.format(self._name), STATE_UNKNOWN, attributes={'entity_id': entity_ids})
+    def _update_state(self,data):
+        self._battery = int(data[READING_BATTERY])
+        self._brightness = int(data[READING_BRIGHTNESS])
+        self._moisture = int(data[READING_MOISTURE])
+        self._conductivity = int(data[READING_CONDUCTIVITY])
+        self._temperature = float(data[READING_TEMPERATURE])
 
-    def _sensor_entity_id(self, sensor_name=None):
-        if sensor_name is None:
-            return 'sensor.{}'.format(self._name).lower()
-        return 'sensor.{}_{}'.format(self._name, sensor_name).lower()
-
-    def _set_sensor(self, sensor_name, value):
-        attrib = {
-            ATTR_UNIT_OF_MEASUREMENT : self.READINGS[sensor_name][ATTR_UNIT_OF_MEASUREMENT],
-        }
-        self._hass.states.async_set(self._sensor_entity_id(sensor_name), value, attributes=attrib)
-
-    @asyncio.coroutine
-    def check_state(self,):
         result = []
         for sensor_name,params in self.READINGS.items():
-            state = self._hass.states.get(self._sensor_entity_id(sensor_name))
-            value = params[CAST_FUNCTION](state.state)
+            value = getattr(self,'_{}'.format(sensor_name))
 
             if 'min' in params and params['min'] in self._config:
                 min_value = self._config[params['min']]
                 if value < min_value:
                     result.append('{} low'.format(sensor_name))
+                    self._icon = params['icon']
 
             if 'max' in params and params['max'] in self._config:
                 max_value = self._config[params['max']]
                 if value > max_value:
                     result.append('{} high'.format(sensor_name))
-
+                    self._icon = params['icon']
 
         if len(result) == 0:
             self._state = 'ok'
+            self._icon = 'mdi:thumb-up'
         else:
             self._state = ', '.join(result)
-        self._hass.async_add_job(self.async_update_ha_state())
 
 
     @property
@@ -180,4 +171,16 @@ class MiGardener(Entity):
 
     @property
     def state_attributes(self):
-        return self._attrib
+        attrib = {
+            ATTR_BATTERY_LEVEL: self._battery,
+            READING_BRIGHTNESS : self._brightness,
+            READING_MOISTURE: self._moisture,
+            READING_CONDUCTIVITY: self._conductivity,
+            READING_TEMPERATURE: self._temperature,
+            ATTR_ICON : self._icon,
+        }
+        return attrib
+
+    #@property
+    #def entity_picture(self):
+    #    return self._icon
