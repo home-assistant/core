@@ -154,6 +154,7 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITE_VALUE = 'white_value'
 CONF_ZONE = 'zone'
 
 # #### EVENTS ####
