@@ -18,6 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 def get_device(node, value, **kwargs):
     """Create zwave entity device."""
     # Generic Device mappings
+    if value.command_class == zwave.const.COMMAND_CLASS_BATTERY:
+        return ZWaveSensor(value)
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         return ZWaveMultilevelSensor(value)
     if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \

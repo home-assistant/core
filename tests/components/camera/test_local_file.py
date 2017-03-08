@@ -6,7 +6,7 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import mock_http_component
 import logging

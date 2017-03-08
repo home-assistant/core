@@ -1,7 +1,7 @@
 """The tests for the Scene component."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant import loader
 from homeassistant.components import light, scene
 

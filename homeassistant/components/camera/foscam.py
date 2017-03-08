@@ -47,15 +47,21 @@ class FoscamCamera(Camera):
         port = device_info.get(CONF_PORT)
 
         self._base_url = 'http://{}:{}/'.format(ip_address, port)
+
+        uri_template = self._base_url \
+            + 'cgi-bin/CGIProxy.fcgi?' \
+            + 'cmd=snapPicture2&usr={}&pwd={}'
+
         self._username = device_info.get(CONF_USERNAME)
         self._password = device_info.get(CONF_PASSWORD)
-        self._snap_picture_url = self._base_url \
-            + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture2&usr=' \
-            + self._username + '&pwd=' + self._password
+        self._snap_picture_url = uri_template.format(
+            self._username,
+            self._password
+        )
         self._name = device_info.get(CONF_NAME)
 
         _LOGGER.info('Using the following URL for %s: %s',
-                     self._name, self._snap_picture_url)
+                     self._name, uri_template.format('***', '***'))
 
     def camera_image(self):
         """Return a still image reponse from the camera."""

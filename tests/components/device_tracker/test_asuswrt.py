@@ -6,7 +6,7 @@ from unittest import mock
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME, CONF_TRACK_NEW)

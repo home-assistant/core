@@ -6,7 +6,7 @@ import requests
 from requests.exceptions import Timeout, MissingSchema, RequestException
 import requests_mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.rest as rest
 from homeassistant.const import STATE_UNKNOWN

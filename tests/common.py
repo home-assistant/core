@@ -10,10 +10,9 @@ import threading
 from contextlib import contextmanager
 
 from aiohttp import web
-from aiohttp.test_utils import unused_port as get_test_instance_port  # noqa
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import setup_component, DATA_SETUP
+from homeassistant.setup import setup_component, DATA_SETUP
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -24,14 +23,14 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
+_TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INST_COUNT = 0
 
@@ -57,7 +56,6 @@ def get_test_home_assistant():
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        loop.close()
         stop_event.set()
 
     orig_start = hass.start
@@ -74,6 +72,7 @@ def get_test_home_assistant():
         """Stop hass."""
         orig_stop()
         stop_event.wait()
+        loop.close()
 
     hass.start = start_hass
     hass.stop = stop_hass
@@ -131,6 +130,7 @@ def async_test_home_assistant(loop):
 
     @ha.callback
     def clear_instance(event):
+        """Clear global instance."""
         global INST_COUNT
         INST_COUNT -= 1
 
@@ -139,21 +139,31 @@ def async_test_home_assistant(loop):
     return hass
 
 
-def mock_service(hass, domain, service):
-    """Setup a fake service.
+def get_test_instance_port():
+    """Return unused port for running test instance.
 
-    Return a list that logs all calls to fake service.
+    The socket that holds the default port does not get released when we stop
+    HA in a different test case. Until I have figured out what is going on,
+    let's run each test on a different port.
     """
+    global _TEST_INSTANCE_PORT
+    _TEST_INSTANCE_PORT += 1
+    return _TEST_INSTANCE_PORT
+
+
+def mock_service(hass, domain, service):
+    """Setup a fake service & return a list that logs calls to this service."""
     calls = []
 
-    # pylint: disable=redefined-outer-name
-    @ha.callback
-    def mock_service(call):
+    @asyncio.coroutine
+    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """"Mocked service call."""
         calls.append(call)
 
-    # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, mock_service)
+    if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
+        hass.services.async_register(domain, service, mock_service_log)
+    else:
+        hass.services.register(domain, service, mock_service_log)
 
     return calls
 
@@ -436,7 +446,7 @@ def assert_setup_component(count, domain=None):
     - domain: The domain to count is optional. It can be automatically
               determined most of the time
 
-    Use as a context manager aroung bootstrap.setup_component
+    Use as a context manager aroung setup.setup_component
         with assert_setup_component(0) as result_config:
             setup_component(hass, domain, start_config)
             # using result_config is optional
@@ -478,8 +488,6 @@ def init_recorder_component(hass, add_config=None):
         assert setup_component(hass, recorder.DOMAIN,
                                {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-        run_coroutine_threadsafe(
-            recorder.wait_connection_ready(hass), hass.loop).result()
     _LOGGER.info("In-memory recorder successfully started")
 
 

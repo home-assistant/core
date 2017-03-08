@@ -12,6 +12,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.const import (
@@ -23,9 +24,12 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
 from . import workaround
+from .util import value_handler
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
@@ -70,7 +74,8 @@ DISCOVERY_COMPONENTS = [
      [const.COMMAND_CLASS_SENSOR_MULTILEVEL,
       const.COMMAND_CLASS_METER,
       const.COMMAND_CLASS_ALARM,
-      const.COMMAND_CLASS_SENSOR_ALARM],
+      const.COMMAND_CLASS_SENSOR_ALARM,
+      const.COMMAND_CLASS_BATTERY],
      const.TYPE_WHATEVER,
      const.GENRE_USER),
     ('light',
@@ -160,6 +165,10 @@ NODE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
 })
 
+REFRESH_ENTITY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -182,6 +191,8 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
         cv.positive_int
 })
+
+SIGNAL_REFRESH_ENTITY_FORMAT = 'zwave_refresh_entity_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -613,6 +624,19 @@ def setup(hass, config):
                          "target node:%s, instance=%s", node_id, group,
                          target_node_id, instance)
 
+    @asyncio.coroutine
+    def async_refresh_entity(service):
+        """Refresh values that specific entity depends on."""
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        async_dispatcher_send(
+            hass, SIGNAL_REFRESH_ENTITY_FORMAT.format(entity_id))
+
+    def refresh_node(service):
+        """Refresh all node info."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        node = NETWORK.nodes[node_id]
+        node.refresh_info()
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting ZWave network.")
@@ -707,6 +731,16 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_PRINT_NODE],
                                schema=NODE_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_ENTITY,
+                               async_refresh_entity,
+                               descriptions[
+                                   const.SERVICE_REFRESH_ENTITY],
+                               schema=REFRESH_ENTITY_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_REFRESH_NODE,
+                               refresh_node,
+                               descriptions[
+                                   const.SERVICE_REFRESH_NODE],
+                               schema=NODE_SERVICE_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -728,11 +762,15 @@ class ZWaveDeviceEntity(Entity):
         from pydispatch import dispatcher
         self._value = value
         self._value.set_change_verified(False)
-        self.entity_id = "{}.{}".format(domain, self._object_id())
+        self.entity_id = "{}.{}".format(domain, object_id(value))
 
+        self._name = _value_name(self._value)
+        self._unique_id = "ZWAVE-{}-{}".format(self._value.node.node_id,
+                                               self._value.object_id)
         self._wakeup_value_id = None
         self._battery_value_id = None
         self._power_value_id = None
+        self._update_scheduled = False
         self._update_attributes()
 
         dispatcher.connect(
@@ -757,8 +795,8 @@ class ZWaveDeviceEntity(Entity):
         self.update_properties()
         # If value changed after device was created but before setup_platform
         # was called - skip updating state.
-        if self.hass:
-            self.schedule_update_ha_state()
+        if self.hass and not self._update_scheduled:
+            self.hass.add_job(self._schedule_update)
 
     def _update_ids(self):
         """Update value_ids from which to pull attributes."""
@@ -782,6 +820,14 @@ class ZWaveDeviceEntity(Entity):
         None if depends on the whole node.
         """
         return []
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Add device to dict."""
+        async_dispatcher_connect(
+            self.hass,
+            SIGNAL_REFRESH_ENTITY_FORMAT.format(self.entity_id),
+            self.refresh_from_network)
 
     def _get_dependent_value_ids(self):
         """Return a list of value_ids this device depend on.
@@ -815,62 +861,13 @@ class ZWaveDeviceEntity(Entity):
         self.power_consumption = round(
             power_value.data, power_value.precision) if power_value else None
 
-    def _value_handler(self, method=None, class_id=None, index=None,
-                       label=None, data=None, member=None, instance=None,
-                       **kwargs):
-        """Get the values for a given command_class with arguments.
-
-        May only be used inside callback.
-
-        """
-        values = []
-        if class_id is None:
-            values.extend(self._value.node.get_values(**kwargs).values())
-        else:
-            if not isinstance(class_id, list):
-                class_id = [class_id]
-            for cid in class_id:
-                values.extend(self._value.node.get_values(
-                    class_id=cid, **kwargs).values())
-        _LOGGER.debug('method=%s, class_id=%s, index=%s, label=%s, data=%s,'
-                      ' member=%s, instance=%d, kwargs=%s',
-                      method, class_id, index, label, data, member, instance,
-                      kwargs)
-        _LOGGER.debug('values=%s', values)
-        results = None
-        for value in values:
-            if index is not None and value.index != index:
-                continue
-            if label is not None:
-                label_found = False
-                for entry in label:
-                    if value.label == entry:
-                        label_found = True
-                        break
-                if not label_found:
-                    continue
-            if method == 'set':
-                value.data = data
-                return
-            if data is not None and value.data != data:
-                continue
-            if instance is not None and value.instance != instance:
-                continue
-            if member is not None:
-                results = getattr(value, member)
-            else:
-                results = value
-            break
-        _LOGGER.debug('final result=%s', results)
-        return results
-
     def get_value(self, **kwargs):
         """Simplifyer to get values. May only be used inside callback."""
-        return self._value_handler(method='get', **kwargs)
+        return value_handler(self._value, method='get', **kwargs)
 
     def set_value(self, **kwargs):
         """Simplifyer to set a value."""
-        return self._value_handler(method='set', **kwargs)
+        return value_handler(self._value, method='set', **kwargs)
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -884,21 +881,12 @@ class ZWaveDeviceEntity(Entity):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return "ZWAVE-{}-{}".format(self._value.node.node_id,
-                                    self._value.object_id)
+        return self._unique_id
 
     @property
     def name(self):
         """Return the name of the device."""
-        return _value_name(self._value)
-
-    def _object_id(self):
-        """Return the object_id of the device value.
-
-        The object_id contains node_id and value instance id to not collide
-        with other entity_ids.
-        """
-        return object_id(self._value)
+        return self._name
 
     @property
     def device_state_attributes(self):
@@ -920,3 +908,28 @@ class ZWaveDeviceEntity(Entity):
             attrs[ATTR_POWER] = self.power_consumption
 
         return attrs
+
+    def refresh_from_network(self):
+        """Refresh all dependent values from zwave network."""
+        dependent_ids = self._get_dependent_value_ids()
+        if dependent_ids is None:
+            # Entity depends on the whole node
+            self._value.node.refresh_info()
+            return
+        for value_id in dependent_ids + [self._value.value_id]:
+            self._value.node.refresh_value(value_id)
+
+    @callback
+    def _schedule_update(self):
+        """Schedule delayed update."""
+        if self._update_scheduled:
+            return
+
+        @callback
+        def do_update():
+            """Really update."""
+            self.hass.async_add_job(self.async_update_ha_state)
+            self._update_scheduled = False
+
+        self._update_scheduled = True
+        self.hass.loop.call_later(0.1, do_update)

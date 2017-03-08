@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, split_entity_id, State
 import homeassistant.util.dt as dt_util
@@ -34,7 +34,7 @@ def test_caching_data(hass):
             patch('homeassistant.helpers.restore_state.get_states',
                   return_value=states), \
             patch('homeassistant.helpers.restore_state.wait_connection_ready',
-                  return_value=mock_coro()):
+                  return_value=mock_coro(True)):
         state = yield from async_get_last_state(hass, 'input_boolean.b1')
 
     assert DATA_RESTORE_CACHE in hass.data

@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 
 from homeassistant import config as conf_util
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
@@ -309,13 +309,10 @@ class EntityPlatform(object):
 
     def schedule_add_entities(self, new_entities, update_before_add=False):
         """Add entities for a single platform."""
-        if update_before_add:
-            for entity in new_entities:
-                entity.update()
-
         run_callback_threadsafe(
             self.component.hass.loop,
-            self.async_schedule_add_entities, list(new_entities), False
+            self.async_schedule_add_entities, list(new_entities),
+            update_before_add
         ).result()
 
     @callback

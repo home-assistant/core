@@ -16,6 +16,9 @@ omit =
 
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
+    
+    homeassistant/components/blink.py
+    homeassistant/components/*/blink.py
 
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
@@ -84,6 +87,10 @@ omit =
     homeassistant/components/*/tellstick.py
 
     homeassistant/components/*/thinkingcleaner.py
+
+    homeassistant/components/twilio.py
+    homeassistant/components/notify/twilio_sms.py
+    homeassistant/components/notify/twilio_call.py
 
     homeassistant/components/vera.py
     homeassistant/components/*/vera.py
@@ -291,8 +298,6 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/telstra.py
-    homeassistant/components/notify/twilio_sms.py
-    homeassistant/components/notify/twilio_call.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
@@ -308,6 +313,7 @@ omit =
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/coinmarketcap.py
+    homeassistant/components/sensor/comed_hourly_pricing.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/cups.py
     homeassistant/components/sensor/currencylayer.py
@@ -339,10 +345,12 @@ omit =
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
+    homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/mint_finance.py
     homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/netdata.py

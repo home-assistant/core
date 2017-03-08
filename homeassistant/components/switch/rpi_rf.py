@@ -114,10 +114,10 @@ class RPiRFSwitch(SwitchDevice):
         """Turn the switch on."""
         if self._send_code(self._code_on, self._protocol, self._pulselength):
             self._state = True
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         if self._send_code(self._code_off, self._protocol, self._pulselength):
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()

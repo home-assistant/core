@@ -3,7 +3,7 @@ from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.microsoft_face as mf
 

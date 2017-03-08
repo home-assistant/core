@@ -7,6 +7,7 @@ Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
 import asyncio
+import json
 from datetime import timedelta
 import logging
 
@@ -18,7 +19,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==0.9.1']
+REQUIREMENTS = ['netdisco==0.9.2']
 
 DOMAIN = 'discovery'
 
@@ -66,6 +67,7 @@ def async_setup(hass, config):
 
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()
+    already_discovered = set()
 
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
@@ -80,13 +82,19 @@ def async_setup(hass, config):
             logger.info("Ignoring service: %s %s", service, info)
             return
 
-        logger.info("Found new service: %s %s", service, info)
-
         comp_plat = SERVICE_HANDLERS.get(service)
 
         # We do not know how to handle this service.
         if not comp_plat:
             return
+
+        discovery_hash = json.dumps([service, info], sort_keys=True)
+        if discovery_hash in already_discovered:
+            return
+
+        already_discovered.add(discovery_hash)
+
+        logger.info("Found new service: %s %s", service, info)
 
         component, platform = comp_plat
 
