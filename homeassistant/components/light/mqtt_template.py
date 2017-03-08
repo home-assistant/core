@@ -12,9 +12,9 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, Light, PLATFORM_SCHEMA,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION)
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -39,6 +39,7 @@ CONF_EFFECT_TEMPLATE = 'effect_template'
 CONF_GREEN_TEMPLATE = 'green_template'
 CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
+CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
 SUPPORT_MQTT_TEMPLATE = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
                          SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
@@ -56,6 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TEMPLATE): cv.template,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
     vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
     vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -88,6 +90,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 CONF_GREEN_TEMPLATE,
                 CONF_RED_TEMPLATE,
                 CONF_STATE_TEMPLATE,
+                CONF_WHITE_VALUE_TEMPLATE,
             )
         },
         config.get(CONF_OPTIMISTIC),
@@ -122,6 +125,11 @@ class MqttTemplate(Light):
             self._color_temp = 255
         else:
             self._color_temp = None
+
+        if self._templates[CONF_WHITE_VALUE_TEMPLATE] is not None:
+            self._white_value = 255
+        else:
+            self._white_value = None
 
         if (self._templates[CONF_RED_TEMPLATE] is not None and
                 self._templates[CONF_GREEN_TEMPLATE] is not None and
@@ -190,6 +198,16 @@ class MqttTemplate(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid color value received')
 
+            # read white value
+            if self._white_value is not None:
+                try:
+                    self._white_value = int(
+                        self._templates[CONF_WHITE_VALUE_TEMPLATE].
+                        async_render_with_possible_json_value(payload)
+                    )
+                except ValueError:
+                    _LOGGER.warning('Invalid white value received')
+
             # read effect
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\
@@ -222,6 +240,11 @@ class MqttTemplate(Light):
     def rgb_color(self):
         """Return the RGB color value [int, int, int]."""
         return self._rgb
+
+    @property
+    def white_value(self):
+        """Return the white property."""
+        return self._white_value
 
     @property
     def should_poll(self):
@@ -290,6 +313,13 @@ class MqttTemplate(Light):
             if self._optimistic:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
 
+        # white value
+        if ATTR_WHITE_VALUE in kwargs:
+            values['white_value'] = int(kwargs[ATTR_WHITE_VALUE])
+
+            if self._optimistic:
+                self._white_value = kwargs[ATTR_WHITE_VALUE]
+
         # effect
         if ATTR_EFFECT in kwargs:
             values['effect'] = kwargs.get(ATTR_EFFECT)
@@ -347,5 +377,7 @@ class MqttTemplate(Light):
             features = features | SUPPORT_EFFECT
         if self._color_temp is not None:
             features = features | SUPPORT_COLOR_TEMP
+        if self._white_value is not None:
+            features = features | SUPPORT_WHITE_VALUE
 
         return features
