@@ -41,9 +41,6 @@ CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
-SUPPORT_MQTT_TEMPLATE = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
-                         SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
     vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
@@ -368,7 +365,7 @@ class MqttTemplate(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = 0
+        features = (SUPPORT_FLASH | SUPPORT_TRANSITION)
         if self._brightness is not None:
             features = features | SUPPORT_BRIGHTNESS
         if self._rgb is not None:
