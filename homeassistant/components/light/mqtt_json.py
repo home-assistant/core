@@ -12,11 +12,12 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, PLATFORM_SCHEMA,
-    ATTR_FLASH, FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    PLATFORM_SCHEMA, ATTR_FLASH, FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    Light)
 from homeassistant.const import (
-    CONF_NAME, CONF_OPTIMISTIC, CONF_BRIGHTNESS, CONF_RGB)
+    CONF_NAME, CONF_OPTIMISTIC, CONF_BRIGHTNESS, CONF_RGB, CONF_COLOR_TEMP)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
@@ -30,15 +31,13 @@ DEPENDENCIES = ['mqtt']
 DEFAULT_NAME = 'MQTT JSON Light'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS = False
+DEFAULT_COLOR_TEMP = False
 DEFAULT_RGB = False
 DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_FLASH_TIME_LONG = 10
 
 CONF_FLASH_TIME_SHORT = 'flash_time_short'
 CONF_FLASH_TIME_LONG = 'flash_time_long'
-
-SUPPORT_MQTT_JSON = (SUPPORT_BRIGHTNESS | SUPPORT_FLASH | SUPPORT_RGB_COLOR |
-                     SUPPORT_TRANSITION)
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,6 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
+    vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
     vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
         cv.positive_int,
@@ -73,6 +73,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_RETAIN),
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_BRIGHTNESS),
+        config.get(CONF_COLOR_TEMP),
         config.get(CONF_RGB),
         {
             key: config.get(key) for key in (
@@ -86,8 +87,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttJson(Light):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, name, topic, qos, retain, optimistic, brightness, rgb,
-                 flash_times):
+    def __init__(self, name, topic, qos, retain, optimistic, brightness,
+                 color_temp, rgb, flash_times):
         """Initialize MQTT JSON light."""
         self._name = name
         self._topic = topic
@@ -100,12 +101,24 @@ class MqttJson(Light):
         else:
             self._brightness = None
 
+        if color_temp:
+            self._color_temp = 150
+        else:
+            self._color_temp = None
+
         if rgb:
             self._rgb = [0, 0, 0]
         else:
             self._rgb = None
 
         self._flash_times = flash_times
+
+        self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
+        self._supported_features |= (rgb is not None and SUPPORT_RGB_COLOR)
+        self._supported_features |= (brightness is not None and
+                                     SUPPORT_BRIGHTNESS)
+        self._supported_features |= (color_temp is not None and
+                                     SUPPORT_COLOR_TEMP)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -143,6 +156,14 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid brightness value received')
 
+            if self._color_temp is not None:
+                try:
+                    self._color_temp = int(values['color_temp'])
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning('Invalid color temp value received')
+
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -154,6 +175,11 @@ class MqttJson(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
+
+    @property
+    def color_temp(self):
+        """Return the color temperature in mired."""
+        return self._color_temp
 
     @property
     def rgb_color(self):
@@ -183,7 +209,7 @@ class MqttJson(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_MQTT_JSON
+        return self._supported_features
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -222,6 +248,13 @@ class MqttJson(Light):
 
             if self._optimistic:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
+                should_update = True
+
+        if ATTR_COLOR_TEMP in kwargs:
+            message['color_temp'] = int(kwargs[ATTR_COLOR_TEMP])
+
+            if self._optimistic:
+                self._color_temp = kwargs[ATTR_COLOR_TEMP]
                 should_update = True
 
         mqtt.async_publish(
