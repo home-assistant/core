@@ -310,7 +310,7 @@ class MqttLight(Light):
         def xy_received(topic, payload, qos):
             """A new MQTT message has been received."""
             self._xy = [float(val) for val in
-                         templates[CONF_XY](payload).split(',')]
+                        templates[CONF_XY](payload).split(',')]
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_XY_STATE_TOPIC] is not None:
