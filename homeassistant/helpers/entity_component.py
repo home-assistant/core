@@ -18,6 +18,7 @@ from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
+SLOW_SETUP_WARNING = 10
 
 
 class EntityComponent(object):
@@ -134,8 +135,13 @@ class EntityComponent(object):
                 self, platform_type, scan_interval, entity_namespace)
         entity_platform = self._platforms[key]
 
+        self.logger.info("Setting up %s.%s", self.domain, platform_type)
+        warn_task = self.hass.loop.call_later(
+            SLOW_SETUP_WARNING, self.logger.warning,
+            'Setup of platform %s is taking over %s seconds.', platform_type,
+            SLOW_SETUP_WARNING)
+
         try:
-            self.logger.info("Setting up %s.%s", self.domain, platform_type)
             if getattr(platform, 'async_setup_platform', None):
                 yield from platform.async_setup_platform(
                     self.hass, platform_config,
@@ -154,6 +160,8 @@ class EntityComponent(object):
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
                 'Error while setting up platform %s', platform_type)
+        finally:
+            warn_task.cancel()
 
     def add_entity(self, entity, platform=None, update_before_add=False):
         """Add entity to component."""
