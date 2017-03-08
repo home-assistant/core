@@ -114,5 +114,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
     def process_image(self, image):
         """Process the image asynchronously."""
-        self._matches = yield from process_image(image,
-                                                 self._classifier_configs)
+        self._matches = process_image(self.hass,
+                                      image,
+                                      self._classifier_configs,
+                                      self.entity_id)

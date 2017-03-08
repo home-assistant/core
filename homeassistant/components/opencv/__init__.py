@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import (
     discovery,
+    dispatcher,
     config_validation as cv,
 )
 
@@ -159,7 +160,7 @@ def cv_image_from_bytes(image):
     return cv2.imdecode(numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
 
-def process_image(image, classifier_configs):
+def process_image(hass, image, classifier_configs, signal):
     """Process the image given classifiers."""
     import cv2
     import numpy
@@ -175,6 +176,9 @@ def process_image(image, classifier_configs):
                                     classifier_config)
         if match is not None:
             matches.append(match)
+            dispatcher.dispatcher_send(hass,
+                                       signal,
+                                       cv_image_to_bytes(cv_image))
 
     return matches
 
