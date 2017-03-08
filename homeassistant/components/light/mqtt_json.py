@@ -12,12 +12,13 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
-    PLATFORM_SCHEMA, ATTR_FLASH, FLASH_LONG, FLASH_SHORT, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, FLASH_LONG, FLASH_SHORT,
+    Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION)
 from homeassistant.const import (
-    CONF_NAME, CONF_OPTIMISTIC, CONF_BRIGHTNESS, CONF_RGB, CONF_COLOR_TEMP)
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
+    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
@@ -32,9 +33,12 @@ DEFAULT_NAME = 'MQTT JSON Light'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS = False
 DEFAULT_COLOR_TEMP = False
+DEFAULT_EFFECT = False
 DEFAULT_RGB = False
 DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_FLASH_TIME_LONG = 10
+
+CONF_EFFECT_LIST = 'effect_list'
 
 CONF_FLASH_TIME_SHORT = 'flash_time_short'
 CONF_FLASH_TIME_LONG = 'flash_time_long'
@@ -47,9 +51,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
     vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
+    vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
     vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
     vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
         cv.positive_int,
@@ -63,6 +69,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MQTT JSON Light."""
     async_add_devices([MqttJson(
         config.get(CONF_NAME),
+        config.get(CONF_EFFECT_LIST),
         {
             key: config.get(key) for key in (
                 CONF_STATE_TOPIC,
@@ -74,6 +81,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_BRIGHTNESS),
         config.get(CONF_COLOR_TEMP),
+        config.get(CONF_EFFECT),
         config.get(CONF_RGB),
         {
             key: config.get(key) for key in (
@@ -87,10 +95,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttJson(Light):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, name, topic, qos, retain, optimistic, brightness,
-                 color_temp, rgb, flash_times):
+    def __init__(self, name, effect_list, topic, qos, retain, optimistic,
+                 brightness, color_temp, effect, rgb, flash_times):
         """Initialize MQTT JSON light."""
         self._name = name
+        self._effect_list = effect_list
         self._topic = topic
         self._qos = qos
         self._retain = retain
@@ -106,6 +115,11 @@ class MqttJson(Light):
         else:
             self._color_temp = None
 
+        if effect:
+            self._effect = 'none'
+        else:
+            self._effect = None
+
         if rgb:
             self._rgb = [0, 0, 0]
         else:
@@ -119,6 +133,8 @@ class MqttJson(Light):
                                      SUPPORT_BRIGHTNESS)
         self._supported_features |= (color_temp is not None and
                                      SUPPORT_COLOR_TEMP)
+        self._supported_features |= (effect is not None and
+                                     SUPPORT_EFFECT)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -164,6 +180,14 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid color temp value received')
 
+            if self._effect is not None:
+                try:
+                    self._effect = values['effect']
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning('Invalid effect value received')
+
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -180,6 +204,16 @@ class MqttJson(Light):
     def color_temp(self):
         """Return the color temperature in mired."""
         return self._color_temp
+
+    @property
+    def effect(self):
+        """Return the current effect."""
+        return self._effect
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return self._effect_list
 
     @property
     def rgb_color(self):
@@ -255,6 +289,13 @@ class MqttJson(Light):
 
             if self._optimistic:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
+                should_update = True
+
+        if ATTR_EFFECT in kwargs:
+            message['effect'] = kwargs[ATTR_EFFECT]
+
+            if self._optimistic:
+                self._effect = kwargs[ATTR_EFFECT]
                 should_update = True
 
         mqtt.async_publish(

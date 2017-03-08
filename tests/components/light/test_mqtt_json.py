@@ -1,5 +1,17 @@
 """The tests for the MQTT JSON light platform.
 
+Configuration for RGB Version with brightness, color temp and effect:
+
+light:
+  platform: mqtt_json
+  name: mqtt_json_light_1
+  state_topic: "home/rgb1"
+  command_topic: "home/rgb1/set"
+  brightness: true
+  color_temp: true
+  effect: true
+  rgb: true
+
 Configuration for RGB Version with brightness and color temp:
 
 light:
@@ -73,9 +85,9 @@ class TestLightMQTTJSON(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_no_color_or_brightness_or_color_temp_if_no_config(self): \
+    def test_no_rgb_or_brightness_or_color_temp_or_effect_if_no_config(self): \
             # pylint: disable=invalid-name
-        """Test there's no RGB, brightness or color temp if undefined."""
+        """Test there's no RGB, brightness, color temp or effect."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
                 'platform': 'mqtt_json',
@@ -90,6 +102,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('color_temp'))
+        self.assertIsNone(state.attributes.get('effect'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"ON"}')
         self.hass.block_till_done()
@@ -99,6 +112,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('color_temp'))
+        self.assertIsNone(state.attributes.get('effect'))
 
     def test_controlling_state_via_topic(self): \
             # pylint: disable=invalid-name
@@ -111,6 +125,7 @@ class TestLightMQTTJSON(unittest.TestCase):
                 'command_topic': 'test_light_rgb/set',
                 'brightness': True,
                 'color_temp': True,
+                'effect': True,
                 'rgb': True,
                 'qos': '0'
             }
@@ -121,6 +136,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('rgb_color'))
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('color_temp'))
+        self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # Turn on the light, full white
@@ -128,7 +144,8 @@ class TestLightMQTTJSON(unittest.TestCase):
                           '{"state":"ON",'
                           '"color":{"r":255,"g":255,"b":255},'
                           '"brightness":255,'
-                          '"color_temp":155}')
+                          '"color_temp":155,'
+                          '"effect":"colorloop"}')
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test')
@@ -136,6 +153,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual([255, 255, 255], state.attributes.get('rgb_color'))
         self.assertEqual(255, state.attributes.get('brightness'))
         self.assertEqual(155, state.attributes.get('color_temp'))
+        self.assertEqual('colorloop', state.attributes.get('effect'))
 
         # Turn the light off
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"OFF"}')
@@ -171,6 +189,14 @@ class TestLightMQTTJSON(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual(155, light_state.attributes.get('color_temp'))
 
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          '{"state":"ON",'
+                          '"effect":"colorloop"}')
+        self.hass.block_till_done()
+
+        light_state = self.hass.states.get('light.test')
+        self.assertEqual('colorloop', light_state.attributes.get('effect'))
+
     def test_sending_mqtt_commands_and_optimistic(self): \
             # pylint: disable=invalid-name
         """Test the sending of command in optimistic mode."""
@@ -181,6 +207,7 @@ class TestLightMQTTJSON(unittest.TestCase):
                 'command_topic': 'test_light_rgb/set',
                 'brightness': True,
                 'color_temp': True,
+                'effect': True,
                 'rgb': True,
                 'qos': 2
             }
@@ -207,7 +234,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
-                      brightness=50, color_temp=155)
+                      brightness=50, color_temp=155, effect='colorloop')
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -218,6 +245,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         message_json = json.loads(self.mock_publish.mock_calls[-2][1][1])
         self.assertEqual(50, message_json["brightness"])
         self.assertEqual(155, message_json["color_temp"])
+        self.assertEqual('colorloop', message_json["effect"])
         self.assertEqual(75, message_json["color"]["r"])
         self.assertEqual(75, message_json["color"]["g"])
         self.assertEqual(75, message_json["color"]["b"])
@@ -228,6 +256,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual((75, 75, 75), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(155, state.attributes['color_temp'])
+        self.assertEqual('colorloop', state.attributes['effect'])
 
     def test_flash_short_and_long(self): \
             # pylint: disable=invalid-name
