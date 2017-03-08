@@ -21,6 +21,8 @@ ATTR_COMPONENT = 'component'
 DATA_SETUP = 'setup_tasks'
 DATA_PIP_LOCK = 'pip_lock'
 
+SLOW_SETUP_WARNING = 10
+
 
 def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Optional[Dict]=None) -> bool:
@@ -172,8 +174,12 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     async_comp = hasattr(component, 'async_setup')
 
+    _LOGGER.info("Setting up %s", domain)
+    warn_task = hass.loop.call_later(
+        SLOW_SETUP_WARNING, _LOGGER.warning,
+        'Setup of %s is taking over %s seconds.', domain, SLOW_SETUP_WARNING)
+
     try:
-        _LOGGER.info("Setting up %s", domain)
         if async_comp:
             result = yield from component.async_setup(hass, processed_config)
         else:
@@ -183,6 +189,8 @@ def _async_setup_component(hass: core.HomeAssistant,
         _LOGGER.exception('Error during setup of component %s', domain)
         async_notify_setup_error(hass, domain, True)
         return False
+    finally:
+        warn_task.cancel()
 
     if result is False:
         log_error('Component failed to initialize.')

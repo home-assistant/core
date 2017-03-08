@@ -4,7 +4,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from datetime import timedelta
 
 import homeassistant.core as ha
@@ -12,7 +12,7 @@ import homeassistant.loader as loader
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import (
-    EntityComponent, DEFAULT_SCAN_INTERVAL)
+    EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
 
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
@@ -410,3 +410,30 @@ class TestHelpersEntityComponent(unittest.TestCase):
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))
+
+
+@asyncio.coroutine
+def test_platform_warn_slow_setup(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from component.async_setup({
+            DOMAIN: {
+                'platform': 'platform',
+            }
+        })
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == SLOW_SETUP_WARNING
+        assert logger_method == _LOGGER.warning
+
+        assert mock_call().cancel.called
