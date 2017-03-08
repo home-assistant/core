@@ -245,9 +245,9 @@ class MqttLight(Light):
             yield from mqtt.async_subscribe(
                 self.hass, self._topic[CONF_EFFECT_STATE_TOPIC],
                 effect_received, self._qos)
-            self._effect = 'rainbow'
+            self._effect = 'none'
         if self._topic[CONF_EFFECT_COMMAND_TOPIC] is not None:
-            self._effect = 'rainbow'
+            self._effect = 'none'
         else:
             self._effect = None
 
