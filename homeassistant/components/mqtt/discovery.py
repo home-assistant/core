@@ -20,7 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 TOPIC_MATCHER = re.compile(
     r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>\w+)/config')
 
-SUPPORTED_COMPONENTS = ['binary_sensor', 'sensor']
+SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor']
+
+ALLOWED_PLATFORMS = {
+    'binary_sensor': ['mqtt'],
+    'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
+    'sensor': ['mqtt']
+}
 
 
 @asyncio.coroutine
@@ -48,7 +54,13 @@ def async_start(hass, discovery_topic, hass_config):
             return
 
         payload = dict(payload)
-        payload[CONF_PLATFORM] = 'mqtt'
+        platform = payload.get(CONF_PLATFORM, 'mqtt')
+        if platform not in ALLOWED_PLATFORMS.get(component, []):
+            _LOGGER.warning("Platform %s (component %s) is not allowed",
+                            platform, component)
+            return
+
+        payload[CONF_PLATFORM] = platform
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
