@@ -1,6 +1,20 @@
 """The tests for the MQTT JSON light platform.
 
-Configuration with RGB, brightness, color temp, effect and white value:
+Configuration with RGB, brightness, color temp, effect, white value and XY:
+
+light:
+  platform: mqtt_json
+  name: mqtt_json_light_1
+  state_topic: "home/rgb1"
+  command_topic: "home/rgb1/set"
+  brightness: true
+  color_temp: true
+  effect: true
+  rgb: true
+  white_value: true
+  xy: true
+
+Configuration with RGB, brightness, color temp, effect, white value:
 
 light:
   platform: mqtt_json
@@ -100,7 +114,7 @@ class TestLightMQTTJSON(unittest.TestCase):
 
     def test_no_color_brightness_color_temp_white_val_if_no_topics(self): \
             # pylint: disable=invalid-name
-        """Test there's no RGB, brightness, color temp, effect or white val."""
+        """Test for no RGB, brightness, color temp, effect, white val or XY."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
                 'platform': 'mqtt_json',
@@ -117,6 +131,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get('white_value'))
+        self.assertIsNone(state.attributes.get('xy_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"ON"}')
         self.hass.block_till_done()
@@ -128,6 +143,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get('white_value'))
+        self.assertIsNone(state.attributes.get('xy_color'))
 
     def test_controlling_state_via_topic(self): \
             # pylint: disable=invalid-name
@@ -143,6 +159,7 @@ class TestLightMQTTJSON(unittest.TestCase):
                 'effect': True,
                 'rgb': True,
                 'white_value': True,
+                'xy': True,
                 'qos': '0'
             }
         })
@@ -154,12 +171,14 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get('white_value'))
+        self.assertIsNone(state.attributes.get('xy_color'))
         self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # Turn on the light, full white
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
-                          '"color":{"r":255,"g":255,"b":255},'
+                          '"color":{"r":255,"g":255,"b":255,'
+                          '"x":0.123,"y":0.123},'
                           '"brightness":255,'
                           '"color_temp":155,'
                           '"effect":"colorloop",'
@@ -173,6 +192,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(155, state.attributes.get('color_temp'))
         self.assertEqual('colorloop', state.attributes.get('effect'))
         self.assertEqual(150, state.attributes.get('white_value'))
+        self.assertEqual([0.123, 0.123], state.attributes.get('xy_color'))
 
         # Turn the light off
         fire_mqtt_message(self.hass, 'test_light_rgb', '{"state":"OFF"}')
@@ -199,6 +219,15 @@ class TestLightMQTTJSON(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual([125, 125, 125],
                          light_state.attributes.get('rgb_color'))
+
+        fire_mqtt_message(self.hass, 'test_light_rgb',
+                          '{"state":"ON",'
+                          '"color":{"x":0.135,"y":0.135}}')
+        self.hass.block_till_done()
+
+        light_state = self.hass.states.get('light.test')
+        self.assertEqual([0.135, 0.135],
+                         light_state.attributes.get('xy_color'))
 
         fire_mqtt_message(self.hass, 'test_light_rgb',
                           '{"state":"ON",'
