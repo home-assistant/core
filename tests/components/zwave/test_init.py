@@ -4,7 +4,6 @@ import asyncio
 from homeassistant.bootstrap import async_setup_component
 
 
-
 @asyncio.coroutine
 def test_valid_device_config(hass, mock_openzwave):
     """Test valid device config."""
