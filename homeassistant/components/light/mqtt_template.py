@@ -11,9 +11,10 @@ import voluptuous as vol
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
-    ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, Light, PLATFORM_SCHEMA,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, STATE_ON, STATE_OFF
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
@@ -39,6 +40,9 @@ CONF_GREEN_TEMPLATE = 'green_template'
 CONF_RED_TEMPLATE = 'red_template'
 CONF_STATE_TEMPLATE = 'state_template'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
+
+SUPPORT_MQTT_TEMPLATE = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT | SUPPORT_FLASH |
+                         SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
@@ -320,6 +324,14 @@ class MqttTemplate(Light):
         if ATTR_EFFECT in kwargs:
             values['effect'] = kwargs.get(ATTR_EFFECT)
 
+        # flash
+        if ATTR_FLASH in kwargs:
+            values['flash'] = kwargs.get(ATTR_FLASH)
+
+        # transition
+        if ATTR_TRANSITION in kwargs:
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
+
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
             self._templates[CONF_COMMAND_ON_TEMPLATE].async_render(**values),
@@ -339,6 +351,10 @@ class MqttTemplate(Light):
         values = {'state': False}
         if self._optimistic:
             self._state = False
+
+        # transition
+        if ATTR_TRANSITION in kwargs:
+            values['transition'] = int(kwargs[ATTR_TRANSITION])
 
         mqtt.async_publish(
             self.hass, self._topics[CONF_COMMAND_TOPIC],
