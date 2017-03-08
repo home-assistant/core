@@ -83,30 +83,15 @@ CLASSIFIER_GROUP_CONFIG = {
 CLASSIFIER_GROUP_SCHEMA = vol.Schema(CLASSIFIER_GROUP_CONFIG)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All(
-        cv.ensure_list,
-        [CLASSIFIER_GROUP_SCHEMA]
-    )
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_GROUPS): vol.All(
+            cv.ensure_list,
+            [CLASSIFIER_GROUP_SCHEMA]
+        )
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 # NOTE: pylint cannot find any of the members of cv2, disable lines to pass
-
-
-@asyncio.coroutine
-def draw_regions(cv_image, regions):
-    """Draw the regions."""
-    import cv2
-
-    # pylint: disable=invalid-name
-    for (x, y, w, h) in regions:
-        # pylint: disable=no-member
-        cv2.rectangle(cv_image,
-                      (x, y),
-                      (x + w, y + h),
-                      (255, 255, 0),  # COLOR
-                      2)
-
-    return cv_image
 
 
 def _process_classifier(cv2, cv_image, classifier_config):
@@ -126,6 +111,11 @@ def _process_classifier(cv2, cv_image, classifier_config):
     matches = []
     # pylint: disable=invalid-name
     for x, y, w, h in detections:
+        cv2.rectangle(cv_image,
+                      (x, y),
+                      (x + w, y + h),
+                      (255, 255, 0),  # COLOR
+                      2)
         matches.append({
             ATTR_MATCH_ID: len(matches),
             ATTR_MATCH_COORDS: (
