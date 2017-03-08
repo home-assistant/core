@@ -25,7 +25,7 @@ SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor']
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
     'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
-    'sensor': ['mqtt', 'mqtt_room']
+    'sensor': ['mqtt']
 }
 
 
@@ -55,7 +55,7 @@ def async_start(hass, discovery_topic, hass_config):
 
         payload = dict(payload)
         platform = payload.get(CONF_PLATFORM, 'mqtt')
-        if platform not in ALLOWED_PLATFORMS[component]:
+        if platform not in ALLOWED_PLATFORMS.get(component, []):
             _LOGGER.warning("Platform %s (component %s) is not allowed",
                             platform, component)
             return
