@@ -43,8 +43,7 @@ DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
 DEFAULT_CLASSIFIER_PATH = \
     os.path.join(os.path.dirname(BASE_PATH),
-                 'image_processor',
-                 'classifiers',
+                 'image_processing',
                  'lbpcascade_frontalface.xml')
 DEFAULT_COLOR = (255, 255, 0)
 DEFAULT_NAME = 'OpenCV'
