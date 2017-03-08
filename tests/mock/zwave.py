@@ -1,3 +1,4 @@
+"""Mock helpers for Z-Wave component."""
 from unittest.mock import MagicMock
 
 from pydispatch import dispatcher
@@ -37,7 +38,7 @@ class MockNode(MagicMock):
         return command_class in self._command_classes
 
     def _get_child_mock(self, **kw):
-        """Creates child mocks with right MagicMock class."""
+        """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)
 
 
@@ -66,5 +67,5 @@ class MockValue(MagicMock):
         self.value_id = value_id
 
     def _get_child_mock(self, **kw):
-        """Creates child mocks with right MagicMock class."""
+        """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)
