@@ -13,12 +13,13 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, FLASH_LONG, FLASH_SHORT,
+    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, FLASH_LONG, FLASH_SHORT,
     Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION)
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
+    SUPPORT_WHITE_VALUE)
 from homeassistant.const import (
     CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
-    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB)
+    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE)
 from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_QOS, CONF_RETAIN)
 import homeassistant.helpers.config_validation as cv
@@ -29,38 +30,40 @@ DOMAIN = 'mqtt_json'
 
 DEPENDENCIES = ['mqtt']
 
-DEFAULT_NAME = 'MQTT JSON Light'
-DEFAULT_OPTIMISTIC = False
 DEFAULT_BRIGHTNESS = False
 DEFAULT_COLOR_TEMP = False
 DEFAULT_EFFECT = False
-DEFAULT_RGB = False
-DEFAULT_FLASH_TIME_SHORT = 2
 DEFAULT_FLASH_TIME_LONG = 10
+DEFAULT_FLASH_TIME_SHORT = 2
+DEFAULT_NAME = 'MQTT JSON Light'
+DEFAULT_OPTIMISTIC = False
+DEFAULT_RGB = False
+DEFAULT_WHITE_VALUE = False
 
 CONF_EFFECT_LIST = 'effect_list'
 
-CONF_FLASH_TIME_SHORT = 'flash_time_short'
 CONF_FLASH_TIME_LONG = 'flash_time_long'
+CONF_FLASH_TIME_SHORT = 'flash_time_short'
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
-        vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
-    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
-    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
-    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS, default=DEFAULT_BRIGHTNESS): cv.boolean,
     vol.Optional(CONF_COLOR_TEMP, default=DEFAULT_COLOR_TEMP): cv.boolean,
     vol.Optional(CONF_EFFECT, default=DEFAULT_EFFECT): cv.boolean,
-    vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
+    vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_FLASH_TIME_SHORT, default=DEFAULT_FLASH_TIME_SHORT):
         cv.positive_int,
     vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG):
-        cv.positive_int
+        cv.positive_int,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
+        vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
+    vol.Optional(CONF_RETAIN, default=mqtt.DEFAULT_RETAIN): cv.boolean,
+    vol.Optional(CONF_RGB, default=DEFAULT_RGB): cv.boolean,
+    vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
+    vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
 })
 
 
@@ -83,6 +86,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_COLOR_TEMP),
         config.get(CONF_EFFECT),
         config.get(CONF_RGB),
+        config.get(CONF_WHITE_VALUE),
         {
             key: config.get(key) for key in (
                 CONF_FLASH_TIME_SHORT,
@@ -96,7 +100,8 @@ class MqttJson(Light):
     """Representation of a MQTT JSON light."""
 
     def __init__(self, name, effect_list, topic, qos, retain, optimistic,
-                 brightness, color_temp, effect, rgb, flash_times):
+                 brightness, color_temp, effect, rgb, white_value,
+                 flash_times):
         """Initialize MQTT JSON light."""
         self._name = name
         self._effect_list = effect_list
@@ -125,6 +130,11 @@ class MqttJson(Light):
         else:
             self._rgb = None
 
+        if white_value:
+            self._white_value = 255
+        else:
+            self._white_value = None
+
         self._flash_times = flash_times
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
@@ -135,6 +145,8 @@ class MqttJson(Light):
                                      SUPPORT_COLOR_TEMP)
         self._supported_features |= (effect is not None and
                                      SUPPORT_EFFECT)
+        self._supported_features |= (white_value is not None and
+                                     SUPPORT_WHITE_VALUE)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -188,6 +200,14 @@ class MqttJson(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid effect value received')
 
+            if self._white_value is not None:
+                try:
+                    self._white_value = int(values['white_value'])
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning('Invalid white value value received')
+
             self.hass.async_add_job(self.async_update_ha_state())
 
         if self._topic[CONF_STATE_TOPIC] is not None:
@@ -219,6 +239,11 @@ class MqttJson(Light):
     def rgb_color(self):
         """Return the RGB color value."""
         return self._rgb
+
+    @property
+    def white_value(self):
+        """Return the white property."""
+        return self._white_value
 
     @property
     def should_poll(self):
@@ -296,6 +321,13 @@ class MqttJson(Light):
 
             if self._optimistic:
                 self._effect = kwargs[ATTR_EFFECT]
+                should_update = True
+
+        if ATTR_WHITE_VALUE in kwargs:
+            message['white_value'] = int(kwargs[ATTR_WHITE_VALUE])
+
+            if self._optimistic:
+                self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
         mqtt.async_publish(
