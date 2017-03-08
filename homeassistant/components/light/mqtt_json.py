@@ -219,10 +219,10 @@ class MqttJson(Light):
 
             if self._xy is not None:
                 try:
-                    x = float(values['color']['x'])
-                    y = float(values['color']['y'])
+                    x_color = float(values['color']['x'])
+                    y_color = float(values['color']['y'])
 
-                    self._xy = [x, y]
+                    self._xy = [x_color, y_color]
                 except KeyError:
                     pass
                 except ValueError:
