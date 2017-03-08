@@ -166,6 +166,7 @@ EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
+EVENT_SERVICE_REMOVED = 'service_removed'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -305,6 +306,7 @@ SERVICE_HOMEASSISTANT_RESTART = 'restart'
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 SERVICE_TOGGLE = 'toggle'
+SERVICE_RELOAD = 'reload'
 
 SERVICE_VOLUME_UP = 'volume_up'
 SERVICE_VOLUME_DOWN = 'volume_down'
