@@ -117,4 +117,4 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         self._matches = process_image(self.hass,
                                       image,
                                       self._classifier_configs,
-                                      self.entity_id)
+                                      self.entity_id.replace('.', '_'))
