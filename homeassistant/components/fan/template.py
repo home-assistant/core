@@ -2,7 +2,7 @@
 Support for fans which integrates with other components.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/fan/template
+https://home-assistant.io/components/fan.template
 """
 
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
@@ -91,7 +91,7 @@ class DemoFan(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return DEMO_SUPPORT
-
+"""
 """
 Support for switches which integrates with other components.
 
@@ -253,3 +253,4 @@ class SwitchTemplate(SwitchDevice):
         except TemplateError as ex:
             _LOGGER.error(ex)
             self._state = None
+"""
