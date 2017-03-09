@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.android_ip_webcam/
 """
 import asyncio
 
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
     CONF_NAME, CONF_SENSORS)
@@ -64,23 +63,11 @@ class IPWebcamSensor(AndroidIPCamEntity):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        if self._ipcam.status_data is None or self._ipcam.sensor_data is None:
-            self._state = STATE_UNKNOWN
-            return
-
-        if self._sensor not in self._ipcam.enabled_sensors:
-            self._state = STATE_UNKNOWN
-            return
-
         if self._sensor in ('audio_connections', 'video_connections'):
             self._state = self._ipcam.status_data.get(self._sensor)
             self._unit = 'Connections'
         else:
-            container = self._ipcam.sensor_data.get(self._sensor)
-            self._unit = container.get('unit', self._unit)
-            data_point = container.get('data', [[0, [0.0]]])
-            if data_point and data_point[0]:
-                self._state = data_point[0][-1][0]
+            self._state, self._unit = self._ipcam.export_sensor(self._sensor)
 
     @property
     def icon(self):
