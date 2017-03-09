@@ -17,14 +17,14 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 
-REQUIREMENTS = ['simplisafe-python==1.0.2']
+REQUIREMENTS = ['totalconnect-python==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'SimpliSafe'
-DOMAIN = 'simplisafe'
-NOTIFICATION_ID = 'simplisafe_notification'
-NOTIFICATION_TITLE = 'SimpliSafe Setup'
+DEFAULT_NAME = 'TotalConnect'
+DOMAIN = 'totalconnect'
+NOTIFICATION_ID = 'totalconnect_notification'
+NOTIFICATION_TITLE = 'TotalConnect Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
