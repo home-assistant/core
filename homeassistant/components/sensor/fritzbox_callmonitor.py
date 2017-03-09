@@ -32,6 +32,8 @@ VALUE_RING = 'ringing'
 VALUE_CALL = 'dialing'
 VALUE_CONNECT = 'talking'
 VALUE_DISCONNECT = 'idle'
+CONF_PHONEBOOK = 'phonebook'
+CONF_PREFIXES = 'prefixes'
 
 INTERVAL_RECONNECT = 60
 
@@ -44,9 +46,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_PASSWORD, default='admin'): cv.string,
     vol.Optional(CONF_USERNAME, default=''): cv.string,
-    vol.Optional('phonebook', default=0): cv.positive_int,
-    vol.Optional('prefixes', default=[]): vol.All(cv.ensure_list,
-                                                  [cv.string])
+    vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
+    vol.Optional(CONF_PREFIXES, default=[]): vol.All(cv.ensure_list,
+                                                     [cv.string])
 })
 
 
@@ -68,9 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # pylint: disable=bare-except
     except:
         phonebook = None
-        _LOGGER.warning('Phonebook with ID '
-                        + str(phonebook_id)
-                        + ' not found on Fritz!Box')
+        _LOGGER.warning('Phonebook with ID %s not found on Fritz!Box',
+                        phonebook_id)
 
     sensor = FritzBoxCallSensor(name=name, phonebook=phonebook)
 
@@ -233,10 +234,7 @@ class FritzBoxPhonebook(object):
         self.phonebook_id = phonebook_id
         self.phonebook_dict = None
         self.number_dict = None
-        if prefixes is not None:
-            self.prefixes = prefixes
-        else:
-            self.prefixes = []
+        self.prefixes = prefixes or []
 
         # pylint: disable=import-error
         import fritzconnection as fc
