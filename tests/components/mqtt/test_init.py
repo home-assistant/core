@@ -11,8 +11,7 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
-    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import (
@@ -55,19 +54,15 @@ class TestMQTT(unittest.TestCase):
         """Helper for recording calls."""
         self.calls.append(args)
 
-    def test_client_starts_on_home_assistant_start(self):
-        """"Test if client start on HA launch."""
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        self.hass.block_till_done()
-        self.assertTrue(self.hass.data['mqtt'].async_start.called)
+    def test_client_starts_on_home_assistant_mqtt_setup(self):
+        """Test if client is connect after mqtt init on bootstrap."""
+        assert self.hass.data['mqtt'].async_connect.called
 
     def test_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA launch."""
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        self.hass.block_till_done()
         self.hass.bus.fire(EVENT_HOMEASSISTANT_STOP)
         self.hass.block_till_done()
-        self.assertTrue(self.hass.data['mqtt'].async_stop.called)
+        self.assertTrue(self.hass.data['mqtt'].async_disconnect.called)
 
     def test_publish_calls_service(self):
         """Test the publishing of call to services."""
