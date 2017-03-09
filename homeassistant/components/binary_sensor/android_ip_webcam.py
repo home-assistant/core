@@ -6,7 +6,6 @@ https://home-assistant.io/components/binary_sensor.android_ip_webcam/
 """
 import asyncio
 
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST, CONF_NAME)
@@ -54,17 +53,8 @@ class IPWebcamBinarySensor(AndroidIPCamEntity, BinarySensorDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        if self._ipcam.status_data is None:
-            self._state = STATE_UNKNOWN
-            return
-
-        if self._sensor not in self._ipcam.enabled_sensors:
-            self._state = STATE_UNKNOWN
-            return
-
-        container = self._ipcam.sensor_data.get(self._sensor)
-        data_point = container.get('data', [[0, [0.0]]])
-        self._state = data_point[0][-1][0] == 1.0
+        state, _ = self._ipcam.export_sensor(self._sensor)
+        self._state = state == 1.0
 
     @property
     def device_class(self):
