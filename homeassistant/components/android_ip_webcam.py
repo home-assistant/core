@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.components.camera.mjpeg import (
-    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, DOMAIN as MJPEG_DOMAIN)
+    CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
 DOMAIN = 'android_ip_webcam'
 REQUIREMENTS = ["pydroid-ipcam==0.3"]
@@ -212,7 +212,7 @@ def async_setup(hass, config):
         webcams[host] = cam
 
         mjpeg_camera = {
-            CONF_PLATFORM: MJPEG_DOMAIN,
+            CONF_PLATFORM: 'mjpeg',
             CONF_MJPEG_URL: cam.mjpeg_url,
             CONF_STILL_IMAGE_URL: cam.image_url,
             CONF_NAME: name,
