@@ -10,7 +10,6 @@ import logging
 import re
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components.mqtt import DOMAIN
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
@@ -66,7 +65,7 @@ def async_start(hass, discovery_topic, hass_config):
                 discovery_topic, component, object_id)
 
         yield from async_load_platform(
-            hass, component, DOMAIN, payload, hass_config)
+            hass, component, platform, payload, hass_config)
 
     yield from mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)
