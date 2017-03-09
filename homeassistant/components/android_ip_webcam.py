@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/android_ip_webcam/
 """
 import asyncio
+import logging
 from datetime import timedelta
 
 import voluptuous as vol
@@ -28,6 +29,7 @@ from homeassistant.components.camera.mjpeg import (
 DOMAIN = 'android_ip_webcam'
 REQUIREMENTS = ["pydroid-ipcam==0.3"]
 
+_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 DATA_IP_WEBCAM = 'android_ip_webcam'
@@ -245,7 +247,6 @@ def async_setup(hass, config):
                     CONF_NAME: name,
                 }, config))
 
-
     tasks = [async_setup_ipcamera(conf) for conf in config[DOMAIN]]
     if tasks:
         yield from asyncio.wait(tasks, loop=hass.loop)
@@ -287,7 +288,7 @@ class AndroidIPCamEntity(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        state_attr = {ATTTR_HOST: self._host}
+        state_attr = {ATTR_HOST: self._host}
         if self._ipcam.status_data is None:
             return state_attr
 
