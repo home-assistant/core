@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
 DOMAIN = 'android_ip_webcam'
-REQUIREMENTS = ["pydroid-ipcam==0.1"]
+REQUIREMENTS = ["pydroid-ipcam==0.2"]
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
@@ -161,7 +161,7 @@ def async_setup(hass, config):
         username = cam_config.get(CONF_USERNAME)
         password = cam_config.get(CONF_PASSWORD)
         name = cam_config[CONF_NAME]
-        interval = cam_config[SCAN_INTERVAL]
+        interval = cam_config[CONF_SCAN_INTERVAL]
 
         cam = PyDroidIPCam(
             hass.loop, websession, host, cam_config[CONF_PORT],
@@ -176,12 +176,13 @@ def async_setup(hass, config):
             async_dispatcher_send(hass, SIGNAL_UPDATE_DATA, host)
 
             async_track_point_in_utc_time(
-                hass, utcnow() + interval, async_update_data)
+                hass, async_update_data, utcnow() + interval)
 
         yield from async_update_data(None)
         webcams[host] = cam
 
         mjpeg_camera = {
+            'platform': 'mjpeg',
             'mjpeg_url': cam.mjpeg_url,
             'still_image_url': cam.image_url,
             CONF_NAME: name,
@@ -246,7 +247,7 @@ class AndroidIPCamEntity(Entity):
 
     @property
     def should_poll(self):
-        """Is update over central callback."""
+        """Return True if entity has to be polled for state."""
         return False
 
     @property
