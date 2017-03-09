@@ -59,7 +59,7 @@ class TestMQTT(unittest.TestCase):
         """"Test if client start on HA launch."""
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
-        self.assertTrue(self.hass.data['mqtt'].async_start.called)
+        self.assertTrue(self.hass.data['mqtt'].async_connect.called)
 
     def test_client_stops_on_home_assistant_start(self):
         """Test if client stops on HA launch."""
