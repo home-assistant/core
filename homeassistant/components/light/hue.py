@@ -436,12 +436,7 @@ class HueLight(Light):
         command = {'on': False}
 
         if ATTR_TRANSITION in kwargs:
-            # Transition time is in 1/10th seconds and cannot exceed
-            # 900 seconds.
-            command['transitiontime'] = min(
-                9000,
-                int(kwargs[ATTR_TRANSITION] * 10)
-            )
+            command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         flash = kwargs.get(ATTR_FLASH)
 
