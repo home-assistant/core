@@ -38,11 +38,11 @@ class Switch(zha.Entity, SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the entity on."""
-        yield from self._clusters[0x0006].command(1)
+        yield from self._endpoint.on_off.on()
         self._state = 1
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        yield from self._clusters[0x0006].command(0)
+        yield from self._endpoint.on_off.off()
         self._state = 0

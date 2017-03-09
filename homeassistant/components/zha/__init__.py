@@ -9,14 +9,14 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import const
+from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 
 
 # Definitions for interfacing with the rest of HA
-REQUIREMENTS = ['bellows==0.2.2']
+REQUIREMENTS = ['bellows==0.2.3']
 
 DOMAIN = 'zha'
 
@@ -26,7 +26,7 @@ CONF_DEVICE_CONFIG = 'device_config'
 DATA_DEVICE_CONFIG = 'zha_device_config'
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
-    vol.Optional(const.CONF_TYPE): cv.string,
+    vol.Optional(ha_const.CONF_TYPE): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -63,32 +63,13 @@ SERVICE_SCHEMAS = {
 # ZigBee definitions
 CENTICELSIUS = 'C-100'
 
-# Device types which require more than one cluster to work together
+# Device types which require more than one cluster to work together.
+# Only non-standard devices should be listed here
 DEVICE_TYPES = {
-    260: {  # ZHA
-        0x0000: ('switch', [0x0004, 0x0005, 0x0006, 0x0007]),
-        0x0100: ('light', [0x0004, 0x0005, 0x0006, 0x0008]),
-        0x0101: ('light', [0x0004, 0x0005, 0x0006, 0x0008]),
-        0x0102: ('light', [0x0004, 0x0005, 0x0006, 0x0008, 0x0300]),
-    },
-    49246: {  # ZLL
-        0x0000: ('light', [0x0004, 0x0005, 0x0006, 0x0008]),
-        0x0010: ('switch', [0x0004, 0x0005, 0x0006, 0x0008]),
-        0x0100: ('light', [0x0004, 0x0005, 0x0006, 0x0008]),
-        0x0110: ('switch', [0x0004, 0x0005, 0x0006, 0x0008]),
-        0x0200: ('light', [0x0004, 0x0005, 0x0006, 0x0008, 0x0300]),
-        0x0210: ('light', [0x0004, 0x0005, 0x0006, 0x0008, 0x0300]),
-        0x0220: ('light', [0x0004, 0x0005, 0x0006, 0x0008, 0x0300]),
-    }, 64513: {  # Probably SmartThings. Maybe.
+    64513: {  # Probably SmartThings. Maybe.
         # This shouldn't be in here, but rather in some sort of quirks database
         0x019a: ('device_tracker', []),
     }
-}
-
-CLUSTERS = {
-    0x0006: ('switch', 0x0000, {}),
-    0x0402: ('sensor', 0x0000, {'unit_of_measurement': CENTICELSIUS}),
-    0x0500: ('binary_sensor', 0x0002, {}),
 }
 
 
@@ -159,33 +140,51 @@ class ApplicationListener:
     @asyncio.coroutine
     def async_device_initialized(self, device, join):
         """Handle device joined and basic information discovered (async)."""
+        import bellows.zigbee.profiles
+        import homeassistant.components.zha.const as zha_const
+
         for endpoint_id, endpoint in device.endpoints.items():
             if endpoint_id == 0:  # ZDO
                 continue
 
             discovered_info = yield from _discover_endpoint_info(endpoint)
 
+            has_valid_profile = False
+            component = None
             used_clusters = []
             device_key = '%s-%s' % (str(device.ieee), endpoint_id)
             node_config = self._config[DOMAIN][CONF_DEVICE_CONFIG].get(
                 device_key, {})
+
+            if endpoint.profile_id in bellows.zigbee.profiles.PROFILES:
+                profile = bellows.zigbee.profiles.PROFILES[endpoint.profile_id]
+                if zha_const.DEVICE_CLASS.get(endpoint.profile_id,
+                                              {}).get(endpoint.device_type,
+                                                      None):
+                    used_clusters = profile.CLUSTERS[endpoint.device_type]
+                    has_valid_profile = True
+                    profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
+                    component = profile_info[endpoint.device_type]
+
             if DEVICE_TYPES.get(endpoint.profile_id,
                                 {}).get(endpoint.device_type, None):
-                # This device has a bunch of predefined clusters which work
-                # together as one device.
-                profile_types = DEVICE_TYPES[endpoint.profile_id]
-                component, used_clusters = profile_types[endpoint.device_type]
-                if const.CONF_TYPE in node_config:
-                    component = node_config[const.CONF_TYPE]
-                clusters = [endpoint.clusters[c]
-                            for c in used_clusters
-                            if c in endpoint.clusters]
+                has_valid_profile = True
+                info = DEVICE_TYPES[endpoint.profile_id][endpoint.device_type]
+                component, used_clusters = info
+
+            if ha_const.CONF_TYPE in node_config:
+                component = node_config[ha_const.CONF_TYPE]
+
+            if has_valid_profile and component:
+                clusters = [endpoint.clusters[c] for c in used_clusters if c in
+                            endpoint.clusters]
                 discovery_info = {
                     'endpoint': endpoint,
                     'clusters': clusters,
                     'new_join': join,
                 }
                 discovery_info.update(discovered_info)
+
                 yield from discovery.async_load_platform(
                     self._hass,
                     component,
@@ -195,17 +194,18 @@ class ApplicationListener:
                 )
 
             for cluster_id, cluster in endpoint.clusters.items():
-                if cluster_id not in CLUSTERS or cluster_id in used_clusters:
+                cluster_type = type(cluster)
+                if cluster_id in used_clusters:
+                    continue
+                if cluster_type not in zha_const.SINGLE_CLUSTER_DEVICE_CLASS:
                     continue
 
-                component, value_attribute, extra_info = CLUSTERS[cluster_id]
+                component = zha_const.SINGLE_CLUSTER_DEVICE_CLASS[cluster_type]
                 discovery_info = {
                     'endpoint': endpoint,
                     'clusters': [cluster],
-                    'value_attribute': value_attribute,
                     'new_join': join,
                 }
-                discovery_info.update(extra_info)
                 discovery_info.update(discovered_info)
 
                 yield from discovery.async_load_platform(
@@ -250,7 +250,7 @@ class Entity(entity.Entity):
             cluster.add_listener(self)
         self._endpoint = endpoint
         self._clusters = {c.cluster_id: c for c in clusters}
-        self._state = const.STATE_UNKNOWN
+        self._state = ha_const.STATE_UNKNOWN
 
     def attribute_updated(self, attribute, value):
         """Handle an attribute updated on this cluster."""

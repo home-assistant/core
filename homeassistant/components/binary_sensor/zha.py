@@ -44,7 +44,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device_class = CLASS_MAPPING.get(success[1], None)
 
     sensor = BinarySensor(device_class, **discovery_info)
-    yield from async_add_devices([sensor])
+    async_add_devices([sensor])
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):

@@ -21,15 +21,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    clusters = discovery_info['clusters']
-    cluster_ids = [c.cluster_id for c in clusters]
-    if 0x0300 in cluster_ids:
-        color = [c for c in clusters if c.cluster_id == 0x0300][0]
-        success, _ = yield from color.read_attributes([0x10], allow_cache=True)
-        if 0x10 in success:
-            discovery_info['num_primaries'] = success[0x10]
+    endpoint = discovery_info['endpoint']
+    try:
+        primaries = yield from endpoint.light_color['num_primaries']
+        discovery_info['num_primaries'] = primaries
+    except (AttributeError, KeyError):
+        pass
 
-    yield from async_add_devices([Light(**discovery_info)])
+    async_add_devices([Light(**discovery_info)])
 
 
 class Light(zha.Entity, light.Light):
@@ -71,8 +70,8 @@ class Light(zha.Entity, light.Light):
         duration = 5  # tenths of s
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
-            yield from self._clusters[0x0300].command(0xa, temperature,
-                                                      duration)
+            yield from self._endpoint.light_color.move_to_color_temp(
+                temperature, duration)
             self._color_temp = temperature
 
         if light.ATTR_XY_COLOR in kwargs:
@@ -83,8 +82,7 @@ class Light(zha.Entity, light.Light):
             self._xy_color = (xyb[0], xyb[1])
             self._brightness = xyb[2]
         if light.ATTR_XY_COLOR in kwargs or light.ATTR_RGB_COLOR in kwargs:
-            yield from self._clusters[0x0300].command(
-                7,
+            yield from self._endpoint.light_color.move_to_color(
                 int(self._xy_color[0] * 65535),
                 int(self._xy_color[1] * 65535),
                 duration,
@@ -94,17 +92,20 @@ class Light(zha.Entity, light.Light):
             brightness = kwargs.get('brightness', self._brightness or 255)
             self._brightness = brightness
             # Move to level with on/off:
-            yield from self._clusters[8].command(4, brightness, duration)
+            yield from self._endpoint.level.move_to_level_with_on_off(
+                brightness,
+                duration
+            )
             self._state = 1
             return
 
-        yield from self._clusters[0x0006].command(1)
+        yield from self._endpoint.on_off.on()
         self._state = 1
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the entity off."""
-        yield from self._clusters[0x0006].command(0)
+        yield from self._endpoint.on_off.off()
         self._state = 0
 
     @property

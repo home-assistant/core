@@ -24,19 +24,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return
 
     sensor = yield from make_sensor(discovery_info)
-    yield from async_add_devices([sensor])
+    async_add_devices([sensor])
 
 
 @asyncio.coroutine
 def make_sensor(discovery_info):
     """Factory function for ZHA sensors."""
-    if discovery_info['unit_of_measurement'] == zha.CENTICELSIUS:
+    from bellows.zigbee import zcl
+    if isinstance(discovery_info['clusters'][0],
+                  zcl.clusters.measurement.TemperatureMeasurement):
         sensor = TemperatureSensor(**discovery_info)
     else:
         sensor = Sensor(**discovery_info)
 
     clusters = discovery_info['clusters']
-    attr = discovery_info['value_attribute']
+    attr = sensor.value_attribute
     if discovery_info['new_join']:
         cluster = clusters[0]
         yield from cluster.bind()
@@ -51,15 +53,14 @@ def make_sensor(discovery_info):
 
 
 class Sensor(zha.Entity):
-    """Generic ZHA sensor."""
+    """Base ZHA sensor."""
 
     _domain = DOMAIN
+    value_attribute = 0
     min_reportable_change = 1
 
-    def __init__(self, unit_of_measurement, value_attribute, **kwargs):
+    def __init__(self, **kwargs):
         """Initialize ZHA sensor."""
-        self._unit_of_measurement = unit_of_measurement
-        self._value_attribute = value_attribute
         super().__init__(**kwargs)
 
     @property
@@ -69,15 +70,10 @@ class Sensor(zha.Entity):
             return str(round(self._state, 2))
         return self._state
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
         _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
-        if attribute == self._value_attribute:
+        if attribute == self.value_attribute:
             self._state = value
             self.schedule_update_ha_state()
 
