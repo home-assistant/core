@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.android_ip_webcam/
 """
 import asyncio
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
     CONF_NAME, CONF_SENSORS)
@@ -64,6 +65,11 @@ class IPWebcamSensor(AndroidIPCamEntity):
     def async_update(self):
         """Retrieve latest state."""
         if self._ipcam.status_data is None or self._ipcam.sensor_data is None:
+            self._state = STATE_UNKNOWN
+            return
+
+        if self._sensor not in self._ipcam.enabled_sensors:
+            self._state = STATE_UNKNOWN
             return
 
         if self._sensor in ('audio_connections', 'video_connections'):

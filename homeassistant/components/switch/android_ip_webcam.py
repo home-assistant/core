@@ -6,6 +6,7 @@ https://home-assistant.io/components/switch.android_ip_webcam/
 """
 import asyncio
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.android_ip_webcam import (
     KEY_MAP, ICON_MAP, DATA_IP_WEBCAM, AndroidIPCamEntity, CONF_HOST,
@@ -42,7 +43,7 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
 
         self._setting = setting
         self._mapped_name = KEY_MAP.get(self._setting, self._setting)
-        self._name = '{} {}'.format(self._device.name, self._mapped_name)
+        self._name = '{} {}'.format(name, self._mapped_name)
         self._state = False
 
     @property
@@ -55,6 +56,8 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
         """Get the updated status of the switch."""
         if self._ipcam.status_data is not None:
             self._state = self._ipcam.current_settings.get(self._setting)
+        else:
+            self._state = STATE_UNKNOWN
 
     @property
     def is_on(self):
