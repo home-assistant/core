@@ -51,7 +51,7 @@ def async_dispatcher_connect(hass, signal, target):
 
 def dispatcher_send(hass, signal, *args):
     """Send signal and data."""
-    hass.add_job(async_dispatcher_send, hass, signal, *args)
+    hass.loop.call_soon_threadsafe(async_dispatcher_send, hass, signal, *args)
 
 
 @callback
