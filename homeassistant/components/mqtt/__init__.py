@@ -23,8 +23,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
+    EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
+    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)

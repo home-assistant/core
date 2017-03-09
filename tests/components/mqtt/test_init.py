@@ -11,8 +11,7 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
-    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_START,
-    EVENT_HOMEASSISTANT_STOP)
+    EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from tests.common import (
