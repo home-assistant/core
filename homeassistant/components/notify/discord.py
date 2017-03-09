@@ -44,7 +44,7 @@ class DiscordNotificationService(BaseNotificationService):
 
         @discord_bot.event
         @asyncio.coroutine
-        def on_ready(): # pylint: disable=unused-variable
+        def on_ready():  # pylint: disable=unused-variable
             """Send the messages when the bot is ready."""
             for channelid in kwargs[ATTR_TARGET]:
                 channel = discord.Object(id=channelid)
