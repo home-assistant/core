@@ -8,8 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_SWITCHES)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_SWITCHES, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rpi-rf==0.9.6']
@@ -70,6 +71,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         rfdevice.enable_tx()
 
     add_devices(devices)
+
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP, lambda event: rfdevice.cleanup())
 
 
 class RPiRFSwitch(SwitchDevice):
