@@ -11,7 +11,8 @@ import aiohttp
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ICON, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_SSL)
+    ATTR_ICON, CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PROXY_SSL)
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
@@ -23,13 +24,13 @@ REQUIREMENTS = ['jsonrpc-async==0.4']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 8080
-DEFAULT_SSL = False
+DEFAULT_PROXY_SSL = False
 DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
 })
@@ -47,7 +48,7 @@ def async_get_service(hass, config, discovery_info=None):
 
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    encryption = config.get(CONF_SSL)
+    encryption = config.get(CONF_PROXY_SSL)
 
     if host.startswith('http://') or host.startswith('https://'):
         host = host.lstrip('http://').lstrip('https://')
