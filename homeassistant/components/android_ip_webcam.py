@@ -202,11 +202,11 @@ def async_setup(hass, config):
                     "Android webcam %s not found for discovery!", host)
                 return
 
-            sensors = cam.enabled_sensors
-            switches = cam.enabled_settings
-            if 'motion_active' in sensors:
-                sensors.pop('motion_active')
-                motion = True
+            sensors = [sensor for sensor in cam.enabled_sensors
+                       if sensor in SENSORS]
+            switches = [setting for setting in cam.enabled_settings
+                        if setting in SWITCHES]
+            motion = True if 'motion_active' in cam.enabled_sensors else False
 
         # load platforms
         webcams[host] = cam
