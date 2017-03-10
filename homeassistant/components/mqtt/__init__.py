@@ -126,7 +126,7 @@ CONFIG_SCHEMA = vol.Schema({
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
         vol.Optional(CONF_TLS_VERSION,
-                     default=DEFAULT_TLS_PROTOCOL): cv.string,
+                     default=DEFAULT_TLS_PROTOCOL): vol.Any('1.0', '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
