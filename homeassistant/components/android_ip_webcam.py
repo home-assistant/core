@@ -27,7 +27,7 @@ from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
 DOMAIN = 'android_ip_webcam'
-REQUIREMENTS = ["pydroid-ipcam==0.3"]
+REQUIREMENTS = ["pydroid-ipcam==0.4"]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -199,7 +199,7 @@ def async_setup(hass, config):
         if cam_config[CONF_AUTO_DISCOVERY]:
             if not cam.available:
                 _LOGGER.error(
-                    "Android webcam %s not found for discovery!", host)
+                    "Android webcam %s not found for discovery!", cam.base_url)
                 return
 
             sensors = [sensor for sensor in cam.enabled_sensors
@@ -207,6 +207,7 @@ def async_setup(hass, config):
             switches = [setting for setting in cam.enabled_settings
                         if setting in SWITCHES]
             motion = True if 'motion_active' in cam.enabled_sensors else False
+            sensors.extend(['audio_connections', 'video_connections'])
 
         # load platforms
         webcams[host] = cam
@@ -226,19 +227,21 @@ def async_setup(hass, config):
         hass.async_add_job(discovery.async_load_platform(
             hass, 'camera', 'mjpeg', mjpeg_camera, config))
 
-        hass.async_add_job(discovery.async_load_platform(
-            hass, 'sensor', DOMAIN, {
-                CONF_NAME: name,
-                CONF_HOST: host,
-                CONF_SENSORS: sensors,
-            }, config))
+        if sensors:
+            hass.async_add_job(discovery.async_load_platform(
+                hass, 'sensor', DOMAIN, {
+                    CONF_NAME: name,
+                    CONF_HOST: host,
+                    CONF_SENSORS: sensors,
+                }, config))
 
-        hass.async_add_job(discovery.async_load_platform(
-            hass, 'switch', DOMAIN, {
-                CONF_NAME: name,
-                CONF_HOST: host,
-                CONF_SWITCHES: switches,
-            }, config))
+        if switches:
+            hass.async_add_job(discovery.async_load_platform(
+                hass, 'switch', DOMAIN, {
+                    CONF_NAME: name,
+                    CONF_HOST: host,
+                    CONF_SWITCHES: switches,
+                }, config))
 
         if motion:
             hass.async_add_job(discovery.async_load_platform(
