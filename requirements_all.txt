@@ -310,7 +310,7 @@ influxdb==3.0.0
 insteon_hub==0.4.5
 
 # homeassistant.components.insteon_local
-insteonlocal==0.39
+insteonlocal==0.48
 
 # homeassistant.components.insteon_plm
 insteonplm==0.7.4
