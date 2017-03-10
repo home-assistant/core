@@ -27,6 +27,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
+STATE_ONLINE = 'Online'
+STATE_BUSY = 'Busy'
+STATE_AWAY = 'Away'
+STATE_SNOOZE = 'Snooze'
+STATE_TRADE = 'Trade'
+STATE_PLAY = 'Play'
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -72,12 +79,12 @@ class SteamSensor(Entity):
             else:
                 self._game = self._profile.current_game[2]
             self._state = {
-                1: 'Online',
-                2: 'Busy',
-                3: 'Away',
-                4: 'Snooze',
-                5: 'Trade',
-                6: 'Play',
+                1: STATE_ONLINE,
+                2: STATE_BUSY,
+                3: STATE_AWAY,
+                4: STATE_SNOOZE,
+                5: STATE_TRADE,
+                6: STATE_PLAY,
             }.get(self._profile.status, 'Offline')
             self._name = self._profile.persona
             self._avatar = self._profile.avatar_medium
