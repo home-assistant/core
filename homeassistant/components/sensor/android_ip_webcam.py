@@ -64,6 +64,8 @@ class IPWebcamSensor(AndroidIPCamEntity):
     def async_update(self):
         """Retrieve latest state."""
         if self._sensor in ('audio_connections', 'video_connections'):
+            if not self._ipcam.status_data:
+                return
             self._state = self._ipcam.status_data.get(self._sensor)
             self._unit = 'Connections'
         else:
