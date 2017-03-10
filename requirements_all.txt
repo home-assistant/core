@@ -624,7 +624,7 @@ python-wink==1.1.1
 pytrackr==0.0.5
 
 # homeassistant.components.device_tracker.unifi
-pyunifi==1.3
+pyunifi==2.0
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
@@ -736,9 +736,6 @@ uber_rides==0.2.7
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.1
-
-# homeassistant.components.device_tracker.unifi
-urllib3
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
