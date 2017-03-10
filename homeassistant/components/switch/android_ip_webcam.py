@@ -63,11 +63,11 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn device on."""
-        if self._setting is 'torch':
+        if self._setting == 'torch':
             yield from self._ipcam.torch(activate=True)
-        elif self._setting is 'focus':
+        elif self._setting == 'focus':
             yield from self._ipcam.focus(activate=True)
-        elif self._setting is 'video_recording':
+        elif self._setting == 'video_recording':
             yield from self._ipcam.record(record=True)
         else:
             yield from self._ipcam.change_setting(self._setting, True)
@@ -77,11 +77,11 @@ class IPWebcamSettingsSwitch(AndroidIPCamEntity, SwitchDevice):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn device off."""
-        if self._setting is 'torch':
+        if self._setting == 'torch':
             yield from self._ipcam.torch(activate=False)
-        elif self._setting is 'focus':
+        elif self._setting == 'focus':
             yield from self._ipcam.focus(activate=False)
-        elif self._setting is 'video_recording':
+        elif self._setting == 'video_recording':
             yield from self._ipcam.record(record=False)
         else:
             yield from self._ipcam.change_setting(self._setting, False)
