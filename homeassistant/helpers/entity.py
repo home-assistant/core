@@ -70,6 +70,9 @@ class Entity(object):
     # If we reported if this entity was slow
     _slow_reported = False
 
+    # protect for multible updates
+    _update_lock = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -199,12 +202,23 @@ class Entity(object):
             raise NoEntitySpecifiedError(
                 "No entity id specified for entity {}".format(self.name))
 
+        # update entity data
         if force_refresh:
-            if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
-                yield from self.async_update()
-            else:
-                yield from self.hass.loop.run_in_executor(None, self.update)
+            if not self._update_lock:
+                self._update_lock = asyncio.Lock(loop=self.hass.loop)
+
+            if self._update_lock.locked():
+                _LOGGER.warning("For %s is already a update task in progress",
+                                self.entity_id)
+                return
+
+            with (yield from self._update_lock):
+                if hasattr(self, 'async_update'):
+                    # pylint: disable=no-member
+                    yield from self.async_update()
+                else:
+                    yield from self.hass.loop.run_in_executor(
+                        None, self.update)
 
         start = timer()
 
