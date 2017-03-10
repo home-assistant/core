@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
+from functools import wraps
 import logging
 import urllib
 
@@ -88,6 +89,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 def cmd(func):
     """Decorator to catch command exceptions."""
+    @wraps(func)
     @asyncio.coroutine
     def wrapper(obj, *args, **kwargs):
         """Wrapper for all command methods."""
