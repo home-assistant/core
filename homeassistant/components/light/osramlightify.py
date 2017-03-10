@@ -91,10 +91,10 @@ class OsramLightifyLight(Light):
         self._light = light
         self._light_id = light_id
         self.update_lights = update_lights
-        self._brightness = 0
-        self._rgb = (0, 0, 0)
-        self._name = ""
-        self._temperature = 2000
+        self._brightness = None
+        self._rgb = None
+        self._name = None
+        self._temperature = None
         self._state = False
         self.update()
 
