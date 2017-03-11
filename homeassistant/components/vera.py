@@ -134,9 +134,9 @@ class VeraDevice(Entity):
         self.controller = controller
 
         self._name = self.vera_device.name
-
         # Append device id to prevent name clashes in HA.
-        self.vera_id = VERA_ID_FORMAT.format(slugify(vera_device.name), vera_device.device_id)
+        self.vera_id = VERA_ID_FORMAT.format(
+            slugify(vera_device.name), vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()
