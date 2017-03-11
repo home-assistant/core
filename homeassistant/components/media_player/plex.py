@@ -160,6 +160,7 @@ def setup_plexserver(host, token, hass, add_devices_callback):
         for session in sessions:
             player = session.player
             if player.machineIdentifier is None:
+                # This prevents duplicate entities
                 continue
 
             plex_sessions[player.machineIdentifier] = session
