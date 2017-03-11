@@ -190,3 +190,14 @@ class MqttCover(CoverDevice):
         mqtt.async_publish(
             self.hass, self._command_topic, self._payload_stop, self._qos,
             self._retain)
+
+    @asyncio.coroutine
+    def async_set_cover_position(self, **kwargs):
+        """Set position
+
+        This method is a coroutine.
+        """
+        mqtt.async_publish(
+            self.hass, self._command_topic, kwargs["position"], self._qos,
+            self._retain)
+
