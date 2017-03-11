@@ -32,7 +32,6 @@ class VeraBinarySensor(VeraDevice, BinarySensorDevice):
         VeraDevice.__init__(self, vera_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
-
     @property
     def is_on(self):
         """Return true if sensor is on."""
