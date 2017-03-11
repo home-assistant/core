@@ -53,9 +53,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         duration = timedelta(hours=2, minutes=1)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', today, None, duration, 'test')
+            self.hass, 'test', None, 'on', today, None, duration, 'test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, today, duration, 'test')
+            self.hass, 'test', None, 'on', None, today, duration, 'test')
 
         sensor1.update_period()
         sensor2.update_period()
@@ -91,10 +91,11 @@ class TestHistoryStatsSensor(unittest.TestCase):
         end = Template('{{ now() }}', self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'binary_sensor.test_id', 'on', start, end, None, 'Test')
+            self.hass, 'binary_sensor.test_id', None, 'on',
+            start, end, None, 'Test')
 
         sensor2 = HistoryStatsSensor(
-            self.hass, 'unknown.id', 'on', start, end, None, 'Test')
+            self.hass, 'unknown.id', None, 'on', start, end, None, 'Test')
 
         with patch('homeassistant.components.history.'
                    'state_changes_during_period', return_value=fake_states):
@@ -113,9 +114,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         bad = Template('{{ TEST }}', self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', good, bad, None, 'Test')
+            self.hass, 'test', None, 'on', good, bad, None, 'Test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, good, None, 'Test')
+            self.hass, 'test', None, 'on', bad, good, None, 'Test')
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
@@ -153,9 +154,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         duration = '01:00'
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, None, duration, 'Test')
+            self.hass, 'test', None, 'on', bad, None, duration, 'Test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, bad, duration, 'Test')
+            self.hass, 'test', None, 'on', None, bad, duration, 'Test')
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period

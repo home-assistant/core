@@ -29,6 +29,7 @@ DEPENDENCIES = ['history']
 CONF_START = 'start'
 CONF_END = 'end'
 CONF_DURATION = 'duration'
+CONF_ATTRIBUTE = 'attribute'
 CONF_PERIOD_KEYS = [CONF_START, CONF_END, CONF_DURATION]
 
 DEFAULT_NAME = 'unnamed statistics'
@@ -58,6 +59,7 @@ def exactly_two_period_keys(conf):
 
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
+    vol.Required(CONF_ATTRIBUTE, default=None): cv.string,
     vol.Required(CONF_STATE): cv.slug,
     vol.Optional(CONF_START, default=None): cv.template,
     vol.Optional(CONF_END, default=None): cv.template,
@@ -70,6 +72,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the History Stats sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
+    attribute = config.get(CONF_ATTRIBUTE)
     entity_state = config.get(CONF_STATE)
     start = config.get(CONF_START)
     end = config.get(CONF_END)
@@ -81,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             template.hass = hass
 
     add_devices([HistoryStatsSensor(
-        hass, entity_id, entity_state, start, end, duration, name)])
+        hass, entity_id, attribute, entity_state, start, end, duration, name)])
 
     return True
 
@@ -89,12 +92,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HistoryStatsSensor(Entity):
     """Representation of a HistoryStats sensor."""
 
-    def __init__(
-            self, hass, entity_id, entity_state, start, end, duration, name):
+    def __init__(self, hass, entity_id, attribute,
+                 entity_state, start, end, duration, name):
         """Initialize the HistoryStats sensor."""
         self._hass = hass
 
         self._entity_id = entity_id
+        self._attribute = attribute
         self._entity_state = entity_state
         self._duration = duration
         self._start = start
@@ -164,13 +168,13 @@ class HistoryStatsSensor(Entity):
 
         # Get history between start and end
         history_list = history.state_changes_during_period(
-            self.hass, start, end, str(self._entity_id))
+            self._hass, start, end, str(self._entity_id))
 
         if self._entity_id not in history_list.keys():
             return
 
         # Get the first state
-        last_state = history.get_state(self.hass, start, self._entity_id)
+        last_state = history.get_state(self._hass, start, self._entity_id)
         last_state = (last_state is not None and
                       last_state == self._entity_state)
         last_time = dt_util.as_timestamp(start)
@@ -178,7 +182,18 @@ class HistoryStatsSensor(Entity):
 
         # Make calculations
         for item in history_list.get(self._entity_id):
-            current_state = item.state == self._entity_state
+            if self._attribute is not None:
+                if self._attribute not in item.attributes:
+                    _LOGGER.warning("%s not in %s attributes",
+                                    self._attribute, self._entity_id)
+                    # A state can not be False ?
+                    current_state = False
+                    break
+                else:
+                    current_state = (item.attributes[self._attribute] ==
+                                     self._entity_state)
+            else:
+                current_state = item.state == self._entity_state
             current_time = item.last_changed.timestamp()
 
             if last_state:
@@ -193,8 +208,9 @@ class HistoryStatsSensor(Entity):
                 datetime.datetime.now()))
             elapsed += measure_end - last_time
 
-        # Save value in hours
-        self.value = elapsed / 3600
+        if current_state is not False:
+            # Save value in hours
+            self.value = elapsed / 3600
 
     def update_period(self):
         """Parse the templates and store a datetime tuple in _period."""
