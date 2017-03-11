@@ -155,9 +155,22 @@ def setup_plexserver(host, token, hass, add_devices_callback):
             _LOGGER.exception('Error listing plex sessions')
             return
 
+        new_plex_clients = []
         plex_sessions.clear()
         for session in sessions:
-            plex_sessions[session.player.machineIdentifier] = session
+            player = session.player
+            if player.machineIdentifier is None:
+                continue
+
+            plex_sessions[player.machineIdentifier] = session
+            if player.machineIdentifier not in plex_clients:
+                new_client = PlexClient(player, plex_sessions, update_devices,
+                                        update_sessions)
+                plex_clients[player.machineIdentifier] = new_client
+                new_plex_clients.append(new_client)
+
+        if new_plex_clients:
+            add_devices_callback(new_plex_clients)
 
     update_devices()
     update_sessions()
@@ -336,7 +349,9 @@ class PlexClient(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_PLEX
+        if 'playback' in self.device.protocolCapabilities:
+            return SUPPORT_PLEX
+        return 0
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
