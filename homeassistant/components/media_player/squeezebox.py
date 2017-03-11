@@ -53,8 +53,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     if discovery_info is not None:
-        host = discovery_info[0]
-        port = None  # Port is not collected in netdisco 0.8.1
+        host = discovery_info.get("host")
+        port = discovery_info.get("port")
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
@@ -85,7 +85,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     players = yield from lms.create_players()
-    yield from async_add_devices(players)
+    async_add_devices(players)
 
     return True
 

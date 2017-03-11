@@ -54,7 +54,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera.get(CONF_NAME)
         ))
 
-    yield from async_add_devices(entities)
+    async_add_devices(entities)
 
 
 class ImageProcessingFaceEntity(ImageProcessingEntity):
@@ -108,8 +108,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
     def process_faces(self, faces, total):
         """Send event with detected faces and store data."""
         run_callback_threadsafe(
-            self.hass.loop, self.async_process_faces, faces, total
-        ).result()
+            self.hass.loop, self.async_process_faces, faces, total).result()
 
     @callback
     def async_process_faces(self, faces, total):

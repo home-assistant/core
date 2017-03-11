@@ -14,14 +14,13 @@ from homeassistant import config as conf_util, core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
-    STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE)
+    STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE, SERVICE_RELOAD)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'group'
 
@@ -43,7 +42,6 @@ SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_VISIBLE): cv.boolean
 })
 
-SERVICE_RELOAD = 'reload'
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,7 +96,7 @@ def is_on(hass, entity_id):
 
 def reload(hass):
     """Reload the automation from config."""
-    hass.services.call(DOMAIN, SERVICE_RELOAD)
+    hass.add_job(async_reload, hass)
 
 
 @asyncio.coroutine
@@ -365,7 +363,7 @@ class Group(Entity):
 
     def start(self):
         """Start tracking members."""
-        run_callback_threadsafe(self.hass.loop, self.async_start).result()
+        self.hass.add_job(self.async_start)
 
     @callback
     def async_start(self):
@@ -396,17 +394,16 @@ class Group(Entity):
         self._state = STATE_UNKNOWN
         self._async_update_group_state()
 
-    @asyncio.coroutine
     def async_remove(self):
         """Remove group from HASS.
 
-        This method must be run in the event loop.
+        This method must be run in the event loop and returns a coroutine.
         """
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
 
-        yield from super().async_remove()
+        return super().async_remove()
 
     @asyncio.coroutine
     def _async_state_changed_listener(self, entity_id, old_state, new_state):

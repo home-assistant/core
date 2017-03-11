@@ -1,4 +1,5 @@
 """The tests for the Owntracks device tracker."""
+import asyncio
 import json
 import os
 import unittest
@@ -9,9 +10,10 @@ from tests.common import (assert_setup_component, fire_mqtt_message,
                           get_test_home_assistant, mock_mqtt_component)
 
 import homeassistant.components.device_tracker.owntracks as owntracks
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
+from homeassistant.util.async import run_coroutine_threadsafe
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -640,6 +642,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     def test_waypoint_import_no_whitelist(self):
         """Test import of list of waypoints with no whitelist set."""
+        @asyncio.coroutine
         def mock_see(**kwargs):
             """Fake see method for owntracks."""
             return
@@ -649,7 +652,8 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
             CONF_MAX_GPS_ACCURACY: 200,
             CONF_WAYPOINT_IMPORT: True
         }
-        owntracks.setup_scanner(self.hass, test_config, mock_see)
+        run_coroutine_threadsafe(owntracks.async_setup_scanner(
+            self.hass, test_config, mock_see), self.hass.loop).result()
         waypoints_message = WAYPOINTS_EXPORTED_MESSAGE.copy()
         self.send_message(WAYPOINT_TOPIC_BLOCKED, waypoints_message)
         # Check if it made it into states

@@ -17,7 +17,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.4']
+REQUIREMENTS = ['limitlessled==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,7 +143,7 @@ def state(new_state):
                 pipeline.on()
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
-                transition_time = kwargs[ATTR_TRANSITION]
+                transition_time = int(kwargs[ATTR_TRANSITION])
             # Do group type-specific work.
             function(self, transition_time, pipeline, **kwargs)
             # Update state.
