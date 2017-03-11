@@ -6,9 +6,9 @@ https://home-assistant.io/components/cover.vera/
 """
 import logging
 
-from homeassistant.components.cover import (ENTITY_ID_FORMAT, CoverDevice)
+from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
 
 DEPENDENCIES = ['vera']
 

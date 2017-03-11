@@ -7,9 +7,9 @@ https://home-assistant.io/components/binary_sensor.vera/
 import logging
 
 from homeassistant.components.binary_sensor import (
-    ENTITY_ID_FORMAT, BinarySensorDevice)
+    BinarySensorDevice, ENTITY_ID_FORMAT)
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
 
 DEPENDENCIES = ['vera']
 

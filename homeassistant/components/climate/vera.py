@@ -7,14 +7,14 @@ https://home-assistant.io/components/switch.vera/
 import logging
 
 from homeassistant.util import convert
-from homeassistant.components.climate import (ENTITY_ID_FORMAT, ClimateDevice)
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE)
 
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
 
 DEPENDENCIES = ['vera']
 

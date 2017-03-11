@@ -6,10 +6,10 @@ https://home-assistant.io/components/lock.vera/
 """
 import logging
 
-from homeassistant.components.lock import (ENTITY_ID_FORMAT, LockDevice)
+from homeassistant.components.lock import ENTITY_ID_FORMAT, LockDevice
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
 
 _LOGGER = logging.getLogger(__name__)
 
