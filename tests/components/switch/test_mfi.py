@@ -2,7 +2,7 @@
 import unittest
 import unittest.mock as mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.switch as switch
 import homeassistant.components.switch.mfi as mfi
 from tests.components.sensor import test_mfi as test_mfi_sensor

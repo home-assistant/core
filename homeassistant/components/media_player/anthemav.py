@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug('dump_rawdata: '+avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
-    yield from async_add_devices([device])
+    async_add_devices([device])
 
 
 class AnthemAVR(MediaPlayerDevice):

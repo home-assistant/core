@@ -7,10 +7,10 @@ https://home-assistant.io/components/switch.vera/
 import logging
 
 from homeassistant.util import convert
-from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -31,6 +31,7 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         """Initialize the Vera device."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     def turn_on(self, **kwargs):
         """Turn device on."""

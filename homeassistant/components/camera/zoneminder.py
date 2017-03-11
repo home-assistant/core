@@ -75,4 +75,4 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.warning('No active cameras found')
         return
 
-    yield from async_add_devices(cameras)
+    async_add_devices(cameras)

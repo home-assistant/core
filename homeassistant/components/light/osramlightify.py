@@ -17,6 +17,8 @@ from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_RGB_COLOR,
     ATTR_TRANSITION, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, PLATFORM_SCHEMA)
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
@@ -24,10 +26,6 @@ REQUIREMENTS = ['https://github.com/tfriedel/python-lightify/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-TEMP_MIN = 2000  # lightify minimum temperature
-TEMP_MAX = 6500  # lightify maximum temperature
-TEMP_MIN_HASS = 154  # home assistant minimum temperature
-TEMP_MAX_HASS = 500  # home assistant maximum temperature
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
@@ -93,10 +91,10 @@ class OsramLightifyLight(Light):
         self._light = light
         self._light_id = light_id
         self.update_lights = update_lights
-        self._brightness = 0
-        self._rgb = (0, 0, 0)
-        self._name = ""
-        self._temperature = TEMP_MIN
+        self._brightness = None
+        self._rgb = None
+        self._name = None
+        self._temperature = None
         self._state = False
         self.update()
 
@@ -145,7 +143,7 @@ class OsramLightifyLight(Light):
         self._state = self._light.on()
 
         if ATTR_TRANSITION in kwargs:
-            transition = kwargs[ATTR_TRANSITION] * 10
+            transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_on requested transition time for light:"
                           " %s is: %s ",
                           self._name, transition)
@@ -164,8 +162,7 @@ class OsramLightifyLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
-            kelvin = int(((TEMP_MAX - TEMP_MIN) * (color_t - TEMP_MIN_HASS) /
-                          (TEMP_MAX_HASS - TEMP_MIN_HASS)) + TEMP_MIN)
+            kelvin = int(color_temperature_mired_to_kelvin(color_t))
             _LOGGER.debug("turn_on requested set_temperature for light:"
                           " %s: %s ", self._name, kelvin)
             self._light.set_temperature(kelvin, transition)
@@ -196,7 +193,7 @@ class OsramLightifyLight(Light):
         _LOGGER.debug("turn_off Attempting to turn off light: %s ",
                       self._name)
         if ATTR_TRANSITION in kwargs:
-            transition = kwargs[ATTR_TRANSITION] * 10
+            transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_off requested transition time for light:"
                           " %s is: %s ",
                           self._name, transition)
@@ -218,6 +215,5 @@ class OsramLightifyLight(Light):
         self._name = self._light.name()
         self._rgb = self._light.rgb()
         o_temp = self._light.temp()
-        self._temperature = int(TEMP_MIN_HASS + (TEMP_MAX_HASS - TEMP_MIN_HASS)
-                                * (o_temp - TEMP_MIN) / (TEMP_MAX - TEMP_MIN))
+        self._temperature = color_temperature_kelvin_to_mired(o_temp)
         self._state = self._light.on()

@@ -7,10 +7,10 @@ https://home-assistant.io/components/light.vera/
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
 from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +33,7 @@ class VeraLight(VeraDevice, Light):
         """Initialize the light."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def brightness(self):

@@ -1,8 +1,8 @@
 # linters such as flake8 and pylint should be pinned, as new releases
 # make new things fail. Manually update these pins when pulling in a
 # new version
-flake8==3.2.1
-pylint==1.6.4
+flake8==3.3
+pylint==1.6.5
 mypy-lang==0.4.5
 pydocstyle==1.1.1
 coveralls>=1.1

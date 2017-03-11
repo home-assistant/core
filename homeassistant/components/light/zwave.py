@@ -13,6 +13,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
     SUPPORT_RGB_COLOR, DOMAIN, Light
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
     color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
@@ -48,38 +49,25 @@ SUPPORT_ZWAVE_COLORTEMP = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
                            | SUPPORT_COLOR_TEMP)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and add Z-Wave lights."""
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
+def get_device(node, value, node_config, **kwargs):
+    """Create zwave entity device."""
     name = '{}.{}'.format(DOMAIN, zwave.object_id(value))
-    node_config = hass.data[zwave.DATA_DEVICE_CONFIG].get(name)
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
     _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
                   ' CONF_REFRESH_DELAY=%s', name, node_config,
                   refresh, delay)
-    if value.command_class != zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL:
-        return
-    if value.type != zwave.const.TYPE_BYTE:
-        return
-    if value.genre != zwave.const.GENRE_USER:
-        return
-
-    value.set_change_verified(False)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
-        add_devices([ZwaveColorLight(value, refresh, delay)])
+        return ZwaveColorLight(value, refresh, delay)
     else:
-        add_devices([ZwaveDimmer(value, refresh, delay)])
+        return ZwaveDimmer(value, refresh, delay)
 
 
 def brightness_state(value):
     """Return the brightness and state."""
     if value.data > 0:
-        return (value.data / 99) * 255, STATE_ON
+        return round((value.data / 99) * 255, 0), STATE_ON
     else:
         return 0, STATE_OFF
 
@@ -119,7 +107,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # Brightness
         self._brightness, self._state = brightness_state(self._value)
 
-    def value_changed(self, value):
+    def value_changed(self):
         """Called when a value for this entity's node has changed."""
         if self._refresh_value:
             if self._refreshing:
@@ -136,7 +124,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
                 self._timer = Timer(self._delay, _refresh_value)
                 self._timer.start()
                 return
-        super().value_changed(value)
+        super().value_changed()
 
     @property
     def brightness(self):
@@ -199,6 +187,12 @@ class ZwaveColorLight(ZwaveDimmer):
         dispatcher.connect(
             self._value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED)
         self._get_color_values()
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return [val.value_id for val in [
+            self._value_color, self._value_color_channels] if val]
 
     def _get_color_values(self):
         """Search for color values available on this node."""

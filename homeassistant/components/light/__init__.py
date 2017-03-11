@@ -24,8 +24,6 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
-from homeassistant.util.async import run_callback_threadsafe
-
 
 DOMAIN = "light"
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -88,7 +86,7 @@ PROP_TO_ATTR = {
 }
 
 # Service call validation schemas
-VALID_TRANSITION = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=900))
+VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
@@ -145,10 +143,10 @@ def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
             profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_on, hass, entity_id, transition, brightness,
+    hass.add_job(
+        async_turn_on, hass, entity_id, transition, brightness,
         rgb_color, xy_color, color_temp, white_value,
-        profile, flash, effect, color_name).result()
+        profile, flash, effect, color_name)
 
 
 @callback
@@ -178,8 +176,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
 
 def turn_off(hass, entity_id=None, transition=None):
     """Turn all or specified light off."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_off, hass, entity_id, transition).result()
+    hass.add_job(async_turn_off, hass, entity_id, transition)
 
 
 @callback

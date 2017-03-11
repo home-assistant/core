@@ -4,10 +4,10 @@ import asyncio
 import unittest
 import logging
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 from homeassistant.core import CoreState, State
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
     DOMAIN, is_on, toggle, turn_off, turn_on)
 from homeassistant.const import (
@@ -118,7 +118,7 @@ def test_restore_state(hass):
     }
 
     hass.state = CoreState.starting
-    hass.config.components.add('recorder')
+    mock_component(hass, 'recorder')
 
     yield from async_setup_component(hass, DOMAIN, {
         DOMAIN: {

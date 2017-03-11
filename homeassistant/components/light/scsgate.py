@@ -106,7 +106,7 @@ class SCSGateLight(Light):
             return
 
         self._toggled = message.toggled
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         command = "off"
         if self._toggled:

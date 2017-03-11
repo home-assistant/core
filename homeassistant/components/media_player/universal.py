@@ -63,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config[CONF_ATTRS]
     )
 
-    yield from async_add_devices([player])
+    async_add_devices([player])
 
 
 def validate_config(config):

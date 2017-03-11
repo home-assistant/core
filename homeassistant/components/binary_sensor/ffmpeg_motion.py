@@ -57,16 +57,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     # generate sensor object
     entity = FFmpegMotion(hass, manager, config)
-
-    # add to system
-    manager.async_register_device(entity)
-    yield from async_add_devices([entity])
+    async_add_devices([entity])
 
 
 class FFmpegBinarySensor(FFmpegBase, BinarySensorDevice):
     """A binary sensor which use ffmpeg for noise detection."""
 
-    def __init__(self, hass, config):
+    def __init__(self, config):
         """Constructor for binary sensor noise detection."""
         super().__init__(config.get(CONF_INITIAL_STATE))
 
@@ -98,15 +95,19 @@ class FFmpegMotion(FFmpegBinarySensor):
         """Initialize ffmpeg motion binary sensor."""
         from haffmpeg import SensorMotion
 
-        super().__init__(hass, config)
+        super().__init__(config)
         self.ffmpeg = SensorMotion(
             manager.binary, hass.loop, self._async_callback)
 
-    def async_start_ffmpeg(self):
+    @asyncio.coroutine
+    def _async_start_ffmpeg(self, entity_ids):
         """Start a FFmpeg instance.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
+        if entity_ids is not None and self.entity_id not in entity_ids:
+            return
+
         # init config
         self.ffmpeg.set_options(
             time_reset=self._config.get(CONF_RESET),
@@ -116,7 +117,7 @@ class FFmpegMotion(FFmpegBinarySensor):
         )
 
         # run
-        return self.ffmpeg.open_sensor(
+        yield from self.ffmpeg.open_sensor(
             input_source=self._config.get(CONF_INPUT),
             extra_cmd=self._config.get(CONF_EXTRA_ARGUMENTS),
         )

@@ -14,8 +14,14 @@ omit =
     homeassistant/components/arduino.py
     homeassistant/components/*/arduino.py
 
+    homeassistant/components/android_ip_webcam.py
+    homeassistant/components/*/android_ip_webcam.py
+
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
+
+    homeassistant/components/blink.py
+    homeassistant/components/*/blink.py
 
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
@@ -85,6 +91,10 @@ omit =
 
     homeassistant/components/*/thinkingcleaner.py
 
+    homeassistant/components/twilio.py
+    homeassistant/components/notify/twilio_sms.py
+    homeassistant/components/notify/twilio_call.py
+
     homeassistant/components/vera.py
     homeassistant/components/*/vera.py
 
@@ -131,6 +141,9 @@ omit =
 
     homeassistant/components/zabbix.py
     homeassistant/components/*/zabbix.py
+
+    homeassistant/components/maxcube.py
+    homeassistant/components/*/maxcube.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
@@ -231,6 +244,7 @@ omit =
     homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/firetv.py
+    homeassistant/components/media_player/frontier_silicon.py
     homeassistant/components/media_player/gpmdp.py
     homeassistant/components/media_player/gstreamer.py
     homeassistant/components/media_player/hdmi_cec.py
@@ -259,6 +273,7 @@ omit =
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
+    homeassistant/components/notify/ciscospark.py
     homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
@@ -286,8 +301,6 @@ omit =
     homeassistant/components/notify/syslog.py
     homeassistant/components/notify/telegram.py
     homeassistant/components/notify/telstra.py
-    homeassistant/components/notify/twilio_sms.py
-    homeassistant/components/notify/twilio_call.py
     homeassistant/components/notify/twitter.py
     homeassistant/components/notify/xmpp.py
     homeassistant/components/nuimo_controller.py
@@ -303,12 +316,14 @@ omit =
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/coinmarketcap.py
+    homeassistant/components/sensor/comed_hourly_pricing.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/cups.py
     homeassistant/components/sensor/currencylayer.py
     homeassistant/components/sensor/darksky.py
     homeassistant/components/sensor/deutsche_bahn.py
     homeassistant/components/sensor/dht.py
+    homeassistant/components/sensor/dnsip.py
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/ebox.py
@@ -333,11 +348,12 @@ omit =
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/influxdb.py
+    homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
-    homeassistant/components/sensor/mhz19.py
     homeassistant/components/sensor/miflora.py
+    homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mqtt_room.py
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/neurio_energy.py
@@ -411,6 +427,7 @@ omit =
     homeassistant/components/upnp.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/openweathermap.py
+    homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
 
 

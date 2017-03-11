@@ -66,7 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], params, confidence, camera.get(CONF_NAME)
         ))
 
-    yield from async_add_devices(entities)
+    async_add_devices(entities)
 
 
 class OpenAlprCloudEntity(ImageProcessingAlprEntity):

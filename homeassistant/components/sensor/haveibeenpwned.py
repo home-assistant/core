@@ -110,7 +110,7 @@ class HaveIBeenPwnedSensor(Entity):
 
         if self._email in self._data.data:
             self._state = len(self._data.data[self._email])
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update data and see if it contains data for our email."""
