@@ -10,41 +10,25 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Z-Wave sensors."""
-    # Return on empty `discovery_info`. Given you configure HA with:
-    #
-    # sensor:
-    #   platform: zwave
-    #
-    # `setup_platform` will be called without `discovery_info`.
-    if discovery_info is None or zwave.NETWORK is None:
-        return
-
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-
-    value.set_change_verified(False)
-
-    # if 1 in groups and (NETWORK.controller.node_id not in
-    #                     groups[1].associations):
-    #     node.groups[1].add_association(NETWORK.controller.node_id)
-
+def get_device(node, value, **kwargs):
+    """Create zwave entity device."""
     # Generic Device mappings
+    if value.command_class == zwave.const.COMMAND_CLASS_BATTERY:
+        return ZWaveSensor(value)
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
-        add_devices([ZWaveMultilevelSensor(value)])
-
-    elif node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
+        return ZWaveMultilevelSensor(value)
+    if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
             value.type == zwave.const.TYPE_DECIMAL:
-        add_devices([ZWaveMultilevelSensor(value)])
-
-    elif node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
+        return ZWaveMultilevelSensor(value)
+    if node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
             node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
-        add_devices([ZWaveAlarmSensor(value)])
+        return ZWaveAlarmSensor(value)
+    return None
 
 
 class ZWaveSensor(zwave.ZWaveDeviceEntity):

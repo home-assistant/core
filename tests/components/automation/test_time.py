@@ -4,12 +4,13 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
 from tests.common import (
-    fire_time_changed, get_test_home_assistant, assert_setup_component)
+    fire_time_changed, get_test_home_assistant, assert_setup_component,
+    mock_component)
 
 
 # pylint: disable=invalid-name
@@ -19,7 +20,7 @@ class TestAutomationTime(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.add('group')
+        mock_component(self.hass, 'group')
         self.calls = []
 
         @callback

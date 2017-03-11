@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from astral import Astral
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 from homeassistant.const import MATCH_ALL
 from homeassistant.helpers.event import (

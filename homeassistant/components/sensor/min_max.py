@@ -61,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
 
-    yield from async_add_devices(
+    async_add_devices(
         [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
         True)
     return True

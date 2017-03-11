@@ -98,7 +98,7 @@ class LIFX(object):
                           ipaddr, name, power, hue, sat, bri, kel)
             bulb.set_power(power)
             bulb.set_color(hue, sat, bri, kel)
-            bulb.update_ha_state()
+            bulb.schedule_update_ha_state()
 
     def on_color(self, ipaddr, hue, sat, bri, kel):
         """Initialize the light."""
@@ -106,7 +106,7 @@ class LIFX(object):
 
         if bulb is not None:
             bulb.set_color(hue, sat, bri, kel)
-            bulb.update_ha_state()
+            bulb.schedule_update_ha_state()
 
     def on_power(self, ipaddr, power):
         """Initialize the light."""
@@ -114,7 +114,7 @@ class LIFX(object):
 
         if bulb is not None:
             bulb.set_power(power)
-            bulb.update_ha_state()
+            bulb.schedule_update_ha_state()
 
     # pylint: disable=unused-argument
     def poll(self, now):
@@ -202,7 +202,7 @@ class LIFXLight(Light):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 1000
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 
@@ -230,15 +230,17 @@ class LIFXLight(Light):
                       hue, saturation, brightness, kelvin, fade)
 
         if self._power == 0:
+            self._liffylights.set_color(self._ip, hue, saturation,
+                                        brightness, kelvin, 0)
             self._liffylights.set_power(self._ip, 65535, fade)
-
-        self._liffylights.set_color(self._ip, hue, saturation,
-                                    brightness, kelvin, fade)
+        else:
+            self._liffylights.set_color(self._ip, hue, saturation,
+                                        brightness, kelvin, fade)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if ATTR_TRANSITION in kwargs:
-            fade = kwargs[ATTR_TRANSITION] * 1000
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 

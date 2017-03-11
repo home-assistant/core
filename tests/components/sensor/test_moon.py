@@ -4,7 +4,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 import homeassistant.util.dt as dt_util
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -37,7 +37,7 @@ class TestMoonSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.moon_day1')
-        self.assertEqual(state.state, 'New moon')
+        self.assertEqual(state.state, 'Waxing crescent')
 
     @patch('homeassistant.components.sensor.moon.dt_util.utcnow',
            return_value=DAY2)
@@ -53,4 +53,4 @@ class TestMoonSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', config)
 
         state = self.hass.states.get('sensor.moon_day2')
-        self.assertEqual(state.state, 'Full moon')
+        self.assertEqual(state.state, 'Waning gibbous')

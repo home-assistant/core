@@ -18,7 +18,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers import service, event
-from homeassistant.util.async import run_callback_threadsafe
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -62,8 +61,7 @@ def is_on(hass, entity_id):
 
 def turn_on(hass, entity_id):
     """Reset the alert."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_on, hass, entity_id).result()
+    hass.add_job(async_turn_on, hass, entity_id)
 
 
 @callback
@@ -76,8 +74,7 @@ def async_turn_on(hass, entity_id):
 
 def turn_off(hass, entity_id):
     """Acknowledge alert."""
-    run_callback_threadsafe(
-        hass.loop, async_turn_off, hass, entity_id).result()
+    hass.add_job(async_turn_off, hass, entity_id)
 
 
 @callback
@@ -90,7 +87,7 @@ def async_turn_off(hass, entity_id):
 
 def toggle(hass, entity_id):
     """Toggle acknowledgement of alert."""
-    run_callback_threadsafe(hass.loop, async_toggle, hass, entity_id)
+    hass.add_job(async_toggle, hass, entity_id)
 
 
 @callback

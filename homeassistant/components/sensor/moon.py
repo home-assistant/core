@@ -33,7 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Moon sensor."""
     name = config.get(CONF_NAME)
 
-    yield from async_add_devices([MoonSensor(name)], True)
+    async_add_devices([MoonSensor(name)], True)
     return True
 
 
@@ -53,14 +53,22 @@ class MoonSensor(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state >= 21:
-            return 'Last quarter'
-        elif self._state >= 14:
-            return 'Full moon'
-        elif self._state >= 7:
-            return 'First quarter'
-        else:
+        if self._state == 0:
             return 'New moon'
+        elif self._state < 7:
+            return 'Waxing crescent'
+        elif self._state == 7:
+            return 'First quarter'
+        elif self._state < 14:
+            return 'Waxing gibbous'
+        elif self._state == 14:
+            return 'Full moon'
+        elif self._state < 21:
+            return 'Waning gibbous'
+        elif self._state == 21:
+            return 'Last quarter'
+        else:
+            return 'Waning crescent'
 
     @property
     def icon(self):

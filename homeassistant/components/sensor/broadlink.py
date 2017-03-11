@@ -32,7 +32,7 @@ SENSOR_TYPES = {
     'air_quality': ['Air Quality', ' '],
     'humidity': ['Humidity', '%'],
     'light': ['Light', ' '],
-    'noise': ['Noise', ' ']
+    'noise': ['Noise', ' '],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -110,28 +110,33 @@ class BroadlinkData(object):
         self.data = None
         self._device = broadlink.a1((ip_addr, 80), mac_addr)
         self._device.timeout = timeout
+        self._schema = vol.Schema({
+            vol.Optional('temperature'): vol.Range(min=-50, max=150),
+            vol.Optional('humidity'): vol.Range(min=0, max=100),
+            vol.Optional('light'): vol.Any(0, 1, 2, 3),
+            vol.Optional('air_quality'): vol.Any(0, 1, 2, 3),
+            vol.Optional('noise'): vol.Any(0, 1, 2),
+            })
         self.update = Throttle(interval)(self._update)
         if not self._auth():
-            _LOGGER.error("Failed to connect to device.")
+            _LOGGER.warning("Failed to connect to device.")
 
-    def _update(self, retry=2):
+    def _update(self, retry=3):
         try:
             data = self._device.check_sensors_raw()
-            if (data is not None and data.get('humidity', 0) <= 100 and
-                    data.get('light', 0) in [0, 1, 2, 3] and
-                    data.get('air_quality', 0) in [0, 1, 2, 3] and
-                    data.get('noise', 0) in [0, 1, 2]):
-                self.data = data
+            if data is not None:
+                self.data = self._schema(data)
                 return
         except socket.timeout as error:
             if retry < 1:
                 _LOGGER.error(error)
                 return
-        if retry < 1 or not self._auth():
-            return
-        self._update(retry-1)
+        except vol.Invalid:
+            pass  # Continue quietly if device returned malformed data
+        if retry > 0 and self._auth():
+            self._update(retry-1)
 
-    def _auth(self, retry=2):
+    def _auth(self, retry=3):
         try:
             auth = self._device.auth()
         except socket.timeout:

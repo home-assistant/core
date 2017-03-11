@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_TOGGLE, STATE_ON, CONF_ALIAS)
+    SERVICE_TOGGLE, SERVICE_RELOAD, STATE_ON, CONF_ALIAS)
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -25,7 +25,6 @@ from homeassistant.helpers.script import Script
 DOMAIN = "script"
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 GROUP_NAME_ALL_SCRIPTS = 'all scripts'
-DEPENDENCIES = ["group"]
 
 CONF_SEQUENCE = "sequence"
 
@@ -50,11 +49,17 @@ SCRIPT_TURN_ONOFF_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_VARIABLES): dict,
 })
+RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
 def is_on(hass, entity_id):
     """Return if the script is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
+
+
+def reload(hass):
+    """Reload script component."""
+    hass.services.call(DOMAIN, SERVICE_RELOAD)
 
 
 def turn_on(hass, entity_id, variables=None):
@@ -77,29 +82,19 @@ def toggle(hass, entity_id):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Load the scripts from the configuration."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass,
-                                group_name=GROUP_NAME_ALL_SCRIPTS)
+    component = EntityComponent(
+        _LOGGER, DOMAIN, hass, group_name=GROUP_NAME_ALL_SCRIPTS)
+
+    yield from _async_process_config(hass, config, component)
 
     @asyncio.coroutine
-    def service_handler(service):
-        """Execute a service call to script.<script name>."""
-        entity_id = ENTITY_ID_FORMAT.format(service.service)
-        script = component.entities.get(entity_id)
-        if script.is_on:
-            _LOGGER.warning("Script %s already running.", entity_id)
+    def reload_service(service):
+        """Call a service to reload scripts."""
+        conf = yield from component.async_prepare_reload()
+        if conf is None:
             return
-        yield from script.async_turn_on(variables=service.data)
 
-    scripts = []
-
-    for object_id, cfg in config[DOMAIN].items():
-        alias = cfg.get(CONF_ALIAS, object_id)
-        script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
-        scripts.append(script)
-        hass.services.async_register(DOMAIN, object_id, service_handler,
-                                     schema=SCRIPT_SERVICE_SCHEMA)
-
-    yield from component.async_add_entities(scripts)
+        yield from _async_process_config(hass, conf, component)
 
     @asyncio.coroutine
     def turn_on_service(service):
@@ -124,13 +119,41 @@ def async_setup(hass, config):
         for script in component.async_extract_from_service(service):
             yield from script.async_toggle()
 
+    hass.services.async_register(DOMAIN, SERVICE_RELOAD, reload_service,
+                                 schema=RELOAD_SERVICE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_TURN_ON, turn_on_service,
                                  schema=SCRIPT_TURN_ONOFF_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_TURN_OFF, turn_off_service,
                                  schema=SCRIPT_TURN_ONOFF_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_TOGGLE, toggle_service,
                                  schema=SCRIPT_TURN_ONOFF_SCHEMA)
+
     return True
+
+
+@asyncio.coroutine
+def _async_process_config(hass, config, component):
+    """Process group configuration."""
+    @asyncio.coroutine
+    def service_handler(service):
+        """Execute a service call to script.<script name>."""
+        entity_id = ENTITY_ID_FORMAT.format(service.service)
+        script = component.entities.get(entity_id)
+        if script.is_on:
+            _LOGGER.warning("Script %s already running.", entity_id)
+            return
+        yield from script.async_turn_on(variables=service.data)
+
+    scripts = []
+
+    for object_id, cfg in config[DOMAIN].items():
+        alias = cfg.get(CONF_ALIAS, object_id)
+        script = ScriptEntity(hass, object_id, alias, cfg[CONF_SEQUENCE])
+        scripts.append(script)
+        hass.services.async_register(
+            DOMAIN, object_id, service_handler, schema=SCRIPT_SERVICE_SCHEMA)
+
+    yield from component.async_add_entities(scripts)
 
 
 class ScriptEntity(ToggleEntity):
@@ -177,3 +200,16 @@ class ScriptEntity(ToggleEntity):
     def async_turn_off(self, **kwargs):
         """Turn script off."""
         self.script.async_stop()
+
+    def async_remove(self):
+        """Remove script from HASS.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if self.script.is_running:
+            self.script.async_stop()
+
+        # remove service
+        self.hass.services.async_remove(DOMAIN, self.object_id)
+
+        return super().async_remove()

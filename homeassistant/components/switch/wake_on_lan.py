@@ -85,11 +85,11 @@ class WOLSwitch(SwitchDevice):
     def update(self):
         """Check if device is on and update the state."""
         if platform.system().lower() == 'windows':
-            ping_cmd = 'ping -n 1 -w {} {}'.format(
-                DEFAULT_PING_TIMEOUT * 1000, self._host)
+            ping_cmd = ['ping', '-n', '1', '-w',
+                        str(DEFAULT_PING_TIMEOUT * 1000), self._host]
         else:
-            ping_cmd = 'ping -c 1 -W {} {}'.format(
-                DEFAULT_PING_TIMEOUT, self._host)
+            ping_cmd = ['ping', '-c', '1', '-W',
+                        str(DEFAULT_PING_TIMEOUT), self._host]
 
-        status = sp.getstatusoutput(ping_cmd)[0]
+        status = sp.call(ping_cmd, stdout=sp.DEVNULL)
         self._state = not bool(status)

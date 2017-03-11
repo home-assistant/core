@@ -46,7 +46,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         devices.append(TimeDateSensor(variable))
 
-    yield from async_add_devices(devices, True)
+    async_add_devices(devices, True)
     return True
 
 

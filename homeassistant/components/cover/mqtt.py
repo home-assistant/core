@@ -54,7 +54,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    yield from async_add_devices([MqttCover(
+    async_add_devices([MqttCover(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
