@@ -84,6 +84,7 @@ class TadoDataStore:
                     _LOGGER.info("querying mytado.com for zone %s %s",
                                  sensor["id"], sensor["name"])
                     data = self.tado.getState(sensor["id"])
+
                 if "device" in sensor:
                     _LOGGER.info("querying mytado.com for device %s %s",
                                  sensor["id"], sensor["name"])
