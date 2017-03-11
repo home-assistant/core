@@ -36,7 +36,8 @@ PLATFORM_SCHEMA = vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_TYPE):
-                vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID, TYPE_TOGGLE),
+                vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
+                        TYPE_HYBRID, TYPE_TOGGLE),
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -248,7 +249,7 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
 
 class ToggleRflinkLight(SwitchableRflinkDevice, Light):
     """Rflink light device which sends out only 'on' commands.
-    
+
     Some switches like for example Livolo light switches use the
     same 'on' command to switch on and switch off the lights.
     If the light is on and 'on' gets sent, the light will turn off
