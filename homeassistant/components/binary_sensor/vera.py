@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.vera/
 import logging
 
 from homeassistant.components.binary_sensor import (
-    BinarySensorDevice)
+    ENTITY_ID_FORMAT, BinarySensorDevice)
 from homeassistant.components.vera import (
     VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
 
@@ -30,6 +30,8 @@ class VeraBinarySensor(VeraDevice, BinarySensorDevice):
         """Initialize the binary_sensor."""
         self._state = False
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
+
 
     @property
     def is_on(self):
