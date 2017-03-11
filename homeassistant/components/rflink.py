@@ -317,6 +317,10 @@ class RflinkCommand(RflinkDevice):
             cmd = str(int(args[0] / 17))
             self._state = True
 
+        elif command == 'toggle':
+            cmd = 'on'
+            self._state = not self._state
+
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
