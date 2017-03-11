@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.wemo/
 """
 import logging
+from datetime import datetime, timedelta
 
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
@@ -110,10 +111,29 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params or (self.coffeemaker_mode is not None):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
+        if self.insight_params:
+            attr['on_latest_time'] = \
+                WemoSwitch.as_uptime(self.insight_params['onfor'])
+            attr['on_today_time'] = \
+                WemoSwitch.as_uptime(self.insight_params['ontoday'])
+            attr['on_total_time'] = \
+                WemoSwitch.as_uptime(self.insight_params['ontotal'])
+            attr['power_threshold_mw'] = \
+                self.insight_params['powerthreshold']
+
         if self.coffeemaker_mode is not None:
             attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
 
         return attr
+
+    @staticmethod
+    def as_uptime(_seconds):
+        """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
+        uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
+        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(uptime.day-1,
+                                                            uptime.hour,
+                                                            uptime.minute,
+                                                            uptime.second)
 
     @property
     def current_power_mwh(self):

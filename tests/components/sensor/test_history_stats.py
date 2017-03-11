@@ -53,9 +53,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         duration = timedelta(hours=2, minutes=1)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', today, None, duration, 'test')
+            self.hass, 'test', 'on', today, None, duration, 'time', 'test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, today, duration, 'test')
+            self.hass, 'test', 'on', None, today, duration, 'time', 'test')
 
         sensor1.update_period()
         sensor2.update_period()
@@ -91,10 +91,23 @@ class TestHistoryStatsSensor(unittest.TestCase):
         end = Template('{{ now() }}', self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'binary_sensor.test_id', 'on', start, end, None, 'Test')
+            self.hass, 'binary_sensor.test_id', 'on', start, end, None,
+            'time', 'Test')
 
         sensor2 = HistoryStatsSensor(
-            self.hass, 'unknown.id', 'on', start, end, None, 'Test')
+            self.hass, 'unknown.id', 'on', start, end, None, 'time', 'Test')
+
+        sensor3 = HistoryStatsSensor(
+            self.hass, 'binary_sensor.test_id', 'on', start, end, None,
+            'count', 'test')
+
+        sensor4 = HistoryStatsSensor(
+            self.hass, 'binary_sensor.test_id', 'on', start, end, None,
+            'ratio', 'test')
+
+        self.assertEqual(sensor1._type, 'time')
+        self.assertEqual(sensor3._type, 'count')
+        self.assertEqual(sensor4._type, 'ratio')
 
         with patch('homeassistant.components.history.'
                    'state_changes_during_period', return_value=fake_states):
@@ -102,10 +115,13 @@ class TestHistoryStatsSensor(unittest.TestCase):
                        return_value=None):
                 sensor1.update()
                 sensor2.update()
+                sensor3.update()
+                sensor4.update()
 
-        self.assertEqual(round(sensor1.value, 3), 0.5)
-        self.assertEqual(round(sensor2.value, 3), 0)
-        self.assertEqual(sensor1.device_state_attributes['ratio'], '50.0%')
+        self.assertEqual(sensor1.state, 0.5)
+        self.assertEqual(sensor2.state, 0)
+        self.assertEqual(sensor3.state, 2)
+        self.assertEqual(sensor4.state, 50)
 
     def test_wrong_date(self):
         """Test when start or end value is not a timestamp or a date."""
@@ -113,9 +129,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         bad = Template('{{ TEST }}', self.hass)
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', good, bad, None, 'Test')
+            self.hass, 'test', 'on', good, bad, None, 'time', 'Test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, good, None, 'Test')
+            self.hass, 'test', 'on', bad, good, None, 'time', 'Test')
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period
@@ -153,9 +169,9 @@ class TestHistoryStatsSensor(unittest.TestCase):
         duration = '01:00'
 
         sensor1 = HistoryStatsSensor(
-            self.hass, 'test', 'on', bad, None, duration, 'Test')
+            self.hass, 'test', 'on', bad, None, duration, 'time', 'Test')
         sensor2 = HistoryStatsSensor(
-            self.hass, 'test', 'on', None, bad, duration, 'Test')
+            self.hass, 'test', 'on', None, bad, duration, 'time', 'Test')
 
         before_update1 = sensor1._period
         before_update2 = sensor2._period

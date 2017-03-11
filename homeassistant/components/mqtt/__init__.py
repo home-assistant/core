@@ -9,6 +9,7 @@ import logging
 import os
 import socket
 import time
+import requests.certs
 
 import voluptuous as vol
 
@@ -22,8 +23,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
+    EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
+    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -310,6 +311,10 @@ def async_setup(hass, config):
         certificate = os.path.join(os.path.dirname(__file__),
                                    'addtrustexternalcaroot.crt')
 
+    # When the port indicates mqtts, use bundled certificates from requests
+    if certificate is None and port == 8883:
+        certificate = requests.certs.where()
+
     will_message = conf.get(CONF_WILL_MESSAGE)
     birth_message = conf.get(CONF_BIRTH_MESSAGE)
 
@@ -326,18 +331,11 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_stop_mqtt(event):
         """Stop MQTT component."""
-        yield from hass.data[DATA_MQTT].async_stop()
+        yield from hass.data[DATA_MQTT].async_disconnect()
 
-    @asyncio.coroutine
-    def async_start_mqtt(event):
-        """Launch MQTT component when Home Assistant starts up."""
-        yield from hass.data[DATA_MQTT].async_start()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_mqtt)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
     success = yield from hass.data[DATA_MQTT].async_connect()
-
     if not success:
         return False
 
@@ -437,13 +435,12 @@ class MQTT(object):
         with (yield from self._paho_lock):
             yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.publish, topic, payload, qos, retain)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
 
     @asyncio.coroutine
     def async_connect(self):
-        """Connect to the host. Does not process messages yet.
+        """Connect to the host. Does process messages yet.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         result = yield from self.hass.loop.run_in_executor(
             None, self._mqttc.connect, self.broker, self.port, self.keepalive)
@@ -451,17 +448,12 @@ class MQTT(object):
         if result != 0:
             import paho.mqtt.client as mqtt
             _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
+        else:
+            self._mqttc.loop_start()
 
         return not result
 
-    def async_start(self):
-        """Run the MQTT client.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(None, self._mqttc.loop_start)
-
-    def async_stop(self):
+    def async_disconnect(self):
         """Stop the MQTT client.
 
         This method must be run in the event loop and returns a coroutine.
@@ -488,7 +480,6 @@ class MQTT(object):
 
             result, mid = yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.subscribe, topic, qos)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
 
             _raise_on_error(result)
             self.progress[mid] = topic

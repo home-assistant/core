@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
+from functools import wraps
 import logging
 import urllib
 
@@ -18,11 +19,12 @@ from homeassistant.components.media_player import (
     PLATFORM_SCHEMA)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
-    CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_PASSWORD,
+    CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.deprecation import get_deprecated
 
 REQUIREMENTS = ['jsonrpc-async==0.4', 'jsonrpc-websocket==0.2']
 
@@ -36,7 +38,7 @@ DEFAULT_NAME = 'Kodi'
 DEFAULT_PORT = 8080
 DEFAULT_TCP_PORT = 9090
 DEFAULT_TIMEOUT = 5
-DEFAULT_SSL = False
+DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
 
 TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
@@ -50,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
@@ -65,7 +67,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     tcp_port = config.get(CONF_TCP_PORT)
-    encryption = config.get(CONF_SSL)
+    encryption = get_deprecated(config, CONF_PROXY_SSL, CONF_SSL)
     websocket = config.get(CONF_ENABLE_WEBSOCKET)
 
     if host.startswith('http://') or host.startswith('https://'):
@@ -84,6 +86,26 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         turn_off_action=config.get(CONF_TURN_OFF_ACTION), websocket=websocket)
 
     async_add_devices([entity], update_before_add=True)
+
+
+def cmd(func):
+    """Decorator to catch command exceptions."""
+    @wraps(func)
+    @asyncio.coroutine
+    def wrapper(obj, *args, **kwargs):
+        """Wrapper for all command methods."""
+        import jsonrpc_base
+        try:
+            yield from func(obj, *args, **kwargs)
+        except jsonrpc_base.jsonrpc.TransportError as exc:
+            # If Kodi is off, we expect calls to fail.
+            if obj.state == STATE_OFF:
+                log_function = _LOGGER.info
+            else:
+                log_function = _LOGGER.error
+            log_function("Error calling %s on entity %s: %r",
+                         func.__name__, obj.entity_id, exc)
+    return wrapper
 
 
 class KodiDevice(MediaPlayerDevice):
@@ -371,6 +393,7 @@ class KodiDevice(MediaPlayerDevice):
 
         return supported_features
 
+    @cmd
     @asyncio.coroutine
     def async_turn_off(self):
         """Execute turn_off_action to turn off media player."""
@@ -387,18 +410,21 @@ class KodiDevice(MediaPlayerDevice):
         else:
             _LOGGER.warning('turn_off requested but turn_off_action is none')
 
+    @cmd
     @asyncio.coroutine
     def async_volume_up(self):
         """Volume up the media player."""
         assert (
             yield from self.server.Input.ExecuteAction('volumeup')) == 'OK'
 
+    @cmd
     @asyncio.coroutine
     def async_volume_down(self):
         """Volume down the media player."""
         assert (
             yield from self.server.Input.ExecuteAction('volumedown')) == 'OK'
 
+    @cmd
     def async_set_volume_level(self, volume):
         """Set volume level, range 0..1.
 
@@ -406,6 +432,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self.server.Application.SetVolume(int(volume * 100))
 
+    @cmd
     def async_mute_volume(self, mute):
         """Mute (true) or unmute (false) media player.
 
@@ -418,10 +445,11 @@ class KodiDevice(MediaPlayerDevice):
         """Helper method for play/pause/toggle."""
         players = yield from self._get_players()
 
-        if len(players) != 0:
+        if players is not None and len(players) != 0:
             yield from self.server.Player.PlayPause(
                 players[0]['playerid'], state)
 
+    @cmd
     def async_media_play_pause(self):
         """Pause media on media player.
 
@@ -429,6 +457,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self.async_set_play_state('toggle')
 
+    @cmd
     def async_media_play(self):
         """Play media.
 
@@ -436,6 +465,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self.async_set_play_state(True)
 
+    @cmd
     def async_media_pause(self):
         """Pause the media player.
 
@@ -443,6 +473,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self.async_set_play_state(False)
 
+    @cmd
     @asyncio.coroutine
     def async_media_stop(self):
         """Stop the media player."""
@@ -465,6 +496,7 @@ class KodiDevice(MediaPlayerDevice):
             yield from self.server.Player.GoTo(
                 players[0]['playerid'], direction)
 
+    @cmd
     def async_media_next_track(self):
         """Send next track command.
 
@@ -472,6 +504,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self._goto('next')
 
+    @cmd
     def async_media_previous_track(self):
         """Send next track command.
 
@@ -479,6 +512,7 @@ class KodiDevice(MediaPlayerDevice):
         """
         return self._goto('previous')
 
+    @cmd
     @asyncio.coroutine
     def async_media_seek(self, position):
         """Send seek command."""
@@ -500,6 +534,7 @@ class KodiDevice(MediaPlayerDevice):
         if len(players) != 0:
             yield from self.server.Player.Seek(players[0]['playerid'], time)
 
+    @cmd
     def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player.
 
