@@ -1,19 +1,15 @@
 """tado component to create some sensors for each zone."""
 
 import logging
-from datetime import timedelta
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 #  DOMAIN = 'tado_v1'
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = ['temperature', 'humidity', 'power',
                 'link', 'heating', 'tado mode', 'overlay']
-
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -27,22 +23,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to get zone info from mytado")
         return False
 
-    tado_data = TadoData(tado, MIN_TIME_BETWEEN_SCANS)
-
     sensor_items = []
     for zone in zones:
         if zone['type'] == 'HEATING':
             for variable in SENSOR_TYPES:
-                sensor_items.append(tado_data.create_zone_sensor(
-                    zone, zone['name'], zone['id'], variable))
+                sensor_items.append(create_zone_sensor(
+                    tado, zone, zone['name'], zone['id'],
+                    variable))
 
     me_data = tado.get_me()
-    sensor_items.append(tado_data.create_device_sensor(
-        me_data, me_data['homes'][0]['name'],
-        me_data['homes'][0]['id'],
-        "tado bridge status"))
+    sensor_items.append(create_device_sensor(
+        tado, me_data, me_data['homes'][0]['name'],
+        me_data['homes'][0]['id'], "tado bridge status"))
 
-    tado_data.update()
+    tado.update()
 
     if len(sensor_items) > 0:
         add_devices(sensor_items)
@@ -51,15 +45,45 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
+def create_zone_sensor(tado, zone, name, zone_id, variable):
+    """Create a zone sensor."""
+    data_id = 'zone {} {}'.format(name, zone_id)
+
+    tado.add_sensor(data_id, {
+        "zone": zone,
+        "name": name,
+        "id": zone_id,
+        "data_id": data_id
+    })
+
+    return TadoSensor(tado, name, zone_id, variable, data_id)
+
+
+def create_device_sensor(tado, device, name, device_id, variable):
+    """Create a device sensor."""
+    data_id = 'device {} {}'.format(name, device_id)
+
+    tado.add_sensor(data_id, {
+        "device": device,
+        "name": name,
+        "id": device_id,
+        "data_id": data_id
+    })
+
+    return TadoSensor(tado, name, device_id, variable, data_id)
+
+
 class TadoSensor(Entity):
     """Representation of a tado Sensor."""
 
-    def __init__(self, tado_data, zone_name, zone_id, zone_variable, data_id):
+    def __init__(self, store, zone_name, zone_id, zone_variable, data_id):
         """Initialization of TadoSensor class."""
-        self._tado_data = tado_data
+        self._store = store
+
         self.zone_name = zone_name
         self.zone_id = zone_id
         self.zone_variable = zone_variable
+
         self._unique_id = '{} {}'.format(zone_variable, zone_id)
         self._data_id = data_id
 
@@ -106,9 +130,9 @@ class TadoSensor(Entity):
 
     def update(self):
         """Update method called when should_poll is true."""
-        self._tado_data.update()
+        self._store.update()
 
-        data = self._tado_data.get_data(self._data_id)
+        data = self._store.get_data(self._data_id)
 
         # pylint: disable=R0912
         if self.zone_variable == 'temperature':
@@ -174,75 +198,3 @@ class TadoSensor(Entity):
                 self._state_attributes = {}
 
         self.schedule_update_ha_state()
-
-
-class TadoData(object):
-    """Tado data object to control the tado functionality."""
-
-    def __init__(self, tado, interval):
-        """Initialization of TadoData class."""
-        self._tado = tado
-
-        self.sensors = {}
-        self.data = {}
-
-        # Apply throttling to methods using configured interval
-        self.update = Throttle(interval)(self._update)
-
-    def create_zone_sensor(self, zone, name, zone_id, variable):
-        """Create a zone sensor."""
-        data_id = 'zone {} {}'.format(name, zone_id)
-
-        self.sensors[data_id] = {
-            "zone": zone,
-            "name": name,
-            "id": zone_id,
-            "data_id": data_id
-        }
-        self.data[data_id] = None
-
-        return TadoSensor(self, name, zone_id, variable, data_id)
-
-    def create_device_sensor(self, device, name, device_id, variable):
-        """Create a device sensor."""
-        data_id = 'device {} {}'.format(name, device_id)
-
-        self.sensors[data_id] = {
-            "device": device,
-            "name": name,
-            "id": device_id,
-            "data_id": data_id
-        }
-        self.data[data_id] = None
-
-        return TadoSensor(self, name, device_id, variable, data_id)
-
-    def get_data(self, data_id):
-        """Get the cached data."""
-        data = {"error": "no data"}
-
-        if data_id in self.data:
-            data = self.data[data_id]
-
-        return data
-
-    def _update(self):
-        """Update the internal data-array from mytado.com."""
-        for data_id, sensor in self.sensors.items():
-            data = None
-
-            try:
-                if "zone" in sensor:
-                    _LOGGER.info("querying mytado.com for zone %s %s",
-                                 sensor["id"], sensor["name"])
-                    data = self._tado.getState(sensor["id"])
-                if "device" in sensor:
-                    _LOGGER.info("querying mytado.com for device %s %s",
-                                 sensor["id"], sensor["name"])
-                    data = self._tado.getDevices()[0]
-
-            except RuntimeError:
-                _LOGGER.error("Unable to connect to myTado. %s %s",
-                              sensor["id"], sensor["id"])
-
-            self.data[data_id] = data
