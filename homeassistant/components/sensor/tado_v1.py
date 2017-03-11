@@ -19,7 +19,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     #  get the PyTado object from the hub component
-    tado = hass.data['Mytado']
+    tado = hass.data['tado_v1_data']
 
     try:
         zones = tado.getZones()

@@ -36,7 +36,7 @@ SENSOR_TYPES = ['temperature', 'humidity', 'tado mode', 'power', 'overlay']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the climate platform."""
     # get the PyTado object from the hub component
-    tado = hass.data['Mytado']
+    tado = hass.data['tado_v1_data']
 
     try:
         zones = tado.getZones()

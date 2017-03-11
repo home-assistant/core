@@ -49,7 +49,7 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
 
-    hass.data['Mytado'] = tado
+    hass.data['tado_v1_data'] = tado
 
     for component in TADO_V1_COMPONENTS:
         load_platform(hass, component, DOMAIN, {}, config)
