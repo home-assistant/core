@@ -200,4 +200,3 @@ class MqttCover(CoverDevice):
         mqtt.async_publish(
             self.hass, self._command_topic, kwargs["position"], self._qos,
             self._retain)
-
