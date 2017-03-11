@@ -99,7 +99,7 @@ def _process_classifier(hass, cv2, cv_image, classifier_config, signal):
     """Process the given classifier."""
     classifier_path = classifier_config[CONF_FILE_PATH]
     classifier_name = classifier_config[CONF_NAME]
-    color = classifier_config[CONF_GROUPS]
+    color = classifier_config[CONF_COLOR]
     scale = classifier_config[CONF_SCALE]
     neighbors = classifier_config[CONF_NEIGHBORS]
     min_size = classifier_config[CONF_MIN_SIZE]
