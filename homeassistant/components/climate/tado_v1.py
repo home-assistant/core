@@ -262,7 +262,7 @@ class TadoClimate(ClimateDevice):
         #  if you set mode manualy to off, there will be an overlay
         #  and a termination, but we want to see the mode "OFF"
 
-        if overlay == "True" and self._device_is_active:
+        if overlay and self._device_is_active:
             #  there is an overlay the device is on
             self._overlay_mode = termination
             self._current_operation = termination
