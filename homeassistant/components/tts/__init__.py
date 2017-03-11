@@ -18,7 +18,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.http import HomeAssistantView

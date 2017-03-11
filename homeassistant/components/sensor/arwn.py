@@ -4,11 +4,13 @@ Support for collecting data from the ARWN project.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.arwn/
 """
+import asyncio
 import json
 import logging
 
 import homeassistant.components.mqtt as mqtt
-from homeassistant.const import (TEMP_FAHRENHEIT, TEMP_CELSIUS)
+from homeassistant.core import callback
+from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -17,13 +19,15 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['mqtt']
 DOMAIN = 'arwn'
 
-SENSORS = {}
-
+DATA_ARWN = 'arwn'
 TOPIC = 'arwn/#'
 
 
 def discover_sensors(topic, payload):
-    """Given a topic, dynamically create the right sensor type."""
+    """Given a topic, dynamically create the right sensor type.
+
+    Async friendly.
+    """
     parts = topic.split('/')
     unit = payload.get('units', '')
     domain = parts[1]
@@ -47,9 +51,11 @@ def _slug(name):
     return 'sensor.arwn_{}'.format(slugify(name))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ARWN platform."""
-    def sensor_event_received(topic, payload, qos):
+    @callback
+    def async_sensor_event_received(topic, payload, qos):
         """Process events as sensors.
 
         When a new event on our topic (arwn/#) is received we map it
@@ -67,6 +73,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not sensors:
             return
 
+        store = hass.data.get(DATA_ARWN)
+        if store is None:
+            store = hass.data[DATA_ARWN] = {}
+
         if isinstance(sensors, ArwnSensor):
             sensors = (sensors, )
 
@@ -74,18 +84,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             del event['timestamp']
 
         for sensor in sensors:
-            if sensor.name not in SENSORS:
+            if sensor.name not in store:
                 sensor.hass = hass
                 sensor.set_event(event)
-                SENSORS[sensor.name] = sensor
+                store[sensor.name] = sensor
                 _LOGGER.debug("Registering new sensor %(name)s => %(event)s",
                               dict(name=sensor.name, event=event))
-                add_devices((sensor,))
+                async_add_devices((sensor,), True)
             else:
-                SENSORS[sensor.name].set_event(event)
-            SENSORS[sensor.name].update_ha_state()
+                store[sensor.name].set_event(event)
 
-    mqtt.subscribe(hass, TOPIC, sensor_event_received, 0)
+    yield from mqtt.async_subscribe(
+        hass, TOPIC, async_sensor_event_received, 0)
     return True
 
 

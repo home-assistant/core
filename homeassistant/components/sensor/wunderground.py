@@ -68,10 +68,10 @@ SENSOR_TYPES = {
     'weather': ['Weather Summary', None],
     'wind_degrees': ['Wind Degrees', None],
     'wind_dir': ['Wind Direction', None],
-    'wind_gust_kph': ['Wind Gust', 'kpH'],
-    'wind_gust_mph': ['Wind Gust', 'mpH'],
-    'wind_kph': ['Wind Speed', 'kpH'],
-    'wind_mph': ['Wind Speed', 'mpH'],
+    'wind_gust_kph': ['Wind Gust', 'kph'],
+    'wind_gust_mph': ['Wind Gust', 'mph'],
+    'wind_kph': ['Wind Speed', 'kph'],
+    'wind_mph': ['Wind Speed', 'mph'],
     'wind_string': ['Wind Summary', None],
 }
 

@@ -1,6 +1,7 @@
 """Color util methods."""
 import logging
 import math
+import colorsys
 
 from typing import Tuple
 
@@ -216,9 +217,8 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     return round(x, 3), round(y, 3), brightness
 
 
-# taken from
-# https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
-# Copyright (c) 2014 Benjamin Knight / MIT License.
+# Converted to Python from Obj-C, original source from:
+# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(vX: float, vY: float,
                                ibrightness: int) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
@@ -235,9 +235,9 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     Z = (Y / vY) * (1 - vX - vY)
 
     # Convert to RGB using Wide RGB D65 conversion.
-    r = X * 1.612 - Y * 0.203 - Z * 0.302
-    g = -X * 0.509 + Y * 1.412 + Z * 0.066
-    b = X * 0.026 - Y * 0.072 + Z * 0.962
+    r = X * 1.656492 - Y * 0.354851 - Z * 0.255038
+    g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152
+    b = X * 0.051713 - Y * 0.121364 + Z * 1.011530
 
     # Apply reverse gamma correction.
     r, g, b = map(
@@ -257,6 +257,18 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     ir, ig, ib = map(lambda x: int(x * 255), [r, g, b])
 
     return (ir, ig, ib)
+
+
+def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
+    """Convert an rgb color to its hsv representation."""
+    fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
+    return (int(fHSV[0]*65536), int(fHSV[1]*255), int(fHSV[2]*255))
+
+
+def color_xy_brightness_to_hsv(vX: float, vY: float,
+                               ibrightness: int) -> Tuple[int, int, int]:
+    """Convert an xy brightness color to its hsv representation."""
+    return color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, ibrightness))
 
 
 def _match_max_scale(input_colors: Tuple[int, ...],

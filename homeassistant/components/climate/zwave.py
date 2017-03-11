@@ -11,6 +11,7 @@ from homeassistant.components.climate import DOMAIN
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
+from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
@@ -32,19 +33,10 @@ DEVICE_MAPPINGS = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Z-Wave Climate devices."""
-    if discovery_info is None or zwave.NETWORK is None:
-        _LOGGER.debug("No discovery_info=%s or no NETWORK=%s",
-                      discovery_info, zwave.NETWORK)
-        return
+def get_device(hass, value, **kwargs):
+    """Create zwave entity device."""
     temp_unit = hass.config.units.temperature_unit
-    node = zwave.NETWORK.nodes[discovery_info[zwave.const.ATTR_NODE_ID]]
-    value = node.values[discovery_info[zwave.const.ATTR_VALUE_ID]]
-    value.set_change_verified(False)
-    add_devices([ZWaveClimate(value, temp_unit)])
-    _LOGGER.debug("discovery_info=%s and zwave.NETWORK=%s",
-                  discovery_info, zwave.NETWORK)
+    return ZWaveClimate(value, temp_unit)
 
 
 class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
@@ -224,7 +216,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self.set_value(
             class_id=zwave.const.COMMAND_CLASS_THERMOSTAT_SETPOINT,
             index=self._index, data=temperature)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
@@ -254,3 +246,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         if self._fan_state:
             data[ATTR_FAN_STATE] = self._fan_state
         return data
+
+    @property
+    def dependent_value_ids(self):
+        """List of value IDs a device depends on."""
+        return None

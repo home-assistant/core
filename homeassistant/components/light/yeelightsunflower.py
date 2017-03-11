@@ -2,9 +2,7 @@
 Support for Yeelight Sunflower color bulbs (not Yeelight Blue or WiFi).
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.yeelight-sunflower
-Uses the yeelightsunflower library:
-https://github.com/lindsaymarkward/python-yeelight-sunflower
+https://home-assistant.io/components/light.yeelightsunflower
 """
 import logging
 import voluptuous as vol
@@ -17,34 +15,29 @@ from homeassistant.components.light import (Light,
 from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelightsunflower==0.0.6']
-SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+REQUIREMENTS = ['yeelightsunflower==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
-# Validate the user's configuration
+
+SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yeelight Sunflower Light platform."""
+    """Set up the Yeelight Sunflower Light platform."""
     import yeelightsunflower
 
-    # Assign configuration variables.
-    # The configuration check takes care they are present.
     host = config.get(CONF_HOST)
-
-    # Setup connection with Yeelight Sunflower hub
     hub = yeelightsunflower.Hub(host)
 
-    # Verify that hub is responsive
     if not hub.available:
         _LOGGER.error('Could not connect to Yeelight Sunflower hub')
         return False
 
-    # Add devices
     add_devices(SunflowerBulb(light) for light in hub.get_lights())
 
 

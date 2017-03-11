@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if response is not None:
             yield from response.release()
 
-    yield from async_add_devices(
+    async_add_devices(
         HookSmartHome(
             hass,
             token,

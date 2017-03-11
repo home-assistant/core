@@ -1,8 +1,7 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)
@@ -35,7 +34,7 @@ class TestFFmpegNoiseSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
 
     @patch('haffmpeg.SensorNoise.open_sensor', return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
@@ -44,15 +43,32 @@ class TestFFmpegNoiseSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
 
-        entity = self.hass.data['ffmpeg'].entities[0]
         self.hass.start()
         assert mock_start.called
 
+        entity = self.hass.states.get('binary_sensor.ffmpeg_noise')
+        assert entity.state == 'unavailable'
+
+    @patch('haffmpeg.SensorNoise')
+    def test_setup_component_start_callback(self, mock_ffmpeg):
+        """Setup ffmpeg component."""
+        with assert_setup_component(1, 'binary_sensor'):
+            setup_component(self.hass, 'binary_sensor', self.config)
+
+        assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
+        assert self.hass.states.get('binary_sensor.ffmpeg_noise') is not None
+
+        self.hass.start()
+
+        entity = self.hass.states.get('binary_sensor.ffmpeg_noise')
         assert entity.state == 'off'
-        run_callback_threadsafe(
-            self.hass.loop, entity._async_callback, True).result()
+
+        mock_ffmpeg.call_args[0][2](True)
+        self.hass.block_till_done()
+
+        entity = self.hass.states.get('binary_sensor.ffmpeg_noise')
         assert entity.state == 'on'
 
 
@@ -83,7 +99,7 @@ class TestFFmpegMotionSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
 
     @patch('haffmpeg.SensorMotion.open_sensor', return_value=mock_coro())
     def test_setup_component_start(self, mock_start):
@@ -92,13 +108,30 @@ class TestFFmpegMotionSetup(object):
             setup_component(self.hass, 'binary_sensor', self.config)
 
         assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
-        assert len(self.hass.data['ffmpeg'].entities) == 1
+        assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
 
-        entity = self.hass.data['ffmpeg'].entities[0]
         self.hass.start()
         assert mock_start.called
 
+        entity = self.hass.states.get('binary_sensor.ffmpeg_motion')
+        assert entity.state == 'unavailable'
+
+    @patch('haffmpeg.SensorMotion')
+    def test_setup_component_start_callback(self, mock_ffmpeg):
+        """Setup ffmpeg component."""
+        with assert_setup_component(1, 'binary_sensor'):
+            setup_component(self.hass, 'binary_sensor', self.config)
+
+        assert self.hass.data['ffmpeg'].binary == 'ffmpeg'
+        assert self.hass.states.get('binary_sensor.ffmpeg_motion') is not None
+
+        self.hass.start()
+
+        entity = self.hass.states.get('binary_sensor.ffmpeg_motion')
         assert entity.state == 'off'
-        run_callback_threadsafe(
-            self.hass.loop, entity._async_callback, True).result()
+
+        mock_ffmpeg.call_args[0][2](True)
+        self.hass.block_till_done()
+
+        entity = self.hass.states.get('binary_sensor.ffmpeg_motion')
         assert entity.state == 'on'

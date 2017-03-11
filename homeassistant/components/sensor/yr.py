@@ -78,7 +78,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YrSensor(sensor_type))
-    yield from async_add_devices(dev)
+    async_add_devices(dev)
 
     weather = YrData(hass, coordinates, dev)
     # Update weather on the hour, spread seconds

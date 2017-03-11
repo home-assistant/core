@@ -170,41 +170,6 @@ def get_component(comp_name) -> Optional[ModuleType]:
     return None
 
 
-def load_order_components(components: Sequence[str]) -> OrderedSet:
-    """Take in a list of components we want to load.
-
-    - filters out components we cannot load
-    - filters out components that have invalid/circular dependencies
-    - Will make sure the recorder component is loaded first
-    - Will ensure that all components that do not directly depend on
-      the group component will be loaded before the group component.
-    - returns an OrderedSet load order.
-    - Makes sure MQTT eventstream is available for publish before
-      components start updating states.
-
-    Async friendly.
-    """
-    _check_prepared()
-
-    load_order = OrderedSet()
-
-    # Sort the list of modules on if they depend on group component or not.
-    # Components that do not depend on the group usually set up states.
-    # Components that depend on group usually use states in their setup.
-    for comp_load_order in sorted((load_order_component(component)
-                                   for component in components),
-                                  key=lambda order: 'group' in order):
-        load_order.update(comp_load_order)
-
-    # Push some to first place in load order
-    for comp in ('mqtt_eventstream', 'mqtt', 'recorder',
-                 'introduction', 'logger'):
-        if comp in load_order:
-            load_order.promote(comp)
-
-    return load_order
-
-
 def load_order_component(comp_name: str) -> OrderedSet:
     """Return an OrderedSet of components in the correct order of loading.
 

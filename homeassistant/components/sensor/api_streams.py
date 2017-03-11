@@ -61,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remove_logger)
 
-    yield from async_add_devices([entity])
+    async_add_devices([entity])
 
 
 class APICount(Entity):

@@ -153,7 +153,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             )
             devices.append(device)
 
-    yield from async_add_devices(devices)
+    async_add_devices(devices)
 
 
 @asyncio.coroutine

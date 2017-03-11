@@ -3,22 +3,24 @@ import asyncio
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import CoreState, split_entity_id, State
 import homeassistant.util.dt as dt_util
 from homeassistant.components import input_boolean, recorder
 from homeassistant.helpers.restore_state import (
     async_get_last_state, DATA_RESTORE_CACHE)
+from homeassistant.components.recorder.models import RecorderRuns, States
 
 from tests.common import (
-    get_test_home_assistant, mock_coro, init_recorder_component)
+    get_test_home_assistant, mock_coro, init_recorder_component,
+    mock_component)
 
 
 @asyncio.coroutine
 def test_caching_data(hass):
     """Test that we cache data."""
-    hass.config.components.add('recorder')
+    mock_component(hass, 'recorder')
     hass.state = CoreState.starting
 
     states = [
@@ -31,8 +33,8 @@ def test_caching_data(hass):
                return_value=MagicMock(end=dt_util.utcnow())), \
             patch('homeassistant.helpers.restore_state.get_states',
                   return_value=states), \
-            patch('homeassistant.helpers.restore_state.async_get_instance',
-                  return_value=mock_coro()):
+            patch('homeassistant.helpers.restore_state.wait_connection_ready',
+                  return_value=mock_coro(True)):
         state = yield from async_get_last_state(hass, 'input_boolean.b1')
 
     assert DATA_RESTORE_CACHE in hass.data
@@ -49,33 +51,29 @@ def test_caching_data(hass):
     assert DATA_RESTORE_CACHE not in hass.data
 
 
-def _add_data_in_last_run(entities):
+def _add_data_in_last_run(hass, entities):
     """Add test data in the last recorder_run."""
     # pylint: disable=protected-access
     t_now = dt_util.utcnow() - timedelta(minutes=10)
     t_min_1 = t_now - timedelta(minutes=20)
     t_min_2 = t_now - timedelta(minutes=30)
 
-    recorder_runs = recorder.get_model('RecorderRuns')
-    states = recorder.get_model('States')
-    with recorder.session_scope() as session:
-        run = recorder_runs(
+    with recorder.session_scope(hass=hass) as session:
+        session.add(RecorderRuns(
             start=t_min_2,
             end=t_now,
             created=t_min_2
-        )
-        recorder._INSTANCE._commit(session, run)
+        ))
 
         for entity_id, state in entities.items():
-            dbstate = states(
+            session.add(States(
                 entity_id=entity_id,
                 domain=split_entity_id(entity_id)[0],
                 state=state,
                 attributes='{}',
                 last_changed=t_min_1,
                 last_updated=t_min_1,
-                created=t_min_1)
-            recorder._INSTANCE._commit(session, dbstate)
+                created=t_min_1))
 
 
 def test_filling_the_cache():
@@ -88,7 +86,7 @@ def test_filling_the_cache():
 
     init_recorder_component(hass)
 
-    _add_data_in_last_run({
+    _add_data_in_last_run(hass, {
         test_entity_id1: 'on',
         test_entity_id2: 'off',
     })

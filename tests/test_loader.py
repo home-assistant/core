@@ -54,33 +54,3 @@ class TestLoader(unittest.TestCase):
 
         # Try to get load order for non-existing component
         self.assertEqual([], loader.load_order_component('mod1'))
-
-    def test_load_order_components(self):
-        """Setup loading order of components."""
-        loader.set_component('mod1', MockModule('mod1', ['group']))
-        loader.set_component('mod2', MockModule('mod2', ['mod1', 'sun']))
-        loader.set_component('mod3', MockModule('mod3', ['mod2']))
-        loader.set_component('mod4', MockModule('mod4', ['group']))
-
-        self.assertEqual(
-            ['group', 'mod4', 'mod1', 'sun', 'mod2', 'mod3'],
-            loader.load_order_components(['mod4', 'mod3', 'mod2']))
-
-        loader.set_component('mod1', MockModule('mod1'))
-        loader.set_component('mod2', MockModule('mod2', ['group']))
-
-        self.assertEqual(
-            ['mod1', 'group', 'mod2'],
-            loader.load_order_components(['mod2', 'mod1']))
-
-        # Add a non existing one
-        self.assertEqual(
-            ['mod1', 'group', 'mod2'],
-            loader.load_order_components(['mod2', 'nonexisting', 'mod1']))
-
-        # Depend on a non existing one
-        loader.set_component('mod1', MockModule('mod1', ['nonexisting']))
-
-        self.assertEqual(
-            ['group', 'mod2'],
-            loader.load_order_components(['mod2', 'mod1']))

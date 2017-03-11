@@ -3,7 +3,7 @@ import unittest
 
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.components.binary_sensor import command_line
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.helpers import template
 
 from tests.common import get_test_home_assistant
@@ -47,7 +47,7 @@ class TestCommandSensorBinarySensor(unittest.TestCase):
                   'platform': 'not_command_line',
                   }
 
-        self.assertFalse(bootstrap.setup_component(self.hass, 'test', {
+        self.assertFalse(setup.setup_component(self.hass, 'test', {
             'command_line': config,
         }))
 
