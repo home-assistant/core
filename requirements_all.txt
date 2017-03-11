@@ -316,10 +316,8 @@ insteonlocal==0.48
 insteonplm==0.7.4
 
 # homeassistant.components.media_player.kodi
-jsonrpc-async==0.4
-
 # homeassistant.components.notify.kodi
-jsonrpc-requests==0.3
+jsonrpc-async==0.4
 
 # homeassistant.components.media_player.kodi
 jsonrpc-websocket==0.2
