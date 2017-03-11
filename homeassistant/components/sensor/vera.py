@@ -11,7 +11,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.vera import (
-    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 

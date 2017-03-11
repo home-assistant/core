@@ -10,7 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
 from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
-    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 _LOGGER = logging.getLogger(__name__)
 

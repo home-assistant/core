@@ -10,7 +10,7 @@ from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
 from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
-    VERA_CONTROLLER, VeraDevice, VERA_DEVICES)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
