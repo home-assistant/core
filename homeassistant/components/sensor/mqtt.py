@@ -19,12 +19,16 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_FORCE_UPDATE = 'force_update'
+
 DEFAULT_NAME = 'MQTT Sensor'
+DEFAULT_FORCE_UPDATE = False
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
 
@@ -43,6 +47,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_QOS),
         config.get(CONF_UNIT_OF_MEASUREMENT),
+        config.get(CONF_FORCE_UPDATE),
         value_template,
     )])
 
@@ -51,13 +56,14 @@ class MqttSensor(Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 value_template):
+                 force_update, value_template):
         """Initialize the sensor."""
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
         self._qos = qos
         self._unit_of_measurement = unit_of_measurement
+        self._force_update = force_update
         self._template = value_template
 
     def async_added_to_hass(self):
@@ -91,6 +97,11 @@ class MqttSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
 
     @property
     def state(self):
