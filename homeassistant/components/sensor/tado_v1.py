@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     tado = hass.data['tado_v1_data']
 
     try:
-        zones = tado.getZones()
+        zones = tado.get_zones()
     except RuntimeError:
         _LOGGER.error("Unable to get zone info from mytado")
         return False
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensor_items.append(tado_data.create_zone_sensor(
                     zone, zone['name'], zone['id'], variable))
 
-    me_data = tado.getMe()
+    me_data = tado.get_me()
     sensor_items.append(tado_data.create_device_sensor(
         me_data, me_data['homes'][0]['name'],
         me_data['homes'][0]['id'],

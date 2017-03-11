@@ -49,9 +49,36 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
 
-    hass.data['tado_v1_data'] = tado
+    hass.data['tado_v1_data'] = TadoDataStore(tado)
 
     for component in TADO_V1_COMPONENTS:
         load_platform(hass, component, DOMAIN, {}, config)
 
     return True
+
+class TadoDataStore:
+    """An object to store the tado data."""
+
+    def __init__(self, tado):
+        """Initialize Tado data store."""
+        self.tado = tado
+
+    def get_zones(self):
+        """Wrapper for getZones()."""
+        return self.tado.getZones()
+
+    def get_capabilities(self, tado_id):
+        """Wrapper for getCapabilities(..)."""
+        return self.tado.getCapabilities(tado_id)
+
+    def get_me(self):
+        """Wrapper for getMet()."""
+        return self.tado.getMe()
+
+    def reset_zone_overlay(self, zone_id):
+        """Wrapper for resetZoneOverlay(..)."""
+        return self.tado.resetZoneOverlay(zone_id)
+    
+    def set_zone_overlay(self, zone_id, mode, temperature):
+        """Wrapper for setZoneOverlay(..)."""
+        return self.tado.setZoneOverlay(zone_id, mode, temperature)

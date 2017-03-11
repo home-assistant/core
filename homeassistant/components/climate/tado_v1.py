@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     tado = hass.data['tado_v1_data']
 
     try:
-        zones = tado.getZones()
+        zones = tado.get_zones()
     except RuntimeError:
         _LOGGER.error("Unable to get zone info from mytado")
         return False
@@ -275,22 +275,22 @@ class TadoClimate(ClimateDevice):
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
             _LOGGER.info('Switching mytado.com to SCHEDULE (default) '
                          'for zone %s', self.zone_name)
-            self._tado.resetZoneOverlay(self.zone_id)
+            self._tado.reset_zone_overlay(self.zone_id)
             self._overlay_mode = self._current_operation
             return
 
         if self._current_operation == CONST_MODE_OFF:
             _LOGGER.info('Switching mytado.com to OFF for zone %s',
                          self.zone_name)
-            self._tado.setZoneOverlay(self.zone_id, CONST_DEFAULT_OFF_MODE)
+            self._tado.set_zone_overlay(self.zone_id, CONST_DEFAULT_OFF_MODE)
             self._overlay_mode = self._current_operation
             return
 
         _LOGGER.info("Switching mytado.com to %s mode for zone %s",
                      self._current_operation, self.zone_name)
-        self._tado.setZoneOverlay(self.zone_id,
-                                  self._current_operation,
-                                  self._target_temp)
+        self._tado.set_zone_overlay(self.zone_id,
+                                    self._current_operation,
+                                    self._target_temp)
 
         self._overlay_mode = self._current_operation
 
@@ -307,7 +307,7 @@ class TadoData(object):
 
     def create_climate_device(self, hass, name, tado_id):
         """Create a climate device."""
-        capabilities = self._tado.getCapabilities(tado_id)
+        capabilities = self._tado.get_capabilities(tado_id)
 
         min_temp = float(capabilities["temperatures"]["celsius"]["min"])
         max_temp = float(capabilities["temperatures"]["celsius"]["max"])
@@ -315,7 +315,7 @@ class TadoData(object):
         ac_mode = capabilities["type"] != "HEATING"
 
         device_id = 'climate {} {}'.format(name, tado_id)
-        device = TadoClimate(self._tado, name, tado_id,
+        device = TadoClimate(self, name, tado_id,
                              min_temp, max_temp, target_temp, ac_mode)
         sensor = {
             "id": device_id,
