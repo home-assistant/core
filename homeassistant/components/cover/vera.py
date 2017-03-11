@@ -6,9 +6,9 @@ https://home-assistant.io/components/cover.vera/
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -28,6 +28,7 @@ class VeraCover(VeraDevice, CoverDevice):
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def current_cover_position(self):

@@ -12,7 +12,7 @@ import voluptuous as vol
 from requests.exceptions import RequestException
 
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import convert
+from homeassistant.util import (convert, slugify)
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
@@ -31,6 +31,8 @@ VERA_CONTROLLER = None
 CONF_CONTROLLER = 'vera_controller_url'
 CONF_EXCLUDE = 'exclude'
 CONF_LIGHTS = 'lights'
+
+VERA_ID_FORMAT = '{}_{}'
 
 ATTR_CURRENT_POWER_MWH = "current_power_mwh"
 
@@ -131,8 +133,10 @@ class VeraDevice(Entity):
         self.vera_device = vera_device
         self.controller = controller
 
+        self._name = self.vera_device.name
         # Append device id to prevent name clashes in HA.
-        self._name = self.vera_device.name + ' ' + str(vera_device.device_id)
+        self.vera_id = VERA_ID_FORMAT.format(
+            slugify(vera_device.name), vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()
