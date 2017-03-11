@@ -67,8 +67,7 @@ def next_setting_utc(hass, entity_id=None):
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_SETTING])
+        return state.attributes[STATE_ATTR_NEXT_SETTING]
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_SETTING does not exist
@@ -95,7 +94,7 @@ def next_rising_utc(hass, entity_id=None):
     state = hass.states.get(ENTITY_ID)
 
     try:
-        return dt_util.parse_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
+        return state.attributes[STATE_ATTR_NEXT_RISING]
     except (AttributeError, KeyError):
         # AttributeError if state is None
         # KeyError if STATE_ATTR_NEXT_RISING does not exist
@@ -174,8 +173,8 @@ class Sun(Entity):
     def state_attributes(self):
         """Return the state attributes of the sun."""
         return {
-            STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
-            STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
+            STATE_ATTR_NEXT_RISING: self.next_rising,
+            STATE_ATTR_NEXT_SETTING: self.next_setting,
             STATE_ATTR_ELEVATION: round(self.solar_elevation, 2),
             STATE_ATTR_AZIMUTH: round(self.solar_azimuth, 2)
         }
