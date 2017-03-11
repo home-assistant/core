@@ -349,6 +349,8 @@ class PlexClient(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
+        # Not all devices support playback functionality
+        # Playback includes volume, stop/play/pause, etc.
         if 'playback' in self.device.protocolCapabilities:
             return SUPPORT_PLEX
         return 0
