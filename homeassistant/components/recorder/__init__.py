@@ -299,12 +299,13 @@ class Recorder(threading.Thread):
 
         @event.listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
-            old_isolation = dbapi_connection.isolation_level
-            dbapi_connection.isolation_level = None
-            cursor = dbapi_connection.cursor()
-            cursor.execute("PRAGMA journal_mode=WAL")
-            cursor.close()
-            dbapi_connection.isolation_level = old_isolation
+            if self.db_url.startswith("sqlite://"):
+                old_isolation = dbapi_connection.isolation_level
+                dbapi_connection.isolation_level = None
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.close()
+                dbapi_connection.isolation_level = old_isolation
 
         if self.db_url == 'sqlite://' or ':memory:' in self.db_url:
             from sqlalchemy.pool import StaticPool
