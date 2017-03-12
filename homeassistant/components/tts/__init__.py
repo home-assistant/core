@@ -31,7 +31,7 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'tts'
 DEPENDENCIES = ['http']
-REQUIREMENTS = ["mutagen==1.36.2"]
+REQUIREMENTS = ["mutagen==1.36.2", "pydub==0.18.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +42,12 @@ CONF_LANG = 'language'
 CONF_CACHE = 'cache'
 CONF_CACHE_DIR = 'cache_dir'
 CONF_TIME_MEMORY = 'time_memory'
+CONF_DELAY = 'delay'
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
+DEFAULT_DELAY = 0
 
 SERVICE_SAY = 'say'
 SERVICE_CLEAR_CACHE = 'clear_cache'
@@ -64,6 +66,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
+    vol.Optional(CONF_DELAY, default=DEFAULT_DELAY):
+        vol.All(vol.Coerce(int)),
 })
 
 SCHEMA_SERVICE_SAY = vol.Schema({
@@ -80,10 +84,9 @@ SCHEMA_SERVICE_CLEAR_CACHE = vol.Schema({})
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup TTS."""
-    tts = SpeechManager(hass)
-
     try:
         conf = config[DOMAIN][0] if len(config.get(DOMAIN, [])) > 0 else {}
+        tts = SpeechManager(hass, conf)
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
@@ -179,7 +182,7 @@ def async_setup(hass, config):
 class SpeechManager(object):
     """Representation of a speech store."""
 
-    def __init__(self, hass):
+    def __init__(self, hass, conf):
         """Initialize a speech store."""
         self.hass = hass
         self.providers = {}
@@ -187,6 +190,7 @@ class SpeechManager(object):
         self.use_cache = DEFAULT_CACHE
         self.cache_dir = DEFAULT_CACHE_DIR
         self.time_memory = DEFAULT_TIME_MEMORY
+        self.delay = conf.get(CONF_DELAY, DEFAULT_DELAY)
         self.file_cache = {}
         self.mem_cache = {}
 
@@ -327,6 +331,9 @@ class SpeechManager(object):
             raise HomeAssistantError(
                 "No TTS from {} for '{}'".format(engine, message))
 
+        if self.delay > 0:
+            data = self.prepend_silence(data, extension, self.delay)
+
         # create file infos
         filename = ("{}.{}".format(key, extension)).lower()
 
@@ -452,6 +459,20 @@ class SpeechManager(object):
             _LOGGER.error("ID3 tag error: %s", err)
 
         return data_bytes.getvalue()
+
+    @staticmethod
+    def prepend_silence(data, extension, delay):
+        """Prepend audio data with silence."""
+        from pydub import AudioSegment
+
+        input_file = io.BytesIO(data)
+        audio = AudioSegment.from_file(input_file, extension)
+        silence = AudioSegment.silent(duration=delay)
+        audio = silence + audio
+        output = io.BytesIO()
+        audio.export(output, format=extension)
+
+        return output.getvalue()
 
 
 class Provider(object):
