@@ -10,7 +10,6 @@ import os
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 
-import asyncio
 import requests
 from requests.packages.urllib3.exceptions import InsecureRequestWarning
 import voluptuous as vol
@@ -56,7 +55,6 @@ GROUP_INACTIVE_DEVICES = 'group._plex_devices_inactive'
 
 CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
 CONF_USE_EPISODE_ART = 'use_episode_art'
-CONF_USE_DYNAMIC_GROUPS = 'use_dynamic_groups'
 CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
 CONF_MAX_FROZEN_PLAYING = 'max_frozen_playing'
@@ -66,8 +64,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
     cv.boolean,
     vol.Optional(CONF_USE_EPISODE_ART, default=False):
-    cv.boolean,
-    vol.Optional(CONF_USE_DYNAMIC_GROUPS, default=False):
     cv.boolean,
     vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False):
     cv.boolean,
@@ -117,8 +113,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     optional_config[CONF_INCLUDE_NON_CLIENTS] = config.get(
         CONF_INCLUDE_NON_CLIENTS)
     optional_config[CONF_USE_EPISODE_ART] = config.get(CONF_USE_EPISODE_ART)
-    optional_config[CONF_USE_DYNAMIC_GROUPS] = config.get(
-        CONF_USE_DYNAMIC_GROUPS)
     optional_config[CONF_USE_CUSTOM_ENTITY_IDS] = config.get(
         CONF_USE_CUSTOM_ENTITY_IDS)
     optional_config[CONF_SHOW_ALL_CONTROLS] = config.get(
@@ -164,12 +158,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     setup_plexserver(host, token, hass, optional_config, add_devices_callback)
 
 
-def set_group_members(hass, group_entity_id, member_entity_id_list):
-    """Create group if doesn't exist and sets memberships."""
-    hass.states.set(group_entity_id, 'off',
-                    {'entity_id': member_entity_id_list})
-
-
 def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
     """Setup a plexserver based on host parameter."""
     import plexapi.server
@@ -206,6 +194,7 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
+    # pylint: disable=too-many-branches
     def update_devices():
         """Update the devices objects."""
         try:
@@ -245,32 +234,10 @@ def setup_plexserver(host, token, hass, optional_config, add_devices_callback):
                 else:
                     plex_clients[machine_identifier].refresh(None, session)
 
-        active_entity_id_list = []
-        inactive_entity_id_list = []
-
         for machine_identifier, client in plex_clients.items():
             # force devices to idle that do not have a valid session
             if client.session is None:
                 client.force_idle()
-
-            # get dynamic group memberships
-            if client.entity_id:
-                # do not add if hidden
-                client_states = hass.states.get(client.entity_id)
-                if client_states is not None:
-                    if not client_states.attributes.get('hidden'):
-                        if client.state in [STATE_IDLE, STATE_OFF]:
-                            inactive_entity_id_list.append(
-                                client.entity_id)
-                        else:
-                            active_entity_id_list.append(client.entity_id)
-
-        # store dynamic group memberships if optionally configured
-        if optional_config[CONF_USE_DYNAMIC_GROUPS]:
-            set_group_members(hass, GROUP_ACTIVE_DEVICES,
-                              active_entity_id_list)
-            set_group_members(hass, GROUP_INACTIVE_DEVICES,
-                              inactive_entity_id_list)
 
         if new_plex_clients:
             add_devices_callback(new_plex_clients)
@@ -323,33 +290,58 @@ def request_configuration(host, hass, optional_config, add_devices_callback):
         }])
 
 
+# pylint: disable=too-many-instance-attributes, too-many-public-methods
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=attribute-defined-outside-init
+    # pylint: disable-msg=too-many-arguments
     def __init__(self, optional_config, device, session, plex_sessions,
                  update_devices, update_sessions):
         """Initialize the Plex device."""
         from plexapi.utils import NA
-
-        self.na_type = NA
-        self._session = None
+        self._app_name = ''
         self._device = None
+        self._frozen_content_id = None
+        self._frozen_fixed_state = None
+        self._is_player_active = False
+        self._is_player_available = False
+        self._is_player_available = False
+        self._last_content_id = None
+        self._last_position = None
+        self._last_position_changed = None
+        self._machine_identifier = None
         self._make = ''
+        self._media_content_id = None
+        self._media_content_type = None
+        self._media_duration = None
+        self._media_image_url = None
+        self._media_position = None
+        self._media_position_updated_at = None
+        self._media_title = None
+        self._name = None
+        self._player_state = 'idle'
+        self._previous_volume_level = 1  # Used in fake muting
+        self._session = None
+        self._session_type = None
+        self._state = STATE_IDLE
+        self._volume_level = 1  # since we can't retrieve remotely
+        self._volume_muted = False  # since we can't retrieve remotely
+        self.na_type = NA
         self.optional_config = optional_config
         self.plex_sessions = plex_sessions
         self.update_devices = update_devices
         self.update_sessions = update_sessions
-        self._state = STATE_IDLE
-        self._volume_muted = False  # since we can't retrieve remotely
-        self._volume_level = 1  # since we can't retrieve remotely
-        self._previous_volume_level = 1  # Used in fake muting
-        self._media_position_updated_at = None
-        self._last_position = None
-        self._last_content_id = None
-        self._last_position_changed = None
-        self._frozen_fixed_state = None
-        self._frozen_content_id = None
+
+        # Music
+        self._media_album_artist = None
+        self._media_album_name = None
+        self._media_artist = None
+        self._media_track = None
+
+        # TV Show
+        self._media_episode = None
+        self._media_season = None
+        self._media_series_title = None
 
         self.refresh(device, session)
 
@@ -371,53 +363,220 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
+    # pylint: disable=too-many-branches, too-many-statements
     def refresh(self, device, session):
         """Refresh key device data."""
+        # previous data
         # frozen detection - reset if content or position changed
         if (self._frozen_content_id is not None and
-                self.media_content_id != self._frozen_content_id) or (
-                    self.media_position != self._last_position or
+                self._media_content_id != self._frozen_content_id) or (
+                    self._media_position != self._last_position or
                     self._last_position_changed is None):
-            self._last_position = self.media_position
+            self._last_position = self._media_position
             self._last_position_changed = datetime.now()
             self._frozen_fixed_state = None
             self._frozen_content_id = None
 
-        # refresh
+        # new data refresh
         if session:
             self._session = session
         if device:
             self._device = device
             self._session = None
 
+        if self._device:
+            self._machine_identifier = self._convert_na_to_none(
+                self._device.machineIdentifier)
+            self._name = self._convert_na_to_none(
+                self._device.title) or DEVICE_DEFAULT_NAME
+
+        # set valid session, preferring device session
+        if self._device and self.plex_sessions.get(
+                self._device.machineIdentifier, None):
+            self._session = self._convert_na_to_none(self.plex_sessions.get(
+                self._device.machineIdentifier, None))
+
+        if self._session:
+            self._media_position = self._convert_na_to_none(
+                self._session.viewOffset)
+            self._media_content_id = self._convert_na_to_none(
+                self._session.ratingKey)
+        else:
+            self._media_position = None
+            self._media_content_id = None
+
+        # player dependent data
+        if self._session and self._session.player:
+            self._is_player_available = True
+            self._machine_identifier = self._convert_na_to_none(
+                self._session.player.machineIdentifier)
+            self._name = self._convert_na_to_none(self._session.player.title)
+            self._player_state = self._session.player.state
+            self._make = self._convert_na_to_none(self._session.player.device)
+        else:
+            self._is_player_available = False
+
         # frozen detection - force state change if past max thresholds
         frozen_seconds = (round(
             (datetime.now() - self._last_position_changed).total_seconds()))
 
-        if self.session and self.session.player:
+        if self._is_player_available:
             if ((frozen_seconds >
                  int(self.optional_config[CONF_MAX_FROZEN_PAUSED])) and
-                    (self.session.player.state == 'paused' or
+                    (self._player_state == 'paused' or
                      self._frozen_fixed_state in (STATE_PAUSED, STATE_IDLE))):
                 _LOGGER.debug('Frozen paused client detected, forcing idle '
                               'state: %s', self.entity_id)
+                self._is_player_active = False
                 self._frozen_fixed_state = STATE_IDLE
                 self._frozen_content_id = self.media_content_id
             elif frozen_seconds > int(
                     self.optional_config[CONF_MAX_FROZEN_PLAYING]
-            ) and self.session.player.state == 'playing':
+            ) and self._player_state == 'playing':
                 _LOGGER.debug(
                     'Frozen playing client detected, forcing paused state: %s',
                     self.entity_id)
+                self._is_player_active = True
                 self._frozen_fixed_state = STATE_PAUSED
                 self._frozen_content_id = self.media_content_id
             else:
                 self._frozen_fixed_state = None
 
-        if self.session and self.session.player:
-            make = self._convert_na_to_none(self.session.player.device)
-            if make:
-                self._make = make
+        # get state (frozen state overrides)
+        if self._frozen_fixed_state is not None:
+            self._state = self._frozen_fixed_state
+        elif self._player_state == 'playing':
+            self._is_player_active = True
+            self._state = STATE_PLAYING
+        elif self._player_state == 'paused':
+            self._is_player_active = True
+            self._state = STATE_PAUSED
+        elif self.device:
+            self._is_player_active = False
+            self._state = STATE_IDLE
+        else:
+            self._is_player_active = False
+            self._state = STATE_OFF
+
+        if self._is_player_active and self._session is not None:
+            self._session_type = self._session.type
+            self._media_duration = self._convert_na_to_none(
+                self._session.duration)
+        else:
+            self._session_type = None
+            self._media_duration = None
+
+        # media type
+        if self._session_type == 'clip':
+            _LOGGER.debug('Clip content type detected, '
+                          'compatibility may vary: %s',
+                          self.entity_id)
+            self._media_content_type = MEDIA_TYPE_TVSHOW
+        elif self._session_type == 'episode':
+            self._media_content_type = MEDIA_TYPE_TVSHOW
+        elif self._session_type == 'movie':
+            self._media_content_type = MEDIA_TYPE_VIDEO
+        elif self._session_type == 'track':
+            self._media_content_type = MEDIA_TYPE_MUSIC
+        else:
+            self._media_content_type = None
+
+        # title (movie name, tv episode name, music song name)
+        if self._session:
+            self._media_title = self._convert_na_to_none(self._session.title)
+
+        # Movies
+        if (self.media_content_type is MEDIA_TYPE_VIDEO and
+                self._convert_na_to_none(self._session.year) is not None):
+            self._media_title += ' (' + str(self._session.year) + ')'
+
+        # TV Show
+        if (self._is_player_active and
+                self._media_content_type is MEDIA_TYPE_TVSHOW):
+
+            # season number (00)
+            if callable(self._convert_na_to_none(self._session.seasons)):
+                self._media_season = self._convert_na_to_none(
+                    self._session.seasons()[0].index).zfill(2)
+            elif self._convert_na_to_none(
+                    self._session.parentIndex) is not None:
+                self._media_season = self._session.parentIndex.zfill(2)
+            else:
+                self._media_season = None
+
+            # show name
+            self._media_series_title = self._convert_na_to_none(
+                self._session.grandparentTitle)
+
+            # episode number (00)
+            if self._convert_na_to_none(
+                    self._session.index) is not None:
+                self._media_episode = str(self._session.index).zfill(2)
+        else:
+            self._media_season = None
+            self._media_series_title = None
+            self._media_episode = None
+
+        # Music
+        if (self._is_player_active and
+                self._media_content_type is MEDIA_TYPE_MUSIC):
+            self._media_album_name = self._convert_na_to_none(
+                self._session.parentTitle)
+            self._media_album_artist = self._convert_na_to_none(
+                self._session.grandparentTitle)
+            self._media_track = self._convert_na_to_none(self._session.index)
+            self._media_artist = self._convert_na_to_none(
+                self._session.originalTitle)
+            # use album artist if track artist is missing
+            if self._media_artist is None:
+                _LOGGER.debug(
+                    'Using album artist because track artist '
+                    'was not found: %s', self.entity_id)
+                self._media_artist = self._media_album_artist
+        else:
+            self._media_album_name = None
+            self._media_album_artist = None
+            self._media_track = None
+            self._media_artist = None
+
+        # set app name to library name
+        if (self._session is not None
+                and self._session.librarySectionID is not None):
+            self._app_name = self._convert_na_to_none(
+                self._session.server.library.sectionByID(
+                    self._session.librarySectionID).title)
+        else:
+            self._app_name = ''
+
+        # media image url
+        if self._session is not None:
+            thumb_url = self._get_thumbnail_url(self._session.thumb)
+            if (self.media_content_type is MEDIA_TYPE_TVSHOW
+                    and not self.optional_config[CONF_USE_EPISODE_ART]):
+                thumb_url = self._get_thumbnail_url(
+                    self._session.grandparentThumb)
+
+            if thumb_url is None:
+                _LOGGER.debug('Using media art because media thumb '
+                              'was not found: %s', self.entity_id)
+                thumb_url = self._get_thumbnail_url(self._session.art)
+
+            self._media_image_url = thumb_url
+        else:
+            self._media_image_url = None
+
+    def _get_thumbnail_url(self, property_value):
+        """Return full URL (if exists) for a thumbnail property."""
+        if self._convert_na_to_none(property_value) is None:
+            return None
+
+        if self._session is None or self._session.server is None:
+            return None
+
+        url = self._session.server.url(property_value)
+        response = requests.get(url, verify=False)
+        if response and response.status_code == 200:
+            return url
 
     def force_idle(self):
         """Force client to idle."""
@@ -433,71 +592,31 @@ class PlexClient(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self.device:
-            return self._convert_na_to_none(
-                self.device.title) or DEVICE_DEFAULT_NAME
-        if self.session and self.session.player:
-            return self._convert_na_to_none(self.session.player.title)
+        return self._name
 
     @property
     def machine_identifier(self):
         """Return the machine identifier of the device."""
-        device_id = None
-        player_id = None
-
-        if self.device:
-            device_id = self._convert_na_to_none(self.device.machineIdentifier)
-
-        if self.session and self.session.player:
-            player_id = self._convert_na_to_none(
-                self.session.player.machineIdentifier)
-
-        return device_id or player_id
+        return self._machine_identifier
 
     @property
     def app_name(self):
         """Return the library name of playing media."""
-        if self.state not in (STATE_IDLE, STATE_OFF):
-            if self.session:
-                if self.session.librarySectionID:
-                    return self._convert_na_to_none(
-                        self.session.server.library.sectionByID(
-                            self.session.librarySectionID).title)
+        return self._app_name
 
     @property
     def device(self):
         """Return the device, if any."""
-        return self._convert_na_to_none(self._device)
+        return self._device
 
     @property
     def session(self):
         """Return the session, if any."""
-        if self.device is not None:
-            session = self.plex_sessions.get(self.device.machineIdentifier,
-                                             None)
-            if session is not None:
-                self._session = session
-
-        return self._convert_na_to_none(self._session)
+        return self._session
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self._frozen_fixed_state is not None:
-            self._state = self._frozen_fixed_state
-        else:
-            if self.session and self.session.player:
-                state = self.session.player.state
-                if state == 'playing':
-                    self._state = STATE_PLAYING
-                elif state == 'paused':
-                    self._state = STATE_PAUSED
-            # This is nasty. Need to find a way to determine alive
-            elif self.device:
-                self._state = STATE_IDLE
-            else:
-                self._state = STATE_OFF
-
         return self._state
 
     def update(self):
@@ -527,167 +646,92 @@ class PlexClient(MediaPlayerDevice):
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        if self.session:
-            return self._convert_na_to_none(self.session.ratingKey)
+        return self._media_content_id
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.session:
-                media_type = self.session.type
-                if media_type in ('episode', 'clip'):
-                    if media_type == 'clip':
-                        _LOGGER.debug('Clip content type detected, '
-                                      'compatibility may vary: %s',
-                                      self.entity_id)
-                    return MEDIA_TYPE_TVSHOW
-                elif media_type == 'movie':
-                    return MEDIA_TYPE_VIDEO
-                elif media_type == 'track':
-                    return MEDIA_TYPE_MUSIC
+        if self._session_type == 'clip':
+            _LOGGER.debug('Clip content type detected, '
+                          'compatibility may vary: %s',
+                          self.entity_id)
+            return MEDIA_TYPE_TVSHOW
+        elif self._session_type == 'episode':
+            return MEDIA_TYPE_TVSHOW
+        elif self._session_type == 'movie':
+            return MEDIA_TYPE_VIDEO
+        elif self._session_type == 'track':
+            return MEDIA_TYPE_MUSIC
+        else:
             return None
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_MUSIC:
-                if self.session:
-                    # use album artist if track artist is missing
-                    if self._convert_na_to_none(
-                            self.session.originalTitle) is not None:
-                        return self._convert_na_to_none(
-                            self.session.originalTitle)
-                    else:
-                        _LOGGER.debug(
-                            'Using album artist because track artist '
-                            'was not found: %s', self.entity_id)
-                        return self._convert_na_to_none(
-                            self.session.grandparentTitle)
+        return self._media_artist
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_MUSIC:
-                if self.session:
-                    return self._convert_na_to_none(self.session.parentTitle)
+        return self._media_album_name
 
     @property
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_MUSIC:
-                if self.session:
-                    return self._convert_na_to_none(
-                        self.session.grandparentTitle)
+        return self._media_album_artist
 
     @property
     def media_track(self):
         """Track number of current playing media, music track only."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_MUSIC:
-                if self.session:
-                    return self._convert_na_to_none(self.session.index)
+        return self._media_track
 
     @property
     def media_duration(self):
         """Duration of current playing media in seconds."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.session:
-                return self._convert_na_to_none(self.session.duration)
+        return self._media_duration
 
     @property
     def media_position(self):
-        """Position of current playing media in seconds."""
-        if self.session:
-            return self._convert_na_to_none(self.session.viewOffset)
+        """Position of current playing media in seconds.
+
+        Music position appears to update slower than other media.
+        """
+        if self._session:
+            return self._media_position
 
     @property
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.state == STATE_PLAYING:
-                self._media_position_updated_at = util.dt.utcnow()
+        if self._is_player_active and self.state == STATE_PLAYING:
+            self._media_position_updated_at = util.dt.utcnow()
+
+        if self._is_player_active:
             return self._media_position_updated_at
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.session:
-                thumb_url = self._convert_na_to_none(self.session.thumb)
-                if self.media_content_type is MEDIA_TYPE_TVSHOW:
-                    if not self.optional_config[CONF_USE_EPISODE_ART]:
-                        thumb_url = self._convert_na_to_none(
-                            self.session.grandparentThumb)
-
-                if thumb_url:
-                    thumb_url = self.session.server.url(thumb_url)
-                    thumb_response = requests.get(thumb_url, verify=False)
-                    if thumb_response.status_code != 200:
-                        _LOGGER.debug('Using media art because media thumb '
-                                      'was not found: %s', self.entity_id)
-                        thumb_url = self.session.server.url(
-                            self._convert_na_to_none(self.session.art))
-                else:
-                    thumb_url = self.session.server.url(
-                        self._convert_na_to_none(self.session.art))
-
-                return thumb_url
+        return self._media_image_url
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            # find a string we can use as a title
-            title = None
-            if self.session:
-                if self._convert_na_to_none(self.session.title) is not None:
-                    title = self.session.title
-
-                    # append year for movies
-                    if self.media_content_type is MEDIA_TYPE_VIDEO:
-                        if self._convert_na_to_none(
-                                self.session.year) is not None:
-                            title = title + " (" + str(self.session.year) + ")"
-
-            return title
+        return self._media_title
 
     @property
     def media_season(self):
         """Season of curent playing media (TV Show only)."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_TVSHOW:
-                if self.session is not None:
-                    if callable(self.session):
-                        return self._convert_na_to_none(
-                            self.session.seasons()[0].index).zfill(2)
-                    elif self._convert_na_to_none(
-                            self.session.parentIndex) is not None:
-                        return self.session.parentIndex.zfill(2)
-
-            return None
+        return self._media_season
 
     @property
     def media_series_title(self):
         """The title of the series of current playing media (TV Show only)."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_TVSHOW:
-                if self.session:
-                    return self._convert_na_to_none(
-                        self.session.grandparentTitle)
+        return self._media_series_title
 
     @property
     def media_episode(self):
         """Episode of current playing media (TV Show only)."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.media_content_type is MEDIA_TYPE_TVSHOW:
-                if self.session:
-                    if self._convert_na_to_none(
-                            self.session.index) is not None:
-                        return str(self.session.index).zfill(2)
+        return self._media_episode
 
     @property
     def make(self):
@@ -697,67 +741,73 @@ class PlexClient(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            # force show all controls
-            if self.optional_config[CONF_SHOW_ALL_CONTROLS]:
-                return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
+        features = None
+        if not self._is_player_active:
+            features = None
+
+        # force show all controls
+        if self.optional_config[CONF_SHOW_ALL_CONTROLS]:
+            features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
                         SUPPORT_NEXT_TRACK | SUPPORT_STOP |
                         SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
                         SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
-            else:
-                # only show controls when we know what device is connecting
-                if not self._make:
-                    return None
-                # no mute support
-                elif self.make.lower() == "shield android tv":
-                    _LOGGER.debug(
-                        'Shield Android TV client detected, disabling mute '
-                        'controls: %s', self.entity_id)
-                    return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                            SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                            SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
-                            SUPPORT_TURN_OFF)
-                # Only supports play,pause,stop (and off which really is stop)
-                elif self.make.lower().startswith("tivo"):
-                    _LOGGER.debug(
-                        'Tivo client detected, only enabling pause, play, '
-                        'stop, and off controls: %s', self.entity_id)
-                    return (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP |
-                            SUPPORT_TURN_OFF)
-                # Default to show all controls
-                elif self.device:
-                    return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                            SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                            SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
-                            SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
-                else:
-                    return None
 
-    def local_client_control_fix(self):
+        # only show controls when we know what device is connecting
+        if not self._make:
+            features = None
+        # no mute support
+        elif self.make.lower() == "shield android tv":
+            _LOGGER.debug(
+                'Shield Android TV client detected, disabling mute '
+                'controls: %s', self.entity_id)
+            features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
+                        SUPPORT_NEXT_TRACK | SUPPORT_STOP |
+                        SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
+                        SUPPORT_TURN_OFF)
+        # Only supports play,pause,stop (and off which really is stop)
+        elif self.make.lower().startswith("tivo"):
+            _LOGGER.debug(
+                'Tivo client detected, only enabling pause, play, '
+                'stop, and off controls: %s', self.entity_id)
+            features = (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP |
+                        SUPPORT_TURN_OFF)
+        # Default to show all controls
+        elif self.device:
+            features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
+                        SUPPORT_NEXT_TRACK | SUPPORT_STOP |
+                        SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
+                        SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
+        else:
+            features = None
+
+        return features
+
+    def _local_client_control_fix(self):
         """Detect if local client and adjust url to allow control."""
-        if self.device:
-            # if this device's machineIdentifier matches an active client
-            # with a loopback address, the device must be local or casting
-            for client in self.device.server.clients():
-                if "127.0.0.1" in client.baseurl:
-                    if (client.machineIdentifier ==
-                            self.device.machineIdentifier):
-                        # point controls to server since that's where the
-                        # playback is occuring
-                        _LOGGER.debug(
-                            'Local client detected, redirecting controls to '
-                            'Plex server: %s', self.entity_id)
-                        server_url = self.device.server.baseurl
-                        client_url = self.device.baseurl
-                        self.device.baseurl = "{}://{}:{}".format(
-                            urlparse(client_url).scheme,
-                            urlparse(server_url).hostname,
-                            str(urlparse(client_url).port))
+        if self.device is None:
+            return
+
+        # if this device's machineIdentifier matches an active client
+        # with a loopback address, the device must be local or casting
+        for client in self.device.server.clients():
+            if ("127.0.0.1" in client.baseurl and
+                    client.machineIdentifier == self.device.machineIdentifier):
+                # point controls to server since that's where the
+                # playback is occuring
+                _LOGGER.debug(
+                    'Local client detected, redirecting controls to '
+                    'Plex server: %s', self.entity_id)
+                server_url = self.device.server.baseurl
+                client_url = self.device.baseurl
+                self.device.baseurl = "{}://{}:{}".format(
+                    urlparse(client_url).scheme,
+                    urlparse(server_url).hostname,
+                    str(urlparse(client_url).port))
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         if self.device:
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.setVolume(
                 int(volume * 100), self._active_media_plexapi_type)
             self._volume_level = volume  # store since we can't retrieve
@@ -765,16 +815,14 @@ class PlexClient(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume level of the client (0..1)."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.device:
-                return self._volume_level
+        if self._is_player_active and self.device:
+            return self._volume_level
 
     @property
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
-        if self.state not in (STATE_IDLE, STATE_OFF):  # true or frozen state
-            if self.device:
-                return self._volume_muted
+        if self._is_player_active and self.device:
+            return self._volume_muted
 
     def mute_volume(self, mute):
         """Mute the volume.
@@ -794,19 +842,19 @@ class PlexClient(MediaPlayerDevice):
     def media_play(self):
         """Send play command."""
         if self.device:
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.play(self._active_media_plexapi_type)
 
     def media_pause(self):
         """Send pause command."""
         if self.device:
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.pause(self._active_media_plexapi_type)
 
     def media_stop(self):
         """Send stop command."""
         if self.device:
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.stop(self._active_media_plexapi_type)
 
     def turn_off(self):
@@ -817,21 +865,18 @@ class PlexClient(MediaPlayerDevice):
     def media_next_track(self):
         """Send next track command."""
         if self.device:
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.skipNext(self._active_media_plexapi_type)
 
     def media_previous_track(self):
         """Send previous track command."""
         if self.device:
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.skipPrevious(self._active_media_plexapi_type)
 
-    @asyncio.coroutine
-    def async_play_media(self, media_type, media_id, **kwargs):
-        """Play a piece of media.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
+    # pylint: disable=W0613
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
         if self.device:
             src = json.loads(media_id)
 
@@ -892,7 +937,7 @@ class PlexClient(MediaPlayerDevice):
             server_url = media.server.baseurl.split(':')
             playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
                                                            media, **params)
-            self.local_client_control_fix()
+            self._local_client_control_fix()
             self.device.sendCommand('playback/playMedia', **dict({
                 'machineIdentifier':
                 self.device.server.machineIdentifier,
