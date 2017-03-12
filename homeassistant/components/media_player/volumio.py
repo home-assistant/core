@@ -179,7 +179,6 @@ class Volumia(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-
         volume = self._state.get('volume', None)
         if volume is not None:
             volume = volume / 100
@@ -222,9 +221,9 @@ class Volumia(MediaPlayerDevice):
                                      params={'cmd': 'volume',
                                              'volume': int(volume * 100)})
 
-    def async_mute_volume(self):
-        """Send volume_up command to media player."""
-        mutecmd = 'unmute' if self._state['mute'] else 'mute'
-        return self.send_volumia_msg('commands',
+    def async_mute_volume(self, mute):
+        """Send mute command to media player."""
+        mutecmd = 'mute' if mute else 'unmute'
+        return self.send_volumio_msg('commands',
                                      params={'cmd': 'volume',
                                              'volume': mutecmd})
