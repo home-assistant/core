@@ -42,6 +42,7 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
+CONF_EVENTS = 'events'
 
 CONNECT_RETRY_WAIT = 3
 
@@ -49,11 +50,15 @@ FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
         vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EVENTS, default=[]):
             vol.All(cv.ensure_list, [cv.string])
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
         vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EVENTS, default=[]):
             vol.All(cv.ensure_list, [cv.string])
     })
 })
@@ -142,6 +147,8 @@ class Recorder(threading.Thread):
         self.include_d = include.get(CONF_DOMAINS, [])
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
+        self.exclude_events = exclude.get(CONF_EVENTS, [])
+        self.include_events = include.get(CONF_EVENTS, [])
 
         self.get_session = None
 
@@ -266,12 +273,19 @@ class Recorder(threading.Thread):
                     continue
 
             with session_scope(session=self.get_session()) as session:
-                dbevent = Events.from_event(event)
-                session.add(dbevent)
+                dbevent = None
+                if (event.event_type not in self.exclude_events) and \
+                        (not self.include_events or
+                         event.event_type in self.include_events):
+                    dbevent = Events.from_event(event)
+                    session.add(dbevent)
+                else:
+                    dbevent = None
 
                 if event.event_type == EVENT_STATE_CHANGED:
                     dbstate = States.from_event(event)
-                    dbstate.event_id = dbevent.event_id
+                    dbstate.event_id = dbevent.event_id if dbevent \
+                        is not None else None
                     session.add(dbstate)
 
             self.queue.task_done()

@@ -168,6 +168,101 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     assert hass.states.get('test.ok').state == 'state2'
 
 
+def test_saving_state_exclude_events_startup(hass_recorder):
+    """Test saving and restoring a state when there are event filters.
+
+    homeassistant_start is just some random event that is always fired.
+    Filtering the event should not filter states of the same domain or name.
+    """
+    hass = hass_recorder({
+        'exclude': {'events': 'homeassistant_start'}})
+    states = _add_entities(hass, ['homeassistant_start.recorder',
+                                  'test.homeassistant_start',
+                                  'test.recorder'])
+    assert len(states) == 3
+    assert hass.states.get('homeassistant_start.recorder') == states[0]
+    assert hass.states.get('test.homeassistant_start') == states[1]
+    assert hass.states.get('test.recorder') == states[2]
+
+
+def test_saving_state_exclude_events_state_changed(hass_recorder):
+    """Test saving a state when there is an event filters for 'state_changed'.
+
+    Recording the state should be done regardless of the event filter.
+    """
+    hass = hass_recorder({
+        'exclude': {'events': 'state_changed'}})
+    states = _add_entities(hass, ['homeassistant_start.recorder',
+                                  'test.recorder'])
+    assert len(states) == 2
+    assert hass.states.get('homeassistant_start.recorder') == states[0]
+    assert hass.states.get('test.recorder') == states[1]
+
+
+def test_exclude_events(hass_recorder):
+    """Test excluding an event."""
+    event_type_unfiltered = 'EVENT_TEST'
+    event_type_filtered = 'EVENT_TEST_FILTERED'
+    event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
+
+    hass = hass_recorder({
+        'exclude': {'events': event_type_filtered}})
+
+    hass.bus.fire(event_type_unfiltered, event_data)
+    hass.bus.fire(event_type_filtered, event_data)
+    hass.block_till_done()
+    hass.data[DATA_INSTANCE].block_till_done()
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(
+            event_type=event_type_unfiltered))
+        assert len(db_events) == 1
+        db_events = list(session.query(Events).filter_by(
+            event_type=event_type_filtered))
+        assert len(db_events) == 0
+
+
+def test_include_events(hass_recorder):
+    """Test limiting saved events to included ones."""
+    event_type_unfiltered = 'EVENT_TEST'
+    event_type_filtered = 'EVENT_TEST_FILTERED'
+    event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
+
+    hass = hass_recorder({
+        'include': {'events': event_type_unfiltered}})
+
+    hass.bus.fire(event_type_unfiltered, event_data)
+    hass.bus.fire(event_type_filtered, event_data)
+    hass.block_till_done()
+    hass.data[DATA_INSTANCE].block_till_done()
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events).filter_by(
+            event_type=event_type_unfiltered))
+        assert len(db_events) == 1
+        db_events = list(session.query(Events).filter_by(
+            event_type=event_type_filtered))
+        assert len(db_events) == 0
+
+
+def test_exclude_all_events(hass_recorder):
+    """Test disabling event saving."""
+    event_type = 'EVENT_TEST'
+    event_data = {'test_attr': 5, 'test_attr_10': 'nice'}
+
+    hass = hass_recorder({
+        'include': {'events': ''}})
+
+    for i in range(10):
+        hass.bus.fire(event_type + str(i), event_data)
+    hass.block_till_done()
+    hass.data[DATA_INSTANCE].block_till_done()
+
+    with session_scope(hass=hass) as session:
+        db_events = list(session.query(Events))
+        assert len(db_events) == 0
+
+
 def test_recorder_setup_failure():
     """Test some exceptions."""
     hass = get_test_home_assistant()
