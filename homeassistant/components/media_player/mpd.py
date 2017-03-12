@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
-    CONF_HOST)
+    CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -29,6 +29,7 @@ CONF_LOCATION = 'location'
 
 DEFAULT_LOCATION = 'MPD'
 DEFAULT_PORT = 6600
+DEFAULT_NAME = 'MPD'
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
@@ -41,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
@@ -51,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     location = config.get(CONF_LOCATION)
     password = config.get(CONF_PASSWORD)
-
+    name = config.get(CONF_NAME)
     import mpd
 
     # pylint: disable=no-member
@@ -75,20 +77,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             raise
 
-    add_devices([MpdDevice(daemon, port, location, password)])
+    add_devices([MpdDevice(daemon, port, location, password, name)])
 
 
 class MpdDevice(MediaPlayerDevice):
     """Representation of a MPD server."""
 
     # pylint: disable=no-member
-    def __init__(self, server, port, location, password):
+    def __init__(self, server, port, location, password, name):
         """Initialize the MPD device."""
         import mpd
 
         self.server = server
         self.port = port
-        self._name = location
+        self._name = name
         self.password = password
         self.status = None
         self.currentsong = None
