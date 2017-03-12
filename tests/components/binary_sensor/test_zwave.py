@@ -27,6 +27,7 @@ def test_get_device_detects_trigger_sensor(mock_openzwave):
 
     device = zwave.get_device(node=node, value=value, node_config={})
     assert isinstance(device, zwave.ZWaveTriggerSensor)
+    assert device.device_class == "motion"
 
 
 def test_get_device_detects_workaround_sensor(mock_openzwave):
@@ -49,20 +50,17 @@ def test_get_device_detects_sensor(mock_openzwave):
     assert isinstance(device, zwave.ZWaveBinarySensor)
 
 
-@asyncio.coroutine
-def test_binary_sensor_value_changed(hass, mock_openzwave):
+def test_binary_sensor_value_changed(mock_openzwave):
     """Test value changed for binary sensor."""
     node = MockNode()
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_SENSOR_BINARY)
     device = zwave.get_device(node=node, value=value, node_config={})
-    device.hass = hass
 
     assert not device.is_on
 
     value.data = True
-    yield from hass.loop.run_in_executor(None, value_changed, value)
-    yield from hass.async_block_till_done()
+    value_changed(value)
 
     assert device.is_on
 
