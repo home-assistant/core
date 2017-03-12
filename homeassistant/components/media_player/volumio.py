@@ -42,11 +42,11 @@ _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_NAME = 'Volumia'
+DEFAULT_NAME = 'Volumio'
 DEFAULT_PORT = 3000
 TIMEOUT = 10
 
-SUPPORT_VOLUMIA = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+SUPPORT_VOLUMIO = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY
 
@@ -60,15 +60,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the Volumia platform."""
+    """Setup the Volumio platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
-    yield from add_entities([Volumia(name, host, port, hass)])
+    yield from add_entities([Volumio(name, host, port, hass)])
 
 
-class Volumia(MediaPlayerDevice):
-    """Volumia Player Object."""
+class Volumio(MediaPlayerDevice):
+    """Volumio Player Object."""
 
     def __init__(self, name, host, port, hass):
         """Initialize the media player."""
@@ -79,9 +79,10 @@ class Volumia(MediaPlayerDevice):
         self._name = name
         self._state = {}
         self.async_update()
+        self._lastvol = self._state.get('volume', 0)
 
     @asyncio.coroutine
-    def send_volumia_msg(self, method, params=None):
+    def send_volumio_msg(self, method, params=None):
         """Send message."""
         url = "http://{}:{}/api/v1/{}/".format(
             self.host, self.port, method)
@@ -103,7 +104,7 @@ class Volumia(MediaPlayerDevice):
         except (asyncio.TimeoutError,
                 aiohttp.errors.ClientError,
                 aiohttp.errors.ClientDisconnectedError) as error:
-            _LOGGER.error("Failed communicating with Volumia: %s", type(error))
+            _LOGGER.error("Failed communicating with Volumio: %s", type(error))
             return False
         finally:
             if response is not None:
@@ -118,7 +119,7 @@ class Volumia(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Update state."""
-        resp = yield from self.send_volumia_msg('getState')
+        resp = yield from self.send_volumio_msg('getState')
         if resp is False:
             return
         self._state = resp.copy()
@@ -197,33 +198,39 @@ class Volumia(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag of media commands that are supported."""
-        return SUPPORT_VOLUMIA
+        return SUPPORT_VOLUMIO
 
     def async_media_next_track(self):
         """Send media_next command to media player."""
-        return self.send_volumia_msg('commands', params={'cmd': 'next'})
+        return self.send_volumio_msg('commands', params={'cmd': 'next'})
 
     def async_media_previous_track(self):
         """Send media_previous command to media player."""
-        return self.send_volumia_msg('commands', params={'cmd': 'prev'})
+        return self.send_volumio_msg('commands', params={'cmd': 'prev'})
 
     def async_media_play(self):
         """Send media_play command to media player."""
-        return self.send_volumia_msg('commands', params={'cmd': 'play'})
+        return self.send_volumio_msg('commands', params={'cmd': 'play'})
 
     def async_media_pause(self):
         """Send media_pause command to media player."""
-        return self.send_volumia_msg('commands', params={'cmd': 'pause'})
+        return self.send_volumio_msg('commands', params={'cmd': 'pause'})
 
     def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
-        return self.send_volumia_msg('commands',
+        return self.send_volumio_msg('commands',
                                      params={'cmd': 'volume',
                                              'volume': int(volume * 100)})
 
     def async_mute_volume(self, mute):
         """Send mute command to media player."""
         mutecmd = 'mute' if mute else 'unmute'
-        return self.send_volumio_msg('commands',
-                                     params={'cmd': 'volume',
-                                             'volume': mutecmd})
+        if mute:
+            self._lastvol = self._state['volume']
+            return self.send_volumio_msg('commands',
+                                         params={'cmd': 'volume',
+                                                 'volume': mutecmd})
+        else:
+            return self.send_volumio_msg('commands',
+                                         params={'cmd': 'volume',
+                                                 'volume': self._lastvol})
