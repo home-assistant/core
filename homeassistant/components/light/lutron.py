@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, DOMAIN, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lutron import (
     LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
 
