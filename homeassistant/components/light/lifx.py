@@ -89,7 +89,7 @@ class LIFX(object):
         self.entities[device.mac_addr] = entity
         self.hass.async_add_job(self.async_add_devices, [entity])
 
-    def unregister(self,device):
+    def unregister(self, device):
         """Callback for disappearing bulb."""
         entity = self.entities[device.mac_addr]
         _LOGGER.debug("%s unregister", entity.ipaddr)
