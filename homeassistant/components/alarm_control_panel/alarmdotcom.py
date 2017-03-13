@@ -219,7 +219,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             return False
         finally:
             if response is not None:
-                return response.release()
+                yield from response.release()
 
     @property
     def name(self):
