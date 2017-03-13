@@ -71,7 +71,7 @@ class LIFX(object):
         self.hass = hass
         self.async_add_devices = async_add_devices
 
-    def register(self,device):
+    def register(self, device):
         """Callback for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
@@ -229,7 +229,7 @@ class LIFXLight(Light):
         else:
             kelvin = self._kel
 
-        hsbk = [ hue, saturation, brightness, kelvin ]
+        hsbk = [hue, saturation, brightness, kelvin]
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
                       self.ipaddr, self._power, fade, *hsbk)
 
@@ -261,7 +261,7 @@ class LIFXLight(Light):
         if fade < BULB_LATENCY:
             self.set_power(0)
 
-    def got_color(self,device,msg):
+    def got_color(self, device, msg):
         """Callback that gets current power/color status"""
         self.set_power(device.power_level)
         self.set_color(*device.color)
