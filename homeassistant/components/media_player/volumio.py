@@ -59,12 +59,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Volumio platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
-    yield from add_entities([Volumio(name, host, port, hass)])
+    async_add_devices([Volumio(name, host, port, hass)])
 
 
 class Volumio(MediaPlayerDevice):
@@ -218,19 +218,20 @@ class Volumio(MediaPlayerDevice):
 
     def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
-        yield from self.send_volumio_msg('commands',
-                                         params={'cmd': 'volume',
-                                                 'volume': int(volume * 100)})
+        return self.send_volumio_msg('commands',
+                                     params={'cmd': 'volume',
+                                             'volume': int(volume * 100)})
 
     def async_mute_volume(self, mute):
         """Send mute command to media player."""
         mutecmd = 'mute' if mute else 'unmute'
         if mute:
+            # mute is implemenhted as 0 volume, do save last volume level
             self._lastvol = self._state['volume']
-            yield from self.send_volumio_msg('commands',
-                                             params={'cmd': 'volume',
-                                                     'volume': mutecmd})
+            return self.send_volumio_msg('commands',
+                                         params={'cmd': 'volume',
+                                                 'volume': mutecmd})
         else:
-            yield from self.send_volumio_msg('commands',
-                                             params={'cmd': 'volume',
-                                                     'volume': self._lastvol})
+            return self.send_volumio_msg('commands',
+                                         params={'cmd': 'volume',
+                                                 'volume': self._lastvol})
