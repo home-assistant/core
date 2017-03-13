@@ -15,34 +15,34 @@ from homeassistant.components.zwave import async_setup_platform  # noqa # pylint
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device(node, values, **kwargs):
+def get_device(node, value, **kwargs):
     """Create zwave entity device."""
     # Generic Device mappings
-    if values.primary.command_class == zwave.const.COMMAND_CLASS_BATTERY:
-        return ZWaveSensor(values)
+    if value.command_class == zwave.const.COMMAND_CLASS_BATTERY:
+        return ZWaveSensor(value)
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
-        return ZWaveMultilevelSensor(values)
+        return ZWaveMultilevelSensor(value)
     if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
-            values.primary.type == zwave.const.TYPE_DECIMAL:
-        return ZWaveMultilevelSensor(values)
+            value.type == zwave.const.TYPE_DECIMAL:
+        return ZWaveMultilevelSensor(value)
     if node.has_command_class(zwave.const.COMMAND_CLASS_ALARM) or \
             node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_ALARM):
-        return ZWaveAlarmSensor(values)
+        return ZWaveAlarmSensor(value)
     return None
 
 
 class ZWaveSensor(zwave.ZWaveDeviceEntity):
     """Representation of a Z-Wave sensor."""
 
-    def __init__(self, values):
+    def __init__(self, value):
         """Initialize the sensor."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
         self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self.values.primary.data
-        self._units = self.values.primary.units
+        self._state = self._value.data
+        self._units = self._value.units
 
     @property
     def force_update(self):
