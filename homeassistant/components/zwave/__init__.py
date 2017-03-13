@@ -434,7 +434,7 @@ def setup(hass, config):
                 node=node, value=value, node_config=node_config, hass=hass)
             if not device:
                 continue
-            dict_id = value.value_id
+            dict_id = "{}.{}".format(component, value.value_id)
 
             @asyncio.coroutine
             def discover_device(component, device, dict_id):
