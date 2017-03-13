@@ -156,6 +156,7 @@ omit =
     homeassistant/components/binary_sensor/hikvision.py
     homeassistant/components/binary_sensor/iss.py
     homeassistant/components/binary_sensor/rest.py
+    homeassistant/components/binary_sensor/workday.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
