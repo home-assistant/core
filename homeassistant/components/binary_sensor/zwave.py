@@ -58,11 +58,6 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._sensor_type
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
 
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""

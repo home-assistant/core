@@ -24,6 +24,7 @@ class MockNode(MagicMock):
                  name='Mock Node',
                  manufacturer_id='ABCD',
                  product_id='123',
+                 product_type='678',
                  command_classes=None):
         """Initialize a Z-Wave mock node."""
         super().__init__()
@@ -31,6 +32,7 @@ class MockNode(MagicMock):
         self.name = name
         self.manufacturer_id = manufacturer_id
         self.product_id = product_id
+        self.product_type = product_type
         self._command_classes = command_classes or []
 
     def has_command_class(self, command_class):
@@ -53,6 +55,7 @@ class MockValue(MagicMock):
                  node=None,
                  instance=0,
                  index=0,
+                 command_class=None,
                  value_id=None):
         """Initialize a Z-Wave mock value."""
         super().__init__()
@@ -61,6 +64,7 @@ class MockValue(MagicMock):
         self.node = node
         self.instance = instance
         self.index = 0
+        self.command_class = command_class
         if value_id is None:
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
