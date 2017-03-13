@@ -58,6 +58,7 @@ SUPPORT_HUE = {
     'Extended color light': SUPPORT_HUE_EXTENDED,
     'Color light': SUPPORT_HUE_COLOR,
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
+    'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
     }
 
