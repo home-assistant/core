@@ -287,15 +287,14 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        from sqlalchemy import create_engine
+        from sqlalchemy import create_engine, event
+        from sqlalchemy.engine import Engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
+
         from . import models
 
         kwargs = {}
-
-        from sqlalchemy.engine import Engine
-        from sqlalchemy import event
 
         @event.listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
