@@ -736,7 +736,7 @@ upsmychoice==1.0.1
 uvcclient==0.10.0
 
 # homeassistant.components.volvooncall
-volvooncall==0.3.2
+volvooncall==0.3.3
 
 # homeassistant.components.verisure
 vsure==0.11.1
