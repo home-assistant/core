@@ -125,11 +125,11 @@ class TestHelpersEntityComponent(unittest.TestCase):
         update_err = []
 
         def update_mock():
-            """Mock normal update"""
+            """Mock normal update."""
             update_ok.append(None)
 
         def update_mock_err():
-            """Mock error update"""
+            """Mock error update."""
             update_err.append(None)
             raise AssertionError("Fake error update")
 
