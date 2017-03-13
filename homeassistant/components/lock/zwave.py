@@ -120,7 +120,7 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 })
 
 
-def get_device(hass, node, value, **kwargs):
+def get_device(hass, node, values, **kwargs):
     """Create zwave entity device."""
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -191,16 +191,15 @@ def get_device(hass, node, value, **kwargs):
                                clear_usercode,
                                descriptions.get(SERVICE_CLEAR_USERCODE),
                                schema=CLEAR_USERCODE_SCHEMA)
-    return ZwaveLock(value)
+    return ZwaveLock(values)
 
 
 class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
     """Representation of a Z-Wave Lock."""
 
-    def __init__(self, value):
+    def __init__(self, values):
         """Initialize the Z-Wave lock device."""
-        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
-        self._node = value.node
+        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._state = None
         self._notification = None
         self._lock_status = None
@@ -208,10 +207,10 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
         # Enable appropriate workaround flags for our device
         # Make sure that we have values for the key before converting to int
-        if (value.node.manufacturer_id.strip() and
-                value.node.product_id.strip()):
-            specific_sensor_key = (int(value.node.manufacturer_id, 16),
-                                   int(value.node.product_id, 16))
+        if (self.node.manufacturer_id.strip() and
+                self.node.product_id.strip()):
+            specific_sensor_key = (int(self.node.manufacturer_id, 16),
+                                   int(self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_V2BTZE:
                     self._v2btze = 1
@@ -221,36 +220,33 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self._value.data
+        self._state = self.values.primary.data
         _LOGGER.debug('Lock state set from Bool value and'
                       ' is %s', self._state)
-        notification_data = self.get_value(class_id=zwave.const
-                                           .COMMAND_CLASS_ALARM,
-                                           label=['Access Control'],
-                                           member='data')
-        if notification_data:
+        if self.values.access_control:
+            notification_data = self.values.access_control.data
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
-        if self._v2btze:
-            advanced_config = self.get_value(class_id=zwave.const
-                                             .COMMAND_CLASS_CONFIGURATION,
-                                             index=12,
-                                             data=CONFIG_ADVANCED,
-                                             member='data')
-            if advanced_config:
-                self._state = LOCK_STATUS.get(str(notification_data))
-                _LOGGER.debug('Lock state set from Access Control '
-                              'value and is %s, get=%s',
-                              str(notification_data),
-                              self.state)
 
-        alarm_type = self.get_value(class_id=zwave.const
-                                    .COMMAND_CLASS_ALARM,
-                                    label=['Alarm Type'], member='data')
+            if self._v2btze:
+                if self.values.v2btze_advanced and \
+                        self.values.v2btze_advanced.data == CONFIG_ADVANCED:
+                    self._state = LOCK_STATUS.get(str(notification_data))
+                    _LOGGER.debug('Lock state set from Access Control '
+                                  'value and is %s, get=%s',
+                                  str(notification_data),
+                                  self.state)
+
+        if not self.values.alarm_type:
+            return
+
+        alarm_type = self.values.alarm_type.data
         _LOGGER.debug('Lock alarm_type is %s', str(alarm_type))
-        alarm_level = self.get_value(class_id=zwave.const
-                                     .COMMAND_CLASS_ALARM,
-                                     label=['Alarm Level'], member='data')
+        if self.values.alarm_level:
+            alarm_level = self.values.alarm_level.data
+        else:
+            alarm_level = None
         _LOGGER.debug('Lock alarm_level is %s', str(alarm_level))
+
         if not alarm_type:
             return
         if alarm_type is 21:
@@ -277,11 +273,11 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
 
     def lock(self, **kwargs):
         """Lock the device."""
-        self._value.data = True
+        self.values.primary.data = True
 
     def unlock(self, **kwargs):
         """Unlock the device."""
-        self._value.data = False
+        self.values.primary.data = False
 
     @property
     def device_state_attributes(self):
@@ -292,8 +288,3 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         if self._lock_status:
             data[ATTR_LOCK_STATUS] = self._lock_status
         return data
-
-    @property
-    def dependent_value_ids(self):
-        """List of value IDs a device depends on."""
-        return None
