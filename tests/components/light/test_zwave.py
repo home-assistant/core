@@ -10,7 +10,7 @@ def test_get_device_detects_dimmer(mock_openzwave):
     node = MockNode()
     value = MockValue(data=0, node=node)
 
-    device = zwave.get_device(node, value, {})
+    device = zwave.get_device(node=node, value=value, node_config={})
     assert isinstance(device, zwave.ZwaveDimmer)
 
 
@@ -19,7 +19,7 @@ def test_get_device_detects_colorlight(mock_openzwave):
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
 
-    device = zwave.get_device(node, value, {})
+    device = zwave.get_device(node=node, value=value, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
 
 
@@ -27,7 +27,7 @@ def test_dimmer_turn_on(mock_openzwave):
     """Test turning on a dimmable Z-Wave light."""
     node = MockNode()
     value = MockValue(data=0, node=node)
-    device = zwave.get_device(node, value, {})
+    device = zwave.get_device(node=node, value=value, node_config={})
 
     device.turn_on()
 
@@ -51,7 +51,7 @@ def test_dimmer_value_changed(mock_openzwave):
     """Test value changed for dimmer lights."""
     node = MockNode()
     value = MockValue(data=0, node=node)
-    device = zwave.get_device(node, value, {})
+    device = zwave.get_device(node=node, value=value, node_config={})
 
     assert not device.is_on
 
