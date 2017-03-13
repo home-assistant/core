@@ -4,6 +4,8 @@ import logging
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.tado_v1 import (
+    CONST_TADO_DATA)
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = ['temperature', 'humidity', 'power',
@@ -13,7 +15,7 @@ SENSOR_TYPES = ['temperature', 'humidity', 'power',
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the sensor platform."""
     #  get the PyTado object from the hub component
-    tado = hass.data['tado_v1_data']
+    tado = hass.data[CONST_TADO_DATA]
 
     try:
         zones = tado.get_zones()

@@ -39,6 +39,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
+CONST_TADO_DATA = 'tado_v1_data'
+
 
 def setup(hass, config):
     """Your controller/hub specific code."""
@@ -53,7 +55,7 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
 
-    hass.data['tado_v1_data'] = TadoDataStore(tado)
+    hass.data[CONST_TADO_DATA] = TadoDataStore(tado)
 
     for component in TADO_V1_COMPONENTS:
         load_platform(hass, component, DOMAIN, {}, config)
