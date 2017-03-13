@@ -9,9 +9,8 @@ import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PLATFORM, CONF_API_KEY
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import discovery, config_per_platform
-from homeassistant.setup import async_prepare_setup_platform
+
+from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'telegram_bot'
 
@@ -37,95 +36,85 @@ PLATFORM_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+class WrongMessageException(Exception):
+    """Exception to raise when an incoming message has wrong format."""
+
+    pass
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the telegram bot component."""
-    @asyncio.coroutine
-    def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Setup a telegram bot platform."""
-        platform = yield from async_prepare_setup_platform(
-            hass, config, DOMAIN, p_type)
+    """Track states and offer events for sensors."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-        if platform is None:
-            _LOGGER.error("Unknown notification service specified")
-            return
-
-        _LOGGER.info("Setting up1 %s.%s", DOMAIN, p_type)
-
-        try:
-            if hasattr(platform, 'async_setup_platform'):
-                notify_service = yield from \
-                    platform.async_setup_platform(hass, p_config,
-                                                  discovery_info)
-            elif hasattr(platform, 'setup_platform'):
-                notify_service = yield from hass.loop.run_in_executor(
-                    None, platform.setup_platform, hass, p_config,
-                    discovery_info)
-            else:
-                raise HomeAssistantError("Invalid telegram bot platform.")
-
-            if notify_service is None:
-                _LOGGER.error(
-                    "Failed to initialize telegram bot %s", p_type)
-                return
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error setting up platform %s', p_type)
-            return
-
-        return True
-
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
-
-    if setup_tasks:
-        yield from asyncio.wait(setup_tasks, loop=hass.loop)
-
-    @asyncio.coroutine
-    def async_platform_discovered(platform, info):
-        """Callback to load a platform."""
-        yield from async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
+    yield from component.async_setup(config)
     return True
 
 
-class BaseTelegramBotEntity:
-    """The base class for the telegram bot."""
+@asyncio.coroutine
+def process_message(data, allowed_chat_ids):
+    """Check for basic message rules and prepare an event to be fired."""
+    data = data.get('message')
 
-    def __init__(self, hass, allowed_chat_ids):
-        """Initialize the bot base class."""
-        self.allowed_chat_ids = allowed_chat_ids
-        self.hass = hass
+    if (not data
+            or 'from' not in data
+            or 'text' not in data
+            or data['from'].get('id') not in allowed_chat_ids):
+        # Message is not correct.
+        _LOGGER.error("Incoming message does not have required data.")
+        return None, None
 
-    def process_message(self, data):
-        """Check for basic message rules and fire an event if message is ok."""
-        data = data.get('message')
+    event_data = {
+        ATTR_USER_ID: data['from']['id'],
+        ATTR_FROM_FIRST: data['from']['first_name'],
+        ATTR_FROM_LAST: data['from']['last_name']}
 
-        if (not data
-                or 'from' not in data
-                or 'text' not in data
-                or data['from'].get('id') not in self.allowed_chat_ids):
-            # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data.")
-            return False
+    if data['text'][0] == '/':
+        pieces = data['text'].split(' ')
+        event_data[ATTR_COMMAND] = pieces[0]
+        event_data[ATTR_ARGS] = pieces[1:]
 
-        event = EVENT_TELEGRAM_COMMAND
-        event_data = {
-            ATTR_USER_ID: data['from']['id'],
-            ATTR_FROM_FIRST: data['from']['first_name'],
-            ATTR_FROM_LAST: data['from']['last_name']}
+        return (EVENT_TELEGRAM_COMMAND, event_data)
 
-        if data['text'][0] == '/':
-            pieces = data['text'].split(' ')
-            event_data[ATTR_COMMAND] = pieces[0]
-            event_data[ATTR_ARGS] = pieces[1:]
+    else:
+        event_data[ATTR_TEXT] = data['text']
 
-        else:
-            event_data[ATTR_TEXT] = data['text']
-            event = EVENT_TELEGRAM_TEXT
+        return (EVENT_TELEGRAM_TEXT, event_data)
 
-        self.hass.bus.async_fire(event, event_data)
-
-        return True
+# class BotReceiver:
+#     """Base receiver class."""
+#
+#     def __init__(self, user_ids):
+#         """Initialize the instance."""
+#         self.allowed_chat_ids = user_ids
+#         _LOGGER.debug("users allowed: %s", self.allowed_chat_ids)
+#
+#     @asyncio.coroutine
+#     def process_message(self, data):
+#         """Check for basic message rules and prepare an event to be fired."""
+#         data = data.get('message')
+#
+#         if (not data
+#             or 'from' not in data
+#             or 'text' not in data
+#             or data['from'].get('id') not in self.allowed_chat_ids):
+#             # Message is not correct.
+#             _LOGGER.error("Incoming message does not have required data.")
+#             raise WrongMessageException()
+#
+#         event_data = {
+#             ATTR_USER_ID: data['from']['id'],
+#             ATTR_FROM_FIRST: data['from']['first_name'],
+#             ATTR_FROM_LAST: data['from']['last_name']}
+#
+#         if data['text'][0] == '/':
+#             pieces = data['text'].split(' ')
+#             event_data[ATTR_COMMAND] = pieces[0]
+#             event_data[ATTR_ARGS] = pieces[1:]
+#
+#             return (EVENT_TELEGRAM_COMMAND, event_data)
+#
+#         else:
+#             event_data[ATTR_TEXT] = data['text']
+#
+#             return (EVENT_TELEGRAM_TEXT, event_data)
