@@ -119,7 +119,7 @@ class LIFXLight(Light):
         self.updated_event = asyncio.Event()
         self.blocker = None
         self.postponed_update = None
-        self.available = True
+        self._available = True
         self.set_power(device.power_level)
         self.set_color(*device.color)
 
