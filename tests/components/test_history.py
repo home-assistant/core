@@ -4,7 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch, sentinel
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 from homeassistant.components import history, recorder

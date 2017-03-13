@@ -11,16 +11,17 @@ import os
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE)
+    SERVICE_TOGGLE, SERVICE_RELOAD)
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.loader import get_platform
 from homeassistant.util.dt import utcnow
 import homeassistant.helpers.config_validation as cv
@@ -50,7 +51,6 @@ DEFAULT_INITIAL_STATE = True
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 SERVICE_TRIGGER = 'trigger'
-SERVICE_RELOAD = 'reload'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -265,9 +265,15 @@ class AutomationEntity(ToggleEntity):
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
-        """Startup if initial_state."""
-        if self._initial_state:
-            yield from self.async_enable()
+        """Startup with initial state or previous state."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if state is None:
+            if self._initial_state:
+                yield from self.async_enable()
+        else:
+            self._last_triggered = state.attributes.get('last_triggered')
+            if state.state == STATE_ON:
+                yield from self.async_enable()
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs) -> None:

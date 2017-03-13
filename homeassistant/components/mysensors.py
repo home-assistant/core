@@ -12,7 +12,7 @@ import sys
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.mqtt import (valid_publish_topic,
                                            valid_subscribe_topic)
 from homeassistant.const import (ATTR_BATTERY_LEVEL, CONF_NAME,
@@ -165,18 +165,22 @@ def setup(hass, config):
                 out_prefix=out_prefix, retain=retain)
         else:
             try:
-                socket.getaddrinfo(device, None)
-                # valid ip address
-                gateway = mysensors.TCPGateway(
-                    device, event_callback=None, persistence=persistence,
-                    persistence_file=persistence_file,
-                    protocol_version=version, port=tcp_port)
-            except OSError:
-                # invalid ip address
+                is_serial_port(device)
                 gateway = mysensors.SerialGateway(
                     device, event_callback=None, persistence=persistence,
                     persistence_file=persistence_file,
                     protocol_version=version, baud=baud_rate)
+            except vol.Invalid:
+                try:
+                    socket.getaddrinfo(device, None)
+                    # valid ip address
+                    gateway = mysensors.TCPGateway(
+                        device, event_callback=None, persistence=persistence,
+                        persistence_file=persistence_file,
+                        protocol_version=version, port=tcp_port)
+                except OSError:
+                    # invalid ip address
+                    return
         gateway.metric = hass.config.units.is_metric
         gateway.debug = config[DOMAIN].get(CONF_DEBUG)
         optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)

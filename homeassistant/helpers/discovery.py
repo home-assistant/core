@@ -7,7 +7,7 @@ There are two different types of discoveries that can be fired/listened for.
 """
 import asyncio
 
-from homeassistant import bootstrap, core
+from homeassistant import setup, core
 from homeassistant.const import (
     ATTR_DISCOVERED, ATTR_SERVICE, EVENT_PLATFORM_DISCOVERED)
 from homeassistant.exceptions import HomeAssistantError
@@ -63,7 +63,7 @@ def async_discover(hass, service, discovered=None, component=None,
             'Cannot discover the {} component.'.format(component))
 
     if component is not None and component not in hass.config.components:
-        yield from bootstrap.async_setup_component(
+        yield from setup.async_setup_component(
             hass, component, hass_config)
 
     data = {
@@ -151,7 +151,7 @@ def async_load_platform(hass, component, platform, discovered=None,
     setup_success = True
 
     if component not in hass.config.components:
-        setup_success = yield from bootstrap.async_setup_component(
+        setup_success = yield from setup.async_setup_component(
             hass, component, hass_config)
 
     # No need to fire event if we could not setup component

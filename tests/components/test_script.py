@@ -1,9 +1,10 @@
 """The tests for the Script component."""
 # pylint: disable=protected-access
 import unittest
+from unittest.mock import patch
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import script
 
 from tests.common import get_test_home_assistant, mock_component
@@ -172,3 +173,38 @@ class TestScriptComponent(unittest.TestCase):
 
         assert len(calls) == 2
         assert calls[-1].data['hello'] == 'universe'
+
+    def test_reload_service(self):
+        """Verify that the turn_on service."""
+        assert setup_component(self.hass, 'script', {
+            'script': {
+                'test': {
+                    'sequence': [{
+                        'delay': {
+                            'seconds': 5
+                        }
+                    }]
+                }
+            }
+        })
+
+        assert self.hass.states.get(ENTITY_ID) is not None
+        assert self.hass.services.has_service(script.DOMAIN, 'test')
+
+        with patch('homeassistant.config.load_yaml_config_file', return_value={
+                'script': {
+                    'test2': {
+                        'sequence': [{
+                            'delay': {
+                                'seconds': 5
+                            }
+                        }]
+                    }}}):
+            script.reload(self.hass)
+            self.hass.block_till_done()
+
+        assert self.hass.states.get(ENTITY_ID) is None
+        assert not self.hass.services.has_service(script.DOMAIN, 'test')
+
+        assert self.hass.states.get("script.test2") is not None
+        assert self.hass.services.has_service(script.DOMAIN, 'test2')

@@ -1,17 +1,24 @@
 """Setup some common test helper things."""
+import asyncio
 import functools
 import logging
-from unittest.mock import patch
+import os
+from unittest.mock import patch, MagicMock
 
 import pytest
 import requests_mock as _requests_mock
 
-from homeassistant import util, bootstrap
+from homeassistant import util, setup
 from homeassistant.util import location
 from homeassistant.components import mqtt
 
 from .common import async_test_home_assistant, mock_coro
 from .test_util.aiohttp import mock_aiohttp_client
+from .mock.zwave import SIGNAL_VALUE_CHANGED
+
+if os.environ.get('UVLOOP') == '1':
+    import uvloop
+    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 logging.basicConfig()
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
@@ -76,7 +83,7 @@ def mqtt_mock(loop, hass):
     """Fixture to mock MQTT."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         mock_mqtt().async_connect.return_value = mock_coro(True)
-        assert loop.run_until_complete(bootstrap.async_setup_component(
+        assert loop.run_until_complete(setup.async_setup_component(
             hass, mqtt.DOMAIN, {
                 mqtt.DOMAIN: {
                     mqtt.CONF_BROKER: 'mock-broker',
@@ -85,3 +92,20 @@ def mqtt_mock(loop, hass):
         client = mock_mqtt()
         client.reset_mock()
         return client
+
+
+@pytest.fixture
+def mock_openzwave():
+    """Mock out Open Z-Wave."""
+    base_mock = MagicMock()
+    libopenzwave = base_mock.libopenzwave
+    libopenzwave.__file__ = 'test'
+    base_mock.network.ZWaveNetwork.SIGNAL_VALUE_CHANGED = SIGNAL_VALUE_CHANGED
+
+    with patch.dict('sys.modules', {
+        'libopenzwave': libopenzwave,
+        'openzwave.option': base_mock.option,
+        'openzwave.network': base_mock.network,
+        'openzwave.group': base_mock.group,
+    }):
+        yield base_mock

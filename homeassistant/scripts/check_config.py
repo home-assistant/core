@@ -9,9 +9,7 @@ from unittest.mock import patch
 
 from typing import Dict, List, Sequence
 
-import homeassistant.bootstrap as bootstrap
-import homeassistant.config as config_util
-import homeassistant.loader as loader
+from homeassistant import bootstrap, loader, setup, config as config_util
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,8 +28,8 @@ MOCKS = {
                config_util.async_log_exception),
     'package_error': ("homeassistant.config._log_pkg_error",
                       config_util._log_pkg_error),
-    'logger_exception': ("homeassistant.bootstrap._LOGGER.error",
-                         bootstrap._LOGGER.error),
+    'logger_exception': ("homeassistant.setup._LOGGER.error",
+                         setup._LOGGER.error),
 }
 SILENCE = (
     'homeassistant.bootstrap.clear_secret_cache',

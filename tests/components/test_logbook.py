@@ -12,7 +12,7 @@ from homeassistant.const import (
     ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import (
     mock_http_component, init_recorder_component, get_test_home_assistant)

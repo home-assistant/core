@@ -8,8 +8,9 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_SWITCHES)
+from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_NAME, CONF_SWITCHES, EVENT_HOMEASSISTANT_STOP)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rpi-rf==0.9.6']
@@ -71,6 +72,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(devices)
 
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP, lambda event: rfdevice.cleanup())
+
 
 class RPiRFSwitch(SwitchDevice):
     """Representation of a GPIO RF switch."""
@@ -114,10 +118,10 @@ class RPiRFSwitch(SwitchDevice):
         """Turn the switch on."""
         if self._send_code(self._code_on, self._protocol, self._pulselength):
             self._state = True
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_off(self):
         """Turn the switch off."""
         if self._send_code(self._code_off, self._protocol, self._pulselength):
             self._state = False
-            self.update_ha_state()
+            self.schedule_update_ha_state()
