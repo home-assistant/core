@@ -119,8 +119,10 @@ class WemoSwitch(SwitchDevice):
                 WemoSwitch.as_uptime(self.insight_params['ontoday'])
             attr['on_total_time'] = \
                 WemoSwitch.as_uptime(self.insight_params['ontotal'])
-            attr['power_threshold_mw'] = \
-                self.insight_params['powerthreshold']
+            attr['power_threshold_w'] = \
+                convert(
+                    self.insight_params['powerthreshold'], float, 0.0
+                ) / 1000.0
 
         if self.coffeemaker_mode is not None:
             attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
