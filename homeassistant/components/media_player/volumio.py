@@ -218,19 +218,19 @@ class Volumio(MediaPlayerDevice):
 
     def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
-        return self.send_volumio_msg('commands',
-                                     params={'cmd': 'volume',
-                                             'volume': int(volume * 100)})
+        yield from self.send_volumio_msg('commands',
+                                         params={'cmd': 'volume',
+                                                 'volume': int(volume * 100)})
 
     def async_mute_volume(self, mute):
         """Send mute command to media player."""
         mutecmd = 'mute' if mute else 'unmute'
         if mute:
             self._lastvol = self._state['volume']
-            return self.send_volumio_msg('commands',
-                                         params={'cmd': 'volume',
-                                                 'volume': mutecmd})
+            yield from self.send_volumio_msg('commands',
+                                             params={'cmd': 'volume',
+                                                     'volume': mutecmd})
         else:
-            return self.send_volumio_msg('commands',
-                                         params={'cmd': 'volume',
-                                                 'volume': self._lastvol})
+            yield from self.send_volumio_msg('commands',
+                                             params={'cmd': 'volume',
+                                                     'volume': self._lastvol})
