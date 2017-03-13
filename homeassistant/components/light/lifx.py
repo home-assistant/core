@@ -65,6 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 class LIFX(object):
     """Representation of all known LIFX entities."""
+
     def __init__(self, hass, async_add_devices):
         """Initialize the light."""
         self.entities = {}
@@ -76,7 +77,7 @@ class LIFX(object):
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s register AGAIN", entity.ipaddr)
-            entity._available = True
+            entity.available = True
             entity.schedule_update_ha_state()
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
@@ -93,7 +94,7 @@ class LIFX(object):
         """Callback for disappearing bulb."""
         entity = self.entities[device.mac_addr]
         _LOGGER.debug("%s unregister", entity.ipaddr)
-        entity._available = False
+        entity.available = False
         entity.updated_event.set()
         entity.schedule_update_ha_state()
 
@@ -118,7 +119,7 @@ class LIFXLight(Light):
         self.updated_event = asyncio.Event()
         self.blocker = None
         self.postponed_update = None
-        self._available = True
+        self.available = True
         self.set_power(device.power_level)
         self.set_color(*device.color)
 
@@ -126,6 +127,11 @@ class LIFXLight(Light):
     def available(self):
         """Return the availability of the device."""
         return self._available
+
+    @available.setter
+    def available(self, value):
+        """Set the availability of the device."""
+        self._available = value
 
     @property
     def name(self):
@@ -262,7 +268,7 @@ class LIFXLight(Light):
             self.set_power(0)
 
     def got_color(self, device, msg):
-        """Callback that gets current power/color status"""
+        """Callback that gets current power/color status."""
         self.set_power(device.power_level)
         self.set_color(*device.color)
         self.updated_event.set()
