@@ -4,6 +4,7 @@ from collections import namedtuple, OrderedDict
 import unittest
 from unittest import mock
 import socket
+import ssl
 
 import voluptuous as vol
 
@@ -407,6 +408,52 @@ def test_setup_uses_certificate_not_on_mqtts_port(hass):
     import requests.certs
     mqttsCertificateBundle = requests.certs.where()
     assert mock_MQTT.mock_calls[0][1][7] != mqttsCertificateBundle
+
+
+@asyncio.coroutine
+def test_setup_without_tls_config_uses_tlsv1_under_python36(hass):
+    """Test setup defaults to TLSv1 under python3.6."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker'}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_MQTT:
+        yield from async_setup_component(hass, mqtt.DOMAIN, test_broker_cfg)
+
+    assert mock_MQTT.called
+
+    import sys
+    if sys.hexversion >= 0x03060000:
+        expectedTlsVersion = ssl.PROTOCOL_TLS  # pylint: disable=no-member
+    else:
+        expectedTlsVersion = ssl.PROTOCOL_TLSv1
+
+    assert mock_MQTT.mock_calls[0][1][14] == expectedTlsVersion
+
+
+@asyncio.coroutine
+def test_setup_with_tls_config_uses_tls_version1_2(hass):
+    """Test setup uses specified TLS version."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker',
+                                     'tls_version': '1.2'}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_MQTT:
+        yield from async_setup_component(hass, mqtt.DOMAIN, test_broker_cfg)
+
+    assert mock_MQTT.called
+
+    assert mock_MQTT.mock_calls[0][1][14] == ssl.PROTOCOL_TLSv1_2
+
+
+@asyncio.coroutine
+def test_setup_with_tls_config_of_v1_under_python36_only_uses_v1(hass):
+    """Test setup uses TLSv1.0 if explicitly chosen."""
+    test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker',
+                                     'tls_version': '1.0'}}
+
+    with mock.patch('homeassistant.components.mqtt.MQTT') as mock_MQTT:
+        yield from async_setup_component(hass, mqtt.DOMAIN, test_broker_cfg)
+
+    assert mock_MQTT.called
+    assert mock_MQTT.mock_calls[0][1][14] == ssl.PROTOCOL_TLSv1
 
 
 @asyncio.coroutine
