@@ -1,3 +1,9 @@
+"""
+Lockitron lock platform.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/lockitron/
+"""
 import logging
 
 import requests
@@ -22,6 +28,7 @@ API_ACTION_URL = BASE_URL + '/v2/locks/{}?access_token={}&state={}'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Setup the Lockitron platform."""
     access_token = config.get(CONF_ACCESS_TOKEN)
     device_id = config.get(CONF_ID)
     response = requests.get(API_STATE_URL.format(device_id, access_token))
@@ -34,6 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class Lockitron(LockDevice):
+    """Representation of a Lockitron lock."""
+
     LOCK_STATE = 'lock'
     UNLOCK_STATE = 'unlock'
 
@@ -45,14 +54,17 @@ class Lockitron(LockDevice):
 
     @property
     def should_poll(self):
+        """Return True since we need to poll for the lock's new status."""
         return True
 
     @property
     def name(self):
+        """Return the name of the device."""
         return DOMAIN
 
     @property
     def is_locked(self):
+        """Return True if the lock is currently locked, else False."""
         return self._state == Lockitron.LOCK_STATE
 
     def lock(self, **kwargs):
@@ -66,6 +78,7 @@ class Lockitron(LockDevice):
         self.update_ha_state()
 
     def update(self):
+        """Update the internal state of the device."""
         response = requests \
             .get(API_STATE_URL.format(self.device_id, self.access_token))
         if response.status_code == 200:
@@ -74,6 +87,7 @@ class Lockitron(LockDevice):
             _LOGGER.error('Error retrieving lock status: %s', response.text)
 
     def do_change_request(self, requested_state):
+        """Execute the change request and pull out the new state."""
         response = requests.put(
             API_ACTION_URL.format(self.device_id, self.access_token,
                                   requested_state))
