@@ -7,7 +7,7 @@ jinja2>=2.9.5
 voluptuous==0.9.3
 typing>=3,<4
 aiohttp==1.3.3
-async_timeout==1.1.0
+async_timeout==1.2.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all http://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
@@ -68,7 +68,7 @@ batinfo==0.4.2
 beautifulsoup4==4.5.3
 
 # homeassistant.components.blink
-blinkpy==0.4.4
+blinkpy==0.5.2
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -266,7 +266,7 @@ https://github.com/molobrakos/python-pocketcasts/archive/9f61ff00c77c7c98ffa0af9
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
 # homeassistant.components.ecobee
-https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
+https://github.com/nkgilley/python-ecobee-api/archive/a4496b293956b2eac285305136a62ac78bef510d.zip#python-ecobee==0.0.7
 
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
@@ -316,10 +316,8 @@ insteonlocal==0.48
 insteonplm==0.7.4
 
 # homeassistant.components.media_player.kodi
-jsonrpc-async==0.4
-
 # homeassistant.components.notify.kodi
-jsonrpc-requests==0.3
+jsonrpc-async==0.4
 
 # homeassistant.components.media_player.kodi
 jsonrpc-websocket==0.2
@@ -424,7 +422,7 @@ pmsensor==0.4
 proliphix==0.4.1
 
 # homeassistant.components.sensor.systemmonitor
-psutil==5.1.3
+psutil==5.2.0
 
 # homeassistant.components.wink
 pubnubsub-handler==1.0.1
@@ -454,7 +452,7 @@ pyRFXtrx==0.17.0
 pyasn1-modules==0.0.8
 
 # homeassistant.components.notify.xmpp
-pyasn1==0.2.2
+pyasn1==0.2.3
 
 # homeassistant.components.media_player.apple_tv
 pyatv==0.2.1
@@ -615,7 +613,7 @@ python-twitch==1.3.0
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.1.1
+python-wink==1.2.1
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
@@ -697,7 +695,7 @@ speedtest-cli==1.0.2
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.5
+sqlalchemy==1.1.6
 
 # homeassistant.components.statsd
 statsd==3.2.1
