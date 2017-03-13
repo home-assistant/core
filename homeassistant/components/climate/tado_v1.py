@@ -26,8 +26,6 @@ CONST_DEFAULT_OPERATION_MODE = CONST_OVERLAY_TADO_MODE
 # will be used when switching to CONST_MODE_OFF
 CONST_DEFAULT_OFF_MODE = CONST_OVERLAY_MANUAL
 
-# DOMAIN = 'tado_v1'
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -180,34 +178,30 @@ class TadoClimate(ClimateDevice):
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
-        self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self._current_operation = operation_mode
         self._overlay_mode = None
         self._control_heating()
-        self.schedule_update_ha_state()
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
         else:
             # get default temp from super class
-            return ClimateDevice.min_temp.fget(self)
+            return super().min_temp.fget(self)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        #  pylint: disable=no-member
         if self._max_temp:
             return self._max_temp
         else:
             #  Get default temp from super class
-            return ClimateDevice.max_temp.fget(self)
+            return super().max_temp.fget(self)
 
     def update(self):
         """Update the state of this climate device."""
@@ -252,7 +246,6 @@ class TadoClimate(ClimateDevice):
                 self._device_is_active = True
 
         if 'overlay' in data and data['overlay'] is not None:
-            # pylint: disable=R0204
             overlay = True
             termination = data['overlay']['termination']['type']
         else:
@@ -271,8 +264,6 @@ class TadoClimate(ClimateDevice):
             #  "SMART_SCHEDULE"
             self._overlay_mode = CONST_MODE_SMART_SCHEDULE
             self._current_operation = CONST_MODE_SMART_SCHEDULE
-
-        self.schedule_update_ha_state()
 
     def _control_heating(self):
         """Send new target temperature to mytado."""

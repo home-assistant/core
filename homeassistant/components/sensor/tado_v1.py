@@ -5,8 +5,6 @@ import logging
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
-#  DOMAIN = 'tado_v1'
-
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = ['temperature', 'humidity', 'power',
                 'link', 'heating', 'tado mode', 'overlay']
@@ -188,7 +186,6 @@ class TadoSensor(Entity):
 
         elif self.zone_variable == 'overlay':
             if 'overlay' in data and data['overlay'] is not None:
-                # pylint: disable=R0204
                 self._state = True
                 self._state_attributes = {
                     "termination": data['overlay']['termination']['type'],
@@ -196,5 +193,3 @@ class TadoSensor(Entity):
             else:
                 self._state = False
                 self._state_attributes = {}
-
-        self.schedule_update_ha_state()

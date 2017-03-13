@@ -8,8 +8,8 @@ https://home-assistant.io/components/tado_v1/
 import logging
 import urllib
 
-import voluptuous as vol
 from datetime import timedelta
+import voluptuous as vol
 
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers import config_validation as cv
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 
 def setup(hass, config):
@@ -53,7 +53,7 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
 
-    hass.data['tado_v1_data'] = TadoDataStore(tado, MIN_TIME_BETWEEN_SCANS)
+    hass.data['tado_v1_data'] = TadoDataStore(tado)
 
     for component in TADO_V1_COMPONENTS:
         load_platform(hass, component, DOMAIN, {}, config)
@@ -64,17 +64,15 @@ def setup(hass, config):
 class TadoDataStore:
     """An object to store the tado data."""
 
-    def __init__(self, tado, interval):
+    def __init__(self, tado):
         """Initialize Tado data store."""
         self.tado = tado
 
         self.sensors = {}
         self.data = {}
 
-        # Apply throttling to methods using configured interval
-        self.update = Throttle(interval)(self._update)
-
-    def _update(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
         """Update the internal data from mytado.com."""
         for data_id, sensor in self.sensors.items():
             data = None
