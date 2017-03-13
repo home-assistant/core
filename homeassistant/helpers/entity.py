@@ -224,7 +224,7 @@ class Entity(object):
                     yield from self.hass.loop.run_in_executor(
                         None, self.update)
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception('Update for %s fails')
+                _LOGGER.exception('Update for %s fails', self.entity_id)
                 return
             finally:
                 self._update_warn.cancel()
