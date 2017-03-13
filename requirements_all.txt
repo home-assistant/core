@@ -40,6 +40,9 @@ aiodns==1.1.1
 # homeassistant.components.http
 aiohttp_cors==0.5.0
 
+# homeassistant.components.light.lifx
+aiolifx==0.4.1.post1
+
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
 amcrest==1.1.4
@@ -333,9 +336,6 @@ libnacl==1.5.0
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.1.0
-
-# homeassistant.components.light.lifx
-liffylights==0.9.4
 
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.5
