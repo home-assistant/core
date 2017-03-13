@@ -15,30 +15,29 @@ from homeassistant.components.zwave import workaround, async_setup_platform  # n
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_device(values, **kwargs):
+def get_device(value, **kwargs):
     """Create zwave entity device."""
-    return ZwaveSwitch(values)
+    return ZwaveSwitch(value)
 
 
 class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
     """Representation of a Z-Wave switch."""
 
-    def __init__(self, values):
+    def __init__(self, value):
         """Initialize the Z-Wave switch device."""
-        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
-        self.refresh_on_update = (
-            workaround.get_device_mapping(values.primary) ==
-            workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
+        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        self.refresh_on_update = (workaround.get_device_mapping(value) ==
+                                  workaround.WORKAROUND_REFRESH_NODE_ON_UPDATE)
         self.last_update = time.perf_counter()
-        self._state = self.values.primary.data
+        self._state = self._value.data
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self.values.primary.data
+        self._state = self._value.data
         if self.refresh_on_update and \
                 time.perf_counter() - self.last_update > 30:
             self.last_update = time.perf_counter()
-            self.node.request_state()
+            self._value.node.request_state()
 
     @property
     def is_on(self):
@@ -47,8 +46,8 @@ class ZwaveSwitch(zwave.ZWaveDeviceEntity, SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        self.node.set_switch(self.values.primary.value_id, True)
+        self._value.node.set_switch(self._value.value_id, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        self.node.set_switch(self.values.primary.value_id, False)
+        self._value.node.set_switch(self._value.value_id, False)
