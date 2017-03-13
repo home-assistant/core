@@ -194,7 +194,7 @@ class TadoClimate(ClimateDevice):
             return self._min_temp
         else:
             # get default temp from super class
-            return super().min_temp.fget(self)
+            return super().min_temp
 
     @property
     def max_temp(self):
@@ -203,7 +203,7 @@ class TadoClimate(ClimateDevice):
             return self._max_temp
         else:
             #  Get default temp from super class
-            return super().max_temp.fget(self)
+            return super().max_temp
 
     def update(self):
         """Update the state of this climate device."""
