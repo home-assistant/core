@@ -15,7 +15,8 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_NAME,
-                                 CONF_PASSWORD, CONF_USERNAME)
+                                 CONF_PASSWORD, CONF_USERNAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
@@ -79,6 +80,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor)
     monitor.connect()
+
+    def _stop_listener(_event):
+        monitor.stopped.set()
+
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP,
+        _stop_listener
+    )
 
     if monitor.sock is None:
         return False
@@ -149,6 +158,7 @@ class FritzBoxCallMonitor(object):
         self.port = port
         self.sock = None
         self._sensor = sensor
+        self.stopped = threading.Event()
 
     def connect(self):
         """Connect to the Fritz!Box."""
@@ -156,7 +166,7 @@ class FritzBoxCallMonitor(object):
         self.sock.settimeout(10)
         try:
             self.sock.connect((self.host, self.port))
-            threading.Thread(target=self._listen, daemon=True).start()
+            threading.Thread(target=self._listen).start()
         except socket.error as err:
             self.sock = None
             _LOGGER.error("Cannot connect to %s on port %s: %s",
@@ -164,7 +174,7 @@ class FritzBoxCallMonitor(object):
 
     def _listen(self):
         """Listen to incoming or outgoing calls."""
-        while True:
+        while not self.stopped.isSet():
             try:
                 response = self.sock.recv(2048)
             except socket.timeout:
@@ -218,7 +228,7 @@ class FritzBoxCallMonitor(object):
             self._sensor.set_state(VALUE_DISCONNECT)
             att = {"duration": line[3], "closed": isotime}
             self._sensor.set_attributes(att)
-        self._sensor.update_ha_state()
+        self._sensor.schedule_update_ha_state()
 
 
 class FritzBoxPhonebook(object):
