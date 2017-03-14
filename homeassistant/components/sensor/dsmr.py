@@ -40,7 +40,7 @@ import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['dsmr_parser==0.6']
+REQUIREMENTS = ['dsmr_parser==0.8']
 
 CONF_DSMR_VERSION = 'dsmr_version'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
@@ -72,7 +72,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+    from dsmr_parser.clients.protocol import (create_dsmr_reader,
+                                              create_tcp_dsmr_reader)
     import serial
 
     dsmr_version = config[CONF_DSMR_VERSION]
