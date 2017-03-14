@@ -73,3 +73,20 @@ class MockValue(MagicMock):
     def _get_child_mock(self, **kw):
         """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)
+
+
+class MockEntityValues():
+    """Mock Z-Wave entity values."""
+
+    def __init__(self, **kwargs):
+        """Initialize the mock zwave values."""
+        self.primary = None
+        self.wakeup = None
+        self.battery = None
+        self.power = None
+        for name in kwargs:
+            setattr(self, name, kwargs[name])
+
+    def __iter__(self):
+        """Allow iteration over all values."""
+        return iter(self.__dict__.values())
