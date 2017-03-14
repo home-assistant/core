@@ -19,7 +19,7 @@ import voluptuous as vol
 
 DOMAIN = 'volvooncall'
 
-REQUIREMENTS = ['volvooncall==0.3.2']
+REQUIREMENTS = ['volvooncall==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
