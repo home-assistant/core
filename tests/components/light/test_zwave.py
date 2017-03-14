@@ -2,15 +2,27 @@
 from homeassistant.components.zwave import const
 from homeassistant.components.light import zwave, ATTR_BRIGHTNESS
 
-from tests.mock.zwave import MockNode, MockValue, value_changed
+from tests.mock.zwave import (
+    MockNode, MockValue, MockEntityValues, value_changed)
+
+
+class MockLightValues(MockEntityValues):
+    """Mock Z-Wave light values."""
+
+    def __init__(self, **kwargs):
+        """Initialize the mock zwave values."""
+        self.color = None
+        self.color_channels = None
+        super().__init__(**kwargs)
 
 
 def test_get_device_detects_dimmer(mock_openzwave):
     """Test get_device returns a color light."""
     node = MockNode()
     value = MockValue(data=0, node=node)
+    values = MockLightValues(primary=value)
 
-    device = zwave.get_device(node=node, value=value, node_config={})
+    device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveDimmer)
 
 
@@ -18,8 +30,9 @@ def test_get_device_detects_colorlight(mock_openzwave):
     """Test get_device returns a color light."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
     value = MockValue(data=0, node=node)
+    values = MockLightValues(primary=value)
 
-    device = zwave.get_device(node=node, value=value, node_config={})
+    device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
 
 
@@ -27,7 +40,8 @@ def test_dimmer_turn_on(mock_openzwave):
     """Test turning on a dimmable Z-Wave light."""
     node = MockNode()
     value = MockValue(data=0, node=node)
-    device = zwave.get_device(node=node, value=value, node_config={})
+    values = MockLightValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
 
     device.turn_on()
 
@@ -51,7 +65,8 @@ def test_dimmer_value_changed(mock_openzwave):
     """Test value changed for dimmer lights."""
     node = MockNode()
     value = MockValue(data=0, node=node)
-    device = zwave.get_device(node=node, value=value, node_config={})
+    values = MockLightValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 

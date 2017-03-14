@@ -20,64 +20,49 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-def get_device(value, **kwargs):
+def get_device(values, **kwargs):
     """Create zwave entity device."""
-    if (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
-            and value.index == 0):
-        return ZwaveRollershutter(value)
-    elif (value.command_class == zwave.const.COMMAND_CLASS_SWITCH_BINARY or
-          value.command_class == zwave.const.COMMAND_CLASS_BARRIER_OPERATOR):
-        return ZwaveGarageDoor(value)
+    if (values.primary.command_class ==
+            zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
+            and values.primary.index == 0):
+        return ZwaveRollershutter(values)
+    elif (values.primary.command_class in [
+            zwave.const.COMMAND_CLASS_SWITCH_BINARY,
+            zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
+        return ZwaveGarageDoor(values)
     return None
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave roller shutter."""
 
-    def __init__(self, value):
+    def __init__(self, values):
         """Initialize the zwave rollershutter."""
-        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         # pylint: disable=no-member
-        self._node = value.node
         self._open_id = None
         self._close_id = None
-        self._current_position_id = None
         self._current_position = None
 
-        self._workaround = workaround.get_device_mapping(value)
+        self._workaround = workaround.get_device_mapping(values.primary)
         if self._workaround:
             _LOGGER.debug("Using workaround %s", self._workaround)
         self.update_properties()
 
-    @property
-    def dependent_value_ids(self):
-        """List of value IDs a device depends on."""
-        if not self._node.is_ready:
-            return None
-        return [self._current_position_id]
-
     def update_properties(self):
         """Callback on data changes for node values."""
         # Position value
-        if not self._node.is_ready:
-            if self._current_position_id is None:
-                self._current_position_id = self.get_value(
-                    class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
-                    label=['Level'], member='value_id')
-            if self._open_id is None:
-                self._open_id = self.get_value(
-                    class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
-                    label=['Open', 'Up'], member='value_id')
-            if self._close_id is None:
-                self._close_id = self.get_value(
-                    class_id=zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL,
-                    label=['Close', 'Down'], member='value_id')
-        if self._open_id and self._close_id and \
-                self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
-            self._open_id, self._close_id = self._close_id, self._open_id
-            self._workaround = None
-        self._current_position = self._node.get_dimmer_level(
-            self._current_position_id)
+        self._current_position = self.values.primary.data
+
+        if self.values.open and self.values.close and \
+                self._open_id is None and self._close_id is None:
+            if self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
+                self._open_id = self.values.close.value_id
+                self._close_id = self.values.open.value_id
+                self._workaround = None
+            else:
+                self._open_id = self.values.open.value_id
+                self._close_id = self.values.close.value_id
 
     @property
     def is_closed(self):
@@ -112,7 +97,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
-        self._node.set_dimmer(self._value.value_id, position)
+        self.node.set_dimmer(self.values.primary.value_id, position)
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
@@ -122,14 +107,14 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave garage door device."""
 
-    def __init__(self, value):
+    def __init__(self, values):
         """Initialize the zwave garage door."""
-        ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self.update_properties()
 
     def update_properties(self):
         """Callback on data changes for node values."""
-        self._state = self._value.data
+        self._state = self.values.primary.data
 
     @property
     def is_closed(self):
@@ -138,11 +123,11 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def close_cover(self):
         """Close the garage door."""
-        self._value.data = False
+        self.values.primary.data = False
 
     def open_cover(self):
         """Open the garage door."""
-        self._value.data = True
+        self.values.primary.data = True
 
     @property
     def device_class(self):
