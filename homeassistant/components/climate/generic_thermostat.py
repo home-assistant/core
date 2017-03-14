@@ -107,6 +107,7 @@ class GenericThermostat(ClimateDevice):
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
             self._async_update_temp(sensor_state)
+            self._async_control_heating()
 
     @property
     def should_poll(self):
@@ -188,6 +189,7 @@ class GenericThermostat(ClimateDevice):
         """Called when heater switch changes state."""
         if new_state is None:
             return
+
         self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
