@@ -412,7 +412,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
-        return self._item.get('artist', [None])[0]
+        return self._item.get('albumartist', [None])[0]
 
     @property
     def supported_features(self):
