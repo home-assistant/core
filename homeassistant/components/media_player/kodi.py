@@ -301,7 +301,7 @@ class KodiDevice(MediaPlayerDevice):
             self._item = (yield from self.server.Player.GetItem(
                 player_id,
                 ['title', 'file', 'uniqueid', 'thumbnail', 'artist',
-                    'album', 'artist', 'season', 'episode']
+                    'showtitle', 'season', 'episode']
             ))['item']
         else:
             self._properties = {}
@@ -387,27 +387,17 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_series_title(self):
         """Title of series of current playing media, TV show only."""
-        return self._item.get('showtitle')
+        return self._item.get('showtitle', None)
 
     @property
     def media_season(self):
         """Season of current playing media, TV show only."""
-        return self._item.get('season')
+        return self._item.get('season', None)
 
     @property
     def media_episode(self):
         """Episode of current playing media, TV show only."""
-        return self._item.get('episode')
-
-    @property
-    def media_album_name(self):
-        """Album name of current playing media, music track only."""
-        return self._item.get('album')
-
-    @property
-    def media_album_artist(self):
-        """Album artist of current playing media, music track only."""
-        return self._item.get('artist')
+        return self._item.get('episode', None)
 
     @property
     def supported_features(self):
