@@ -301,7 +301,7 @@ class KodiDevice(MediaPlayerDevice):
             self._item = (yield from self.server.Player.GetItem(
                 player_id,
                 ['title', 'file', 'uniqueid', 'thumbnail', 'artist',
-                    'showtitle', 'album', 'season', 'episode']
+                 'showtitle', 'album', 'season', 'episode']
             ))['item']
         else:
             self._properties = {}
