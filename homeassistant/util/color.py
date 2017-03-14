@@ -8,7 +8,7 @@ from typing import Tuple
 _LOGGER = logging.getLogger(__name__)
 
 HASS_COLOR_MAX = 500  # mireds (inverted)
-HASS_COLOR_MIN = 154
+HASS_COLOR_MIN = 111
 
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
