@@ -7,15 +7,17 @@ from unittest.mock import patch
 from homeassistant.components.zwave import const
 from homeassistant.components.binary_sensor import zwave
 
-from tests.mock.zwave import MockNode, MockValue, value_changed
+from tests.mock.zwave import (
+    MockNode, MockValue, MockEntityValues, value_changed)
 
 
 def test_get_device_detects_none(mock_openzwave):
     """Test device is not returned."""
     node = MockNode()
     value = MockValue(data=False, node=node)
+    values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, value=value, node_config={})
+    device = zwave.get_device(node=node, values=values, node_config={})
     assert device is None
 
 
@@ -24,8 +26,9 @@ def test_get_device_detects_trigger_sensor(mock_openzwave):
     node = MockNode(
         manufacturer_id='013c', product_type='0002', product_id='0002')
     value = MockValue(data=False, node=node)
+    values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, value=value, node_config={})
+    device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZWaveTriggerSensor)
     assert device.device_class == "motion"
 
@@ -35,8 +38,9 @@ def test_get_device_detects_workaround_sensor(mock_openzwave):
     node = MockNode(manufacturer_id='010f', product_type='0b00')
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_SENSOR_ALARM)
+    values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, value=value, node_config={})
+    device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZWaveBinarySensor)
 
 
@@ -45,8 +49,9 @@ def test_get_device_detects_sensor(mock_openzwave):
     node = MockNode()
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_SENSOR_BINARY)
+    values = MockEntityValues(primary=value)
 
-    device = zwave.get_device(node=node, value=value, node_config={})
+    device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZWaveBinarySensor)
 
 
@@ -55,7 +60,8 @@ def test_binary_sensor_value_changed(mock_openzwave):
     node = MockNode()
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_SENSOR_BINARY)
-    device = zwave.get_device(node=node, value=value, node_config={})
+    values = MockEntityValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 
@@ -71,7 +77,8 @@ def test_trigger_sensor_value_changed(hass, mock_openzwave):
     node = MockNode(
         manufacturer_id='013c', product_type='0002', product_id='0002')
     value = MockValue(data=False, node=node)
-    device = zwave.get_device(node=node, value=value, node_config={})
+    values = MockEntityValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
 
     assert not device.is_on
 
