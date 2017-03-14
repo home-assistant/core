@@ -215,6 +215,6 @@ class OsramLightifyLight(Light):
         self._name = self._light.name()
         self._rgb = self._light.rgb()
         o_temp = self._light.temp()
-        if o_temp is not 0:
+        if o_temp != 0:
             self._temperature = color_temperature_kelvin_to_mired(o_temp)
         self._state = self._light.on()
