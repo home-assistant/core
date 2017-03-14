@@ -16,10 +16,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, SUPPORT_VOLUME_SET,
+    MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+import time
 
 REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
                 'v0.2.0.zip#pylgnetcast==0.2.0']
@@ -33,7 +35,8 @@ SCAN_INTERVAL = timedelta(seconds=10)
 SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
                SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
-               SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+               SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | \
+               SUPPORT_VOLUME_SET
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -189,6 +192,16 @@ class LgTVDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         self.send_command(25)
+
+    def set_volume_level(self, volume):
+        """Set volume level."""
+        target_volume = int(volume * 100)
+        for _ in range(abs(target_volume - int(self._volume))):
+            if target_volume > self._volume:
+                self.volume_up()
+            else:
+                self.volume_down()
+            time.sleep(0.2)
 
     def mute_volume(self, mute):
         """Send mute command."""
