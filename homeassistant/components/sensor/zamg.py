@@ -157,6 +157,7 @@ class ZamgData(object):
             response = requests.get(
                 cls.API_URL, headers=cls.API_HEADERS, timeout=15)
             response.raise_for_status()
+            response.encoding = 'UTF8'
             return csv.DictReader(response.text.splitlines(),
                                   delimiter=';', quotechar='"')
         except Exception:  # pylint:disable=broad-except
