@@ -296,8 +296,10 @@ class Recorder(threading.Thread):
 
         kwargs = {}
 
+        # pylint: disable=unused-variable
         @event.listens_for(Engine, "connect")
         def set_sqlite_pragma(dbapi_connection, connection_record):
+            """Set sqlite's WAL mode."""
             if self.db_url.startswith("sqlite://"):
                 old_isolation = dbapi_connection.isolation_level
                 dbapi_connection.isolation_level = None
