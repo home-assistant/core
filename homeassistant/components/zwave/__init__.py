@@ -737,7 +737,7 @@ class ZWaveDeviceEntityValues():
 
         self._entity = device
 
-        dict_id = "{}.{}".format(component, value.value_id)
+        dict_id = "{}.{}".format(component, self.primary.value_id)
 
         @asyncio.coroutine
         def discover_device(component, device, dict_id):
