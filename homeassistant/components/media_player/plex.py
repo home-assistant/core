@@ -262,7 +262,7 @@ def request_configuration(host, hass, config, add_devices_callback):
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable-msg=too-many-arguments
+    # pylint: disable=too-many-arguments
     def __init__(self, config, device, session, plex_sessions,
                  update_devices, update_sessions):
         """Initialize the Plex device."""
