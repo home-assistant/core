@@ -3,6 +3,9 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import (Entity, generate_entity_id)
 from homeassistant.loader import get_component
 
+REQUIREMENTS = ['https://github.com/gurumitts/pylutron-caseta/archive/0.1.0.zip#'
+                'pylutron-caseta==0.1.0']
+
 _LOGGER = logging.getLogger(__name__)
 
 LUTRON_CASETA_SMARTBRIDGE = 'lutron_smartbridge'
