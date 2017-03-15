@@ -53,6 +53,7 @@ class MockValue(MagicMock):
                  label='Mock Value',
                  data=None,
                  data_items=None,
+                 units=None,
                  node=None,
                  instance=0,
                  index=0,
@@ -64,6 +65,7 @@ class MockValue(MagicMock):
         self.label = label
         self.data = data
         self.data_items = data_items
+        self.units = units
         self.node = node
         self.instance = instance
         self.index = 0
