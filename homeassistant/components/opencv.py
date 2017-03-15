@@ -118,6 +118,7 @@ def _process_classifier(hass, cv2, cv_image, classifier_config, signal):
             )
         })
 
+    # Dispatch a signal in case `dispatch` camera is set up
     dispatcher.dispatcher_send(hass,
                                signal,
                                cv_image_to_bytes(cv_image))
