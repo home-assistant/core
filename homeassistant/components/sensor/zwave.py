@@ -19,7 +19,7 @@ def get_device(node, values, **kwargs):
     """Create zwave entity device."""
     # Generic Device mappings
     if node.has_command_class(zwave.const.COMMAND_CLASS_BATTERY):
-        return ZWaveSensor(value)
+        return ZWaveSensor(values)
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         return ZWaveMultilevelSensor(values)
     if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
