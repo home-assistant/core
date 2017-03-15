@@ -6,6 +6,7 @@ https://home-assistant.io/components/light.lifx/
 """
 import colorsys
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -14,6 +15,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 from homeassistant.helpers.event import track_time_change
+import homeassistant.util as util
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 import homeassistant.helpers.config_validation as cv
@@ -26,6 +28,9 @@ BYTE_MAX = 255
 
 CONF_BROADCAST = 'broadcast'
 CONF_SERVER = 'server'
+
+# liffylight packet timeout is 5s
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=6)
 
 SHORT_MAX = 65535
 
@@ -52,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lifx_library = LIFX(add_devices, server_addr, broadcast_addr)
 
     # Register our poll service
-    track_time_change(hass, lifx_library.poll, second=[10, 40])
+    track_time_change(hass, lifx_library.poll, second=[10])
 
     lifx_library.probe()
 
@@ -89,8 +94,8 @@ class LIFX(object):
         if bulb is None:
             _LOGGER.debug("new bulb %s %s %d %d %d %d %d",
                           ipaddr, name, power, hue, sat, bri, kel)
-            bulb = LIFXLight(
-                self._liffylights, ipaddr, name, power, hue, sat, bri, kel)
+            bulb = LIFXLight(self._liffylights, self.probe,
+                             ipaddr, name, power, hue, sat, bri, kel)
             self._devices.append(bulb)
             self._add_devices_callback([bulb])
         else:
@@ -118,12 +123,14 @@ class LIFX(object):
 
     # pylint: disable=unused-argument
     def poll(self, now):
-        """Polling for the light."""
-        self.probe()
+        """Probe for the first light."""
+        if not self._devices:
+            self.probe()
 
-    def probe(self, address=None):
-        """Probe the light."""
-        self._liffylights.probe(address)
+    @util.Throttle(MIN_TIME_BETWEEN_SCANS)
+    def probe(self):
+        """Probe all lights."""
+        self._liffylights.probe()
 
 
 def convert_rgb_to_hsv(rgb):
@@ -140,21 +147,17 @@ def convert_rgb_to_hsv(rgb):
 class LIFXLight(Light):
     """Representation of a LIFX light."""
 
-    def __init__(self, liffy, ipaddr, name, power, hue, saturation, brightness,
-                 kelvin):
+    def __init__(self, liffy, probe, ipaddr, name, power,
+                 hue, saturation, brightness, kelvin):
         """Initialize the light."""
         _LOGGER.debug("LIFXLight: %s %s", ipaddr, name)
 
         self._liffylights = liffy
+        self._probe = probe
         self._ip = ipaddr
         self.set_name(name)
         self.set_power(power)
         self.set_color(hue, saturation, brightness, kelvin)
-
-    @property
-    def should_poll(self):
-        """No polling needed for LIFX light."""
-        return False
 
     @property
     def name(self):
@@ -198,6 +201,10 @@ class LIFXLight(Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_LIFX
+
+    def update(self):
+        """Update status by triggering a global probe."""
+        self._probe()
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
