@@ -72,6 +72,7 @@ class LIFX(object):
         self.hass = hass
         self.async_add_devices = async_add_devices
 
+    @callback
     def register(self, device):
         """Callback for newly detected bulb."""
         if device.mac_addr in self.entities:
@@ -83,6 +84,7 @@ class LIFX(object):
             _LOGGER.debug("%s register NEW", device.ip_addr)
             device.get_color(self.ready)
 
+    @callback
     def ready(self, device, msg):
         """Callback that adds the device once all data is retrieved."""
         entity = LIFXLight(device)
@@ -90,6 +92,7 @@ class LIFX(object):
         self.entities[device.mac_addr] = entity
         self.hass.async_add_job(self.async_add_devices, [entity])
 
+    @callback
     def unregister(self, device):
         """Callback for disappearing bulb."""
         entity = self.entities[device.mac_addr]
@@ -267,6 +270,7 @@ class LIFXLight(Light):
         if fade < BULB_LATENCY:
             self.set_power(0)
 
+    @callback
     def got_color(self, device, msg):
         """Callback that gets current power/color status."""
         self.set_power(device.power_level)
