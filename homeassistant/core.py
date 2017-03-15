@@ -149,7 +149,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.add_job(self.async_stop())
+            self.loop.create_task(self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
