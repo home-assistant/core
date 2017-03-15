@@ -8,7 +8,8 @@ from tests.mock.zwave import (
 def test_get_device_detects_sensor(mock_openzwave):
     """Test get_device returns a Z-Wave Sensor."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_BATTERY])
-    value = MockValue(data=0, node=node)
+    value = MockValue(data=0, command_class=const.COMMAND_CLASS_BATTERY,
+                      node=node)
     values = MockEntityValues(primary=value)
 
     device = zwave.get_device(node=node, values=values, node_config={})
