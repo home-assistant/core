@@ -17,6 +17,7 @@ LUTRON_CASETA_DEVICES = 'lutron_devices'
 
 DOMAIN = 'lutron_caseta'
 
+
 def setup(hass, base_config):
     """Setup the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge
