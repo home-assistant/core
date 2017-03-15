@@ -8,7 +8,6 @@ import homeassistant.loader as loader
 from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
 from homeassistant.components import (
     device_tracker, light, sun, device_sun_light_trigger)
-from homeassistant.helpers import event_decorators
 
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, ensure_sun_risen,
@@ -45,7 +44,6 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        event_decorators.HASS = self.hass
 
         self.scanner = loader.get_component(
             'device_tracker.test').get_scanner(None, None)
@@ -69,7 +67,6 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
-        event_decorators.HASS = None
 
     def test_lights_on_when_sun_sets(self):
         """Test lights go on when there is someone home and the sun sets."""
