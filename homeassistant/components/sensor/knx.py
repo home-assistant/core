@@ -129,6 +129,6 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
         self._value = None
 
         if self._data:
-            value = knx2_to_float(self._data)
+            value = 0 if self._data == 0 else knx2_to_float(self._data)
             if self._minimum_value <= value <= self._maximum_value:
                 self._value = value
