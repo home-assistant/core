@@ -170,7 +170,6 @@ omit =
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
-    homeassistant/components/climate/zwave.py
     homeassistant/components/config/zwave.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py

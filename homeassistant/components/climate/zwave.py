@@ -127,11 +127,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._fan_state = self.values.fan_state.data
 
     @property
-    def should_poll(self):
-        """No polling on Z-Wave."""
-        return False
-
-    @property
     def current_fan_mode(self):
         """Return the fan speed set."""
         return self._current_fan_mode
@@ -189,7 +184,6 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             return
 
         self.values.primary.data = temperature
-        self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
@@ -205,14 +199,15 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Set new target swing mode."""
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
-                self.values.zxt_120_swing_mode = bytes(swing_mode, 'utf-8')
+                self.values.zxt_120_swing_mode.data = bytes(
+                    swing_mode, 'utf-8')
 
     @property
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         data = super().device_state_attributes
         if self._operating_state:
-            data[ATTR_OPERATING_STATE] = self._operating_state,
+            data[ATTR_OPERATING_STATE] = self._operating_state
         if self._fan_state:
             data[ATTR_FAN_STATE] = self._fan_state
         return data
