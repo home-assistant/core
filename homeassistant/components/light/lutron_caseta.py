@@ -6,7 +6,6 @@ from homeassistant.components.light import (
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_DEVICES, LUTRON_CASETA_SMARTBRIDGE)
 from homeassistant.components.light.lutron import to_hass_level
-from homeassistant.components.light.lutron import to_lutron_level
 
 DEPENDENCIES = ['lutron_caseta']
 
