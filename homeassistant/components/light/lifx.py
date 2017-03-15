@@ -59,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         partial(aiolifx.LifxDiscovery, hass.loop, lifx_library),
         local_addr=(server_addr, UDP_BROADCAST_PORT))
 
-    hass.loop.create_task(coro)
+    hass.async_add_job(coro)
     return True
 
 
@@ -79,7 +79,7 @@ class LIFX(object):
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s register AGAIN", entity.ipaddr)
             entity.available = True
-            entity.schedule_update_ha_state()
+            self.hass.async_add_job(entity.async_update_ha_state())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
             device.get_color(self.ready)
@@ -99,7 +99,7 @@ class LIFX(object):
         _LOGGER.debug("%s unregister", entity.ipaddr)
         entity.available = False
         entity.updated_event.set()
-        entity.schedule_update_ha_state()
+        self.hass.async_add_job(entity.async_update_ha_state())
 
 
 def convert_rgb_to_hsv(rgb):
@@ -183,13 +183,13 @@ class LIFXLight(Light):
     def update_after_transition(self, now):
         """Request new status after completion of the last transition."""
         self.postponed_update = None
-        self.schedule_update_ha_state(force_refresh=True)
+        self.hass.async_add_job(self.async_update_ha_state(force_refresh=True))
 
     @callback
     def unblock_updates(self, now):
         """Allow async_update after the new state has settled on the bulb."""
         self.blocker = None
-        self.schedule_update_ha_state(force_refresh=True)
+        self.hass.async_add_job(self.async_update_ha_state(force_refresh=True))
 
     def update_later(self, when):
         """Block immediate update requests and schedule one for later."""
