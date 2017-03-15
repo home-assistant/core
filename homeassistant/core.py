@@ -141,7 +141,7 @@ class HomeAssistant(object):
     def start(self) -> None:
         """Start home assistant."""
         # Register the async start
-        self.loop.create_task(self.async_start())
+        self.add_job(self.async_start())
 
         # Run forever and catch keyboard interrupt
         try:
@@ -149,7 +149,7 @@ class HomeAssistant(object):
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
         except KeyboardInterrupt:
-            self.loop.create_task(self.async_stop())
+            self.add_job(self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()

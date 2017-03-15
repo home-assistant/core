@@ -268,7 +268,7 @@ class KodiDevice(MediaPlayerDevice):
                 "Unable to connect to Kodi via websocket", exc_info=True)
             # Websocket connection is not required. Just return.
             return
-        self.hass.loop.create_task(self.async_ws_loop())
+        self.hass.async_add_job(self.async_ws_loop())
         self._ws_connected = True
 
     @asyncio.coroutine
@@ -297,7 +297,7 @@ class KodiDevice(MediaPlayerDevice):
             return
 
         if self._enable_websocket and not self._ws_connected:
-            self.hass.loop.create_task(self.async_ws_connect())
+            self.hass.async_add_job(self.async_ws_connect())
 
         self._app_properties = \
             yield from self.server.Application.GetProperties(
