@@ -52,19 +52,23 @@ class MockValue(MagicMock):
     def __init__(self, *,
                  label='Mock Value',
                  data=None,
+                 data_items=None,
                  node=None,
                  instance=0,
                  index=0,
                  command_class=None,
+                 units=None,
                  value_id=None):
         """Initialize a Z-Wave mock value."""
         super().__init__()
         self.label = label
         self.data = data
+        self.data_items = data_items
         self.node = node
         self.instance = instance
         self.index = 0
         self.command_class = command_class
+        self.units = units
         if value_id is None:
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
