@@ -47,9 +47,3 @@ def setup(hass, base_config):
         if len(components[component]) > 0:
             discovery.load_platform(hass, component, DOMAIN, None, base_config)
     return True
-
-
-
-
-
-    return True
