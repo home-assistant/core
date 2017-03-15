@@ -287,12 +287,26 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        from sqlalchemy import create_engine
+        from sqlalchemy import create_engine, event
+        from sqlalchemy.engine import Engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
+
         from . import models
 
         kwargs = {}
+
+        # pylint: disable=unused-variable
+        @event.listens_for(Engine, "connect")
+        def set_sqlite_pragma(dbapi_connection, connection_record):
+            """Set sqlite's WAL mode."""
+            if self.db_url.startswith("sqlite://"):
+                old_isolation = dbapi_connection.isolation_level
+                dbapi_connection.isolation_level = None
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.close()
+                dbapi_connection.isolation_level = old_isolation
 
         if self.db_url == 'sqlite://' or ':memory:' in self.db_url:
             from sqlalchemy.pool import StaticPool
