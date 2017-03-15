@@ -91,7 +91,8 @@ class TestEfergySensor(unittest.TestCase):
                          self.hass.states.get('sensor.energy_budget').state)
         self.assertEqual('5.27',
                          self.hass.states.get('sensor.energy_cost').state)
-        self.assertEqual('1628', self.hass.states.get('sensor.728386').state)
+        self.assertEqual('1.628',
+                         self.hass.states.get('sensor.efergy_728386').state)
 
     @requests_mock.Mocker()
     def test_multi_sensor_readings(self, mock):
@@ -99,6 +100,9 @@ class TestEfergySensor(unittest.TestCase):
         mock_responses(mock)
         assert setup_component(self.hass, 'sensor', {
               'sensor': MULTI_SENSOR_CONFIG})
-        self.assertEqual('218', self.hass.states.get('sensor.728386').state)
-        self.assertEqual('1808', self.hass.states.get('sensor.0').state)
-        self.assertEqual('312', self.hass.states.get('sensor.728387').state)
+        self.assertEqual('0.218',
+                         self.hass.states.get('sensor.efergy_728386').state)
+        self.assertEqual('1.808',
+                         self.hass.states.get('sensor.efergy_0').state)
+        self.assertEqual('0.312',
+                         self.hass.states.get('sensor.efergy_728387').state)

@@ -83,7 +83,7 @@ class EfergySensor(Entity):
         """Initialize the sensor."""
         self.sid = sid
         if sid:
-            self._name = sid
+            self._name = 'efergy_' + sid
         else:
             self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
@@ -141,7 +141,8 @@ class EfergySensor(Entity):
                 response = get(url_string, timeout=10)
                 for sensor in response.json():
                     if self.sid == sensor['sid']:
-                        self._state = next(iter(sensor['data'][0].values()))
+                        measurement = next(iter(sensor['data'][0].values()))
+                        self._state = measurement / 1000
             else:
                 self._state = 'Unknown'
         except (RequestException, ValueError, KeyError):
