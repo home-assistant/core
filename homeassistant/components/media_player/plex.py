@@ -7,7 +7,7 @@ https://home-assistant.io/components/media_player.plex/
 import json
 import logging
 import os
-from datetime import datetime, timedelta
+from datetime import timedelta
 from urllib.parse import urlparse
 
 import requests
