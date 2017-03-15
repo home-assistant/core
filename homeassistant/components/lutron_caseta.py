@@ -1,3 +1,9 @@
+"""
+Component for interacting with a Lutron Caseta system.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/lutron_caseta/
+"""
 import logging
 from homeassistant.helpers import discovery
 
@@ -17,7 +23,6 @@ def setup(hass, base_config):
 
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = None
     hass.data[LUTRON_CASETA_DEVICES] = None
-
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = Smartbridge(

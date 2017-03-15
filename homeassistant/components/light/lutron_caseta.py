@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, DOMAIN, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_DEVICES, LUTRON_CASETA_SMARTBRIDGE)
 from homeassistant.components.light.lutron import to_hass_level
@@ -11,12 +11,13 @@ DEPENDENCIES = ['lutron_caseta']
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Lutron lights."""
     devs = []
     for _caseta_light in hass.data[LUTRON_CASETA_DEVICES]['light']:
         dev = LutronCasetaLight(hass, _caseta_light,
-                          hass.data[LUTRON_CASETA_SMARTBRIDGE])
+                                hass.data[LUTRON_CASETA_SMARTBRIDGE])
         devs.append(dev)
     add_devices(devs, True)
 
@@ -35,7 +36,6 @@ class LutronCasetaLight(Light):
         self._state = None
         self._smartbridge = smartbridge
         self.update()
-
 
     @property
     def name(self):
