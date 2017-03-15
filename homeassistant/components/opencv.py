@@ -40,34 +40,21 @@ CONF_SCALE = 'scale'
 
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
-DEFAULT_CLASSIFIER_PATH = \
-    os.path.join(os.path.dirname(BASE_PATH),
-                 'image_processing',
-                 'lbpcascade_frontalface.xml')
 DEFAULT_COLOR = (255, 255, 0)
 DEFAULT_NAME = 'OpenCV'
 DEFAULT_MIN_SIZE = (30, 30)
 DEFAULT_NEIGHBORS = 4
 DEFAULT_SCALE = 1.1
 
-DEFAULT_CLASSIFIER = [{
-    CONF_COLOR: DEFAULT_COLOR,
-    CONF_FILE_PATH: DEFAULT_CLASSIFIER_PATH,
-    CONF_NAME: DEFAULT_NAME,
-    CONF_MIN_SIZE: DEFAULT_MIN_SIZE,
-    CONF_NEIGHBORS: DEFAULT_NEIGHBORS,
-    CONF_SCALE: DEFAULT_SCALE
-}]
-
 DOMAIN = 'opencv'
 
 CLASSIFIER_GROUP_CONFIG = {
-    vol.Optional(CONF_CLASSIFIER, default=DEFAULT_CLASSIFIER): vol.All(
+    vol.Required(CONF_CLASSIFIER): vol.All(
         cv.ensure_list,
         [vol.Schema({
             vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
                 vol.Schema((int, int, int)),
-            vol.Optional(CONF_FILE_PATH, default=DEFAULT_CLASSIFIER_PATH):
+            vol.Required(CONF_FILE_PATH):
                 cv.isfile,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME):
                 cv.string,
