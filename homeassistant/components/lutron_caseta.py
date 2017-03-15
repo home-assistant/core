@@ -7,8 +7,8 @@ https://home-assistant.io/components/lutron_caseta/
 import logging
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['https://github.com/gurumitts/pylutron-caseta/archive/0.1.0.zip#'
-                'pylutron-caseta==0.1.0']
+REQUIREMENTS = ['https://github.com/gurumitts/pylutron-caseta'
+                '/archive/0.1.0.zip#pylutron-caseta==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
