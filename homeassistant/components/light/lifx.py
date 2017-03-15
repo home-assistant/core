@@ -53,17 +53,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     server_addr = config.get(CONF_SERVER)
 
-    lifx_library = LIFX(hass, async_add_devices)
+    lifx_manager = LIFXManager(hass, async_add_devices)
 
     coro = hass.loop.create_datagram_endpoint(
-        partial(aiolifx.LifxDiscovery, hass.loop, lifx_library),
+        partial(aiolifx.LifxDiscovery, hass.loop, lifx_manager),
         local_addr=(server_addr, UDP_BROADCAST_PORT))
 
     hass.async_add_job(coro)
     return True
 
 
-class LIFX(object):
+class LIFXManager(object):
     """Representation of all known LIFX entities."""
 
     def __init__(self, hass, async_add_devices):
