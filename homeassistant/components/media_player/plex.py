@@ -22,7 +22,6 @@ from homeassistant.components.media_player import (
     SUPPORT_PAUSE,
     SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
     SUPPORT_STOP,
     SUPPORT_TURN_OFF,
     SUPPORT_VOLUME_MUTE,
@@ -44,8 +43,6 @@ from homeassistant.loader import get_component
 REQUIREMENTS = ['plexapi==2.0.2']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-DEFAULT_MAX_FROZEN_PLAYING = 60
-DEFAULT_MAX_FROZEN_PAUSED = 300
 
 PLEX_CONFIG_FILE = 'plex.conf'
 
@@ -53,8 +50,6 @@ CONF_INCLUDE_NON_CLIENTS = 'include_non_clients'
 CONF_USE_EPISODE_ART = 'use_episode_art'
 CONF_USE_CUSTOM_ENTITY_IDS = 'use_custom_entity_ids'
 CONF_SHOW_ALL_CONTROLS = 'show_all_controls'
-CONF_MAX_FROZEN_PLAYING = 'max_frozen_playing'
-CONF_MAX_FROZEN_PAUSED = 'max_frozen_paused'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE_NON_CLIENTS, default=False):
@@ -63,10 +58,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
     vol.Optional(CONF_USE_CUSTOM_ENTITY_IDS, default=False):
     cv.boolean,
-    vol.Optional(CONF_MAX_FROZEN_PLAYING, default=DEFAULT_MAX_FROZEN_PLAYING):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=999999)),
-    vol.Optional(CONF_MAX_FROZEN_PAUSED, default=CONF_MAX_FROZEN_PAUSED):
-    vol.All(vol.Coerce(int), vol.Range(min=0, max=999999)),
 })
 
 # Map ip to request id for configuring
@@ -103,7 +94,6 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup the Plex platform."""
     # get config from plex.conf
     file_config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
-    config.update(file_config)  # merge configs
 
     if len(file_config):
         # Setup a configured PlexServer
@@ -270,20 +260,14 @@ class PlexClient(MediaPlayerDevice):
         self._app_name = ''
         self._device = None
         self._device_protocol_capabilities = None
-        self._frozen_content_id = None
-        self._frozen_fixed_state = None
         self._is_player_active = False
         self._is_player_available = False
-        self._last_content_id = None
-        self._last_position = None
-        self._last_position_changed = None
         self._machine_identifier = None
         self._make = ''
         self._media_content_id = None
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
-        self._media_position = None
         self._media_title = None
         self._name = None
         self._player_state = 'idle'
@@ -333,17 +317,6 @@ class PlexClient(MediaPlayerDevice):
     # pylint: disable=too-many-branches, too-many-statements
     def refresh(self, device, session):
         """Refresh key device data."""
-        # previous data
-        # frozen detection - reset if content or position changed
-        if (self._frozen_content_id is not None and
-                self._media_content_id != self._frozen_content_id) or (
-                    self._media_position != self._last_position or
-                    self._last_position_changed is None):
-            self._last_position = self._media_position
-            self._last_position_changed = datetime.now()
-            self._frozen_fixed_state = None
-            self._frozen_content_id = None
-
         # new data refresh
         if session:
             self._session = session
@@ -385,35 +358,7 @@ class PlexClient(MediaPlayerDevice):
         else:
             self._is_player_available = False
 
-        # frozen detection - force state change if past max thresholds
-        frozen_seconds = (round(
-            (datetime.now() - self._last_position_changed).total_seconds()))
-
-        if self._is_player_available:
-            if ((frozen_seconds >
-                 self.config.get(CONF_MAX_FROZEN_PAUSED)) and
-                    (self._player_state == 'paused' or
-                     self._frozen_fixed_state in (STATE_PAUSED, STATE_IDLE))):
-                _LOGGER.debug('Frozen paused client detected, forcing idle '
-                              'state: %s', self.entity_id)
-                self._is_player_active = False
-                self._frozen_fixed_state = STATE_IDLE
-                self._frozen_content_id = self.media_content_id
-            elif (frozen_seconds > self.config.get(CONF_MAX_FROZEN_PLAYING)
-                  and self._player_state == 'playing'):
-                _LOGGER.debug(
-                    'Frozen playing client detected, forcing paused state: %s',
-                    self.entity_id)
-                self._is_player_active = True
-                self._frozen_fixed_state = STATE_PAUSED
-                self._frozen_content_id = self.media_content_id
-            else:
-                self._frozen_fixed_state = None
-
-        # get state (frozen state overrides)
-        if self._frozen_fixed_state is not None:
-            self._state = self._frozen_fixed_state
-        elif self._player_state == 'playing':
+        if self._player_state == 'playing':
             self._is_player_active = True
             self._state = STATE_PLAYING
         elif self._player_state == 'paused':
@@ -659,21 +604,6 @@ class PlexClient(MediaPlayerDevice):
         return self._media_duration
 
     @property
-    def media_position(self):
-        """Position of current playing media in seconds.
-
-        Music position appears to update slower than other media.
-        """
-        if self._session:
-            return self._media_position
-
-    @property
-    def media_position_updated_at(self):
-        """When was the position of the current playing media valid."""
-        if self._is_player_active:
-            return util.dt.utcnow()
-
-    @property
     def media_image_url(self):
         """Image url of current playing media."""
         return self._media_image_url
@@ -714,7 +644,7 @@ class PlexClient(MediaPlayerDevice):
         if self.config.get(CONF_SHOW_ALL_CONTROLS):
             features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
                         SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                        SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
+                        SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                         SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
 
         # only show controls when we know what device is connecting
@@ -727,7 +657,7 @@ class PlexClient(MediaPlayerDevice):
                 'controls: %s', self.entity_id)
             features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
                         SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                        SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
+                        SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                         SUPPORT_TURN_OFF)
         # Only supports play,pause,stop (and off which really is stop)
         elif self.make.lower().startswith("tivo"):
@@ -741,7 +671,7 @@ class PlexClient(MediaPlayerDevice):
         elif self.device and 'playback' in self._device_protocol_capabilities:
             features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
                         SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                        SUPPORT_VOLUME_SET | SUPPORT_PLAY | SUPPORT_SEEK |
+                        SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                         SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
         else:
             features = None
