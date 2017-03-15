@@ -16,7 +16,8 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
+    MEDIA_TYPE_EPISODE, MEDIA_TYPE_PLAYLIST)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -42,6 +43,21 @@ DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
 
 TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
+
+# https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
+MEDIA_TYPES = {
+    "music": MEDIA_TYPE_MUSIC,
+    "artist": MEDIA_TYPE_MUSIC,
+    "album": MEDIA_TYPE_MUSIC,
+    "song": MEDIA_TYPE_MUSIC,
+    "video": MEDIA_TYPE_VIDEO,
+    "set": MEDIA_TYPE_PLAYLIST,
+    "musicvideo": MEDIA_TYPE_VIDEO,
+    "movie": MEDIA_TYPE_VIDEO,
+    "tvshow": MEDIA_TYPE_TVSHOW,
+    "season": MEDIA_TYPE_TVSHOW,
+    "episode": MEDIA_TYPE_EPISODE,
+}
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
@@ -344,8 +360,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self._players is not None and len(self._players) > 0:
-            return self._players[0]['type']
+        return MEDIA_TYPES.get(self._item.get('type'))
 
     @property
     def media_duration(self):
