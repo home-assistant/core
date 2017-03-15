@@ -1,7 +1,8 @@
 """Test Z-Wave sensor."""
 from homeassistant.components.sensor import zwave
 from homeassistant.components.zwave import const
-from tests.mock.zwave import MockNode, MockValue, MockEntityValues, value_changed
+from tests.mock.zwave import (
+   MockNode, MockValue, MockEntityValues, value_changed)
 
 
 def test_get_device_detects_sensor(mock_openzwave):
@@ -22,7 +23,6 @@ def test_get_device_detects_alarmsensor(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZWaveAlarmSensor)
-
 
 def test_get_device_detects_multilevelsensor(mock_openzwave):
     """Test get_device returns a Z-Wave multilevel sensor."""
