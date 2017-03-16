@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 import requests
@@ -17,6 +18,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_AUTHENTICATION, HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION, CONF_HEADERS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
+CONF_UPDATE_INTERVAL = 'update_interval'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -38,6 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=60)): (
+        vol.All(cv.time_period, cv.positive_timedelta)),
+
 })
 
 
@@ -70,13 +76,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Unable to fetch REST data')
         return False
 
-    add_devices([RestSensor(hass, rest, name, unit, value_template)])
+    add_devices([RestSensor(hass, rest, name, unit, value_template,
+                            config.get(CONF_UPDATE_INTERVAL))])
 
 
 class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
-    def __init__(self, hass, rest, name, unit_of_measurement, value_template):
+    def __init__(self, hass, rest, name, unit_of_measurement, value_template, interval):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
@@ -84,6 +91,7 @@ class RestSensor(Entity):
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
+        self.update = Throttle(interval)(self._update)
         self.update()
 
     @property
@@ -101,7 +109,7 @@ class RestSensor(Entity):
         """Return the state of the device."""
         return self._state
 
-    def update(self):
+    def _update(self):
         """Get the latest data from REST API and update the state."""
         self.rest.update()
         value = self.rest.data
@@ -113,7 +121,6 @@ class RestSensor(Entity):
                 value, STATE_UNKNOWN)
 
         self._state = value
-
 
 class RestData(object):
     """Class for handling the data retrieval."""
