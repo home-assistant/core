@@ -36,10 +36,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         tado, me_data, me_data['homes'][0]['name'],
         me_data['homes'][0]['id'], "tado bridge status"))
 
-    tado.update()
-
     if len(sensor_items) > 0:
-        add_devices(sensor_items)
+        add_devices(sensor_items, True)
         return True
     else:
         return False

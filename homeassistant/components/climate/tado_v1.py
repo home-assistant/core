@@ -22,11 +22,12 @@ CONST_OVERLAY_MANUAL = "MANUAL"
 # the temperature will be reset after a timespan
 CONST_OVERLAY_TIMER = "TIMER"
 
-
-# will be used when changing temperature
-CONST_DEFAULT_OPERATION_MODE = CONST_OVERLAY_TADO_MODE
-# will be used when switching to CONST_MODE_OFF
-CONST_DEFAULT_OFF_MODE = CONST_OVERLAY_MANUAL
+OPERATION_LIST = {
+    "Manual": CONST_OVERLAY_MANUAL,
+    "Timer": CONST_OVERLAY_TIMER,
+    "Tado mode": CONST_OVERLAY_TADO_MODE,
+    "Smart schedule": CONST_MODE_SMART_SCHEDULE,
+    "Off": CONST_MODE_OFF}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                                      zone['id']))
 
     if len(climate_devices) > 0:
-        add_devices(climate_devices)
+        add_devices(climate_devices, True)
         return True
     else:
         return False
@@ -62,14 +63,13 @@ def create_climate_device(tado, hass, zone, name, zone_id):
 
     min_temp = float(capabilities["temperatures"]["celsius"]["min"])
     max_temp = float(capabilities["temperatures"]["celsius"]["max"])
-    target_temp = 21
     ac_mode = capabilities["type"] != "HEATING"
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
                          name, zone_id, data_id,
                          min_temp, max_temp,
-                         target_temp, ac_mode)
+                         ac_mode)
 
     tado.add_sensor(data_id, {
         "id": zone_id,
@@ -85,7 +85,7 @@ class TadoClimate(ClimateDevice):
     """Representation of a tado climate device."""
 
     def __init__(self, store, zone_name, zone_id, data_id,
-                 min_temp, max_temp, target_temp, ac_mode,
+                 min_temp, max_temp, ac_mode,
                  tolerance=0.3):
         """Initialization of TadoClimate device."""
         self._store = store
@@ -104,17 +104,12 @@ class TadoClimate(ClimateDevice):
         self._is_away = False
         self._min_temp = min_temp
         self._max_temp = max_temp
-        self._target_temp = target_temp
+        self._target_temp = None
         self._tolerance = tolerance
         self._unit = TEMP_CELSIUS
 
-        self._operation_list = [CONST_OVERLAY_MANUAL,
-                                CONST_OVERLAY_TIMER,
-                                CONST_OVERLAY_TADO_MODE,
-                                CONST_MODE_SMART_SCHEDULE,
-                                CONST_MODE_OFF]
         self._current_operation = CONST_MODE_SMART_SCHEDULE
-        self._overlay_mode = self._current_operation
+        self._overlay_mode = CONST_MODE_SMART_SCHEDULE
 
     @property
     def name(self):
@@ -147,13 +142,17 @@ class TadoClimate(ClimateDevice):
 
     @property
     def current_operation(self):
-        """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        """Return current readable operation mode."""
+        for readable, mode in OPERATION_LIST.items():
+            if mode == self._current_operation:
+                return readable
+
+        return None
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
-        return self._operation_list
+        """List of available operation modes (readable)."""
+        return list(OPERATION_LIST.keys())
 
     @property
     def is_away_mode_on(self):
@@ -176,13 +175,15 @@ class TadoClimate(ClimateDevice):
         if temperature is None:
             return
 
-        self._current_operation = CONST_DEFAULT_OPERATION_MODE
+        self._current_operation = CONST_OVERLAY_TADO_MODE
         self._overlay_mode = None
         self._target_temp = temperature
         self._control_heating()
 
-    def set_operation_mode(self, operation_mode):
-        """Set new target temperature."""
+    def set_operation_mode(self, readable_operation_mode):
+        """Set new operation mode."""
+        operation_mode = OPERATION_LIST[readable_operation_mode]
+
         self._current_operation = operation_mode
         self._overlay_mode = None
         self._control_heating()
@@ -288,7 +289,7 @@ class TadoClimate(ClimateDevice):
         if self._current_operation == CONST_MODE_OFF:
             _LOGGER.info('Switching mytado.com to OFF for zone %s',
                          self.zone_name)
-            self._store.set_zone_overlay(self.zone_id, CONST_DEFAULT_OFF_MODE)
+            self._store.set_zone_overlay(self.zone_id, CONST_OVERLAY_MANUAL)
             self._overlay_mode = self._current_operation
             return
 
