@@ -27,7 +27,7 @@ from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
 DOMAIN = 'android_ip_webcam'
-REQUIREMENTS = ["pydroid-ipcam==0.4"]
+REQUIREMENTS = ["pydroid-ipcam==0.6"]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
