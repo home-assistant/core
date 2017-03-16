@@ -154,11 +154,6 @@ class TadoClimate(ClimateDevice):
         return self._is_away
 
     @property
-    def _is_device_active(self):
-        """If the toggleable device is currently active."""
-        return self._device_is_active
-
-    @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temp
