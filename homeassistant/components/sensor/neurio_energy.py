@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NeurioData(object):
-    """Stores data retrieved from Neurio sensor. """
+    """Stores data retrieved from Neurio sensor."""
 
     def __init__(self, api_key, api_secret, sensor_id):
         """Initialize the data."""
