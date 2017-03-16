@@ -11,7 +11,7 @@ from datetime import timedelta
 import re
 
 from homeassistant.components.google import (CONF_OFFSET,
-                                             CONF_DEFAULT_OFFSET,
+                                             CONF_DEFAULT_OFFSET_TIME,
                                              CONF_DEVICE_ID,
                                              CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -57,7 +57,7 @@ class CalendarEventDevice(Entity):
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._default_offset = time_period_str(
-            data.get(CONF_DEFAULT_OFFSET, "00:00"))
+            data.get(CONF_DEFAULT_OFFSET_TIME, "00:00"))
         self.entity_id = generate_entity_id(ENTITY_ID_FORMAT,
                                             self.dev_id,
                                             hass=hass)
