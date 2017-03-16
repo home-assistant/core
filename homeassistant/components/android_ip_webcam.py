@@ -201,6 +201,23 @@ def async_setup(hass, config):
 
         yield from async_update_data(None)
 
+<<<<<<< HEAD
+        # use autodiscovery to detect sensors/configs
+        if cam_config[CONF_AUTO_DISCOVERY]:
+            if not cam.available:
+                _LOGGER.error(
+                    "Android webcam %s not found for discovery!", cam.base_url)
+                return
+
+            sensors = [sensor for sensor in cam.enabled_sensors
+                       if sensor in SENSORS]
+            switches = [setting for setting in cam.enabled_settings
+                        if setting in SWITCHES]
+            motion = True if 'motion_active' in cam.enabled_sensors else False
+            sensors.extend(['audio_connections', 'video_connections'])
+
+=======
+>>>>>>> upstream/dev
         # load platforms
         webcams[host] = cam
 
