@@ -112,7 +112,7 @@ class TadoSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
-            return TEMP_CELSIUS
+            return self.hass.config.units.temperature_unit
         elif self.zone_variable == "humidity":
             return '%'
         elif self.zone_variable == "heating":
@@ -131,13 +131,17 @@ class TadoSensor(Entity):
         self._store.update()
 
         data = self._store.get_data(self._data_id)
+        unit = TEMP_CELSIUS
 
         # pylint: disable=R0912
         if self.zone_variable == 'temperature':
             if 'sensorDataPoints' in data:
                 sensor_data = data['sensorDataPoints']
-                self._state = float(
+                temperature = float(
                     sensor_data['insideTemperature']['celsius'])
+
+                self._state = self.hass.config.units.temperature(
+                    temperature, unit)
                 self._state_attributes = {
                     "time":
                         sensor_data['insideTemperature']['timestamp'],
@@ -147,8 +151,12 @@ class TadoSensor(Entity):
                 # temperature setting will not exist when device is off
                 if 'temperature' in data['setting'] and \
                         data['setting']['temperature'] is not None:
-                    self._state_attributes["setting"] = float(
+                    temperature = float(
                         data['setting']['temperature']['celsius'])
+
+                    self._state_attributes["setting"] = \
+                        self.hass.config.units.temperature(
+                            temperature, unit)
 
         elif self.zone_variable == 'humidity':
             if 'sensorDataPoints' in data:

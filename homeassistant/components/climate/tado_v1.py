@@ -61,6 +61,7 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     """Create a climate device."""
     capabilities = tado.get_capabilities(zone_id)
 
+    unit = TEMP_CELSIUS
     min_temp = float(capabilities["temperatures"]["celsius"]["min"])
     max_temp = float(capabilities["temperatures"]["celsius"]["max"])
     ac_mode = capabilities["type"] != "HEATING"
@@ -68,7 +69,8 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
                          name, zone_id, data_id,
-                         min_temp, max_temp,
+                         hass.config.units.temperature(min_temp, unit),
+                         hass.config.units.temperature(max_temp, unit),
                          ac_mode)
 
     tado.add_sensor(data_id, {
