@@ -6,7 +6,8 @@ from homeassistant.components.light import (
 from homeassistant.components.light.lutron import to_hass_level
 from homeassistant.components.light.lutron import to_lutron_level
 
-REQUIREMENTS = ['https://github.com/gurumitts/pylutron-caseta/archive/v0.2.0.zip#'
+REQUIREMENTS = ['https://github.com/gurumitts/'
+                'pylutron-caseta/archive/v0.2.0.zip#'
                 'pylutron-caseta==v0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +48,8 @@ class LutronCasetaLight(Light):
         self._device_name = device_info["name"]
         self._state = None
         self._smartbridge = bridge
-        self._smartbridge.add_subscriber(self._device_id, self._update_callback)
+        self._smartbridge.add_subscriber(self._device_id,
+                                         self._update_callback)
         self.update()
 
     def _update_callback(self):
@@ -74,7 +76,8 @@ class LutronCasetaLight(Light):
             brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             brightness = 100
-        self._smartbridge.set_value(self._device_id, to_lutron_level(brightness))
+        self._smartbridge.set_value(self._device_id,
+                                    to_lutron_level(brightness))
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
