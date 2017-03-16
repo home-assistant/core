@@ -80,8 +80,7 @@ class TelegramPoll:
                 headers={'connection': 'keep-alive'}
             )
             if resp.status != 200:
-                _LOGGER.error("Error {0} on {1}".format(
-                    resp.status, self.update_url))
+                _LOGGER.error("Error %s on %s", resp.status, self.update_url)
             _json = yield from resp.json()
         except ValueError:
             _LOGGER.error("Error parsing Json message")

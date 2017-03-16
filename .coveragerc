@@ -435,6 +435,9 @@ omit =
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
+    homeassistant/components/telegram_bot/__init__.py
+    homeassistant/components/telegram_bot/telegram_poll.py
+    homeassistant/components/telegram_bot/telegram_webhooks.py
 
 
 [report]
