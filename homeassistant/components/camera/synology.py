@@ -14,7 +14,7 @@ import async_timeout
 
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
-    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL)
+    CONF_URL, CONF_WHITELIST, CONF_VERIFY_SSL, CONF_TIMEOUT)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers.aiohttp_client import (
@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Synology Camera'
 DEFAULT_STREAM_ID = '0'
-TIMEOUT = 5
+DEFAULT_TIMEOUT = 5
 CONF_CAMERA_NAME = 'camera_name'
 CONF_STREAM_ID = 'stream_id'
 
@@ -51,6 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_URL): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_WHITELIST, default=[]): cv.ensure_list,
     vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
 })
@@ -60,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a Synology IP Camera."""
     verify_ssl = config.get(CONF_VERIFY_SSL)
+    timeout = config.get(CONF_TIMEOUT)
     websession_init = async_get_clientsession(hass, verify_ssl)
 
     # Determine API to use for authentication
@@ -74,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     }
     query_req = None
     try:
-        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(timeout, loop=hass.loop):
             query_req = yield from websession_init.get(
                 syno_api_url,
                 params=query_payload
@@ -103,7 +105,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         websession_init,
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
-        syno_auth_url
+        syno_auth_url,
+        timeout
     )
 
     # init websession
@@ -120,7 +123,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         'version': '1'
     }
     try:
-        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(timeout, loop=hass.loop):
             camera_req = yield from websession.get(
                 syno_camera_url,
                 params=camera_payload
@@ -149,7 +152,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 snapshot_path,
                 streaming_path,
                 camera_path,
-                auth_path
+                auth_path,
+                timeout
             )
             devices.append(device)
 
@@ -157,7 +161,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 @asyncio.coroutine
-def get_session_id(hass, websession, username, password, login_url):
+def get_session_id(hass, websession, username, password, login_url, timeout):
     """Get a session id."""
     auth_payload = {
         'api': AUTH_API,
@@ -170,7 +174,7 @@ def get_session_id(hass, websession, username, password, login_url):
     }
     auth_req = None
     try:
-        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+        with async_timeout.timeout(timeout, loop=hass.loop):
             auth_req = yield from websession.get(
                 login_url,
                 params=auth_payload
@@ -192,7 +196,7 @@ class SynologyCamera(Camera):
 
     def __init__(self, hass, websession, config, camera_id,
                  camera_name, snapshot_path, streaming_path, camera_path,
-                 auth_path):
+                 auth_path, timeout):
         """Initialize a Synology Surveillance Station camera."""
         super().__init__()
         self.hass = hass
@@ -206,6 +210,7 @@ class SynologyCamera(Camera):
         self._streaming_path = streaming_path
         self._camera_path = camera_path
         self._auth_path = auth_path
+        self._timeout = timeout
 
     def camera_image(self):
         """Return bytes of camera image."""
@@ -225,7 +230,7 @@ class SynologyCamera(Camera):
             'cameraId': self._camera_id
         }
         try:
-            with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
+            with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 response = yield from self._websession.get(
                     image_url,
                     params=image_payload
