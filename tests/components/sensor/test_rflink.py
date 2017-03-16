@@ -70,34 +70,3 @@ def test_default_setup(hass, monkeypatch):
     assert new_sensor.state == '0'
     assert new_sensor.attributes['unit_of_measurement'] == '°C'
     assert new_sensor.attributes['icon'] == 'mdi:thermometer'
-
-
-@asyncio.coroutine
-def test_new_sensors_group(hass, monkeypatch):
-    """New devices should be added to configured group."""
-    config = {
-        'rflink': {
-            'port': '/dev/ttyABC0',
-        },
-        DOMAIN: {
-            'platform': 'rflink',
-            'new_devices_group': 'new_rflink_sensors',
-        },
-    }
-
-    # setup mocking rflink module
-    event_callback, _, _, _ = yield from mock_rflink(
-        hass, config, DOMAIN, monkeypatch)
-
-    # test event for new unconfigured sensor
-    event_callback({
-        'id': 'test',
-        'sensor': 'temperature',
-        'value': 0,
-        'unit': '°C',
-    })
-    yield from hass.async_block_till_done()
-
-    # make sure new device is added to correct group
-    group = hass.states.get('group.new_rflink_sensors')
-    assert group.attributes.get('entity_id') == ('sensor.test',)
