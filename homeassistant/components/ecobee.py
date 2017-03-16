@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6']
+    'a4496b293956b2eac285305136a62ac78bef510d.zip#python-ecobee==0.0.7']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
