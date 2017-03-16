@@ -573,7 +573,7 @@ pysnmp==4.3.4
 python-clementine-remote==1.0.1
 
 # homeassistant.components.digital_ocean
-python-digitalocean==1.10.1
+python-digitalocean==1.11
 
 # homeassistant.components.climate.eq3btsmart
 # python-eq3bt==0.1.5
