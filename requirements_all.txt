@@ -266,7 +266,7 @@ https://github.com/molobrakos/python-pocketcasts/archive/9f61ff00c77c7c98ffa0af9
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
 # homeassistant.components.ecobee
-https://github.com/nkgilley/python-ecobee-api/archive/4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6
+https://github.com/nkgilley/python-ecobee-api/archive/a4496b293956b2eac285305136a62ac78bef510d.zip#python-ecobee==0.0.7
 
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
