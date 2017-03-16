@@ -106,7 +106,6 @@ class TadoClimate(ClimateDevice):
         self._max_temp = max_temp
         self._target_temp = None
         self._tolerance = tolerance
-        self._unit = TEMP_CELSIUS
 
         self._current_operation = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
@@ -115,11 +114,6 @@ class TadoClimate(ClimateDevice):
     def name(self):
         """Return the name of the sensor."""
         return self.zone_name
-
-    @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return self._unit
 
     @property
     def state(self):
