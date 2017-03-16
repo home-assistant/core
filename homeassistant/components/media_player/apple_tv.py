@@ -96,7 +96,8 @@ class AppleTvDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Called when entity is about to be added to HASS."""
-        self._atv.push_updater.start()
+        if not self._is_off:
+            self._atv.push_updater.start()
 
     @callback
     def _set_power_off(self, is_off):
