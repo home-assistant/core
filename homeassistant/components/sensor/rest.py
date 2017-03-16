@@ -123,6 +123,7 @@ class RestSensor(Entity):
 
         self._state = value
 
+
 class RestData(object):
     """Class for handling the data retrieval."""
 
