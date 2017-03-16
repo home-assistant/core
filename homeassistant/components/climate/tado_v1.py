@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     ATTR_TEMPERATURE)
 from homeassistant.components.tado_v1 import (
-    CONST_TADO_DATA)
+    DATA_TADO)
 
 CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"  # Default mytado mode
 CONST_MODE_OFF = "OFF"  # Switch off heating in a zone
@@ -35,7 +35,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the climate platform."""
     # get the PyTado object from the hub component
-    tado = hass.data[CONST_TADO_DATA]
+    tado = hass.data[DATA_TADO]
 
     try:
         zones = tado.get_zones()

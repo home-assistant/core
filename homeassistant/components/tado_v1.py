@@ -32,14 +32,14 @@ TADO_V1_COMPONENTS = [
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_USERNAME, default=''): cv.string,
-        vol.Required(CONF_PASSWORD, default=''): cv.string
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-CONST_TADO_DATA = 'tado_v1_data'
+DATA_TADO = 'tado_v1_data'
 
 
 def setup(hass, config):
@@ -55,7 +55,7 @@ def setup(hass, config):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False
 
-    hass.data[CONST_TADO_DATA] = TadoDataStore(tado)
+    hass.data[DATA_TADO] = TadoDataStore(tado)
 
     for component in TADO_V1_COMPONENTS:
         load_platform(hass, component, DOMAIN, {}, config)
