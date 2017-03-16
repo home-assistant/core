@@ -2,9 +2,9 @@
 import logging
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, DOMAIN, SUPPORT_BRIGHTNESS, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.lutron import (
-    LutronDevice, LUTRON_DEVICES, LUTRON_GROUPS, LUTRON_CONTROLLER)
+    LutronDevice, LUTRON_DEVICES, LUTRON_CONTROLLER)
 
 DEPENDENCIES = ['lutron']
 
@@ -21,15 +21,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           hass.data[LUTRON_CONTROLLER])
         area_devs.setdefault(area_name, []).append(dev)
         devs.append(dev)
+
     add_devices(devs, True)
-
-    for area in area_devs:
-        if area not in hass.data[LUTRON_GROUPS]:
-            continue
-        grp = hass.data[LUTRON_GROUPS][area]
-        ids = list(grp.tracking) + [dev.entity_id for dev in area_devs[area]]
-        grp.update_tracked_entity_ids(ids)
-
     return True
 
 
@@ -49,8 +42,7 @@ class LutronLight(LutronDevice, Light):
     def __init__(self, hass, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        LutronDevice.__init__(self, hass, DOMAIN, area_name, lutron_device,
-                              controller)
+        LutronDevice.__init__(self, hass, area_name, lutron_device, controller)
 
     @property
     def supported_features(self):

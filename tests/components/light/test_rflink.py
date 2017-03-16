@@ -155,35 +155,6 @@ def test_default_setup(hass, monkeypatch):
 
 
 @asyncio.coroutine
-def test_new_light_group(hass, monkeypatch):
-    """New devices should be added to configured group."""
-    config = {
-        'rflink': {
-            'port': '/dev/ttyABC0',
-        },
-        DOMAIN: {
-            'platform': 'rflink',
-            'new_devices_group': 'new_rflink_lights',
-        },
-    }
-
-    # setup mocking rflink module
-    event_callback, _, _, _ = yield from mock_rflink(
-        hass, config, DOMAIN, monkeypatch)
-
-    # test event for new unconfigured sensor
-    event_callback({
-        'id': 'protocol_0_0',
-        'command': 'off',
-    })
-    yield from hass.async_block_till_done()
-
-    # make sure new device is added to correct group
-    group = hass.states.get('group.new_rflink_lights')
-    assert group.attributes.get('entity_id') == ('light.protocol_0_0',)
-
-
-@asyncio.coroutine
 def test_firing_bus_event(hass, monkeypatch):
     """Incoming Rflink command events should be put on the HA event bus."""
     config = {
