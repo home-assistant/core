@@ -32,7 +32,6 @@ CONF_DEVICE_DEFAULTS = 'device_defaults'
 CONF_DEVICES = 'devices'
 CONF_FIRE_EVENT = 'fire_event'
 CONF_IGNORE_DEVICES = 'ignore_devices'
-CONF_NEW_DEVICES_GROUP = 'new_devices_group'
 CONF_RECONNECT_INTERVAL = 'reconnect_interval'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_WAIT_FOR_ACK = 'wait_for_ack'
@@ -358,7 +357,7 @@ class RflinkCommand(RflinkDevice):
                 self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:
-            self._repetition_task = self.hass.loop.create_task(
+            self._repetition_task = self.hass.async_add_job(
                 self._async_send_command(cmd, repetitions - 1))
 
 
