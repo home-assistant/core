@@ -316,7 +316,8 @@ class KodiDevice(MediaPlayerDevice):
 
             self._item = (yield from self.server.Player.GetItem(
                 player_id,
-                ['title', 'file', 'uniqueid', 'thumbnail', 'artist']
+                ['title', 'file', 'uniqueid', 'thumbnail', 'artist',
+                 'albumartist', 'showtitle', 'album', 'season', 'episode']
             ))['item']
         else:
             self._properties = {}
@@ -397,6 +398,44 @@ class KodiDevice(MediaPlayerDevice):
         # find a string we can use as a title
         return self._item.get(
             'title', self._item.get('label', self._item.get('file')))
+
+    @property
+    def media_series_title(self):
+        """Title of series of current playing media, TV show only."""
+        return self._item.get('showtitle')
+
+    @property
+    def media_season(self):
+        """Season of current playing media, TV show only."""
+        return self._item.get('season')
+
+    @property
+    def media_episode(self):
+        """Episode of current playing media, TV show only."""
+        return self._item.get('episode')
+
+    @property
+    def media_album_name(self):
+        """Album name of current playing media, music track only."""
+        return self._item.get('album')
+
+    @property
+    def media_artist(self):
+        """Artist of current playing media, music track only."""
+        artists = self._item.get('artist', [])
+        if len(artists) > 0:
+            return artists[0]
+        else:
+            return None
+
+    @property
+    def media_album_artist(self):
+        """Album artist of current playing media, music track only."""
+        artists = self._item.get('albumartist', [])
+        if len(artists) > 0:
+            return artists[0]
+        else:
+            return None
 
     @property
     def supported_features(self):
