@@ -35,8 +35,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for droplet in droplets:
         droplet_id = digital_ocean.DIGITAL_OCEAN.get_droplet_id(droplet)
-        dev.append(DigitalOceanSwitch(
-            digital_ocean.DIGITAL_OCEAN, droplet_id))
+        if droplet_id is None:
+            _LOGGER.error("Droplet is not available")
+            return False
+        else:
+            dev.append(DigitalOceanSwitch(
+                digital_ocean.DIGITAL_OCEAN, droplet_id))
 
     add_devices(dev)
 
