@@ -398,6 +398,9 @@ paho-mqtt==1.2
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.2
 
+# homeassistant.components.light.lutron_caseta
+paramiko==2.1.2
+
 # homeassistant.components.media_player.dunehd
 pdunehd==1.3
 

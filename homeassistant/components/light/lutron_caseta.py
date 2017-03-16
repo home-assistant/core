@@ -8,7 +8,7 @@ from homeassistant.components.light.lutron import to_lutron_level
 
 REQUIREMENTS = ['https://github.com/gurumitts/'
                 'pylutron-caseta/archive/v0.2.0.zip#'
-                'pylutron-caseta==v0.2.0']
+                'pylutron-caseta==v0.2.0', 'paramiko==2.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,9 +26,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     caseta_devices = bridge.get_devices()
     devs = []
-    _LOGGER.error(caseta_devices)
+    _LOGGER.debug(caseta_devices)
     for device in caseta_devices:
-        _LOGGER.error(device)
         if caseta_devices[device]["type"] in supported_types:
             dev = LutronCasetaLight(hass, caseta_devices[device], bridge)
             devs.append(dev)
