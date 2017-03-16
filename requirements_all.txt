@@ -247,6 +247,9 @@ https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.
 # homeassistant.components.lutron_caseta
 https://github.com/gurumitts/pylutron-caseta/archive/0.1.0.zip#pylutron-caseta==0.1.0
 
+# homeassistant.components.light.lutron_caseta
+https://github.com/gurumitts/pylutron-caseta/archive/v0.2.0.zip#pylutron-caseta==v0.2.0
+
 # homeassistant.components.netatmo
 https://github.com/jabesq/netatmo-api-python/archive/v0.9.1.zip#lnetatmo==0.9.1
 
