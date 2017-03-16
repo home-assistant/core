@@ -135,7 +135,8 @@ class TestRestSensor(unittest.TestCase):
 
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
-                                      self.value_template)
+                                      self.value_template, self.interval)
+
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -162,7 +163,7 @@ class TestRestSensor(unittest.TestCase):
         """Test state gets updated to unknown when sensor returns no data."""
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(None))
-        self.sensor.update()
+        self.sensor._update()
         self.assertEqual(STATE_UNKNOWN, self.sensor.state)
 
     def test_update_when_value_changed(self):
@@ -170,7 +171,7 @@ class TestRestSensor(unittest.TestCase):
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(
                                     '{ "key": "updated_state" }'))
-        self.sensor.update()
+        self.sensor._update()
         self.assertEqual('updated_state', self.sensor.state)
 
     def test_update_with_no_template(self):
@@ -180,7 +181,7 @@ class TestRestSensor(unittest.TestCase):
                                     'plain_state'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement, None)
-        self.sensor.update()
+        self.sensor._update()
         self.assertEqual('plain_state', self.sensor.state)
 
 
