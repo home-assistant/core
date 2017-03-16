@@ -59,7 +59,6 @@ omit =
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
-    homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
 
     homeassistant/components/modbus.py
