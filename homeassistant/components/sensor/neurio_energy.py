@@ -52,12 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
     def update_daily():
-        """ Update the daily power usage. """
+        """Update the daily power usage."""
         data.get_daily_usage()
 
     @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
     def update_active():
-        """ Update the active power usage. """
+        """Update the active power usage."""
         data.get_active_power()
 
     update_daily()
@@ -73,7 +73,7 @@ class NeurioData(object):
     """Stores data retrieved from Neurio sensor. """
 
     def __init__(self, api_key, api_secret, sensor_id):
-        """ Initialize the data. """
+        """Initialize the data."""
         import neurio
 
         self.api_key = api_key
@@ -97,16 +97,16 @@ class NeurioData(object):
 
     @property
     def daily_usage(self):
-        """ Return latest daily usage value."""
+        """Return latest daily usage value."""
         return self._daily_usage
 
     @property
     def active_power(self):
-        """ Return latest active power value."""
+        """Return latest active power value."""
         return self._active_power
 
     def get_active_power(self):
-        """ Return current power value. """
+        """Return current power value."""
         try:
             sample = self.neurio_client.get_samples_live_last(self.sensor_id)
             self._active_power = sample['consumptionPower']
@@ -115,7 +115,7 @@ class NeurioData(object):
             return None
 
     def get_daily_usage(self):
-        """ Return current daily power usage. """
+        """Return current daily power usage."""
         kwh = 0
         start_time = dt_util.start_of_local_day() \
             .astimezone(dt_util.UTC).isoformat()
