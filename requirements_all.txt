@@ -486,7 +486,7 @@ pydroid-ipcam==0.4
 pyebox==0.1.0
 
 # homeassistant.components.media_player.emby
-pyemby==0.2
+pyemby==1.0
 
 # homeassistant.components.envisalink
 pyenvisalink==2.0
