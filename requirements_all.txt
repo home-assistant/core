@@ -58,7 +58,7 @@ apns2==0.1.1
 
 # homeassistant.components.sun
 # homeassistant.components.sensor.moon
-astral==1.3.4
+astral==1.4
 
 # homeassistant.components.light.avion
 # avion==0.5
