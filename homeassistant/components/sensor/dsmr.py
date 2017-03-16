@@ -111,7 +111,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         # Make all device entities aware of new telegram
         for device in devices:
             device.telegram = telegram
-            hass.async_add_job(device.async_update_ha_state)
+            hass.async_add_job(device.async_update_ha_state())
 
     # Creates a asyncio.Protocol factory for reading DSMR telegrams from serial
     # and calls update_entities_telegram to update entities on arrival
@@ -133,7 +133,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until HA stops."""
         while hass.state != CoreState.stopping:
-            # Start DSMR asycnio.Protocol reader
+            # Start DSMR asyncio.Protocol reader
             try:
                 transport, protocol = yield from hass.loop.create_task(
                     reader_factory())
@@ -161,6 +161,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 yield from asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
                                          loop=hass.loop)
 
+    # Cannot be hass.async_add_job because job runs forever
     hass.loop.create_task(connect_and_reconnect())
 
 
