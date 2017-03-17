@@ -319,7 +319,10 @@ class RflinkCommand(RflinkDevice):
 
         elif command == 'toggle':
             cmd = 'on'
-            self._state = not self._state
+            if self._state is (STATE_UNKNOWN or False):
+                self._state = True
+            else:
+                self._state = False
 
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to

@@ -15,7 +15,7 @@ from homeassistant.components.rflink import (
     CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP, CONF_SIGNAL_REPETITIONS,
     DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA, DOMAIN,
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN
 
 DEPENDENCIES = ['rflink']
 
@@ -267,7 +267,10 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
 
         command = event['command']
         if command == 'on':
-            self._state = not self._state
+            if self._state is (STATE_UNKNOWN or False):
+                self._state = True
+            else:
+                self._state = False
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
