@@ -14,7 +14,8 @@ from homeassistant.components import switch
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -68,9 +69,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     tolerance = config.get(CONF_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
 
-    async_add_devices([GenericThermostat(
+    thermostat = GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
-        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)])
+        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)
+
+    async_add_devices([thermostat])
+
+    def _start_generic_thermostat(_event):
+        thermostat._async_control_heating()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_START,
+        _start_generic_thermostat
+    )
 
 
 class GenericThermostat(ClimateDevice):
@@ -107,7 +118,6 @@ class GenericThermostat(ClimateDevice):
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
             self._async_update_temp(sensor_state)
-            self._async_control_heating()
 
     @property
     def should_poll(self):
