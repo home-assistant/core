@@ -32,6 +32,7 @@ MEDIA_TYPE_GENERIC_VIDEO = 'video'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8096
+DEFAULT_SSL_PORT = 8920
 DEFAULT_SSL = False
 DEFAULT_AUTO_HIDE = False
 
@@ -44,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PORT, default=None): cv.port,
     vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
 })
 
@@ -60,12 +61,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     ssl = config.get(CONF_SSL)
     auto_hide = config.get(CONF_AUTO_HIDE)
 
-    _LOGGER.debug('Setting up Emby server at: %s', host)
+    if port is None:
+        port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
+
+    _LOGGER.debug('Setting up Emby server at: %s:%s', host, port)
 
     emby = EmbyServer(host, key, port, ssl, hass.loop)
 
     active_emby_devices = {}
-    hidden_emby_devices = {}
+    inactive_emby_devices = {}
 
     @callback
     def device_update_callback(data):
@@ -75,16 +79,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for dev_id in emby.devices:
             active_devices.append(dev_id)
             if dev_id not in active_emby_devices and \
-                    dev_id not in hidden_emby_devices:
+                    dev_id not in inactive_emby_devices:
                 new = EmbyDevice(emby, dev_id)
                 active_emby_devices[dev_id] = new
                 new_devices.append(new)
 
-            elif dev_id in hidden_emby_devices:
+            elif dev_id in inactive_emby_devices:
                 if emby.devices[dev_id].state != 'Off':
-                    add = hidden_emby_devices.pop(dev_id)
+                    add = inactive_emby_devices.pop(dev_id)
                     active_emby_devices[dev_id] = add
                     _LOGGER.debug("Showing %s, item: %s", dev_id, add)
+                    add.set_available(True)
                     add.set_hidden(False)
 
         if new_devices:
@@ -94,11 +99,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     @callback
     def device_removal_callback(data):
         """Callback for when devices are removed from emby."""
-        if auto_hide:
-            if data in active_emby_devices:
-                rem = active_emby_devices.pop(data)
-                hidden_emby_devices[data] = rem
-                _LOGGER.debug("Hiding %s, item: %s", data, rem)
+        if data in active_emby_devices:
+            rem = active_emby_devices.pop(data)
+            inactive_emby_devices[data] = rem
+            _LOGGER.debug("Inactive %s, item: %s", data, rem)
+            rem.set_available(False)
+            if auto_hide:
                 rem.set_hidden(True)
 
     @callback
@@ -129,6 +135,7 @@ class EmbyDevice(MediaPlayerDevice):
         self.device = self.emby.devices[self.device_id]
 
         self._hidden = False
+        self._available = True
 
         self.media_status_last_position = None
         self.media_status_received = None
@@ -162,6 +169,15 @@ class EmbyDevice(MediaPlayerDevice):
     def set_hidden(self, value):
         """Set hidden property."""
         self._hidden = value
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    def set_available(self, value):
+        """Set available property."""
+        self._available = value
 
     @property
     def unique_id(self):
