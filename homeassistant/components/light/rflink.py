@@ -269,7 +269,7 @@ class ToggleRflinkLight(SwitchableRflinkDevice, Light):
         if command == 'on':
             # if the state is unknown or false, it gets set as true
             # if the state is true, it gets set as false
-            self._state = self._state is (STATE_UNKNOWN or False)
+            self._state = self._state in [STATE_UNKNOWN, False]
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
