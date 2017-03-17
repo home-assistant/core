@@ -101,13 +101,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 _LOGGER.debug("Hiding %s, item: %s", data, rem)
                 rem.set_hidden(True)
 
+    @callback
     def start_emby(event):
         """Start emby connection."""
         emby.start()
 
+    @asyncio.coroutine
     def stop_emby(event):
         """Stop emby connection."""
-        hass.async_add_job(emby.stop())
+        yield from emby.stop()
 
     emby.add_new_devices_callback(device_update_callback)
     emby.add_stale_devices_callback(device_removal_callback)
@@ -131,6 +133,9 @@ class EmbyDevice(MediaPlayerDevice):
         self.media_status_last_position = None
         self.media_status_received = None
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callback."""
         self.emby.add_update_callback(self.async_update_callback,
                                       self.device_id)
 
