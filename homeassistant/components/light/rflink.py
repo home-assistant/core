@@ -15,8 +15,8 @@ from homeassistant.components.rflink import (
     CONF_IGNORE_DEVICES, CONF_NEW_DEVICES_GROUP, CONF_SIGNAL_REPETITIONS,
     DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA, DOMAIN,
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN
-
+from homeassistant.const import (
+    CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
