@@ -21,7 +21,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.0']
+REQUIREMENTS = ['pyemby==1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +31,8 @@ MEDIA_TYPE_TRAILER = 'trailer'
 MEDIA_TYPE_GENERIC_VIDEO = 'video'
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 8920
-DEFAULT_SSL = True
+DEFAULT_PORT = 8096
+DEFAULT_SSL = False
 DEFAULT_AUTO_HIDE = False
 
 _LOGGER = logging.getLogger(__name__)
