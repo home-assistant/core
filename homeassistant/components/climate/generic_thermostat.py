@@ -69,19 +69,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     tolerance = config.get(CONF_TOLERANCE)
     keep_alive = config.get(CONF_KEEP_ALIVE)
 
-    thermostat = GenericThermostat(
+    async_add_devices([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
-        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)
-
-    async_add_devices([thermostat])
-
-    def _start_generic_thermostat(_event):
-        thermostat._async_control_heating()
-
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_START,
-        _start_generic_thermostat
-    )
+        target_temp, ac_mode, min_cycle_duration, tolerance, keep_alive)])
 
 
 class GenericThermostat(ClimateDevice):
@@ -118,6 +108,14 @@ class GenericThermostat(ClimateDevice):
         sensor_state = hass.states.get(sensor_entity_id)
         if sensor_state:
             self._async_update_temp(sensor_state)
+
+        def _start_generic_thermostat(_event):
+            self._async_control_heating()
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START,
+            _start_generic_thermostat
+        )
 
     @property
     def should_poll(self):
