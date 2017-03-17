@@ -25,7 +25,7 @@ CONF_API_SECRET = 'api_secret'
 CONF_SENSOR_ID = 'sensor_id'
 
 ACTIVE_NAME = 'Energy Usage'
-DAILY_NAME = 'Daily Usage'
+DAILY_NAME = 'Daily Energy Usage'
 
 ACTIVE_TYPE = 'active'
 DAILY_TYPE = 'daily'
