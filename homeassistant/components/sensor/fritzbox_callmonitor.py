@@ -40,6 +40,7 @@ INTERVAL_RECONNECT = 60
 
 # Return cached results if phonebook was downloaded less then this time ago.
 MIN_TIME_PHONEBOOK_UPDATE = datetime.timedelta(hours=6)
+SCAN_INTERVAL = datetime.timedelta(hours=3)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
