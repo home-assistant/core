@@ -342,3 +342,46 @@ def test_signal_repetitions_cancelling(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
     assert protocol.send_command_ack.call_args_list[2][0][1] == 'on'
     assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
+
+
+@asyncio.coroutine
+def test_type_toggle(hass, monkeypatch):
+    """Test toggle type lights (on/on)."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'toggle_0_0': {
+                    'name': 'toggle_test',
+                    'type': 'toggle',
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get('light.toggle_test').state == 'off'
+
+    # test sending on command to toggle alias
+    event_callback({
+        'id': 'toggle_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.toggle_test').state == 'on'
+
+    # test sending group command to group alias
+    event_callback({
+        'id': 'toggle_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.toggle_test').state == 'off'
