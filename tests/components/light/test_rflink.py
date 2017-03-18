@@ -408,7 +408,7 @@ def test_type_toggle(hass, monkeypatch):
 
 @asyncio.coroutine
 def test_group_alias(hass, monkeypatch):
-    """Aliases that only respond to group commands (allon/alloff)."""
+    """Group aliases should only respond to group commands (allon/alloff)."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
@@ -451,7 +451,7 @@ def test_group_alias(hass, monkeypatch):
 
 @asyncio.coroutine
 def test_nogroup_alias(hass, monkeypatch):
-    """Aliases that do not respond to group commands (allon/alloff)."""
+    """Non group aliases should not respond to group commands."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
