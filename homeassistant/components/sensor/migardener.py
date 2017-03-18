@@ -60,8 +60,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
-    mg = MiGardener(hass, config)
-    add_devices([mg])
+    mi_gardener = MiGardener(hass, config)
+    add_devices([mi_gardener])
 
 
 class MiGardener(Entity):
