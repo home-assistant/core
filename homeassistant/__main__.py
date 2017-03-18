@@ -255,10 +255,13 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
 
 def cmdline() -> List[str]:
     """Collect path and arguments to re-execute the current hass instance."""
-    if sys.argv[0].endswith('/__main__.py'):
+    if sys.argv[0].endswith(os.path.sep + '__main__.py'):
         modulepath = os.path.dirname(sys.argv[0])
         os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
-    return [sys.executable] + [arg for arg in sys.argv if arg != '--daemon']
+        return [sys.executable] + [arg for arg in sys.argv if
+                                   arg != '--daemon']
+    else:
+        return [arg for arg in sys.argv if arg != '--daemon']
 
 
 def setup_and_run_hass(config_dir: str,
