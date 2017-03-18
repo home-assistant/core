@@ -1,9 +1,12 @@
-""" Generate test data for migardener the built in MQTT server.
+"""Generate test data for migardener the built in MQTT server.
 
-This program will mock a plant gatway (https://github.com/ChristianKuehnel/plantgateway) and send data
+This program will mock a plant gatway
+(https://github.com/ChristianKuehnel/plantgateway) and send data
 in short intervals to the build-in MQTT server of Home Assistant instance.
 
-It can be used for testing the data input and processing in the migardener.py sensor. """
+It can be used for testing the data input and processing in the
+migardener.py sensor.
+"""
 
 import yaml
 import os
