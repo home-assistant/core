@@ -65,8 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MiGardener(Entity):
-    """Mi Gardener reads measurements from a
-    Xiaomi Mi plant sensor via MQTT.
+    """Read measurements from a Xiaomi Mi plant sensor via MQTT.
 
     It also checks the measurements against
     configurable min and max values.
@@ -128,10 +127,7 @@ class MiGardener(Entity):
         mqtt.subscribe(hass, self._state_topic, message_received)
 
     def _update_state(self, data):
-        """"Update the state of the class based on the
-        data received via MQTT.
-        """
-
+        """"Update the state, check ranges."""
         self._battery = int(data[READING_BATTERY])
         self._brightness = int(data[READING_BRIGHTNESS])
         self._moisture = int(data[READING_MOISTURE])
@@ -177,10 +173,7 @@ class MiGardener(Entity):
 
     @property
     def state_attributes(self):
-        """provide the individual measurements from the
-        sensor in the attributes of the device.
-        """
-
+        """Provide the all measurements."""
         attrib = {
             ATTR_BATTERY_LEVEL: self._battery,
             READING_BRIGHTNESS: self._brightness,
