@@ -109,14 +109,6 @@ class GenericThermostat(ClimateDevice):
         if sensor_state:
             self._async_update_temp(sensor_state)
 
-        def _start_generic_thermostat(_event):
-            self._async_control_heating()
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START,
-            _start_generic_thermostat
-        )
-
     @property
     def should_poll(self):
         """No polling needed."""
@@ -181,6 +173,18 @@ class GenericThermostat(ClimateDevice):
         else:
             # Get default temp from super class
             return ClimateDevice.max_temp.fget(self)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register EVENT_HOMEASSISTANT_START callback."""
+        @callback
+        def _start_generic_thermostat(_event):
+            self._async_control_heating()
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START,
+            _start_generic_thermostat
+        )
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
