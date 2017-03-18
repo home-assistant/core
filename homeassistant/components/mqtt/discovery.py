@@ -45,8 +45,6 @@ def async_start(hass, discovery_topic, hass_config):
         if topic in DISCOVERED_TOPICS:
             return
 
-        DISCOVERED_TOPICS.append(topic)
-
         prefix_topic, component, object_id = match.groups()
 
         try:
@@ -70,6 +68,8 @@ def async_start(hass, discovery_topic, hass_config):
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
+
+        DISCOVERED_TOPICS.append(topic)
 
         yield from async_load_platform(
             hass, component, platform, payload, hass_config)
