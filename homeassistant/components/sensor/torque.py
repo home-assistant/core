@@ -41,11 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def decode(value):
-    """Double-decode required."""
-    return value.encode('raw_unicode_escape').decode('utf-8')
-
-
 def convert_pid(value):
     """Convert pid from hex string to integer."""
     return int(value, 16)
@@ -94,10 +89,10 @@ class TorqueReceiveDataView(HomeAssistantView):
 
             if is_name:
                 pid = convert_pid(is_name.group(1))
-                names[pid] = decode(data[key])
+                names[pid] = data[key]
             elif is_unit:
                 pid = convert_pid(is_unit.group(1))
-                units[pid] = decode(data[key])
+                units[pid] = data[key]
             elif is_value:
                 pid = convert_pid(is_value.group(1))
                 if pid in self.sensors:
@@ -110,7 +105,7 @@ class TorqueReceiveDataView(HomeAssistantView):
                     units.get(pid, None))
                 hass.async_add_job(self.add_devices, [self.sensors[pid]])
 
-        return None
+        return "OK!"
 
 
 class TorqueSensor(Entity):
