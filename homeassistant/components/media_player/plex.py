@@ -636,47 +636,44 @@ class PlexClient(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        features = None
         if not self._is_player_active:
-            features = None
+            return None
 
         # force show all controls
         if self.config.get(CONF_SHOW_ALL_CONTROLS):
-            features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                        SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                        SUPPORT_VOLUME_SET | SUPPORT_PLAY |
-                        SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
+            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
+                    SUPPORT_NEXT_TRACK | SUPPORT_STOP |
+                    SUPPORT_VOLUME_SET | SUPPORT_PLAY |
+                    SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
 
         # only show controls when we know what device is connecting
         if not self._make:
-            features = None
+            return None
         # no mute support
         elif self.make.lower() == "shield android tv":
             _LOGGER.debug(
                 'Shield Android TV client detected, disabling mute '
                 'controls: %s', self.entity_id)
-            features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                        SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                        SUPPORT_VOLUME_SET | SUPPORT_PLAY |
-                        SUPPORT_TURN_OFF)
+            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
+                    SUPPORT_NEXT_TRACK | SUPPORT_STOP |
+                    SUPPORT_VOLUME_SET | SUPPORT_PLAY |
+                    SUPPORT_TURN_OFF)
         # Only supports play,pause,stop (and off which really is stop)
         elif self.make.lower().startswith("tivo"):
             _LOGGER.debug(
                 'Tivo client detected, only enabling pause, play, '
                 'stop, and off controls: %s', self.entity_id)
-            features = (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP |
-                        SUPPORT_TURN_OFF)
+            return (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP |
+                    SUPPORT_TURN_OFF)
         # Not all devices support playback functionality
         # Playback includes volume, stop/play/pause, etc.
         elif self.device and 'playback' in self._device_protocol_capabilities:
-            features = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
-                        SUPPORT_NEXT_TRACK | SUPPORT_STOP |
-                        SUPPORT_VOLUME_SET | SUPPORT_PLAY |
-                        SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
+            return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
+                    SUPPORT_NEXT_TRACK | SUPPORT_STOP |
+                    SUPPORT_VOLUME_SET | SUPPORT_PLAY |
+                    SUPPORT_TURN_OFF | SUPPORT_VOLUME_MUTE)
         else:
-            features = None
-
-        return features
+            return None
 
     def _local_client_control_fix(self):
         """Detect if local client and adjust url to allow control."""
