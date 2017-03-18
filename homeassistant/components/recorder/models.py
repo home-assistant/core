@@ -16,7 +16,7 @@ from homeassistant.remote import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,7 +72,9 @@ class States(Base):   # type: ignore
     __table_args__ = (Index('states__state_changes',
                             'last_changed', 'last_updated', 'entity_id'),
                       Index('states__significant_changes',
-                            'domain', 'last_updated', 'entity_id'), )
+                            'domain', 'last_updated', 'entity_id'),
+                      Index('states__last_updated', 'last_updated'),
+                      Index('states__created', 'created'))
 
     @staticmethod
     def from_event(event):

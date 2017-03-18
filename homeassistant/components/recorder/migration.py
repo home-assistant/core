@@ -40,21 +40,28 @@ def _apply_update(engine, new_version):
     """Perform operations to bring schema up to date."""
     from sqlalchemy import Table
     from . import models
+    
+    def create_index(table_name, column_name):
+        """Create an index for the specified table and column."""
+        table = Table(table_name, models.Base.metadata)
+        name = "_".join(("ix", table_name, column_name))
+        # Look up the index object that was created from the models
+        index = next(idx for idx in table.indexes if idx.name == name)
+        _LOGGER.debug("Creating index for table %s column %s",
+            table_name, column_name)
+        index.create(engine)
+        _LOGGER.debug("Index creation done for table %s column %s",
+            table_name, column_name)
 
     if new_version == 1:
-        def create_index(table_name, column_name):
-            """Create an index for the specified table and column."""
-            table = Table(table_name, models.Base.metadata)
-            name = "_".join(("ix", table_name, column_name))
-            # Look up the index object that was created from the models
-            index = next(idx for idx in table.indexes if idx.name == name)
-            _LOGGER.debug("Creating index for table %s column %s",
-                          table_name, column_name)
-            index.create(engine)
-            _LOGGER.debug("Index creation done for table %s column %s",
-                          table_name, column_name)
-
         create_index("events", "time_fired")
+    else:
+        raise ValueError("No schema migration defined for version {}"
+                         .format(new_version))
+
+    if new_version == 2:
+        create_index("states", "last_updated")
+        create_index("states", "created")
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))
