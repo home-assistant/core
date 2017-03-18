@@ -1,4 +1,5 @@
-"""Unit tests for sensor/migardener.py"""
+"""Unit tests for sensor/migardener.py."""
+
 import unittest
 import unittest.mock as mock
 
