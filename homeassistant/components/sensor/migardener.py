@@ -1,12 +1,14 @@
-""" Sensor for monitoring plants with Xiaomi Mi Plant sensors.
+"""Sensor for monitoring plants with Xiaomi Mi Plant sensors.
 
-To read the sensor data and send it via MQTT, see https://github.com/ChristianKuehnel/plantgateway
+To read the sensor data and send it via MQTT,
+see https://github.com/ChristianKuehnel/plantgateway
 """
 
 import json
 import voluptuous as vol
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL, TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
+    CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL,
+    TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
     ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
@@ -63,8 +65,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MiGardener(Entity):
-    """Mi Gardener reads measurements from a Xiaomi Mi plant sensor via MQTT.
-    It also checks the measurements against configurable min and max values. """
+    """Mi Gardener reads measurements from a
+    Xiaomi Mi plant sensor via MQTT.
+
+    It also checks the measurements against
+    configurable min and max values.
+    """
 
     READINGS = {
         READING_BATTERY: {
@@ -99,7 +105,7 @@ class MiGardener(Entity):
     }
 
     def __init__(self, hass, config):
-        """default constructor."""
+        """Default constructor."""
         self._hass = hass
         self._config = config
         self._state = STATE_UNKNOWN
@@ -122,7 +128,10 @@ class MiGardener(Entity):
         mqtt.subscribe(hass, self._state_topic, message_received)
 
     def _update_state(self, data):
-        """update the state of the class based on the data received via MQTT."""
+        """"Update the state of the class based on the
+        data received via MQTT.
+        """
+
         self._battery = int(data[READING_BATTERY])
         self._brightness = int(data[READING_BRIGHTNESS])
         self._moisture = int(data[READING_MOISTURE])
@@ -168,7 +177,10 @@ class MiGardener(Entity):
 
     @property
     def state_attributes(self):
-        """provide the individual measurements from the seansor in the attributes of the device."""
+        """provide the individual measurements from the
+        sensor in the attributes of the device.
+        """
+
         attrib = {
             ATTR_BATTERY_LEVEL: self._battery,
             READING_BRIGHTNESS: self._brightness,
