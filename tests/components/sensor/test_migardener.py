@@ -40,7 +40,8 @@ class TestMiGardener(unittest.TestCase):
         self.assertEqual(self.sensor.state, 'ok')
         attrib = self.sensor.state_attributes
         for key, value in self.GOOD_DATA.items():
-            # battery level has a different name in the JSON format than in hass
+            # battery level has a different name in
+            # the JSON format than in hass
             if key == 'battery':
                 key = 'battery_level'
             self.assertEqual(attrib[key], value)
