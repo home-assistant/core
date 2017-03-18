@@ -27,6 +27,8 @@ ALLOWED_PLATFORMS = {
     'sensor': ['mqtt']
 }
 
+DISCOVERED_TOPICS = []
+
 
 @asyncio.coroutine
 def async_start(hass, discovery_topic, hass_config):
@@ -39,6 +41,11 @@ def async_start(hass, discovery_topic, hass_config):
 
         if not match:
             return
+
+        if topic in DISCOVERED_TOPICS:
+            return
+
+        DISCOVERED_TOPICS.append(topic)
 
         prefix_topic, component, object_id = match.groups()
 
