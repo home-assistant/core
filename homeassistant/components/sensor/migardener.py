@@ -1,8 +1,9 @@
-"""
-Sensor for monitoring plants with Xiaomi Mi Plant sensors
+""" Sensor for monitoring plants with Xiaomi Mi Plant sensors.
+
+To read the sensor data and send it via MQTT, see https://github.com/ChristianKuehnel/plantgateway
 """
 
-import logging
+import json
 import voluptuous as vol
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL, TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
@@ -12,8 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
-import json
-import asyncio
+
 
 DEFAULT_NAME = 'MiGardener'
 DEPENDENCIES = ['mqtt']
@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up MiGardener"""
+    """Set up MiGardener."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
@@ -63,41 +63,43 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MiGardener(Entity):
+    """Mi Gardener reads measurements from a Xiaomi Mi plant sensor via MQTT.
+    It also checks the measurements against configurable min and max values. """
 
-
-    READINGS =  {
+    READINGS = {
         READING_BATTERY: {
             ATTR_UNIT_OF_MEASUREMENT:  '%',
-            'min':CONF_MIN_BATTERY_LEVEL,
-            'icon':'mdi:battery-outline'
+            'min': CONF_MIN_BATTERY_LEVEL,
+            'icon': 'mdi:battery-outline'
         },
         READING_TEMPERATURE: {
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
-            'min': CONF_MIN_TEMPERATURE ,
+            'min': CONF_MIN_TEMPERATURE,
             'max': CONF_MAX_TEMPERATURE,
-            'icon':'mdi:thermometer'
+            'icon': 'mdi:thermometer'
         },
         READING_MOISTURE: {
             ATTR_UNIT_OF_MEASUREMENT: '%',
             'min': CONF_MIN_MOISTURE,
             'max': CONF_MAX_MOISTURE,
-            'icon':'mdi:water'
+            'icon': 'mdi:water'
         },
         READING_CONDUCTIVITY: {
             ATTR_UNIT_OF_MEASUREMENT: 'µS/cm',
             'min': CONF_MIN_CONDUCTIVITY,
             'max': CONF_MAX_CONDUCTIVITY,
-            'icon':'mdi:emoticon-poop'
+            'icon': 'mdi:emoticon-poop'
         },
         READING_BRIGHTNESS: {
             ATTR_UNIT_OF_MEASUREMENT: 'lux',
             'min': CONF_MIN_BRIGHTNESS,
             'max': CONF_MAX_BRIGHTNESS,
-            'icon':'mdi:white-balance-sunny'
+            'icon': 'mdi:white-balance-sunny'
         }
     }
 
     def __init__(self, hass, config):
+        """default constructor."""
         self._hass = hass
         self._config = config
         self._state = STATE_UNKNOWN
@@ -119,7 +121,8 @@ class MiGardener(Entity):
 
         mqtt.subscribe(hass, self._state_topic, message_received)
 
-    def _update_state(self,data):
+    def _update_state(self, data):
+        """update the state of the class based on the data received via MQTT."""
         self._battery = int(data[READING_BATTERY])
         self._brightness = int(data[READING_BRIGHTNESS])
         self._moisture = int(data[READING_MOISTURE])
@@ -127,8 +130,8 @@ class MiGardener(Entity):
         self._temperature = float(data[READING_TEMPERATURE])
 
         result = []
-        for sensor_name,params in self.READINGS.items():
-            value = getattr(self,'_{}'.format(sensor_name))
+        for sensor_name, params in self.READINGS.items():
+            value = getattr(self, '_{}'.format(sensor_name))
 
             if 'min' in params and params['min'] in self._config:
                 min_value = self._config[params['min']]
@@ -148,7 +151,6 @@ class MiGardener(Entity):
         else:
             self._state = ', '.join(result)
 
-
     @property
     def should_poll(self):
         """No polling needed."""
@@ -159,11 +161,6 @@ class MiGardener(Entity):
         """Return the name of the sensor."""
         return self._name
 
-    # @property
-    # def unit_of_measurement(self):
-    #     """Return the unit this state is expressed in."""
-    #     return self._unit_of_measurement
-
     @property
     def state(self):
         """Return the state of the entity."""
@@ -171,16 +168,13 @@ class MiGardener(Entity):
 
     @property
     def state_attributes(self):
+        """provide the individual measurements from the seansor in the attributes of the device."""
         attrib = {
             ATTR_BATTERY_LEVEL: self._battery,
-            READING_BRIGHTNESS : self._brightness,
+            READING_BRIGHTNESS: self._brightness,
             READING_MOISTURE: self._moisture,
             READING_CONDUCTIVITY: self._conductivity,
             READING_TEMPERATURE: self._temperature,
-            ATTR_ICON : self._icon,
+            ATTR_ICON: self._icon,
         }
         return attrib
-
-    #@property
-    #def entity_picture(self):
-    #    return self._icon
