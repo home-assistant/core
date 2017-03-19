@@ -318,7 +318,7 @@ def async_setup(hass, config):
                                    'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
-    if certificate is not None and certificate.lower() == 'auto':
+    if certificate == 'auto':
         certificate = requests.certs.where()
 
     will_message = conf.get(CONF_WILL_MESSAGE)
