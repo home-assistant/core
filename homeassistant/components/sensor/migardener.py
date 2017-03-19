@@ -58,6 +58,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up MiGardener."""
@@ -126,9 +127,9 @@ class MiGardener(Entity):
         self._icon = None
 
     @callback
-    def message_received(self,topic, payload, qos):
+    def message_received(self, topic, payload, qos):
         """A new MQTT message has been received."""
-        _LOGGER.debug('Received data: %s',payload)
+        _LOGGER.debug('Received data: %s', payload)
         data = json.loads(payload)
         self._update_state(data)
         self._hass.async_add_job(self.async_update_ha_state())
