@@ -25,10 +25,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = hass.data[DOMAIN].blink
+    data = hass.data[DOMAIN]
     devs = list()
     index = 0
-    for name in data.cameras:
+    for name in data.blink.cameras:
         devs.append(BlinkSensor(name, 'temperature', index, data))
         devs.append(BlinkSensor(name, 'battery', index, data))
         devs.append(BlinkSensor(name, 'notifications', index, data))
@@ -72,7 +72,7 @@ class BlinkSensor(Entity):
 
     def update(self):
         """A method to retrieve sensor data from the camera."""
-        camera = self.data.cameras[self._camera_name]
+        camera = self.data.blink.cameras[self._camera_name]
         if self._type == 'temperature':
             self._state = camera.temperature
         elif self._type == 'battery':
