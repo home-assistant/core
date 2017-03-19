@@ -119,7 +119,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_CERTIFICATE): vol.Any('auto', cv.isfile),
         vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
@@ -317,8 +317,8 @@ def async_setup(hass, config):
         certificate = os.path.join(os.path.dirname(__file__),
                                    'addtrustexternalcaroot.crt')
 
-    # When the port indicates mqtts, use bundled certificates from requests
-    if certificate is None and port == 8883:
+    # When the certificate is set to auto, use bundled certs from requests
+    if certificate == 'auto':
         certificate = requests.certs.where()
 
     will_message = conf.get(CONF_WILL_MESSAGE)
