@@ -17,8 +17,7 @@ from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -628,14 +627,7 @@ class ZWaveDeviceEntityValues():
         self._entity = None
         self._workaround_ignore = False
 
-        # Combine node value schemas and instance value schemas into one
-        # values schema mapping.
         self._schema[const.DISC_VALUES] = {}
-        for name in self._schema[const.DISC_NODE_VALUES].keys():
-            self._values[name] = None
-            self._schema[const.DISC_VALUES][name] = \
-                self._schema[const.DISC_NODE_VALUES][name]
-
         for name in self._schema[const.DISC_INSTANCE_VALUES].keys():
             self._values[name] = None
             self._schema[const.DISC_VALUES][name] = \
@@ -802,17 +794,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
         self.node_id = self.node.node_id
-        self.location = self.node.location
-
-        if self.values.battery:
-            self.battery_level = self.values.battery.data
-        else:
-            self.battery_level = None
-
-        if self.values.wakeup:
-            self.wakeup_interval = self.values.wakeup.data
-        else:
-            self.wakeup_interval = None
 
         if self.values.power:
             self.power_consumption = round(
@@ -845,15 +826,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         attrs = {
             const.ATTR_NODE_ID: self.node_id,
         }
-
-        if self.battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = self.battery_level
-
-        if self.location:
-            attrs[ATTR_LOCATION] = self.location
-
-        if self.wakeup_interval is not None:
-            attrs[ATTR_WAKEUP] = self.wakeup_interval
 
         if self.power_consumption is not None:
             attrs[ATTR_POWER] = self.power_consumption

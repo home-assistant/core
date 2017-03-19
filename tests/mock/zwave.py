@@ -62,6 +62,10 @@ class MockNode(MagicMock):
         """Test if mock has a command class."""
         return command_class in self._command_classes
 
+    def get_battery_level(self):
+        """Return mock battery level."""
+        return 42
+
     def _get_child_mock(self, **kw):
         """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)

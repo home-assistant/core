@@ -2,10 +2,11 @@
 import logging
 
 from homeassistant.core import callback
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_WAKEUP
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-from .const import ATTR_NODE_ID, DOMAIN
+from .const import ATTR_NODE_ID, DOMAIN, COMMAND_CLASS_WAKE_UP
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,7 +21,7 @@ STAGE_COMPLETE = 'Complete'
 _REQUIRED_ATTRIBUTES = [
     ATTR_QUERY_STAGE, ATTR_AWAKE, ATTR_READY, ATTR_FAILED,
     'is_info_received', 'max_baud_rate', 'is_zwave_plus']
-_OPTIONAL_ATTRIBUTES = ['capabilities', 'neighbors']
+_OPTIONAL_ATTRIBUTES = ['capabilities', 'neighbors', 'location']
 ATTRIBUTES = _REQUIRED_ATTRIBUTES + _OPTIONAL_ATTRIBUTES
 
 
@@ -76,6 +77,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.entity_id = "{}.{}_{}".format(
             DOMAIN, slugify(self._name), self.node_id)
         self._attributes = {}
+        self.wakeup_interval = None
+        self.location = None
+        self.battery_level = None
         dispatcher.connect(
             self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
@@ -98,6 +102,18 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             value = getattr(self.node, attr)
             if attr in _REQUIRED_ATTRIBUTES or value:
                 self._attributes[attr] = value
+
+        if self.node.can_wake_up():
+            for value in self.node.get_values(COMMAND_CLASS_WAKE_UP).values():
+                self.wakeup_interval = value.data
+                break
+        else:
+            self.wakeup_interval = None
+
+        self.location = self.node.location
+
+        self.battery_level = self.node.get_battery_level()
+
         self.maybe_schedule_update()
 
     @property
@@ -139,4 +155,10 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             ATTR_NODE_ID: self.node_id,
         }
         attrs.update(self._attributes)
+        if self.battery_level is not None:
+            attrs[ATTR_BATTERY_LEVEL] = self.battery_level
+        if self.location:
+            attrs[ATTR_LOCATION] = self.location
+        if self.wakeup_interval is not None:
+            attrs[ATTR_WAKEUP] = self.wakeup_interval
         return attrs
