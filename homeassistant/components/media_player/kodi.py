@@ -323,7 +323,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def server(self):
         """Active server for json-rpc requests."""
-        if self._ws_server.connected:
+        if self._enable_websocket and self._ws_server.connected:
             return self._ws_server
         else:
             return self._http_server
@@ -336,7 +336,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return not self._ws_server.connected
+        return not (self._enable_websocket and self._ws_server.connected)
 
     @property
     def volume_level(self):
