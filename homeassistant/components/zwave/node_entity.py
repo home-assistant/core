@@ -17,10 +17,11 @@ ATTR_FAILED = 'is_failed'
 
 STAGE_COMPLETE = 'Complete'
 
-ATTRIBUTES = [
+_REQUIRED_ATTRIBUTES = [
     ATTR_QUERY_STAGE, ATTR_AWAKE, ATTR_READY, ATTR_FAILED,
-    'is_info_received', 'max_baud_rate', 'is_zwave_plus',
-    'capabilities', 'neighbors']
+    'is_info_received', 'max_baud_rate', 'is_zwave_plus']
+_OPTIONAL_ATTRIBUTES = ['capabilities', 'neighbors']
+ATTRIBUTES = _REQUIRED_ATTRIBUTES + _OPTIONAL_ATTRIBUTES
 
 
 class ZWaveBaseEntity(Entity):
@@ -55,7 +56,7 @@ class ZWaveBaseEntity(Entity):
         self.hass.loop.call_later(0.1, do_update)
 
 
-def sub_status(stage, status):
+def sub_status(status, stage):
     """Format sub-status."""
     return '{} ({})'.format(status, stage) if stage else status
 
@@ -75,7 +76,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.entity_id = "{}.{}_{}".format(
             DOMAIN, slugify(self._name), self.node_id)
         self._attributes = {}
-        self._stage = self.node.query_stage
         dispatcher.connect(
             self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
@@ -93,8 +93,11 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def node_changed(self):
         """Update node properties."""
+        self._attributes = {}
         for attr in ATTRIBUTES:
-            self._attributes[attr] = getattr(self.node, attr)
+            value = getattr(self.node, attr)
+            if attr in _REQUIRED_ATTRIBUTES or value:
+                self._attributes[attr] = value
         self.maybe_schedule_update()
 
     @property
@@ -107,15 +110,17 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         """Return the state."""
         if ATTR_READY not in self._attributes:
             return None
-        status = ''
+        stage = ''
         if not self._attributes[ATTR_READY]:
             # If node is not ready use stage as sub-status.
-            status = self._attributes[ATTR_QUERY_STAGE]
+            stage = self._attributes[ATTR_QUERY_STAGE]
         if self._attributes[ATTR_FAILED]:
-            return sub_status('Dead', status)
+            return sub_status('Dead', stage)
         if not self._attributes[ATTR_AWAKE]:
-            return sub_status('Sleeping', status)
-        return status if status else 'Ready'
+            return sub_status('Sleeping', stage)
+        if self._attributes[ATTR_READY]:
+            return sub_status('Ready', stage)
+        return stage
 
     @property
     def should_poll(self):
