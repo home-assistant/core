@@ -65,6 +65,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def __init__(self, node):
         """Initialize node."""
+        # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
