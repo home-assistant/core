@@ -121,6 +121,7 @@ class TadoClimate(ClimateDevice):
     def state(self):
         """
         Return the current operation mode.
+
         Because ClimateDevice does the same!
         """
         return self._current_operation
