@@ -17,9 +17,13 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
+import time
+from datetime import timedelta
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FORCE_UPDATE = 'force_update'
+CONF_EXPIRE_AFTER = 'expire_after'
 
 DEFAULT_NAME = 'MQTT Sensor'
 DEFAULT_FORCE_UPDATE = False
@@ -31,6 +35,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
+SCAN_INTERVAL = timedelta(seconds=1)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -48,6 +53,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_QOS),
         config.get(CONF_UNIT_OF_MEASUREMENT),
         config.get(CONF_FORCE_UPDATE),
+        config.get(CONF_EXPIRE_AFTER),
         value_template,
     )])
 
@@ -56,7 +62,7 @@ class MqttSensor(Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, value_template):
+                 force_update, expire_after, value_template):
         """Initialize the sensor."""
         self._state = STATE_UNKNOWN
         self._name = name
@@ -65,6 +71,8 @@ class MqttSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._force_update = force_update
         self._template = value_template
+        self._expire_after = expire_after or 0
+        self._value_expiration_at = 0
 
     def async_added_to_hass(self):
         """Subscribe mqtt events.
@@ -73,6 +81,9 @@ class MqttSensor(Entity):
         """
         @callback
         def message_received(topic, payload, qos):
+            """ reset expiration time """
+            self._value_expiration_at = time.time() + self._expire_after
+            
             """A new MQTT message has been received."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
@@ -85,8 +96,12 @@ class MqttSensor(Entity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
-        return False
+        """polling needed only for auto-expire"""
+        return self._expire_after > 0
+    
+    def update(self):
+        if self._expire_after > 0 and time.time() > self._value_expiration_at:
+            self._state = STATE_UNKNOWN
 
     @property
     def name(self):
