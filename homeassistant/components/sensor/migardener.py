@@ -6,12 +6,12 @@ see https://github.com/ChristianKuehnel/plantgateway
 
 import json
 import logging
+import asyncio
 import voluptuous as vol
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL,
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
     ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
-import asyncio
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
