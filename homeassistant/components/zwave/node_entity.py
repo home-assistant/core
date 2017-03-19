@@ -115,11 +115,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.maybe_schedule_update()
 
     @property
-    def hidden(self):
-        """Return True if the entity should be hidden from UIs."""
-        return True
-
-    @property
     def state(self):
         """Return the state."""
         if ATTR_READY not in self._attributes:
