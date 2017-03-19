@@ -2,7 +2,7 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_WAKEUP
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
@@ -110,8 +110,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         else:
             self.wakeup_interval = None
 
-        self.location = self.node.location
-
         self.battery_level = self.node.get_battery_level()
 
         self.maybe_schedule_update()
@@ -157,8 +155,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         attrs.update(self._attributes)
         if self.battery_level is not None:
             attrs[ATTR_BATTERY_LEVEL] = self.battery_level
-        if self.location:
-            attrs[ATTR_LOCATION] = self.location
         if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
         return attrs

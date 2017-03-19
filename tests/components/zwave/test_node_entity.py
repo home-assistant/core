@@ -106,8 +106,15 @@ class TestZWaveNodeEntity(unittest.TestCase):
              'is_info_received': True,
              'max_baud_rate': 40000,
              'is_zwave_plus': False,
-             'battery_level': 42},
+             'battery_level': 42,
+             'wake_up_interval': 1800},
             self.entity.device_state_attributes)
+
+        self.node.can_wake_up_value = False
+        self.entity.node_changed()
+
+        self.assertNotIn(
+            'wake_up_interval', self.entity.device_state_attributes)
 
     def test_name(self):
         """Test name property."""
