@@ -5,57 +5,34 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.light.lutron import to_hass_level
 from homeassistant.components.light.lutron import to_lutron_level
-
+from homeassistant.components.lutron_caseta import LUTRON_CASETA_DEVICES
+from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
+from homeassistant.components.lutron_caseta import LutronCasetaDevice
 
 
 _LOGGER = logging.getLogger(__name__)
 
 
+# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Lutron walldimmers and switches as lights."""
-    from pylutron_caseta import smartbridge
-
-    bridge = smartbridge.Smartbridge(
-        hostname=config['host'],
-        username=config['user'],
-        password=config['password'])
-
-    supported_types = ['WallDimmer']
-
-    caseta_devices = bridge.get_devices()
+    """Setup Lutron  Caseta lights."""
     devs = []
-    _LOGGER.debug(caseta_devices)
-    for device in caseta_devices:
-        if caseta_devices[device]["type"] in supported_types:
-            dev = LutronCasetaLight(hass, caseta_devices[device], bridge)
-            devs.append(dev)
-    add_devices(devs, True)
+    for device in hass.data[LUTRON_CASETA_DEVICES]['light']:
+        dev = LutronCasetaLight(device,
+                                hass.data[LUTRON_CASETA_SMARTBRIDGE])
+        devs.append(dev)
 
+    add_devices(devs, True)
     return True
 
 
-class LutronCasetaLight(Light):
+class LutronCasetaLight(LutronCasetaDevice, Light):
     """Representation of a Lutron Light, including dimmable."""
 
-    def __init__(self, hass, device_info, bridge):
+    def __init__(self, device, bridge):
         """Initialize the light."""
         self._prev_brightness = None
-        self._device_id = device_info["device_id"]
-        self._device_type = device_info["type"]
-        self._device_name = device_info["name"]
-        self._state = None
-        self._smartbridge = bridge
-        self._smartbridge.add_subscriber(self._device_id,
-                                         self._update_callback)
-        self.update()
-
-    def _update_callback(self):
-        self.schedule_update_ha_state()
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._device_name
+        LutronCasetaDevice.__init__(self, device, bridge)
 
     @property
     def supported_features(self):
@@ -79,13 +56,6 @@ class LutronCasetaLight(Light):
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._smartbridge.set_value(self._device_id, 0)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attr = {}
-        attr['Lutron Integration ID'] = self._device_id
-        return attr
 
     @property
     def is_on(self):

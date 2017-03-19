@@ -250,7 +250,7 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 # homeassistant.components.media_player.onkyo
 https://github.com/danieljkemp/onkyo-eiscp/archive/python3.zip#onkyo-eiscp==0.9.2
 
-# homeassistant.components.light.lutron_caseta
+# homeassistant.components.lutron_caseta
 https://github.com/gurumitts/pylutron-caseta/archive/v0.2.0.zip#pylutron-caseta==v0.2.0
 
 # homeassistant.components.netatmo
@@ -398,7 +398,7 @@ paho-mqtt==1.2
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.2
 
-# homeassistant.components.light.lutron_caseta
+# homeassistant.components.lutron_caseta
 paramiko==2.1.2
 
 # homeassistant.components.media_player.dunehd
