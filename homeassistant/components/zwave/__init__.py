@@ -13,13 +13,12 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -29,9 +28,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
+from .const import DOMAIN
+from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
-from .util import check_node_schema, check_value_schema
+from .util import check_node_schema, check_value_schema, node_name
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
@@ -60,7 +61,6 @@ DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
-DOMAIN = 'zwave'
 
 DATA_ZWAVE_DICT = 'zwave_devices'
 
@@ -140,20 +140,14 @@ def _obj_to_dict(obj):
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
-def _node_name(node):
-    """Return the name of the node."""
-    return node.name or '{} {}'.format(
-        node.manufacturer_name, node.product_name)
-
-
 def _value_name(value):
     """Return the name of the value."""
-    return '{} {}'.format(_node_name(value.node), value.label)
+    return '{} {}'.format(node_name(value.node), value.label)
 
 
 def _node_object_id(node):
     """Return the object_id of the node."""
-    node_object_id = '{}_{}'.format(slugify(_node_name(node)), node.node_id)
+    node_object_id = '{}_{}'.format(slugify(node_name(node)), node.node_id)
     return node_object_id
 
 
@@ -298,6 +292,19 @@ def setup(hass, config):
                 hass, schema, value, config, device_config)
             discovered_values.append(values)
 
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    def node_added(node):
+        """Called when a node is added on the network."""
+        entity = ZWaveNodeEntity(node)
+        node_config = device_config.get(entity.entity_id)
+        if node_config.get(CONF_IGNORED):
+            _LOGGER.info(
+                "Ignoring node entity %s due to device settings.",
+                entity.entity_id)
+            return
+        component.add_entities([entity])
+
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
         hass.bus.fire(const.EVENT_SCENE_ACTIVATED, {
@@ -328,6 +335,8 @@ def setup(hass, config):
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
+    dispatcher.connect(
+        node_added, ZWaveNetwork.SIGNAL_NODE_ADDED, weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
     dispatcher.connect(
@@ -714,7 +723,7 @@ class ZWaveDeviceEntityValues():
 
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
-                "Ignoring node %s due to device settings.", self._node.node_id)
+                "Ignoring entity %s due to device settings.", name)
             # No entity will be created for this value
             self._workaround_ignore = True
             return
@@ -749,12 +758,13 @@ class ZWaveDeviceEntityValues():
         self._hass.add_job(discover_device, component, device, dict_id)
 
 
-class ZWaveDeviceEntity(Entity):
+class ZWaveDeviceEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node entity."""
 
     def __init__(self, values, domain):
         """Initialize the z-Wave device."""
         # pylint: disable=import-error
+        super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
         self.values = values
@@ -765,7 +775,6 @@ class ZWaveDeviceEntity(Entity):
         self._name = _value_name(self.values.primary)
         self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
                                                self.values.primary.object_id)
-        self._update_scheduled = False
         self._update_attributes()
 
         dispatcher.connect(
@@ -780,10 +789,7 @@ class ZWaveDeviceEntity(Entity):
         """Called when a value for this entity's node has changed."""
         self._update_attributes()
         self.update_properties()
-        # If value changed after device was created but before setup_platform
-        # was called - skip updating state.
-        if self.hass and not self._update_scheduled:
-            self.hass.add_job(self._schedule_update)
+        self.maybe_schedule_update()
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -858,18 +864,3 @@ class ZWaveDeviceEntity(Entity):
         """Refresh all dependent values from zwave network."""
         for value in self.values:
             self.node.refresh_value(value.value_id)
-
-    @callback
-    def _schedule_update(self):
-        """Schedule delayed update."""
-        if self._update_scheduled:
-            return
-
-        @callback
-        def do_update():
-            """Really update."""
-            self.hass.async_add_job(self.async_update_ha_state)
-            self._update_scheduled = False
-
-        self._update_scheduled = True
-        self.hass.loop.call_later(0.1, do_update)

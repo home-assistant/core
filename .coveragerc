@@ -115,7 +115,11 @@ omit =
     homeassistant/components/zigbee.py
     homeassistant/components/*/zigbee.py
 
-    homeassistant/components/zwave/*
+    homeassistant/components/zwave/__init__.py
+    homeassistant/components/zwave/const.py
+    homeassistant/components/zwave/discovery_schemas.py
+    homeassistant/components/zwave/util.py
+    homeassistant/components/zwave/workaround.py
 
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py

@@ -1,4 +1,5 @@
 """Z-Wave Constants."""
+DOMAIN = "zwave"
 
 ATTR_NODE_ID = "node_id"
 ATTR_TARGET_NODE_ID = "target_node_id"
