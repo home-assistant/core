@@ -378,7 +378,7 @@ def test_setup_fails_if_no_connect_broker(hass):
 
 @asyncio.coroutine
 def test_setup_uses_certificate_on_certificate_set_to_auto(hass):
-    """Test setup uses bundled certificates when certificate is set to auto."""
+    """Test setup uses bundled certs when certificate is set to auto."""
     test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker',
                                      'certificate': 'auto'}}
 
@@ -394,7 +394,7 @@ def test_setup_uses_certificate_on_certificate_set_to_auto(hass):
 
 @asyncio.coroutine
 def test_setup_does_not_use_certificate_on_mqtts_port(hass):
-    """Test setup doesn't use bundled certificates when certificate is not set."""
+    """Test setup doesn't use bundled certs when certificate is not set."""
     test_broker_cfg = {mqtt.DOMAIN: {mqtt.CONF_BROKER: 'test-broker',
                                      'port': 8883}}
 
