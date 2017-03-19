@@ -23,11 +23,11 @@ CONST_OVERLAY_MANUAL = "MANUAL"
 CONST_OVERLAY_TIMER = "TIMER"
 
 OPERATION_LIST = {
-    "Manual": CONST_OVERLAY_MANUAL,
-    "Timer": CONST_OVERLAY_TIMER,
-    "Tado mode": CONST_OVERLAY_TADO_MODE,
-    "Smart schedule": CONST_MODE_SMART_SCHEDULE,
-    "Off": CONST_MODE_OFF}
+    CONST_OVERLAY_MANUAL: "Manual",
+    CONST_OVERLAY_TIMER: "Timer",
+    CONST_OVERLAY_TADO_MODE: "Tado mode",
+    CONST_MODE_SMART_SCHEDULE: "Smart schedule",
+    CONST_MODE_OFF: "Off"}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,16 +139,12 @@ class TadoClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current readable operation mode."""
-        for readable, mode in OPERATION_LIST.items():
-            if mode == self._current_operation:
-                return readable
-
-        return None
+        return OPERATION_LIST.get(self._current_operation)
 
     @property
     def operation_list(self):
         """List of available operation modes (readable)."""
-        return list(OPERATION_LIST.keys())
+        return list(OPERATION_LIST.values())
 
     @property
     def is_away_mode_on(self):
@@ -173,7 +169,12 @@ class TadoClimate(ClimateDevice):
 
     def set_operation_mode(self, readable_operation_mode):
         """Set new operation mode."""
-        operation_mode = OPERATION_LIST[readable_operation_mode]
+        operation_mode = CONST_MODE_SMART_SCHEDULE
+
+        for mode, readable in OPERATION_LIST.items():
+            if readable == readable_operation_mode:
+                operation_mode = mode
+                break
 
         self._current_operation = operation_mode
         self._overlay_mode = None
@@ -284,7 +285,7 @@ class TadoClimate(ClimateDevice):
             self._overlay_mode = self._current_operation
             return
 
-        _LOGGER.info("Switching mytado.com to %s mode for zone %s",
+        _LOGGER.info('Switching mytado.com to %s mode for zone %s',
                      self._current_operation, self.zone_name)
         self._store.set_zone_overlay(self.zone_id,
                                      self._current_operation,
