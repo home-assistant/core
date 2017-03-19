@@ -22,7 +22,7 @@ from homeassistant.const import __version__ as CURRENT_VERSION
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers import event
 
-REQUIREMENTS = ['distro==1.0.2']
+REQUIREMENTS = ['distro==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,8 +71,7 @@ def setup(hass, config):
     """Set up the updater component."""
     if 'dev' in CURRENT_VERSION:
         # This component only makes sense in release versions
-        _LOGGER.warning("Updater component enabled in 'dev'. "
-                        "No notifications but analytics will be submitted")
+        _LOGGER.warning("Running on 'dev', only analytics will be submitted")
 
     config = config.get(DOMAIN, {})
     huuid = _load_uuid(hass) if config.get(CONF_REPORTING) else None
