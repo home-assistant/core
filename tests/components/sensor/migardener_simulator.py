@@ -14,12 +14,13 @@ import paho.mqtt.client as mqtt
 import time
 import json
 
+"""data used in simulating the different measurements of the sensor.
+first entry: min value
+second entry: max value
+third entry: increment
+"""
 ATTRIBUTES = {
-    """data used in simulating the different measurements of the sensor.
-    first entry: min value
-    second entry: max value
-    third entry: increment
-    """
+
     'battery': (0, 100, 5),
     'temperature': (-20.0, 30.0, 5.3),
     'brightness': (0, 10000, 400),

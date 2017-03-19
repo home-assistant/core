@@ -5,17 +5,21 @@ see https://github.com/ChristianKuehnel/plantgateway
 """
 
 import json
+import logging
 import voluptuous as vol
 from homeassistant.const import (
     CONF_PLATFORM, CONF_NAME, STATE_UNKNOWN, ATTR_BATTERY_LEVEL,
     TEMP_CELSIUS, ATTR_TEMPERATURE, ATTR_SERVICE,
     ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
+import asyncio
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 
+
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MiGardener'
 DEPENDENCIES = ['mqtt']
@@ -54,14 +58,18 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_MAX_BRIGHTNESS): cv.positive_int,
 })
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up MiGardener."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
     mi_gardener = MiGardener(hass, config)
-    add_devices([mi_gardener])
+    async_add_entities([mi_gardener])
+
+    yield from mqtt.async_subscribe(hass, mi_gardener.state_topic, mi_gardener.message_received)
+    _LOGGER.debug('platform setup completed')
+    return True
 
 
 class MiGardener(Entity):
@@ -109,7 +117,7 @@ class MiGardener(Entity):
         self._config = config
         self._state = STATE_UNKNOWN
         self._name = config[CONF_NAME]
-        self._state_topic = config[CONF_STATE_TOPIC]
+        self.state_topic = config[CONF_STATE_TOPIC]
         self._battery = None
         self._moisture = None
         self._conductivity = None
@@ -117,14 +125,13 @@ class MiGardener(Entity):
         self._brightness = None
         self._icon = None
 
-        @callback
-        def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
-            data = json.loads(payload)
-            self._update_state(data)
-            self._hass.async_add_job(self.async_update_ha_state())
-
-        mqtt.subscribe(hass, self._state_topic, message_received)
+    @callback
+    def message_received(self,topic, payload, qos):
+        """A new MQTT message has been received."""
+        _LOGGER.debug('Received data: %s',payload)
+        data = json.loads(payload)
+        self._update_state(data)
+        self._hass.async_add_job(self.async_update_ha_state())
 
     def _update_state(self, data):
         """"Update the state, check ranges."""
@@ -155,6 +162,7 @@ class MiGardener(Entity):
             self._icon = 'mdi:thumb-up'
         else:
             self._state = ', '.join(result)
+        _LOGGER.debug('new data processed')
 
     @property
     def should_poll(self):
