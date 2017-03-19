@@ -6,6 +6,8 @@ https://home-assistant.io/components/sensor.mqtt/
 """
 import asyncio
 import logging
+import time
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -17,8 +19,6 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
 
-import time
-from datetime import timedelta
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,7 @@ class MqttSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._force_update = force_update
         self._template = value_template
-        self._expire_after = expire_after or 0
+        self._expire_after = int(expire_after or 0)
         self._value_expiration_at = 0
 
     def async_added_to_hass(self):
@@ -81,9 +81,9 @@ class MqttSensor(Entity):
         """
         @callback
         def message_received(topic, payload, qos):
-            """ reset expiration time """
+            """Reset expiration time."""
             self._value_expiration_at = time.time() + self._expire_after
-            
+
             """A new MQTT message has been received."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
@@ -96,10 +96,11 @@ class MqttSensor(Entity):
 
     @property
     def should_poll(self):
-        """polling needed only for auto-expire"""
+        """Polling needed only for auto-expire."""
         return self._expire_after > 0
-    
+
     def update(self):
+        """Check if value is expired."""
         if self._expire_after > 0 and time.time() > self._value_expiration_at:
             self._state = STATE_UNKNOWN
 
