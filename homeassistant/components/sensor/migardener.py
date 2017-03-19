@@ -60,7 +60,8 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up MiGardener."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
