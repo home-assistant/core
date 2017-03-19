@@ -284,7 +284,7 @@ def setup(hass, config):
                 continue
             if not check_value_schema(
                     value,
-                    schema[const.DISC_INSTANCE_VALUES][const.DISC_PRIMARY]):
+                    schema[const.DISC_VALUES][const.DISC_PRIMARY]):
                 continue
 
             values = ZWaveDeviceEntityValues(
@@ -627,11 +627,8 @@ class ZWaveDeviceEntityValues():
         self._entity = None
         self._workaround_ignore = False
 
-        self._schema[const.DISC_VALUES] = {}
-        for name in self._schema[const.DISC_INSTANCE_VALUES].keys():
+        for name in self._schema[const.DISC_VALUES].keys():
             self._values[name] = None
-            self._schema[const.DISC_VALUES][name] = \
-                self._schema[const.DISC_INSTANCE_VALUES][name]
             self._schema[const.DISC_VALUES][name][const.DISC_INSTANCE] = \
                 [primary_value.instance]
 
