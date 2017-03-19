@@ -69,7 +69,8 @@ def async_setup_platform(hass, config, async_add_entities,
     mi_gardener = MiGardener(hass, config)
     async_add_entities([mi_gardener])
 
-    yield from mqtt.async_subscribe(hass, mi_gardener.state_topic, mi_gardener.message_received)
+    yield from mqtt.async_subscribe(hass, mi_gardener.state_topic,
+                                    mi_gardener.message_received)
     _LOGGER.debug('platform setup completed')
     return True
 
