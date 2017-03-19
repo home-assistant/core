@@ -126,7 +126,7 @@ class RecorderRuns(Base):   # type: ignore
     closed_incorrect = Column(Boolean, default=False)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
-    __table_args__ = (Index('ix_start_end', 'start', 'end'),)
+    __table_args__ = (Index('ix_recorder_runs_start_end', 'start', 'end'),)
 
     def entity_ids(self, point_in_time=None):
         """Return the entity ids that existed in this run.

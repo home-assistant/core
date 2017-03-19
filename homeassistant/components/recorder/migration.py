@@ -38,7 +38,7 @@ def migrate_schema(instance):
 
 def _apply_update(engine, new_version):
     """Perform operations to bring schema up to date."""
-    from sqlalchemy import Table, Index
+    from sqlalchemy import Table
     from . import models
 
     def create_index(table_name, column_name):
@@ -53,13 +53,24 @@ def _apply_update(engine, new_version):
         _LOGGER.debug("Index creation done for table %s column %s",
                       table_name, column_name)
 
+    def create_compound_index(table_name, column_names):
+        """Create an index for the specified table and columns."""
+        table = Table(table_name, models.Base.metadata)
+        index_name = "ix_" + table_name + "_" + "_".join(column_names)
+        # Look up the index object that was created from the models
+        _LOGGER.debug("Looking up index for table %s", table_name)
+        index = next(idx for idx in table.indexes if idx.name == index_name)
+        _LOGGER.debug("Creating %s index for table %s",
+                      index_name, table_name)
+        index.create(engine)
+        _LOGGER.debug("Done creating %s index for table %s",
+                      index_name, table_name)
+
     if new_version == 1:
         create_index("events", "time_fired")
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
-        table = Table("recorder_runs", models.Base.metadata)
-        index = Index("ix_start_end", table.c.start, table.c.end)
-        index.create(engine)
+        create_compound_index("recorder_runs", ("start", "end"))
         # Create indexes for states
         create_index("states", "last_updated")
         create_index("states", "created")
