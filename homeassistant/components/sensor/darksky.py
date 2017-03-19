@@ -133,7 +133,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Dark Sky sensor."""
     # latitude and longitude are inclusive on config
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
