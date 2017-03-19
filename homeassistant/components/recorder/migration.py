@@ -38,7 +38,7 @@ def migrate_schema(instance):
 
 def _apply_update(engine, new_version):
     """Perform operations to bring schema up to date."""
-    from sqlalchemy import Table
+    from sqlalchemy import Table, Index
     from . import models
 
     def create_index(table_name, column_name):
@@ -56,6 +56,11 @@ def _apply_update(engine, new_version):
     if new_version == 1:
         create_index("events", "time_fired")
     elif new_version == 2:
+        # Create compound start/end index for recorder_runs
+        table = Table("recorder_runs", models.Base.metadata)
+        index = Index("ix_start_end", table.c.start, table.c.end)
+        index.create(engine)
+        # Create indexes for states
         create_index("states", "last_updated")
         create_index("states", "created")
     else:
