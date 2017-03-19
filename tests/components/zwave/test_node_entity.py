@@ -71,11 +71,24 @@ class TestZWaveNodeEntity(unittest.TestCase):
             mock_zwave.node_changed(self.node)
             mock.assert_called_once_with()
 
+    def test_network_node_changed_from_another_node(self):
+        """Test for network_node_changed."""
+        with patch.object(self.entity, 'maybe_schedule_update') as mock:
+            node = mock_zwave.MockNode(node_id=1024)
+            mock_zwave.node_changed(node)
+            self.assertFalse(mock.called)
+
     def test_network_node_changed_from_notification(self):
         """Test for network_node_changed."""
         with patch.object(self.entity, 'maybe_schedule_update') as mock:
             mock_zwave.notification(node_id=self.node.node_id)
             mock.assert_called_once_with()
+
+    def test_network_node_changed_from_another_notification(self):
+        """Test for network_node_changed."""
+        with patch.object(self.entity, 'maybe_schedule_update') as mock:
+            mock_zwave.notification(node_id=1024)
+            self.assertFalse(mock.called)
 
     def test_node_changed(self):
         """Test node_changed function."""
@@ -132,6 +145,10 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.node.is_awake = False
         self.entity.node_changed()
         self.assertEqual('Sleeping', self.entity.state)
+
+    def test_not_polled(self):
+        """Test should_poll property."""
+        self.assertFalse(self.entity.should_poll)
 
 
 def test_sub_status():
