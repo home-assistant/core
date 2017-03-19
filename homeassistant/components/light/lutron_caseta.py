@@ -6,9 +6,7 @@ from homeassistant.components.light import (
 from homeassistant.components.light.lutron import to_hass_level
 from homeassistant.components.light.lutron import to_lutron_level
 
-REQUIREMENTS = ['https://github.com/gurumitts/'
-                'pylutron-caseta/archive/v0.2.0.zip#'
-                'pylutron-caseta==v0.2.0', 'paramiko==2.1.2']
+
 
 _LOGGER = logging.getLogger(__name__)
 
