@@ -14,8 +14,8 @@ from homeassistant.components.rflink import (
     CONF_IGNORE_DEVICES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA, DOMAIN,
     EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, CONF_TYPE
-
+from homeassistant.const import (
+    CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 TYPE_DIMMABLE = 'dimmable'
 TYPE_SWITCHABLE = 'switchable'
 TYPE_HYBRID = 'hybrid'
+TYPE_TOGGLE = 'toggle'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
@@ -33,7 +34,8 @@ PLATFORM_SCHEMA = vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
             vol.Optional(CONF_TYPE):
-                vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE, TYPE_HYBRID),
+                vol.Any(TYPE_DIMMABLE, TYPE_SWITCHABLE,
+                        TYPE_HYBRID, TYPE_TOGGLE),
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -71,6 +73,9 @@ def entity_class_for_type(entity_type):
         # sends 'dim' and 'on' command to support both dimmers and on/off
         # switches. Not compatible with signal repetition.
         TYPE_HYBRID: HybridRflinkLight,
+        # sends only 'on' commands for switches which turn on and off
+        # using the same 'on' command for both.
+        TYPE_TOGGLE: ToggleRflinkLight,
     }
 
     return entity_device_mapping.get(entity_type, RflinkLight)
@@ -213,3 +218,38 @@ class HybridRflinkLight(SwitchableRflinkDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
+
+
+class ToggleRflinkLight(SwitchableRflinkDevice, Light):
+    """Rflink light device which sends out only 'on' commands.
+
+    Some switches like for example Livolo light switches use the
+    same 'on' command to switch on and switch off the lights.
+    If the light is on and 'on' gets sent, the light will turn off
+    and if the light is off and 'on' gets sent, the light will turn on.
+    """
+
+    @property
+    def entity_id(self):
+        """Return entity id."""
+        return "light.{}".format(self.name)
+
+    def _handle_event(self, event):
+        """Adjust state if Rflink picks up a remote command for this device."""
+        self.cancel_queued_send_commands()
+
+        command = event['command']
+        if command == 'on':
+            # if the state is unknown or false, it gets set as true
+            # if the state is true, it gets set as false
+            self._state = self._state in [STATE_UNKNOWN, False]
+
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the device on."""
+        yield from self._async_handle_command('toggle')
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the device off."""
+        yield from self._async_handle_command('toggle')

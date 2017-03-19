@@ -6,7 +6,7 @@ pip>=7.0.0
 jinja2>=2.9.5
 voluptuous==0.9.3
 typing>=3,<4
-aiohttp==1.3.4
+aiohttp==1.3.5
 async_timeout==1.2.0
 
 # homeassistant.components.nuimo_controller
@@ -58,7 +58,7 @@ apns2==0.1.1
 
 # homeassistant.components.sun
 # homeassistant.components.sensor.moon
-astral==1.3.4
+astral==1.4
 
 # homeassistant.components.light.avion
 # avion==0.5
@@ -167,8 +167,9 @@ flux_led==0.15
 freesms==0.1.1
 
 # homeassistant.components.device_tracker.fritz
+# homeassistant.components.sensor.fritzbox_callmonitor
 # homeassistant.components.sensor.fritzbox_netmonitor
-# fritzconnection==0.6
+# fritzconnection==0.6.3
 
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.2
@@ -486,13 +487,13 @@ pycmus==0.1.0
 pydispatcher==2.0.5
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==0.4
+pydroid-ipcam==0.6
 
 # homeassistant.components.sensor.ebox
 pyebox==0.1.0
 
 # homeassistant.components.media_player.emby
-pyemby==0.2
+pyemby==1.1
 
 # homeassistant.components.envisalink
 pyenvisalink==2.0
