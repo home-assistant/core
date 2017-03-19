@@ -282,6 +282,9 @@ https://github.com/nkgilley/python-ecobee-api/archive/a4496b293956b2eac285305136
 # homeassistant.components.notify.joaoapps_join
 https://github.com/nkgilley/python-join-api/archive/3e1e849f1af0b4080f551b62270c6d244d5fbcbd.zip#python-join-api==0.0.1
 
+# homeassistant.components.sensor.mvglive
+https://github.com/pc-coholic/PyMVGLive/archive/1.1.2.zip#PyMVGLive==1.1.2
+
 # homeassistant.components.notify.mailgun
 https://github.com/pschmitt/pymailgun/archive/1.3.zip#pymailgun==1.3
 
