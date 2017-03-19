@@ -27,7 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 
-REQUIREMENTS = ['jsonrpc-async==0.4', 'jsonrpc-websocket==0.2']
+REQUIREMENTS = ['jsonrpc-async==0.4', 'jsonrpc-websocket==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,7 +186,6 @@ class KodiDevice(MediaPlayerDevice):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self._ws_connected = False
 
     @callback
     def async_on_speed_event(self, sender, data):
@@ -261,29 +260,26 @@ class KodiDevice(MediaPlayerDevice):
         """Connect to Kodi via websocket protocol."""
         import jsonrpc_base
         try:
-            yield from self._ws_server.ws_connect()
+            ws_loop_future = yield from self._ws_server.ws_connect()
         except jsonrpc_base.jsonrpc.TransportError:
             _LOGGER.info("Unable to connect to Kodi via websocket")
             _LOGGER.debug(
                 "Unable to connect to Kodi via websocket", exc_info=True)
-            # Websocket connection is not required. Just return.
             return
-        self.hass.async_add_job(self.async_ws_loop())
-        self._ws_connected = True
 
-    @asyncio.coroutine
-    def async_ws_loop(self):
-        """Run the websocket asyncio message loop."""
-        import jsonrpc_base
-        try:
-            yield from self._ws_server.ws_loop()
-        except jsonrpc_base.jsonrpc.TransportError:
-            # Kodi abruptly ends ws connection when exiting. We only need to
-            # know that it was closed.
-            pass
-        finally:
-            yield from self._ws_server.close()
-            self._ws_connected = False
+        @asyncio.coroutine
+        def ws_loop_wrapper():
+            """Catch exceptions from the websocket loop task."""
+            try:
+                yield from ws_loop_future
+            except jsonrpc_base.TransportError:
+                # Kodi abruptly ends ws connection when exiting. We will try
+                # to reconnect on the next poll.
+                pass
+
+        # Create a task instead of adding a tracking job, since this task will
+        # run until the websocket connection is closed.
+        self.hass.loop.create_task(ws_loop_wrapper())
 
     @asyncio.coroutine
     def async_update(self):
@@ -296,7 +292,7 @@ class KodiDevice(MediaPlayerDevice):
             self._app_properties = {}
             return
 
-        if self._enable_websocket and not self._ws_connected:
+        if self._enable_websocket and not self._ws_server.connected:
             self.hass.async_add_job(self.async_ws_connect())
 
         self._app_properties = \
@@ -327,7 +323,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def server(self):
         """Active server for json-rpc requests."""
-        if self._ws_connected:
+        if self._ws_server.connected:
             return self._ws_server
         else:
             return self._http_server
@@ -340,7 +336,7 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return not self._ws_connected
+        return not self._ws_server.connected
 
     @property
     def volume_level(self):
