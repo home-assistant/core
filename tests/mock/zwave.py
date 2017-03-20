@@ -78,6 +78,10 @@ class MockValue(MagicMock):
         """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)
 
+    def refresh(self):
+        """Mock refresh of node value."""
+        value_changed(self)
+
 
 class MockEntityValues():
     """Mock Z-Wave entity values."""
