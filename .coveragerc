@@ -421,7 +421,6 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/switch/zwave.py
     homeassistant/components/telegram_webhooks.py
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
