@@ -366,7 +366,7 @@ class HueLight(Light):
         """Flag supported features."""
         features = SUPPORT_HUE.get(self.info.get('type'), SUPPORT_HUE_EXTENDED)
         if self.info.get('manufacturername') == "OSRAM":
-            return features & ~SUPPORT_XY_COLOR;
+            return features & ~SUPPORT_XY_COLOR
         else:
             return features
 
