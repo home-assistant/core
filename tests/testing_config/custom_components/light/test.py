@@ -4,11 +4,12 @@ Provide a mock switch platform.
 Call init before using it in your tests to ensure clean test data.
 """
 from homeassistant.const import STATE_ON, STATE_OFF
-from homeassistant.components.light import ( SUPPORT_XY_COLOR )
+from homeassistant.components.light import (SUPPORT_XY_COLOR)
 from tests.common import MockToggleDevice
 
 
 DEVICES = []
+
 
 class MockLightDevice(MockToggleDevice):
     """Provide a mock light device."""
@@ -22,6 +23,7 @@ class MockLightDevice(MockToggleDevice):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return None
+
 
 def init(empty=False):
     """Initalize the platform with devices."""
