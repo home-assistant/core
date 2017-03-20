@@ -3,8 +3,12 @@ import time
 import unittest
 from unittest import mock
 
+import homeassistant.components.binary_sensor as sensor
 from homeassistant.components.binary_sensor import ring
-from tests.common import get_test_home_assistant
+from homeassistant.setup import setup_component
+
+from tests.common import (
+    get_test_home_assistant, assert_setup_component)
 
 VALID_CONFIG = {
     "platform": "ring",
@@ -183,14 +187,6 @@ def mocked_requests_get(*args, **kwargs):
 class TestRingSetup(unittest.TestCase):
     """Test the Ring platform."""
 
-    # pylint: disable=invalid-name
-    DEVICES = []
-
-    def add_devices(self, devices, action):
-        """Mock add devices."""
-        for device in devices:
-            self.DEVICES.append(device)
-
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
@@ -204,17 +200,19 @@ class TestRingSetup(unittest.TestCase):
     @mock.patch('requests.Session.post', side_effect=mocked_requests_get)
     def test_setup(self, get_mock, post_mock):
         """Test if component loaded successfully."""
-        self.assertTrue(
-            ring.setup_platform(self.hass, VALID_CONFIG,
-                                self.add_devices, None))
+        with assert_setup_component(1, sensor.DOMAIN):
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                sensor.DOMAIN: VALID_CONFIG})
 
     @mock.patch('requests.Session.get', side_effect=mocked_requests_get)
     @mock.patch('requests.Session.post', side_effect=mocked_requests_get)
     def test_sensor(self, get_mock, post_mock):
         """Test the Ring sensor class and methods."""
-        ring.setup_platform(self.hass, VALID_CONFIG, self.add_devices, None)
+        with assert_setup_component(1, sensor.DOMAIN):
+            assert setup_component(self.hass, sensor.DOMAIN, {
+                sensor.DOMAIN: VALID_CONFIG})
 
-        for device in self.DEVICES:
+        for device in self.hass.states.all():
             device.update()
             if device.name == 'Front Door Ding':
                 self.assertEqual('on', device.state)
