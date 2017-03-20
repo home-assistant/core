@@ -78,6 +78,21 @@ def test_dimmer_turn_on(mock_openzwave):
     assert brightness == 46  # int(120 / 255 * 99)
 
 
+def test_dimmer_turn_off(mock_openzwave):
+    """Test turning off a dimmable Z-Wave light."""
+    node = MockNode()
+    value = MockValue(data=46, node=node)
+    values = MockLightValues(primary=value)
+    device = zwave.get_device(node=node, values=values, node_config={})
+
+    device.turn_off()
+
+    assert node.set_dimmer.called
+    value_id, brightness = node.set_dimmer.mock_calls[0][1]
+    assert value_id == value.value_id
+    assert brightness == 0
+
+
 def test_dimmer_value_changed(mock_openzwave):
     """Test value changed for dimmer lights."""
     node = MockNode()
