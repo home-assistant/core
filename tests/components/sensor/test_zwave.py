@@ -7,6 +7,16 @@ from tests.mock.zwave import (
    MockNode, MockValue, MockEntityValues, value_changed)
 
 
+def test_get_device_detects_none(mock_openzwave):
+    """Test get_device returns None."""
+    node = MockNode()
+    value = MockValue(data=0, node=node)
+    values = MockEntityValues(primary=value)
+
+    device = zwave.get_device(node=node, values=values, node_config={})
+    assert device is None
+
+
 def test_get_device_detects_sensor(mock_openzwave):
     """Test get_device returns a Z-Wave Sensor."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_BATTERY])
@@ -60,7 +70,7 @@ def test_sensor_value_changed(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert device.state == 12.34
-    assert value.units == '%'
+    assert device.unit_of_measurement == '%'
     value.data = 45.67
     value_changed(value)
     assert device.state == 45.67
