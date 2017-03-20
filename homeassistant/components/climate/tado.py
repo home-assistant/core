@@ -101,6 +101,7 @@ class TadoClimate(ClimateDevice):
         self._active = False
         self._device_is_active = False
 
+        self._unit = TEMP_CELSIUS
         self._cur_temp = None
         self._cur_humidity = None
         self._is_away = False
@@ -136,6 +137,11 @@ class TadoClimate(ClimateDevice):
     def operation_list(self):
         """List of available operation modes (readable)."""
         return list(OPERATION_LIST.values())
+
+    @property
+    def temperature_unit(self):
+        """The unit of measurement used by the platform."""
+        return self._unit
 
     @property
     def is_away_mode_on(self):
