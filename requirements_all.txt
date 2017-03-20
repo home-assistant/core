@@ -115,7 +115,7 @@ directpy==0.1
 discord.py==0.16.0
 
 # homeassistant.components.updater
-distro==1.0.2
+distro==1.0.3
 
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
@@ -330,7 +330,7 @@ insteonplm==0.7.4
 jsonrpc-async==0.4
 
 # homeassistant.components.media_player.kodi
-jsonrpc-websocket==0.2
+jsonrpc-websocket==0.3
 
 # homeassistant.scripts.keyring
 keyring>=9.3,<10.0
@@ -472,7 +472,7 @@ pybbox==0.0.5-alpha
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
-pychromecast==0.8.0
+pychromecast==0.8.1
 
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
