@@ -364,7 +364,11 @@ class HueLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_HUE.get(self.info.get('type'), SUPPORT_HUE_EXTENDED)
+        features = SUPPORT_HUE.get(self.info.get('type'), SUPPORT_HUE_EXTENDED)
+        if self.info.get('manufacturername') == "OSRAM":
+            return features & ~SUPPORT_XY_COLOR;
+        else:
+            return features
 
     @property
     def effect_list(self):
@@ -379,15 +383,7 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_XY_COLOR in kwargs:
-            if self.info.get('manufacturername') == "OSRAM":
-                hsv = color_util.color_xy_brightness_to_hsv(
-                    *kwargs[ATTR_XY_COLOR],
-                    ibrightness=self.info['bri'])
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
-            else:
-                command['xy'] = kwargs[ATTR_XY_COLOR]
+            command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
             if self.info.get('manufacturername') == "OSRAM":
                 hsv = color_util.color_RGB_to_hsv(
