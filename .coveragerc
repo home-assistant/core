@@ -229,7 +229,6 @@ omit =
     homeassistant/components/light/yeelightsunflower.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/zengge.py
-    homeassistant/components/light/zwave.py
     homeassistant/components/lirc.py
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/zwave.py
