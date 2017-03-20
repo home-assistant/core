@@ -201,6 +201,11 @@ class TadoClimate(ClimateDevice):
 
         data = self._store.get_data(self._data_id)
 
+        if data is None:
+            _LOGGER.debug('Recieved no data for zone %s',
+                          self.zone_name)
+            return
+
         if 'sensorDataPoints' in data:
             sensor_data = data['sensorDataPoints']
             temperature = float(
