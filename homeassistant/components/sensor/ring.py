@@ -32,11 +32,13 @@ DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONF_ATTRIBUTION = "Data provided by Ring.com"
 
-# Sensor types: Name, category, units, icon
+# Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
-    'battery': ['Battery', ['doorbell'], '%', 'battery-50'],
-    'last_activity': ['Last Activity', ['doorbell'], None, 'history'],
-    'volume': ['Volume', ['chime', 'doorbell'], None, 'bell-ring'],
+    'battery': ['Battery', ['doorbell'], '%', 'battery-50', None],
+    'last_activity': ['Last Activity', ['doorbell'], None, 'history', None],
+    'last_ding': ['Last Ding', ['doorbell'], None, 'history', 'ding'],
+    'last_motion': ['Last Motion', ['doorbell'], None, 'history', 'motion'],
+    'volume': ['Volume', ['chime', 'doorbell'], None, 'bell-ring', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -98,6 +100,7 @@ class RingSensor(Entity):
         self._data = data
         self._extra = None
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[3])
+        self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
         self._name = "{0} {1}".format(self._data.name,
                                       SENSOR_TYPES.get(self._sensor_type)[0])
         self._state = STATE_UNKNOWN
@@ -125,7 +128,7 @@ class RingSensor(Entity):
         attrs['timezone'] = self._data.timezone
         attrs['type'] = self._data.family
 
-        if self._extra and self._sensor_type == 'last_activity':
+        if self._extra and self._sensor_type.startswith('last_'):
             attrs['created_at'] = self._extra['created_at']
             attrs['answered'] = self._extra['answered']
             attrs['recording_status'] = self._extra['recording']['status']
@@ -153,8 +156,11 @@ class RingSensor(Entity):
         if self._sensor_type == 'battery':
             self._state = self._data.battery_life
 
-        if self._sensor_type == 'last_activity':
-            self._extra = self._data.history(limit=1, timezone=self._tz)[0]
-            created_at = self._extra['created_at']
-            self._state = '{0:0>2}:{1:0>2}'.format(created_at.hour,
-                                                   created_at.minute)
+        if self._sensor_type.startswith('last_'):
+            history = self._data.history(timezone=self._tz,
+                                             kind=self._kind)
+            if history:
+                self._extra = history[0]
+                created_at = self._extra['created_at']
+                self._state = '{0:0>2}:{1:0>2}'.format(created_at.hour,
+                                                       created_at.minute)
