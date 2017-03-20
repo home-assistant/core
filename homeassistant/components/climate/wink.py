@@ -19,7 +19,6 @@ DEPENDENCIES = ['wink']
 STATE_AUX = 'aux'
 STATE_ECO = 'eco'
 STATE_FAN = 'fan'
-SPEED_LOWEST = 'lowest'
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
 SPEED_HIGH = 'high'
@@ -400,7 +399,7 @@ class WinkAC(WinkDevice, ClimateDevice):
             op_list.append(STATE_COOL)
         if 'auto_eco' in modes:
             op_list.append(STATE_ECO)
-        if 'fan_eco' in modes:
+        if 'fan_only' in modes:
             op_list.append(STATE_FAN)
         return op_list
 
@@ -439,9 +438,7 @@ class WinkAC(WinkDevice, ClimateDevice):
     def current_fan_mode(self):
         """Return the current fan mode."""
         speed = self.wink.current_fan_speed()
-        if speed <= 0.3 and speed >= 0.0:
-            return SPEED_LOWEST
-        elif speed <= 0.5 and speed > 0.3:
+        if speed <= 0.4 and speed > 0.3:
             return SPEED_LOW
         elif speed <= 0.8 and speed > 0.5:
             return SPEED_MEDIUM
@@ -453,14 +450,12 @@ class WinkAC(WinkDevice, ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return [SPEED_LOWEST, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+        return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def set_fan_mode(self, mode):
         """Set fan speed."""
-        if mode == SPEED_LOWEST:
-            speed = 0.3
-        elif mode == SPEED_LOW:
-            speed = 0.5
+        if mode == SPEED_LOW:
+            speed = 0.4
         elif mode == SPEED_MEDIUM:
             speed = 0.8
         elif mode == SPEED_HIGH:
