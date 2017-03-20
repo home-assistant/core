@@ -3,23 +3,25 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-from homeassistant.components.light.lutron import to_hass_level
-from homeassistant.components.light.lutron import to_lutron_level
-from homeassistant.components.lutron_caseta import LUTRON_CASETA_DEVICES
-from homeassistant.components.lutron_caseta import LUTRON_CASETA_SMARTBRIDGE
-from homeassistant.components.lutron_caseta import LutronCasetaDevice
+from homeassistant.components.light.lutron import (
+    to_hass_level, to_lutron_level)
+from homeassistant.components.lutron_caseta import (
+    LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
 
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['lutron_caseta']
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Lutron  Caseta lights."""
     devs = []
-    for device in hass.data[LUTRON_CASETA_DEVICES]['light']:
-        dev = LutronCasetaLight(device,
-                                hass.data[LUTRON_CASETA_SMARTBRIDGE])
+    bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
+    light_devices = bridge.get_devices_by_type("WallDimmer")
+    for light_device in light_devices:
+        dev = LutronCasetaLight(light_device, bridge)
         devs.append(dev)
 
     add_devices(devs, True)
@@ -28,11 +30,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class LutronCasetaLight(LutronCasetaDevice, Light):
     """Representation of a Lutron Light, including dimmable."""
-
-    def __init__(self, device, bridge):
-        """Initialize the light."""
-        self._prev_brightness = None
-        LutronCasetaDevice.__init__(self, device, bridge)
 
     @property
     def supported_features(self):
@@ -49,7 +46,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
         if ATTR_BRIGHTNESS in kwargs and self._device_type == "WallDimmer":
             brightness = kwargs[ATTR_BRIGHTNESS]
         else:
-            brightness = 100
+            brightness = 255
         self._smartbridge.set_value(self._device_id,
                                     to_lutron_level(brightness))
 
@@ -60,14 +57,9 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     @property
     def is_on(self):
         """Return true if device is on."""
-        _LOGGER.debug(self._state)
         return self._state["current_state"] > 0
 
     def update(self):
         """Called when forcing a refresh of the device."""
         self._state = self._smartbridge.get_device_by_id(self._device_id)
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
+        _LOGGER.debug(self._state)

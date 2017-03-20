@@ -16,13 +16,12 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['https://github.com/gurumitts/'
-                'pylutron-caseta/archive/v0.2.0.zip#'
-                'pylutron-caseta==v0.2.0', 'paramiko==2.1.2']
+                'pylutron-caseta/archive/v0.2.3.zip#'
+                'pylutron-caseta==v0.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 LUTRON_CASETA_SMARTBRIDGE = 'lutron_smartbridge'
-LUTRON_CASETA_DEVICES = 'lutron_devices'
 
 DOMAIN = 'lutron_caseta'
 
@@ -39,38 +38,23 @@ def setup(hass, base_config):
     """Setup the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge
 
-    hass.data[LUTRON_CASETA_SMARTBRIDGE] = None
-    hass.data[LUTRON_CASETA_DEVICES] = None
-
     config = base_config.get(DOMAIN)
-
     hass.data[LUTRON_CASETA_SMARTBRIDGE] = Smartbridge(
         hostname=config[CONF_HOST],
         username=config[CONF_USERNAME],
         password=config[CONF_PASSWORD]
     )
-    _LOGGER.debug("Connected to Lutron smartbridge at %s",
-                  config[CONF_HOST])
-    caseta_devices = hass.data[LUTRON_CASETA_SMARTBRIDGE].get_devices()
+    if hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
+        _LOGGER.debug("Connected to Lutron smartbridge at %s",
+                      config[CONF_HOST])
 
-    # WallDimmer will be home-assistant lights
-    # WallSwitch switches should be trivial to add
-    components = {"light": [], "switch": []}
+        for component in ('light', 'switch'):
+            discovery.load_platform(hass, component, DOMAIN, {}, config)
+    else:
+        _LOGGER.debug("Unable to connect to Lutron smartbridge at %s",
+                      config[CONF_HOST])
+        return False
 
-    for device_id in caseta_devices:
-        if caseta_devices[device_id]["type"] == "WallDimmer":
-            components["light"].append(caseta_devices[device_id])
-        if caseta_devices[device_id]["type"] == "WallSwitch":
-            components["switch"].append(caseta_devices[device_id])
-        # More Lutron devices can be added here
-
-    hass.data[LUTRON_CASETA_DEVICES] = components
-    _LOGGER.debug(hass.data[LUTRON_CASETA_DEVICES])
-
-    for component in components:
-        if len(components[component]) > 0:
-            discovery.load_platform(hass, component,
-                                    DOMAIN, None, base_config)
     return True
 
 
@@ -83,7 +67,6 @@ class LutronCasetaDevice(Entity):
         [:param]device the device metadata
         [:param]bridge the smartbridge object
         """
-        self._prev_brightness = None
         self._device_id = device["device_id"]
         self._device_type = device["type"]
         self._device_name = device["name"]
@@ -91,7 +74,6 @@ class LutronCasetaDevice(Entity):
         self._smartbridge = bridge
         self._smartbridge.add_subscriber(self._device_id,
                                          self._update_callback)
-        self.update()
 
     def _update_callback(self):
         self.schedule_update_ha_state()
@@ -104,6 +86,10 @@ class LutronCasetaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {}
-        attr['Lutron Integration ID'] = self._device_id
+        attr = {'Lutron Integration ID': self._device_id}
         return attr
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
