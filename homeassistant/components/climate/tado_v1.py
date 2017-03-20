@@ -118,15 +118,6 @@ class TadoClimate(ClimateDevice):
         return self.zone_name
 
     @property
-    def state(self):
-        """
-        Return the current operation mode.
-
-        Because ClimateDevice does the same!
-        """
-        return self._current_operation
-
-    @property
     def current_humidity(self):
         """Return the current humidity."""
         return self._cur_humidity
