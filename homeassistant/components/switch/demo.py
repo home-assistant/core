@@ -48,15 +48,15 @@ class DemoSwitch(SwitchDevice):
         return self._assumed
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
+    def current_power_w(self):
+        """Return the current power usage in W."""
         if self._state:
             return 100
 
     @property
-    def today_power_mw(self):
-        """Return the today total power usage in mW."""
-        return 1500
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
+        return 15
 
     @property
     def is_on(self):

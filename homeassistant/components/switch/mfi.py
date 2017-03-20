@@ -111,9 +111,9 @@ class MfiSwitch(SwitchDevice):
         self._target_state = False
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
-        return int(self._port.data.get('active_pwr', 0) * 1000)
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        return int(self._port.data.get('active_pwr', 0))
 
     @property
     def device_state_attributes(self):
