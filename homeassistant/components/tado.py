@@ -76,7 +76,7 @@ class TadoDataStore:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the internal data from mytado.com."""
-        for data_id, sensor in self.sensors.items():
+        for data_id, sensor in list(self.sensors.items()):
             data = None
 
             try:
