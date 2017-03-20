@@ -57,13 +57,6 @@ CONTENT_TYPE_HEADER = 'Content-Type'
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
-SERVICE_GET_ARTISTS = 'get_artists'
-SERVICE_PLAY_SONG = 'play_song'
-SERVICE_ADD_SONG = 'add_song_to_playlist'
-SERVICE_ADD_ALBUM = 'add_album_to_playlist'
-SERVICE_SET_SHUFFLE = 'set_shuffle'
-SERVICE_UNSET_SHUFFLE = 'unset_shuffle'
-SERVICE_ADD_ALL_ALBUMS = 'add_all_albums_to_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
@@ -88,10 +81,6 @@ ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
-ATTR_MEDIA_SONG_NAME = 'song_name'
-ATTR_MEDIA_ARTIST_NAME = 'artist_name'
-ATTR_MEDIA_SONG_ID = 'song_id'
-ATTR_MEDIA_ALBUM_ID = 'album_id'
 
 
 MEDIA_TYPE_MUSIC = 'music'
@@ -145,27 +134,6 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
 })
 
-MEDIA_PLAYER_PLAY_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SONG_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
-
-MEDIA_PLAYER_ADD_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Optional(ATTR_MEDIA_SONG_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_SONG_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
-
-MEDIA_PLAYER_ADD_ALBUM_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Optional(ATTR_MEDIA_ALBUM_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ALBUM_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
-
-MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
-
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'async_turn_on'},
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
@@ -194,21 +162,6 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
-    SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
-    SERVICE_PLAY_SONG: {
-        'method': 'async_play_song',
-        'schema': MEDIA_PLAYER_PLAY_SONG_SCHEMA},
-    SERVICE_ADD_SONG: {
-        'method': 'async_add_song_to_playlist',
-        'schema': MEDIA_PLAYER_ADD_SONG_SCHEMA},
-    SERVICE_ADD_ALBUM: {
-        'method': 'async_add_album_to_playlist',
-        'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
-    SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle'},
-    SERVICE_UNSET_SHUFFLE: {'method': 'async_unset_shuffle'},
-    SERVICE_ADD_ALL_ALBUMS: {
-        'method': 'async_add_all_albums',
-        'schema': MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -406,9 +359,6 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
-        elif service.service == SERVICE_PLAY_SONG:
-            params['song_name'] = service.data.get(ATTR_MEDIA_SONG_NAME)
-            params['artist_name'] = service.data.get(ATTR_MEDIA_ARTIST_NAME)
         else:
             for k in service.data:
                 if k != 'entity_id':

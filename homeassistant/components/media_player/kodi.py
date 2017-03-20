@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
-    PLATFORM_SCHEMA)
+    DOMAIN, PLATFORM_SCHEMA, MEDIA_PLAYER_SCHEMA, ATTR_MEDIA_ALBUM_NAME)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -60,6 +60,58 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean,
 })
 
+SERVICE_GET_ARTISTS = 'get_artists'
+SERVICE_PLAY_SONG = 'play_song'
+SERVICE_ADD_SONG = 'add_song_to_playlist'
+SERVICE_ADD_ALBUM = 'add_album_to_playlist'
+SERVICE_SET_SHUFFLE = 'set_shuffle'
+SERVICE_UNSET_SHUFFLE = 'unset_shuffle'
+SERVICE_ADD_ALL_ALBUMS = 'add_all_albums_to_playlist'
+
+ATTR_MEDIA_SONG_NAME = 'song_name'
+ATTR_MEDIA_ARTIST_NAME = 'artist_name'
+ATTR_MEDIA_SONG_ID = 'song_id'
+ATTR_MEDIA_ALBUM_ID = 'album_id'
+
+MEDIA_PLAYER_PLAY_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SONG_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
+MEDIA_PLAYER_ADD_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Optional(ATTR_MEDIA_SONG_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_SONG_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
+MEDIA_PLAYER_ADD_ALBUM_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Optional(ATTR_MEDIA_ALBUM_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_ALBUM_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
+MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
+SERVICE_TO_METHOD = {
+    SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
+    SERVICE_PLAY_SONG: {
+        'method': 'async_play_song',
+        'schema': MEDIA_PLAYER_PLAY_SONG_SCHEMA},
+    SERVICE_ADD_SONG: {
+        'method': 'async_add_song_to_playlist',
+        'schema': MEDIA_PLAYER_ADD_SONG_SCHEMA},
+    SERVICE_ADD_ALBUM: {
+        'method': 'async_add_album_to_playlist',
+        'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
+    SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle'},
+    SERVICE_UNSET_SHUFFLE: {'method': 'async_unset_shuffle'},
+    SERVICE_ADD_ALL_ALBUMS: {
+        'method': 'async_add_all_albums',
+        'schema': MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA},
+}
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -86,6 +138,38 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         turn_off_action=config.get(CONF_TURN_OFF_ACTION), websocket=websocket)
 
     async_add_devices([entity], update_before_add=True)
+    
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Map services to methods on MediaPlayerDevice."""
+        method = SERVICE_TO_METHOD.get(service.service)
+        if not method:
+            return
+
+        params = {}
+        for k in service.data:
+            if k != 'entity_id':
+                params[k] = service.data.get(k)
+
+        yield from getattr(entity, method['method'])(**params)
+
+        update_tasks = []
+        if entity.should_poll:
+            update_coro = entity.async_update_ha_state(True)
+            if hasattr(entity, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    for service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service].get(
+            'schema', MEDIA_PLAYER_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler,
+            description=None, schema=schema)
 
 
 class KodiDevice(MediaPlayerDevice):
