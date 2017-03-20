@@ -23,7 +23,8 @@ from homeassistant.components.light import (
     SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
     SUPPORT_XY_COLOR, Light, PLATFORM_SCHEMA)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (CONF_FILENAME, CONF_HOST, DEVICE_DEFAULT_NAME)
+from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_USERNAME,
+                                 DEVICE_DEFAULT_NAME)
 from homeassistant.loader import get_component
 from homeassistant.components.emulated_hue import ATTR_EMULATED_HUE
 import homeassistant.helpers.config_validation as cv
@@ -74,6 +75,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ALLOW_IN_EMULATED_HUE): cv.boolean,
     vol.Optional(CONF_ALLOW_HUE_GROUPS,
                  default=DEFAULT_ALLOW_HUE_GROUPS): cv.boolean,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 ATTR_GROUP_NAME = "group_name"
@@ -134,18 +136,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             socket.gethostbyname(host) in _CONFIGURED_BRIDGES:
         return
 
+    username = config.get(CONF_USERNAME, None)
+
     setup_bridge(host, hass, add_devices, filename, allow_unreachable,
-                 allow_in_emulated_hue, allow_hue_groups)
+                 allow_in_emulated_hue, allow_hue_groups, username)
 
 
 def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
-                 allow_in_emulated_hue, allow_hue_groups):
+                 allow_in_emulated_hue, allow_hue_groups, username):
     """Setup a phue bridge based on host parameter."""
     import phue
 
     try:
         bridge = phue.Bridge(
             host,
+            username=username,
             config_file_path=hass.config.path(filename))
     except ConnectionRefusedError:  # Wrong host was given
         _LOGGER.error("Error connecting to the Hue bridge at %s", host)
@@ -157,7 +162,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         request_configuration(host, hass, add_devices, filename,
                               allow_unreachable, allow_in_emulated_hue,
-                              allow_hue_groups)
+                              allow_hue_groups, username)
 
         return
 
@@ -260,7 +265,7 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
 def request_configuration(host, hass, add_devices, filename,
                           allow_unreachable, allow_in_emulated_hue,
-                          allow_hue_groups):
+                          allow_hue_groups, username):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -275,7 +280,7 @@ def request_configuration(host, hass, add_devices, filename,
     def hue_configuration_callback(data):
         """The actions to do when our configuration callback is called."""
         setup_bridge(host, hass, add_devices, filename, allow_unreachable,
-                     allow_in_emulated_hue, allow_hue_groups)
+                     allow_in_emulated_hue, allow_hue_groups, username)
 
     _CONFIGURING[host] = configurator.request_config(
         hass, "Philips Hue", hue_configuration_callback,
