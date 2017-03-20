@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.mqtt/
 """
 import asyncio
 import logging
-import time
 from datetime import timedelta
 
 import voluptuous as vol
@@ -18,7 +17,8 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.mqtt as mqtt
 import homeassistant.helpers.config_validation as cv
-
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +32,10 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+    vol.Optional(CONF_EXPIRE_AFTER, default=0): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
-SCAN_INTERVAL = timedelta(seconds=1)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -71,7 +71,7 @@ class MqttSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._force_update = force_update
         self._template = value_template
-        self._expire_after = int(expire_after or 0)
+        self._expire_after = expire_after
         self._value_expiration_at = 0
 
     def async_added_to_hass(self):
@@ -81,12 +81,22 @@ class MqttSensor(Entity):
         """
         @callback
         def message_received(topic, payload, qos):
-            """Reset expiration time."""
-            self._value_expiration_at = time.time() + self._expire_after
-
             """A new MQTT message has been received."""
+            # auto-expire enabled?
+            if self._expire_after > 0:
+                # Reset expiration time and set trigger
+                self._value_expiration_at = (
+                    dt_util.utcnow() +
+                    timedelta(seconds=self._expire_after)
+                    )
+                async_track_point_in_utc_time(self.hass,
+                                              self.check_value_is_expired,
+                                              self._value_expiration_at +
+                                              timedelta(seconds=1))
+
             if self._template is not None:
-                payload = self._template.async_render_with_possible_json_value(
+                template = self._template
+                payload = template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
             self.hass.async_add_job(self.async_update_ha_state())
@@ -94,15 +104,18 @@ class MqttSensor(Entity):
         return mqtt.async_subscribe(
             self.hass, self._state_topic, message_received, self._qos)
 
+    @callback
+    def check_value_is_expired(self, *_):
+        """Check if value is expired."""
+        if (self._expire_after > 0 and
+                dt_util.utcnow() > self._value_expiration_at):
+            self._state = STATE_UNKNOWN
+            self.hass.async_add_job(self.async_update_ha_state())
+
     @property
     def should_poll(self):
-        """Polling needed only for auto-expire."""
-        return self._expire_after > 0
-
-    def update(self):
-        """Check if value is expired."""
-        if self._expire_after > 0 and time.time() > self._value_expiration_at:
-            self._state = STATE_UNKNOWN
+        """No polling needed."""
+        return False
 
     @property
     def name(self):

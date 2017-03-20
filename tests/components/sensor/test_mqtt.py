@@ -1,14 +1,17 @@
 """The tests for the MQTT sensor platform."""
 import unittest
 
-import time
+from datetime import timedelta, datetime
+
 import homeassistant.core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED
-from tests.common import mock_mqtt_component, fire_mqtt_message
+import homeassistant.util.dt as dt_util
 
+from tests.common import mock_mqtt_component, fire_mqtt_message
 from tests.common import get_test_home_assistant, mock_component
+from tests.common import fire_time_changed
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -38,7 +41,7 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
         state = self.hass.states.get('sensor.test')
-        
+
         self.assertEqual('100', state.state)
         self.assertEqual('fav unit',
                          state.attributes.get('unit_of_measurement'))
@@ -57,6 +60,9 @@ class TestSensorMQTT(unittest.TestCase):
             }
         })
 
+        time = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+        fire_time_changed(self.hass, time)
+
         state = self.hass.states.get('sensor.test')
         self.assertEqual('unknown', state.state)
 
@@ -65,16 +71,16 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test')
         self.assertEqual('100', state.state)
-        
-        time.sleep(1)
-        # FIXME: how to call update() on the sensor?
+
+        time = time + timedelta(seconds=1)
+        fire_time_changed(self.hass, time)
 
         """ Not yet expired """
         state = self.hass.states.get('sensor.test')
         self.assertEqual('100', state.state)
-        
-        time.sleep(2)
-        # FIXME: how to call update() on the sensor?
+
+        time = time + timedelta(seconds=2)
+        fire_time_changed(self.hass, time)
 
         """ Expired """
         state = self.hass.states.get('sensor.test')
