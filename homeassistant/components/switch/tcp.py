@@ -97,7 +97,6 @@ class TcpSwitch(SwitchDevice):
 
     def update(self):
         """Get the latest value for this switch."""
-        _LOGGER.warning("update")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
@@ -140,7 +139,6 @@ class TcpSwitch(SwitchDevice):
                     self._config[CONF_VALUE_TEMPLATE], value)
                 return
 
-        _LOGGER.warning("value = " + value)
         if value != "0":
             self._state = True
         else:
@@ -149,7 +147,6 @@ class TcpSwitch(SwitchDevice):
     def turn_on(self):
         """Turn the device on.
         """
-        _LOGGER.warning("turn_on")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
@@ -190,7 +187,6 @@ class TcpSwitch(SwitchDevice):
     def turn_off(self):
         """Turn the device off.
         """
-        _LOGGER.warning("turn_off")
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
             sock.settimeout(self._config[CONF_TIMEOUT])
             try:
