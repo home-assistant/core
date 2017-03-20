@@ -5,10 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ring/
 """
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+
+from homeassistant.components.ring import (
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_SCAN_INTERVAL)
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -21,14 +23,6 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
-
-NOTIFICATION_ID = 'ring_notification'
-NOTIFICATION_TITLE = 'Ring Sensor Setup'
-
-DEFAULT_ENTITY_NAMESPACE = 'ring'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-
-CONF_ATTRIBUTION = "Data provided by Ring.com"
 
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {

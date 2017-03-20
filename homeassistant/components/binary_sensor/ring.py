@@ -5,10 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ring/
 """
 import logging
-from datetime import timedelta
-
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
+
+from homeassistant.components.ring import (
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_CACHEDB)
 
 from homeassistant.loader import get_component
 from homeassistant.components.binary_sensor import (
@@ -20,12 +21,6 @@ from homeassistant.const import (
 DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_CACHEDB = 'ring_cache.pickle'
-DEFAULT_ENTITY_NAMESPACE = 'ring'
-SCAN_INTERVAL = timedelta(seconds=5)
-
-CONF_ATTRIBUTION = "Data provided by Ring.com"
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
