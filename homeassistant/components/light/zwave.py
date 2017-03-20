@@ -153,11 +153,13 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
         if self.node.set_dimmer(self.values.primary.value_id, brightness):
             self._state = STATE_ON
+            self.update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
         if self.node.set_dimmer(self.values.primary.value_id, 0):
             self._state = STATE_OFF
+            self.update_ha_state()
 
 
 def ct_to_rgb(temp):
