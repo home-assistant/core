@@ -9,22 +9,17 @@ from datetime import timedelta
 
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
-import homeassistant.loader as loader
 
+from homeassistant.loader import get_component
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    CONF_USERNAME, CONF_PASSWORD, ATTR_ATTRIBUTION)
+    ATTR_ATTRIBUTION)
 
-from requests.exceptions import HTTPError, ConnectTimeout
-
-REQUIREMENTS = ['ring_doorbell==0.1.1']
+DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
-
-NOTIFICATION_ID = 'ring_notification'
-NOTIFICATION_TITLE = 'Ring Binary Sensor Setup'
 
 DEFAULT_CACHEDB = 'ring_cache.pickle'
 DEFAULT_ENTITY_NAMESPACE = 'ring'
@@ -39,8 +34,6 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
@@ -50,27 +43,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    from ring_doorbell import Ring
-    ring = Ring(username=config.get(CONF_USERNAME),
-                password=config.get(CONF_PASSWORD),
-                persist_token=True)
-
-    persistent_notification = loader.get_component('persistent_notification')
-    try:
-        ring.is_connected
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
-        persistent_notification.create(
-            hass, 'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+    ring = get_component('ring')
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.doorbells:
+        for device in ring.RING.data.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,

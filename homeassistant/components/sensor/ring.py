@@ -13,14 +13,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
-    CONF_USERNAME, CONF_PASSWORD, STATE_UNKNOWN,
-    ATTR_ATTRIBUTION)
+    STATE_UNKNOWN, ATTR_ATTRIBUTION)
+
+from homeassistant.loader import get_component
 from homeassistant.helpers.entity import Entity
-import homeassistant.loader as loader
 
-from requests.exceptions import HTTPError, ConnectTimeout
-
-REQUIREMENTS = ['ring_doorbell==0.1.1']
+DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +40,6 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
     vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
@@ -55,32 +51,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    from ring_doorbell import Ring
-
-    ring = Ring(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-
-    persistent_notification = loader.get_component('persistent_notification')
-    try:
-        ring.is_connected
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
-        persistent_notification.create(
-            hass, 'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+    ring = get_component('ring')
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.chimes:
+        for device in ring.RING.data.chimes:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass,
                                           device,
                                           sensor_type))
 
-        for device in ring.doorbells:
+        for device in ring.RING.data.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass,
                                           device,
@@ -158,7 +139,7 @@ class RingSensor(Entity):
 
         if self._sensor_type.startswith('last_'):
             history = self._data.history(timezone=self._tz,
-                                             kind=self._kind)
+                                         kind=self._kind)
             if history:
                 self._extra = history[0]
                 created_at = self._extra['created_at']
