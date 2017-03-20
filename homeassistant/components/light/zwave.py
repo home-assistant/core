@@ -264,10 +264,10 @@ class ZwaveColorLight(ZwaveDimmer):
             if self._zw098:
                 if kwargs[ATTR_COLOR_TEMP] > TEMP_MID_HASS:
                     self._ct = TEMP_WARM_HASS
-                    rgbw = b'#000000FF00'
+                    rgbw = b'#000000ff00'
                 else:
                     self._ct = TEMP_COLD_HASS
-                    rgbw = b'#00000000FF'
+                    rgbw = b'#00000000ff'
 
         elif ATTR_RGB_COLOR in kwargs:
             self._rgb = kwargs[ATTR_RGB_COLOR]
