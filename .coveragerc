@@ -144,8 +144,8 @@ omit =
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
 
-    homeassistant/components/tado_v1.py
-    homeassistant/components/*/tado_v1.py
+    homeassistant/components/tado.py
+    homeassistant/components/*/tado.py
     
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py

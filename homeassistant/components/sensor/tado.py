@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.tado_v1 import (
+from homeassistant.components.tado import (
     DATA_TADO)
 
 _LOGGER = logging.getLogger(__name__)

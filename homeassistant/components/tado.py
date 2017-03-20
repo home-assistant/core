@@ -2,7 +2,7 @@
 Support for the (unofficial) tado api.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tado_v1/
+https://home-assistant.io/components/tado/
 """
 
 import logging
@@ -20,13 +20,13 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'tado_v1'
+DOMAIN = 'tado'
 
 REQUIREMENTS = ['https://github.com/wmalgadey/PyTado/archive/'
                 '0.1.10.zip#'
                 'PyTado==0.1.10']
 
-TADO_V1_COMPONENTS = [
+TADO_COMPONENTS = [
     'sensor', 'climate'
 ]
 
@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
-DATA_TADO = 'tado_v1_data'
+DATA_TADO = 'tado_data'
 
 
 def setup(hass, config):
@@ -57,7 +57,7 @@ def setup(hass, config):
 
     hass.data[DATA_TADO] = TadoDataStore(tado)
 
-    for component in TADO_V1_COMPONENTS:
+    for component in TADO_COMPONENTS:
         load_platform(hass, component, DOMAIN, {}, config)
 
     return True

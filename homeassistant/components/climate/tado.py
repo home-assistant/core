@@ -8,7 +8,7 @@ from homeassistant.components.climate import (
     ClimateDevice)
 from homeassistant.const import (
     ATTR_TEMPERATURE)
-from homeassistant.components.tado_v1 import (
+from homeassistant.components.tado import (
     DATA_TADO)
 
 CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"  # Default mytado mode
