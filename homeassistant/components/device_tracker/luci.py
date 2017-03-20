@@ -14,6 +14,7 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -30,6 +31,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string
 })
 
+class InvalidLuciTokenError(HomeAssistantError):
+    """When an invalid token is detected."""
+
+    pass
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Luci scanner."""
@@ -46,8 +51,8 @@ class LuciDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
-        host = config[CONF_HOST]
-        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+        self.host = config[CONF_HOST]
+        self.username, self.password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
@@ -55,11 +60,13 @@ class LuciDeviceScanner(DeviceScanner):
 
         self.last_results = {}
 
-        self.token = _get_token(host, username, password)
-        self.host = host
+        self.refresh_token()
 
         self.mac2name = None
         self.success_init = self.token is not None
+
+    def refresh_token(self):
+        self.token = _get_token(self.host, self.username, self.password)
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -98,8 +105,15 @@ class LuciDeviceScanner(DeviceScanner):
             _LOGGER.info('Checking ARP')
 
             url = 'http://{}/cgi-bin/luci/rpc/sys'.format(self.host)
-            result = _req_json_rpc(url, 'net.arptable',
-                                   params={'auth': self.token})
+
+            try:
+                result = _req_json_rpc(url, 'net.arptable',
+                                       params={'auth': self.token})
+            except InvalidLuciTokenError as ex:
+                _LOGGER.info('Refreshing token')
+                self.refresh_token()
+                return False
+
             if result:
                 self.last_results = []
                 for device_entry in result:
@@ -116,6 +130,7 @@ class LuciDeviceScanner(DeviceScanner):
 def _req_json_rpc(url, method, *args, **kwargs):
     """Perform one JSON RPC operation."""
     data = json.dumps({'method': method, 'params': args})
+
     try:
         res = requests.post(url, data=data, timeout=5, **kwargs)
     except requests.exceptions.Timeout:
@@ -139,6 +154,10 @@ def _req_json_rpc(url, method, *args, **kwargs):
             "Failed to authenticate, "
             "please check your username and password")
         return
+    elif res.status_code == 403:
+        _LOGGER.error('Luci responded with a 403 Invalid token')
+        raise InvalidLuciTokenError
+
     else:
         _LOGGER.error('Invalid response from luci: %s', res)
 
