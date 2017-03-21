@@ -49,7 +49,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     auth_flow = ClientCredentialGrant(client_id=config.get(CONF_CLIENT_ID),
                                       client_secret=config.get(
                                           CONF_CLIENT_SECRET),
-                                      scopes="public")
+                                      scopes="public",
+                                      is_sandbox_mode=False)
     session = auth_flow.get_session()
 
     wanted_product_ids = config.get(CONF_PRODUCT_IDS)
