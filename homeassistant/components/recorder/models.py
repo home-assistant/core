@@ -68,13 +68,14 @@ class States(Base):   # type: ignore
     last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
     last_updated = Column(DateTime(timezone=True), default=datetime.utcnow,
                           index=True)
-    created = Column(DateTime(timezone=True), default=datetime.utcnow,
-                     index=True)
+    created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     __table_args__ = (Index('states__state_changes',
                             'last_changed', 'last_updated', 'entity_id'),
                       Index('states__significant_changes',
-                            'domain', 'last_updated', 'entity_id'))
+                            'domain', 'last_updated', 'entity_id'),
+                      Index('ix_states_entity_id_created',
+                            'entity_id','created'),)
 
     @staticmethod
     def from_event(event):
