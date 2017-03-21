@@ -124,7 +124,7 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Generic Z-Wave platform setup."""
     yield from zwave.async_setup_platform(
-        hass,  config, async_add_devices, discovery_info)
+        hass, config, async_add_devices, discovery_info)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -181,20 +181,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             break
 
     hass.services.async_register(DOMAIN,
-                           SERVICE_SET_USERCODE,
-                           set_usercode,
-                           descriptions.get(SERVICE_SET_USERCODE),
-                           schema=SET_USERCODE_SCHEMA)
+                                 SERVICE_SET_USERCODE,
+                                 set_usercode,
+                                 descriptions.get(SERVICE_SET_USERCODE),
+                                 schema=SET_USERCODE_SCHEMA)
     hass.services.async_register(DOMAIN,
-                           SERVICE_GET_USERCODE,
-                           get_usercode,
-                           descriptions.get(SERVICE_GET_USERCODE),
-                           schema=GET_USERCODE_SCHEMA)
+                                 SERVICE_GET_USERCODE,
+                                 get_usercode,
+                                 descriptions.get(SERVICE_GET_USERCODE),
+                                 schema=GET_USERCODE_SCHEMA)
     hass.services.async_register(DOMAIN,
-                           SERVICE_CLEAR_USERCODE,
-                           clear_usercode,
-                           descriptions.get(SERVICE_CLEAR_USERCODE),
-                           schema=CLEAR_USERCODE_SCHEMA)
+                                 SERVICE_CLEAR_USERCODE,
+                                 clear_usercode,
+                                 descriptions.get(SERVICE_CLEAR_USERCODE),
+                                 schema=CLEAR_USERCODE_SCHEMA)
 
 
 def get_device(node, values, **kwargs):
