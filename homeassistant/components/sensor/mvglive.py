@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sbahn = config.get(CONF_SBAHN)
 
     add_devices([MVGLiveSensor(station, destination, line,
-                               offset, ubahn, tram, bus, sbahn)])
+                               offset, ubahn, tram, bus, sbahn)], True)
 
 
 # pylint: disable=too-few-public-methods
@@ -73,7 +73,6 @@ class MVGLiveSensor(Entity):
         self._line = line
         self.data = MVGLiveData(station, destination, line,
                                 offset, ubahn, tram, bus, sbahn)
-        self.update()
 
     @property
     def name(self):
@@ -136,7 +135,7 @@ class MVGLiveData(object):
     def update(self):
         """Update the connection data."""
         try:
-            self.departures = self.mvg.getlivedata(station=self._station,
+            _departures = self.mvg.getlivedata(station=self._station,
                                                    ubahn=self._ubahn,
                                                    tram=self._tram,
                                                    bus=self._bus,
@@ -145,16 +144,9 @@ class MVGLiveData(object):
             self.departures = [{}]
             _LOGGER.warning("Returned data not understood.")
             return
-        self.departures = [con for con in self.departures
+        _keys = ['destination', 'linename', 'time', 'direction', 'product']
+        self.departures = [{k: int(v) if k == 'time' and v.is_integer() else v
+                            for k, v in con.items() if k in _keys}
+                           for con in _departures
                            if con['time'] >= self._offset and
                            con['destination'].startswith(self._destination)]
-        for con in self.departures:
-            # Details info is not useful.
-            # Having a more consistent interface simplifies
-            # usage of Template sensors later on
-            con.pop('productsymbol')
-            con.pop('productsymbolurl')
-            con.pop('linesymbol')
-            con.pop('linesymbolurl')
-            if 'time' in con and con['time'].is_integer():
-                con['time'] = int(con['time'])
