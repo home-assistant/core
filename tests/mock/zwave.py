@@ -95,6 +95,7 @@ class MockValue(MagicMock):
                  index=0,
                  command_class=None,
                  units=None,
+                 type=None,
                  value_id=None):
         """Initialize a Z-Wave mock value."""
         super().__init__()
@@ -106,6 +107,7 @@ class MockValue(MagicMock):
         self.index = index
         self.command_class = command_class
         self.units = units
+        self.type = type
         if value_id is None:
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
@@ -114,6 +116,10 @@ class MockValue(MagicMock):
     def _get_child_mock(self, **kw):
         """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)
+
+    def refresh(self):
+        """Mock refresh of node value."""
+        value_changed(self)
 
 
 class MockEntityValues():
