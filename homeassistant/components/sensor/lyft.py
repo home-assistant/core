@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if product.get('estimate') is not None:
             dev.append(LyftSensor(
                 'price', timeandpriceest, product_id, product))
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class LyftSensor(Entity):
@@ -80,20 +80,19 @@ class LyftSensor(Entity):
         self._sensortype = sensorType
         self._name = '{} {}'.format(self._product['display_name'],
                                     self._sensortype)
+        if 'lyft' not in self._name.lower():
+            self._name = 'Lyft{}'.format(self._name)
         if self._sensortype == 'time':
             self._unit_of_measurement = 'min'
         elif self._sensortype == 'price':
             estimate = self._product['estimate']
             if estimate is not None:
                 self._unit_of_measurement = estimate.get('currency')
-
-        self.update()
+        self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if 'lyft' not in self._name.lower():
-            self._name = 'Lyft{}'.format(self._name)
         return self._name
 
     @property
@@ -157,7 +156,10 @@ class LyftSensor(Entity):
     def update(self):
         """Get the latest data from the Lyft API and update the states."""
         self.data.update()
-        self._product = self.data.products[self._product_id]
+        try:
+            self._product = self.data.products[self._product_id]
+        except KeyError:
+            return
         if self._sensortype == 'time':
             eta = self._product['eta']
             if (eta is not None) and (eta.get('is_valid_estimate')):
