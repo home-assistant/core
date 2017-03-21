@@ -87,6 +87,7 @@ class MqttSensor(Entity):
                 # Reset old trigger
                 if self._expiration_trigger:
                     self._expiration_trigger()
+                    self._expiration_trigger = None
 
                 # Set new trigger
                 expiration_at = (
@@ -110,6 +111,7 @@ class MqttSensor(Entity):
     @callback
     def value_is_expired(self, *_):
         """Triggered when value is expired."""
+        self._expiration_trigger = None
         self._state = STATE_UNKNOWN
         self.hass.async_add_job(self.async_update_ha_state())
 
