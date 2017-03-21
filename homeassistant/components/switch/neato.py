@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
 import logging
-
+import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
@@ -52,6 +52,11 @@ class NeatoConnectedSwitch(ToggleEntity):
         _LOGGER.debug('Running switch update')
         self.neato.update_robots()
         if not self._state:
+            return
+        try:
+            self._state = self.robot.state
+        except requests.exceptions.HTTPError:
+            self._state = None
             return
         self._state = self.robot.state
         _LOGGER.debug('self._state=%s', self._state)
