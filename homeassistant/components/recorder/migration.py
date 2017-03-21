@@ -45,7 +45,8 @@ def _apply_update(engine, new_version):
         """Create an index for the specified table.
 
         The index name should match the name given for the index
-        within the table definition described in the models"""
+        within the table definition described in the models
+        """
         table = Table(table_name, models.Base.metadata)
         _LOGGER.debug("Looking up index for table %s", table_name)
         # Look up the index object by name that was created in the models
