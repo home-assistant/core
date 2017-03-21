@@ -38,7 +38,10 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the MQTT switch."""
+    """Set up the MQTT switch."""
+    if discovery_info is not None:
+        config = PLATFORM_SCHEMA(discovery_info)
+
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
