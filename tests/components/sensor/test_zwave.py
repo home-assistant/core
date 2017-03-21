@@ -17,18 +17,6 @@ def test_get_device_detects_none(mock_openzwave):
     assert device is None
 
 
-def test_get_device_detects_sensor(mock_openzwave):
-    """Test get_device returns a Z-Wave Sensor."""
-    node = MockNode(command_classes=[const.COMMAND_CLASS_BATTERY])
-    value = MockValue(data=0, command_class=const.COMMAND_CLASS_BATTERY,
-                      node=node)
-    values = MockEntityValues(primary=value)
-
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert isinstance(device, zwave.ZWaveSensor)
-    assert device.force_update
-
-
 def test_get_device_detects_alarmsensor(mock_openzwave):
     """Test get_device returns a Z-Wave alarmsensor."""
     node = MockNode(command_classes=[const.COMMAND_CLASS_ALARM,
@@ -59,21 +47,6 @@ def test_get_device_detects_multilevel_meter(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZWaveMultilevelSensor)
-
-
-def test_sensor_value_changed(mock_openzwave):
-    """Test value changed for Z-Wave sensor."""
-    node = MockNode(command_classes=[const.COMMAND_CLASS_BATTERY])
-    value = MockValue(data=12.34, command_class=const.COMMAND_CLASS_BATTERY,
-                      node=node, units='%')
-    values = MockEntityValues(primary=value)
-
-    device = zwave.get_device(node=node, values=values, node_config={})
-    assert device.state == 12.34
-    assert device.unit_of_measurement == '%'
-    value.data = 45.67
-    value_changed(value)
-    assert device.state == 45.67
 
 
 def test_multilevelsensor_value_changed_temp_fahrenheit(mock_openzwave):
