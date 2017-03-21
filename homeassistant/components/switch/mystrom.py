@@ -64,8 +64,8 @@ class MyStromSwitch(SwitchDevice):
         return bool(self.data['relay'])
 
     @property
-    def current_power_mwh(self):
-        """Return the current power consumption in mWh."""
+    def current_power_w(self):
+        """Return the current power consumption in W."""
         return round(self.data['power'], 2)
 
     def turn_on(self, **kwargs):

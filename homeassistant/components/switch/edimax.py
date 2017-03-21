@@ -59,13 +59,13 @@ class SmartPlugSwitch(SwitchDevice):
         return self._name
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
+    def current_power_w(self):
+        """Return the current power usage in W."""
         return self._now_power
 
     @property
-    def today_power_mw(self):
-        """Return the today total power usage in mW."""
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
         return self._now_energy_day
 
     @property
