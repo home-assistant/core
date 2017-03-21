@@ -6,6 +6,7 @@ https://home-assistant.io/components/lock.zwave/
 """
 # Because we do not compile openzwave on CI
 # pylint: disable=import-error
+import asyncio
 import logging
 from os import path
 
@@ -13,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.components.lock import DOMAIN, LockDevice
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 
@@ -53,7 +53,7 @@ LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
     '18': 'Locked with Keypad by user ',
     '19': 'Unlocked with Keypad by user ',
-    '21': 'Manually Locked by',
+    '21': 'Manually Locked by ',
     '22': 'Manually Unlocked by Key or Inside thumb turn',
     '24': 'Locked by RF',
     '25': 'Unlocked by RF',
@@ -120,8 +120,12 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 })
 
 
-def get_device(hass, node, values, **kwargs):
-    """Create zwave entity device."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Generic Z-Wave platform setup."""
+    yield from zwave.async_setup_platform(
+        hass, config, async_add_devices, discovery_info)
+
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
@@ -140,6 +144,7 @@ def get_device(hass, node, values, **kwargs):
                 _LOGGER.error('Invalid code provided: (%s)'
                               ' usercode must %s or less digits',
                               usercode, len(value.data))
+                break
             value.data = str(usercode)
             break
 
@@ -175,22 +180,25 @@ def get_device(hass, node, values, **kwargs):
             _LOGGER.info('Usercode at slot %s is cleared', value.index)
             break
 
-    if node.has_command_class(zwave.const.COMMAND_CLASS_USER_CODE):
-        hass.services.register(DOMAIN,
-                               SERVICE_SET_USERCODE,
-                               set_usercode,
-                               descriptions.get(SERVICE_SET_USERCODE),
-                               schema=SET_USERCODE_SCHEMA)
-        hass.services.register(DOMAIN,
-                               SERVICE_GET_USERCODE,
-                               get_usercode,
-                               descriptions.get(SERVICE_GET_USERCODE),
-                               schema=GET_USERCODE_SCHEMA)
-        hass.services.register(DOMAIN,
-                               SERVICE_CLEAR_USERCODE,
-                               clear_usercode,
-                               descriptions.get(SERVICE_CLEAR_USERCODE),
-                               schema=CLEAR_USERCODE_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_SET_USERCODE,
+                                 set_usercode,
+                                 descriptions.get(SERVICE_SET_USERCODE),
+                                 schema=SET_USERCODE_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_GET_USERCODE,
+                                 get_usercode,
+                                 descriptions.get(SERVICE_GET_USERCODE),
+                                 schema=GET_USERCODE_SCHEMA)
+    hass.services.async_register(DOMAIN,
+                                 SERVICE_CLEAR_USERCODE,
+                                 clear_usercode,
+                                 descriptions.get(SERVICE_CLEAR_USERCODE),
+                                 schema=CLEAR_USERCODE_SCHEMA)
+
+
+def get_device(node, values, **kwargs):
+    """Create zwave entity device."""
     return ZwaveLock(values)
 
 
@@ -253,7 +261,8 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)),
                 MANUAL_LOCK_ALARM_LEVEL.get(str(alarm_level)))
-        if alarm_type in ALARM_TYPE_STD:
+            return
+        if str(alarm_type) in ALARM_TYPE_STD:
             self._lock_status = '{}{}'.format(
                 LOCK_ALARM_TYPE.get(str(alarm_type)), str(alarm_level))
             return
