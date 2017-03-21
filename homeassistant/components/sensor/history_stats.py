@@ -66,7 +66,7 @@ def exactly_two_period_keys(conf):
 
 PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
-    vol.Required(CONF_STATE): cv.slug,
+    vol.Required(CONF_STATE): cv.string,
     vol.Optional(CONF_START, default=None): cv.template,
     vol.Optional(CONF_END, default=None): cv.template,
     vol.Optional(CONF_DURATION, default=None): cv.time_period,
