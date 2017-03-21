@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import STATE_UNKNOWN
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,6 +74,7 @@ class MVGLiveSensor(Entity):
         self._line = line
         self.data = MVGLiveData(station, destination, line,
                                 offset, ubahn, tram, bus, sbahn)
+        self._state = STATE_UNKNOWN
 
     @property
     def name(self):
@@ -108,7 +110,7 @@ class MVGLiveSensor(Entity):
         """Get the latest data and update the state."""
         self.data.update()
         if not self.data.departures:
-            self._state = ('-')
+            self._state = '-'
         else:
             self._state = self.data.departures[0].get('time', '-')
 
@@ -136,10 +138,10 @@ class MVGLiveData(object):
         """Update the connection data."""
         try:
             _departures = self.mvg.getlivedata(station=self._station,
-                                                   ubahn=self._ubahn,
-                                                   tram=self._tram,
-                                                   bus=self._bus,
-                                                   sbahn=self._sbahn)
+                                               ubahn=self._ubahn,
+                                               tram=self._tram,
+                                               bus=self._bus,
+                                               sbahn=self._sbahn)
         except ValueError:
             self.departures = [{}]
             _LOGGER.warning("Returned data not understood.")
