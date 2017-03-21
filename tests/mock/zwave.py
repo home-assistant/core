@@ -67,7 +67,7 @@ class MockValue(MagicMock):
         self.data_items = data_items
         self.node = node
         self.instance = instance
-        self.index = 0
+        self.index = index
         self.command_class = command_class
         self.units = units
         self.type = type
