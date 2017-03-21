@@ -4,6 +4,7 @@ Component for interacting with a Lutron Caseta system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lutron_caseta/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -72,6 +73,10 @@ class LutronCasetaDevice(Entity):
         self._device_name = device["name"]
         self._state = None
         self._smartbridge = bridge
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         self._smartbridge.add_subscriber(self._device_id,
                                          self._update_callback)
 
