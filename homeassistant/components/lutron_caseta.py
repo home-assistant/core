@@ -60,7 +60,7 @@ def setup(hass, base_config):
 
 
 class LutronCasetaDevice(Entity):
-    """Common base class for all Caseta devices."""
+    """Common base class for all Lutron Caseta devices."""
 
     def __init__(self, device, bridge):
         """Set up the base class.
