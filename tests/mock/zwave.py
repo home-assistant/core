@@ -72,10 +72,6 @@ class MockNode(MagicMock):
         """Return whether the node can wake up."""
         return self.can_wake_up_value
 
-    def get_values(self, class_id):
-        """Get values by class."""
-        return {1: MockValue(data=1800)}
-
     def _get_child_mock(self, **kw):
         """Create child mocks with right MagicMock class."""
         return MagicMock(**kw)

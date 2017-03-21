@@ -95,6 +95,9 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.assertEqual({'node_id': self.node.node_id},
                          self.entity.device_state_attributes)
 
+        self.node.get_values.return_value = {
+            1: mock_zwave.MockValue(data=1800)
+        }
         self.entity.node_changed()
 
         self.assertEqual(
