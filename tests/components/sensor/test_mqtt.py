@@ -55,13 +55,13 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
-                'expire_after': '2',
+                'expire_after': '4',
                 'force_update': True
             }
         })
 
-        time = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-        fire_time_changed(self.hass, time)
+        now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+        fire_time_changed(self.hass, now)
 
         state = self.hass.states.get('sensor.test')
         self.assertEqual('unknown', state.state)
@@ -72,20 +72,39 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('sensor.test')
         self.assertEqual('100', state.state)
 
-        time = time + timedelta(seconds=1)
-        fire_time_changed(self.hass, time)
+        # +3s
+        now = now + timedelta(seconds=3)
+        fire_time_changed(self.hass, now)
+        self.hass.block_till_done()
 
-        """ Not yet expired """
+        # Not yet expired
         state = self.hass.states.get('sensor.test')
         self.assertEqual('100', state.state)
 
-        time = time + timedelta(seconds=2)
-        fire_time_changed(self.hass, time)
+        # Next message resets timer
+        fire_mqtt_message(self.hass, 'test-topic', '100')
+        self.hass.block_till_done()
 
-        """ Expired """
         state = self.hass.states.get('sensor.test')
-        # FIXME: this will fail unless the fixmes above are fixed
-#        self.assertEqual('unknown', state.state)
+        self.assertEqual('100', state.state)
+
+        # +3s
+        now = now + timedelta(seconds=3)
+        fire_time_changed(self.hass, now)
+        self.hass.block_till_done()
+
+        # Not yet expired
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual('100', state.state)
+
+        # +3s
+        now = now + timedelta(seconds=3)
+        fire_time_changed(self.hass, now)
+        self.hass.block_till_done()
+
+        # Expired
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual('unknown', state.state)
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
         """Test the setting of the value via MQTT with JSON playload."""

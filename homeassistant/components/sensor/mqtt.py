@@ -72,7 +72,7 @@ class MqttSensor(Entity):
         self._force_update = force_update
         self._template = value_template
         self._expire_after = expire_after
-        self._value_expiration_at = 0
+        self._expiration_trigger = None
 
     def async_added_to_hass(self):
         """Subscribe mqtt events.
@@ -84,15 +84,18 @@ class MqttSensor(Entity):
             """A new MQTT message has been received."""
             # auto-expire enabled?
             if self._expire_after > 0:
-                # Reset expiration time and set trigger
-                self._value_expiration_at = (
-                    dt_util.utcnow() +
-                    timedelta(seconds=self._expire_after)
-                    )
-                async_track_point_in_utc_time(self.hass,
-                                              self.check_value_is_expired,
-                                              self._value_expiration_at +
-                                              timedelta(seconds=1))
+                # Reset old trigger
+                if self._expiration_trigger:
+                    self._expiration_trigger()
+
+                # Set new trigger
+                expiration_at = (
+                    dt_util.utcnow() + timedelta(seconds=self._expire_after))
+
+                self._expiration_trigger = async_track_point_in_utc_time(
+                    self.hass,
+                    self.value_is_expired,
+                    expiration_at)
 
             if self._template is not None:
                 template = self._template
@@ -105,12 +108,10 @@ class MqttSensor(Entity):
             self.hass, self._state_topic, message_received, self._qos)
 
     @callback
-    def check_value_is_expired(self, *_):
-        """Check if value is expired."""
-        if (self._expire_after > 0 and
-                dt_util.utcnow() > self._value_expiration_at):
-            self._state = STATE_UNKNOWN
-            self.hass.async_add_job(self.async_update_ha_state())
+    def value_is_expired(self, *_):
+        """Triggered when value is expired."""
+        self._state = STATE_UNKNOWN
+        self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def should_poll(self):
