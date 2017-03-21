@@ -75,7 +75,7 @@ class States(Base):   # type: ignore
                       Index('states__significant_changes',
                             'domain', 'last_updated', 'entity_id'),
                       Index('ix_states_entity_id_created',
-                            'entity_id','created'),)
+                            'entity_id', 'created'),)
 
     @staticmethod
     def from_event(event):

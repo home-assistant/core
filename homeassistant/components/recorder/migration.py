@@ -40,7 +40,7 @@ def _apply_update(engine, new_version):
     """Perform operations to bring schema up to date."""
     from sqlalchemy import Table
     from . import models
-    
+
     def create_index(table_name, index_name):
         """Create an index for the specified table.
 
