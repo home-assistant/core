@@ -16,8 +16,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['https://github.com/gurumitts/'
-                'pylutron-caseta/archive/v0.2.3.zip#'
-                'pylutron-caseta==v0.2.3']
+                'pylutron-caseta/archive/v0.2.4.zip#'
+                'pylutron-caseta==v0.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 
