@@ -306,6 +306,9 @@ https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f5
 # homeassistant.components.sensor.modem_callerid
 https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
 
+# homeassistant.components.tado
+https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
+
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
