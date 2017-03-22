@@ -18,9 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 # A typo in the file name of the PyPI version prevents installation from PyPI
-REQUIREMENTS = ["https://github.com/pc-coholic/PyMVGLive/archive/"
-                "1.1.2.zip#"
-                "PyMVGLive==1.1.2"]
+REQUIREMENTS = ["PyMVGLive==1.1.3"]
 ICON = 'mdi:bus'
 
 # Return cached results if last scan was less then this time ago.
