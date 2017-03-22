@@ -7,7 +7,7 @@ https://home-assistant.io/components/lutron/
 import logging
 
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import (Entity, generate_entity_id)
 
 REQUIREMENTS = ['https://github.com/thecynic/pylutron/archive/v0.1.0.zip#'
                 'pylutron==0.1.0']
@@ -50,14 +50,16 @@ def setup(hass, base_config):
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
-    def __init__(self, hass, area_name, lutron_device, controller):
+    def __init__(self, hass, domain, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
 
         self.hass = hass
-        self.object_id = '{} {}'.format(area_name, lutron_device.name)
+        object_id = '{} {}'.format(area_name, lutron_device.name)
+        self.entity_id = generate_entity_id(domain + '.{}', object_id,
+                                            hass=hass)
 
         self._controller.subscribe(self._lutron_device, self._update_callback)
 
@@ -68,7 +70,7 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._lutron_device.name
+        return '{} {}'.format(self._area_name, self._lutron_device.name)
 
     @property
     def should_poll(self):
