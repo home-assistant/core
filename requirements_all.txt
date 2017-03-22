@@ -222,6 +222,9 @@ holidays==0.8.1
 # homeassistant.components.sensor.dht
 # http://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.0
 
+# homeassistant.components.media_player.apple_tv
+http://github.com/home-assistant/pyatv/archive/fa93513579ced672bc8ff3c1c314e86ec9177fc4.zip#pyatv==0.2.1
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
@@ -457,9 +460,6 @@ pyasn1-modules==0.0.8
 
 # homeassistant.components.notify.xmpp
 pyasn1==0.2.3
-
-# homeassistant.components.media_player.apple_tv
-pyatv==0.2.1
 
 # homeassistant.components.device_tracker.bbox
 # homeassistant.components.sensor.bbox
