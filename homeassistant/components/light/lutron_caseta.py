@@ -25,7 +25,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devs.append(dev)
 
     add_devices(devs, True)
-    return True
 
 
 class LutronCasetaLight(LutronCasetaDevice, Light):
