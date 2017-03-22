@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.metoffice/
 """
 
 import logging
-import datetime
 
 import voluptuous as vol
 
