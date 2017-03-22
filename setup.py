@@ -18,7 +18,7 @@ REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
     'pytz>=2016.10',
-    'pip>=7.0.0',
+    'pip>=7.1.0',
     'jinja2>=2.9.5',
     'voluptuous==0.9.3',
     'typing>=3,<4',
