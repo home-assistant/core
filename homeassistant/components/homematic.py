@@ -22,7 +22,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.22"]
+REQUIREMENTS = ["pyhomematic==0.1.23"]
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
