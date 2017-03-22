@@ -36,33 +36,35 @@ def migrate_schema(instance):
             _LOGGER.info("Upgrade to version %s done", new_version)
 
 
-def _apply_update(engine, new_version):
-    """Perform operations to bring schema up to date."""
+def _create_index(engine, table_name, index_name):
+    """Create an index for the specified table.
+
+    The index name should match the name given for the index
+    within the table definition described in the models
+    """
     from sqlalchemy import Table
     from . import models
 
-    def create_index(table_name, index_name):
-        """Create an index for the specified table.
+    table = Table(table_name, models.Base.metadata)
+    _LOGGER.debug("Looking up index for table %s", table_name)
+    # Look up the index object by name from the table is the the models
+    index = next(idx for idx in table.indexes if idx.name == index_name)
+    _LOGGER.debug("Creating %s index", index_name)
+    index.create(engine)
+    _LOGGER.debug("Finished creating %s", index_name)
 
-        The index name should match the name given for the index
-        within the table definition described in the models
-        """
-        table = Table(table_name, models.Base.metadata)
-        _LOGGER.debug("Looking up index for table %s", table_name)
-        # Look up the index object by name that was created in the models
-        index = next(idx for idx in table.indexes if idx.name == index_name)
-        _LOGGER.debug("Creating %s index", index_name)
-        index.create(engine)
-        _LOGGER.debug("Finished creating %s", index_name)
 
+def _apply_update(engine, new_version):
+    """Perform operations to bring schema up to date."""
     if new_version == 1:
-        create_index("events", "ix_events_time_fired")
+        _create_index(engine, "events", "ix_events_time_fired")
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
-        create_index("recorder_runs", "ix_recorder_runs_start_end")
+        _create_index(engine, "recorder_runs",
+                      "ix_recorder_runs_start_end")
         # Create indexes for states
-        create_index("states", "ix_states_last_updated")
-        create_index("states", "ix_states_entity_id_created")
+        _create_index(engine, "states", "ix_states_last_updated")
+        _create_index(engine, "states", "ix_states_entity_id_created")
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))
