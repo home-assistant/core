@@ -105,7 +105,7 @@ class TestSensorMQTT(unittest.TestCase):
         # Expired
         state = self.hass.states.get('sensor.test')
         # FIXME: I have no idea why this does not work.
-        # Got stuck here, help please! :-(
+        # Got stuck here, help please.
         # self.assertEqual('unknown', state.state)
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
