@@ -8,6 +8,7 @@ import logging
 from os import path
 import urllib.parse
 
+
 import voluptuous as vol
 
 import homeassistant.components.remote as remote
@@ -24,16 +25,17 @@ REQUIREMENTS = ['pyharmony==1.0.12']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 5222
-DEVICES = []
 
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
 })
+
+KNOWN_HOSTS = []
 
 HARMONY_SYNC_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -43,31 +45,50 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Harmony platform."""
     import pyharmony
-    global DEVICES
 
-    name = config.get(CONF_NAME)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    _LOGGER.debug("Loading Harmony platform: %s", name)
+    host = None
+    if discovery_info:
+        host = (
+            discovery_info['name'],
+            discovery_info['host'],
+            DEFAULT_PORT)
 
-    harmony_conf_file = hass.config.path(
-        '{}{}{}'.format('harmony_', slugify(name), '.conf'))
+        # Ignore hub name when checking if this hub is known - ip and port only
+        if host and host[1:] in [h[1:] for h in KNOWN_HOSTS]:
+            _LOGGER.debug("Discovered host already known: %s", host)
+            return
 
+    elif CONF_HOST in config:
+        host = (
+            config.get(CONF_NAME),
+            config.get(CONF_HOST),
+            config.get(CONF_PORT),
+        )
+    else:
+        return
+
+    name, address, port = host
+    _LOGGER.info("Loading Harmony Platform: %s at %s:%s",
+                 name, address, port)
     try:
         _LOGGER.debug("Calling pyharmony.ha_get_token for remote at: %s:%s",
-                      host, port)
-        token = urllib.parse.quote_plus(pyharmony.ha_get_token(host, port))
+                      address, port)
+        token = urllib.parse.quote_plus(pyharmony.ha_get_token(address, port))
+        _LOGGER.debug("Received token: %s", token)
     except ValueError as err:
         _LOGGER.warning("%s for remote: %s", err.args[0], name)
         return False
 
-    _LOGGER.debug("Received token: %s", token)
-    DEVICES = [HarmonyRemote(
-        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(ATTR_ACTIVITY), harmony_conf_file, token)]
-    add_devices(DEVICES, True)
+    harmony_conf_file = hass.config.path(
+        '{}{}{}'.format('harmony_', slugify(name), '.conf'))
+    hub = HarmonyRemote(
+        name, address, port,
+        config.get(ATTR_ACTIVITY), harmony_conf_file, token)
+
+    KNOWN_HOSTS.append(host)
+
+    add_devices([hub])
     register_services(hass)
-    return True
 
 
 def register_services(hass):
