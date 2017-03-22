@@ -45,7 +45,7 @@ def setup(hass, base_config):
         username=config[CONF_USERNAME],
         password=config[CONF_PASSWORD]
     )
-    if hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
+    if not hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
         _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
                       config[CONF_HOST])
         return False
