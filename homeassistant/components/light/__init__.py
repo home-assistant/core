@@ -42,6 +42,7 @@ SUPPORT_RGB_COLOR = 16
 SUPPORT_TRANSITION = 32
 SUPPORT_XY_COLOR = 64
 SUPPORT_WHITE_VALUE = 128
+SUPPORT_EFFECT_SPEED = 256
 
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
@@ -55,6 +56,9 @@ ATTR_WHITE_VALUE = "white_value"
 
 # int with value 0 .. 255 representing brightness of the light.
 ATTR_BRIGHTNESS = "brightness"
+
+# int with value 0 .. 100 representing the speed at which effects should go
+ATTR_EFFECT_SPEED = "effect_speed"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -83,11 +87,13 @@ PROP_TO_ATTR = {
     'white_value': ATTR_WHITE_VALUE,
     'effect_list': ATTR_EFFECT_LIST,
     'effect': ATTR_EFFECT,
+    'effect_speed': ATTR_EFFECT_SPEED,
 }
 
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
+VALID_EFFECT_SPEED = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
@@ -105,6 +111,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
+    ATTR_EFFECT_SPEED: VALID_EFFECT_SPEED,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -141,19 +148,20 @@ def is_on(hass, entity_id=None):
 
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+            profile=None, flash=None, effect=None, color_name=None,
+            effect_speed=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness,
         rgb_color, xy_color, color_temp, white_value,
-        profile, flash, effect, color_name)
+        profile, flash, effect, color_name, effect_speed)
 
 
 @callback
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   rgb_color=None, xy_color=None, color_temp=None,
                   white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
+                  color_name=None, effect_speed=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -168,6 +176,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_EFFECT_SPEED, effect_speed)
         ] if value is not None
     }
 
@@ -350,6 +359,11 @@ class Light(ToggleEntity):
     @property
     def effect(self):
         """Return the current effect."""
+        return None
+
+    @property
+    def effect_speed(self):
+        """Return the current effect speed."""
         return None
 
     @property
