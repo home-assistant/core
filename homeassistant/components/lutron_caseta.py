@@ -46,15 +46,15 @@ def setup(hass, base_config):
         password=config[CONF_PASSWORD]
     )
     if hass.data[LUTRON_CASETA_SMARTBRIDGE].is_connected():
-        _LOGGER.debug("Connected to Lutron smartbridge at %s",
-                      config[CONF_HOST])
-
-        for component in ('light', 'switch'):
-            discovery.load_platform(hass, component, DOMAIN, {}, config)
-    else:
-        _LOGGER.debug("Unable to connect to Lutron smartbridge at %s",
+        _LOGGER.error("Unable to connect to Lutron smartbridge at %s",
                       config[CONF_HOST])
         return False
+
+    _LOGGER.info("Connected to Lutron smartbridge at %s",
+                  config[CONF_HOST])
+
+    for component in ('light', 'switch'):
+        discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
 
