@@ -34,6 +34,10 @@ URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
            '#1-requirements')
 
 
+CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
+                               '../homeassistant/package_constraints.txt')
+
+
 def explore_module(package, explore_children):
     """Explore the modules."""
     module = importlib.import_module(package)
@@ -118,15 +122,32 @@ def gather_modules():
     return ''.join(output)
 
 
-def write_file(data):
+def gather_constraints():
+    """Construct output for constraint file."""
+    return '\n'.join(core_requirements() + [''])
+
+
+def write_requirements_file(data):
     """Write the modules to the requirements_all.txt."""
     with open('requirements_all.txt', 'w+') as req_file:
         req_file.write(data)
 
 
-def validate_file(data):
+def write_constraints_file(data):
+    """Write constraints to a file."""
+    with open(CONSTRAINT_PATH, 'w+', newline="\n") as req_file:
+        req_file.write(data)
+
+
+def validate_requirements_file(data):
     """Validate if requirements_all.txt is up to date."""
     with open('requirements_all.txt', 'r') as req_file:
+        return data == ''.join(req_file)
+
+
+def validate_constraints_file(data):
+    """Validate if constraints is up to date."""
+    with open(CONSTRAINT_PATH, 'r') as req_file:
         return data == ''.join(req_file)
 
 
@@ -141,15 +162,25 @@ def main():
     if data is None:
         sys.exit(1)
 
-    if sys.argv[-1] == 'validate':
-        if validate_file(data):
-            sys.exit(0)
-        print("******* ERROR")
-        print("requirements_all.txt is not up to date")
-        print("Please run script/gen_requirements_all.py")
-        sys.exit(1)
+    constraints = gather_constraints()
 
-    write_file(data)
+    if sys.argv[-1] == 'validate':
+        if not validate_requirements_file(data):
+            print("******* ERROR")
+            print("requirements_all.txt is not up to date")
+            print("Please run script/gen_requirements_all.py")
+            sys.exit(1)
+
+        if not validate_constraints_file(constraints):
+            print("******* ERROR")
+            print("home-assistant/package_constraints.txt is not up to date")
+            print("Please run script/gen_requirements_all.py")
+            sys.exit(1)
+
+        sys.exit(0)
+
+    write_requirements_file(data)
+    write_constraints_file(constraints)
 
 
 if __name__ == '__main__':
