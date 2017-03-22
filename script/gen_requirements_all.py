@@ -129,7 +129,7 @@ def gather_modules():
 
 
 def gather_constraints():
-    """Construct output for constraint file"""
+    """Construct output for constraint file."""
     return '\n'.join(core_requirements() + [''])
 
 
