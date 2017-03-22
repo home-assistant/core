@@ -15,7 +15,8 @@ INSTALL_LOCK = threading.Lock()
 
 
 def install_package(package: str, upgrade: bool=True,
-                    target: Optional[str]=None) -> bool:
+                    target: Optional[str]=None,
+                    constraints: Optional[str]=None) -> bool:
     """Install a package on PyPi. Accepts pip compatible package strings.
 
     Return boolean if install successful.
@@ -31,6 +32,9 @@ def install_package(package: str, upgrade: bool=True,
             args.append('--upgrade')
         if target:
             args += ['--target', os.path.abspath(target)]
+
+        if constraints is not None:
+            args += ['--constraint', constraints]
 
         try:
             return subprocess.call(args) == 0
