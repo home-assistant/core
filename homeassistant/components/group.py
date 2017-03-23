@@ -215,6 +215,8 @@ def _async_process_config(hass, config, component):
         entity_ids = conf.get(CONF_ENTITIES) or []
         icon = conf.get(CONF_ICON)
         view = conf.get(CONF_VIEW)
+        if view is None and object_id == 'default_view':
+            view = True
         control = conf.get(CONF_CONTROL)
 
         # Don't create tasks and await them all. The order is important as
