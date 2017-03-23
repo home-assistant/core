@@ -45,6 +45,7 @@ CONF_POLLING_INTERVAL = 'polling_interval'
 CONF_USB_STICK_PATH = 'usb_path'
 CONF_CONFIG_PATH = 'config_path'
 CONF_IGNORED = 'ignored'
+CONF_INVERT_OPENCLOSE = 'invert_openclose'
 CONF_REFRESH_VALUE = 'refresh_value'
 CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
@@ -58,6 +59,7 @@ DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
 DEFAULT_POLLING_INTERVAL = 60000
 DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
+DEFAULT_CONF_INVERT_OPENCLOSE = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
@@ -104,6 +106,8 @@ SET_WAKEUP_SCHEMA = vol.Schema({
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_POLLING_INTENSITY): cv.positive_int,
+    vol.Optional(CONF_INVERT_OPENCLOSE,
+                 default=DEFAULT_CONF_INVERT_OPENCLOSE): cv.boolean,
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
