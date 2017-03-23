@@ -7,14 +7,14 @@ https://home-assistant.io/components/switch.vera/
 import logging
 
 from homeassistant.util import convert
-from homeassistant.components.climate import ClimateDevice
+from homeassistant.components.climate import ClimateDevice, ENTITY_ID_FORMAT
 from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TEMP_CELSIUS,
     ATTR_TEMPERATURE)
 
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -37,6 +37,7 @@ class VeraThermostat(VeraDevice, ClimateDevice):
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def current_operation(self):
@@ -84,11 +85,11 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             return self.vera_device.fan_cycle()
 
     @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
+    def current_power_w(self):
+        """Current power usage in W."""
         power = self.vera_device.power
         if power:
-            return convert(power, float, 0.0) * 1000
+            return convert(power, float, 0.0)
 
     def update(self):
         """Called by the vera device callback to update state."""

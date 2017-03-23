@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch, DEFAULT, Mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.sensor import DOMAIN
 import homeassistant.components.sensor.mhz19 as mhz19
 from homeassistant.const import TEMP_FAHRENHEIT

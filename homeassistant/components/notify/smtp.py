@@ -18,7 +18,8 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT)
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
+    CONF_SENDER, CONF_RECIPIENT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -32,6 +33,7 @@ CONF_SERVER = 'server'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 25
+DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
 DEFAULT_STARTTLS = False
 
@@ -40,6 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RECIPIENT): vol.Email(),
     vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_SENDER): vol.Email(),
     vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -53,6 +56,7 @@ def get_service(hass, config, discovery_info=None):
     mail_service = MailNotificationService(
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
+        config.get(CONF_TIMEOUT),
         config.get(CONF_SENDER),
         config.get(CONF_STARTTLS),
         config.get(CONF_USERNAME),
@@ -69,11 +73,12 @@ def get_service(hass, config, discovery_info=None):
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
-    def __init__(self, server, port, sender, starttls, username,
+    def __init__(self, server, port, timeout, sender, starttls, username,
                  password, recipient, debug):
         """Initialize the service."""
         self._server = server
         self._port = port
+        self._timeout = timeout
         self._sender = sender
         self.starttls = starttls
         self.username = username
@@ -84,7 +89,7 @@ class MailNotificationService(BaseNotificationService):
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        mail = smtplib.SMTP(self._server, self._port, timeout=5)
+        mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.starttls:

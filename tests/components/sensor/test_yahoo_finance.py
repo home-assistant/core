@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.components.sensor as sensor
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from tests.common import (
     get_test_home_assistant, load_fixture, assert_setup_component)
 

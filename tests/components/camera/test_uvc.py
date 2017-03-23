@@ -7,7 +7,7 @@ import requests
 from uvcclient import camera
 from uvcclient import nvr
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.camera import uvc
 from tests.common import get_test_home_assistant, mock_http_component
 

@@ -10,7 +10,7 @@ import logging
 import time
 from threading import Lock
 
-from homeassistant.components.discovery import load_platform
+from homeassistant.helpers.discovery import load_platform
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol

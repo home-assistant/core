@@ -155,35 +155,6 @@ def test_default_setup(hass, monkeypatch):
 
 
 @asyncio.coroutine
-def test_new_light_group(hass, monkeypatch):
-    """New devices should be added to configured group."""
-    config = {
-        'rflink': {
-            'port': '/dev/ttyABC0',
-        },
-        DOMAIN: {
-            'platform': 'rflink',
-            'new_devices_group': 'new_rflink_lights',
-        },
-    }
-
-    # setup mocking rflink module
-    event_callback, _, _, _ = yield from mock_rflink(
-        hass, config, DOMAIN, monkeypatch)
-
-    # test event for new unconfigured sensor
-    event_callback({
-        'id': 'protocol_0_0',
-        'command': 'off',
-    })
-    yield from hass.async_block_till_done()
-
-    # make sure new device is added to correct group
-    group = hass.states.get('group.new_rflink_lights')
-    assert group.attributes.get('entity_id') == ('light.protocol_0_0',)
-
-
-@asyncio.coroutine
 def test_firing_bus_event(hass, monkeypatch):
     """Incoming Rflink command events should be put on the HA event bus."""
     config = {
@@ -371,3 +342,46 @@ def test_signal_repetitions_cancelling(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
     assert protocol.send_command_ack.call_args_list[2][0][1] == 'on'
     assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
+
+
+@asyncio.coroutine
+def test_type_toggle(hass, monkeypatch):
+    """Test toggle type lights (on/on)."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'toggle_0_0': {
+                    'name': 'toggle_test',
+                    'type': 'toggle',
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get('light.toggle_test').state == 'off'
+
+    # test sending on command to toggle alias
+    event_callback({
+        'id': 'toggle_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.toggle_test').state == 'on'
+
+    # test sending group command to group alias
+    event_callback({
+        'id': 'toggle_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.toggle_test').state == 'off'

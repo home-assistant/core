@@ -103,7 +103,8 @@ class TestComponentsCore(unittest.TestCase):
         ent = entity.Entity()
         ent.entity_id = 'test.entity'
         ent.hass = self.hass
-        ent.update_ha_state()
+        ent.schedule_update_ha_state()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('test.entity')
         assert state is not None
@@ -130,7 +131,8 @@ class TestComponentsCore(unittest.TestCase):
         assert 10 == self.hass.config.latitude
         assert 20 == self.hass.config.longitude
 
-        ent.update_ha_state()
+        ent.schedule_update_ha_state()
+        self.hass.block_till_done()
 
         state = self.hass.states.get('test.entity')
         assert state is not None

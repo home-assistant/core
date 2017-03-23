@@ -35,7 +35,7 @@ from .util import session_scope
 
 DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.1.5']
+REQUIREMENTS = ['sqlalchemy==1.1.6']
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
@@ -43,8 +43,7 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
 
-CONNECT_RETRY_WAIT = 10
-ERROR_QUERY = "Error during query: %s"
+CONNECT_RETRY_WAIT = 3
 
 FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
@@ -76,7 +75,7 @@ def wait_connection_ready(hass):
 
     Returns a coroutine object.
     """
-    return hass.data[DATA_INSTANCE].async_db_ready.wait()
+    return hass.data[DATA_INSTANCE].async_db_ready
 
 
 def run_information(hass, point_in_time: Optional[datetime]=None):
@@ -113,13 +112,13 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
-    hass.data[DATA_INSTANCE] = Recorder(
+    instance = hass.data[DATA_INSTANCE] = Recorder(
         hass, purge_days=purge_days, uri=db_url, include=include,
         exclude=exclude)
-    hass.data[DATA_INSTANCE].async_initialize()
-    hass.data[DATA_INSTANCE].start()
+    instance.async_initialize()
+    instance.start()
 
-    return True
+    return (yield from instance.async_db_ready)
 
 
 class Recorder(threading.Thread):
@@ -135,7 +134,7 @@ class Recorder(threading.Thread):
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
-        self.async_db_ready = asyncio.Event(loop=hass.loop)
+        self.async_db_ready = asyncio.Future(loop=hass.loop)
         self.engine = None  # type: Any
         self.run_info = None  # type: Any
 
@@ -153,20 +152,37 @@ class Recorder(threading.Thread):
 
     def run(self):
         """Start processing events to save."""
-        from sqlalchemy.exc import SQLAlchemyError
         from .models import States, Events
+        from homeassistant.components import persistent_notification
 
-        while True:
+        tries = 1
+        connected = False
+
+        while not connected and tries <= 10:
+            if tries != 1:
+                time.sleep(CONNECT_RETRY_WAIT)
             try:
                 self._setup_connection()
                 migration.migrate_schema(self)
                 self._setup_run()
-                self.hass.loop.call_soon_threadsafe(self.async_db_ready.set)
-                break
-            except SQLAlchemyError as err:
+                connected = True
+            except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
-                time.sleep(CONNECT_RETRY_WAIT)
+                tries += 1
+
+        if not connected:
+            @callback
+            def connection_failed():
+                """Connection failed tasks."""
+                self.async_db_ready.set_result(False)
+                persistent_notification.async_create(
+                    self.hass,
+                    "The recorder could not start, please check the log",
+                    "Recorder")
+
+            self.hass.add_job(connection_failed)
+            return
 
         purge_task = object()
         shutdown_task = object()
@@ -175,6 +191,8 @@ class Recorder(threading.Thread):
         @callback
         def register():
             """Post connection initialize."""
+            self.async_db_ready.set_result(True)
+
             def shutdown(event):
                 """Shut down the Recorder."""
                 if not hass_started.done():
@@ -269,24 +287,42 @@ class Recorder(threading.Thread):
 
     def _setup_connection(self):
         """Ensure database is ready to fly."""
-        from sqlalchemy import create_engine
+        from sqlalchemy import create_engine, event
+        from sqlalchemy.engine import Engine
         from sqlalchemy.orm import scoped_session
         from sqlalchemy.orm import sessionmaker
+
         from . import models
+
+        kwargs = {}
+
+        # pylint: disable=unused-variable
+        @event.listens_for(Engine, "connect")
+        def set_sqlite_pragma(dbapi_connection, connection_record):
+            """Set sqlite's WAL mode."""
+            if self.db_url.startswith("sqlite://"):
+                old_isolation = dbapi_connection.isolation_level
+                dbapi_connection.isolation_level = None
+                cursor = dbapi_connection.cursor()
+                cursor.execute("PRAGMA journal_mode=WAL")
+                cursor.close()
+                dbapi_connection.isolation_level = old_isolation
 
         if self.db_url == 'sqlite://' or ':memory:' in self.db_url:
             from sqlalchemy.pool import StaticPool
-            self.engine = create_engine(
-                'sqlite://',
-                connect_args={'check_same_thread': False},
-                poolclass=StaticPool,
-                pool_reset_on_return=None)
-        else:
-            self.engine = create_engine(self.db_url, echo=False)
 
+            kwargs['connect_args'] = {'check_same_thread': False}
+            kwargs['poolclass'] = StaticPool
+            kwargs['pool_reset_on_return'] = None
+        else:
+            kwargs['echo'] = False
+
+        if self.engine is not None:
+            self.engine.dispose()
+
+        self.engine = create_engine(self.db_url, **kwargs)
         models.Base.metadata.create_all(self.engine)
-        session_factory = sessionmaker(bind=self.engine)
-        self.get_session = scoped_session(session_factory)
+        self.get_session = scoped_session(sessionmaker(bind=self.engine))
 
     def _close_connection(self):
         """Close the connection."""

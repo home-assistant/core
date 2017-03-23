@@ -21,8 +21,7 @@ from typing import Optional
 
 import requests
 
-import homeassistant.bootstrap as bootstrap
-import homeassistant.core as ha
+from homeassistant import setup, core as ha
 from homeassistant.const import (
     HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
@@ -123,6 +122,8 @@ class HomeAssistant(ha.HomeAssistant):
     # pylint: disable=super-init-not-called
     def __init__(self, remote_api, local_api=None, loop=None):
         """Initalize the forward instance."""
+        _LOGGER.warning('Remote instances of Home Assistant are deprecated. '
+                        'Will be removed by 0.43')
         if not remote_api.validate_api():
             raise HomeAssistantError(
                 "Remote API at {}:{} not valid: {}".format(
@@ -151,7 +152,7 @@ class HomeAssistant(ha.HomeAssistant):
         """Start the instance."""
         # Ensure a local API exists to connect with remote
         if 'api' not in self.config.components:
-            if not bootstrap.setup_component(self, 'api'):
+            if not setup.setup_component(self, 'api'):
                 raise HomeAssistantError(
                     'Unable to setup local API to receive events')
 
@@ -216,6 +217,9 @@ class EventForwarder(object):
 
     def __init__(self, hass, restrict_origin=None):
         """Initalize the event forwarder."""
+        _LOGGER.warning('API forwarding is deprecated. '
+                        'Will be removed by 0.43')
+
         self.hass = hass
         self.restrict_origin = restrict_origin
 
@@ -350,6 +354,8 @@ def validate_api(api):
 
 def connect_remote_events(from_api, to_api):
     """Setup from_api to forward all events to to_api."""
+    _LOGGER.warning('Event forwarding is deprecated. '
+                    'Will be removed by 0.43')
     data = {
         'host': to_api.host,
         'api_password': to_api.api_password,
@@ -375,6 +381,8 @@ def connect_remote_events(from_api, to_api):
 
 def disconnect_remote_events(from_api, to_api):
     """Disconnect forwarding events from from_api to to_api."""
+    _LOGGER.warning('Event forwarding is deprecated. '
+                    'Will be removed by 0.43')
     data = {
         'host': to_api.host,
         'port': to_api.port

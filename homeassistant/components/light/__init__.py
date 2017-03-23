@@ -86,7 +86,7 @@ PROP_TO_ATTR = {
 }
 
 # Service call validation schemas
-VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=900))
+VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
@@ -255,7 +255,7 @@ def async_setup(hass, config):
             if not light.should_poll:
                 continue
 
-            update_coro = hass.loop.create_task(
+            update_coro = hass.async_add_job(
                 light.async_update_ha_state(True))
             if hasattr(light, 'async_update'):
                 update_tasks.append(update_coro)

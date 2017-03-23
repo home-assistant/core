@@ -9,11 +9,13 @@ import logging
 import os
 import socket
 import time
+import ssl
+import requests.certs
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import template, config_validation as cv
@@ -22,8 +24,8 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE,
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
+    EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
+    CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,6 +49,7 @@ CONF_CERTIFICATE = 'certificate'
 CONF_CLIENT_KEY = 'client_key'
 CONF_CLIENT_CERT = 'client_cert'
 CONF_TLS_INSECURE = 'tls_insecure'
+CONF_TLS_VERSION = 'tls_version'
 
 CONF_BIRTH_MESSAGE = 'birth_message'
 CONF_WILL_MESSAGE = 'will_message'
@@ -66,6 +69,7 @@ DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
 DEFAULT_DISCOVERY = False
 DEFAULT_DISCOVERY_PREFIX = 'homeassistant'
+DEFAULT_TLS_PROTOCOL = 'auto'
 
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
@@ -115,12 +119,15 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_USERNAME): cv.string,
         vol.Optional(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CERTIFICATE): cv.isfile,
+        vol.Optional(CONF_CERTIFICATE): vol.Any('auto', cv.isfile),
         vol.Inclusive(CONF_CLIENT_KEY, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
+        vol.Optional(CONF_TLS_VERSION,
+                     default=DEFAULT_TLS_PROTOCOL): vol.Any('auto', '1.0',
+                                                            '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
@@ -310,14 +317,34 @@ def async_setup(hass, config):
         certificate = os.path.join(os.path.dirname(__file__),
                                    'addtrustexternalcaroot.crt')
 
+    # When the certificate is set to auto, use bundled certs from requests
+    if certificate == 'auto':
+        certificate = requests.certs.where()
+
     will_message = conf.get(CONF_WILL_MESSAGE)
     birth_message = conf.get(CONF_BIRTH_MESSAGE)
+
+    # Be able to override versions other than TLSv1.0 under Python3.6
+    conf_tls_version = conf.get(CONF_TLS_VERSION)
+    if conf_tls_version == '1.2':
+        tls_version = ssl.PROTOCOL_TLSv1_2
+    elif conf_tls_version == '1.1':
+        tls_version = ssl.PROTOCOL_TLSv1_1
+    elif conf_tls_version == '1.0':
+        tls_version = ssl.PROTOCOL_TLSv1
+    else:
+        import sys
+        # Python3.6 supports automatic negotiation of highest TLS version
+        if sys.hexversion >= 0x03060000:
+            tls_version = ssl.PROTOCOL_TLS  # pylint: disable=no-member
+        else:
+            tls_version = ssl.PROTOCOL_TLSv1
 
     try:
         hass.data[DATA_MQTT] = MQTT(
             hass, broker, port, client_id, keepalive, username, password,
             certificate, client_key, client_cert, tls_insecure, protocol,
-            will_message, birth_message)
+            will_message, birth_message, tls_version)
     except socket.error:
         _LOGGER.exception("Can't connect to the broker. "
                           "Please check your settings and the broker itself")
@@ -326,18 +353,11 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def async_stop_mqtt(event):
         """Stop MQTT component."""
-        yield from hass.data[DATA_MQTT].async_stop()
+        yield from hass.data[DATA_MQTT].async_disconnect()
 
-    @asyncio.coroutine
-    def async_start_mqtt(event):
-        """Launch MQTT component when Home Assistant starts up."""
-        yield from hass.data[DATA_MQTT].async_start()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, async_start_mqtt)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
 
     success = yield from hass.data[DATA_MQTT].async_connect()
-
     if not success:
         return False
 
@@ -382,7 +402,8 @@ class MQTT(object):
 
     def __init__(self, hass, broker, port, client_id, keepalive, username,
                  password, certificate, client_key, client_cert,
-                 tls_insecure, protocol, will_message, birth_message):
+                 tls_insecure, protocol, will_message, birth_message,
+                 tls_version):
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
@@ -411,7 +432,8 @@ class MQTT(object):
 
         if certificate is not None:
             self._mqttc.tls_set(
-                certificate, certfile=client_cert, keyfile=client_key)
+                certificate, certfile=client_cert,
+                keyfile=client_key, tls_version=tls_version)
 
         if tls_insecure is not None:
             self._mqttc.tls_insecure_set(tls_insecure)
@@ -437,13 +459,12 @@ class MQTT(object):
         with (yield from self._paho_lock):
             yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.publish, topic, payload, qos, retain)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
 
     @asyncio.coroutine
     def async_connect(self):
-        """Connect to the host. Does not process messages yet.
+        """Connect to the host. Does process messages yet.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method is a coroutine.
         """
         result = yield from self.hass.loop.run_in_executor(
             None, self._mqttc.connect, self.broker, self.port, self.keepalive)
@@ -451,17 +472,12 @@ class MQTT(object):
         if result != 0:
             import paho.mqtt.client as mqtt
             _LOGGER.error('Failed to connect: %s', mqtt.error_string(result))
+        else:
+            self._mqttc.loop_start()
 
         return not result
 
-    def async_start(self):
-        """Run the MQTT client.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(None, self._mqttc.loop_start)
-
-    def async_stop(self):
+    def async_disconnect(self):
         """Stop the MQTT client.
 
         This method must be run in the event loop and returns a coroutine.
@@ -482,17 +498,16 @@ class MQTT(object):
         if not isinstance(topic, str):
             raise HomeAssistantError("topic need to be a string!")
 
-        if topic in self.topics:
-            return
-
         with (yield from self._paho_lock):
+            if topic in self.topics:
+                return
+
             result, mid = yield from self.hass.loop.run_in_executor(
                 None, self._mqttc.subscribe, topic, qos)
-            yield from asyncio.sleep(0, loop=self.hass.loop)
 
-        _raise_on_error(result)
-        self.progress[mid] = topic
-        self.topics[topic] = None
+            _raise_on_error(result)
+            self.progress[mid] = topic
+            self.topics[topic] = None
 
     @asyncio.coroutine
     def async_unsubscribe(self, topic):
