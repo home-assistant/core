@@ -32,7 +32,7 @@ DEPENDENCIES = ['mqtt']
 PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_EXPIRE_AFTER, default=0): cv.positive_int,
+    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
 })
 
@@ -83,7 +83,7 @@ class MqttSensor(Entity):
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             # auto-expire enabled?
-            if self._expire_after > 0:
+            if self._expire_after is not None and self._expire_after > 0:
                 # Reset old trigger
                 if self._expiration_trigger:
                     self._expiration_trigger()
