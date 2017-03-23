@@ -234,7 +234,7 @@ https://github.com/TheRealLink/pylgtv/archive/v0.1.4.zip#pylgtv==0.1.4
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
-https://github.com/Xorso/pyalarmdotcom/archive/0.1.1.zip#pyalarmdotcom==0.1.1
+pyalarmdotcom==0.2.9
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.6.zip#braviarc==0.3.6
