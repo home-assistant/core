@@ -68,28 +68,19 @@ DEVICE_COMPONENT_MAPPING = {
 
 def get_device_component_mapping(value):
     """Get mapping of value to another component."""
-    if (value.node.manufacturer_id.strip() and
-            value.node.product_type.strip()):
-        manufacturer_id = int(value.node.manufacturer_id, 16)
-        product_type = int(value.node.product_type, 16)
-        return DEVICE_COMPONENT_MAPPING.get(
-            (manufacturer_id, product_type, value.command_class))
-
-    return None
+    manufacturer_id = int(value.node.manufacturer_id, 16)
+    product_type = int(value.node.product_type, 16)
+    return DEVICE_COMPONENT_MAPPING.get(
+        (manufacturer_id, product_type, value.command_class))
 
 
 def get_device_mapping(value):
     """Get mapping of value to a workaround."""
-    if (value.node.manufacturer_id.strip() and
-            value.node.product_id.strip() and
-            value.node.product_type.strip()):
-        manufacturer_id = int(value.node.manufacturer_id, 16)
-        product_type = int(value.node.product_type, 16)
-        product_id = int(value.node.product_id, 16)
-        result = DEVICE_MAPPINGS_MTII.get(
-            (manufacturer_id, product_type, product_id, value.index))
-        if result:
-            return result
-        return DEVICE_MAPPINGS_MT.get((manufacturer_id, product_type))
-
-    return None
+    manufacturer_id = int(value.node.manufacturer_id, 16)
+    product_type = int(value.node.product_type, 16)
+    product_id = int(value.node.product_id, 16)
+    result = DEVICE_MAPPINGS_MTII.get(
+        (manufacturer_id, product_type, product_id, value.index))
+    if result:
+        return result
+    return DEVICE_MAPPINGS_MT.get((manufacturer_id, product_type))
