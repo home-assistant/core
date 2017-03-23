@@ -69,3 +69,9 @@ def check_value_schema(value, schema):
                       value.instance, schema[const.DISC_INSTANCE])
         return False
     return True
+
+
+def node_name(node):
+    """Return the name of the node."""
+    return node.name or '{} {}'.format(
+        node.manufacturer_name, node.product_name)
