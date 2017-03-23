@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.metoffice/
 """
 
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -24,7 +25,7 @@ REQUIREMENTS = ['datapoint==0.4.3']
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 CONF_MO_API_KEY = 'api_key'
 
-SCAN_INTERVAL = 35
+SCAN_INTERVAL = timedelta(minutes=35)
 LAST_UPDATE = 0
 
 # Sensor types are defined like: Name, units
