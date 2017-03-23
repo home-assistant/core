@@ -2,6 +2,7 @@
 import unittest
 
 from datetime import timedelta, datetime
+from unittest.mock import patch
 
 import homeassistant.core as ha
 from homeassistant.setup import setup_component
@@ -11,7 +12,6 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import mock_mqtt_component, fire_mqtt_message
 from tests.common import get_test_home_assistant, mock_component
-from tests.common import fire_time_changed
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -46,7 +46,8 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual('fav unit',
                          state.attributes.get('unit_of_measurement'))
 
-    def test_setting_sensor_value_expires(self):
+    @patch('homeassistant.core.dt_util.utcnow')
+    def test_setting_sensor_value_expires(self, mock_utcnow):
         """Test the expiration of the value."""
         mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, sensor.DOMAIN, {
@@ -60,53 +61,53 @@ class TestSensorMQTT(unittest.TestCase):
             }
         })
 
-        now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
-        fire_time_changed(self.hass, now)
-
         state = self.hass.states.get('sensor.test')
         self.assertEqual('unknown', state.state)
 
+        now = datetime(2017, 1, 1, 1, tzinfo=dt_util.UTC)
+        mock_utcnow.return_value = now
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
 
+        # Value was set correctly.
         state = self.hass.states.get('sensor.test')
         self.assertEqual('100', state.state)
 
-        # +3s
+        # Time jump +3s
         now = now + timedelta(seconds=3)
-        fire_time_changed(self.hass, now)
+        self._send_time_changed(now)
         self.hass.block_till_done()
 
-        # Not yet expired
+        # Value is not yet expired
         state = self.hass.states.get('sensor.test')
         self.assertEqual('100', state.state)
 
         # Next message resets timer
-        fire_mqtt_message(self.hass, 'test-topic', '100')
+        mock_utcnow.return_value = now
+        fire_mqtt_message(self.hass, 'test-topic', '101')
         self.hass.block_till_done()
 
+        # Value was updated correctly.
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('100', state.state)
+        self.assertEqual('101', state.state)
 
-        # +3s
+        # Time jump +3s
         now = now + timedelta(seconds=3)
-        fire_time_changed(self.hass, now)
+        self._send_time_changed(now)
         self.hass.block_till_done()
 
-        # Not yet expired
+        # Value is not yet expired
         state = self.hass.states.get('sensor.test')
-        self.assertEqual('100', state.state)
+        self.assertEqual('101', state.state)
 
-        # +3s
-        now = now + timedelta(seconds=3)
-        fire_time_changed(self.hass, now)
+        # Time jump +2s
+        now = now + timedelta(seconds=2)
+        self._send_time_changed(now)
         self.hass.block_till_done()
 
-        # Expired
+        # Value is expired now
         state = self.hass.states.get('sensor.test')
-        # FIXME: I have no idea why this does not work.
-        # Got stuck here, help please..
-        # self.assertEqual('unknown', state.state)
+        self.assertEqual('unknown', state.state)
 
     def test_setting_sensor_value_via_mqtt_json_message(self):
         """Test the setting of the value via MQTT with JSON playload."""
@@ -183,3 +184,7 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', '100')
         self.hass.block_till_done()
         self.assertEqual(2, len(events))
+
+    def _send_time_changed(self, now):
+        """Send a time changed event."""
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
