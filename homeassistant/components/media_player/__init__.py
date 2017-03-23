@@ -58,6 +58,8 @@ SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 
+SERVICE_VOLUME_TRANSITION = 'volume_transition'
+
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
 ATTR_MEDIA_VOLUME_MUTED = 'is_volume_muted'
 ATTR_MEDIA_SEEK_POSITION = 'seek_position'
@@ -82,6 +84,8 @@ ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
 
+ATTR_MEDIA_TRANSITION = 'transition'
+
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
 MEDIA_TYPE_VIDEO = 'movie'
@@ -104,6 +108,14 @@ SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
+
+
+# Transition interval for volume transitions will be computed such that after
+# each interval the volume will be increased by 1 percentile.
+# I.e., interval = 0.01 * duration/dVolume
+# MIN_TRANSITION_INTERVAL specifies a lower bound (in seconds) in order to
+# prevent excessive calling of set_volume_level.
+MIN_TRANSITION_INTERVAL = 1.0
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -131,6 +143,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
+MEDIA_PLAYER_VOLUME_TRANSITION_SCHEMA = MEDIA_PLAYER_SET_VOLUME_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_TRANSITION): vol.Coerce(int)
 })
 
 SERVICE_TO_METHOD = {
@@ -161,6 +177,9 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+    SERVICE_VOLUME_TRANSITION: {
+        'method': 'async_volume_transition',
+        'schema': MEDIA_PLAYER_VOLUME_TRANSITION_SCHEMA}
 }
 
 ATTR_TO_PROPERTY = [
@@ -247,6 +266,16 @@ def set_volume_level(hass, volume, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_VOLUME_SET, data)
+
+
+def volume_transition(hass, volume, transition, entity_id=None):
+    """Send the media player the command to transition the volume."""
+    data = {ATTR_MEDIA_VOLUME_LEVEL: volume, ATTR_MEDIA_TRANSITION: transition}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_VOLUME_TRANSITION, data)
 
 
 def media_play_pause(hass, entity_id=None):
@@ -358,6 +387,10 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
+        elif service.service == SERVICE_VOLUME_TRANSITION:
+            params['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
+            params['transition'] = service.data.get(ATTR_MEDIA_TRANSITION)
+
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
@@ -592,6 +625,52 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.loop.run_in_executor(
             None, self.set_volume_level, volume)
+
+    @asyncio.coroutine
+    def _async_transition_helper(self, current_volume,
+                                 transition_interval, step, target_volume):
+        """Helper function for volume transitions.
+
+        This method is a coroutine.
+        """
+        while True:
+            new_volume = current_volume + step
+            if step >= 0:
+                new_volume = min(target_volume, new_volume)
+            else:
+                new_volume = max(target_volume, new_volume)
+
+            yield from self.async_set_volume_level(new_volume)
+            current_volume = new_volume
+
+            _LOGGER.debug("Transition volume set to %.1f", new_volume*100)
+
+            if new_volume == target_volume:
+                return
+
+            yield from asyncio.sleep(transition_interval)
+
+    def async_volume_transition(self, volume, transition):
+        """Transition to volume, range 0..1, transition in seconds.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        _LOGGER.debug("Transition started")
+
+        current_volume = self.volume_level
+        transition_interval = max(0.01 *
+                                  transition/abs(volume - current_volume),
+                                  MIN_TRANSITION_INTERVAL)
+
+        step = (volume - current_volume) / transition * transition_interval
+        _LOGGER.debug("Changing volume from %d%% to %d%%"
+                      "in steps of %.1f%% every %.1fs.",
+                      current_volume*100, volume*100, step*100,
+                      transition_interval)
+
+        return self.hass.async_add_job(
+            self._async_transition_helper, current_volume, transition_interval,
+            step, volume)
 
     def media_play(self):
         """Send play commmand."""
