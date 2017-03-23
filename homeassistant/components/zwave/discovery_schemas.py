@@ -1,18 +1,7 @@
 """Zwave discovery schemas."""
 from . import const
 
-DEFAULT_NODE_VALUES_SCHEMA = {
-    'wakeup': {
-        const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_WAKE_UP],
-        const.DISC_GENRE: const.GENRE_USER,
-        const.DISC_OPTIONAL: True,
-        },
-    'battery': {
-        const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_BATTERY],
-        const.DISC_OPTIONAL: True,
-        },
-}
-DEFAULT_INSTANCE_VALUES_SCHEMA = {
+DEFAULT_VALUES_SCHEMA = {
     'power': {
         const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                                    const.COMMAND_CLASS_METER],
@@ -32,8 +21,7 @@ DISCOVERY_SCHEMAS = [
          const.GENERIC_TYPE_SWITCH_MULTILEVEL,
          const.GENERIC_TYPE_SENSOR_NOTIFICATION,
          const.GENERIC_TYPE_THERMOSTAT],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SENSOR_BINARY],
              const.DISC_TYPE: const.TYPE_BOOL,
@@ -41,8 +29,7 @@ DISCOVERY_SCHEMAS = [
          }})},
     {const.DISC_COMPONENT: 'climate',
      const.DISC_GENERIC_DEVICE_CLASS: [const.GENERIC_TYPE_THERMOSTAT],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
                  const.COMMAND_CLASS_THERMOSTAT_SETPOINT],
@@ -87,8 +74,7 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
          const.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
          const.SPECIFIC_TYPE_SECURE_DOOR],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
              const.DISC_GENRE: const.GENRE_USER,
@@ -114,8 +100,7 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
          const.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
          const.SPECIFIC_TYPE_SECURE_DOOR],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
                  const.COMMAND_CLASS_BARRIER_OPERATOR,
@@ -130,8 +115,7 @@ DISCOVERY_SCHEMAS = [
          const.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
          const.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
          const.SPECIFIC_TYPE_NOT_USED],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
              const.DISC_GENRE: const.GENRE_USER,
@@ -156,8 +140,7 @@ DISCOVERY_SCHEMAS = [
      const.DISC_SPECIFIC_DEVICE_CLASS: [
          const.SPECIFIC_TYPE_ADVANCED_DOOR_LOCK,
          const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_DOOR_LOCK],
              const.DISC_TYPE: const.TYPE_BOOL,
@@ -185,15 +168,13 @@ DISCOVERY_SCHEMAS = [
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'sensor',
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
                  const.COMMAND_CLASS_SENSOR_MULTILEVEL,
                  const.COMMAND_CLASS_METER,
                  const.COMMAND_CLASS_ALARM,
-                 const.COMMAND_CLASS_SENSOR_ALARM,
-                 const.COMMAND_CLASS_BATTERY],
+                 const.COMMAND_CLASS_SENSOR_ALARM],
              const.DISC_GENRE: const.GENRE_USER,
          }})},
     {const.DISC_COMPONENT: 'switch',
@@ -210,8 +191,7 @@ DISCOVERY_SCHEMAS = [
          const.GENERIC_TYPE_REPEATER_SLAVE,
          const.GENERIC_TYPE_THERMOSTAT,
          const.GENERIC_TYPE_WALL_CONTROLLER],
-     const.DISC_NODE_VALUES: dict(DEFAULT_NODE_VALUES_SCHEMA),
-     const.DISC_INSTANCE_VALUES: dict(DEFAULT_INSTANCE_VALUES_SCHEMA, **{
+     const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_BINARY],
              const.DISC_TYPE: const.TYPE_BOOL,
