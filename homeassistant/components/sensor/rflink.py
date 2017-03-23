@@ -88,8 +88,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
 
-        # Make sure the event is processed by the new entity
-        device.handle_event(event)
+        # Schedule task to process event after entity is created
+        hass.async_add_job(device.handle_event, event)
 
     hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
