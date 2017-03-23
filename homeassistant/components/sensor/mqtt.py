@@ -99,8 +99,7 @@ class MqttSensor(Entity):
                     expiration_at)
 
             if self._template is not None:
-                template = self._template
-                payload = template.async_render_with_possible_json_value(
+                payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
             self._state = payload
             self.hass.async_add_job(self.async_update_ha_state())
