@@ -664,7 +664,7 @@ class MediaPlayerDevice(Entity):
 
         step = (volume - current_volume) / transition * transition_interval
         _LOGGER.debug("Changing volume from %d%% to %d%%"
-                      "in steps of %.1f%% every %.1fs.",
+                      " in steps of %.1f%% every %.1fs.",
                       current_volume*100, volume*100, step*100,
                       transition_interval)
 
