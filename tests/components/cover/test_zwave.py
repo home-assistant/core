@@ -84,6 +84,7 @@ def test_roller_value_changed(mock_openzwave):
     assert device.current_cover_position == 100
     assert not device.is_closed
 
+
 def test_roller_value_changed_reversed(mock_openzwave):
     """Test position changed."""
     node = MockNode()

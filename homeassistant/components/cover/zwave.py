@@ -98,7 +98,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
                     return 0
                 else:
                     return 100 - self._current_position
-            else: 
+            else:
                 if self._current_position <= 5:
                     return 0
                 elif self._current_position >= 95:
