@@ -166,6 +166,7 @@ class Recorder(threading.Thread):
                 migration.migrate_schema(self)
                 self._setup_run()
                 connected = True
+                _LOGGER.debug("Connected to recorder database")
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)
