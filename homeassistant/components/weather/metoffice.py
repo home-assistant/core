@@ -9,8 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, CONF_API_KEY,
-    CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    CONF_NAME, TEMP_CELSIUS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.metoffice import \
