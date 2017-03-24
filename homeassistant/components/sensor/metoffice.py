@@ -54,13 +54,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import datapoint as dp
     datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
-    if None in (hass.config.latitude, hass.config.longitude):
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+
+    if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
         return False
 
     try:
-        site = datapoint.get_nearest_site(longitude=hass.config.longitude,
-                                          latitude=hass.config.latitude)
+        site = datapoint.get_nearest_site(latitude=latitude,
+                                          longitude=longitude)
     except dp.exceptions.APIException as err:
         _LOGGER.error("Received error from Met Office Datapoint: %s", err)
         return False
