@@ -123,6 +123,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Return the current position of Zwave garage door."""
         return not self._state
 
+# pylint:disable=simplifiable-if-statement
     def close_cover(self):
         """Close the garage door."""
         self.values.primary.data = False
