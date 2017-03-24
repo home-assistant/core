@@ -34,7 +34,7 @@ SENSOR_TYPES = {
     'feels_like_temperature': ['Feels Like Temperature', TEMP_CELSIUS],
     'wind_speed': ['Wind Speed', 'm/s'],
     'wind_direction': ['Wind Direction', None],
-    'wind_gust': ['Wind Gust', 'mps'],
+    'wind_gust': ['Wind Gust', 'm/s'],
     'visibility': ['Visibility', 'km'],
     'uv': ['UV', None],
     'precipitation': ['Probability of Precipitation', '%'],
