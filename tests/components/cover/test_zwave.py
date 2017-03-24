@@ -195,6 +195,23 @@ def test_garage_value_changed(mock_openzwave):
     assert not device.is_closed
 
 
+def test_garage_reversed_value_changed(mock_openzwave):
+    """Test position changed."""
+    node = MockNode()
+    value = MockValue(data=False, node=node,
+                      command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
+    values = MockEntityValues(primary=value, node=node)
+    device = zwave.get_device(node=node, values=values, node_config={
+        homeassistant.components.zwave.CONF_INVERT_OPENCLOSE: True})
+
+    assert not device.is_closed
+
+    value.data = True
+    value_changed(value)
+
+    assert device.is_closed
+
+
 def test_garage_commands(mock_openzwave):
     """Test position changed."""
     node = MockNode()
@@ -204,7 +221,33 @@ def test_garage_commands(mock_openzwave):
     device = zwave.get_device(node=node, values=values, node_config={})
 
     assert value.data is False
+    assert device.is_closed is True
     device.open_cover()
+    value_changed(value)
     assert value.data is True
+    assert device.is_closed is False
     device.close_cover()
+    value_changed(value)
     assert value.data is False
+    assert device.is_closed is True
+
+
+def test_garage_commands_reversed(mock_openzwave):
+    """Test position changed."""
+    node = MockNode()
+    value = MockValue(data=False, node=node,
+                      command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
+    values = MockEntityValues(primary=value, node=node)
+    device = zwave.get_device(node=node, values=values, node_config={
+        homeassistant.components.zwave.CONF_INVERT_OPENCLOSE: True})
+
+    assert value.data is False
+    assert device.is_closed is False
+    device.close_cover()
+    value_changed(value)
+    assert value.data is True
+    assert device.is_closed is True
+    device.open_cover()
+    value_changed(value)
+    assert value.data is False
+    assert device.is_closed is False

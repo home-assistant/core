@@ -34,7 +34,7 @@ def get_device(values, node_config, **kwargs):
     elif (values.primary.command_class in [
             zwave.const.COMMAND_CLASS_SWITCH_BINARY,
             zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
-        return ZwaveGarageDoor(values)
+        return ZwaveGarageDoor(values, invert)
     return None
 
 
@@ -129,9 +129,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave garage door device."""
 
-    def __init__(self, values):
+    def __init__(self, values, invert):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self._invert = invert
         self.update_properties()
 
     def update_properties(self):
@@ -141,15 +142,25 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._state
+        if self._invert:
+            _LOGGER.debug('Inverted %s', self._state)
+            return self._state
+        else:
+            return not self._state
 
     def close_cover(self):
         """Close the garage door."""
-        self.values.primary.data = False
+        if self._invert:
+            self.values.primary.data = True
+        else:
+            self.values.primary.data = False
 
     def open_cover(self):
         """Open the garage door."""
-        self.values.primary.data = True
+        if self._invert:
+            self.values.primary.data = False
+        else:
+            self.values.primary.data = True
 
     @property
     def device_class(self):
