@@ -37,6 +37,7 @@ def test_get_device_detects_multilevelsensor(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZWaveMultilevelSensor)
+    assert device.force_update
 
 
 def test_get_device_detects_multilevel_meter(mock_openzwave):
@@ -107,3 +108,18 @@ def test_multilevelsensor_value_changed_integer(mock_openzwave):
     value.data = 6
     value_changed(value)
     assert device.state == 6
+
+
+def test_alarm_sensor_value_changed(mock_openzwave):
+    """Test value changed for Z-Wave sensor."""
+    node = MockNode(command_classes=[const.COMMAND_CLASS_ALARM,
+                                     const.COMMAND_CLASS_SENSOR_ALARM])
+    value = MockValue(data=12.34, node=node, units='%')
+    values = MockEntityValues(primary=value)
+
+    device = zwave.get_device(node=node, values=values, node_config={})
+    assert device.state == 12.34
+    assert device.unit_of_measurement == '%'
+    value.data = 45.67
+    value_changed(value)
+    assert device.state == 45.67
