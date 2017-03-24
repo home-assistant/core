@@ -568,6 +568,38 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 2
 
+    def test_automation_not_trigger_on_bootstrap(self):
+        """Test if automation is not trigger on bootstrap."""
+        self.hass.state = CoreState.not_running
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'entity_id': 'hello.world'
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 0
+
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.hass.block_till_done()
+        self.hass.states = CoreState.running
+
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 1
+        assert ['hello.world'] == self.calls[0].data.get(ATTR_ENTITY_ID)
+
 
 @asyncio.coroutine
 def test_automation_restore_state(hass):

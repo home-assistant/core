@@ -285,8 +285,8 @@ class AutomationEntity(ToggleEntity):
                 """Start automation on startup."""
                 yield from self.async_enable()
 
-                self.hass.bus.async_listen_once(
-                    EVENT_HOMEASSISTANT_START, async_enable_automation)
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, async_enable_automation)
 
         # HomeAssistant is running
         elif enable_automation:
