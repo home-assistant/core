@@ -11,7 +11,14 @@ import homeassistant.util.dt as dt_util
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_DISARM_AFTER_TRIGGER, STATE_UNKNOWN, CONF_PAYLOAD, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, STATE_ON, STATE_OFF)
+    CONF_NAME,
+    CONF_DISARM_AFTER_TRIGGER,
+    STATE_UNKNOWN,
+    CONF_PAYLOAD,
+    CONF_PAYLOAD_OFF,
+    CONF_PAYLOAD_ON,
+    STATE_ON,
+    STATE_OFF)
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
@@ -43,24 +50,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Pilight Binary Sensor."""
     disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
-    if  disarm == 'yes' :
-    	add_devices([PilightTriggerSensor(
-        	hass=hass,
-        	name=config.get(CONF_NAME),
-        	variable=config.get(CONF_VARIABLE),
-        	payload=config.get(CONF_PAYLOAD),
-        	on_value=config.get(CONF_PAYLOAD_ON),
-        	off_value=config.get(CONF_PAYLOAD_OFF),
-   	 )])
-    else: 
-    	add_devices([PilightBinarySensor(
-        	hass=hass,
-        	name=config.get(CONF_NAME),
-        	variable=config.get(CONF_VARIABLE),
-        	payload=config.get(CONF_PAYLOAD),
-        	on_value=config.get(CONF_PAYLOAD_ON),
-        	off_value=config.get(CONF_PAYLOAD_OFF),        
-    	)])
+    if disarm == 'yes':
+        add_devices([PilightTriggerSensor(
+            hass=hass,
+            name=config.get(CONF_NAME),
+            variable=config.get(CONF_VARIABLE),
+            payload=config.get(CONF_PAYLOAD),
+            on_value=config.get(CONF_PAYLOAD_ON),
+            off_value=config.get(CONF_PAYLOAD_OFF),
+        )])
+    else:
+        add_devices([PilightBinarySensor(
+            hass=hass,
+            name=config.get(CONF_NAME),
+            variable=config.get(CONF_VARIABLE),
+            payload=config.get(CONF_PAYLOAD),
+            on_value=config.get(CONF_PAYLOAD_ON),
+            off_value=config.get(CONF_PAYLOAD_OFF),
+        )])
 
 
 class PilightBinarySensor(BinarySensorDevice):
@@ -75,7 +82,7 @@ class PilightBinarySensor(BinarySensorDevice):
         self._payload = payload
         self._on_value = on_value
         self._off_value = off_value
-        
+
         hass.bus.listen(pilight.EVENT, self._handle_code)
 
     @property
@@ -111,11 +118,20 @@ class PilightBinarySensor(BinarySensorDevice):
                 _LOGGER.error(
                     'No variable %s in received code data %s',
                     str(self._variable), str(call.data))
-                    
+
+
 class PilightTriggerSensor(BinarySensorDevice):
     """Representation of a binary sensor that can be updated using Pilight."""
 
-    def __init__(self, hass, name, variable, payload, on_value, off_value, rst_dly_sec=30):
+    def __init__(
+            self,
+            hass,
+            name,
+            variable,
+            payload,
+            on_value,
+            off_value,
+            rst_dly_sec=30):
         """Initialize the sensor."""
         self._state = False
         self._hass = hass
@@ -127,7 +143,7 @@ class PilightTriggerSensor(BinarySensorDevice):
         self._reset_delay_sec = rst_dly_sec
         self._delay_after = None
         self._hass = hass
-        
+
         hass.bus.listen(pilight.EVENT, self._handle_code)
 
     @property
@@ -148,7 +164,7 @@ class PilightTriggerSensor(BinarySensorDevice):
     def _reset_state(self, call):
         self._state = False
         self.schedule_update_ha_state()
-        
+
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
@@ -171,4 +187,4 @@ class PilightTriggerSensor(BinarySensorDevice):
             except KeyError:
                 _LOGGER.error(
                     'No variable %s in received code data %s',
-                    str(self._variable), str(call.data))                    
+                    str(self._variable), str(call.data))
