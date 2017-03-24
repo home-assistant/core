@@ -2,18 +2,18 @@
 Support for UK Met Office weather service.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.metoffice/
+https://home-assistant.io/components/weather.metoffice/
 """
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.weather import WeatherEntity, PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_NAME, TEMP_CELSIUS, CONF_API_KEY
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.metoffice import \
-    MetOfficeCurrentData, CONF_MO_API_KEY, CONF_ATTRIBUTION
+    MetOfficeCurrentData, CONF_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,14 +21,14 @@ REQUIREMENTS = ['datapoint==0.4.3']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Required(CONF_MO_API_KEY): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Met Office weather platform."""
     import datapoint as dp
-    datapoint = dp.connection(api_key=config.get(CONF_MO_API_KEY))
+    datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
