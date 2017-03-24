@@ -86,7 +86,7 @@ def test_roller_value_changed(mock_openzwave):
 
 
 def test_roller_value_changed_reversed(mock_openzwave):
-    """Test position changed."""
+    """Test position changed reversed."""
     node = MockNode()
     value = MockValue(data=None, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -118,7 +118,7 @@ def test_roller_value_changed_reversed(mock_openzwave):
 
 @patch('homeassistant.components.zwave.NETWORK')
 def test_roller_commands(mock_network, mock_openzwave):
-    """Test position changed."""
+    """Test roller commands."""
     node = MockNode()
     value = MockValue(data=50, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -151,8 +151,8 @@ def test_roller_commands(mock_network, mock_openzwave):
 
 
 @patch('homeassistant.components.zwave.NETWORK')
-def test_roller_reverse_open_close(mock_network, mock_openzwave):
-    """Test position changed."""
+def test_roller_reverse_commands(mock_network, mock_openzwave):
+    """Test roller commands reversed."""
     node = MockNode()
     value = MockValue(data=50, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
@@ -196,7 +196,7 @@ def test_garage_value_changed(mock_openzwave):
 
 
 def test_garage_reversed_value_changed(mock_openzwave):
-    """Test position changed."""
+    """Test position changed reversed."""
     node = MockNode()
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
@@ -213,7 +213,7 @@ def test_garage_reversed_value_changed(mock_openzwave):
 
 
 def test_garage_commands(mock_openzwave):
-    """Test position changed."""
+    """Test garage commands."""
     node = MockNode()
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
@@ -233,7 +233,7 @@ def test_garage_commands(mock_openzwave):
 
 
 def test_garage_commands_reversed(mock_openzwave):
-    """Test position changed."""
+    """Test garage commands reversed."""
     node = MockNode()
     value = MockValue(data=False, node=node,
                       command_class=const.COMMAND_CLASS_BARRIER_OPERATOR)
