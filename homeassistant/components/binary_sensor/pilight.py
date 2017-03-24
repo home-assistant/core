@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME,
     CONF_DISARM_AFTER_TRIGGER,
-    STATE_UNKNOWN,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
