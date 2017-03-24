@@ -60,8 +60,7 @@ def _apply_update(engine, new_version):
         _create_index(engine, "events", "ix_events_time_fired")
     elif new_version == 2:
         # Create compound start/end index for recorder_runs
-        _create_index(engine, "recorder_runs",
-                      "ix_recorder_runs_start_end")
+        _create_index(engine, "recorder_runs", "ix_recorder_runs_start_end")
         # Create indexes for states
         _create_index(engine, "states", "ix_states_last_updated")
         _create_index(engine, "states", "ix_states_entity_id_created")
