@@ -4,10 +4,11 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-from homeassistant.core import State
+from homeassistant.core import State, CoreState
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
