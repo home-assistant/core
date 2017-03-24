@@ -45,7 +45,6 @@ class BlinkCameraMotionSensor(BinarySensorDevice):
 
     def update(self):
         """Update sensor state."""
-        self.data.update()
         self._state = self.data.blink.cameras[self._camera_name].armed
 
 
