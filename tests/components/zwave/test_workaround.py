@@ -5,7 +5,7 @@ from tests.mock.zwave import MockNode, MockValue
 
 def test_get_device_no_component_mapping():
     """Test that None is returned."""
-    node = MockNode()
+    node = MockNode(manufacturer_id=' ')
     value = MockValue(data=0, node=node)
     assert workaround.get_device_component_mapping(value) is None
 
@@ -20,7 +20,7 @@ def test_get_device_component_mapping():
 
 def test_get_device_no_mapping():
     """Test that no device mapping is returned."""
-    node = MockNode()
+    node = MockNode(manufacturer_id=' ')
     value = MockValue(data=0, node=node)
     assert workaround.get_device_mapping(value) is None
 
