@@ -148,6 +148,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         else:
             return not self._state
 
+# pylint:disable=simplifiable-if-statement
     def close_cover(self):
         """Close the garage door."""
         if self._invert:
