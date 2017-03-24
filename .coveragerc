@@ -436,7 +436,6 @@ omit =
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/__init__.py
     homeassistant/components/zwave/util.py
-    homeassistant/components/zwave/workaround.py
 
 
 [report]
