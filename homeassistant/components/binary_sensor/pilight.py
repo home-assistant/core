@@ -20,12 +20,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OFF)
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_time
-from homeassistant.components.binary_sensor import (
-    DOMAIN,
-    DEVICE_CLASSES,
-    BinarySensorDevice)
+from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.components.pilight as pilight
 import homeassistant.helpers.config_validation as cv
 
