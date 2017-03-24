@@ -112,8 +112,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             _LOGGER.debug("Setpoint is 0, setting default to "
                           "current_temperature=%s",
                           self._current_temperature)
-            self._target_temperature = (
-                round((float(self._current_temperature)), 1))
+            if self._current_temperature is not None:
+                self._target_temperature = (
+                    round((float(self._current_temperature)), 1))
         else:
             self._target_temperature = round(
                 (float(self.values.primary.data)), 1)
