@@ -24,6 +24,23 @@ REQUIREMENTS = ['datapoint==0.4.3']
 
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 
+CONDITION_CLASSES = {
+    'cloudy': ["7", "8"],
+    'fog': ["5", "6"],
+    'hail': ["19", "20", "21"],
+    'lightning': ["30"],
+    'lightning-rainy': ["28", "29"],
+    'partlycloudy': ["2", "3"],
+    'pouring': ["13", "14", "15"],
+    'rainy': ["9", "10", "11", "12"],
+    'snowy': ["22", "23", "24", "25", "26", "27"],
+    'snowy-rainy': ["16", "17", "18"],
+    'sunny': ["0", "1"],
+    'windy': [],
+    'windy-variant': [],
+    'exceptional': [],
+}
+
 SCAN_INTERVAL = timedelta(minutes=35)
 
 # Sensor types are defined like: Name, units
@@ -106,7 +123,8 @@ class MetOfficeCurrentSensor(Entity):
         if self._condition in self.data.data.__dict__.keys():
             variable = getattr(self.data.data, self._condition)
             if self._condition == "weather":
-                return variable.text
+                return [k for k, v in CONDITION_CLASSES.items() if
+                        self.data.data.weather.value in v][0]
             else:
                 return variable.value
         else:

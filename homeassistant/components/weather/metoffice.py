@@ -14,7 +14,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.metoffice import \
-    MetOfficeCurrentData, CONF_ATTRIBUTION
+    MetOfficeCurrentData, CONF_ATTRIBUTION, CONDITION_CLASSES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +81,8 @@ class MetOfficeWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self.data.data.weather.text
+        return [k for k, v in CONDITION_CLASSES.items() if
+                self.data.data.weather.value in v][0]
 
     # Now implement the WeatherEntity interface
 
