@@ -219,4 +219,4 @@ class WemoSwitch(SwitchDevice):
                 self.coffeemaker_mode = self.wemo.mode
         except AttributeError as err:
             _LOGGER.warning('Could not update status for %s (%s)',
-                self.name, err)
+                            self.name, err)
