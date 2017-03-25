@@ -20,7 +20,7 @@ from tests.common import assert_setup_component
 @pytest.fixture
 def mock_connection_factory(monkeypatch):
     """Mock the create functions for serial and TCP Asyncio connections."""
-    from dsmr_parser.protocol import DSMRProtocol
+    from dsmr_parser.clients.protocol import DSMRProtocol
     transport = asynctest.Mock(spec=asyncio.Transport)
     protocol = asynctest.Mock(spec=DSMRProtocol)
 
@@ -32,10 +32,10 @@ def mock_connection_factory(monkeypatch):
 
     # apply the mock to both connection factories
     monkeypatch.setattr(
-        'dsmr_parser.protocol.create_dsmr_reader',
+        'dsmr_parser.clients.protocol.create_dsmr_reader',
         connection_factory)
     monkeypatch.setattr(
-        'dsmr_parser.protocol.create_tcp_dsmr_reader',
+        'dsmr_parser.clients.protocol.create_tcp_dsmr_reader',
         connection_factory)
 
     return connection_factory, transport, protocol
@@ -161,7 +161,7 @@ def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
             TimeoutError])
 
     monkeypatch.setattr(
-        'dsmr_parser.protocol.create_dsmr_reader',
+        'dsmr_parser.clients.protocol.create_dsmr_reader',
         first_fail_connection_factory)
     yield from async_setup_component(hass, 'sensor', {'sensor': config})
 

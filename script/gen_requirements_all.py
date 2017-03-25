@@ -30,6 +30,10 @@ IGNORE_PACKAGES = (
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
 
+IGNORE_REQ = (
+    'colorama<=1',  # Windows only requirement in check_config
+)
+
 URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
            '#1-requirements')
 
@@ -89,6 +93,8 @@ def gather_modules():
             continue
 
         for req in module.REQUIREMENTS:
+            if req in IGNORE_REQ:
+                continue
             if req.partition('==')[1] == '' and req not in IGNORE_PIN:
                 errors.append(
                     "{}[Please pin requirement {}, see {}]".format(
@@ -129,7 +135,7 @@ def gather_constraints():
 
 def write_requirements_file(data):
     """Write the modules to the requirements_all.txt."""
-    with open('requirements_all.txt', 'w+') as req_file:
+    with open('requirements_all.txt', 'w+', newline="\n") as req_file:
         req_file.write(data)
 
 
