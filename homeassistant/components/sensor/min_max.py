@@ -34,8 +34,6 @@ ATTR_TO_PROPERTY = [
 CONF_ENTITY_IDS = 'entity_ids'
 CONF_ROUND_DIGITS = 'round_digits'
 
-DEFAULT_NAME = 'Min/Max/Avg Sensor'
-
 ICON = 'mdi:calculator'
 
 SENSOR_TYPES = {
@@ -47,7 +45,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]):
         vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
     vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
 })
@@ -76,9 +74,13 @@ class MinMaxSensor(Entity):
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
-        self._name = '{} {}'.format(
-            name, next(v for k, v in SENSOR_TYPES.items()
-                       if self._sensor_type == v))
+
+        if name:
+            self._name = name
+        else:
+            self._name = '{} sensor'.format(
+                next(v for k, v in SENSOR_TYPES.items()
+                     if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
         self.min_value = self.max_value = self.mean = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
@@ -154,31 +156,33 @@ class MinMaxSensor(Entity):
         self.max_value = self.calc_max(sensor_values)
         self.mean = self.calc_mean(sensor_values)
 
+    # pylint: disable=R0201
     def calc_min(self, sensor_values):
         """Calculate min value, honoring unkown states."""
         val = STATE_UNKNOWN
-        for v in sensor_values:
-            if v != STATE_UNKNOWN:
-                if val == STATE_UNKNOWN or val > v:
-                    val = v
+        for sval in sensor_values:
+            if sval != STATE_UNKNOWN:
+                if val == STATE_UNKNOWN or val > sval:
+                    val = sval
         return val
 
+    # pylint: disable=R0201
     def calc_max(self, sensor_values):
         """Calculate max value, honoring unkown states."""
         val = STATE_UNKNOWN
-        for v in sensor_values:
-            if v != STATE_UNKNOWN:
-                if val == STATE_UNKNOWN or val < v:
-                    val = v
+        for sval in sensor_values:
+            if sval != STATE_UNKNOWN:
+                if val == STATE_UNKNOWN or val < sval:
+                    val = sval
         return val
 
     def calc_mean(self, sensor_values):
         """Calculate mean value, honoring unkown states."""
         val = 0
         count = 0
-        for v in sensor_values:
-            if v != STATE_UNKNOWN:
-                val += v
+        for sval in sensor_values:
+            if sval != STATE_UNKNOWN:
+                val += sval
                 count += 1
         if count == 0:
             return STATE_UNKNOWN

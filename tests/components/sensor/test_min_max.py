@@ -29,7 +29,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_min',
                 'type': 'min',
                 'entity_ids': [
                     'sensor.test_1',
@@ -58,7 +58,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_max',
                 'type': 'max',
                 'entity_ids': [
                     'sensor.test_1',
@@ -87,7 +87,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_mean',
                 'type': 'mean',
                 'entity_ids': [
                     'sensor.test_1',
@@ -116,7 +116,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_mean',
                 'type': 'mean',
                 'round_digits': 1,
                 'entity_ids': [
@@ -146,7 +146,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_mean',
                 'type': 'mean',
                 'round_digits': 4,
                 'entity_ids': [
@@ -176,7 +176,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_max',
                 'type': 'max',
                 'entity_ids': [
                     'sensor.test_1',
