@@ -4,8 +4,8 @@ Support for Pilight binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.pilight/
 """
-import logging
 import datetime
+import logging
 
 import homeassistant.components.pilight as pilight
 import homeassistant.helpers.config_validation as cv
@@ -13,11 +13,11 @@ import homeassistant.util.dt as dt_util
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA,
-    BinarySensorDevice)
+    BinarySensorDevice,
+    PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_NAME,
     CONF_DISARM_AFTER_TRIGGER,
+    CONF_NAME,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
