@@ -164,7 +164,6 @@ DISCOVERY_SCHEMAS = [
          'v2btze_advanced': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_CONFIGURATION],
              const.DISC_INDEX: [12],
-             const.DISC_LABEL: 'Access Control',
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'sensor',
