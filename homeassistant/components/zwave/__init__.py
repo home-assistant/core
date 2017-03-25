@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zwave/
 """
 import asyncio
+import copy
 import logging
 import os.path
 import time
@@ -12,13 +13,11 @@ from pprint import pprint
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_LOCATION, ATTR_ENTITY_ID, ATTR_WAKEUP,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers.entity import Entity
+    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -28,8 +27,11 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
 from . import const
+from .const import DOMAIN
+from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
-from .util import value_handler
+from .discovery_schemas import DISCOVERY_SCHEMAS
+from .util import check_node_schema, check_value_schema, node_name
 
 REQUIREMENTS = ['pydispatcher==2.0.5']
 
@@ -58,93 +60,10 @@ DEFAULT_DEBUG = False
 DEFAULT_CONF_IGNORED = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
-DOMAIN = 'zwave'
 
 DATA_ZWAVE_DICT = 'zwave_devices'
 
 NETWORK = None
-
-
-# List of tuple (DOMAIN, discovered service, supported command classes,
-# value type, genre type, specific device class).
-DISCOVERY_COMPONENTS = [
-    ('sensor',
-     [const.GENERIC_TYPE_WHATEVER],
-     [const.SPECIFIC_TYPE_WHATEVER],
-     [const.COMMAND_CLASS_SENSOR_MULTILEVEL,
-      const.COMMAND_CLASS_METER,
-      const.COMMAND_CLASS_ALARM,
-      const.COMMAND_CLASS_SENSOR_ALARM,
-      const.COMMAND_CLASS_BATTERY],
-     const.TYPE_WHATEVER,
-     const.GENRE_USER),
-    ('light',
-     [const.GENERIC_TYPE_SWITCH_MULTILEVEL,
-      const.GENERIC_TYPE_SWITCH_REMOTE],
-     [const.SPECIFIC_TYPE_POWER_SWITCH_MULTILEVEL,
-      const.SPECIFIC_TYPE_SCENE_SWITCH_MULTILEVEL,
-      const.SPECIFIC_TYPE_NOT_USED],
-     [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
-     const.TYPE_BYTE,
-     const.GENRE_USER),
-    ('switch',
-     [const.GENERIC_TYPE_SENSOR_ALARM,
-      const.GENERIC_TYPE_SENSOR_BINARY,
-      const.GENERIC_TYPE_SWITCH_BINARY,
-      const.GENERIC_TYPE_ENTRY_CONTROL,
-      const.GENERIC_TYPE_SENSOR_MULTILEVEL,
-      const.GENERIC_TYPE_SWITCH_MULTILEVEL,
-      const.GENERIC_TYPE_SENSOR_NOTIFICATION,
-      const.GENERIC_TYPE_GENERIC_CONTROLLER,
-      const.GENERIC_TYPE_SWITCH_REMOTE,
-      const.GENERIC_TYPE_REPEATER_SLAVE,
-      const.GENERIC_TYPE_THERMOSTAT,
-      const.GENERIC_TYPE_WALL_CONTROLLER],
-     [const.SPECIFIC_TYPE_WHATEVER],
-     [const.COMMAND_CLASS_SWITCH_BINARY],
-     const.TYPE_BOOL,
-     const.GENRE_USER),
-    ('binary_sensor',
-     [const.GENERIC_TYPE_SENSOR_ALARM,
-      const.GENERIC_TYPE_SENSOR_BINARY,
-      const.GENERIC_TYPE_SWITCH_BINARY,
-      const.GENERIC_TYPE_METER,
-      const.GENERIC_TYPE_SENSOR_MULTILEVEL,
-      const.GENERIC_TYPE_SWITCH_MULTILEVEL,
-      const.GENERIC_TYPE_SENSOR_NOTIFICATION,
-      const.GENERIC_TYPE_THERMOSTAT],
-     [const.SPECIFIC_TYPE_WHATEVER],
-     [const.COMMAND_CLASS_SENSOR_BINARY],
-     const.TYPE_BOOL,
-     const.GENRE_USER),
-    ('lock',
-     [const.GENERIC_TYPE_ENTRY_CONTROL],
-     [const.SPECIFIC_TYPE_ADVANCED_DOOR_LOCK,
-      const.SPECIFIC_TYPE_SECURE_KEYPAD_DOOR_LOCK],
-     [const.COMMAND_CLASS_DOOR_LOCK],
-     const.TYPE_BOOL,
-     const.GENRE_USER),
-    ('cover',
-     [const.GENERIC_TYPE_SWITCH_MULTILEVEL,
-      const.GENERIC_TYPE_ENTRY_CONTROL],
-     [const.SPECIFIC_TYPE_CLASS_A_MOTOR_CONTROL,
-      const.SPECIFIC_TYPE_CLASS_B_MOTOR_CONTROL,
-      const.SPECIFIC_TYPE_CLASS_C_MOTOR_CONTROL,
-      const.SPECIFIC_TYPE_MOTOR_MULTIPOSITION,
-      const.SPECIFIC_TYPE_SECURE_BARRIER_ADDON,
-      const.SPECIFIC_TYPE_SECURE_DOOR],
-     [const.COMMAND_CLASS_SWITCH_BINARY,
-      const.COMMAND_CLASS_BARRIER_OPERATOR,
-      const.COMMAND_CLASS_SWITCH_MULTILEVEL],
-     const.TYPE_WHATEVER,
-     const.GENRE_USER),
-    ('climate',
-     [const.GENERIC_TYPE_THERMOSTAT],
-     [const.SPECIFIC_TYPE_WHATEVER],
-     [const.COMMAND_CLASS_THERMOSTAT_SETPOINT],
-     const.TYPE_WHATEVER,
-     const.GENRE_WHATEVER),
-]
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
@@ -220,20 +139,14 @@ def _obj_to_dict(obj):
             if key[0] != '_' and not hasattr(getattr(obj, key), '__call__')}
 
 
-def _node_name(node):
-    """Return the name of the node."""
-    return node.name or '{} {}'.format(
-        node.manufacturer_name, node.product_name)
-
-
 def _value_name(value):
     """Return the name of the value."""
-    return '{} {}'.format(_node_name(value.node), value.label)
+    return '{} {}'.format(node_name(value.node), value.label)
 
 
 def _node_object_id(node):
     """Return the object_id of the node."""
-    node_object_id = '{}_{}'.format(slugify(_node_name(node)), node.node_id)
+    node_object_id = '{}_{}'.format(slugify(node_name(node)), node.node_id)
     return node_object_id
 
 
@@ -358,92 +271,38 @@ def setup(hass, config):
 
         dispatcher.connect(log_all, weak=False)
 
+    discovered_values = []
+
     def value_added(node, value):
         """Called when a value is added to a node on the network."""
-        for (component,
-             generic_device_class,
-             specific_device_class,
-             command_class,
-             value_type,
-             value_genre) in DISCOVERY_COMPONENTS:
+        # Check if this value should be tracked by an existing entity
+        for values in discovered_values:
+            values.check_value(value)
 
-            _LOGGER.debug("Component=%s Node_id=%s query start",
-                          component, node.node_id)
-            if node.generic not in generic_device_class and \
-               None not in generic_device_class:
-                _LOGGER.debug("node.generic %s not None and in "
-                              "generic_device_class %s",
-                              node.generic, generic_device_class)
+        for schema in DISCOVERY_SCHEMAS:
+            if not check_node_schema(node, schema):
                 continue
-            if node.specific not in specific_device_class and \
-               None not in specific_device_class:
-                _LOGGER.debug("node.specific %s is not None and in "
-                              "specific_device_class %s", node.specific,
-                              specific_device_class)
-                continue
-            if value.command_class not in command_class and \
-               None not in command_class:
-                _LOGGER.debug("value.command_class %s is not None "
-                              "and in command_class %s",
-                              value.command_class, command_class)
-                continue
-            if value_type != value.type and value_type is not None:
-                _LOGGER.debug("value.type %s != value_type %s",
-                              value.type, value_type)
-                continue
-            if value_genre != value.genre and value_genre is not None:
-                _LOGGER.debug("value.genre %s != value_genre %s",
-                              value.genre, value_genre)
+            if not check_value_schema(
+                    value,
+                    schema[const.DISC_VALUES][const.DISC_PRIMARY]):
                 continue
 
-            # Configure node
-            _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
-                          "Specific_command_class=%s, "
-                          "Command_class=%s, Value type=%s, "
-                          "Genre=%s as %s", node.node_id,
-                          node.generic, node.specific,
-                          value.command_class, value.type,
-                          value.genre, component)
-            workaround_component = workaround.get_device_component_mapping(
-                value)
-            if workaround_component and workaround_component != component:
-                if workaround_component == workaround.WORKAROUND_IGNORE:
-                    _LOGGER.info("Ignoring device %s due to workaround.",
-                                 "{}.{}".format(component, object_id(value)))
-                    continue
-                _LOGGER.debug("Using %s instead of %s",
-                              workaround_component, component)
-                component = workaround_component
+            values = ZWaveDeviceEntityValues(
+                hass, schema, value, config, device_config)
+            discovered_values.append(values)
 
-            name = "{}.{}".format(component, object_id(value))
-            node_config = device_config.get(name)
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
 
-            if node_config.get(CONF_IGNORED):
-                _LOGGER.info(
-                    "Ignoring device %s due to device settings.", name)
-                return
-
-            polling_intensity = convert(
-                node_config.get(CONF_POLLING_INTENSITY), int)
-            if polling_intensity:
-                value.enable_poll(polling_intensity)
-            else:
-                value.disable_poll()
-            platform = get_platform(component, DOMAIN)
-            device = platform.get_device(
-                node=node, value=value, node_config=node_config, hass=hass)
-            if not device:
-                continue
-            dict_id = "{}.{}".format(component, value.value_id)
-
-            @asyncio.coroutine
-            def discover_device(component, device, dict_id):
-                """Put device in a dictionary and call discovery on it."""
-                hass.data[DATA_ZWAVE_DICT][dict_id] = device
-                yield from discovery.async_load_platform(
-                    hass, component, DOMAIN,
-                    {const.DISCOVERY_DEVICE: dict_id}, config)
-            hass.add_job(discover_device, component, device, dict_id)
+    def node_added(node):
+        """Called when a node is added on the network."""
+        entity = ZWaveNodeEntity(node)
+        node_config = device_config.get(entity.entity_id)
+        if node_config.get(CONF_IGNORED):
+            _LOGGER.info(
+                "Ignoring node entity %s due to device settings.",
+                entity.entity_id)
+            return
+        component.add_entities([entity])
 
     def scene_activated(node, scene_id):
         """Called when a scene is activated on any node in the network."""
@@ -475,6 +334,8 @@ def setup(hass, config):
 
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
+    dispatcher.connect(
+        node_added, ZWaveNetwork.SIGNAL_NODE_ADDED, weak=False)
     dispatcher.connect(
         scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
     dispatcher.connect(
@@ -752,25 +613,157 @@ def setup(hass, config):
     return True
 
 
-class ZWaveDeviceEntity(Entity):
+class ZWaveDeviceEntityValues():
+    """Manages entity access to the underlying zwave value objects."""
+
+    def __init__(self, hass, schema, primary_value, zwave_config,
+                 device_config):
+        """Initialize the values object with the passed entity schema."""
+        self._hass = hass
+        self._zwave_config = zwave_config
+        self._device_config = device_config
+        self._schema = copy.deepcopy(schema)
+        self._values = {}
+        self._entity = None
+        self._workaround_ignore = False
+
+        for name in self._schema[const.DISC_VALUES].keys():
+            self._values[name] = None
+            self._schema[const.DISC_VALUES][name][const.DISC_INSTANCE] = \
+                [primary_value.instance]
+
+        self._values[const.DISC_PRIMARY] = primary_value
+        self._node = primary_value.node
+        self._schema[const.DISC_NODE_ID] = [self._node.node_id]
+
+        # Check values that have already been discovered for node
+        for value in self._node.values.values():
+            self.check_value(value)
+
+        self._check_entity_ready()
+
+    def __getattr__(self, name):
+        """Get the specified value for this entity."""
+        return self._values[name]
+
+    def __iter__(self):
+        """Allow iteration over all values."""
+        return iter(self._values.values())
+
+    def check_value(self, value):
+        """Check if the new value matches a missing value for this entity.
+
+        If a match is found, it is added to the values mapping.
+        """
+        if not check_node_schema(value.node, self._schema):
+            return
+        for name in self._values:
+            if self._values[name] is not None:
+                continue
+            if not check_value_schema(
+                    value, self._schema[const.DISC_VALUES][name]):
+                continue
+            self._values[name] = value
+            if self._entity:
+                self._entity.value_changed()
+
+            self._check_entity_ready()
+
+    def _check_entity_ready(self):
+        """Check if all required values are discovered and create entity."""
+        if self._workaround_ignore:
+            return
+        if self._entity is not None:
+            return
+
+        for name in self._schema[const.DISC_VALUES]:
+            if self._values[name] is None and \
+                    not self._schema[const.DISC_VALUES][name].get(
+                            const.DISC_OPTIONAL):
+                return
+
+        component = self._schema[const.DISC_COMPONENT]
+
+        workaround_component = workaround.get_device_component_mapping(
+            self.primary)
+        if workaround_component and workaround_component != component:
+            if workaround_component == workaround.WORKAROUND_IGNORE:
+                _LOGGER.info("Ignoring device %s due to workaround.",
+                             "{}.{}".format(
+                                 component, object_id(self.primary)))
+                # No entity will be created for this value
+                self._workaround_ignore = True
+                return
+            _LOGGER.debug("Using %s instead of %s",
+                          workaround_component, component)
+            component = workaround_component
+
+        name = "{}.{}".format(component, object_id(self.primary))
+        node_config = self._device_config.get(name)
+
+        # Configure node
+        _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
+                      "Specific_command_class=%s, "
+                      "Command_class=%s, Value type=%s, "
+                      "Genre=%s as %s", self._node.node_id,
+                      self._node.generic, self._node.specific,
+                      self.primary.command_class, self.primary.type,
+                      self.primary.genre, component)
+
+        if node_config.get(CONF_IGNORED):
+            _LOGGER.info(
+                "Ignoring entity %s due to device settings.", name)
+            # No entity will be created for this value
+            self._workaround_ignore = True
+            return
+
+        polling_intensity = convert(
+            node_config.get(CONF_POLLING_INTENSITY), int)
+        if polling_intensity:
+            self.primary.enable_poll(polling_intensity)
+        else:
+            self.primary.disable_poll()
+
+        platform = get_platform(component, DOMAIN)
+        device = platform.get_device(
+            node=self._node, values=self,
+            node_config=node_config, hass=self._hass)
+        if not device:
+            # No entity will be created for this value
+            self._workaround_ignore = True
+            return
+
+        self._entity = device
+
+        dict_id = id(self)
+
+        @asyncio.coroutine
+        def discover_device(component, device, dict_id):
+            """Put device in a dictionary and call discovery on it."""
+            self._hass.data[DATA_ZWAVE_DICT][dict_id] = device
+            yield from discovery.async_load_platform(
+                self._hass, component, DOMAIN,
+                {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)
+        self._hass.add_job(discover_device, component, device, dict_id)
+
+
+class ZWaveDeviceEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node entity."""
 
-    def __init__(self, value, domain):
+    def __init__(self, values, domain):
         """Initialize the z-Wave device."""
         # pylint: disable=import-error
+        super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
-        self._value = value
-        self._value.set_change_verified(False)
-        self.entity_id = "{}.{}".format(domain, object_id(value))
+        self.values = values
+        self.node = values.primary.node
+        self.values.primary.set_change_verified(False)
+        self.entity_id = "{}.{}".format(domain, object_id(values.primary))
 
-        self._name = _value_name(self._value)
-        self._unique_id = "ZWAVE-{}-{}".format(self._value.node.node_id,
-                                               self._value.object_id)
-        self._wakeup_value_id = None
-        self._battery_value_id = None
-        self._power_value_id = None
-        self._update_scheduled = False
+        self._name = _value_name(self.values.primary)
+        self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
+                                               self.values.primary.object_id)
         self._update_attributes()
 
         dispatcher.connect(
@@ -778,48 +771,14 @@ class ZWaveDeviceEntity(Entity):
 
     def network_value_changed(self, value):
         """Called when a value has changed on the network."""
-        if self._value.value_id == value.value_id:
-            return self.value_changed()
-
-        dependent_ids = self._get_dependent_value_ids()
-        if dependent_ids is None and self._value.node == value.node:
-            return self.value_changed()
-        if dependent_ids is not None and value.value_id in dependent_ids:
+        if value.value_id in [v.value_id for v in self.values if v]:
             return self.value_changed()
 
     def value_changed(self):
         """Called when a value for this entity's node has changed."""
-        if not self._value.node.is_ready:
-            self._update_ids()
         self._update_attributes()
         self.update_properties()
-        # If value changed after device was created but before setup_platform
-        # was called - skip updating state.
-        if self.hass and not self._update_scheduled:
-            self.hass.add_job(self._schedule_update)
-
-    def _update_ids(self):
-        """Update value_ids from which to pull attributes."""
-        if self._wakeup_value_id is None:
-            self._wakeup_value_id = self.get_value(
-                class_id=const.COMMAND_CLASS_WAKE_UP, member='value_id')
-        if self._battery_value_id is None:
-            self._battery_value_id = self.get_value(
-                class_id=const.COMMAND_CLASS_BATTERY, member='value_id')
-        if self._power_value_id is None:
-            self._power_value_id = self.get_value(
-                class_id=[const.COMMAND_CLASS_SENSOR_MULTILEVEL,
-                          const.COMMAND_CLASS_METER],
-                label=['Power'], member='value_id',
-                instance=self._value.instance)
-
-    @property
-    def dependent_value_ids(self):
-        """List of value IDs a device depends on.
-
-        None if depends on the whole node.
-        """
-        return []
+        self.maybe_schedule_update()
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -829,45 +788,15 @@ class ZWaveDeviceEntity(Entity):
             SIGNAL_REFRESH_ENTITY_FORMAT.format(self.entity_id),
             self.refresh_from_network)
 
-    def _get_dependent_value_ids(self):
-        """Return a list of value_ids this device depend on.
-
-        Return None if it depends on the whole node.
-        """
-        if self.dependent_value_ids is None:
-            # Device depends on node.
-            return None
-        if not self._value.node.is_ready:
-            # Node is not ready, so depend on the whole node.
-            return None
-
-        return [val for val in (self.dependent_value_ids + [
-            self._wakeup_value_id, self._battery_value_id,
-            self._power_value_id]) if val]
-
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
-        self.node_id = self._value.node.node_id
-        self.location = self._value.node.location
-        self.battery_level = self._value.node.get_battery_level(
-            self._battery_value_id)
-        self.wakeup_interval = None
-        if self._wakeup_value_id:
-            self.wakeup_interval = self._value.node.values[
-                self._wakeup_value_id].data
-        power_value = None
-        if self._power_value_id:
-            power_value = self._value.node.values[self._power_value_id]
-        self.power_consumption = round(
-            power_value.data, power_value.precision) if power_value else None
+        self.node_id = self.node.node_id
 
-    def get_value(self, **kwargs):
-        """Simplifyer to get values. May only be used inside callback."""
-        return value_handler(self._value, method='get', **kwargs)
-
-    def set_value(self, **kwargs):
-        """Simplifyer to set a value."""
-        return value_handler(self._value, method='set', **kwargs)
+        if self.values.power:
+            self.power_consumption = round(
+                self.values.power.data, self.values.power.precision)
+        else:
+            self.power_consumption = None
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -895,15 +824,6 @@ class ZWaveDeviceEntity(Entity):
             const.ATTR_NODE_ID: self.node_id,
         }
 
-        if self.battery_level is not None:
-            attrs[ATTR_BATTERY_LEVEL] = self.battery_level
-
-        if self.location:
-            attrs[ATTR_LOCATION] = self.location
-
-        if self.wakeup_interval is not None:
-            attrs[ATTR_WAKEUP] = self.wakeup_interval
-
         if self.power_consumption is not None:
             attrs[ATTR_POWER] = self.power_consumption
 
@@ -911,25 +831,5 @@ class ZWaveDeviceEntity(Entity):
 
     def refresh_from_network(self):
         """Refresh all dependent values from zwave network."""
-        dependent_ids = self._get_dependent_value_ids()
-        if dependent_ids is None:
-            # Entity depends on the whole node
-            self._value.node.refresh_info()
-            return
-        for value_id in dependent_ids + [self._value.value_id]:
-            self._value.node.refresh_value(value_id)
-
-    @callback
-    def _schedule_update(self):
-        """Schedule delayed update."""
-        if self._update_scheduled:
-            return
-
-        @callback
-        def do_update():
-            """Really update."""
-            self.hass.async_add_job(self.async_update_ha_state)
-            self._update_scheduled = False
-
-        self._update_scheduled = True
-        self.hass.loop.call_later(0.1, do_update)
+        for value in self.values:
+            self.node.refresh_value(value.value_id)

@@ -75,7 +75,7 @@ refresh_entity:
 refresh_node:
   description: Refresh zwave node.
   fields:
-    entity_id:
+    node_id:
       description: ID of the node to refresh.
       example: 10
 

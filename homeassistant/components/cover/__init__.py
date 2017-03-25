@@ -166,7 +166,7 @@ def async_setup(hass, config):
             if not cover.should_poll:
                 continue
 
-            update_coro = hass.loop.create_task(
+            update_coro = hass.async_add_job(
                 cover.async_update_ha_state(True))
             if hasattr(cover, 'async_update'):
                 update_tasks.append(update_coro)

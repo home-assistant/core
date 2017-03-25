@@ -27,7 +27,7 @@ from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
 DOMAIN = 'android_ip_webcam'
-REQUIREMENTS = ["pydroid-ipcam==0.4"]
+REQUIREMENTS = ["pydroid-ipcam==0.6"]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -125,11 +125,8 @@ SENSORS = ['audio_connections', 'battery_level', 'battery_temp',
 
 SIGNAL_UPDATE_DATA = 'android_ip_webcam_update'
 
-CONF_AUTO_DISCOVERY = 'auto_discovery'
 CONF_MOTION_SENSOR = 'motion_sensor'
 
-DEFAULT_AUTO_DISCOVERY = True
-DEFAULT_MOTION_SENSOR = False
 DEFAULT_NAME = 'IP Webcam'
 DEFAULT_PORT = 8080
 DEFAULT_TIMEOUT = 10
@@ -145,14 +142,11 @@ CONFIG_SCHEMA = vol.Schema({
             cv.time_period,
         vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
-        vol.Optional(CONF_AUTO_DISCOVERY, default=DEFAULT_AUTO_DISCOVERY):
-            cv.boolean,
-        vol.Optional(CONF_SWITCHES, default=[]):
+        vol.Optional(CONF_SWITCHES, default=None):
             vol.All(cv.ensure_list, [vol.In(SWITCHES)]),
-        vol.Optional(CONF_SENSORS, default=[]):
+        vol.Optional(CONF_SENSORS, default=None):
             vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-        vol.Optional(CONF_MOTION_SENSOR, default=DEFAULT_MOTION_SENSOR):
-            cv.boolean,
+        vol.Optional(CONF_MOTION_SENSOR, default=None): cv.boolean,
     })])
 }, extra=vol.ALLOW_EXTRA)
 
@@ -184,6 +178,18 @@ def async_setup(hass, config):
             timeout=cam_config[CONF_TIMEOUT]
         )
 
+        if switches is None:
+            switches = [setting for setting in cam.enabled_settings
+                        if setting in SWITCHES]
+
+        if sensors is None:
+            sensors = [sensor for sensor in cam.enabled_sensors
+                       if sensor in SENSORS]
+            sensors.extend(['audio_connections', 'video_connections'])
+
+        if motion is None:
+            motion = 'motion_active' in cam.enabled_sensors
+
         @asyncio.coroutine
         def async_update_data(now):
             """Update data from ipcam in SCAN_INTERVAL."""
@@ -194,20 +200,6 @@ def async_setup(hass, config):
                 hass, async_update_data, utcnow() + interval)
 
         yield from async_update_data(None)
-
-        # use autodiscovery to detect sensors/configs
-        if cam_config[CONF_AUTO_DISCOVERY]:
-            if not cam.available:
-                _LOGGER.error(
-                    "Android webcam %s not found for discovery!", cam.base_url)
-                return
-
-            sensors = [sensor for sensor in cam.enabled_sensors
-                       if sensor in SENSORS]
-            switches = [setting for setting in cam.enabled_settings
-                        if setting in SWITCHES]
-            motion = True if 'motion_active' in cam.enabled_sensors else False
-            sensors.extend(['audio_connections', 'video_connections'])
 
         # load platforms
         webcams[host] = cam

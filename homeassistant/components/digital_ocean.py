@@ -13,7 +13,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-digitalocean==1.10.1']
+REQUIREMENTS = ['python-digitalocean==1.11']
 
 _LOGGER = logging.getLogger(__name__)
 
