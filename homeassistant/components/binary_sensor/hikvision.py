@@ -94,7 +94,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for sensor, channel_list in data.sensors.items():
         for channel in channel_list:
             # Build sensor name, then parse customize config.
-            sensor_name = '{}_{}'.format(sensor.replace(' ', '_'), channel[1])
+            if data.type == 'NVR':
+                sensor_name = '{}_{}'.format(
+                    sensor.replace(' ', '_'), channel[1])
+            else:
+                sensor_name = sensor.replace(' ', '_')
 
             custom = customize.get(sensor_name.lower(), {})
             ignore = custom.get(CONF_IGNORED)
@@ -146,13 +150,18 @@ class HikvisionData(object):
 
     @property
     def cam_id(self):
-        """Return camera id."""
+        """Return device id."""
         return self.camdata.get_id
 
     @property
     def name(self):
-        """Return camera name."""
+        """Return device name."""
         return self._name
+
+    @property
+    def type(self):
+        """Return device type."""
+        return self.camdata.get_type
 
     def get_attributes(self, sensor, channel):
         """Return attribute list for sensor/channel."""
@@ -166,10 +175,15 @@ class HikvisionBinarySensor(BinarySensorDevice):
         """Initialize the binary_sensor."""
         self._hass = hass
         self._cam = cam
-        self._name = '{} {} {}'.format(self._cam.name, sensor, channel)
-        self._id = '{}.{}.{}'.format(self._cam.cam_id, sensor, channel)
         self._sensor = sensor
         self._channel = channel
+
+        if self._cam.type == 'NVR':
+            self._name = '{} {} {}'.format(self._cam.name, sensor, channel)
+        else:
+            self._name = '{} {}'.format(self._cam.name, sensor)
+
+        self._id = '{}.{}.{}'.format(self._cam.cam_id, sensor, channel)
 
         if delay is None:
             self._delay = 0
