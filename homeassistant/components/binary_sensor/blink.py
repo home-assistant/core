@@ -15,9 +15,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    data = hass.data[DOMAIN].blink
+    data = hass.data[DOMAIN]
     devs = list()
-    for name in data.cameras:
+    for name in data.blink.cameras:
         devs.append(BlinkCameraMotionSensor(name, data))
     devs.append(BlinkSystemSensor(data))
     add_devices(devs, True)
@@ -31,7 +31,7 @@ class BlinkCameraMotionSensor(BinarySensorDevice):
         self._name = 'blink_' + name + '_motion_enabled'
         self._camera_name = name
         self.data = data
-        self._state = self.data.cameras[self._camera_name].armed
+        self._state = self.data.blink.cameras[self._camera_name].armed
 
     @property
     def name(self):
@@ -45,8 +45,8 @@ class BlinkCameraMotionSensor(BinarySensorDevice):
 
     def update(self):
         """Update sensor state."""
-        self.data.refresh()
-        self._state = self.data.cameras[self._camera_name].armed
+        self.data.update()
+        self._state = self.data.blink.cameras[self._camera_name].armed
 
 
 class BlinkSystemSensor(BinarySensorDevice):
@@ -56,7 +56,7 @@ class BlinkSystemSensor(BinarySensorDevice):
         """Initialize the sensor."""
         self._name = 'blink armed status'
         self.data = data
-        self._state = self.data.arm
+        self._state = self.data.blink.arm
 
     @property
     def name(self):
@@ -70,5 +70,4 @@ class BlinkSystemSensor(BinarySensorDevice):
 
     def update(self):
         """Update sensor state."""
-        self.data.refresh()
-        self._state = self.data.arm
+        self._state = self.data.blink.arm
