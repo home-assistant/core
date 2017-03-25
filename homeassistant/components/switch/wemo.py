@@ -66,11 +66,9 @@ class WemoSwitch(SwitchDevice):
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
-        if self._model_name in ['CoffeeMaker', 'Insight']:
-            self.wemo.subscription_update(_type, _params)
-            self._update(force_update=False)
-        else:
-            self.update()
+        updated = self.wemo.subscription_update(_type, _params)
+        self._update(force_update=(not updated))
+
         if not hasattr(self, 'hass'):
             return
         self.schedule_update_ha_state()
@@ -220,4 +218,5 @@ class WemoSwitch(SwitchDevice):
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
         except AttributeError as err:
-            _LOGGER.warning('Could not update status for %s (%s)', self.name, err)
+            _LOGGER.warning('Could not update status for %s (%s)',
+                self.name, err)
