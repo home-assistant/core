@@ -54,6 +54,7 @@ CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 
 ATTR_POWER = 'power_consumption'
+ATTR_QUALITY = 'quality'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -771,6 +772,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self._name = _value_name(self.values.primary)
         self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
                                                self.values.primary.object_id)
+        self.quality = None
         self._update_attributes()
 
         dispatcher.connect(
@@ -799,6 +801,27 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             SIGNAL_REFRESH_ENTITY_FORMAT.format(self.entity_id),
             self.refresh_from_network)
 
+    def get_node_statistics(self):
+        """Retrieve statistics from the node."""
+        return NETWORK.manager.getNodeStatistics(NETWORK.home_id, self.node_id)
+
+    def get_com_quality(self):
+        """Calculate communication quality for the node."""
+
+        quality = 0.0
+        maxrtt = 10000.0
+        data = self.get_node_statistics()
+        if data and data != {}:
+            data1 = float(float(data['sentCnt'] - data['sentFailed']) / data['sentCnt'])  if data['sentCnt'] != 0 else 0.0
+            data2 = float(((maxrtt /2) - data['averageRequestRTT']) / (maxrtt / 2))
+            data3 = float((maxrtt - data['averageResponseRTT']) / maxrtt)
+            data4 = float(1 - (float(data['receivedCnt']  - data['receivedUnsolicited']) / data['receivedCnt'])) if data['receivedCnt'] != 0 else 0.0
+            quality = ((data1 + (data2*2) + (data3*3) + data4) / 7.0) * 100.0
+        else:
+            _LOGGER.debug('No node statistics for node %s ', self.node_id)
+            quality = 20
+        return int(quality)
+
     def _update_attributes(self):
         """Update the node attributes. May only be used inside callback."""
         self.node_id = self.node.node_id
@@ -808,6 +831,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
                 self.values.power.data, self.values.power.precision)
         else:
             self.power_consumption = None
+        self.quality = self.get_com_quality()
 
     def update_properties(self):
         """Callback on data changes for node values."""
@@ -837,7 +861,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
         if self.power_consumption is not None:
             attrs[ATTR_POWER] = self.power_consumption
-
+        if self.quality is not None:
+            attrs[ATTR_QUALITY] = self.quality
         return attrs
 
     def refresh_from_network(self):
