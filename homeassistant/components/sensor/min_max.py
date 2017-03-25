@@ -98,7 +98,7 @@ class MinMaxSensor(Entity):
             if self._unit_of_measurement != new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT):
                 _LOGGER.warning("Units of measurement do not match")
-                return
+
             try:
                 self.states[entity] = float(new_state.state)
             except ValueError:
@@ -150,10 +150,36 @@ class MinMaxSensor(Entity):
         """Get the latest data and updates the states."""
         sensor_values = [self.states[k] for k in self._entity_ids
                          if k in self.states]
-        if len(sensor_values) == self.count_sensors:
-            self.min_value = min(sensor_values)
-            self.max_value = max(sensor_values)
-            self.mean = round(sum(sensor_values) / self.count_sensors,
-                              self._round_digits)
-        else:
-            self.min_value = self.max_value = self.mean = STATE_UNKNOWN
+        self.min_value = self.calc_min(sensor_values)
+        self.max_value = self.calc_max(sensor_values)
+        self.mean = self.calc_mean(sensor_values)
+
+    def calc_min(self, sensor_values):
+        """Calculate min value, honoring unkown states."""
+        val = STATE_UNKNOWN
+        for v in sensor_values:
+            if v != STATE_UNKNOWN:
+                if val == STATE_UNKNOWN or val > v:
+                    val = v
+        return val
+
+    def calc_max(self, sensor_values):
+        """Calculate max value, honoring unkown states."""
+        val = STATE_UNKNOWN
+        for v in sensor_values:
+            if v != STATE_UNKNOWN:
+                if val == STATE_UNKNOWN or val < v:
+                    val = v
+        return val
+
+    def calc_mean(self, sensor_values):
+        """Calculate mean value, honoring unkown states."""
+        val = 0
+        count = 0
+        for v in sensor_values:
+            if v != STATE_UNKNOWN:
+                val += v
+                count += 1
+        if count == 0:
+            return STATE_UNKNOWN
+        return round(val/count, self._round_digits)
