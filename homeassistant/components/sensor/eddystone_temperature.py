@@ -1,6 +1,5 @@
-"""
-Read temperature information from the TLM frame broadcasted by Eddystone
-beacons.
+"""Read temperature information from Eddystone beacons.
+
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
 
@@ -47,8 +46,7 @@ EVT_LE_ADVERTISING_REPORT = 0x02
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Validate configuration, create devices and start monitoring thread"""
-
+    """Validate configuration, create devices and start monitoring thread."""
     _LOGGER.debug("Setting up...")
 
     bt_device_id = config.get("bt_device_id")
@@ -74,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info("Stopping scanner for eddystone beacons")
         mon.terminate()
 
-
     if len(devices) > 0:
         mon.devices = devices
         add_devices(devices)
@@ -85,9 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def convert_hex_string(config, config_key, length):
-    """Retrieve value from config, validate its length and
-    convert to binary string."""
-
+    """Retrieve value from config, validate its length and convert to binary string."""
     string = config.get(config_key)
     if len(string) != length:
         _LOGGER.error("Error in config parameter \"%s\": Must be exactly %d "
@@ -166,17 +161,19 @@ class Monitor(threading.Thread):
                 pkt = self.socket.recv(255)
                 event = pkt[1]
                 subevent = pkt[3]
-                if event == LE_META_EVENT and subevent == EVT_LE_ADVERTISING_REPORT:
+                if event == LE_META_EVENT \
+                and subevent == EVT_LE_ADVERTISING_REPORT:
                     # we have an BLE advertisement
                     self.process_packet(pkt)
         except:
-            _LOGGER.error("Exception while scanning for beacons", exc_info=True)
+            _LOGGER.error("Exception while scanning for beacons",
+                          exc_info=True)
             raise
         finally:
             self.toggle_scan(False)
 
     def toggle_scan(self, enable):
-        """ Enable and disable BLE scanning """
+        """Enable and disable BLE scanning."""
         # pylint: disable=import-error
         import bluetooth._bluetooth as bluez
 
@@ -188,7 +185,8 @@ class Monitor(threading.Thread):
 
 
     def process_packet(self, pkt):
-        """ Processes an BLE advertisement packet.
+        """Process an BLE advertisement packet.
+
         First, we look for the unique ID which identifies Eddystone beacons.
         All other packets will be ignored. We then filter for UID and TLM
         frames. See https://github.com/google/eddystone/ for reference.
@@ -204,7 +202,6 @@ class Monitor(threading.Thread):
         belongs to the beacon monitored. If yes, we can finally extract the
         temperature.
         """
-
         bt_addr = pkt[7:13]
 
         # strip bluetooth address and start parsing "length-type-value"
@@ -212,7 +209,6 @@ class Monitor(threading.Thread):
         pkt = pkt[14:]
         for type_, data in self.parse_structure(pkt):
             # type 0x16: service data, 0xaa 0xfe: eddystone UUID
-            #_LOGGER.debug("_type: %s data: %s", binascii.hexlify(type_), binascii.hexlify(data))
             if type_ == 0x16 and data[:2] == b"\xaa\xfe":
                 # found eddystone beacon
                 if data[2] == 0x00:
@@ -234,12 +230,14 @@ class Monitor(threading.Thread):
                     if device is not None:
                         # TLM frame from target beacon
                         temp = struct.unpack("<H", data[6:8])[0]
-                        _LOGGER.debug("Received temperature for device %s: %d"
-                                      , device.name, temp)
+                        _LOGGER.debug("Received temperature for %s: %d",
+                                      device.name, temp)
                         device.temperature = temp
 
     def match_device(self, namespace, instance, bt_addr):
-        """Searches device list for beacon with supplied namespace
+        """Find beacon in device list.
+
+        Interates device list for beacon with supplied namespace
         and instance id. Returns object only if bluetooth address is
         different.
         """
@@ -247,10 +245,13 @@ class Monitor(threading.Thread):
             if dev.namespace == namespace and dev.instance == instance \
             and (dev.bt_addr is None or dev.bt_addr != bt_addr):
                 return dev
+
         return None
 
     def match_device_by_addr(self, bt_addr):
-        """Searches device list for beacon with the supplied bluetooth
+        """Find beacon in device list.
+
+        Searches device list for beacon with the supplied bluetooth
         address.
         """
         for dev in self.devices:
@@ -260,7 +261,8 @@ class Monitor(threading.Thread):
 
     @staticmethod
     def parse_structure(data):
-        """ Generator to parse the eddystone packet structure.
+        """Generator to parse the eddystone packet structure.
+
         | length | type |     data       |
         | 1 byte |1 byte| length-1 bytes |
         """
