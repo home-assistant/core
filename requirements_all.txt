@@ -475,6 +475,7 @@ pyatv==0.2.1
 pybbox==0.0.5-alpha
 
 # homeassistant.components.device_tracker.bluetooth_tracker
+# homeassistant.components.sensor.eddystone_temperature
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
