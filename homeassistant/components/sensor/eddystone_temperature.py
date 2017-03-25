@@ -160,7 +160,7 @@ class Monitor(threading.Thread):
                 event = pkt[1]
                 subevent = pkt[3]
                 if event == LE_META_EVENT \
-                    and subevent == EVT_LE_ADVERTISING_REPORT:
+                        and subevent == EVT_LE_ADVERTISING_REPORT:
                     # we have an BLE advertisement
                     self.process_packet(pkt)
         except:
@@ -179,7 +179,7 @@ class Monitor(threading.Thread):
             command = struct.pack("<BB", 0x01, 0x00)
         else:
             command = struct.pack("<BB", 0x00, 0x00)
-        bluez.hci_send_cmd(self.socket, OGF_LE_CTL, 
+        bluez.hci_send_cmd(self.socket, OGF_LE_CTL,
                            OCF_LE_SET_SCAN_ENABLE, command)
 
     def process_packet(self, pkt):
@@ -241,7 +241,7 @@ class Monitor(threading.Thread):
         """
         for dev in self.devices:
             if dev.namespace == namespace and dev.instance == instance \
-                and (dev.bt_addr is None or dev.bt_addr != bt_addr):
+                    and (dev.bt_addr is None or dev.bt_addr != bt_addr):
                 return dev
 
         return None
