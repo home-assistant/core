@@ -30,8 +30,6 @@ DEFAULT_ENTITY_NAMESPACE = 'ring'
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 SCAN_INTERVAL = timedelta(seconds=5)
 
-RING = None
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
@@ -42,7 +40,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up Ring component."""
-    global RING
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
@@ -53,7 +50,7 @@ def setup(hass, config):
 
         ring = Ring(username, password)
         if ring.is_connected:
-            RING = RingData(ring)
+            hass.data['ring'] = ring
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
         persistent_notification.create(
@@ -64,11 +61,3 @@ def setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
     return True
-
-
-class RingData(object):
-    """Stores the data retrived for Ring device."""
-
-    def __init__(self, data):
-        """Initialize the data object."""
-        self.data = data

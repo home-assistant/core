@@ -11,7 +11,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
     CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_CACHEDB)
 
-from homeassistant.loader import get_component
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -38,11 +37,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    ring = get_component('ring')
+    ring = hass.data.get('ring')
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.RING.data.doorbells:
+        for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingBinarySensor(hass,
                                                 device,

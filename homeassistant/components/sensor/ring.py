@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
     STATE_UNKNOWN, ATTR_ATTRIBUTION)
 
-from homeassistant.loader import get_component
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ring']
@@ -45,17 +44,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    ring = get_component('ring')
+    ring = hass.data.get('ring')
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.RING.data.chimes:
+        for device in ring.chimes:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass,
                                           device,
                                           sensor_type))
 
-        for device in ring.RING.data.doorbells:
+        for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass,
                                           device,
