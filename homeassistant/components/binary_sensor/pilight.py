@@ -7,23 +7,25 @@ https://home-assistant.io/components/binary_sensor.pilight/
 import datetime
 import logging
 
-import homeassistant.components.pilight as pilight
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 import voluptuous as vol
-
+from homeassistant.components import pilight
 from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA,
     BinarySensorDevice,
-    PLATFORM_SCHEMA)
+)
 from homeassistant.const import (
     CONF_DISARM_AFTER_TRIGGER,
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON,
+    STATE_OFF,
     STATE_ON,
-    STATE_OFF)
+)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
+from homeassistant.util import dt as dt_util
+
 
 _LOGGER = logging.getLogger(__name__)
 
