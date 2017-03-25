@@ -327,6 +327,8 @@ class APIEventForwardingView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request):
         """Setup an event forwarder."""
+        _LOGGER.warning('Event forwarding is deprecated. '
+                        'Will be removed by 0.43')
         hass = request.app['hass']
         try:
             data = yield from request.json()

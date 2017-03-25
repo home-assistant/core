@@ -46,11 +46,11 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         self.schedule_update_ha_state()
 
     @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
+    def current_power_w(self):
+        """Current power usage in W."""
         power = self.vera_device.power
         if power:
-            return convert(power, float, 0.0) * 1000
+            return convert(power, float, 0.0)
 
     @property
     def is_on(self):

@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
-REQUIREMENTS = ['blinkpy==0.4.4']
+REQUIREMENTS = ['blinkpy==0.5.2']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
