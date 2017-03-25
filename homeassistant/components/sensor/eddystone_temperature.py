@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def convert_hex_string(config, config_key, length):
-    """Retrieve value from config, validate its length and convert to binary string."""
+    """Retrieve value from config and convert to binary string."""
     string = config.get(config_key)
     if len(string) != length:
         _LOGGER.error("Error in config parameter \"%s\": Must be exactly %d "
@@ -138,10 +138,8 @@ class Monitor(threading.Thread):
         # bt socket
         self.socket = None
 
-
     def run(self):
         """Continously scan for BLE advertisements."""
-
         # pylint: disable=import-error
         import bluetooth._bluetooth as bluez
 
@@ -162,7 +160,7 @@ class Monitor(threading.Thread):
                 event = pkt[1]
                 subevent = pkt[3]
                 if event == LE_META_EVENT \
-                and subevent == EVT_LE_ADVERTISING_REPORT:
+                    and subevent == EVT_LE_ADVERTISING_REPORT:
                     # we have an BLE advertisement
                     self.process_packet(pkt)
         except:
@@ -181,8 +179,8 @@ class Monitor(threading.Thread):
             command = struct.pack("<BB", 0x01, 0x00)
         else:
             command = struct.pack("<BB", 0x00, 0x00)
-        bluez.hci_send_cmd(self.socket, OGF_LE_CTL, OCF_LE_SET_SCAN_ENABLE, command)
-
+        bluez.hci_send_cmd(self.socket, OGF_LE_CTL, 
+                           OCF_LE_SET_SCAN_ENABLE, command)
 
     def process_packet(self, pkt):
         """Process an BLE advertisement packet.
@@ -243,7 +241,7 @@ class Monitor(threading.Thread):
         """
         for dev in self.devices:
             if dev.namespace == namespace and dev.instance == instance \
-            and (dev.bt_addr is None or dev.bt_addr != bt_addr):
+                and (dev.bt_addr is None or dev.bt_addr != bt_addr):
                 return dev
 
         return None
