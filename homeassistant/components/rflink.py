@@ -316,6 +316,12 @@ class RflinkCommand(RflinkDevice):
             cmd = str(int(args[0] / 17))
             self._state = True
 
+        elif command == 'toggle':
+            cmd = 'on'
+            # if the state is unknown or false, it gets set as true
+            # if the state is true, it gets set as false
+            self._state = self._state in [STATE_UNKNOWN, False]
+
         # Send initial command and queue repetitions.
         # This allows the entity state to be updated quickly and not having to
         # wait for all repetitions to be sent
@@ -357,7 +363,7 @@ class RflinkCommand(RflinkDevice):
                 self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:
-            self._repetition_task = self.hass.loop.create_task(
+            self._repetition_task = self.hass.async_add_job(
                 self._async_send_command(cmd, repetitions - 1))
 
 

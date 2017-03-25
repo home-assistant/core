@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
-    CONF_HOST)
+    CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -25,9 +25,7 @@ REQUIREMENTS = ['python-mpd2==0.5.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_LOCATION = 'location'
-
-DEFAULT_LOCATION = 'MPD'
+DEFAULT_NAME = 'MPD'
 DEFAULT_PORT = 6600
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
@@ -38,7 +36,7 @@ SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -49,9 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the MPD platform."""
     daemon = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    location = config.get(CONF_LOCATION)
+    name = config.get(CONF_NAME)
     password = config.get(CONF_PASSWORD)
-
     import mpd
 
     # pylint: disable=no-member
@@ -75,20 +72,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             raise
 
-    add_devices([MpdDevice(daemon, port, location, password)])
+    add_devices([MpdDevice(daemon, port, password, name)])
 
 
 class MpdDevice(MediaPlayerDevice):
     """Representation of a MPD server."""
 
     # pylint: disable=no-member
-    def __init__(self, server, port, location, password):
+    def __init__(self, server, port, password, name):
         """Initialize the MPD device."""
         import mpd
 
         self.server = server
         self.port = port
-        self._name = location
+        self._name = name
         self.password = password
         self.status = None
         self.currentsong = None

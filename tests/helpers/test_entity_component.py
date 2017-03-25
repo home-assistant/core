@@ -116,6 +116,43 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert not no_poll_ent.async_update.called
         assert poll_ent.async_update.called
 
+    def test_polling_updates_entities_with_exception(self):
+        """Test the updated entities that not brake with a exception."""
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
+
+        update_ok = []
+        update_err = []
+
+        def update_mock():
+            """Mock normal update."""
+            update_ok.append(None)
+
+        def update_mock_err():
+            """Mock error update."""
+            update_err.append(None)
+            raise AssertionError("Fake error update")
+
+        ent1 = EntityTest(should_poll=True)
+        ent1.update = update_mock_err
+        ent2 = EntityTest(should_poll=True)
+        ent2.update = update_mock
+        ent3 = EntityTest(should_poll=True)
+        ent3.update = update_mock
+        ent4 = EntityTest(should_poll=True)
+        ent4.update = update_mock
+
+        component.add_entities([ent1, ent2, ent3, ent4])
+
+        update_ok.clear()
+        update_err.clear()
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=20))
+        self.hass.block_till_done()
+
+        assert len(update_ok) == 3
+        assert len(update_err) == 1
+
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
