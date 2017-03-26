@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_USB_PATH: cv.string,
         CONF_DATABASE: cv.string,
-        vol.Optional(CONF_DEVICE_CONFIG):
+        vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
     })
 }, extra=vol.ALLOW_EXTRA)
