@@ -15,6 +15,7 @@ ATTR_QUERY_STAGE = 'query_stage'
 ATTR_AWAKE = 'is_awake'
 ATTR_READY = 'is_ready'
 ATTR_FAILED = 'is_failed'
+ATTR_QUALITY = 'quality'
 
 STAGE_COMPLETE = 'Complete'
 
@@ -65,12 +66,13 @@ def sub_status(status, stage):
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
 
-    def __init__(self, node):
+    def __init__(self, node, NETWORK):
         """Initialize node."""
         # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
+        self._network = NETWORK
         self.node = node
         self.node_id = self.node.node_id
         self._name = node_name(self.node)
@@ -80,6 +82,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
+        self.quality = None
         dispatcher.connect(
             self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
@@ -94,6 +97,27 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
                 args['nodeId'] != self.node_id:
             return
         self.node_changed()
+
+    def get_node_statistics(self):
+        """Retrieve statistics from the node."""
+        return self._network.manager.getNodeStatistics(self._network.home_id, self.node_id)
+
+    def get_com_quality(self):
+        """Calculate communication quality for the node."""
+
+        quality = 0.0
+        maxrtt = 10000.0
+        data = self.get_node_statistics()
+        if data and data != {}:
+            data1 = float(float(data['sentCnt'] - data['sentFailed']) / data['sentCnt'])  if data['sentCnt'] != 0 else 0.0
+            data2 = float(((maxrtt /2) - data['averageRequestRTT']) / (maxrtt / 2))
+            data3 = float((maxrtt - data['averageResponseRTT']) / maxrtt)
+            data4 = float(1 - (float(data['receivedCnt']  - data['receivedUnsolicited']) / data['receivedCnt'])) if data['receivedCnt'] != 0 else 0.0
+            quality = ((data1 + (data2*2) + (data3*3) + data4) / 7.0) * 100.0
+        else:
+            _LOGGER.info('No node statistics for node %s ', self.node_id)
+            quality = 20
+        return int(quality)
 
     def node_changed(self):
         """Update node properties."""
@@ -111,6 +135,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.wakeup_interval = None
 
         self.battery_level = self.node.get_battery_level()
+        self.quality = self.get_com_quality()
 
         self.maybe_schedule_update()
 
@@ -152,4 +177,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             attrs[ATTR_BATTERY_LEVEL] = self.battery_level
         if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
+        if self.quality is not None:
+            attrs[ATTR_QUALITY] = self.quality
         return attrs
