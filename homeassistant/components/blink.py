@@ -5,17 +5,19 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/blink/
 """
 import logging
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_USERNAME,
-                                 CONF_PASSWORD,
-                                 ATTR_FRIENDLY_NAME,
-                                 ATTR_ARMED)
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, ATTR_FRIENDLY_NAME, ATTR_ARMED)
 from homeassistant.helpers import discovery
+
+REQUIREMENTS = ['blinkpy==0.5.2']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
-REQUIREMENTS = ['blinkpy==0.5.2']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -50,7 +52,7 @@ class BlinkSystem(object):
 
 
 def setup(hass, config):
-    """Setup Blink System."""
+    """Set up Blink System."""
     hass.data[DOMAIN] = BlinkSystem(config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
@@ -77,11 +79,11 @@ def setup(hass, config):
         hass.data[DOMAIN].blink.arm = value
         hass.data[DOMAIN].blink.refresh()
 
-    hass.services.register(DOMAIN, 'snap_picture', snap_picture,
-                           schema=SNAP_PICTURE_SCHEMA)
-    hass.services.register(DOMAIN, 'arm_camera', arm_camera,
-                           schema=ARM_CAMERA_SCHEMA)
-    hass.services.register(DOMAIN, 'arm_system', arm_system,
-                           schema=ARM_SYSTEM_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'snap_picture', snap_picture, schema=SNAP_PICTURE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'arm_camera', arm_camera, schema=ARM_CAMERA_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'arm_system', arm_system, schema=ARM_SYSTEM_SCHEMA)
 
     return True

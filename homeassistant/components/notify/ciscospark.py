@@ -5,17 +5,19 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.ciscospark/
 """
 import logging
+
 import voluptuous as vol
+
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService, ATTR_TITLE)
 from homeassistant.const import (CONF_TOKEN)
 import homeassistant.helpers.config_validation as cv
 
-CONF_ROOMID = "roomid"
+REQUIREMENTS = ['ciscosparkapi==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['ciscosparkapi==0.4.2']
+CONF_ROOMID = 'roomid'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
