@@ -5,20 +5,24 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/twilio/
 """
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 
-DEPENDENCIES = ['http']
 REQUIREMENTS = ['twilio==5.7.0']
 
 DOMAIN = 'twilio'
-DATA_TWILIO = DOMAIN
+
 API_PATH = '/api/{}'.format(DOMAIN)
-RECEIVED_DATA = '{}_data_received'.format(DOMAIN)
 
 CONF_ACCOUNT_SID = 'account_sid'
 CONF_AUTH_TOKEN = 'auth_token'
+
+DATA_TWILIO = DOMAIN
+DEPENDENCIES = ['http']
+
+RECEIVED_DATA = '{}_data_received'.format(DOMAIN)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -32,8 +36,8 @@ def setup(hass, config):
     """Set up the Twilio component."""
     from twilio.rest import TwilioRestClient
     conf = config[DOMAIN]
-    hass.data[DATA_TWILIO] = TwilioRestClient(conf.get(CONF_ACCOUNT_SID),
-                                              conf.get(CONF_AUTH_TOKEN))
+    hass.data[DATA_TWILIO] = TwilioRestClient(
+        conf.get(CONF_ACCOUNT_SID), conf.get(CONF_AUTH_TOKEN))
     hass.http.register_view(TwilioReceiveDataView())
     return True
 
