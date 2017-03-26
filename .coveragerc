@@ -59,6 +59,9 @@ omit =
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
+    homeassistant/components/lutron_caseta.py
+    homeassistant/components/*/lutron_caseta.py
+
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
@@ -115,8 +118,6 @@ omit =
     homeassistant/components/zigbee.py
     homeassistant/components/*/zigbee.py
 
-    homeassistant/components/zwave/*
-
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
@@ -144,6 +145,9 @@ omit =
     homeassistant/components/maxcube.py
     homeassistant/components/*/maxcube.py
 
+    homeassistant/components/tado.py
+    homeassistant/components/*/tado.py
+    
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -231,7 +235,6 @@ omit =
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
     homeassistant/components/lock/nuki.py
-    homeassistant/components/lock/zwave.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
@@ -353,6 +356,7 @@ omit =
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
+    homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/modem_callerid.py
     homeassistant/components/sensor/mqtt_room.py
@@ -430,6 +434,8 @@ omit =
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
+    homeassistant/components/zwave/__init__.py
+    homeassistant/components/zwave/util.py
 
 
 [report]
