@@ -151,7 +151,8 @@ class MVGLiveData(object):
                 continue
             # now select the relevant data
             _nextdep = {}
-            for k in ['destination', 'linename', 'time', 'direction', 'product']:
+            for k in ['destination', 'linename', 'time', 'direction',
+                      'product']:
                 _nextdep[k] = _departure.get(k, '')
             _nextdep['time'] = int(_nextdep['time'])
             self.nextdeparture = _nextdep
