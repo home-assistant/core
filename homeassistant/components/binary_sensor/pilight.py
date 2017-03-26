@@ -161,6 +161,7 @@ class PilightTriggerSensor(BinarySensorDevice):
 
     def _reset_state(self, call):
         self._state = False
+        self._delay_after = None
         self.schedule_update_ha_state()
 
     def _handle_code(self, call):
@@ -176,11 +177,12 @@ class PilightTriggerSensor(BinarySensorDevice):
             try:
                 value = call.data[self._variable]
                 self._state = (value == self._on_value)
-                self._delay_after = dt_util.utcnow() + datetime.timedelta(
-                    seconds=self._reset_delay_sec)
-                track_point_in_time(
-                    self._hass, self._reset_state,
-                    self._delay_after)
+                if self._delay_after == None:
+                    self._delay_after = dt_util.utcnow() + datetime.timedelta(
+                        seconds=self._reset_delay_sec)
+                    track_point_in_time(
+                        self._hass, self._reset_state,
+                        self._delay_after)
                 self.schedule_update_ha_state()
             except KeyError:
                 _LOGGER.error(
