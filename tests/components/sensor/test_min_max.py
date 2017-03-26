@@ -196,7 +196,7 @@ class TestMinMaxSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.test_max')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
-        self.hass.states.set(entity_ids[2], self.values[1])
+        self.hass.states.set(entity_ids[1], self.values[1])
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
@@ -207,3 +207,9 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_max')
         self.assertNotEqual(STATE_UNKNOWN, state.state)
+
+        self.hass.states.set(entity_ids[1], STATE_UNKNOWN)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_max')
+        self.assertEqual(STATE_UNKNOWN, state.state)
