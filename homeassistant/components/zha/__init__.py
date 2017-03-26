@@ -63,16 +63,6 @@ SERVICE_SCHEMAS = {
 # ZigBee definitions
 CENTICELSIUS = 'C-100'
 
-# Device types which require more than one cluster to work together.
-# Only non-standard devices should be listed here
-DEVICE_TYPES = {
-    64513: {  # Probably SmartThings. Maybe.
-        # This shouldn't be in here, but rather in some sort of quirks database
-        0x019a: ('device_tracker', []),
-    }
-}
-
-
 # Internal definitions
 APPLICATION_CONTROLLER = None
 _LOGGER = logging.getLogger(__name__)
@@ -165,12 +155,6 @@ class ApplicationListener:
                     has_valid_profile = True
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
-
-            if DEVICE_TYPES.get(endpoint.profile_id,
-                                {}).get(endpoint.device_type, None):
-                has_valid_profile = True
-                info = DEVICE_TYPES[endpoint.profile_id][endpoint.device_type]
-                component, used_clusters = info
 
             if ha_const.CONF_TYPE in node_config:
                 component = node_config[ha_const.CONF_TYPE]
