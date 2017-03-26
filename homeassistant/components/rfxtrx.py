@@ -265,14 +265,14 @@ def find_possible_pt2262_device(device_id):
 
     for dev_id, device in RFX_DEVICES.items():
         if len(dev_id) == len(device_id):
-            sz = None
+            size = None
             for i in range(0, len(dev_id)):
-                if (dev_id[i] != device_id[i]):
-                    break;
-                sz = i;
+                if dev_id[i] != device_id[i]:
+                    break
+                size = i
 
-            if sz is not None:
-                sz = len(dev_id) - sz
+            if size is not None:
+                size = len(dev_id) - size
                 _LOGGER.info("rfxtrx: found possible device %s for %s " \
                              "with the following configuration:\n" \
                              "data_bits=%d\n" \
@@ -280,8 +280,8 @@ def find_possible_pt2262_device(device_id):
                              "command_off=0x%s\n",
                              device_id,
                              dev_id,
-                             sz * 4,
-                             dev_id[-sz:], device_id[-sz:])
+                             size * 4,
+                             dev_id[-size:], device_id[-size:])
                 return device
 
     return None
