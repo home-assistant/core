@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.components.sun as sun
@@ -109,6 +109,6 @@ class TestSun(unittest.TestCase):
 
         assert state is not None
         assert sun.next_rising_utc(self.hass) == \
-            datetime(2016, 7, 25, 23, 38, 21, tzinfo=dt_util.UTC)
+            datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
         assert sun.next_setting_utc(self.hass) == \
-            datetime(2016, 7, 26, 22, 4, 18, tzinfo=dt_util.UTC)
+            datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)

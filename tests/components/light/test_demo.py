@@ -4,11 +4,11 @@ import asyncio
 import unittest
 
 from homeassistant.core import State, CoreState
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.light as light
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 ENTITY_LIGHT = 'light.bed_light'
 
@@ -39,7 +39,7 @@ class TestDemoLight(unittest.TestCase):
         self.assertEqual((.4, .6), state.attributes.get(light.ATTR_XY_COLOR))
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
-            (82, 91, 0), state.attributes.get(light.ATTR_RGB_COLOR))
+            (76, 95, 0), state.attributes.get(light.ATTR_RGB_COLOR))
         self.assertEqual('rainbow', state.attributes.get(light.ATTR_EFFECT))
         light.turn_on(
             self.hass, ENTITY_LIGHT, rgb_color=(251, 252, 253),
@@ -68,7 +68,7 @@ class TestDemoLight(unittest.TestCase):
 @asyncio.coroutine
 def test_restore_state(hass):
     """Test state gets restored."""
-    hass.config.components.add('recorder')
+    mock_component(hass, 'recorder')
     hass.state = CoreState.starting
     hass.data[DATA_RESTORE_CACHE] = {
         'light.bed_light': State('light.bed_light', 'on', {

@@ -1,8 +1,7 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
-from unittest.mock import MagicMock
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -77,7 +76,8 @@ class TestHelpersEntity(object):
         self.entity = entity.Entity()
         self.entity.entity_id = 'test.overwrite_hidden_true'
         self.hass = self.entity.hass = get_test_home_assistant()
-        self.entity.update_ha_state()
+        self.entity.schedule_update_ha_state()
+        self.hass.block_till_done()
 
     def teardown_method(self, method):
         """Stop everything that was started."""
@@ -92,7 +92,8 @@ class TestHelpersEntity(object):
         """Test we can overwrite hidden property to True."""
         self.hass.data[DATA_CUSTOMIZE] = EntityValues({
             self.entity.entity_id: {ATTR_HIDDEN: True}})
-        self.entity.update_ha_state()
+        self.entity.schedule_update_ha_state()
+        self.hass.block_till_done()
 
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_HIDDEN)
@@ -126,6 +127,72 @@ class TestHelpersEntity(object):
         assert state.attributes.get(ATTR_DEVICE_CLASS) is None
         with patch('homeassistant.helpers.entity.Entity.device_class',
                    new='test_class'):
-            self.entity.update_ha_state()
+            self.entity.schedule_update_ha_state()
+            self.hass.block_till_done()
         state = self.hass.states.get(self.entity.entity_id)
         assert state.attributes.get(ATTR_DEVICE_CLASS) == 'test_class'
+
+
+@asyncio.coroutine
+def test_warn_slow_update(hass):
+    """Warn we log when entity update takes a long time."""
+    update_call = False
+
+    @asyncio.coroutine
+    def async_update():
+        """Mock async update."""
+        nonlocal update_call
+        update_call = True
+
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.async_update = async_update
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from mock_entity.async_update_ha_state(True)
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == entity.SLOW_UPDATE_WARNING
+        assert logger_method == entity._LOGGER.warning
+
+        assert mock_call().cancel.called
+
+        assert update_call
+
+
+@asyncio.coroutine
+def test_warn_slow_update_with_exception(hass):
+    """Warn we log when entity update takes a long time and trow exception."""
+    update_call = False
+
+    @asyncio.coroutine
+    def async_update():
+        """Mock async update."""
+        nonlocal update_call
+        update_call = True
+        raise AssertionError("Fake update error")
+
+    mock_entity = entity.Entity()
+    mock_entity.hass = hass
+    mock_entity.entity_id = 'comp_test.test_entity'
+    mock_entity.async_update = async_update
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from mock_entity.async_update_ha_state(True)
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == entity.SLOW_UPDATE_WARNING
+        assert logger_method == entity._LOGGER.warning
+
+        assert mock_call().cancel.called
+
+        assert update_call

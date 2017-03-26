@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import setup, const
 import homeassistant.components.http as http
 from homeassistant.components.http.const import (
     KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR, HTTP_HEADER_X_FORWARDED_FOR)
@@ -43,7 +43,7 @@ def setUpModule():
 
     hass = get_test_home_assistant()
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN, {
             http.DOMAIN: {
                 http.CONF_API_PASSWORD: API_PASSWORD,
@@ -52,7 +52,7 @@ def setUpModule():
         }
     )
 
-    bootstrap.setup_component(hass, 'api')
+    setup.setup_component(hass, 'api')
 
     hass.http.app[KEY_TRUSTED_NETWORKS] = [
         ip_network(trusted_network)

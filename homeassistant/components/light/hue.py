@@ -379,7 +379,7 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_XY_COLOR in kwargs:
-            if self.info['manufacturername'] == "OSRAM":
+            if self.info.get('manufacturername') == "OSRAM":
                 hsv = color_util.color_xy_brightness_to_hsv(
                     *kwargs[ATTR_XY_COLOR],
                     ibrightness=self.info['bri'])
@@ -389,7 +389,7 @@ class HueLight(Light):
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
-            if self.info['manufacturername'] == "OSRAM":
+            if self.info.get('manufacturername') == "OSRAM":
                 hsv = color_util.color_RGB_to_hsv(
                     *(int(val) for val in kwargs[ATTR_RGB_COLOR]))
                 command['hue'] = hsv[0]
@@ -426,7 +426,7 @@ class HueLight(Light):
             command['hue'] = random.randrange(0, 65535)
             command['sat'] = random.randrange(150, 254)
         elif self.bridge_type == 'hue':
-            if self.info['manufacturername'] != "OSRAM":
+            if self.info.get('manufacturername') != "OSRAM":
                 command['effect'] = 'none'
 
         self._command_func(self.light_id, command)
@@ -436,12 +436,7 @@ class HueLight(Light):
         command = {'on': False}
 
         if ATTR_TRANSITION in kwargs:
-            # Transition time is in 1/10th seconds and cannot exceed
-            # 900 seconds.
-            command['transitiontime'] = min(
-                9000,
-                int(kwargs[ATTR_TRANSITION] * 10)
-            )
+            command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         flash = kwargs.get(ATTR_FLASH)
 

@@ -1,28 +1,11 @@
 """Tests for the Z-Wave init."""
 import asyncio
-from unittest.mock import MagicMock, patch
-
-import pytest
 
 from homeassistant.bootstrap import async_setup_component
 
 
-@pytest.fixture(autouse=True)
-def mock_openzwave():
-    """Mock out Open Z-Wave."""
-    libopenzwave = MagicMock()
-    libopenzwave.__file__ = 'test'
-    with patch.dict('sys.modules', {
-        'libopenzwave': libopenzwave,
-        'openzwave.option': MagicMock(),
-        'openzwave.network': MagicMock(),
-        'openzwave.group': MagicMock(),
-    }):
-        yield
-
-
 @asyncio.coroutine
-def test_valid_device_config(hass):
+def test_valid_device_config(hass, mock_openzwave):
     """Test valid device config."""
     device_config = {
         'light.kitchen': {
@@ -38,7 +21,7 @@ def test_valid_device_config(hass):
 
 
 @asyncio.coroutine
-def test_invalid_device_config(hass):
+def test_invalid_device_config(hass, mock_openzwave):
     """Test invalid device config."""
     device_config = {
         'light.kitchen': {

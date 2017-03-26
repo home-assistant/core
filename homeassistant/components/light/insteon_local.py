@@ -152,6 +152,10 @@ class InsteonLocalDimmerDevice(Light):
     def update(self):
         """Update state of the light."""
         resp = self.node.status(0)
+
+        while 'error' in resp and resp['error'] is True:
+            resp = self.node.status(0)
+
         if 'cmd2' in resp:
             self._value = int(resp['cmd2'], 16)
 

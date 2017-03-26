@@ -15,6 +15,9 @@ def test_validate_config_ok(hass, test_client):
     with patch.object(config, 'SECTIONS', ['core']):
         yield from async_setup_component(hass, 'config', {})
 
+    # yield from hass.async_block_till_done()
+    yield from asyncio.sleep(0.1, loop=hass.loop)
+
     hass.http.views[CheckConfigView.name].register(app.router)
     client = yield from test_client(app)
 

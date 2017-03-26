@@ -4,7 +4,7 @@ import asyncio
 import aiohttp
 
 import homeassistant.components.rest_command as rc
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)

@@ -1,12 +1,12 @@
 """The tests for the MQTT cover platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
 import homeassistant.components.cover as cover
-from tests.common import mock_mqtt_component, fire_mqtt_message
 
-from tests.common import get_test_home_assistant
+from tests.common import (
+    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
 
 
 class TestCoverMQTT(unittest.TestCase):
@@ -23,7 +23,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_state_via_state_topic(self):
         """Test the controlling state via topic."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -72,7 +71,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_state_via_template(self):
         """Test the controlling state via topic."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -101,7 +99,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_optimistic_state_change(self):
         """Test changing state optimistically."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -132,7 +129,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_send_open_cover_command(self):
         """Test the sending of open_cover."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -156,7 +152,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_send_close_cover_command(self):
         """Test the sending of close_cover."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -180,7 +175,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_send_stop__cover_command(self):
         """Test the sending of stop_cover."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -204,7 +198,6 @@ class TestCoverMQTT(unittest.TestCase):
 
     def test_current_cover_position(self):
         """Test the current cover position."""
-        self.hass.config.components = set(['mqtt'])
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',

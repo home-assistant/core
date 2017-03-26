@@ -12,8 +12,8 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.bootstrap import (
-    setup_component, async_prepare_setup_component)
+from homeassistant.setup import setup_component, DATA_SETUP
+from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
@@ -28,8 +28,7 @@ from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import (
-    run_callback_threadsafe, run_coroutine_threadsafe)
+from homeassistant.util.async import run_callback_threadsafe
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +56,6 @@ def get_test_home_assistant():
         # pylint: disable=protected-access
         loop._thread_ident = threading.get_ident()
         loop.run_forever()
-        loop.close()
         stop_event.set()
 
     orig_start = hass.start
@@ -74,6 +72,7 @@ def get_test_home_assistant():
         """Stop hass."""
         orig_stop()
         stop_event.wait()
+        loop.close()
 
     hass.start = start_hass
     hass.stop = stop_hass
@@ -93,13 +92,16 @@ def async_test_home_assistant(loop):
 
     hass = ha.HomeAssistant(loop)
 
+    orig_async_add_job = hass.async_add_job
+
     def async_add_job(target, *args):
         """Add a magic mock."""
         if isinstance(target, MagicMock):
             return
-        hass._async_add_job_tracking(target, *args)
+        return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
+    hass.async_track_tasks()
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -128,6 +130,7 @@ def async_test_home_assistant(loop):
 
     @ha.callback
     def clear_instance(event):
+        """Clear global instance."""
         global INST_COUNT
         INST_COUNT -= 1
 
@@ -149,20 +152,18 @@ def get_test_instance_port():
 
 
 def mock_service(hass, domain, service):
-    """Setup a fake service.
-
-    Return a list that logs all calls to fake service.
-    """
+    """Setup a fake service & return a list that logs calls to this service."""
     calls = []
 
-    # pylint: disable=redefined-outer-name
-    @ha.callback
-    def mock_service(call):
+    @asyncio.coroutine
+    def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """"Mocked service call."""
         calls.append(call)
 
-    # pylint: disable=unnecessary-lambda
-    hass.services.register(domain, service, mock_service)
+    if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
+        hass.services.async_register(domain, service, mock_service_log)
+    else:
+        hass.services.register(domain, service, mock_service_log)
 
     return calls
 
@@ -230,7 +231,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
 def mock_http_component(hass, api_password=None):
     """Mock the HTTP component."""
     hass.http = MagicMock(api_password=api_password)
-    hass.config.components.add('http')
+    mock_component(hass, 'http')
     hass.http.views = {}
 
     def mock_register_view(view):
@@ -266,6 +267,19 @@ def mock_mqtt_component(hass):
             }
         })
         return mock_mqtt
+
+
+def mock_component(hass, component):
+    """Mock a component is setup."""
+    setup_tasks = hass.data.get(DATA_SETUP)
+    if setup_tasks is None:
+        setup_tasks = hass.data[DATA_SETUP] = {}
+
+    if component not in setup_tasks:
+        AssertionError("Component {} is already setup".format(component))
+
+    hass.config.components.add(component)
+    setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 
 
 class MockModule(object):
@@ -432,17 +446,17 @@ def assert_setup_component(count, domain=None):
     - domain: The domain to count is optional. It can be automatically
               determined most of the time
 
-    Use as a context manager aroung bootstrap.setup_component
+    Use as a context manager aroung setup.setup_component
         with assert_setup_component(0) as result_config:
             setup_component(hass, domain, start_config)
             # using result_config is optional
     """
     config = {}
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_psc(hass, config_input, domain):
         """Mock the prepare_setup_component to capture config."""
-        res = yield from async_prepare_setup_component(
+        res = async_process_component_config(
             hass, config_input, domain)
         config[domain] = None if res is None else res.get(domain)
         _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
@@ -450,7 +464,7 @@ def assert_setup_component(count, domain=None):
         return res
 
     assert isinstance(config, dict)
-    with patch('homeassistant.bootstrap.async_prepare_setup_component',
+    with patch('homeassistant.config.async_process_component_config',
                mock_psc):
         yield config
 
@@ -474,8 +488,6 @@ def init_recorder_component(hass, add_config=None):
         assert setup_component(hass, recorder.DOMAIN,
                                {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-        run_coroutine_threadsafe(
-            recorder.wait_connection_ready(hass), hass.loop).result()
     _LOGGER.info("In-memory recorder successfully started")
 
 

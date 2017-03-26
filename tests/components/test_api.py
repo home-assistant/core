@@ -9,7 +9,7 @@ from unittest.mock import Mock, patch
 from aiohttp import web
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import setup, const
 import homeassistant.core as ha
 import homeassistant.components.http as http
 
@@ -41,12 +41,12 @@ def setUpModule():
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
          http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    bootstrap.setup_component(hass, 'api')
+    setup.setup_component(hass, 'api')
 
     hass.start()
 

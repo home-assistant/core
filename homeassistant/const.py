@@ -1,12 +1,13 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 39
+MINOR_VERSION = 42
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
 REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
+CONSTRAINT_FILE = 'package_constraints.txt'
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
@@ -87,6 +88,7 @@ CONF_DISCOVERY = 'discovery'
 CONF_DISPLAY_OPTIONS = 'display_options'
 CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
+CONF_EFFECT = 'effect'
 CONF_ELEVATION = 'elevation'
 CONF_EMAIL = 'email'
 CONF_ENTITIES = 'entities'
@@ -126,6 +128,7 @@ CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
 CONF_PROTOCOL = 'protocol'
+CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
 CONF_RECIPIENT = 'recipient'
 CONF_RESOURCE = 'resource'
@@ -153,6 +156,8 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITE_VALUE = 'white_value'
+CONF_XY = 'xy'
 CONF_ZONE = 'zone'
 
 # #### EVENTS ####
@@ -166,6 +171,7 @@ EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
+EVENT_SERVICE_REMOVED = 'service_removed'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -305,6 +311,7 @@ SERVICE_HOMEASSISTANT_RESTART = 'restart'
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 SERVICE_TOGGLE = 'toggle'
+SERVICE_RELOAD = 'reload'
 
 SERVICE_VOLUME_UP = 'volume_up'
 SERVICE_VOLUME_DOWN = 'volume_down'

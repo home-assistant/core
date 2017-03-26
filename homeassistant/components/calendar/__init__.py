@@ -3,8 +3,8 @@ Support for Google Calendar event device sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar/
-
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -27,13 +27,13 @@ DOMAIN = 'calendar'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
-    component.setup(config)
-
+    yield from component.async_setup(config)
     return True
 
 
@@ -155,7 +155,7 @@ class CalendarEventDevice(Entity):
         start = _get_date(self.data.event['start'])
         end = _get_date(self.data.event['end'])
 
-        summary = self.data.event['summary']
+        summary = self.data.event.get('summary', '')
 
         # check if we have an offset tag in the message
         # time is HH:MM or MM

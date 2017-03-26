@@ -18,7 +18,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 
 DOMAIN = 'scene'
-DEPENDENCIES = ['group']
 STATE = 'scening'
 
 CONF_ENTITIES = "entities"

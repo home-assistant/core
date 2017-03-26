@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 
-REQUIREMENTS = ['openhomedevice==0.2']
+REQUIREMENTS = ['openhomedevice==0.2.1']
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
