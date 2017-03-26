@@ -101,16 +101,15 @@ class MVGLiveSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        if self.data.departures:
-            return self.data.departures[0]
+        return self.data.nextdeparture
 
     def update(self):
         """Get the latest data and update the state."""
         self.data.update()
-        if not self.data.departures:
+        if not self.data.nextdeparture:
             self._state = '-'
         else:
-            self._state = self.data.departures[0].get('time', '-')
+            self._state = self.data.nextdeparture.get('time', '-')
 
 
 class MVGLiveData(object):
@@ -129,7 +128,7 @@ class MVGLiveData(object):
         self._bus = bus
         self._sbahn = sbahn
         self.mvg = MVGLive.MVGLive()
-        self.departures = [{}]
+        self.nextdeparture = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -141,12 +140,19 @@ class MVGLiveData(object):
                                                bus=self._bus,
                                                sbahn=self._sbahn)
         except ValueError:
-            self.departures = [{}]
+            self.nextdeparture = {}
             _LOGGER.warning("Returned data not understood.")
             return
-        _keys = ['destination', 'linename', 'time', 'direction', 'product']
-        self.departures = [{k: int(v) if k == 'time' and v.is_integer() else v
-                            for k, v in con.items() if k in _keys}
-                           for con in _departures
-                           if con['time'] >= self._offset and
-                           con['destination'].startswith(self._destination)]
+        for _departure in _departures:
+            # find the first departure meeting the criteria
+            if not _departure['destination'].startswith(self._destination):
+                continue
+            elif _departure['time'] < self._offset:
+                continue
+            # now select the relevant data
+            _nextdep = {}
+            for k in ['destination', 'linename', 'time', 'direction', 'product']:
+                _nextdep[k] = _departure.get(k, '')
+            _nextdep['time'] = int(_nextdep['time'])
+            self.nextdeparture = _nextdep
+            break
