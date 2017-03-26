@@ -158,7 +158,7 @@ class MinMaxSensor(Entity):
 
     # pylint: disable=R0201
     def calc_min(self, sensor_values):
-        """Calculate min value, honoring unkown states."""
+        """Calculate min value, honoring unknown states."""
         val = STATE_UNKNOWN
         for sval in sensor_values:
             if sval != STATE_UNKNOWN:
@@ -168,7 +168,7 @@ class MinMaxSensor(Entity):
 
     # pylint: disable=R0201
     def calc_max(self, sensor_values):
-        """Calculate max value, honoring unkown states."""
+        """Calculate max value, honoring unknown states."""
         val = STATE_UNKNOWN
         for sval in sensor_values:
             if sval != STATE_UNKNOWN:
@@ -177,7 +177,7 @@ class MinMaxSensor(Entity):
         return val
 
     def calc_mean(self, sensor_values):
-        """Calculate mean value, honoring unkown states."""
+        """Calculate mean value, honoring unknown states."""
         val = 0
         count = 0
         for sval in sensor_values:
