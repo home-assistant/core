@@ -85,11 +85,11 @@ class VeraThermostat(VeraDevice, ClimateDevice):
             return self.vera_device.fan_cycle()
 
     @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
+    def current_power_w(self):
+        """Current power usage in W."""
         power = self.vera_device.power
         if power:
-            return convert(power, float, 0.0) * 1000
+            return convert(power, float, 0.0)
 
     def update(self):
         """Called by the vera device callback to update state."""

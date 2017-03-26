@@ -8,15 +8,15 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.loader as loader
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
     CONF_USERNAME, CONF_PASSWORD, STATE_UNKNOWN,
     ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-import homeassistant.loader as loader
 
 from requests.exceptions import HTTPError, ConnectTimeout
 

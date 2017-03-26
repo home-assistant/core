@@ -4,10 +4,11 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-from homeassistant.core import State
+from homeassistant.core import State, CoreState
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.automation as automation
-from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID, STATE_ON, STATE_OFF, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.util.dt as dt_util
 
@@ -567,6 +568,38 @@ class TestAutomation(unittest.TestCase):
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
         assert len(self.calls) == 2
+
+    def test_automation_not_trigger_on_bootstrap(self):
+        """Test if automation is not trigger on bootstrap."""
+        self.hass.state = CoreState.not_running
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'event',
+                    'event_type': 'test_event',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'entity_id': 'hello.world'
+                }
+            }
+        })
+
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 0
+
+        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
+        self.hass.block_till_done()
+        self.hass.states = CoreState.running
+
+        self.hass.bus.fire('test_event')
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 1
+        assert ['hello.world'] == self.calls[0].data.get(ATTR_ENTITY_ID)
 
 
 @asyncio.coroutine

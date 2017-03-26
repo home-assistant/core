@@ -7,19 +7,20 @@ https://home-assistant.io/components/blink/
 import logging
 from datetime import timedelta
 import requests
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_USERNAME,
-                                 CONF_PASSWORD,
-                                 ATTR_FRIENDLY_NAME,
-                                 ATTR_ARMED)
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, ATTR_FRIENDLY_NAME, ATTR_ARMED)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
+
+REQUIREMENTS = ['blinkpy==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
-REQUIREMENTS = ['blinkpy==0.5.2']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=180)
 MIN_TIME_BETWEEN_FORCED_UPDATES = timedelta(seconds=5)
@@ -94,7 +95,7 @@ class BlinkSystem(object):
 
 
 def setup(hass, config):
-    """Setup Blink System."""
+    """Set up Blink System."""
     hass.data[DOMAIN] = BlinkSystem(config)
     discovery.load_platform(hass, 'camera', DOMAIN, {}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
@@ -125,12 +126,13 @@ def setup(hass, config):
         """Force an update."""
         hass.data[DOMAIN].force_update()
 
-    hass.services.register(DOMAIN, 'snap_picture', snap_picture,
-                           schema=SNAP_PICTURE_SCHEMA)
-    hass.services.register(DOMAIN, 'arm_camera', arm_camera,
-                           schema=ARM_CAMERA_SCHEMA)
-    hass.services.register(DOMAIN, 'arm_system', arm_system,
-                           schema=ARM_SYSTEM_SCHEMA)
-    hass.services.register(DOMAIN, 'force_update', force_update)
+    hass.services.register(
+        DOMAIN, 'snap_picture', snap_picture, schema=SNAP_PICTURE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'arm_camera', arm_camera, schema=ARM_CAMERA_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'arm_system', arm_system, schema=ARM_SYSTEM_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'force_update', force_update)
 
     return True
