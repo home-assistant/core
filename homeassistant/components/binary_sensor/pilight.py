@@ -177,7 +177,7 @@ class PilightTriggerSensor(BinarySensorDevice):
             try:
                 value = call.data[self._variable]
                 self._state = (value == self._on_value)
-                if self._delay_after == None:
+                if self._delay_after is None:
                     self._delay_after = dt_util.utcnow() + datetime.timedelta(
                         seconds=self._reset_delay_sec)
                     track_point_in_time(
