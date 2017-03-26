@@ -4,34 +4,33 @@ Support for real-time departure information for public transport in Munich.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mvglive/
 """
-
 import logging
 from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
-import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['PyMVGLive==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
-# A typo in the file name of the PyPI version prevents installation from PyPI
-REQUIREMENTS = ["PyMVGLive==1.1.3"]
-ICON = 'mdi:bus'
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
-
-CONF_STATION = 'station'
+CONF_BUS = 'bus'
 CONF_DEST = 'destination'
 CONF_LINE = 'line'
 CONF_OFFSET = 'offset'
-CONF_UBAHN = 'ubahn'
-CONF_TRAM = 'tram'
-CONF_BUS = 'bus'
 CONF_SBAHN = 'sbahn'
+CONF_STATION = 'station'
+CONF_TRAM = 'tram'
+CONF_UBAHN = 'ubahn'
+
+ICON = 'mdi:bus'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): cv.string,
@@ -46,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MVG Live Sensor."""
+    """Set up the MVG Live Sensor."""
     station = config.get(CONF_STATION)
     destination = config.get(CONF_DEST)
     line = config.get(CONF_LINE)
@@ -56,11 +55,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bus = config.get(CONF_BUS)
     sbahn = config.get(CONF_SBAHN)
 
-    add_devices([MVGLiveSensor(station, destination, line,
-                               offset, ubahn, tram, bus, sbahn)], True)
+    add_devices([MVGLiveSensor(
+        station, destination, line, offset, ubahn, tram, bus, sbahn)], True)
 
 
-# pylint: disable=too-few-public-methods
 class MVGLiveSensor(Entity):
     """Implementation of an MVG Live sensor."""
 
@@ -83,9 +81,9 @@ class MVGLiveSensor(Entity):
         # 'Hauptbahnhof-Marienplatz (S1)'
         namestr = self._station
         if self._destination:
-            namestr = namestr + '-' + self._destination
+            namestr = '{}-{}'.format(namestr, self._destination)
         if self._line:
-            namestr = namestr + ' (' + self._line + ')'
+            namestr = '{} ({})'.format(namestr, self._line)
         return namestr
 
     @property
@@ -134,11 +132,9 @@ class MVGLiveData(object):
     def update(self):
         """Update the connection data."""
         try:
-            _departures = self.mvg.getlivedata(station=self._station,
-                                               ubahn=self._ubahn,
-                                               tram=self._tram,
-                                               bus=self._bus,
-                                               sbahn=self._sbahn)
+            _departures = self.mvg.getlivedata(
+                station=self._station, ubahn=self._ubahn, tram=self._tram,
+                bus=self._bus, sbahn=self._sbahn)
         except ValueError:
             self.nextdeparture = {}
             _LOGGER.warning("Returned data not understood.")
