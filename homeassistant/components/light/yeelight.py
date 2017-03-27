@@ -44,12 +44,13 @@ DEVICE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
 
-SUPPORT_YEELIGHT_RGB = (SUPPORT_RGB_COLOR |
-                        SUPPORT_COLOR_TEMP)
-
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
                     SUPPORT_FLASH)
+
+SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
+                        SUPPORT_RGB_COLOR |
+                        SUPPORT_COLOR_TEMP)
 
 
 def _cmd(func):
@@ -201,7 +202,7 @@ class YeelightLight(Light):
             self._bulb.get_properties()
 
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
-                self._supported_features |= SUPPORT_YEELIGHT_RGB
+                self._supported_features = SUPPORT_YEELIGHT_RGB
 
             self._is_on = self._properties.get("power") == "on"
 
