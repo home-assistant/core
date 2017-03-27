@@ -109,10 +109,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         maxrtt = 10000.0
         data = self.get_node_statistics()
         if data and data != {}:
-            data1 = float(float(data['sentCnt'] - data['sentFailed']) / data['sentCnt'])  if data['sentCnt'] != 0 else 0.0
+            data1 = (float(float(data['sentCnt'] - data['sentFailed'])
+                           / data['sentCnt'])  if data['sentCnt']
+                     != 0 else 0.0)
             data2 = float(((maxrtt /2) - data['averageRequestRTT']) / (maxrtt / 2))
             data3 = float((maxrtt - data['averageResponseRTT']) / maxrtt)
-            data4 = float(1 - (float(data['receivedCnt']  - data['receivedUnsolicited']) / data['receivedCnt'])) if data['receivedCnt'] != 0 else 0.0
+            data4 = (float(1 - (float(data['receivedCnt']
+                                      - data['receivedUnsolicited'])
+                                / data['receivedCnt'])) if data['receivedCnt']
+                     != 0 else 0.0)
             quality = ((data1 + (data2*2) + (data3*3) + data4) / 7.0) * 100.0
         else:
             _LOGGER.debug('No node statistics for node %s ', self.node_id)
