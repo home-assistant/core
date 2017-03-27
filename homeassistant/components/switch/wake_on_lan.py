@@ -76,7 +76,8 @@ class WOLSwitch(SwitchDevice):
     def turn_on(self):
         """Turn the device on."""
         if self._host:
-            self._wol.send_magic_packet(self._mac_address, ip_address=self._host)
+            self._wol.send_magic_packet(self._mac_address,
+                                        ip_address=self._host)
         else:
             self._wol.send_magic_packet(self._mac_address)
 
