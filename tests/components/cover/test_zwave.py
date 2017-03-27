@@ -101,7 +101,7 @@ def test_roller_value_changed_reversed(mock_openzwave):
     value_changed(value)
 
     assert device.current_cover_position == 100
-    assert device.is_closed
+    assert not device.is_closed
 
     value.data = 35
     value_changed(value)
@@ -113,7 +113,7 @@ def test_roller_value_changed_reversed(mock_openzwave):
     value_changed(value)
 
     assert device.current_cover_position == 0
-    assert not device.is_closed
+    assert device.is_closed
 
 
 @patch('homeassistant.components.zwave.NETWORK')

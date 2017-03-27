@@ -76,16 +76,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Return if the cover is closed."""
         if self.current_cover_position is None:
             return None
-        if self._invert:
-            if self.current_cover_position < 100:
-                return False
-            else:
-                return True
+        if self.current_cover_position > 0:
+            return False
         else:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+            return True
 
     @property
     def current_cover_position(self):
