@@ -360,7 +360,7 @@ liveboxplaytv==1.4.9
 lyft_rides==0.1.0b0
 
 # homeassistant.components.notify.matrix
-matrix-client==0.0.5
+matrix-client==0.0.6
 
 # homeassistant.components.maxcube
 maxcube-api==0.1.0
