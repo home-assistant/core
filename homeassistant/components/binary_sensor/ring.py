@@ -11,11 +11,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
     CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_CACHEDB)
 
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    ATTR_ATTRIBUTION)
 
 DEPENDENCIES = ['ring']
 

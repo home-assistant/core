@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.loader as loader
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
     CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_SCAN_INTERVAL)
