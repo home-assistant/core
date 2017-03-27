@@ -115,7 +115,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             data4 = float(1 - (float(data['receivedCnt']  - data['receivedUnsolicited']) / data['receivedCnt'])) if data['receivedCnt'] != 0 else 0.0
             quality = ((data1 + (data2*2) + (data3*3) + data4) / 7.0) * 100.0
         else:
-            _LOGGER.info('No node statistics for node %s ', self.node_id)
+            _LOGGER.debug('No node statistics for node %s ', self.node_id)
             quality = 20
         return int(quality)
 
