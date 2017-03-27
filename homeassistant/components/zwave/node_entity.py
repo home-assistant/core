@@ -100,23 +100,24 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def get_node_statistics(self):
         """Retrieve statistics from the node."""
-        return self._network.manager.getNodeStatistics(self._network.home_id, self.node_id)
+        return self._network.manager.getNodeStatistics(self._network.home_id,
+                                                       self.node_id)
 
     def get_com_quality(self):
         """Calculate communication quality for the node."""
-
         quality = 0.0
         maxrtt = 10000.0
         data = self.get_node_statistics()
         if data and data != {}:
-            data1 = (float(float(data['sentCnt'] - data['sentFailed'])
-                           / data['sentCnt'])  if data['sentCnt']
+            data1 = (float(float(data['sentCnt'] - data['sentFailed']) /
+                           data['sentCnt']) if data['sentCnt']
                      != 0 else 0.0)
-            data2 = float(((maxrtt /2) - data['averageRequestRTT']) / (maxrtt / 2))
+            data2 = float(((maxrtt / 2) - data['averageRequestRTT']) /
+                          (maxrtt / 2))
             data3 = float((maxrtt - data['averageResponseRTT']) / maxrtt)
-            data4 = (float(1 - (float(data['receivedCnt']
-                                      - data['receivedUnsolicited'])
-                                / data['receivedCnt'])) if data['receivedCnt']
+            data4 = (float(1 - (float(data['receivedCnt'] -
+                                      data['receivedUnsolicited']) /
+                                data['receivedCnt'])) if data['receivedCnt']
                      != 0 else 0.0)
             quality = ((data1 + (data2*2) + (data3*3) + data4) / 7.0) * 100.0
         else:
