@@ -22,7 +22,7 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.22"]
+REQUIREMENTS = ["pyhomematic==0.1.24"]
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -82,7 +82,12 @@ HM_ATTRIBUTE_SUPPORT = {
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
-    'CONTROL_MODE': ['mode', {0: 'Auto', 1: 'Manual', 2: 'Away', 3: 'Boost'}],
+    'CONTROL_MODE': ['mode', {0: 'Auto',
+                              1: 'Manual',
+                              2: 'Away',
+                              3: 'Boost',
+                              4: 'Comfort',
+                              5: 'Lowering'}],
     'POWER': ['power', {}],
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],

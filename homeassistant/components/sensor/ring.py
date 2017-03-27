@@ -7,16 +7,15 @@ https://home-assistant.io/components/sensor.ring/
 import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.loader as loader
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
     CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_SCAN_INTERVAL)
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
     STATE_UNKNOWN, ATTR_ATTRIBUTION)
-
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ring']
