@@ -20,29 +20,35 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-def get_device(values, **kwargs):
+def get_device(values, node_config, **kwargs):
     """Create zwave entity device."""
+    name = '{}.{}'.format(DOMAIN, zwave.object_id(values.primary))
+    invert = node_config.get(zwave.CONF_INVERT_OPENCLOSE)
+    _LOGGER.debug('name=%s node_config=%s CONF_INVERT_OPENCLOSE=%s',
+                  name, node_config, invert)
+
     if (values.primary.command_class ==
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
-        return ZwaveRollershutter(values)
+        return ZwaveRollershutter(values, invert)
     elif (values.primary.command_class in [
             zwave.const.COMMAND_CLASS_SWITCH_BINARY,
             zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
-        return ZwaveGarageDoor(values)
+        return ZwaveGarageDoor(values, invert)
     return None
 
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave roller shutter."""
 
-    def __init__(self, values):
+    def __init__(self, values, invert):
         """Initialize the zwave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         # pylint: disable=no-member
         self._open_id = None
         self._close_id = None
         self._current_position = None
+        self._invert = invert
 
         self._workaround = workaround.get_device_mapping(values.primary)
         if self._workaround:
@@ -56,10 +62,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
         if self.values.open and self.values.close and \
                 self._open_id is None and self._close_id is None:
-            if self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
+            if (self._invert or
+                    self._workaround == workaround
+                    .WORKAROUND_REVERSE_OPEN_CLOSE):
                 self._open_id = self.values.close.value_id
                 self._close_id = self.values.open.value_id
-                self._workaround = None
             else:
                 self._open_id = self.values.open.value_id
                 self._close_id = self.values.close.value_id
@@ -80,12 +87,20 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         if self._workaround == workaround.WORKAROUND_NO_POSITION:
             return None
         if self._current_position is not None:
-            if self._current_position <= 5:
-                return 0
-            elif self._current_position >= 95:
-                return 100
+            if self._invert:
+                if self._current_position <= 5:
+                    return 100
+                elif self._current_position >= 95:
+                    return 0
+                else:
+                    return 100 - self._current_position
             else:
-                return self._current_position
+                if self._current_position <= 5:
+                    return 0
+                elif self._current_position >= 95:
+                    return 100
+                else:
+                    return self._current_position
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
@@ -97,7 +112,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
-        self.node.set_dimmer(self.values.primary.value_id, position)
+        if self._invert:
+            self.node.set_dimmer(self.values.primary.value_id, 100 - position)
+        else:
+            self.node.set_dimmer(self.values.primary.value_id, position)
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
@@ -107,9 +125,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave garage door device."""
 
-    def __init__(self, values):
+    def __init__(self, values, invert):
         """Initialize the zwave garage door."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
+        self._invert = invert
         self.update_properties()
 
     def update_properties(self):
@@ -119,15 +138,26 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return the current position of Zwave garage door."""
-        return not self._state
+        if self._invert:
+            _LOGGER.debug('Inverted %s', self._state)
+            return self._state
+        else:
+            return not self._state
 
+# pylint:disable=simplifiable-if-statement
     def close_cover(self):
         """Close the garage door."""
-        self.values.primary.data = False
+        if self._invert:
+            self.values.primary.data = True
+        else:
+            self.values.primary.data = False
 
     def open_cover(self):
         """Open the garage door."""
-        self.values.primary.data = True
+        if self._invert:
+            self.values.primary.data = False
+        else:
+            self.values.primary.data = True
 
     @property
     def device_class(self):
