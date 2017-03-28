@@ -9,7 +9,6 @@ import json
 import logging
 import ssl
 from ipaddress import ip_network
-from pathlib import Path
 
 import os
 import voluptuous as vol
@@ -282,10 +281,13 @@ class HomeAssistantWSGI(object):
         # to work around cache busting MD5.
         # Turns something like /static/dev-panel.html into
         # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
-        base, ext = url_path.rsplit('.', 1)
-        base, file = base.rsplit('/', 1)
-        regex = r"{}(-[a-z0-9]{{32}}|)\.{}".format(file, ext)
-        url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        base, ext = os.path.splitext(url_path)
+        if ext:
+            base, file = base.rsplit('/', 1)
+            regex = r"{}(-[a-z0-9]{{32}}|)\.{}".format(file, ext)
+            url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        else:
+            url_pattern = url_path
 
         self.app.router.add_route('GET', url_pattern, serve_file)
 

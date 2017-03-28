@@ -247,22 +247,6 @@ class TestAPI(unittest.TestCase):
                            headers=HA_HEADERS)
         self.assertEqual(hass.config.components, set(req.json()))
 
-    def test_api_get_error_log(self):
-        """Test the return of the error log."""
-        test_string = 'Test String°'
-
-        @asyncio.coroutine
-        def mock_send():
-            """Mock file send."""
-            return web.Response(text=test_string)
-
-        with patch('homeassistant.components.http.HomeAssistantView.file',
-                   Mock(return_value=mock_send())):
-            req = requests.get(_url(const.URL_API_ERROR_LOG),
-                               headers=HA_HEADERS)
-            self.assertEqual(test_string, req.text)
-            self.assertIsNone(req.headers.get('expires'))
-
     def test_api_get_event_listeners(self):
         """Test if we can get the list of events being listened for."""
         req = requests.get(_url(const.URL_API_EVENTS),
