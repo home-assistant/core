@@ -148,7 +148,7 @@ class WemoSwitch(SwitchDevice):
     def today_energy_kwh(self):
         """Today total energy usage in kWh."""
         if self.insight_params:
-            return convert(self.insight_params['todaymw'], float, 0.0) / 1000.0
+            return convert(self.insight_params['todaymw'], float, 0.0) / 1000000.0
 
     @property
     def detail_state(self):
