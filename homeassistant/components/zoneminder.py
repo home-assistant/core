@@ -21,6 +21,7 @@ DEFAULT_PATH = '/zm/'
 DEFAULT_PATH_ZMS = '/zm/cgi-bin/nph-zms'
 DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
+DEFAULT_TRIGGER_PORT = 6802
 DOMAIN = 'zoneminder'
 
 LOGIN_RETRIES = 2
@@ -32,6 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
+        vol.Optional('trigger_port', default=DEFAULT_TRIGGER_PORT): cv.port,
         # This should match PATH_ZMS in ZoneMinder settings.
         vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
         vol.Optional(CONF_USERNAME): cv.string,
@@ -61,6 +63,8 @@ def setup(hass, config):
     ZM['username'] = username
     ZM['password'] = password
     ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
+    ZM['host'] = conf[CONF_HOST]
+    ZM['trigger_port'] = conf['trigger_port']
 
     hass.data[DOMAIN] = ZM
 
@@ -116,6 +120,22 @@ def _zm_request(method, api_url, data=None):
     except ValueError:
         _LOGGER.exception('JSON decode exception caught while attempting to '
                           'decode "%s"', req.text)
+
+
+def zm_trigger(monitor, state, cause, duration):
+    """Attempt to connect over TCP socket and trigger recording."""
+    import socket
+    sock = socket.socket()
+    try:
+        sock.connect((ZM['host'], ZM['trigger_port']))
+        command = '{:d}|{:s}'.format(monitor, state)
+        if state in 'on':
+            command += "+{:d}|1|{:s}|{:s}".format(duration, cause, cause)
+        sock.sendall(command.encode())
+    except socket.error as sock_err:
+        _LOGGER.exception('Connect failed (%s), check OPT_TRIGGERS', sock_err)
+    finally:
+        sock.close()
 
 
 # pylint: disable=no-member
