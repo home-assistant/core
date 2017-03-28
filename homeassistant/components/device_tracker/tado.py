@@ -127,7 +127,7 @@ class TadoDeviceScanner(DeviceScanner):
 
                 tado_json = yield from response.json()
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Cannot load Tado data")
             return False
 

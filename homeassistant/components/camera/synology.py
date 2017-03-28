@@ -88,7 +88,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         camera_path = query_resp['data'][CAMERA_API]['path']
         streaming_path = query_resp['data'][STREAMING_API]['path']
 
-    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", syno_api_url)
         return False
 
@@ -128,7 +128,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 syno_camera_url,
                 params=camera_payload
             )
-    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", syno_camera_url)
         return False
 
@@ -182,7 +182,7 @@ def get_session_id(hass, websession, username, password, login_url, timeout):
         auth_resp = yield from auth_req.json()
         return auth_resp['data']['sid']
 
-    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", login_url)
         return False
 
@@ -235,7 +235,7 @@ class SynologyCamera(Camera):
                     image_url,
                     params=image_payload
                 )
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error on %s", image_url)
             return None
 

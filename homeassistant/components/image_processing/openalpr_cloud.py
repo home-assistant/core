@@ -127,7 +127,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                                   request.status, data.get('error'))
                     return
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for openalpr api.")
             return
 

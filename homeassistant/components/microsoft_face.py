@@ -374,8 +374,7 @@ class MicrosoftFace(object):
                                 response.status, response.url)
                 raise HomeAssistantError(answer['error']['message'])
 
-        except (aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError):
+        except aiohttp.ClientError:
             _LOGGER.warning("Can't connect to microsoft face api")
 
         except asyncio.TimeoutError:

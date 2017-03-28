@@ -123,7 +123,7 @@ class UPCDeviceScanner(DeviceScanner):
                 return True
             return False
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Can not load login page from %s", self.host)
             return False
 
@@ -163,7 +163,7 @@ class UPCDeviceScanner(DeviceScanner):
                 self.token = response.cookies['sessionToken'].value
                 return (yield from response.text())
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error on %s", function)
             self.token = None
 

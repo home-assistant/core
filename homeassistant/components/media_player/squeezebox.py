@@ -146,9 +146,7 @@ class LogitechMediaServer(object):
                         response.status, response)
                     return False
 
-        except (asyncio.TimeoutError,
-                aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as error:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with LMS: %s", type(error))
             return False
         finally:

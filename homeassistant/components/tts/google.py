@@ -109,7 +109,7 @@ class GoogleProvider(Provider):
                         return (None, None)
                     data += yield from request.read()
 
-            except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+            except (asyncio.TimeoutError, aiohttp.ClientError):
                 _LOGGER.error("Timeout for google speech.")
                 return (None, None)
 

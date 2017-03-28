@@ -65,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")
         return False
-    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
     finally:
@@ -113,7 +113,7 @@ class RestSwitch(SwitchDevice):
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.post(
                     self._resource, data=bytes(body_on_t, 'utf-8'))
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn on %s", self._resource)
             return
         finally:
@@ -137,7 +137,7 @@ class RestSwitch(SwitchDevice):
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.post(
                     self._resource, data=bytes(body_off_t, 'utf-8'))
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn off %s", self._resource)
             return
         finally:
@@ -160,7 +160,7 @@ class RestSwitch(SwitchDevice):
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.get(self._resource)
                 text = yield from request.text()
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error while fetch data.")
             return
         finally:

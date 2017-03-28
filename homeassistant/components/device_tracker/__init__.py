@@ -570,7 +570,7 @@ class Device(Entity):
             # in the 'known_devices.yaml' file which only happens
             # the first time the device is seen.
             return 'unknown'
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
+        except (asyncio.TimeoutError, aiohttp.ClientError,
                 aiohttp.errors.ClientDisconnectedError):
             # same as above
             return 'unknown'
