@@ -441,7 +441,7 @@ proliphix==0.4.1
 psutil==5.2.1
 
 # homeassistant.components.wink
-pubnubsub-handler==1.0.1
+pubnubsub-handler==1.0.2
 
 # homeassistant.components.notify.pushbullet
 pushbullet.py==0.10.0
