@@ -43,9 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     'username': username,
                     'password': password})
         data = yield from response.json()
-    except (asyncio.TimeoutError,
-            aiohttp.ClientError,
-            aiohttp.errors.ClientDisconnectedError) as error:
+    except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         _LOGGER.error("Failed authentication API call: %s", error)
         return False
     finally:
@@ -65,9 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
                 params={"token": data['data']['token']})
         data = yield from response.json()
-    except (asyncio.TimeoutError,
-            aiohttp.ClientError,
-            aiohttp.errors.ClientDisconnectedError) as error:
+    except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
     finally:
@@ -119,9 +115,7 @@ class HookSmartHome(SwitchDevice):
                     url, params={"token": self._token})
             data = yield from response.json()
 
-        except (asyncio.TimeoutError,
-                aiohttp.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as error:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed setting state: %s", error)
             return False
 

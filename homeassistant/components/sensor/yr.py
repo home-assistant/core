@@ -172,8 +172,7 @@ class YrData(object):
                     return
                 text = yield from resp.text()
 
-            except (asyncio.TimeoutError, aiohttp.ClientError,
-                    aiohttp.errors.ClientDisconnectedError) as err:
+            except (asyncio.TimeoutError, aiohttp.ClientError) as err:
                 try_again(err)
                 return
 
