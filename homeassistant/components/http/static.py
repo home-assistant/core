@@ -6,8 +6,9 @@ from aiohttp import hdrs
 from aiohttp.web import FileResponse
 from aiohttp.web_exceptions import HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-from .const import KEY_DEVELOPMENT
 from yarl import unquote
+
+from .const import KEY_DEVELOPMENT
 
 _FINGERPRINT = re.compile(r'^(.+)-[a-z0-9]{32}\.(\w+)$', re.IGNORECASE)
 
