@@ -1,6 +1,8 @@
 """Test Home Assistant remote methods and classes."""
 # pylint: disable=protected-access
 import asyncio
+from functools import wraps
+import socket
 import threading
 import unittest
 from unittest.mock import patch
@@ -11,7 +13,8 @@ from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
-    get_test_instance_port, get_test_home_assistant, get_test_config_dir)
+    get_test_instance_port, get_test_home_assistant, get_test_config_dir,
+    _TEST_INSTANCE_PORT_BINDS)
 
 API_PASSWORD = 'test1234'
 MASTER_PORT = get_test_instance_port()
@@ -53,6 +56,35 @@ def setUpModule():
 
     # Start slave
     loop = asyncio.new_event_loop()
+
+    orig_create_server = loop.create_server
+
+    @wraps(orig_create_server)
+    def create_server(*args, **kwargs):
+        """Wrap the native create_server method to return test bindings.
+
+        If a test port is requested and there is a binding available, return
+        a new server with that binding instead.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if len(args) >= 3:
+            port = args[2]
+        else:
+            port = kwargs.get('port')
+
+        if port in _TEST_INSTANCE_PORT_BINDS:
+            # Port binding has been precreated. Drop host/port from either
+            # *args or **kwargs, and add the created port binding.
+            args = args[:1]
+            kwargs.pop('host', None)
+            kwargs.pop('port', None)
+            kwargs['sock'] = _TEST_INSTANCE_PORT_BINDS.pop(port)
+
+        return orig_create_server(*args, **kwargs)
+
+    loop.create_server = create_server
+
 
     # FIXME: should not be a daemon
     threading.Thread(name='SlaveThread', daemon=True,

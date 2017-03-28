@@ -1,6 +1,8 @@
 """Test the helper method for writing tests."""
 import asyncio
+from functools import wraps
 import os
+import socket
 import sys
 from datetime import timedelta
 from unittest.mock import patch, MagicMock
@@ -23,14 +25,14 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DISCOVERED, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
 from homeassistant.util.async import run_callback_threadsafe
 
-_TEST_INSTANCE_PORT = SERVER_PORT
+_TEST_INSTANCE_PORT_BINDS = {}
 _LOGGER = logging.getLogger(__name__)
 INST_COUNT = 0
 
@@ -76,6 +78,34 @@ def get_test_home_assistant():
 
     hass.start = start_hass
     hass.stop = stop_hass
+
+    orig_create_server = hass.loop.create_server
+
+    @wraps(orig_create_server)
+    def create_server(*args, **kwargs):
+        """Wrap the native create_server method to return test bindings.
+
+        If a test port is requested and there is a binding available, return
+        a new server with that binding instead.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if len(args) >= 3:
+            port = args[2]
+        else:
+            port = kwargs.get('port')
+
+        if port in _TEST_INSTANCE_PORT_BINDS:
+            # Port binding has been precreated. Drop host/port from either
+            # *args or **kwargs, and add the created port binding.
+            args = args[:1]
+            kwargs.pop('host', None)
+            kwargs.pop('port', None)
+            kwargs['sock'] = _TEST_INSTANCE_PORT_BINDS.pop(port)
+
+        return orig_create_server(*args, **kwargs)
+
+    hass.loop.create_server = create_server
 
     threading.Thread(name="LoopThread", target=run_loop, daemon=False).start()
 
@@ -142,13 +172,15 @@ def async_test_home_assistant(loop):
 def get_test_instance_port():
     """Return unused port for running test instance.
 
-    The socket that holds the default port does not get released when we stop
-    HA in a different test case. Until I have figured out what is going on,
-    let's run each test on a different port.
+    This function creates a binding to an anonymous port, and maintains a
+    reference to that binding. Later, if hass attempts to bind to that port,
+    this binding is substituted for a new port binding.
     """
-    global _TEST_INSTANCE_PORT
-    _TEST_INSTANCE_PORT += 1
-    return _TEST_INSTANCE_PORT
+    sock_obj = socket.socket()
+    sock_obj.bind(('127.0.0.1', 0))
+    port = sock_obj.getsockname()[1]
+    _TEST_INSTANCE_PORT_BINDS[port] = sock_obj
+    return port
 
 
 def mock_service(hass, domain, service):
