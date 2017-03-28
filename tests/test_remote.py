@@ -2,7 +2,6 @@
 # pylint: disable=protected-access
 import asyncio
 from functools import wraps
-import socket
 import threading
 import unittest
 from unittest.mock import patch
@@ -84,7 +83,6 @@ def setUpModule():
         return orig_create_server(*args, **kwargs)
 
     loop.create_server = create_server
-
 
     # FIXME: should not be a daemon
     threading.Thread(name='SlaveThread', daemon=True,
