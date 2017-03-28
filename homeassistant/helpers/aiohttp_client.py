@@ -95,8 +95,7 @@ def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
     except asyncio.TimeoutError:
         raise HTTPGatewayTimeout()
 
-    except (aiohttp.errors.ClientError,
-            aiohttp.errors.ClientDisconnectedError):
+    except aiohttp.ClientError:
         pass
 
     except (asyncio.CancelledError, ConnectionResetError):
@@ -152,7 +151,7 @@ def _async_get_connector(hass, verify_ssl=True):
         @asyncio.coroutine
         def _async_close_connector(event):
             """Close connector pool."""
-            yield from connector.close()
+            connector.close()
 
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)

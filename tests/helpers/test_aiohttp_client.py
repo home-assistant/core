@@ -5,7 +5,7 @@ import unittest
 import aiohttp
 
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
-from homeassistant.setup import setup_component
+from homeassistant.setup import async_setup_component
 import homeassistant.helpers.aiohttp_client as client
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -125,16 +125,13 @@ def test_fetching_url(aioclient_mock, hass, test_client):
         b'Frame1', b'Frame2', b'Frame3'
     ])
 
-    def setup_platform():
-        """Setup the platform."""
-        assert setup_component(hass, 'camera', {
-            'camera': {
-                'name': 'config_test',
-                'platform': 'mjpeg',
-                'mjpeg_url': 'http://example.com/mjpeg_stream',
-            }})
-
-    yield from hass.loop.run_in_executor(None, setup_platform)
+    result = yield from async_setup_component(hass, 'camera', {
+        'camera': {
+            'name': 'config_test',
+            'platform': 'mjpeg',
+            'mjpeg_url': 'http://example.com/mjpeg_stream',
+        }})
+    assert result, 'Failed to setup camera'
 
     client = yield from test_client(hass.http.app)
 
@@ -152,9 +149,7 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 
     resp = yield from client.get('/api/camera_proxy_stream/camera.config_test')
 
-    assert resp.status == 200
-    body = yield from resp.text()
-    assert body == ''
+    assert resp.status == 504
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
@@ -169,7 +164,7 @@ def test_fetching_url(aioclient_mock, hass, test_client):
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
-        'http://example.com/mjpeg_stream', exc=aiohttp.errors.ClientError(),
+        'http://example.com/mjpeg_stream', exc=aiohttp.ClientError(),
         content=[b'Frame1', b'Frame2', b'Frame3'])
 
     resp = yield from client.get('/api/camera_proxy_stream/camera.config_test')
