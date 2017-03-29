@@ -148,19 +148,7 @@ def test_fetching_url(aioclient_mock, hass, test_client):
         content=[b'Frame1', b'Frame2', b'Frame3'])
 
     resp = yield from client.get('/api/camera_proxy_stream/camera.config_test')
-
     assert resp.status == 504
-
-    aioclient_mock.clear_requests()
-    aioclient_mock.get(
-        'http://example.com/mjpeg_stream', exc=asyncio.CancelledError(),
-        content=[b'Frame1', b'Frame2', b'Frame3'])
-
-    resp = yield from client.get('/api/camera_proxy_stream/camera.config_test')
-
-    assert resp.status == 200
-    body = yield from resp.text()
-    assert body == ''
 
     aioclient_mock.clear_requests()
     aioclient_mock.get(
@@ -168,7 +156,4 @@ def test_fetching_url(aioclient_mock, hass, test_client):
         content=[b'Frame1', b'Frame2', b'Frame3'])
 
     resp = yield from client.get('/api/camera_proxy_stream/camera.config_test')
-
-    assert resp.status == 200
-    body = yield from resp.text()
-    assert body == ''
+    assert resp.status == 502
