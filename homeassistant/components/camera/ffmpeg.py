@@ -8,7 +8,6 @@ import asyncio
 import logging
 
 import voluptuous as vol
-from aiohttp import web
 
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
@@ -71,7 +70,7 @@ class FFmpegCamera(Camera):
             self._input, extra_cmd=self._extra_arguments)
 
         yield from async_aiohttp_proxy_stream(
-            self.hass, stream,
+            self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
         yield from stream.close()
 
