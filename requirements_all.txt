@@ -659,7 +659,7 @@ qnapstats==0.2.3
 radiotherm==1.2
 
 # homeassistant.components.rflink
-rflink==0.0.28
+rflink==0.0.31
 
 # homeassistant.components.sensor.ring
 ring_doorbell==0.1.0
