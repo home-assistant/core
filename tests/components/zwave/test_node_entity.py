@@ -146,7 +146,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
              'is_zwave_plus': False,
              'battery_level': 42,
              'wake_up_interval': 1800,
-             'wake_up_interval': 1800,
              'averageRequestRTT': 2462,
              'averageResponseRTT': 2443,
              'lastRequestRTT': 1591,
