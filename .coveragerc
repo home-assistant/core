@@ -235,6 +235,7 @@ omit =
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
     homeassistant/components/lock/nuki.py
+    homeassistant/components/lock/lockitron.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
