@@ -87,7 +87,8 @@ def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
         yield from response.prepare(request)
 
         while True:
-            data = yield from stream.content.read(buffer_size)
+            with async_timeout.timeout(timeout, loop=hass.loop):
+                data = yield from stream.content.read(buffer_size)
             if not data:
                 break
             response.write(data)
