@@ -20,6 +20,8 @@ class CachingStaticResource(StaticResource):
     def _handle(self, request):
         filename = unquote(request.match_info['filename'])
         try:
+            # PyLint is wrong about resolve not being a member.
+            # pylint: disable=no-member
             filepath = self._directory.joinpath(filename).resolve()
             if not self._follow_symlinks:
                 filepath.relative_to(self._directory)

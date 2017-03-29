@@ -1,12 +1,9 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access
-import asyncio
 from contextlib import closing
 import json
 import unittest
-from unittest.mock import Mock, patch
 
-from aiohttp import web
 import requests
 
 from homeassistant import setup, const
