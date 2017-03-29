@@ -21,9 +21,15 @@ DOMAIN = 'scene'
 STATE = 'scening'
 
 CONF_ENTITIES = "entities"
+CONF_NAME = "name"
 
 SCENE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_ENTITIES): cv.ordered_dict(cv.match_all, cv.entity_id),
 })
 
 SceneConfig = namedtuple('SceneConfig', ['name', 'states'])
