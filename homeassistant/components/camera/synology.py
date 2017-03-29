@@ -19,7 +19,7 @@ from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA)
 from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_create_clientsession,
-    async_aiohttp_proxy_stream)
+    async_aiohttp_proxy_web)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
@@ -248,7 +248,7 @@ class SynologyCamera(Camera):
         stream_coro = self._websession.get(
             streaming_url, params=streaming_payload)
 
-        yield from async_aiohttp_proxy_stream(self.hass, request, stream_coro)
+        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):

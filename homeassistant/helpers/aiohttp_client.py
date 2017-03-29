@@ -71,12 +71,12 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
 
 
 @asyncio.coroutine
-def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
-                               timeout=10):
+def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
+                            timeout=10):
     """Stream websession request to aiohttp web response."""
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            stream = yield from stream_coro
+            req = yield from web_coro
 
     except asyncio.TimeoutError as err:
         raise HTTPGatewayTimeout() from err
@@ -84,14 +84,22 @@ def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
     except aiohttp.ClientError as err:
         raise HTTPBadGateway() from err
 
+    yield from async_aiohttp_proxy_stream(hass, request, req.content,
+                                          req.headers.get(CONTENT_TYPE))
+
+
+@asyncio.coroutine
+def async_aiohttp_proxy_stream(hass, request, stream, content_type,
+                               buffer_size=102400, timeout=10):
+    """Stream a stream to aiohttp web response."""
     response = web.StreamResponse()
-    response.content_type = stream.headers.get(CONTENT_TYPE)
+    response.content_type = content_type
     yield from response.prepare(request)
 
     try:
         while True:
             with async_timeout.timeout(timeout, loop=hass.loop):
-                data = yield from stream.content.read(buffer_size)
+                data = yield from stream.read(buffer_size)
 
             if not data:
                 yield from response.write_eof()
