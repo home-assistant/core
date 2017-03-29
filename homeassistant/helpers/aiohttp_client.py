@@ -5,7 +5,7 @@ import sys
 import aiohttp
 from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout
+from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
 import async_timeout
 
 from homeassistant.core import callback
@@ -74,39 +74,35 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
 def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
                                timeout=10):
     """Stream websession request to aiohttp web response."""
-    response = None
-    stream = None
-
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             stream = yield from stream_coro
 
-        response = web.StreamResponse()
-        response.content_type = stream.headers.get(CONTENT_TYPE)
+    except asyncio.TimeoutError as err:
+        raise HTTPGatewayTimeout() from err
 
-        yield from response.prepare(request)
+    except aiohttp.ClientError as err:
+        raise HTTPBadGateway() from err
 
+    response = web.StreamResponse()
+    response.content_type = stream.headers.get(CONTENT_TYPE)
+    yield from response.prepare(request)
+
+    try:
         while True:
             with async_timeout.timeout(timeout, loop=hass.loop):
                 data = yield from stream.content.read(buffer_size)
+
             if not data:
+                yield from response.write_eof()
                 break
+
             response.write(data)
 
-    except asyncio.TimeoutError:
-        raise HTTPGatewayTimeout()
-
-    except aiohttp.ClientError:
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         pass
 
-    except (asyncio.CancelledError, ConnectionResetError):
-        response = None
-
-    finally:
-        if stream is not None:
-            stream.close()
-        if response is not None:
-            yield from response.write_eof()
+    yield from response.write_eof()
 
 
 @callback
