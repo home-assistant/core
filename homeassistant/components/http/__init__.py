@@ -284,7 +284,7 @@ class HomeAssistantWSGI(object):
         base, ext = os.path.splitext(url_path)
         if ext:
             base, file = base.rsplit('/', 1)
-            regex = r"{}(-[a-z0-9]{{32}}|)\.{}".format(file, ext)
+            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
             url_pattern = "{}/{{filename:{}}}".format(base, regex)
         else:
             url_pattern = url_path
