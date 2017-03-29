@@ -105,8 +105,6 @@ class TadoDeviceScanner(DeviceScanner):
         _LOGGER.debug("Requesting Tado")
 
         last_results = []
-        response = None
-        tado_json = None
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -130,10 +128,6 @@ class TadoDeviceScanner(DeviceScanner):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Cannot load Tado data")
             return False
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
         # Without a home_id, we fetched an URL where the mobile devices can be
         # found under the mobileDevices key.

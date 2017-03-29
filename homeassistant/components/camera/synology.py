@@ -74,7 +74,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         'version': '1',
         'query': 'SYNO.'
     }
-    query_req = None
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             query_req = yield from websession_init.get(
@@ -91,10 +90,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", syno_api_url)
         return False
-
-    finally:
-        if query_req is not None:
-            yield from query_req.release()
 
     # Authticate to NAS to get a session id
     syno_auth_url = SYNO_API_URL.format(
@@ -134,7 +129,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     camera_resp = yield from camera_req.json()
     cameras = camera_resp['data']['cameras']
-    yield from camera_req.release()
 
     # add cameras
     devices = []
@@ -172,7 +166,6 @@ def get_session_id(hass, websession, username, password, login_url, timeout):
         'session': 'SurveillanceStation',
         'format': 'sid'
     }
-    auth_req = None
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             auth_req = yield from websession.get(
@@ -185,10 +178,6 @@ def get_session_id(hass, websession, username, password, login_url, timeout):
     except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.exception("Error on %s", login_url)
         return False
-
-    finally:
-        if auth_req is not None:
-            yield from auth_req.release()
 
 
 class SynologyCamera(Camera):
@@ -236,11 +225,10 @@ class SynologyCamera(Camera):
                     params=image_payload
                 )
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.exception("Error on %s", image_url)
+            _LOGGER.error("Error fetching %s", image_url)
             return None
 
         image = yield from response.read()
-        yield from response.release()
 
         return image
 

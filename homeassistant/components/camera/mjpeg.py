@@ -93,7 +93,6 @@ class MjpegCamera(Camera):
             return image
 
         websession = async_get_clientsession(self.hass)
-        response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from websession.get(
@@ -107,10 +106,6 @@ class MjpegCamera(Camera):
 
         except aiohttp.ClientError as err:
             _LOGGER.error('Error getting new camera image: %s', err)
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
     def camera_image(self):
         """Return a still image response from the camera."""

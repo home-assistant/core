@@ -68,7 +68,6 @@ class Volumio(MediaPlayerDevice):
     def send_volumio_msg(self, method, params=None):
         """Send message."""
         url = "http://{}:{}/api/v1/{}/".format(self.host, self.port, method)
-        response = None
 
         _LOGGER.debug("URL: %s params: %s", url, params)
 
@@ -86,9 +85,6 @@ class Volumio(MediaPlayerDevice):
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with Volumio: %s", type(error))
             return False
-        finally:
-            if response is not None:
-                yield from response.release()
 
         try:
             return data

@@ -117,7 +117,6 @@ class LogitechMediaServer(object):
     @asyncio.coroutine
     def async_query(self, *command, player=""):
         """Abstract out the JSON-RPC connection."""
-        response = None
         auth = None if self._username is None else aiohttp.BasicAuth(
             self._username, self._password)
         url = "http://{}:{}/jsonrpc.js".format(
@@ -138,20 +137,17 @@ class LogitechMediaServer(object):
                     data=data,
                     auth=auth)
 
-                if response.status == 200:
-                    data = yield from response.json()
-                else:
+                if response.status != 200:
                     _LOGGER.error(
                         "Query failed, response code: %s Full message: %s",
                         response.status, response)
                     return False
 
+                data = yield from response.json()
+
         except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with LMS: %s", type(error))
             return False
-        finally:
-            if response is not None:
-                yield from response.release()
 
         try:
             return data['result']

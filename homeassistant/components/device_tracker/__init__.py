@@ -553,7 +553,6 @@ class Device(Entity):
         # bytes like 00 get truncates to 0, API needs full bytes
         oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
         url = 'http://api.macvendors.com/' + oui
-        resp = None
         try:
             websession = async_get_clientsession(self.hass)
 
@@ -573,9 +572,6 @@ class Device(Entity):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             # same as above
             return 'unknown'
-        finally:
-            if resp is not None:
-                yield from resp.release()
 
     @asyncio.coroutine
     def async_added_to_hass(self):

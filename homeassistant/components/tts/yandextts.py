@@ -98,10 +98,8 @@ class YandexSpeechKitProvider(Provider):
     def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
-
         actual_language = language
 
-        request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 url_param = {
@@ -126,9 +124,5 @@ class YandexSpeechKitProvider(Provider):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for yandex speech kit api.")
             return (None, None)
-
-        finally:
-            if request is not None:
-                yield from request.release()
 
         return (self._codec, data)
