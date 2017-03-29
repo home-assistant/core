@@ -119,7 +119,7 @@ class TestHelpersAiohttpClient(unittest.TestCase):
 
 
 @asyncio.coroutine
-def test_fetching_url(aioclient_mock, hass, test_client):
+def test_async_aiohttp_proxy_stream(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     aioclient_mock.get('http://example.com/mjpeg_stream', content=[
         b'Frame1', b'Frame2', b'Frame3'
