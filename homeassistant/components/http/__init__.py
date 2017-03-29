@@ -187,7 +187,7 @@ class HomeAssistantWSGI(object):
         if is_ban_enabled:
             middlewares.insert(0, ban_middleware)
 
-        self.app = web.Application(middlewares=middlewares, loop=hass.loop)
+        self.app = web.Application(middlewares=middlewares)
         self.app['hass'] = hass
         self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
         self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
