@@ -38,12 +38,13 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def setUp(self):
         """Initialize values for this testcase class."""
-        NETWORK = MagicMock()
+        self.zwave_network = MagicMock()
         self.node = mock_zwave.MockNode(
             query_stage='Dynamic', is_awake=True, is_ready=False,
             is_failed=False, is_info_received=True, max_baud_rate=40000,
             is_zwave_plus=False, capabilities=[], neighbors=[], location=None)
-        self.entity = node_entity.ZWaveNodeEntity(self.node, NETWORK)
+        self.entity = node_entity.ZWaveNodeEntity(self.node,
+                                                  self.zwave_network)
 
     def test_network_node_changed_from_value(self):
         """Test for network_node_changed."""
@@ -86,6 +87,53 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.node.get_values.return_value = {
             1: mock_zwave.MockValue(data=1800)
         }
+        self.zwave_network.manager.getNodeStatistics.return_value = {
+            "receivedCnt": 4, "ccData": [{"receivedCnt": 0,
+                                          "commandClassId": 134,
+                                          "sentCnt": 0},
+                                         {"receivedCnt": 1,
+                                          "commandClassId": 133,
+                                          "sentCnt": 1},
+                                         {"receivedCnt": 1,
+                                          "commandClassId": 115,
+                                          "sentCnt": 1},
+                                         {"receivedCnt": 0,
+                                          "commandClassId": 114,
+                                          "sentCnt": 0},
+                                         {"receivedCnt": 0,
+                                          "commandClassId": 112,
+                                          "sentCnt": 0},
+                                         {"receivedCnt": 1,
+                                          "commandClassId": 32,
+                                          "sentCnt": 1},
+                                         {"receivedCnt": 0,
+                                          "commandClassId": 0,
+                                          "sentCnt": 0}],
+            "receivedUnsolicited": 0,
+            "sentTS": "2017-03-27 15:38:15:620 ", "averageRequestRTT": 2462,
+            "lastResponseRTT": 3679, "retries": 0, "sentFailed": 1,
+            "sentCnt": 7, "quality": 0, "lastRequestRTT": 1591,
+            "lastReceivedMessage": [0, 4, 0, 15, 3, 32, 3, 0, 221, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    0, 0, 0, 0], "receivedDups": 1,
+            "averageResponseRTT": 2443,
+            "receivedTS": "2017-03-27 15:38:19:298 "}
         self.entity.node_changed()
         self.assertEqual(
             {'node_id': self.node.node_id,
@@ -98,18 +146,19 @@ class TestZWaveNodeEntity(unittest.TestCase):
              'is_zwave_plus': False,
              'battery_level': 42,
              'wake_up_interval': 1800,
-             'averageRequestRTT': 1,
-             'averageResponseRTT': 2,
-             'lastRequestRTT': 3,
-             'lastResponseRTT': 4,
-             'receivedCnt': 5,
-             'receivedDups': 6,
-             'receivedTS': 7,
-             'receivedUnsolicited': 8,
-             'retries': 9,
-             'sentCnt': 10,
-             'sentFailed': 11,
-             'sentTS': 12},
+             'wake_up_interval': 1800,
+             'averageRequestRTT': 2462,
+             'averageResponseRTT': 2443,
+             'lastRequestRTT': 1591,
+             'lastResponseRTT': 3679,
+             'receivedCnt': 4,
+             'receivedDups': 1,
+             'receivedTS': '2017-03-27 15:38:19:298 ',
+             'receivedUnsolicited': 0,
+             'retries': 0,
+             'sentCnt': 7,
+             'sentFailed': 1,
+             'sentTS': '2017-03-27 15:38:15:620 '},
             self.entity.device_state_attributes)
 
         self.node.can_wake_up_value = False

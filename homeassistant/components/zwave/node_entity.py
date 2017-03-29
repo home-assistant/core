@@ -69,13 +69,13 @@ def sub_status(status, stage):
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
 
-    def __init__(self, node, NETWORK):
+    def __init__(self, node, network):
         """Initialize node."""
         # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
-        self._network = NETWORK
+        self._network = network
         self.node = node
         self.node_id = self.node.node_id
         self._name = node_name(self.node)

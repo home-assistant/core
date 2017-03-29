@@ -467,13 +467,14 @@ class TestZWaveServices(unittest.TestCase):
 
     def setUp(self):
         """Initialize values for this testcase class."""
+        self.zwave_network = MagicMock()
         self.hass = get_test_home_assistant()
         self.hass.start()
 
         # Initialize zwave
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
-        zwave.NETWORK.state = MockNetwork.STATE_READY
+        self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
@@ -486,58 +487,58 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.services.call('zwave', 'add_node', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.controller.add_node.called
-        assert len(zwave.NETWORK.controller.add_node.mock_calls) == 1
-        assert len(zwave.NETWORK.controller.add_node.mock_calls[0][1]) == 0
+        assert self.zwave_network.controller.add_node.called
+        assert len(self.zwave_network.controller.add_node.mock_calls) == 1
+        assert len(self.zwave_network.controller.add_node.mock_calls[0][1]) == 0
 
     def test_add_node_secure(self):
         """Test zwave add_node_secure service."""
         self.hass.services.call('zwave', 'add_node_secure', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.controller.add_node.called
-        assert len(zwave.NETWORK.controller.add_node.mock_calls) == 1
-        assert zwave.NETWORK.controller.add_node.mock_calls[0][1][0] is True
+        assert self.zwave_network.controller.add_node.called
+        assert len(self.zwave_network.controller.add_node.mock_calls) == 1
+        assert self.zwave_network.controller.add_node.mock_calls[0][1][0] is True
 
     def test_remove_node(self):
         """Test zwave remove_node service."""
         self.hass.services.call('zwave', 'remove_node', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.controller.remove_node.called
-        assert len(zwave.NETWORK.controller.remove_node.mock_calls) == 1
+        assert self.zwave_network.controller.remove_node.called
+        assert len(self.zwave_network.controller.remove_node.mock_calls) == 1
 
     def test_cancel_command(self):
         """Test zwave cancel_command service."""
         self.hass.services.call('zwave', 'cancel_command', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.controller.cancel_command.called
-        assert len(zwave.NETWORK.controller.cancel_command.mock_calls) == 1
+        assert self.zwave_network.controller.cancel_command.called
+        assert len(self.zwave_network.controller.cancel_command.mock_calls) == 1
 
     def test_heal_network(self):
         """Test zwave heal_network service."""
         self.hass.services.call('zwave', 'heal_network', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.heal.called
-        assert len(zwave.NETWORK.heal.mock_calls) == 1
+        assert self.zwave_network.heal.called
+        assert len(self.zwave_network.heal.mock_calls) == 1
 
     def test_soft_reset(self):
         """Test zwave soft_reset service."""
         self.hass.services.call('zwave', 'soft_reset', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.controller.soft_reset.called
-        assert len(zwave.NETWORK.controller.soft_reset.mock_calls) == 1
+        assert self.zwave_network.controller.soft_reset.called
+        assert len(self.zwave_network.controller.soft_reset.mock_calls) == 1
 
     def test_test_network(self):
         """Test zwave test_network service."""
         self.hass.services.call('zwave', 'test_network', {})
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.test.called
-        assert len(zwave.NETWORK.test.mock_calls) == 1
+        assert self.zwave_network.test.called
+        assert len(self.zwave_network.test.mock_calls) == 1
 
     def test_stop_network(self):
         """Test zwave stop_network service."""
@@ -551,16 +552,17 @@ class TestZWaveServices(unittest.TestCase):
             assert len(mock_fire.mock_calls) == 2
             assert mock_fire.mock_calls[0][1][0] == const.EVENT_NETWORK_STOP
 
+
     def test_rename_node(self):
         """Test zwave rename_node service."""
-        zwave.NETWORK.nodes = {11: MagicMock()}
+        self.zwave_network.nodes = {11: MagicMock()}
         self.hass.services.call('zwave', 'rename_node', {
             const.ATTR_NODE_ID: 11,
             const.ATTR_NAME: 'test_name',
         })
         self.hass.block_till_done()
 
-        assert zwave.NETWORK.nodes[11].name == 'test_name'
+        assert self.zwave_network.nodes[11].name == 'test_name'
 
     def test_remove_failed_node(self):
         """Test zwave remove_failed_node service."""
@@ -569,7 +571,7 @@ class TestZWaveServices(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        remove_failed_node = zwave.NETWORK.controller.remove_failed_node
+        remove_failed_node = self.zwave_network.controller.remove_failed_node
         assert remove_failed_node.called
         assert len(remove_failed_node.mock_calls) == 1
         assert remove_failed_node.mock_calls[0][1][0] == 12
@@ -581,7 +583,7 @@ class TestZWaveServices(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        replace_failed_node = zwave.NETWORK.controller.replace_failed_node
+        replace_failed_node = self.zwave_network.controller.replace_failed_node
         assert replace_failed_node.called
         assert len(replace_failed_node.mock_calls) == 1
         assert replace_failed_node.mock_calls[0][1][0] == 13
@@ -600,7 +602,7 @@ class TestZWaveServices(unittest.TestCase):
         )
         node = MockNode(node_id=14)
         node.get_values.return_value = {12: value, 13: value_list}
-        zwave.NETWORK.nodes = {14: node}
+        self.zwave_network.nodes = {14: node}
 
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
@@ -655,7 +657,7 @@ class TestZWaveServices(unittest.TestCase):
         )
         node = MockNode(node_id=14)
         node.values = {12: value1, 13: value2}
-        zwave.NETWORK.nodes = {14: node}
+        self.zwave_network.nodes = {14: node}
 
         with patch.object(zwave, '_LOGGER') as mock_logger:
             self.hass.services.call('zwave', 'print_config_parameter', {
@@ -674,7 +676,7 @@ class TestZWaveServices(unittest.TestCase):
         """Test zwave print_config_parameter service."""
         node1 = MockNode(node_id=14)
         node2 = MockNode(node_id=15)
-        zwave.NETWORK.nodes = {14: node1, 15: node2}
+        self.zwave_network.nodes = {14: node1, 15: node2}
 
         with patch.object(zwave, 'pprint') as mock_pprint:
             self.hass.services.call('zwave', 'print_node', {
@@ -695,7 +697,7 @@ class TestZWaveServices(unittest.TestCase):
         node = MockNode(node_id=14)
         node.values = {12: value}
         node.get_values.return_value = node.values
-        zwave.NETWORK.nodes = {14: node}
+        self.zwave_network.nodes = {14: node}
 
         self.hass.services.call('zwave', 'set_wakeup', {
             const.ATTR_NODE_ID: 14,
@@ -727,7 +729,7 @@ class TestZWaveServices(unittest.TestCase):
         node = MockNode(node_id=14)
         node.values = {12: value}
         node.get_values.return_value = node.values
-        zwave.NETWORK.nodes = {14: node}
+        self.zwave_network.nodes = {14: node}
 
         self.hass.services.call('zwave', 'change_association', {
             const.ATTR_ASSOCIATION: 'add',
@@ -760,7 +762,7 @@ class TestZWaveServices(unittest.TestCase):
         node = MockNode(node_id=14)
         node.values = {12: value}
         node.get_values.return_value = node.values
-        zwave.NETWORK.nodes = {14: node}
+        self.zwave_network.nodes = {14: node}
 
         self.hass.services.call('zwave', 'change_association', {
             const.ATTR_ASSOCIATION: 'remove',
@@ -808,7 +810,7 @@ class TestZWaveServices(unittest.TestCase):
     def test_refresh_node(self):
         """Test zwave refresh_node service."""
         node = MockNode(node_id=14)
-        zwave.NETWORK.nodes = {14: node}
+        self.zwave_network.nodes = {14: node}
         self.hass.services.call('zwave', 'refresh_node', {
             const.ATTR_NODE_ID: 14,
         })
