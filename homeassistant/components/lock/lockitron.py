@@ -53,11 +53,6 @@ class Lockitron(LockDevice):
         self.device_id = device_id
 
     @property
-    def should_poll(self):
-        """Return True since we need to poll for the lock's new status."""
-        return True
-
-    @property
     def name(self):
         """Return the name of the device."""
         return DOMAIN
@@ -70,12 +65,10 @@ class Lockitron(LockDevice):
     def lock(self, **kwargs):
         """Lock the device."""
         self._state = self.do_change_request(Lockitron.LOCK_STATE)
-        self.update_ha_state()
 
     def unlock(self, **kwargs):
         """Unlock the device."""
         self._state = self.do_change_request(Lockitron.UNLOCK_STATE)
-        self.update_ha_state()
 
     def update(self):
         """Update the internal state of the device."""
