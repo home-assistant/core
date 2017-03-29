@@ -191,7 +191,7 @@ def get_rfx_object(packetid):
     return obj
 
 
-def get_devices_from_config(config, device):
+def get_devices_from_config(config, device, hass):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
@@ -209,12 +209,13 @@ def get_devices_from_config(config, device):
 
         new_device = device(entity_info[ATTR_NAME], event, datas,
                             signal_repetitions)
+        new_device.hass = hass
         RFX_DEVICES[device_id] = new_device
         devices.append(new_device)
     return devices
 
 
-def get_new_device(event, config, device):
+def get_new_device(event, config, device, hass):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
     if device_id in RFX_DEVICES:
@@ -235,6 +236,7 @@ def get_new_device(event, config, device):
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
     new_device = device(pkt_id, event, datas,
                         signal_repetitions)
+    new_device.hass = hass
     RFX_DEVICES[device_id] = new_device
     return new_device
 

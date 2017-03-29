@@ -18,8 +18,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import RFXtrx as rfxtrxmod
 
     # Add cover from config file
-    covers = rfxtrx.get_devices_from_config(config,
-                                            RfxtrxCover)
+    covers = rfxtrx.get_devices_from_config(config, RfxtrxCover, hass)
     add_devices_callback(covers)
 
     def cover_update(event):
@@ -29,7 +28,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 not event.device.known_to_be_rollershutter:
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxCover)
+        new_device = rfxtrx.get_new_device(event, config, RfxtrxCover, hass)
         if new_device:
             add_devices_callback([new_device])
 
