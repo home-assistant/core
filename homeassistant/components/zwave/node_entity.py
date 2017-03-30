@@ -85,7 +85,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.wakeup_interval = None
         self.location = None
         self.battery_level = None
-        self.quality = None
         dispatcher.connect(
             self.network_node_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
