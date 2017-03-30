@@ -347,6 +347,9 @@ libnacl==1.5.0
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.1.0
 
+# homeassistant.components.light.lifx_legacy
+liffylights==0.9.4
+
 # homeassistant.components.light.limitlessled
 limitlessled==1.0.5
 
