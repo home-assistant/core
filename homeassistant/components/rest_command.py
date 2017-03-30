@@ -81,7 +81,6 @@ def async_setup(hass, config):
                     template_payload.async_render(variables=service.data),
                     'utf-8')
 
-            request = None
             try:
                 with async_timeout.timeout(timeout, loop=hass.loop):
                     request = yield from getattr(websession, method)(
@@ -90,21 +89,17 @@ def async_setup(hass, config):
                         auth=auth
                     )
 
-                    if request.status < 400:
-                        _LOGGER.info("Success call %s.", request.url)
-                        return
-
+                if request.status < 400:
+                    _LOGGER.info("Success call %s.", request.url)
+                else:
                     _LOGGER.warning(
                         "Error %d on call %s.", request.status, request.url)
+
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s.", request.url)
 
-            except aiohttp.errors.ClientError:
+            except aiohttp.ClientError:
                 _LOGGER.error("Client error %s.", request.url)
-
-            finally:
-                if request is not None:
-                    yield from request.release()
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)
