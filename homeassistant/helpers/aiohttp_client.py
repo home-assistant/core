@@ -153,7 +153,7 @@ def _async_get_connector(hass, verify_ssl=True):
             connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
 
     if is_new:
-        @asyncio.coroutine
+        @callback
         def _async_close_connector(event):
             """Close connector pool."""
             connector.close()
