@@ -1,89 +1,69 @@
 """The tests for Home Assistant frontend."""
-# pylint: disable=protected-access
+import asyncio
 import re
-import unittest
 
-import requests
+import pytest
 
-from homeassistant import setup
-from homeassistant.components import http
-from homeassistant.const import HTTP_HEADER_HA_AUTH
-
-from tests.common import get_test_instance_port, get_test_home_assistant
-
-API_PASSWORD = "test1234"
-SERVER_PORT = get_test_instance_port()
-HTTP_BASE_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
-HA_HEADERS = {HTTP_HEADER_HA_AUTH: API_PASSWORD}
-
-hass = None
+from homeassistant.setup import async_setup_component
 
 
-def _url(path=""):
-    """Helper method to generate URLs."""
-    return HTTP_BASE_URL + path
+@pytest.fixture
+def mock_http_client(loop, hass, test_client):
+    """Start the Hass HTTP component."""
+    loop.run_until_complete(async_setup_component(hass, 'frontend', {}))
+    return loop.run_until_complete(test_client(hass.http.app))
 
 
-# pylint: disable=invalid-name
-def setUpModule():
-    """Initialize a Home Assistant server."""
-    global hass
+@asyncio.coroutine
+def test_frontend_and_static(mock_http_client):
+    """Test if we can get the frontend."""
+    resp = yield from mock_http_client.get('')
+    assert resp.status == 200
+    assert 'cache-control' not in resp.headers
 
-    hass = get_test_home_assistant()
+    text = yield from resp.text()
 
-    assert setup.setup_component(
-        hass, http.DOMAIN,
-        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-                       http.CONF_SERVER_PORT: SERVER_PORT}})
+    # Test we can retrieve frontend.js
+    frontendjs = re.search(
+        r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)', text)
 
-    assert setup.setup_component(hass, 'frontend')
-
-    hass.start()
-
-
-# pylint: disable=invalid-name
-def tearDownModule():
-    """Stop everything that was started."""
-    hass.stop()
+    assert frontendjs is not None
+    resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
+    assert resp.status == 200
+    assert 'public' in resp.headers.get('cache-control')
 
 
-class TestFrontend(unittest.TestCase):
-    """Test the frontend."""
+@asyncio.coroutine
+def test_dont_cache_service_worker(mock_http_client):
+    """Test that we don't cache the service worker."""
+    resp = yield from mock_http_client.get('/service_worker.js')
+    assert resp.status == 200
+    assert 'cache-control' not in resp.headers
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        hass.block_till_done()
 
-    def test_frontend_and_static(self):
-        """Test if we can get the frontend."""
-        req = requests.get(_url(""))
-        self.assertEqual(200, req.status_code)
+@asyncio.coroutine
+def test_404(mock_http_client):
+    """Test for HTTP 404 error."""
+    resp = yield from mock_http_client.get('/not-existing')
+    assert resp.status == 404
 
-        # Test we can retrieve frontend.js
-        frontendjs = re.search(
-            r'(?P<app>\/static\/frontend-[A-Za-z0-9]{32}.html)',
-            req.text)
 
-        self.assertIsNotNone(frontendjs)
-        req = requests.get(_url(frontendjs.groups(0)[0]))
-        self.assertEqual(200, req.status_code)
+@asyncio.coroutine
+def test_we_cannot_POST_to_root(mock_http_client):
+    """Test that POST is not allow to root."""
+    resp = yield from mock_http_client.post('/')
+    assert resp.status == 405
 
-    def test_404(self):
-        """Test for HTTP 404 error."""
-        self.assertEqual(404, requests.get(_url("/not-existing")).status_code)
 
-    def test_we_cannot_POST_to_root(self):
-        """Test that POST is not allow to root."""
-        self.assertEqual(405, requests.post(_url("")).status_code)
+@asyncio.coroutine
+def test_states_routes(hass, mock_http_client):
+    """All served by index."""
+    resp = yield from mock_http_client.get('/states')
+    assert resp.status == 200
 
-    def test_states_routes(self):
-        """All served by index."""
-        req = requests.get(_url("/states"))
-        self.assertEqual(200, req.status_code)
+    resp = yield from mock_http_client.get('/states/group.non_existing')
+    assert resp.status == 404
 
-        req = requests.get(_url("/states/group.non_existing"))
-        self.assertEqual(404, req.status_code)
-
-        hass.states.set('group.existing', 'on', {'view': True})
-        req = requests.get(_url("/states/group.existing"))
-        self.assertEqual(200, req.status_code)
+    hass.states.async_set('group.existing', 'on', {'view': True})
+    resp = yield from mock_http_client.get('/states/group.existing')
+    assert resp.status == 200
