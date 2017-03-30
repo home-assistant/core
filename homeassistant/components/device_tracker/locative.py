@@ -18,6 +18,7 @@ from homeassistant.components.device_tracker import (  # NOQA
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
+URL = '/api/locative'
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
@@ -30,7 +31,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 class LocativeView(HomeAssistantView):
     """View to handle locative requests."""
 
-    url = '/api/locative'
+    url = URL
     name = 'api:locative'
 
     def __init__(self, see):
