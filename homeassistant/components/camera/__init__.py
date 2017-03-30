@@ -58,7 +58,6 @@ def async_get_image(hass, entity_id, timeout=10):
         state.attributes.get(ATTR_ENTITY_PICTURE)
     )
 
-    response = None
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             response = yield from websession.get(url)
@@ -70,12 +69,8 @@ def async_get_image(hass, entity_id, timeout=10):
             image = yield from response.read()
             return image
 
-    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         raise HomeAssistantError("Can't connect to {0}".format(url))
-
-    finally:
-        if response is not None:
-            yield from response.release()
 
 
 @asyncio.coroutine
