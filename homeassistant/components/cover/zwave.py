@@ -36,6 +36,7 @@ def get_device(hass, values, node_config, **kwargs):
 
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave roller shutter."""
+
     def __init__(self, hass, values, invert_buttons):
         """Initialize the zwave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
