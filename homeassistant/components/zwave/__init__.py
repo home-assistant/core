@@ -228,6 +228,7 @@ def setup(hass, config):
                       "https://home-assistant.io/components/zwave/")
         return False
     from pydispatch import dispatcher
+    # pylint: disable=import-error
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
     from openzwave.group import ZWaveGroup
