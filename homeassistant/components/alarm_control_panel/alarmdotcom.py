@@ -93,6 +93,13 @@ class AlarmDotCom(alarm.AlarmControlPanel):
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'sensor_status': self._alarm.sensor_status
+        }
+
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
         """Send disarm command."""
