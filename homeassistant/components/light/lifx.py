@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.lifx/
 import colorsys
 import logging
 import asyncio
+import sys
 from functools import partial
 from datetime import timedelta
 
@@ -50,6 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the LIFX platform."""
     import aiolifx
+
+    if sys.platform == 'win32':
+        _LOGGER.warning('The lifx platform is known to not work on Windows. '
+                        'Consider using the lifx_legacy platform instead.')
 
     server_addr = config.get(CONF_SERVER)
 
