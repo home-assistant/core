@@ -5,11 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.ring/
 """
 import logging
+from datetime import timedelta
+
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_CACHEDB)
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS)
@@ -20,6 +22,8 @@ from homeassistant.components.binary_sensor import (
 DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
@@ -56,7 +60,6 @@ class RingBinarySensor(BinarySensorDevice):
     def __init__(self, hass, data, sensor_type):
         """Initialize a sensor for Ring device."""
         super(RingBinarySensor, self).__init__()
-        self._cache = hass.config.path(DEFAULT_CACHEDB)
         self._sensor_type = sensor_type
         self._data = data
         self._name = "{0} {1}".format(self._data.name,
@@ -97,10 +100,10 @@ class RingBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Get the latest data and updates the state."""
-        self._data.check_alerts(cache=self._cache)
+        self._data.check_alerts()
 
         if self._data.alert:
-            self._state = bool(self._sensor_type ==
-                               self._data.alert.get('kind'))
+            self._state = (self._sensor_type ==
+                           self._data.alert.get('kind'))
         else:
             self._state = False

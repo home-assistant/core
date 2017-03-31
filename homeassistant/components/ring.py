@@ -14,8 +14,7 @@ import homeassistant.loader as loader
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-
-REQUIREMENTS = ['ring_doorbell==0.1.2']
+REQUIREMENTS = ['ring_doorbell==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,10 +24,9 @@ NOTIFICATION_ID = 'ring_notification'
 NOTIFICATION_TITLE = 'Ring Sensor Setup'
 
 DOMAIN = 'ring'
-DEFAULT_CACHEDB = 'ring_cache.pickle'
+DEFAULT_CACHEDB = '.ring_cache.pickle'
 DEFAULT_ENTITY_NAMESPACE = 'ring'
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-SCAN_INTERVAL = timedelta(seconds=5)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -48,9 +46,11 @@ def setup(hass, config):
     try:
         from ring_doorbell import Ring
 
-        ring = Ring(username, password)
-        if ring.is_connected:
-            hass.data['ring'] = ring
+        cache = hass.config.path(DEFAULT_CACHEDB)
+        ring = Ring(username=username, password=password, cache_file=cache)
+        if not ring.is_connected:
+            return False
+        hass.data['ring'] = ring
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
         persistent_notification.create(
