@@ -1,13 +1,12 @@
 """The tests for the Ring sensor platform."""
 import unittest
-from unittest import mock
+import requests_mock
 
 from homeassistant.components.sensor import ring
 from homeassistant.components import ring as base_ring
 
-from tests.components.test_ring import (
-    mocked_requests_get, ATTRIBUTION, VALID_CONFIG)
-from tests.common import get_test_home_assistant
+from tests.components.test_ring import ATTRIBUTION, VALID_CONFIG
+from tests.common import get_test_home_assistant, load_fixture
 
 
 class TestRingSensorSetup(unittest.TestCase):
@@ -38,10 +37,15 @@ class TestRingSensorSetup(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    @mock.patch('requests.Session.get', side_effect=mocked_requests_get)
-    @mock.patch('requests.Session.post', side_effect=mocked_requests_get)
-    def test_sensor(self, get_mock, post_mock):
-        """Test the Ring sensor class and methods."""
+    @requests_mock.Mocker()
+    def test_sensor(self, mock):
+        """Test the Ring senskor class and methods."""
+        mock.post('https://api.ring.com/clients_api/session',
+                  text=load_fixture('ring_session.json'))
+        mock.get('https://api.ring.com/clients_api/ring_devices',
+                 text=load_fixture('ring_devices.json'))
+        mock.get('https://api.ring.com/clients_api/doorbots/987652/history',
+                 text=load_fixture('ring_doorbots.json'))
         base_ring.setup(self.hass, VALID_CONFIG)
         ring.setup_platform(self.hass,
                             self.config,
