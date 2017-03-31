@@ -78,10 +78,16 @@ def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
         with async_timeout.timeout(timeout, loop=hass.loop):
             req = yield from web_coro
 
+    except asyncio.CancelledError:
+        # The user cancelled the request
+        return
+
     except asyncio.TimeoutError as err:
+        # Timeout trying to start the web request
         raise HTTPGatewayTimeout() from err
 
     except aiohttp.ClientError as err:
+        # Something went wrong with the connection
         raise HTTPBadGateway() from err
 
     yield from async_aiohttp_proxy_stream(hass, request, req.content,
@@ -108,9 +114,12 @@ def async_aiohttp_proxy_stream(hass, request, stream, content_type,
             response.write(data)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        pass
+        # Something went wrong fetching data, close connection gracefully
+        yield from response.write_eof()
 
-    yield from response.write_eof()
+    except asyncio.CancelledError:
+        # The user closed the connection
+        pass
 
 
 @callback
