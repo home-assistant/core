@@ -10,7 +10,7 @@ import logging
 # pylint: disable=import-error
 from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
+    ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
     SUPPORT_RGB_COLOR, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
@@ -70,6 +70,13 @@ def brightness_state(value):
         return round((value.data / 99) * 255, 0), STATE_ON
     else:
         return 0, STATE_OFF
+
+
+def ct_to_rgb(temp):
+    """Convert color temperature (mireds) to RGB."""
+    colorlist = list(
+        color_temperature_to_rgb(color_temperature_mired_to_kelvin(temp)))
+    return [int(val) for val in colorlist]
 
 
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
@@ -141,8 +148,41 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         """Flag supported features."""
         return SUPPORT_ZWAVE_DIMMER
 
+    def _set_duration(self, **kwargs):
+        """Set the transition time for the brightness value.
+
+        Zwave Dimming Duration values:
+        0x00      = instant
+        0x01-0x7F = 1 second to 127 seconds
+        0x80-0xFE = 1 minute to 127 minutes
+        0xFF      = factory default
+        """
+        if self.values.dimming_duration is None:
+            if ATTR_TRANSITION in kwargs:
+                _LOGGER.debug("Dimming not supported by %s.", self.entity_id)
+            return
+
+        if ATTR_TRANSITION not in kwargs:
+            self.values.dimming_duration.data = 0xFF
+            return
+
+        transition = kwargs[ATTR_TRANSITION]
+        if transition <= 127:
+            self.values.dimming_duration.data = int(transition)
+        elif transition > 7620:
+            self.values.dimming_duration.data = 0xFE
+            _LOGGER.warning("Transition clipped to 127 minutes for %s.",
+                            self.entity_id)
+        else:
+            minutes = int(transition / 60)
+            _LOGGER.debug("Transition rounded to %d minutes for %s.",
+                          minutes, self.entity_id)
+            self.values.dimming_duration.data = minutes + 0x7F
+
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        self._set_duration(**kwargs)
+
         # Zwave multilevel switches use a range of [0, 99] to control
         # brightness. Level 255 means to set it to previous value.
         if ATTR_BRIGHTNESS in kwargs:
@@ -156,15 +196,10 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        self._set_duration(**kwargs)
+
         if self.node.set_dimmer(self.values.primary.value_id, 0):
             self._state = STATE_OFF
-
-
-def ct_to_rgb(temp):
-    """Convert color temperature (mireds) to RGB."""
-    colorlist = list(
-        color_temperature_to_rgb(color_temperature_mired_to_kelvin(temp)))
-    return [int(val) for val in colorlist]
 
 
 class ZwaveColorLight(ZwaveDimmer):
