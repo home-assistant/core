@@ -664,8 +664,8 @@ radiotherm==1.2
 # homeassistant.components.rflink
 rflink==0.0.31
 
-# homeassistant.components.sensor.ring
-ring_doorbell==0.1.0
+# homeassistant.components.ring
+ring_doorbell==0.1.3
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
