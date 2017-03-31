@@ -36,7 +36,6 @@ class TestDemoLight(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertTrue(light.is_on(self.hass, ENTITY_LIGHT))
-        self.assertEqual((.4, .6), state.attributes.get(light.ATTR_XY_COLOR))
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
             (76, 95, 0), state.attributes.get(light.ATTR_RGB_COLOR))
@@ -75,7 +74,6 @@ def test_restore_state(hass):
             'brightness': 'value-brightness',
             'color_temp': 'value-color_temp',
             'rgb_color': 'value-rgb_color',
-            'xy_color': 'value-xy_color',
             'white_value': 'value-white_value',
             'effect': 'value-effect',
         }),
@@ -93,6 +91,5 @@ def test_restore_state(hass):
     assert state.attributes.get('brightness') == 'value-brightness'
     assert state.attributes.get('color_temp') == 'value-color_temp'
     assert state.attributes.get('rgb_color') == 'value-rgb_color'
-    assert state.attributes.get('xy_color') == 'value-xy_color'
     assert state.attributes.get('white_value') == 'value-white_value'
     assert state.attributes.get('effect') == 'value-effect'
