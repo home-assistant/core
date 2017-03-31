@@ -175,7 +175,7 @@ class InsteonLocalDimmerDevice(Light):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS]) / 255 * 100
 
-        self.node.on(brightness)
+        self.node.change_level(brightness)
 
     def turn_off(self, **kwargs):
         """Turn device off."""
