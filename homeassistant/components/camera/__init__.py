@@ -7,6 +7,7 @@ https://home-assistant.io/components/camera/
 """
 import asyncio
 import collections
+from contextlib import suppress
 from datetime import timedelta
 import logging
 import hashlib
@@ -167,7 +168,7 @@ class Camera(Entity):
                 if not img_bytes:
                     break
 
-                if img_bytes is not None and img_bytes != last_image:
+                if img_bytes and img_bytes != last_image:
                     write(img_bytes)
 
                     # Chrome seems to always ignore first picture,
@@ -180,8 +181,8 @@ class Camera(Entity):
 
                 yield from asyncio.sleep(.5)
 
-        except (asyncio.CancelledError, ConnectionResetError):
-            _LOGGER.debug("Close stream by frontend.")
+        except asyncio.CancelledError:
+            _LOGGER.debug("Stream closed by frontend.")
             response = None
 
         finally:
@@ -263,16 +264,14 @@ class CameraImageView(CameraView):
     @asyncio.coroutine
     def handle(self, request, camera):
         """Serve camera image."""
-        try:
-            image = yield from camera.async_camera_image()
+        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+            with async_timeout.timeout(10, loop=request.app['hass'].loop):
+                image = yield from camera.async_camera_image()
 
-            if image is None:
-                return web.Response(status=500)
+            if image:
+                return web.Response(body=image)
 
-            return web.Response(body=image)
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by frontend.")
+        return web.Response(status=500)
 
 
 class CameraMjpegStream(CameraView):
