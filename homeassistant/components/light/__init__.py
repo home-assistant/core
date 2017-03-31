@@ -253,7 +253,7 @@ def async_setup(hass, config):
                     rgb = color_util.color_xy_brightness_to_RGB(
                         *xy_color,
                         ibrightness=brightness)
-                    params[ATTR_RGB_COLOR] = rgb
+                    params.setdefault(ATTR_RGB_COLOR, rgb)
 
             if service.service == SERVICE_TURN_ON:
                 yield from light.async_turn_on(**params)
