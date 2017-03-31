@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import (CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sendgrid==3.6.3']
+REQUIREMENTS = ['sendgrid==3.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
