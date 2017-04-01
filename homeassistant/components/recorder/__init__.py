@@ -35,7 +35,7 @@ from .util import session_scope
 
 DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.1.6']
+REQUIREMENTS = ['sqlalchemy==1.1.8']
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
