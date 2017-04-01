@@ -224,7 +224,7 @@ def async_setup(hass, config):
             if not climate.should_poll:
                 continue
 
-            update_coro = hass.loop.create_task(
+            update_coro = hass.async_add_job(
                 climate.async_update_ha_state(True))
             if hasattr(climate, 'async_update'):
                 update_tasks.append(update_coro)

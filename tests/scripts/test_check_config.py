@@ -108,6 +108,7 @@ class TestCheckConfig(unittest.TestCase):
                     'protocol': '3.1.1',
                     'discovery': False,
                     'discovery_prefix': 'homeassistant',
+                    'tls_version': 'auto',
                 },
                  'light': []},
                 res['components']

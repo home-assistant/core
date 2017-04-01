@@ -151,6 +151,8 @@ class YrData(object):
     @asyncio.coroutine
     def async_update(self, *_):
         """Get the latest data from yr.no."""
+        import xmltodict
+
         def try_again(err: str):
             """Retry in 15 minutes."""
             _LOGGER.warning('Retrying in 15 minutes: %s', err)
@@ -161,7 +163,6 @@ class YrData(object):
                                               nxt)
 
         if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
-            resp = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
@@ -172,17 +173,11 @@ class YrData(object):
                     return
                 text = yield from resp.text()
 
-            except (asyncio.TimeoutError, aiohttp.errors.ClientError,
-                    aiohttp.errors.ClientDisconnectedError) as err:
+            except (asyncio.TimeoutError, aiohttp.ClientError) as err:
                 try_again(err)
                 return
 
-            finally:
-                if resp is not None:
-                    yield from resp.release()
-
             try:
-                import xmltodict
                 self.data = xmltodict.parse(text)['weatherdata']
                 model = self.data['meta']['model']
                 if '@nextrun' not in model:

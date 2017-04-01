@@ -60,7 +60,8 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA), _check_sensor_schema)
 
 
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
 
@@ -89,7 +90,7 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_defs = {name: val for name, val in sensor_defs.items()
                    if name in used_sensors}
 
-    yield from add_devices(hass_sensors)
+    async_add_devices(hass_sensors)
 
     # Init the SMA interface
     session = async_get_clientsession(hass)

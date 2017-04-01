@@ -21,7 +21,6 @@ import homeassistant.loader as loader
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import event_decorators, service
 from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
@@ -126,10 +125,6 @@ def async_from_config_dict(config: Dict[str, Any],
     yield from persistent_notification.async_setup(hass, config)
 
     _LOGGER.info('Home Assistant core initialized')
-
-    # Give event decorators access to HASS
-    event_decorators.HASS = hass
-    service.HASS = hass
 
     # stage 1
     for component in components:

@@ -17,13 +17,13 @@ PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 REQUIRES = [
     'requests>=2,<3',
     'pyyaml>=3.11,<4',
-    'pytz>=2016.10',
-    'pip>=7.0.0',
+    'pytz>=2017.02',
+    'pip>=7.1.0',
     'jinja2>=2.9.5',
     'voluptuous==0.9.3',
     'typing>=3,<4',
-    'aiohttp==1.3.3',
-    'async_timeout==1.1.0',
+    'aiohttp==2.0.5',
+    'async_timeout==1.2.0',
 ]
 
 setup(

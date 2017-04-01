@@ -9,8 +9,9 @@ import logging
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import ENTITY_ID_FORMAT
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -32,6 +33,7 @@ class VeraSensor(VeraDevice, Entity):
         self.current_value = None
         self._temperature_units = None
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def state(self):

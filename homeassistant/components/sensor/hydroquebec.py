@@ -149,7 +149,8 @@ class HydroQuebecSensor(Entity):
     def update(self):
         """Get the latest data from Hydroquebec and update the state."""
         self.hydroquebec_data.update()
-        self._state = round(self.hydroquebec_data.data[self.type], 2)
+        if self.type in self.hydroquebec_data.data:
+            self._state = round(self.hydroquebec_data.data[self.type], 2)
 
 
 class HydroquebecData(object):

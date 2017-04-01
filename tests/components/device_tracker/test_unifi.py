@@ -9,7 +9,7 @@ import voluptuous as vol
 from tests.common import get_test_home_assistant
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
 from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
-                                 CONF_PLATFORM)
+                                 CONF_PLATFORM, CONF_VERIFY_SSL)
 
 
 class TestUnifiScanner(unittest.TestCase):
@@ -39,7 +39,8 @@ class TestUnifiScanner(unittest.TestCase):
         self.assertEqual(mock_ctrl.call_count, 1)
         self.assertEqual(
             mock_ctrl.call_args,
-            mock.call('localhost', 'foo', 'password', 8443, 'v4', 'default')
+            mock.call('localhost', 'foo', 'password', 8443,
+                      version='v4', site_id='default', ssl_verify=True)
         )
         self.assertEqual(mock_scanner.call_count, 1)
         self.assertEqual(
@@ -57,6 +58,7 @@ class TestUnifiScanner(unittest.TestCase):
                 CONF_USERNAME: 'foo',
                 CONF_PASSWORD: 'password',
                 CONF_HOST: 'myhost',
+                CONF_VERIFY_SSL: False,
                 'port': 123,
                 'site_id': 'abcdef01',
             })
@@ -66,7 +68,8 @@ class TestUnifiScanner(unittest.TestCase):
         self.assertEqual(mock_ctrl.call_count, 1)
         self.assertEqual(
             mock_ctrl.call_args,
-            mock.call('myhost', 'foo', 'password', 123, 'v4', 'abcdef01')
+            mock.call('myhost', 'foo', 'password', 123,
+                      version='v4', site_id='abcdef01', ssl_verify=False)
         )
         self.assertEqual(mock_scanner.call_count, 1)
         self.assertEqual(
