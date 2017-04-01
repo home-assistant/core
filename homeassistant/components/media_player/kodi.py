@@ -79,7 +79,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SERVICE_GET_ARTISTS = 'get_artists'
-SERVICE_PLAY_SONG = 'play_song'
 SERVICE_ADD_SONG = 'add_song_to_playlist'
 SERVICE_ADD_ALBUM = 'add_album_to_playlist'
 SERVICE_SET_SHUFFLE = 'set_shuffle'
@@ -90,11 +89,6 @@ ATTR_MEDIA_SONG_NAME = 'song_name'
 ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_SONG_ID = 'song_id'
 ATTR_MEDIA_ALBUM_ID = 'album_id'
-
-MEDIA_PLAYER_PLAY_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SONG_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
 
 MEDIA_PLAYER_ADD_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_SONG_ID): cv.string,
@@ -114,9 +108,6 @@ MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 
 SERVICE_TO_METHOD = {
     SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
-    SERVICE_PLAY_SONG: {
-        'method': 'async_play_song',
-        'schema': MEDIA_PLAYER_PLAY_SONG_SCHEMA},
     SERVICE_ADD_SONG: {
         'method': 'async_add_song_to_playlist',
         'schema': MEDIA_PLAYER_ADD_SONG_SCHEMA},
@@ -753,23 +744,6 @@ class KodiDevice(MediaPlayerDevice):
     def async_clear_playlist(self):
         """Clear default playlist (i.e. playlistid=0)."""
         return self.server.Playlist.Clear({"playlistid": 0})
-
-    @asyncio.coroutine
-    def async_play_song(self, song_name, artist_name=''):
-        """Play a single song.
-
-        Specified in terms of artist name and song name.
-        """
-        song_id = yield from self.async_find_song(song_name, artist_name)
-        if song_id is None:
-            warnings.warn("no song found.", RuntimeWarning)
-            return
-
-        yield from self.async_media_stop()
-        yield from self.async_clear_playlist()
-        yield from self.async_add_song_to_playlist(song_id)
-
-        yield from self.async_play_media("PLAYLIST", 0)
 
     @asyncio.coroutine
     def async_get_artists(self):
