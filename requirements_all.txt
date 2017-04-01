@@ -41,7 +41,7 @@ aiodns==1.1.1
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
-aiohttp_cors==0.5.0
+aiohttp_cors==0.5.2
 
 # homeassistant.components.light.lifx
 aiolifx==0.4.2
