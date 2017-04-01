@@ -4,41 +4,26 @@ Support to interface with the Plex API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.plex/
 """
+from datetime import timedelta
 import json
 import logging
 import os
-from datetime import timedelta
 from urllib.parse import urlparse
 
 import requests
-import voluptuous as vol
+
 from homeassistant import util
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
-    PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    MediaPlayerDevice,
-)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    DEVICE_DEFAULT_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.loader import get_component
-
+import voluptuous as vol
 
 REQUIREMENTS = ['plexapi==2.0.2']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -789,7 +774,7 @@ class PlexClient(MediaPlayerDevice):
                 src['library_name']).get(src['artist_name']).album(
                     src['album_name']).get(src['track_name'])
         elif media_type == 'EPISODE':
-            media = self._get_episode(
+            media = self._get_tv_media(
                 src['library_name'], src['show_name'],
                 src['season_number'], src['episode_number'])
         elif media_type == 'PLAYLIST':
@@ -798,18 +783,27 @@ class PlexClient(MediaPlayerDevice):
             media = self.device.server.library.section(
                 src['library_name']).get(src['video_name'])
 
-        if media:
-            self._client_play_media(media, shuffle=src['shuffle'])
+        if media and media_type == 'EPISODE' and str(media.type) == 'playlist':
+            self._client_play_media(media=media, delete=True,
+                                    shuffle=src['shuffle'])
+        elif media:
+            self._client_play_media(media=media, shuffle=src['shuffle'])
 
-    def _get_episode(self, library_name, show_name, season_number,
-                     episode_number):
-        """Find TV episode and return a Plex media object."""
+    def _get_tv_media(self, library_name, show_name, season_number,
+                      episode_number):
+        """Find TV media and return a Plex media object."""
         target_season = None
         target_episode = None
 
-        seasons = self.device.server.library.section(library_name).get(
-            show_name).seasons()
-        for season in seasons:
+        show = self.device.server.library.section(library_name).get(
+            show_name)
+
+        if not season_number:
+            playlist_name = (self.entity_id + ' - ' + show_name + ' Episodes')
+            return self.device.server.createPlaylist(
+                playlist_name, show.episodes())
+
+        for season in show.seasons():
             if int(season.seasonNumber) == int(season_number):
                 target_season = season
                 break
@@ -820,6 +814,12 @@ class PlexClient(MediaPlayerDevice):
                           str(season_number).zfill(2),
                           str(episode_number).zfill(2))
         else:
+            if not episode_number:
+                playlist_name = (self.entity_id + ' - ' + show_name +
+                                 ' Season ' + str(season_number) + ' Episodes')
+                return self.device.server.createPlaylist(
+                    playlist_name, target_season.episodes())
+
             for episode in target_season.episodes():
                 if int(episode.index) == int(episode_number):
                     target_episode = episode
@@ -833,7 +833,7 @@ class PlexClient(MediaPlayerDevice):
 
         return target_episode
 
-    def _client_play_media(self, media, **params):
+    def _client_play_media(self, media, delete=False, **params):
         """Instruct Plex client to play a piece of media."""
         if not (self.device and
                 'playback' in self._device_protocol_capabilities):
@@ -841,10 +841,12 @@ class PlexClient(MediaPlayerDevice):
             return
 
         import plexapi.playqueue
-        server_url = media.server.baseurl.split(':')
         playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
                                                        media, **params)
+
         self._local_client_control_fix()
+
+        server_url = self.device.server.baseurl.split(':')
         self.device.sendCommand('playback/playMedia', **dict({
             'machineIdentifier':
             self.device.server.machineIdentifier,
@@ -857,3 +859,17 @@ class PlexClient(MediaPlayerDevice):
             'containerKey':
             '/playQueues/%s?window=100&own=1' % playqueue.playQueueID,
         }, **params))
+
+        # delete dynamic playlists used to build playqueue (ex. play tv season)
+        if delete:
+            media.delete()
+
+    @property
+    def device_state_attributes(self):
+        """Return the scene state attributes."""
+        attr = {}
+        attr['media_content_rating'] = self._media_content_rating
+        attr['session_username'] = self._session_username
+        attr['media_library_name'] = self._app_name
+
+        return attr
