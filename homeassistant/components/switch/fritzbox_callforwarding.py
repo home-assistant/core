@@ -98,8 +98,10 @@ class FritzCallForwardingSwitch(SwitchDevice):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update(self):
-        """Get the latest call forwarding data
-        from the fritz box and updates the states."""
+        """Get the latest call forwarding data,
+
+        from the fritz box and updates the states.
+        """
         self._call_forwarding = get_call_forwarding_by_uid(
             self._call_forwarding.fritz_box, self._call_forwarding.uid)
         _LOGGER.debug(self._call_forwarding)
@@ -151,7 +153,6 @@ def get_call_forwarding_by_uid(fritz_box, uid):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the fritzbox connection."""
-    # pylint: disable=import-error
     from fritzconnection import FritzConnection
     from fritzconnection.fritzconnection import FritzConnectionException
 
@@ -170,9 +171,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if fritz_box is None:
         _LOGGER.error('Failed to establish connection to FRITZ!Box '
                       'with IP: %s', host)
-        return 1
+        raise ConnectionError('Failed to establish connection to FRITZ!Box '
+                      'with IP: %s', host)
     else:
-        _LOGGER.info('Successfully connected to FRITZ!Box')
+        _LOGGER.debug('Successfully connected to FRITZ!Box')
 
     devices = []
     for call_forwarding in get_call_forwardings(fritz_box):
