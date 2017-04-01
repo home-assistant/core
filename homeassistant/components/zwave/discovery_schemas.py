@@ -126,6 +126,7 @@ DISCOVERY_SCHEMAS = [
              const.DISC_GENRE: const.GENRE_SYSTEM,
              const.DISC_TYPE: const.TYPE_BYTE,
              const.DISC_LABEL: 'Dimming Duration',
+             const.DISC_OPTIONAL: True,
          },
          'color': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_COLOR],
