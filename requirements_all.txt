@@ -171,9 +171,9 @@ freesms==0.1.1
 
 # homeassistant.components.device_tracker.fritz
 # homeassistant.components.sensor.fritzbox_callmonitor
-# homeassistant.components.sensor.fritzbox_callforwarding
+# homeassistant.components.switch.fritzbox_callforwarding
 # homeassistant.components.sensor.fritzbox_netmonitor
-# fritzconnection==0.6.3
+fritzconnection==0.6.3
 
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.2
