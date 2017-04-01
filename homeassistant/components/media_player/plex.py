@@ -250,6 +250,7 @@ class PlexClient(MediaPlayerDevice):
         self._machine_identifier = None
         self._make = ''
         self._media_content_id = None
+        self._media_content_rating = None
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
@@ -259,6 +260,7 @@ class PlexClient(MediaPlayerDevice):
         self._previous_volume_level = 1  # Used in fake muting
         self._session = None
         self._session_type = None
+        self._session_username = None
         self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
