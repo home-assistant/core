@@ -98,7 +98,7 @@ class FritzCallForwardingSwitch(SwitchDevice):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update(self):
-        """Get the latest call forwarding data,
+        """Get the latest call forwarding data.
 
         from the fritz box and updates the states.
         """
@@ -172,7 +172,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error('Failed to establish connection to FRITZ!Box '
                       'with IP: %s', host)
         raise ConnectionError('Failed to establish connection to FRITZ!Box '
-                      'with IP: %s', host)
+                              'with IP: %s', host)
     else:
         _LOGGER.debug('Successfully connected to FRITZ!Box')
 
