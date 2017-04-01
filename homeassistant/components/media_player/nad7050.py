@@ -7,9 +7,8 @@ https://home-assistant.io/components/media_player.nad7050/
 import logging
 import codecs
 import socket
-import voluptuous as vol
 from time import sleep
-
+import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_MUTE, SUPPORT_TURN_ON, SUPPORT_TURN_OFF,
@@ -101,9 +100,10 @@ class NAD7050(MediaPlayerDevice):
             return
         nad_reply = codecs.encode(nad_reply, 'hex').decode("utf-8")
 
-        # split reply into parts of 5 Bytes
-        n = 10
-        nad_status = [nad_reply[i:i + n] for i in range(0, len(nad_reply), n)]
+        # split reply into parts of 10 characters
+        num_chars = 10
+        nad_status = [nad_reply[i:i + num_chars]
+                      for i in range(0, len(nad_reply), num_chars)]
         logging.debug(nad_status)
         volume = int(nad_status[0][-2:], 16)  # converts 2B hex value to int
         power = nad_status[5][-2:]
@@ -114,10 +114,7 @@ class NAD7050(MediaPlayerDevice):
         self._volume = self.nad_volume_to_internal_volume(volume)
 
         # Update muted state
-        if mute == '01':
-            self._mute = True
-        else:
-            self._mute = False
+        self._mute = bool(mute == '01')
 
         # Update on/off state
         if power == '01':
@@ -127,7 +124,7 @@ class NAD7050(MediaPlayerDevice):
 
         # Update current source
         self._source = self._source_mapping[source]
-        logging.debug("Updated source to {}".format(self._source))
+        logging.debug("Updated source to %s" % self._source)
 
     def nad_volume_to_internal_volume(self, nad_volume):
         """Convert nad volume range (0-200) to internal volume range.
@@ -141,24 +138,24 @@ class NAD7050(MediaPlayerDevice):
         else:
             volume_internal = (nad_volume - self._min_volume) / \
                               (self._max_volume - self._min_volume)
-        logging.debug("updating volume to {}".format(volume_internal))
+        logging.debug("updating volume to %i" % volume_internal)
         return volume_internal
 
     def send(self, message, read_reply=False):
         """Send a command string to the amplifier."""
         try:
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.connect((self._host, self._port))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.connect((self._host, self._port))
         except ConnectionError:
             return
         message = codecs.decode(message, 'hex_codec')
-        s.send(message)
+        sock.send(message)
         sleep(0.5)
         if read_reply:
-            x = s.recv(self._buffersize)
-            s.close()
-            return x
-        s.close()
+            reply = sock.recv(self._buffersize)
+            sock.close()
+            return reply
+        sock.close()
         sleep(1)
 
     @property
