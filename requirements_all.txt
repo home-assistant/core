@@ -48,7 +48,7 @@ aiolifx==0.4.2
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
-amcrest==1.1.4
+amcrest==1.1.5
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
