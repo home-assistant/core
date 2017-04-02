@@ -9,7 +9,6 @@ from functools import wraps
 import logging
 import urllib
 import re
-import warnings
 
 import aiohttp
 import voluptuous as vol
@@ -87,7 +86,7 @@ ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_ID = 'media_id'
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required('on'): cv.boolean,
+    vol.Required('shuffle_on'): cv.boolean,
 })
 
 MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -101,7 +100,8 @@ SERVICE_TO_METHOD = {
     SERVICE_ADD_MEDIA: {
         'method': 'async_add_media_to_playlist',
         'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
-    SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle',
+    SERVICE_SET_SHUFFLE: {
+        'method': 'async_set_shuffle',
         'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
 }
 
@@ -131,7 +131,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         turn_off_action=config.get(CONF_TURN_OFF_ACTION), websocket=websocket)
 
     async_add_devices([entity], update_before_add=True)
-    
+
     @asyncio.coroutine
     def async_service_handler(service):
         """Map services to methods on MediaPlayerDevice."""
@@ -662,14 +662,14 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
-    def async_set_shuffle(self, on):
+    def async_set_shuffle(self, shuffle_on):
         """Set shuffle mode, for the first player."""
         players = yield from self._get_players()
 
         if len(players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
-            {"playerid": players[0]['playerid'], "shuffle": on})
+            {"playerid": players[0]['playerid'], "shuffle": shuffle_on})
 
     @asyncio.coroutine
     def async_add_media_to_playlist(
@@ -684,20 +684,21 @@ class KodiDevice(MediaPlayerDevice):
         """
         if media_type == "SONG":
             if media_id is None:
-                media_id = yield from self.async_find_song(media_name, artist_name)
-    
+                media_id = yield from self.async_find_song(
+                    media_name, artist_name)
+
             yield from self.server.Playlist.Add(
                 {"playlistid": 0, "item": {"songid": int(media_id)}})
-        
+
         elif media_type == "ALBUM":
             if media_id is None:
                 if media_name == "ALL":
                     yield from self.async_add_all_albums(artist_name)
                     return
-                    
+
                 media_id = yield from self.async_find_album(
                     media_name, artist_name)
-    
+
             yield from self.server.Playlist.Add(
                 {"playlistid": 0, "item": {"albumid": int(media_id)}})
         else:
