@@ -13,8 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_PORT, STATE_UNKNOWN)
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.loader as loader
 
