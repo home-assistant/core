@@ -19,7 +19,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
     PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
-    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, ATTR_MEDIA_ALBUM_NAME, DOMAIN)
+    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -79,50 +79,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SERVICE_GET_ARTISTS = 'get_artists'
-SERVICE_ADD_SONG = 'add_song_to_playlist'
-SERVICE_ADD_ALBUM = 'add_album_to_playlist'
+SERVICE_ADD_MEDIA = 'add_media_to_playlist'
 SERVICE_SET_SHUFFLE = 'set_shuffle'
-SERVICE_UNSET_SHUFFLE = 'unset_shuffle'
-SERVICE_ADD_ALL_ALBUMS = 'add_all_albums_to_playlist'
 
-ATTR_MEDIA_SONG_NAME = 'song_name'
+ATTR_MEDIA_TYPE = 'media_type'
+ATTR_MEDIA_NAME = 'media_name'
 ATTR_MEDIA_ARTIST_NAME = 'artist_name'
-ATTR_MEDIA_SONG_ID = 'song_id'
-ATTR_MEDIA_ALBUM_ID = 'album_id'
+ATTR_MEDIA_ID = 'media_id'
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required('on'): cv.boolean,
 })
 
-MEDIA_PLAYER_ADD_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Optional(ATTR_MEDIA_SONG_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_SONG_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
-
-MEDIA_PLAYER_ADD_ALBUM_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Optional(ATTR_MEDIA_ALBUM_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_ALBUM_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
-})
-
-MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_NAME): cv.string,
     vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 
 SERVICE_TO_METHOD = {
     SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
-    SERVICE_ADD_SONG: {
-        'method': 'async_add_song_to_playlist',
-        'schema': MEDIA_PLAYER_ADD_SONG_SCHEMA},
-    SERVICE_ADD_ALBUM: {
-        'method': 'async_add_album_to_playlist',
-        'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
+    SERVICE_ADD_MEDIA: {
+        'method': 'async_add_media_to_playlist',
+        'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
     SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle',
         'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
-    SERVICE_ADD_ALL_ALBUMS: {
-        'method': 'async_add_all_albums',
-        'schema': MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA},
 }
 
 
@@ -692,33 +674,36 @@ class KodiDevice(MediaPlayerDevice):
             {"playerid": players[0]['playerid'], "shuffle": on})
 
     @asyncio.coroutine
-    def async_add_song_to_playlist(
-            self, song_id=None, song_name='', artist_name=''):
-        """Add a song to default playlist (i.e. playlistid=0).
+    def async_add_media_to_playlist(
+            self, media_type, media_id=None, media_name='', artist_name=''):
+        """Add a media to default playlist (i.e. playlistid=0).
 
-        The song can be specified in terms of id or
+        First the media type must be selected, then
+        the media can be specified in terms of id or
         name and optionally artist name.
+        All the albums of an artist can be added with
+        media_name="ALL"
         """
-        if song_id is None:
-            song_id = yield from self.async_find_song(song_name, artist_name)
-
-        yield from self.server.Playlist.Add(
-            {"playlistid": 0, "item": {"songid": int(song_id)}})
-
-    @asyncio.coroutine
-    def async_add_album_to_playlist(
-            self, album_id=None, media_album_name='', artist_name=''):
-        """Add an album to default playlist (i.e. playlistid=0).
-
-        The album can be specified in terms of id
-        or name and optionally artist name.
-        """
-        if album_id is None:
-            album_id = yield from self.async_find_album(
-                media_album_name, artist_name)
-
-        yield from self.server.Playlist.Add(
-            {"playlistid": 0, "item": {"albumid": int(album_id)}})
+        if media_type == "SONG":
+            if media_id is None:
+                media_id = yield from self.async_find_song(media_name, artist_name)
+    
+            yield from self.server.Playlist.Add(
+                {"playlistid": 0, "item": {"songid": int(media_id)}})
+        
+        elif media_type == "ALBUM":
+            if media_id is None:
+                if media_name == "ALL":
+                    yield from self.async_add_all_albums(artist_name)
+                    return
+                    
+                media_id = yield from self.async_find_album(
+                    media_name, artist_name)
+    
+            yield from self.server.Playlist.Add(
+                {"playlistid": 0, "item": {"albumid": int(media_id)}})
+        else:
+            raise RuntimeError("Unrecognized media type.")
 
     @asyncio.coroutine
     def async_add_all_albums(self, artist_name):
