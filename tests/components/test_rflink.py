@@ -205,14 +205,10 @@ def test_error_when_not_connected(hass, monkeypatch):
     _, mock_create, _, disconnect_callback = yield from mock_rflink(
         hass, config, domain, monkeypatch, failures=failures)
 
-    assert hass.states.get('rflink.connection_status').state == 'connected'
-
     # rflink initiated disconnect
     disconnect_callback(None)
 
     yield from asyncio.sleep(0, loop=hass.loop)
-
-    assert hass.states.get('rflink.connection_status').state == 'error'
 
     success = yield from hass.services.async_call(
         domain, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: 'switch.test'})

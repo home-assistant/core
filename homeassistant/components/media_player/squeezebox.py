@@ -53,8 +53,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     if discovery_info is not None:
-        host = discovery_info[0]
-        port = None  # Port is not collected in netdisco 0.8.1
+        host = discovery_info.get("host")
+        port = discovery_info.get("port")
     else:
         host = config.get(CONF_HOST)
         port = config.get(CONF_PORT)
@@ -117,7 +117,6 @@ class LogitechMediaServer(object):
     @asyncio.coroutine
     def async_query(self, *command, player=""):
         """Abstract out the JSON-RPC connection."""
-        response = None
         auth = None if self._username is None else aiohttp.BasicAuth(
             self._username, self._password)
         url = "http://{}:{}/jsonrpc.js".format(
@@ -138,22 +137,17 @@ class LogitechMediaServer(object):
                     data=data,
                     auth=auth)
 
-                if response.status == 200:
-                    data = yield from response.json()
-                else:
+                if response.status != 200:
                     _LOGGER.error(
                         "Query failed, response code: %s Full message: %s",
                         response.status, response)
                     return False
 
-        except (asyncio.TimeoutError,
-                aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as error:
+                data = yield from response.json()
+
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with LMS: %s", type(error))
             return False
-        finally:
-            if response is not None:
-                yield from response.release()
 
         try:
             return data['result']

@@ -108,7 +108,9 @@ class Dovado:
         """Update device state."""
         _LOGGER.info("Updating")
         try:
-            self.state.update(self._dovado.state or {})
+            self.state = self._dovado.state or {}
+            if not self.state:
+                return False
             self.state.update(
                 connected=self.state.get("modem status") == "CONNECTED")
             _LOGGER.debug("Received: %s", self.state)

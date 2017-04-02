@@ -8,9 +8,8 @@ import asyncio
 from functools import partial
 import logging
 
-from homeassistant.components import group
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICES, CONF_NEW_DEVICES_GROUP, DATA_DEVICE_REGISTER,
+    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES, DATA_DEVICE_REGISTER,
     DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT,
     RflinkDevice, cv, vol)
 from homeassistant.const import (
@@ -31,7 +30,7 @@ CONF_SENSOR_TYPE = 'sensor_type'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
-    vol.Optional(CONF_NEW_DEVICES_GROUP, default=None): cv.string,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
@@ -76,13 +75,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Rflink platform."""
     async_add_devices(devices_from_config(config, hass))
 
-    # Add new (unconfigured) devices to user desired group
-    if config[CONF_NEW_DEVICES_GROUP]:
-        new_devices_group = yield from group.Group.async_create_group(
-            hass, config[CONF_NEW_DEVICES_GROUP], [], True)
-    else:
-        new_devices_group = None
-
     @asyncio.coroutine
     def add_new_device(event):
         """Check if device is known, otherwise create device entity."""
@@ -97,15 +89,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
 
-        # Make sure the event is processed by the new entity
-        device.handle_event(event)
+        # Schedule task to process event after entity is created
+        hass.async_add_job(device.handle_event, event)
 
-        # Maybe add to new devices group
-        if new_devices_group:
-            yield from new_devices_group.async_update_tracked_entity_ids(
-                list(new_devices_group.tracking) + [device.entity_id])
-
-    hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
 class RflinkSensor(RflinkDevice):
@@ -121,11 +109,6 @@ class RflinkSensor(RflinkDevice):
     def _handle_event(self, event):
         """Domain specific event handler."""
         self._state = event['value']
-
-    @property
-    def entity_id(self):
-        """Return entity id."""
-        return "sensor.{}".format(self.name)
 
     @property
     def unit_of_measurement(self):

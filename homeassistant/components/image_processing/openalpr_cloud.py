@@ -112,8 +112,6 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
         params['image_bytes'] = str(b64encode(image), 'utf-8')
 
-        data = None
-        request = None
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 request = yield from websession.post(
@@ -127,13 +125,9 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                                   request.status, data.get('error'))
                     return
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for openalpr api.")
             return
-
-        finally:
-            if request is not None:
-                yield from request.release()
 
         # processing api data
         vehicles = 0

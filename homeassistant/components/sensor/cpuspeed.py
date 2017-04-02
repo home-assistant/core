@@ -13,7 +13,7 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.2.6']
+REQUIREMENTS = ['py-cpuinfo==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the CPU speed sensor."""
+    """Set up the CPU speed sensor."""
     name = config.get(CONF_NAME)
 
     add_devices([CpuSpeedSensor(name)])

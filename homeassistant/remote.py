@@ -122,6 +122,8 @@ class HomeAssistant(ha.HomeAssistant):
     # pylint: disable=super-init-not-called
     def __init__(self, remote_api, local_api=None, loop=None):
         """Initalize the forward instance."""
+        _LOGGER.warning('Remote instances of Home Assistant are deprecated. '
+                        'Will be removed by 0.43')
         if not remote_api.validate_api():
             raise HomeAssistantError(
                 "Remote API at {}:{} not valid: {}".format(
@@ -215,6 +217,9 @@ class EventForwarder(object):
 
     def __init__(self, hass, restrict_origin=None):
         """Initalize the event forwarder."""
+        _LOGGER.warning('API forwarding is deprecated. '
+                        'Will be removed by 0.43')
+
         self.hass = hass
         self.restrict_origin = restrict_origin
 
@@ -349,6 +354,8 @@ def validate_api(api):
 
 def connect_remote_events(from_api, to_api):
     """Setup from_api to forward all events to to_api."""
+    _LOGGER.warning('Event forwarding is deprecated. '
+                    'Will be removed by 0.43')
     data = {
         'host': to_api.host,
         'api_password': to_api.api_password,
@@ -374,6 +381,8 @@ def connect_remote_events(from_api, to_api):
 
 def disconnect_remote_events(from_api, to_api):
     """Disconnect forwarding events from from_api to to_api."""
+    _LOGGER.warning('Event forwarding is deprecated. '
+                    'Will be removed by 0.43')
     data = {
         'host': to_api.host,
         'port': to_api.port

@@ -50,8 +50,10 @@ def setup(hass, config):
     hass.http.register_view(APIDomainServicesView)
     hass.http.register_view(APIEventForwardingView)
     hass.http.register_view(APIComponentsView)
-    hass.http.register_view(APIErrorLogView)
     hass.http.register_view(APITemplateView)
+
+    hass.http.register_static_path(
+        URL_API_ERROR_LOG, hass.config.path(ERROR_LOG_FILENAME), False)
 
     return True
 
@@ -327,6 +329,8 @@ class APIEventForwardingView(HomeAssistantView):
     @asyncio.coroutine
     def post(self, request):
         """Setup an event forwarder."""
+        _LOGGER.warning('Event forwarding is deprecated. '
+                        'Will be removed by 0.43')
         hass = request.app['hass']
         try:
             data = yield from request.json()
@@ -398,20 +402,6 @@ class APIComponentsView(HomeAssistantView):
     def get(self, request):
         """Get current loaded components."""
         return self.json(request.app['hass'].config.components)
-
-
-class APIErrorLogView(HomeAssistantView):
-    """View to handle ErrorLog requests."""
-
-    url = URL_API_ERROR_LOG
-    name = "api:error-log"
-
-    @asyncio.coroutine
-    def get(self, request):
-        """Serve error log."""
-        resp = yield from self.file(
-            request, request.app['hass'].config.path(ERROR_LOG_FILENAME))
-        return resp
 
 
 class APITemplateView(HomeAssistantView):
