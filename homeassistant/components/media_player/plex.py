@@ -330,7 +330,8 @@ class PlexClient(MediaPlayerDevice):
                 self._session.viewOffset)
             self._media_content_id = self._convert_na_to_none(
                 self._session.ratingKey)
-            self._media_content_rating = self._session.contentRating
+            self._media_content_rating = self._convert_na_to_none(
+                self._session.contentRating)
         else:
             self._media_position = None
             self._media_content_id = None
@@ -342,7 +343,8 @@ class PlexClient(MediaPlayerDevice):
                 self._session.player.machineIdentifier)
             self._name = self._convert_na_to_none(self._session.player.title)
             self._player_state = self._session.player.state
-            self._session_username = self._session.username
+            self._session_username = self._convert_na_to_none(
+                self._session.username)
             self._make = self._convert_na_to_none(self._session.player.device)
         else:
             self._is_player_available = False
