@@ -78,8 +78,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean,
 })
 
-SERVICE_ADD_MEDIA = 'add_media_to_playlist'
-SERVICE_SET_SHUFFLE = 'set_shuffle'
+SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
+SERVICE_SET_SHUFFLE = 'kodi_set_shuffle'
 
 ATTR_MEDIA_TYPE = 'media_type'
 ATTR_MEDIA_NAME = 'media_name'
