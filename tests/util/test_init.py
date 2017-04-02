@@ -31,6 +31,8 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test_more", util.slugify("Test More"))
         self.assertEqual("test_more", util.slugify("Test_(More)"))
         self.assertEqual("test_more", util.slugify("Tèst_Mörê"))
+        self.assertEqual("test_aouss_aouss_zal",
+                         util.slugify("test_äöüß_ÖÜẞ_Зал"))
 
     def test_repr_helper(self):
         """Test repr_helper."""

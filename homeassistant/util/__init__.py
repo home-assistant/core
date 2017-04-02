@@ -10,7 +10,7 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from unicodedata import normalize
+from unidecode import unidecode
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
@@ -36,7 +36,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = normalize('NFKD', text).lower().replace(" ", "_")
+    text = unidecode(text).lower().replace(" ", "_")
 
     return RE_SLUGIFY.sub("", text)
 
