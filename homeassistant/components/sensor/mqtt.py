@@ -55,6 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_FORCE_UPDATE),
         config.get(CONF_EXPIRE_AFTER),
         value_template,
+        config
     )])
 
 
@@ -62,8 +63,9 @@ class MqttSensor(Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
-                 force_update, expire_after, value_template):
+                 force_update, expire_after, value_template, config):
         """Initialize the sensor."""
+        super(MqttSensor, self).__init__(config)
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic

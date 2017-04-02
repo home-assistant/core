@@ -62,7 +62,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     round_digits = config.get(CONF_ROUND_DIGITS)
 
     async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
+        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits,
+                      config)],
         True)
     return True
 
@@ -70,8 +71,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, sensor_type, round_digits):
+    def __init__(self, hass, entity_ids, name, sensor_type, round_digits,
+                 config):
         """Initialize the min/max sensor."""
+        super(MinMaxSensor, self).__init__(config)
         self._hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
