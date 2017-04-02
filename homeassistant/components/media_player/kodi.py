@@ -90,6 +90,10 @@ ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_SONG_ID = 'song_id'
 ATTR_MEDIA_ALBUM_ID = 'album_id'
 
+MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required('on'): cv.boolean,
+})
+
 MEDIA_PLAYER_ADD_SONG_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_SONG_ID): cv.string,
     vol.Optional(ATTR_MEDIA_SONG_NAME): cv.string,
@@ -114,8 +118,8 @@ SERVICE_TO_METHOD = {
     SERVICE_ADD_ALBUM: {
         'method': 'async_add_album_to_playlist',
         'schema': MEDIA_PLAYER_ADD_ALBUM_SCHEMA},
-    SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle'},
-    SERVICE_UNSET_SHUFFLE: {'method': 'async_unset_shuffle'},
+    SERVICE_SET_SHUFFLE: {'method': 'async_set_shuffle',
+        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
     SERVICE_ADD_ALL_ALBUMS: {
         'method': 'async_add_all_albums',
         'schema': MEDIA_PLAYER_ADD_ALL_ALBUMS_SCHEMA},
@@ -678,24 +682,14 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
-    def async_set_shuffle(self):
-        """Set shuffle mode on, for the first player."""
+    def async_set_shuffle(self, on):
+        """Set shuffle mode, for the first player."""
         players = yield from self._get_players()
 
         if len(players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
-            {"playerid": players[0]['playerid'], "shuffle": True})
-
-    @asyncio.coroutine
-    def async_unset_shuffle(self):
-        """Set shuffle mode off, for the first player."""
-        players = yield from self._get_players()
-
-        if len(players) < 1:
-            raise RuntimeError("Error: No active player.")
-        yield from self.server.Player.SetShuffle(
-            {"playerid": players[0]['playerid'], "shuffle": False})
+            {"playerid": players[0]['playerid'], "shuffle": on})
 
     @asyncio.coroutine
     def async_add_song_to_playlist(
