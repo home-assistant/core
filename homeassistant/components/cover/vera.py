@@ -63,7 +63,6 @@ class VeraCover(VeraDevice, CoverDevice):
         self.vera_device.open()
         self.schedule_update_ha_state()
 
-
     def close_cover(self, **kwargs):
         """Close the cover."""
         self.vera_device.close()
