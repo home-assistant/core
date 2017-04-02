@@ -37,31 +37,31 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 SENSOR_TYPES = {
     'period_total_bill': 
-	['Current period bill', PRICE, 'mdi:square-inc-cash'],
+    ['Current period bill', PRICE, 'mdi:square-inc-cash'],
     'period_length': 
-	['Current period length', DAYS, 'mdi:calendar-today'],
+    ['Current period length', DAYS, 'mdi:calendar-today'],
     'period_total_days': 
-	['Total number of days in this period', DAYS, 'mdi:calendar-today'],
+    ['Total number of days in this period', DAYS, 'mdi:calendar-today'],
     'period_mean_daily_bill': 
-	['Period daily average bill', PRICE, 'mdi:square-inc-cash'],
+    ['Period daily average bill', PRICE, 'mdi:square-inc-cash'],
     'period_mean_daily_consumption': 
-	['Period daily average consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period daily average consumption', KILOWATT_HOUR, 'mdi:flash'],
     'period_total_consumption': 
-	['Total Consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Total Consumption', KILOWATT_HOUR, 'mdi:flash'],
     'period_lower_price_consumption': 
-	['Period Lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period Lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'period_higher_price_consumption': 
-	['Period Higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Period Higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_total_consumption': 
-	['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_lower_price_consumption': 
-	['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_higher_price_consumption': 
-	['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    ['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_average_temperature': 
-	['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    ['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
     'period_average_temperature': 
-	['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    ['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
