@@ -35,11 +35,10 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = text.replace(":", "")
-    text = text.replace(".", "")
-    text = python_slugify(text)
-    text = text.replace("-", "_")
-
+    for char in ':.-!@#$()':
+        text = text.replace(char, '')
+    text = python_slugify(text, regex_pattern=r'[^-a-z0-9_ ]+')
+    text = text.replace("-", "_").replace(" ", "_")
     return text
 
 
