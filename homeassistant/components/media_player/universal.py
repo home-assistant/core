@@ -425,12 +425,12 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._async_call_service(
             SERVICE_VOLUME_MUTE, data, allow_override=True)
 
-    def async_set_volume_level(self, volume_level):
+    def async_set_volume_level(self, volume):
         """Set volume level, range 0..1.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        data = {ATTR_MEDIA_VOLUME_LEVEL: volume_level}
+        data = {ATTR_MEDIA_VOLUME_LEVEL: volume}
         return self._async_call_service(
             SERVICE_VOLUME_SET, data, allow_override=True)
 
