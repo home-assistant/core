@@ -168,7 +168,7 @@ fitbit==0.2.3
 fixerio==0.1.1
 
 # homeassistant.components.light.flux_led
-flux_led==0.16
+flux_led==0.17
 
 # homeassistant.components.notify.free_mobile
 freesms==0.1.1
