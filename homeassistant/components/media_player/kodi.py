@@ -78,7 +78,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean,
 })
 
-SERVICE_GET_ARTISTS = 'get_artists'
 SERVICE_ADD_MEDIA = 'add_media_to_playlist'
 SERVICE_SET_SHUFFLE = 'set_shuffle'
 
@@ -99,7 +98,6 @@ MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 })
 
 SERVICE_TO_METHOD = {
-    SERVICE_GET_ARTISTS: {'method': 'async_get_artists'},
     SERVICE_ADD_MEDIA: {
         'method': 'async_add_media_to_playlist',
         'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
