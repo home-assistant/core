@@ -36,31 +36,31 @@ REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 SENSOR_TYPES = {
-    'period_total_bill': 
+    'period_total_bill':
     ['Current period bill', PRICE, 'mdi:square-inc-cash'],
-    'period_length': 
+    'period_length':
     ['Current period length', DAYS, 'mdi:calendar-today'],
-    'period_total_days': 
+    'period_total_days':
     ['Total number of days in this period', DAYS, 'mdi:calendar-today'],
-    'period_mean_daily_bill': 
+    'period_mean_daily_bill':
     ['Period daily average bill', PRICE, 'mdi:square-inc-cash'],
-    'period_mean_daily_consumption': 
+    'period_mean_daily_consumption':
     ['Period daily average consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_total_consumption': 
+    'period_total_consumption':
     ['Total Consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_lower_price_consumption': 
+    'period_lower_price_consumption':
     ['Period Lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'period_higher_price_consumption': 
+    'period_higher_price_consumption':
     ['Period Higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_total_consumption': 
+    'yesterday_total_consumption':
     ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_lower_price_consumption': 
+    'yesterday_lower_price_consumption':
     ['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_higher_price_consumption': 
+    'yesterday_higher_price_consumption':
     ['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_average_temperature': 
+    'yesterday_average_temperature':
     ['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    'period_average_temperature': 
+    'period_average_temperature':
     ['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 
