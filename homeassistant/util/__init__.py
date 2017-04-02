@@ -10,7 +10,7 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from unidecode import unidecode
+from slugify import slugify as python_slugify
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
@@ -36,9 +36,9 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = unidecode(text).lower().replace(" ", "_")
+    text = python_slugify(text).replace("-", "_")
 
-    return RE_SLUGIFY.sub("", text)
+    return text
 
 
 def repr_helper(inp: Any) -> str:
