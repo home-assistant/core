@@ -46,6 +46,9 @@ aiohttp_cors==0.5.2
 # homeassistant.components.light.lifx
 aiolifx==0.4.2
 
+# homeassistant.components.alarmdecoder
+alarmdecoder==0.12.1.0
+
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
 amcrest==1.1.5

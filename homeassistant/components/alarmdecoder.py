@@ -1,0 +1,165 @@
+"""
+Support for AlarmDecoder devices.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/alarmdecoder/
+"""
+import asyncio
+import logging
+
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
+
+from homeassistant.core import callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+
+from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+
+REQUIREMENTS = ['alarmdecoder==0.12.1.0']
+
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'alarmdecoder'
+
+DATA_AD = 'alarmdecoder'
+
+
+CONF_DEVICE = 'device'
+CONF_DEVICE_TYPE = 'type'
+CONF_DEVICE_HOST = 'host'
+CONF_DEVICE_PORT = 'port'
+CONF_DEVICE_PATH = 'path'
+CONF_DEVICE_BAUD = 'baudrate'
+
+CONF_ZONES = 'zones'
+CONF_ZONE_NAME = 'name'
+CONF_ZONE_TYPE = 'type'
+
+CONF_PANEL_DISPLAY = 'panel_display'
+
+DEFAULT_DEVICE_TYPE = 'socket'
+DEFAULT_DEVICE_HOST = 'localhost'
+DEFAULT_DEVICE_PORT = 10000
+DEFAULT_DEVICE_PATH = '/dev/ttyUSB0'
+DEFAULT_DEVICE_BAUD = 115200
+
+DEFAULT_PANEL_DISPLAY = False
+
+DEFAULT_ZONE_TYPE = 'opening'
+
+SIGNAL_PANEL_MESSAGE = 'alarmdecoder.panel_message'
+SIGNAL_PANEL_ARM_AWAY = 'alarmdecoder.panel_arm_away'
+SIGNAL_PANEL_ARM_HOME = 'alarmdecoder.panel_arm_home'
+SIGNAL_PANEL_DISARM = 'alarmdecoder.panel_disarm'
+
+SIGNAL_ZONE_FAULT = 'alarmdecoder.zone_fault'
+SIGNAL_ZONE_RESTORE = 'alarmdecoder.zone_restore'
+
+DEVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_TYPE, default=DEFAULT_DEVICE_TYPE): cv.string,
+    vol.Optional(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
+    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port,
+    vol.Optional(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH): cv.string,
+    vol.Optional(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD): cv.string})
+
+ZONE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ZONE_NAME): cv.string,
+    vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_DEVICE): DEVICE_SCHEMA,
+        vol.Optional(CONF_PANEL_DISPLAY,
+                     default=DEFAULT_PANEL_DISPLAY): cv.boolean,
+        vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Common setup for AlarmDecoder devices."""
+    from alarmdecoder import AlarmDecoder
+    from alarmdecoder.devices import (SocketDevice, SerialDevice)
+
+    conf = config.get(DOMAIN)
+
+    _device = conf.get(CONF_DEVICE)
+    _display = conf.get(CONF_PANEL_DISPLAY)
+    _zones = conf.get(CONF_ZONES)
+
+    _type = _device.get(CONF_DEVICE_TYPE)
+    _host = _device.get(CONF_DEVICE_HOST)
+    _port = _device.get(CONF_DEVICE_PORT)
+    _path = _device.get(CONF_DEVICE_PATH)
+    _baud = _device.get(CONF_DEVICE_BAUD)
+
+    sync_connect = asyncio.Future(loop=hass.loop)
+
+    def handle_open(device):
+        """Callback for a successful connection."""
+        _LOGGER.info("Established a connection with the alarmdecoder.")
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
+        sync_connect.set_result(True)
+
+    @callback
+    def stop_alarmdecoder(event):
+        """Callback to handle shutdown alarmdecoder."""
+        _LOGGER.debug("Shutting down alarmdecoder.")
+        controller.close()
+
+    @callback
+    def handle_message(sender, message):
+        """Callback to handle message from alarmdecoder."""
+        async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
+
+    def zone_fault_callback(sender, zone):
+        """Callback to handle zone fault from alarmdecoder."""
+        async_dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
+
+    def zone_restore_callback(sender, zone):
+        """Callback to handle zone restore from alarmdecoder."""
+        async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
+
+    try:
+        controller = False
+        if _type == 'socket':
+            controller = AlarmDecoder(SocketDevice(interface=(_host, _port)))
+        elif _type == 'serial':
+            controller = AlarmDecoder(SerialDevice(interface=_path))
+        elif _type == 'usb':
+            _LOGGER.debug("AlarmDecoder USB Device not implemented yet.")
+            return False
+
+        controller.on_open += handle_open
+        controller.on_message += handle_message
+        controller.on_zone_fault += zone_fault_callback
+        controller.on_zone_restore += zone_restore_callback
+
+        hass.data[DATA_AD] = controller
+
+        controller.open(_baud)
+
+        result = yield from sync_connect
+
+        if not result:
+            return False
+
+    except Exception as ex:
+        print('AlarmDecoder Exception:', ex)
+        sync_connect.set_result(False)
+        return False
+
+    hass.async_add_job(async_load_platform(hass, 'alarm_control_panel', DOMAIN,
+                                           conf, config))
+
+    if _zones:
+        hass.async_add_job(async_load_platform(
+            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: _zones}, config))
+
+    if _display:
+        hass.async_add_job(async_load_platform(hass, 'sensor', DOMAIN,
+                                               conf, config))
+
+    return True
