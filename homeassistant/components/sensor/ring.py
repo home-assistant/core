@@ -33,8 +33,6 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -120,6 +118,8 @@ class RingSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
+        _LOGGER.debug("Pulling data from %s sensor.", self._name)
+
         self._data.update()
 
         if self._sensor_type == 'volume':
