@@ -120,6 +120,8 @@ class AmcrestSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
+        _LOGGER.debug("Pulling data from %s sensor.", self._name)
+
         try:
             version, build_date = self._camera.software_information
             self._attrs['Build Date'] = build_date.split('=')[-1]
