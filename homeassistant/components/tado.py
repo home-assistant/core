@@ -122,6 +122,6 @@ class TadoDataStore:
         """Wrapper for resetZoneOverlay(..)."""
         return self.tado.resetZoneOverlay(zone_id)
 
-    def set_zone_overlay(self, zone_id, mode, temperature):
+    def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
         """Wrapper for setZoneOverlay(..)."""
-        return self.tado.setZoneOverlay(zone_id, mode, temperature)
+        return self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
