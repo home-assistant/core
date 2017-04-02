@@ -21,7 +21,6 @@ U = TypeVar('U')
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
 def sanitize_filename(filename: str) -> str:
@@ -36,7 +35,10 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = python_slugify(text.replace(":", "")).replace("-", "_")
+    text = text.replace(":", "")
+    text = text.replace(".", "")
+    text = python_slugify(text)
+    text = text.replace("-", "_")
 
     return text
 

@@ -34,6 +34,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test_aouss_aouss_zal",
                          util.slugify("test_äöüß_ÄÖÜẞ_Зал"))
         self.assertEqual("b827eb000000", util.slugify("B8:27:EB:00:00:00"))
+        self.assertEqual("testcom", util.slugify("test.com"))
 
     def test_repr_helper(self):
         """Test repr_helper."""
