@@ -36,7 +36,7 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = python_slugify(text).replace("-", "_")
+    text = python_slugify(text.replace(":", "")).replace("-","_")
 
     return text
 
