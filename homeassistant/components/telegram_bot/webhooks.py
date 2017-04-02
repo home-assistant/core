@@ -11,13 +11,13 @@ from ipaddress import ip_network
 
 import voluptuous as vol
 
-from homeassistant.components.telegram_webhooks import CONF_USER_ID
+
 from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.telegram_bot import PLATFORM_SCHEMA,\
-    process_message
+from homeassistant.components.telegram_bot import CONF_ALLOWED_CHAT_IDS, \
+    BaseTelegramBotEntity, PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY
 from homeassistant.components.http.util import get_real_ip
 
@@ -55,25 +55,29 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
     if current_status and current_status['url'] != handler_url:
         if bot.setWebhook(handler_url):
             _LOGGER.info("set new telegram webhook %s", handler_url)
+
+            hass.http.register_view(
+                BotPushReceiver(
+                    hass,
+                    config[CONF_ALLOWED_CHAT_IDS],
+                    config[CONF_TRUSTED_NETWORKS]))
+
         else:
             _LOGGER.error("set telegram webhook failed %s", handler_url)
 
-    # shouldn't I do this only when bot.setWebhook has succeeded ?
-    hass.http.register_view(BotPushReceiver(config[CONF_USER_ID],
-                                            config[CONF_TRUSTED_NETWORKS]))
 
-
-class BotPushReceiver(HomeAssistantView):
+class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
     """Handle pushes from telegram."""
 
     requires_auth = False
     url = TELEGRAM_HANDLER_URL
     name = "telegram_webhooks"
 
-    def __init__(self, allowed_chat_ids, trusted_networks):
+    def __init__(self, hass, allowed_chat_ids, trusted_networks):
+        """Initialize the class."""
+        BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
         """Initialize users allowed to send messages to bot."""
         self.trusted_networks = trusted_networks
-        self.allowed_chat_ids = allowed_chat_ids
 
     @asyncio.coroutine
     def post(self, request):
@@ -88,11 +92,7 @@ class BotPushReceiver(HomeAssistantView):
         except ValueError:
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
-        event, event_data = yield from process_message(
-            data, self.allowed_chat_ids)
-
-        if event is None or event_data is None:
+        if not self.process_message(data):
             return self.json_message('Invalid message', HTTP_BAD_REQUEST)
-
-        request.app['hass'].bus.async_fire(event, event_data)
-        return self.json({})
+        else:
+            return self.json({})

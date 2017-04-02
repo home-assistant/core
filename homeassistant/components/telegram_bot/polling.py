@@ -4,17 +4,21 @@ import asyncio
 from asyncio.futures import CancelledError
 import logging
 
+import async_timeout
 
 from homeassistant.components.telegram_bot import CONF_ALLOWED_CHAT_IDS, \
-    process_message
+    BaseTelegramBotEntity, PLATFORM_SCHEMA
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     EVENT_HOMEASSISTANT_STOP, CONF_API_KEY
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from aiohttp.errors import ClientError, ClientDisconnectedError
+
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['python-telegram-bot==5.3.0']
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA
 
 
 @asyncio.coroutine
@@ -22,8 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the polling platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
-    allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
-    pol = TelegramPoll(bot, hass, allowed_chat_ids)
+    pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
 
     @callback
     def _start_bot(_event):
@@ -43,20 +46,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         EVENT_HOMEASSISTANT_STOP,
         _stop_bot
     )
-    async_add_devices(pol)
+
+    return True
 
 
-class TelegramPoll:
+class TelegramPoll(BaseTelegramBotEntity):
     """asyncio telegram incoming message handler."""
 
     def __init__(self, bot, hass, allowed_chat_ids):
         """Initialize the polling instance."""
-        self.allowed_chat_ids = allowed_chat_ids
+        BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
         self.update_id = 0
-        self.hass = hass
         self.websession = async_get_clientsession(hass)
         self.update_url = '{0}/getUpdates'.format(bot.base_url)
         self.polling_task = None  # The actuall polling task.
+        self.timeout = 15  # async post timeout
+        # polling timeout should always be less than async post timeout.
+        self.post_data = {'timeout': self.timeout - 5}
 
     def start_polling(self):
         """Start the polling task."""
@@ -67,18 +73,19 @@ class TelegramPoll:
         self.polling_task.cancel()
 
     @asyncio.coroutine
-    def get_updates(self, offset, timeout):
-        """Bypass the default longpolling method to enable asyncio."""
+    def get_updates(self, offset):
+        """Bypass the default long polling method to enable asyncio."""
         resp = None
         _json = []  # The actual value to be returned.
-        data = {'timeout': timeout}
+
         if offset:
-            data['offset'] = offset
+            self.post_data['offset'] = offset
         try:
-            resp = yield from self.websession.post(
-                self.update_url, data=data,
-                headers={'connection': 'keep-alive'}
-            )
+            with async_timeout.timeout(self.timeout, loop=self.hass.loop):
+                resp = yield from self.websession.post(
+                    self.update_url, data=self.post_data,
+                    headers={'connection': 'keep-alive'}
+                )
             if resp.status != 200:
                 _LOGGER.error("Error %s on %s", resp.status, self.update_url)
             _json = yield from resp.json()
@@ -95,15 +102,10 @@ class TelegramPoll:
     @asyncio.coroutine
     def handle(self):
         """" Receiving and processing incoming messages."""
-        _updates = yield from self.get_updates(self.update_id, 10)
+        _updates = yield from self.get_updates(self.update_id)
         for update in _updates['result']:
             self.update_id = update['update_id'] + 1
-            event, event_data = yield from process_message(
-                update, self.allowed_chat_ids)
-            if event is None or event_data is None:
-                return
-
-            self.hass.bus.async_fire(event, event_data)
+            self.process_message(update)
 
     @asyncio.coroutine
     def check_incoming(self):
@@ -116,5 +118,4 @@ class TelegramPoll:
                 # timeout will for this reason not really stress the processor.
                 yield from self.handle()
         except CancelledError:
-            _LOGGER.error("Stopping telegram polling")
-            return
+            _LOGGER.debug("Stopping telegram polling bot")
