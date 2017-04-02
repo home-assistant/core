@@ -1,4 +1,4 @@
-""" Interfaces with TotalConnect alarm control panels. """
+"""Interfaces with TotalConnect alarm control panels."""
 import logging
 import asyncio
 import voluptuous as vol
