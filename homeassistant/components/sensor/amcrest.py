@@ -29,7 +29,7 @@ NOTIFICATION_TITLE = 'Amcrest Sensor Setup'
 
 DEFAULT_NAME = 'Amcrest'
 DEFAULT_PORT = 80
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types are defined like: Name, units, icon
 SENSOR_TYPES = {
@@ -44,8 +44,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
