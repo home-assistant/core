@@ -14,8 +14,9 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/miracle2k/onkyo-eiscp/archive/py3.zip#onkyo-eiscp==1.0']
-#'python3.zip#onkyo-eiscp==0.9.2']
+REQUIREMENTS = ['https://github.com/miracle2k/onkyo-eiscp/archive/'
+                '066023aec04770518d494c32fb72eea0ec5c1b7c.zipi#'
+                'onkyo-eiscp==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
