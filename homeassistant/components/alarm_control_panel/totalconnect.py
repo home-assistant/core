@@ -13,7 +13,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN,
     CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 REQUIREMENTS = ['total_connect_client==0.5']
 
@@ -52,7 +51,8 @@ class TotalConnect(alarm.AlarmControlPanel):
         self._username = username
         self._password = password
         self._state = STATE_UNKNOWN
-        self._client = TotalConnectClient.TotalConnectClient(username, password)
+        self._client = TotalConnectClient.TotalConnectClient(username,
+                                                             password)
 
     @property
     def name(self):
