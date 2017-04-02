@@ -26,7 +26,7 @@ NOTIFICATION_TITLE = 'Ring Sensor Setup'
 DOMAIN = 'ring'
 DEFAULT_CACHEDB = '.ring_cache.pickle'
 DEFAULT_ENTITY_NAMESPACE = 'ring'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

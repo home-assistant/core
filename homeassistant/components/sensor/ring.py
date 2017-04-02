@@ -10,16 +10,18 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_SCAN_INTERVAL)
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
+    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
     STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
