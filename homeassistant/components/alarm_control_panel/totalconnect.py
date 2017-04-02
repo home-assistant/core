@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['total_connect_client==0.5']
+REQUIREMENTS = ['total_connect_client==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a Alarm.com control panel."""
+    """Setup a TotalConnect control panel."""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -41,7 +41,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class TotalConnect(alarm.AlarmControlPanel):
     """Represent an TotalConnect status."""
 
-    def __init__(self, hass, name,  username, password):
+    def __init__(self, hass, name, username, password):
         """Initialize the TotalConnect status."""
         from total_connect_client import TotalConnectClient
 
