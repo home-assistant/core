@@ -122,33 +122,27 @@ def async_setup(hass, config):
         """Callback to handle zone restore from alarmdecoder."""
         async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
 
-    try:
-        controller = False
-        if _type == 'socket':
-            controller = AlarmDecoder(SocketDevice(interface=(_host, _port)))
-        elif _type == 'serial':
-            controller = AlarmDecoder(SerialDevice(interface=_path))
-        elif _type == 'usb':
-            _LOGGER.debug("AlarmDecoder USB Device not implemented yet.")
-            return False
+    controller = False
+    if _type == 'socket':
+        controller = AlarmDecoder(SocketDevice(interface=(_host, _port)))
+    elif _type == 'serial':
+        controller = AlarmDecoder(SerialDevice(interface=_path))
+    elif _type == 'usb':
+        _LOGGER.debug("AlarmDecoder USB Device not implemented yet.")
+        return False
 
-        controller.on_open += handle_open
-        controller.on_message += handle_message
-        controller.on_zone_fault += zone_fault_callback
-        controller.on_zone_restore += zone_restore_callback
+    controller.on_open += handle_open
+    controller.on_message += handle_message
+    controller.on_zone_fault += zone_fault_callback
+    controller.on_zone_restore += zone_restore_callback
 
-        hass.data[DATA_AD] = controller
+    hass.data[DATA_AD] = controller
 
-        controller.open(_baud)
+    controller.open(_baud)
 
-        result = yield from sync_connect
+    result = yield from sync_connect
 
-        if not result:
-            return False
-
-    except Exception as ex:
-        print('AlarmDecoder Exception:', ex)
-        sync_connect.set_result(False)
+    if not result:
         return False
 
     hass.async_add_job(async_load_platform(hass, 'alarm_control_panel', DOMAIN,
