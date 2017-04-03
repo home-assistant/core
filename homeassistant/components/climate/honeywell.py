@@ -17,11 +17,11 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
                                               ATTR_OPERATION_LIST)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    ATTR_TEMPERATURE)
+    ATTR_TEMPERATURE, ATTR_CURRENT_HUMIDITY)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
-                'somecomfort==0.4.1']
+                'somecomfort==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,6 +121,7 @@ class RoundThermostat(ClimateDevice):
         self.device = device
         self._current_temperature = None
         self._target_temperature = None
+        self._current_humidity = None
         self._name = 'round connected'
         self._id = zone_id
         self._master = master
@@ -143,6 +144,11 @@ class RoundThermostat(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._current_humidity
 
     @property
     def target_temperature(self):
@@ -204,6 +210,7 @@ class RoundThermostat(ClimateDevice):
 
         self._current_temperature = data['temp']
         self._target_temperature = data['setpoint']
+        self._current_humidity = data['humidity']
         if data['thermostat'] == 'DOMESTIC_HOT_WATER':
             self._name = 'Hot Water'
             self._is_dhw = True
