@@ -1,7 +1,7 @@
 Home Assistant |Build Status| |Coverage Status| |Join the chat at https://gitter.im/home-assistant/home-assistant| |Join the dev chat at https://gitter.im/home-assistant/home-assistant/devs|
 ==============================================================================================================================================================================================
 
-Home Assistant is a home automation platform running on Python 3. It is to be able to track and control all devices at home and offer a platform for automating control.
+Home Assistant is a home automation platform running on Python 3. It is able to track and control all devices at home and offer a platform for automating control.
 
 To get started:
 
@@ -15,6 +15,9 @@ demo <https://home-assistant.io/demo/>`__, `installation instructions <https://h
 `tutorials <https://home-assistant.io/getting-started/automation-2/>`__ and `documentation <https://home-assistant.io/docs/>`__.
 
 |screenshot-states|
+
+Featured integrations
+---------------------
 
 |screenshot-components|
 
