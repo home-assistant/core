@@ -124,7 +124,7 @@ class NAD7050(MediaPlayerDevice):
 
         # Update current source
         self._source = self._source_mapping[source]
-        logging.debug("Updated source to %s" % self._source)
+        logging.debug("Updated source to %s", self._source)
 
     def nad_volume_to_internal_volume(self, nad_volume):
         """Convert nad volume range (0-200) to internal volume range.
@@ -138,7 +138,7 @@ class NAD7050(MediaPlayerDevice):
         else:
             volume_internal = (nad_volume - self._min_volume) / \
                               (self._max_volume - self._min_volume)
-        logging.debug("updating volume to %i" % volume_internal)
+        logging.debug("updating volume to %i", volume_internal)
         return volume_internal
 
     def send(self, message, read_reply=False):
