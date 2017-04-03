@@ -35,12 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BEACONS): vol.Schema({cv.string: BEACON_SCHEMA}),
 })
 
-LE_META_EVENT = 0x3e
-OGF_LE_CTL = 0x08
-OCF_LE_SET_SCAN_ENABLE = 0x000C
-EVT_LE_ADVERTISING_REPORT = 0x02
-
-
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
@@ -134,6 +128,7 @@ class Monitor(object):
                                 additional_info['instance'],
                                 packet.temperature)
 
+        # pylint: disable=import-error
         from beacontools import (BeaconScanner, EddystoneFilter,
                                  EddystoneTLMFrame)
         # Create a device filter for each device
