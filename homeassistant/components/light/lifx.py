@@ -95,7 +95,7 @@ class LIFXManager(object):
         entity = LIFXLight(device)
         _LOGGER.debug("%s register READY", entity.ipaddr)
         self.entities[device.mac_addr] = entity
-        self.hass.async_add_job(self.async_add_devices, [entity])
+        self.async_add_devices([entity])
 
     @callback
     def unregister(self, device):
