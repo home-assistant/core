@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.lifx/
 import colorsys
 import logging
 import asyncio
+import sys
 from functools import partial
 from datetime import timedelta
 
@@ -25,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.1.post1']
+REQUIREMENTS = ['aiolifx==0.4.2']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -50,6 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the LIFX platform."""
     import aiolifx
+
+    if sys.platform == 'win32':
+        _LOGGER.warning('The lifx platform is known to not work on Windows. '
+                        'Consider using the lifx_legacy platform instead.')
 
     server_addr = config.get(CONF_SERVER)
 
@@ -95,11 +100,12 @@ class LIFXManager(object):
     @callback
     def unregister(self, device):
         """Callback for disappearing bulb."""
-        entity = self.entities[device.mac_addr]
-        _LOGGER.debug("%s unregister", entity.ipaddr)
-        entity.available = False
-        entity.updated_event.set()
-        self.hass.async_add_job(entity.async_update_ha_state())
+        if device.mac_addr in self.entities:
+            entity = self.entities[device.mac_addr]
+            _LOGGER.debug("%s unregister", entity.ipaddr)
+            entity.available = False
+            entity.updated_event.set()
+            self.hass.async_add_job(entity.async_update_ha_state())
 
 
 def convert_rgb_to_hsv(rgb):

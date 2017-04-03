@@ -12,10 +12,11 @@ import os
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
+from homeassistant.core import CoreState
 from homeassistant import config as conf_util
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    SERVICE_TOGGLE, SERVICE_RELOAD)
+    SERVICE_TOGGLE, SERVICE_RELOAD, EVENT_HOMEASSISTANT_START)
 from homeassistant.components import logbook
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import extract_domain_configs, script, condition
@@ -266,14 +267,30 @@ class AutomationEntity(ToggleEntity):
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
+        enable_automation = False
+
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if state is None:
             if self._initial_state:
-                yield from self.async_enable()
+                enable_automation = True
         else:
             self._last_triggered = state.attributes.get('last_triggered')
             if state.state == STATE_ON:
+                enable_automation = True
+
+        # HomeAssistant is on bootstrap
+        if enable_automation and self.hass.state == CoreState.not_running:
+            @asyncio.coroutine
+            def async_enable_automation(event):
+                """Start automation on startup."""
                 yield from self.async_enable()
+
+            self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_START, async_enable_automation)
+
+        # HomeAssistant is running
+        elif enable_automation:
+            yield from self.async_enable()
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs) -> None:

@@ -153,7 +153,7 @@ def setup(hass, config):
         sw_path = "service_worker.js"
 
     hass.http.register_static_path("/service_worker.js",
-                                   os.path.join(STATIC_PATH, sw_path), 0)
+                                   os.path.join(STATIC_PATH, sw_path), False)
     hass.http.register_static_path("/robots.txt",
                                    os.path.join(STATIC_PATH, "robots.txt"))
     hass.http.register_static_path("/static", STATIC_PATH)

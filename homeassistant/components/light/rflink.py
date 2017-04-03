@@ -10,12 +10,14 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICE_DEFAULTS, CONF_DEVICES, CONF_FIRE_EVENT,
-    CONF_IGNORE_DEVICES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
-    DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA, DOMAIN,
-    EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
+    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICE_DEFAULTS, CONF_DEVICES,
+    CONF_FIRE_EVENT, CONF_GROUP, CONF_GROUP_ALIASSES, CONF_IGNORE_DEVICES,
+    CONF_NOGROUP_ALIASSES, CONF_SIGNAL_REPETITIONS, DATA_DEVICE_REGISTER,
+    DATA_ENTITY_GROUP_LOOKUP, DATA_ENTITY_LOOKUP, DEVICE_DEFAULTS_SCHEMA,
+    DOMAIN, EVENT_KEY_COMMAND, EVENT_KEY_ID, SwitchableRflinkDevice, cv, vol)
 from homeassistant.const import (
     CONF_NAME, CONF_PLATFORM, CONF_TYPE, STATE_UNKNOWN)
+
 DEPENDENCIES = ['rflink']
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,6 +32,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_IGNORE_DEVICES): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_DEVICE_DEFAULTS, default=DEVICE_DEFAULTS_SCHEMA({})):
     DEVICE_DEFAULTS_SCHEMA,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
@@ -38,8 +41,13 @@ PLATFORM_SCHEMA = vol.Schema({
                         TYPE_HYBRID, TYPE_TOGGLE),
             vol.Optional(CONF_ALIASSES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_GROUP_ALIASSES, default=[]):
+                vol.All(cv.ensure_list, [cv.string]),
+            vol.Optional(CONF_NOGROUP_ALIASSES, default=[]):
+                vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
             vol.Optional(CONF_SIGNAL_REPETITIONS): vol.Coerce(int),
+            vol.Optional(CONF_GROUP, default=True): cv.boolean,
         },
     }),
 })
@@ -110,7 +118,24 @@ def devices_from_config(domain_config, hass=None):
         devices.append(device)
 
         # Register entity (and aliasses) to listen to incoming rflink events
-        for _id in [device_id] + config[CONF_ALIASSES]:
+
+        # device id and normal aliasses respond to normal and group command
+        hass.data[DATA_ENTITY_LOOKUP][
+            EVENT_KEY_COMMAND][device_id].append(device)
+        if config[CONF_GROUP]:
+            hass.data[DATA_ENTITY_GROUP_LOOKUP][
+                EVENT_KEY_COMMAND][device_id].append(device)
+        for _id in config[CONF_ALIASSES]:
+            hass.data[DATA_ENTITY_LOOKUP][
+                EVENT_KEY_COMMAND][_id].append(device)
+            hass.data[DATA_ENTITY_GROUP_LOOKUP][
+                EVENT_KEY_COMMAND][_id].append(device)
+        # group_aliasses only respond to group commands
+        for _id in config[CONF_GROUP_ALIASSES]:
+            hass.data[DATA_ENTITY_GROUP_LOOKUP][
+                EVENT_KEY_COMMAND][_id].append(device)
+        # nogroup_aliasses only respond to normal commands
+        for _id in config[CONF_NOGROUP_ALIASSES]:
             hass.data[DATA_ENTITY_LOOKUP][
                 EVENT_KEY_COMMAND][_id].append(device)
 
@@ -138,10 +163,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
 
-        # Make sure the event is processed by the new entity
-        device.handle_event(event)
+        # Schedule task to process event after entity is created
+        hass.async_add_job(device.handle_event, event)
 
-    hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_COMMAND] = add_new_device
 
 
 class RflinkLight(SwitchableRflinkDevice, Light):
