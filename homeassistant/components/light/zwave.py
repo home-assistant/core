@@ -11,7 +11,7 @@ import logging
 from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
     ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
-    SUPPORT_RGB_COLOR, DOMAIN, Light
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -42,11 +42,6 @@ DEVICE_MAPPINGS = {
 TEMP_MID_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 2 + HASS_COLOR_MIN
 TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
 TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
-
-SUPPORT_ZWAVE_DIMMER = SUPPORT_BRIGHTNESS
-SUPPORT_ZWAVE_COLOR = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-SUPPORT_ZWAVE_COLORTEMP = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-                           | SUPPORT_COLOR_TEMP)
 
 
 def get_device(node, values, node_config, **kwargs):
@@ -87,6 +82,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._brightness = None
         self._state = None
+        self._supported_features = None
         self._delay = delay
         self._refresh_value = refresh
         self._zw098 = None
@@ -107,12 +103,19 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._timer = None
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
+        self.value_added()
         self.update_properties()
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
         # Brightness
         self._brightness, self._state = brightness_state(self.values.primary)
+
+    def value_added(self):
+        """Called when a new value is added to this entity."""
+        self._supported_features = SUPPORT_BRIGHTNESS
+        if self.values.dimming_duration is not None:
+            self._supported_features |= SUPPORT_TRANSITION
 
     def value_changed(self):
         """Called when a value for this entity's node has changed."""
@@ -146,7 +149,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_ZWAVE_DIMMER
+        return self._supported_features
 
     def _set_duration(self, **kwargs):
         """Set the transition time for the brightness value.
@@ -212,6 +215,14 @@ class ZwaveColorLight(ZwaveDimmer):
         self._ct = None
 
         super().__init__(values, refresh, delay)
+
+    def value_added(self):
+        """Called when a new value is added to this entity."""
+        super().value_added()
+
+        self._supported_features |= SUPPORT_RGB_COLOR
+        if self._zw098:
+            self._supported_features |= SUPPORT_COLOR_TEMP
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
@@ -323,11 +334,3 @@ class ZwaveColorLight(ZwaveDimmer):
             self.values.color.data = rgbw
 
         super().turn_on(**kwargs)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._zw098:
-            return SUPPORT_ZWAVE_COLORTEMP
-        else:
-            return SUPPORT_ZWAVE_COLOR

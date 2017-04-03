@@ -4,7 +4,9 @@ from unittest.mock import patch, MagicMock
 import homeassistant.components.zwave
 from homeassistant.components.zwave import const
 from homeassistant.components.light import (
-    zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION)
+    zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_RGB_COLOR,
+    SUPPORT_COLOR_TEMP)
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
@@ -29,7 +31,7 @@ def test_get_device_detects_dimmer(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveDimmer)
-    assert device.supported_features == zwave.SUPPORT_ZWAVE_DIMMER
+    assert device.supported_features == SUPPORT_BRIGHTNESS
 
 
 def test_get_device_detects_colorlight(mock_openzwave):
@@ -40,7 +42,7 @@ def test_get_device_detects_colorlight(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
-    assert device.supported_features == zwave.SUPPORT_ZWAVE_COLOR
+    assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
 
 def test_get_device_detects_zw098(mock_openzwave):
@@ -51,7 +53,8 @@ def test_get_device_detects_zw098(mock_openzwave):
     values = MockLightValues(primary=value)
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
-    assert device.supported_features == zwave.SUPPORT_ZWAVE_COLORTEMP
+    assert device.supported_features == (
+        SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_COLOR_TEMP)
 
 
 def test_dimmer_turn_on(mock_openzwave):
@@ -93,6 +96,7 @@ def test_dimmer_transitions(mock_openzwave):
     duration = MockValue(data=0, node=node)
     values = MockLightValues(primary=value, dimming_duration=duration)
     device = zwave.get_device(node=node, values=values, node_config={})
+    assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
     # Test turn_on
     # Factory Default
