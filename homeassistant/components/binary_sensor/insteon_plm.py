@@ -32,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             InsteonPLMBinarySensorDevice(hass, plm, address, name)
         )
 
-    hass.async_add_job(async_add_devices(device_list))
+    async_add_devices(device_list)
 
 
 class InsteonPLMBinarySensorDevice(BinarySensorDevice):

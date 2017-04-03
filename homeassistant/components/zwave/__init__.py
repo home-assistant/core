@@ -669,6 +669,7 @@ class ZWaveDeviceEntityValues():
                 continue
             self._values[name] = value
             if self._entity:
+                self._entity.value_added()
                 self._entity.value_changed()
 
             self._check_entity_ready()
@@ -777,6 +778,10 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         """Called when a value has changed on the network."""
         if value.value_id in [v.value_id for v in self.values if v]:
             return self.value_changed()
+
+    def value_added(self):
+        """Called when a new value is added to this entity."""
+        pass
 
     def value_changed(self):
         """Called when a value for this entity's node has changed."""
