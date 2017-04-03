@@ -76,7 +76,6 @@ class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
     def __init__(self, hass, allowed_chat_ids, trusted_networks):
         """Initialize the class."""
         BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
-        """Initialize users allowed to send messages to bot."""
         self.trusted_networks = trusted_networks
 
     @asyncio.coroutine
