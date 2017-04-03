@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.neato/
 """
 import logging
-
+import requests
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, ACTION, ERRORS, MODE, ALERTS)
@@ -52,7 +52,13 @@ class NeatoConnectedSensor(Entity):
         self.neato.update_robots()
         if not self._state:
             return
-        self._state = self.robot.state
+        try:
+            self._state = self.robot.state
+        except requests.exceptions.HTTPError as ex:
+            self._state = None
+            self._status_state = 'Offline'
+            _LOGGER.debug('Neato connection issue: %s', ex)
+            return
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SENSOR_TYPE_STATUS:
             if self._state['state'] == 1:
