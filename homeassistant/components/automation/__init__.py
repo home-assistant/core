@@ -264,15 +264,13 @@ class AutomationEntity(ToggleEntity):
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
-        enable_automation = False
+        enable_automation = DEFAULT_INITIAL_STATE
 
         if self._initial_state is not None:
             enable_automation = self._initial_state
         else:
             state = yield from async_get_last_state(self.hass, self.entity_id)
-            if state is None:
-                enable_automation = DEFAULT_INITIAL_STATE
-            else:
+            if state:
                 enable_automation = state.state == STATE_ON
                 self._last_triggered = state.attributes.get('last_triggered')
 

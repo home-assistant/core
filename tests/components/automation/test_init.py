@@ -700,7 +700,7 @@ def test_initial_value_off_but_restore_on(hass):
 
 @asyncio.coroutine
 def test_initial_value_on_but_restore_off(hass):
-    """Test initial value off and restored state is turned on."""
+    """Test initial value on and restored state is turned off."""
     calls = mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_OFF),
@@ -710,6 +710,61 @@ def test_initial_value_on_but_restore_off(hass):
         automation.DOMAIN: {
             'alias': 'hello',
             'initial_state': 'on',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+    assert res
+    assert automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+@asyncio.coroutine
+def test_no_initial_value_and_restore_off(hass):
+    """Test initial value off and restored state is turned on."""
+    calls = mock_service(hass, 'test', 'automation')
+    mock_restore_cache(hass, (
+        State('automation.hello', STATE_OFF),
+    ))
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+    assert res
+    assert not automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@asyncio.coroutine
+def test_automation_is_on_if_no_initial_state_or_restore(hass):
+    """Test initial value is on when no initial state or restored state."""
+    calls = mock_service(hass, 'test', 'automation')
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
             'trigger': {
                 'platform': 'event',
                 'event_type': 'test_event',
