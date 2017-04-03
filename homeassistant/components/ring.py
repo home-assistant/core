@@ -4,7 +4,6 @@ Support for Ring Doorbell/Chimes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/ring/
 """
-from datetime import timedelta
 import logging
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -26,7 +25,6 @@ NOTIFICATION_TITLE = 'Ring Sensor Setup'
 DOMAIN = 'ring'
 DEFAULT_CACHEDB = '.ring_cache.pickle'
 DEFAULT_ENTITY_NAMESPACE = 'ring'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
