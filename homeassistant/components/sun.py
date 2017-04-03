@@ -308,82 +308,38 @@ class Sun(Entity):
         return min(self.next_dawn, self.next_dusk, self.next_midnight,
                    self.next_noon, self.next_rising, self.next_setting)
 
-    def update_as_of(self, utc_point_in_time):
+    @staticmethod
+    def get_next_solar_event(callable_on_astral_location,
+                             utc_point_in_time, mod, increment):
         """Calculate sun state at a point in UTC time."""
         import astral
 
-        mod = -1
         while True:
             try:
-                next_dawn_dt = self.location.dawn(
+                next_dt = callable_on_astral_location(
                     utc_point_in_time + timedelta(days=mod), local=False)
-                if next_dawn_dt > utc_point_in_time:
+                if next_dt > utc_point_in_time:
                     break
             except astral.AstralError:
                 pass
-            mod += 1
+            mod += increment
 
-        mod = -1
-        while True:
-            try:
-                next_dusk_dt = self.location.dusk(
-                    utc_point_in_time + timedelta(days=mod), local=False)
-                if next_dusk_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
+        return next_dt
 
-        mod = -1
-        while True:
-            try:
-                next_midnight_dt = self.location.solar_midnight(
-                    utc_point_in_time + timedelta(days=mod), local=False)
-                if next_midnight_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
-
-        mod = -1
-        while True:
-            try:
-                next_noon_dt = self.location.solar_noon(
-                    utc_point_in_time + timedelta(days=mod), local=False)
-                if next_noon_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
-
-        mod = -1
-        while True:
-            try:
-                next_rising_dt = self.location.sunrise(
-                    utc_point_in_time + timedelta(days=mod), local=False)
-                if next_rising_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
-
-        mod = -1
-        while True:
-            try:
-                next_setting_dt = (self.location.sunset(
-                    utc_point_in_time + timedelta(days=mod), local=False))
-                if next_setting_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
-
-        self.next_dawn = next_dawn_dt
-        self.next_dusk = next_dusk_dt
-        self.next_midnight = next_midnight_dt
-        self.next_noon = next_noon_dt
-        self.next_rising = next_rising_dt
-        self.next_setting = next_setting_dt
+    def update_as_of(self, utc_point_in_time):
+        """Update the attributes containing solar events."""
+        self.next_dawn = Sun.get_next_solar_event(
+            self.location.dawn, utc_point_in_time, -1, 1)
+        self.next_dusk = Sun.get_next_solar_event(
+            self.location.dusk, utc_point_in_time, -1, 1)
+        self.next_midnight = Sun.get_next_solar_event(
+            self.location.solar_midnight, utc_point_in_time, -1, 1)
+        self.next_noon = Sun.get_next_solar_event(
+            self.location.solar_noon, utc_point_in_time, -1, 1)
+        self.next_rising = Sun.get_next_solar_event(
+            self.location.sunrise, utc_point_in_time, -1, 1)
+        self.next_setting = Sun.get_next_solar_event(
+            self.location.sunset, utc_point_in_time, -1, 1)
 
     def update_sun_position(self, utc_point_in_time):
         """Calculate the position of the sun."""
