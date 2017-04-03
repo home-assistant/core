@@ -13,7 +13,7 @@ REQUIREMENTS = ['total_connect_client==0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'total-connect-client'
+DEFAULT_NAME = 'Total Connect'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
@@ -22,25 +22,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup a TotalConnect control panel."""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    total_connect = TotalConnect(hass, name, username, password)
-    async_add_devices([total_connect])
+    total_connect = TotalConnect(name, username, password)
+    add_devices([total_connect], True)
 
 
 class TotalConnect(alarm.AlarmControlPanel):
     """Represent an TotalConnect status."""
 
-    def __init__(self, hass, name, username, password):
+    def __init__(self, name, username, password):
         """Initialize the TotalConnect status."""
         from total_connect_client import TotalConnectClient
 
         _LOGGER.debug('Setting up TotalConnect...')
-        self._hass = hass
         self._name = name
         self._username = username
         self._password = password
