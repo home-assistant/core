@@ -66,6 +66,9 @@ astral==1.4
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.sensor.eddystone_temperature
+beacontools[scan]==0.1.2
+
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
@@ -475,7 +478,6 @@ pyatv==0.2.1
 pybbox==0.0.5-alpha
 
 # homeassistant.components.device_tracker.bluetooth_tracker
-# homeassistant.components.sensor.eddystone_temperature
 # pybluez==0.22
 
 # homeassistant.components.media_player.cast
