@@ -10,7 +10,6 @@ Original version of this code (for Skybeacons) by anpetrov.
 https://github.com/anpetrov/skybeacon
 """
 import logging
-import threading
 
 import voluptuous as vol
 
@@ -52,7 +51,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     beacons = config.get("beacons")
     devices = []
 
-
     for dev_name, properties in beacons.items():
         namespace = get_from_conf(properties, "namespace", 20)
         instance = get_from_conf(properties, "instance", 12)
@@ -66,6 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if len(devices) > 0:
         mon = Monitor(hass, devices, bt_device_id)
+
         def monitor_stop(_service_or_event):
             """Stop the monitor thread."""
             _LOGGER.info("Stopping scanner for eddystone beacons")
