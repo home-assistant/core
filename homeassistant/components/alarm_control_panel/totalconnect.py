@@ -23,8 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a TotalConnect control panel."""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
