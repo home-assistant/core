@@ -271,7 +271,7 @@ https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 https://github.com/laf/russound/archive/0.1.7.zip#russound==0.1.7
 
 # homeassistant.components.media_player.onkyo
-https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea0ec5c1b7c.zipi#onkyo-eiscp==1.0
+https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea0ec5c1b7c.zip#onkyo-eiscp==1.0
 
 # homeassistant.components.sensor.pocketcasts
 https://github.com/molobrakos/python-pocketcasts/archive/9f61ff00c77c7c98ffa0af9dd3540df3dce4a836.zip#python-pocketcasts==0.0.1
