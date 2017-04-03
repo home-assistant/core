@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
     CONF_NAMESPACE, CONF_INSTANCE, CONF_BT_DEVICE_ID, CONF_BEACONS)
 
-REQUIREMENTS = ['beacontools[scan]==0.1.2']
+REQUIREMENTS = ['beacontools[scan]==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -123,7 +123,7 @@ class Monitor(object):
         # number of the bt device (hciX)
         self.bt_device_id = bt_device_id
 
-        def callback(bt_addr, packet, additional_info):
+        def callback(bt_addr, _, packet, additional_info):
             """Callback for new packets."""
             self.process_packet(additional_info['namespace'],
                                 additional_info['instance'],
