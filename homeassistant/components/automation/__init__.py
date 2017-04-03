@@ -82,8 +82,7 @@ _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,
-    vol.Optional(CONF_INITIAL_STATE,
-                 default=DEFAULT_INITIAL_STATE): cv.boolean,
+    vol.Optional(CONF_INITIAL_STATE): cv.boolean,
     vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
     vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
     vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
@@ -102,15 +101,13 @@ TRIGGER_SERVICE_SCHEMA = vol.Schema({
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
 
-def is_on(hass, entity_id=None):
+def is_on(hass, entity_id):
     """
     Return true if specified automation entity_id is on.
 
-    Check all automation if no entity_id specified.
+    Async friendly.
     """
-    entity_ids = [entity_id] if entity_id else hass.states.entity_ids(DOMAIN)
-    return any(hass.states.is_state(entity_id, STATE_ON)
-               for entity_id in entity_ids)
+    return hass.states.is_state(entity_id, STATE_ON)
 
 
 def turn_on(hass, entity_id=None):
@@ -269,17 +266,21 @@ class AutomationEntity(ToggleEntity):
         """Startup with initial state or previous state."""
         enable_automation = False
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state is None:
-            if self._initial_state:
-                enable_automation = True
+        if self._initial_state is not None:
+            enable_automation = self._initial_state
         else:
-            self._last_triggered = state.attributes.get('last_triggered')
-            if state.state == STATE_ON:
-                enable_automation = True
+            state = yield from async_get_last_state(self.hass, self.entity_id)
+            if state is None:
+                enable_automation = DEFAULT_INITIAL_STATE
+            else:
+                enable_automation = state.state == STATE_ON
+                self._last_triggered = state.attributes.get('last_triggered')
 
-        # HomeAssistant is on bootstrap
-        if enable_automation and self.hass.state == CoreState.not_running:
+        if not enable_automation:
+            return
+
+        # HomeAssistant is starting up
+        elif self.hass.state == CoreState.not_running:
             @asyncio.coroutine
             def async_enable_automation(event):
                 """Start automation on startup."""
@@ -289,7 +290,7 @@ class AutomationEntity(ToggleEntity):
                 EVENT_HOMEASSISTANT_START, async_enable_automation)
 
         # HomeAssistant is running
-        elif enable_automation:
+        else:
             yield from self.async_enable()
 
     @asyncio.coroutine
@@ -359,7 +360,7 @@ def _async_process_config(hass, config, component):
                                                                   list_no)
 
             hidden = config_block[CONF_HIDE_ENTITY]
-            initial_state = config_block[CONF_INITIAL_STATE]
+            initial_state = config_block.get(CONF_INITIAL_STATE)
 
             action = _async_get_action(hass, config_block.get(CONF_ACTION, {}),
                                        name)

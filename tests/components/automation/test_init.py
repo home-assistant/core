@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component, get_test_home_assistant, fire_time_changed,
-    mock_component, mock_service, mock_restore_cache)
+    mock_service, mock_restore_cache)
 
 
 # pylint: disable=invalid-name
@@ -24,7 +24,6 @@ class TestAutomation(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_component(self.hass, 'group')
         self.calls = mock_service(self.hass, 'test', 'automation')
 
     def tearDown(self):
@@ -155,46 +154,6 @@ class TestAutomation(unittest.TestCase):
         self.assertEqual(1, len(self.calls))
         self.assertEqual(['hello.world'],
                          self.calls[0].data.get(ATTR_ENTITY_ID))
-
-    def test_service_initial_value_off(self):
-        """Test initial value off."""
-        entity_id = 'automation.hello'
-
-        assert setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'alias': 'hello',
-                'initial_state': 'off',
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'test_event',
-                },
-                'action': {
-                    'service': 'test.automation',
-                    'entity_id': ['hello.world', 'hello.world2']
-                }
-            }
-        })
-        assert not automation.is_on(self.hass, entity_id)
-
-    def test_service_initial_value_on(self):
-        """Test initial value on."""
-        entity_id = 'automation.hello'
-
-        assert setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'alias': 'hello',
-                'initial_state': 'on',
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'test_event',
-                },
-                'action': {
-                    'service': 'test.automation',
-                    'entity_id': ['hello.world', 'hello.world2']
-                }
-            }
-        })
-        assert automation.is_on(self.hass, entity_id)
 
     def test_service_specify_entity_id_list(self):
         """Test service data."""
@@ -652,4 +611,118 @@ def test_automation_restore_state(hass):
     hass.bus.async_fire('test_event_hello')
     yield from hass.async_block_till_done()
 
+    assert len(calls) == 1
+
+
+@asyncio.coroutine
+def test_initial_value_off(hass):
+    """Test initial value off."""
+    calls = mock_service(hass, 'test', 'automation')
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'initial_state': 'off',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+    assert res
+    assert not automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@asyncio.coroutine
+def test_initial_value_on(hass):
+    """Test initial value on."""
+    calls = mock_service(hass, 'test', 'automation')
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'initial_state': 'on',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': ['hello.world', 'hello.world2']
+            }
+        }
+    })
+    assert res
+    assert automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+@asyncio.coroutine
+def test_initial_value_off_but_restore_on(hass):
+    """Test initial value off and restored state is turned on."""
+    calls = mock_service(hass, 'test', 'automation')
+    mock_restore_cache(hass, (
+        State('automation.hello', STATE_ON),
+    ))
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'initial_state': 'off',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+    assert res
+    assert not automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 0
+
+
+@asyncio.coroutine
+def test_initial_value_on_but_restore_off(hass):
+    """Test initial value off and restored state is turned on."""
+    calls = mock_service(hass, 'test', 'automation')
+    mock_restore_cache(hass, (
+        State('automation.hello', STATE_OFF),
+    ))
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'initial_state': 'on',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+    assert res
+    assert automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
     assert len(calls) == 1
