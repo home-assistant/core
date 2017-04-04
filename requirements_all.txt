@@ -524,7 +524,7 @@ pygatt==3.0.0
 pyharmony==1.0.12
 
 # homeassistant.components.binary_sensor.hikvision
-pyhik==0.1.1
+pyhik==0.1.2
 
 # homeassistant.components.homematic
 pyhomematic==0.1.24
