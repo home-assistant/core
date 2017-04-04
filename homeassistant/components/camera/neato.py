@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
-        if not 'maps' in robot.traits:
+        if 'maps' not in robot.traits:
             return False
         dev.append(NeatoCleaningMap(hass, robot, directory_path))
     _LOGGER.debug('Adding robots for cleaning maps %s', dev)

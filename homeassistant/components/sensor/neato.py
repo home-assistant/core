@@ -101,7 +101,8 @@ class NeatoConnectedSensor(Entity):
         if self._mapdata is None:
             return
         self.clean_time_start = (
-            (self._mapdata[self.robot.serial]['maps'][0]['start_at'].strip('Z'))
+            (self._mapdata[self.robot.serial]['maps'][0]['start_at']
+             .strip('Z'))
             .replace('T', ' '))
         self.clean_time_stop = (
             (self._mapdata[self.robot.serial]['maps'][0]['end_at'].strip('Z'))
