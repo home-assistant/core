@@ -528,38 +528,6 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 2
 
-    def test_automation_not_trigger_on_bootstrap(self):
-        """Test if automation is not trigger on bootstrap."""
-        self.hass.state = CoreState.not_running
-
-        assert setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'test_event',
-                },
-                'action': {
-                    'service': 'test.automation',
-                    'entity_id': 'hello.world'
-                }
-            }
-        })
-
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-
-        assert len(self.calls) == 0
-
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        self.hass.block_till_done()
-        self.hass.states = CoreState.running
-
-        self.hass.bus.fire('test_event')
-        self.hass.block_till_done()
-
-        assert len(self.calls) == 1
-        assert ['hello.world'] == self.calls[0].data.get(ATTR_ENTITY_ID)
-
 
 @asyncio.coroutine
 def test_automation_restore_state(hass):
@@ -781,3 +749,40 @@ def test_automation_is_on_if_no_initial_state_or_restore(hass):
     hass.bus.async_fire('test_event')
     yield from hass.async_block_till_done()
     assert len(calls) == 1
+
+
+@asyncio.coroutine
+def test_automation_not_trigger_on_bootstrap(hass):
+    """Test if automation is not trigger on bootstrap."""
+    hass.state = CoreState.not_running
+    calls = mock_service(hass, 'test', 'automation')
+
+    res = yield from async_setup_component(hass, automation.DOMAIN, {
+        automation.DOMAIN: {
+            'alias': 'hello',
+            'trigger': {
+                'platform': 'event',
+                'event_type': 'test_event',
+            },
+            'action': {
+                'service': 'test.automation',
+                'entity_id': 'hello.world'
+            }
+        }
+    })
+    assert res
+    assert not automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+    assert len(calls) == 0
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    yield from hass.async_block_till_done()
+    assert automation.is_on(hass, 'automation.hello')
+
+    hass.bus.async_fire('test_event')
+    yield from hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert ['hello.world'] == calls[0].data.get(ATTR_ENTITY_ID)

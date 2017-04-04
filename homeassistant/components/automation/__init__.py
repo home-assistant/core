@@ -229,7 +229,6 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers = None
         self._cond_func = cond_func
         self._async_action = async_action
-        self._enabled = False
         self._last_triggered = None
         self._hidden = hidden
         self._initial_state = initial_state
@@ -259,7 +258,7 @@ class AutomationEntity(ToggleEntity):
     @property
     def is_on(self) -> bool:
         """Return True if entity is on."""
-        return self._enabled
+        return self._async_detach_triggers is not None
 
     @asyncio.coroutine
     def async_added_to_hass(self) -> None:
@@ -294,21 +293,19 @@ class AutomationEntity(ToggleEntity):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs) -> None:
         """Turn the entity on and update the state."""
-        if self._enabled:
+        if self.is_on:
             return
 
         yield from self.async_enable()
-        yield from self.async_update_ha_state()
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        if not self._enabled:
+        if not self.is_on:
             return
 
         self._async_detach_triggers()
         self._async_detach_triggers = None
-        self._enabled = False
         yield from self.async_update_ha_state()
 
     @asyncio.coroutine
@@ -334,12 +331,12 @@ class AutomationEntity(ToggleEntity):
 
         This method is a coroutine.
         """
-        if self._enabled:
+        if self.is_on:
             return
 
         self._async_detach_triggers = yield from self._async_attach_triggers(
             self.async_trigger)
-        self._enabled = True
+        yield from self.async_update_ha_state()
 
 
 @asyncio.coroutine
