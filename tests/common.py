@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.setup import setup_component, DATA_SETUP
+from homeassistant.setup import setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -271,15 +271,10 @@ def mock_mqtt_component(hass):
 
 def mock_component(hass, component):
     """Mock a component is setup."""
-    setup_tasks = hass.data.get(DATA_SETUP)
-    if setup_tasks is None:
-        setup_tasks = hass.data[DATA_SETUP] = {}
-
-    if component not in setup_tasks:
+    if component in hass.config.components:
         AssertionError("Component {} is already setup".format(component))
 
     hass.config.components.add(component)
-    setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 
 
 class MockModule(object):
@@ -499,4 +494,4 @@ def mock_restore_cache(hass, states):
     assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
-    hass.config.components.add(recorder.DOMAIN)
+    mock_component(hass, recorder.DOMAIN)

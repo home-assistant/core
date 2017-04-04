@@ -3,12 +3,11 @@
 import asyncio
 import unittest
 
-from tests.common import get_test_home_assistant, mock_component
-
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_slider import (DOMAIN, select_value)
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+
+from tests.common import get_test_home_assistant, mock_restore_cache
 
 
 class TestInputSlider(unittest.TestCase):
@@ -75,13 +74,43 @@ class TestInputSlider(unittest.TestCase):
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
-    hass.data[DATA_RESTORE_CACHE] = {
-        'input_slider.b1': State('input_slider.b1', '70'),
-        'input_slider.b2': State('input_slider.b2', '200'),
-    }
+    mock_restore_cache(hass, (
+        State('input_slider.b1', '70'),
+        State('input_slider.b2', '200'),
+    ))
 
     hass.state = CoreState.starting
-    mock_component(hass, 'recorder')
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'b1': {
+                'min': 0,
+                'max': 100,
+            },
+            'b2': {
+                'min': 10,
+                'max': 100,
+            },
+        }})
+
+    state = hass.states.get('input_slider.b1')
+    assert state
+    assert float(state.state) == 70
+
+    state = hass.states.get('input_slider.b2')
+    assert state
+    assert float(state.state) == 10
+
+
+@asyncio.coroutine
+def test_initial_state_overrules_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('input_slider.b1', '70'),
+        State('input_slider.b2', '200'),
+    ))
+
+    hass.state = CoreState.starting
 
     yield from async_setup_component(hass, DOMAIN, {
         DOMAIN: {
@@ -99,7 +128,7 @@ def test_restore_state(hass):
 
     state = hass.states.get('input_slider.b1')
     assert state
-    assert float(state.state) == 70
+    assert float(state.state) == 50
 
     state = hass.states.get('input_slider.b2')
     assert state
