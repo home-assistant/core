@@ -3,8 +3,8 @@
 FINGERPRINTS = {
     "compatibility.js": "83d9c77748dafa9db49ae77d7f3d8fb0",
     "core.js": "5d08475f03adb5969bd31855d5ca0cfd",
-    "frontend.html": "53c45b837a3bcae7cfb9ef4a5919844f",
-    "mdi.html": "4921d26f29dc148c3e8bd5bcd8ce5822",
+    "frontend.html": "feaf3e9453eca239f29eb10e7645a84f",
+    "mdi.html": "989f02c51eba561dc32b9ecc628a84b3",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
     "panels/ha-panel-config.html": "6dcb246cd356307a638f81c4f89bf9b3",
     "panels/ha-panel-dev-event.html": "1f169700c2345785855b1d7919d12326",
@@ -12,9 +12,9 @@ FINGERPRINTS = {
     "panels/ha-panel-dev-service.html": "0fe8e6acdccf2dc3d1ae657b2c7f2df0",
     "panels/ha-panel-dev-state.html": "48d37db4a1d6708314ded1d624d0f4d4",
     "panels/ha-panel-dev-template.html": "6f353392d68574fbc5af188bca44d0ae",
-    "panels/ha-panel-history.html": "bfd5f929d5aa9cefdd799ec37624efa1",
+    "panels/ha-panel-history.html": "6945cebe5d8075aae560d2c4246b063f",
     "panels/ha-panel-iframe.html": "d920f0aa3c903680f2f8795e2255daab",
     "panels/ha-panel-logbook.html": "a1fc2b5d739bedb9d87e4da4cd929a71",
-    "panels/ha-panel-map.html": "9aa065b1908089f3bb5af7fdf9485be5",
+    "panels/ha-panel-map.html": "e3c7a54f90dd4269d7e53cdcd96514c6",
     "websocket_test.html": "575de64b431fe11c3785bf96d7813450"
 }
