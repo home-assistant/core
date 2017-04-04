@@ -554,7 +554,8 @@ def setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK,
                                test_network,
                                descriptions[const.SERVICE_TEST_NETWORK])
-        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK, stop_network,
+        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
+                               stop_network,
                                descriptions[const.SERVICE_STOP_NETWORK])
         hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
                                start_zwave,
