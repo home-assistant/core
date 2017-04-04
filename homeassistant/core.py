@@ -26,7 +26,8 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_SERVICE_REMOVED, __version__)
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
 from homeassistant.util.async import (
@@ -140,7 +141,7 @@ class HomeAssistant(object):
     def start(self) -> None:
         """Start home assistant."""
         # Register the async start
-        self.loop.create_task(self.async_start())
+        self.add_job(self.async_start())
 
         # Run forever and catch keyboard interrupt
         try:
@@ -861,6 +862,32 @@ class ServiceRegistry(object):
 
         self._hass.bus.async_fire(
             EVENT_SERVICE_REGISTERED,
+            {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
+        )
+
+    def remove(self, domain, service):
+        """Remove a registered service from service handler."""
+        run_callback_threadsafe(
+            self._hass.loop, self.async_remove, domain, service).result()
+
+    @callback
+    def async_remove(self, domain, service):
+        """Remove a registered service from service handler.
+
+        This method must be run in the event loop.
+        """
+        domain = domain.lower()
+        service = service.lower()
+
+        if service not in self._services.get(domain, {}):
+            _LOGGER.warning(
+                "Unable to remove unknown service %s/%s.", domain, service)
+            return
+
+        self._services[domain].pop(service)
+
+        self._hass.bus.async_fire(
+            EVENT_SERVICE_REMOVED,
             {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 

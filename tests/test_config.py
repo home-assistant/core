@@ -213,7 +213,7 @@ class TestConfig(unittest.TestCase):
         entity = Entity()
         entity.entity_id = 'test.test'
         entity.hass = self.hass
-        entity.update_ha_state()
+        entity.schedule_update_ha_state()
 
         self.hass.block_till_done()
 

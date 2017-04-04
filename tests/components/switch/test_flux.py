@@ -3,7 +3,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import switch, light
 from homeassistant.const import CONF_PLATFORM, STATE_ON, SERVICE_TURN_ON
 import homeassistant.loader as loader

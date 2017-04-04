@@ -13,7 +13,7 @@ from functools import reduce
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import discovery
+from homeassistant.helpers import discovery
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.config import load_yaml_config_file

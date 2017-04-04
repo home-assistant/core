@@ -2,7 +2,7 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import frontend
 
 from tests.common import get_test_home_assistant
@@ -28,7 +28,7 @@ class TestPanelIframe(unittest.TestCase):
                 'url': 'not-a-url'}}]
 
         for conf in to_try:
-            assert not bootstrap.setup_component(
+            assert not setup.setup_component(
                 self.hass, 'panel_iframe', {
                     'panel_iframe': conf
                 })
@@ -37,7 +37,7 @@ class TestPanelIframe(unittest.TestCase):
         'panels/ha-panel-iframe.html': 'md5md5'})
     def test_correct_config(self):
         """Test correct config."""
-        assert bootstrap.setup_component(
+        assert setup.setup_component(
             self.hass, 'panel_iframe', {
                 'panel_iframe': {
                     'router': {

@@ -5,7 +5,7 @@ import soco.snapshot
 from unittest import mock
 import soco
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.media_player import sonos, DOMAIN
 from homeassistant.components.media_player.sonos import CONF_INTERFACE_ADDR, \
     CONF_ADVERTISE_ADDR

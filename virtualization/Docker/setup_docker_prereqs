@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install requirements and build dependencies for Home Assinstant in Docker.
+# Install requirements and build dependencies for Home Assistant in Docker.
 
 # Stop on errors
 set -e

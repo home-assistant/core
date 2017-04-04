@@ -14,6 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import async_get_last_state
 
 DOMAIN = 'input_slider'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -164,6 +165,18 @@ class InputSlider(Entity):
             ATTR_MAX: self._maximum,
             ATTR_STEP: self._step
         }
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Called when entity about to be added to hass."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+
+        num_value = float(state.state)
+        if num_value < self._minimum or num_value > self._maximum:
+            return
+        self._current_value = num_value
 
     @asyncio.coroutine
     def async_select_value(self, value):

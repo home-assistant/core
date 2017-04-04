@@ -19,6 +19,7 @@ from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
+SLOW_UPDATE_WARNING = 10
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
@@ -69,6 +70,9 @@ class Entity(object):
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # protect for multible updates
+    _update_warn = None
 
     @property
     def should_poll(self) -> bool:
@@ -180,14 +184,9 @@ class Entity(object):
 
         If force_refresh == True will update entity before setting state.
         """
-        # We're already in a thread, do the force refresh here.
-        if force_refresh and not hasattr(self, 'async_update'):
-            self.update()
-            force_refresh = False
-
-        run_coroutine_threadsafe(
-            self.async_update_ha_state(force_refresh), self.hass.loop
-        ).result()
+        _LOGGER.warning("'update_ha_state' is deprecated. "
+                        "Use 'schedule_update_ha_state' instead.")
+        self.schedule_update_ha_state(force_refresh)
 
     @asyncio.coroutine
     def async_update_ha_state(self, force_refresh=False):
@@ -204,12 +203,32 @@ class Entity(object):
             raise NoEntitySpecifiedError(
                 "No entity id specified for entity {}".format(self.name))
 
+        # update entity data
         if force_refresh:
-            if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
-                yield from self.async_update()
-            else:
-                yield from self.hass.loop.run_in_executor(None, self.update)
+            if self._update_warn:
+                _LOGGER.warning('Update for %s is already in progress',
+                                self.entity_id)
+                return
+
+            self._update_warn = self.hass.loop.call_later(
+                SLOW_UPDATE_WARNING, _LOGGER.warning,
+                'Update of %s is taking over %s seconds.', self.entity_id,
+                SLOW_UPDATE_WARNING
+            )
+
+            try:
+                if hasattr(self, 'async_update'):
+                    # pylint: disable=no-member
+                    yield from self.async_update()
+                else:
+                    yield from self.hass.loop.run_in_executor(
+                        None, self.update)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception('Update for %s fails', self.entity_id)
+                return
+            finally:
+                self._update_warn.cancel()
+                self._update_warn = None
 
         start = timer()
 
@@ -280,11 +299,6 @@ class Entity(object):
 
         That is only needed on executor to not block.
         """
-        # We're already in a thread, do the force refresh here.
-        if force_refresh and not hasattr(self, 'async_update'):
-            self.update()
-            force_refresh = False
-
         self.hass.add_job(self.async_update_ha_state(force_refresh))
 
     def remove(self) -> None:

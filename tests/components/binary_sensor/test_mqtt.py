@@ -1,7 +1,7 @@
 """The tests for the  MQTT binary sensor platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
 from homeassistant.const import (STATE_OFF, STATE_ON)
 

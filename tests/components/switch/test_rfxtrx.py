@@ -3,7 +3,7 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
 from tests.common import get_test_home_assistant, mock_component

@@ -11,7 +11,7 @@ from functools import partial
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import async_prepare_setup_platform
+from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file

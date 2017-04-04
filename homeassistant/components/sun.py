@@ -17,7 +17,7 @@ from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 
-REQUIREMENTS = ['astral==1.3.4']
+REQUIREMENTS = ['astral==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -231,7 +231,7 @@ class Sun(Entity):
     def point_in_time_listener(self, now):
         """Called when the state of the sun has changed."""
         self.update_as_of(now)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         # Schedule next update at next_change+1 second so sun state has changed
         track_point_in_utc_time(
@@ -241,4 +241,4 @@ class Sun(Entity):
     def timer_update(self, time):
         """Needed to update solar elevation and azimuth."""
         self.update_sun_position(time)
-        self.update_ha_state()
+        self.schedule_update_ha_state()

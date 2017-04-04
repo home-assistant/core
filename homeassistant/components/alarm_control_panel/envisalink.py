@@ -94,10 +94,13 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
         _LOGGER.debug("Setting up alarm: %s", alarm_name)
         super().__init__(alarm_name, info, controller)
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         async_dispatcher_connect(
-            hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
+            self.hass, SIGNAL_KEYPAD_UPDATE, self._update_callback)
         async_dispatcher_connect(
-            hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
+            self.hass, SIGNAL_PARTITION_UPDATE, self._update_callback)
 
     @callback
     def _update_callback(self, partition):

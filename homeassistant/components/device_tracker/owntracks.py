@@ -4,14 +4,15 @@ Support the OwnTracks platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.owntracks/
 """
+import asyncio
 import json
 import logging
-import threading
 import base64
 from collections import defaultdict
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.components.mqtt as mqtt
 from homeassistant.const import STATE_HOME
@@ -19,6 +20,7 @@ from homeassistant.util import convert, slugify
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 
+DEPENDENCIES = ['mqtt']
 REQUIREMENTS = ['libnacl==1.5.0']
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,16 +32,9 @@ CONF_SECRET = 'secret'
 CONF_WAYPOINT_IMPORT = 'waypoints'
 CONF_WAYPOINT_WHITELIST = 'waypoint_whitelist'
 
-DEPENDENCIES = ['mqtt']
-
 EVENT_TOPIC = 'owntracks/+/+/event'
 
 LOCATION_TOPIC = 'owntracks/+/+'
-LOCK = threading.Lock()
-
-MOBILE_BEACONS_ACTIVE = defaultdict(list)
-
-REGIONS_ENTERED = defaultdict(list)
 
 VALIDATE_LOCATION = 'location'
 VALIDATE_TRANSITION = 'transition'
@@ -61,7 +56,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_cipher():
-    """Return decryption function and length of key."""
+    """Return decryption function and length of key.
+
+    Async friendly.
+    """
     from libnacl import crypto_secretbox_KEYBYTES as KEYLEN
     from libnacl.secret import SecretBox
 
@@ -71,12 +69,16 @@ def get_cipher():
     return (KEYLEN, decrypt)
 
 
-def setup_scanner(hass, config, see, discovery_info=None):
+@asyncio.coroutine
+def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Set up an OwnTracks tracker."""
     max_gps_accuracy = config.get(CONF_MAX_GPS_ACCURACY)
     waypoint_import = config.get(CONF_WAYPOINT_IMPORT)
     waypoint_whitelist = config.get(CONF_WAYPOINT_WHITELIST)
     secret = config.get(CONF_SECRET)
+
+    mobile_beacons_active = defaultdict(list)
+    regions_entered = defaultdict(list)
 
     def decrypt_payload(topic, ciphertext):
         """Decrypt encrypted payload."""
@@ -154,7 +156,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
         return data
 
-    def owntracks_location_update(topic, payload, qos):
+    @callback
+    def async_owntracks_location_update(topic, payload, qos):
         """MQTT message received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typelocation
@@ -164,18 +167,17 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
         dev_id, kwargs = _parse_see_args(topic, data)
 
-        # Block updates if we're in a region
-        with LOCK:
-            if REGIONS_ENTERED[dev_id]:
-                _LOGGER.debug(
-                    "location update ignored - inside region %s",
-                    REGIONS_ENTERED[-1])
-                return
+        if regions_entered[dev_id]:
+            _LOGGER.debug(
+                "location update ignored - inside region %s",
+                regions_entered[-1])
+            return
 
-            see(**kwargs)
-            see_beacons(dev_id, kwargs)
+        hass.async_add_job(async_see(**kwargs))
+        async_see_beacons(dev_id, kwargs)
 
-    def owntracks_event_update(topic, payload, qos):
+    @callback
+    def async_owntracks_event_update(topic, payload, qos):
         """MQTT event (geofences) received."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typetransition
@@ -199,67 +201,65 @@ def setup_scanner(hass, config, see, discovery_info=None):
         def enter_event():
             """Execute enter event."""
             zone = hass.states.get("zone.{}".format(slugify(location)))
-            with LOCK:
-                if zone is None and data.get('t') == 'b':
-                    # Not a HA zone, and a beacon so assume mobile
-                    beacons = MOBILE_BEACONS_ACTIVE[dev_id]
-                    if location not in beacons:
-                        beacons.append(location)
-                    _LOGGER.info("Added beacon %s", location)
-                else:
-                    # Normal region
-                    regions = REGIONS_ENTERED[dev_id]
-                    if location not in regions:
-                        regions.append(location)
-                    _LOGGER.info("Enter region %s", location)
-                    _set_gps_from_zone(kwargs, location, zone)
+            if zone is None and data.get('t') == 'b':
+                # Not a HA zone, and a beacon so assume mobile
+                beacons = mobile_beacons_active[dev_id]
+                if location not in beacons:
+                    beacons.append(location)
+                _LOGGER.info("Added beacon %s", location)
+            else:
+                # Normal region
+                regions = regions_entered[dev_id]
+                if location not in regions:
+                    regions.append(location)
+                _LOGGER.info("Enter region %s", location)
+                _set_gps_from_zone(kwargs, location, zone)
 
-                see(**kwargs)
-                see_beacons(dev_id, kwargs)
+            hass.async_add_job(async_see(**kwargs))
+            async_see_beacons(dev_id, kwargs)
 
         def leave_event():
             """Execute leave event."""
-            with LOCK:
-                regions = REGIONS_ENTERED[dev_id]
-                if location in regions:
-                    regions.remove(location)
-                new_region = regions[-1] if regions else None
+            regions = regions_entered[dev_id]
+            if location in regions:
+                regions.remove(location)
+            new_region = regions[-1] if regions else None
 
-                if new_region:
-                    # Exit to previous region
-                    zone = hass.states.get(
-                        "zone.{}".format(slugify(new_region)))
-                    _set_gps_from_zone(kwargs, new_region, zone)
-                    _LOGGER.info("Exit to %s", new_region)
-                    see(**kwargs)
-                    see_beacons(dev_id, kwargs)
+            if new_region:
+                # Exit to previous region
+                zone = hass.states.get(
+                    "zone.{}".format(slugify(new_region)))
+                _set_gps_from_zone(kwargs, new_region, zone)
+                _LOGGER.info("Exit to %s", new_region)
+                hass.async_add_job(async_see(**kwargs))
+                async_see_beacons(dev_id, kwargs)
 
-                else:
-                    _LOGGER.info("Exit to GPS")
-                    # Check for GPS accuracy
-                    valid_gps = True
-                    if 'acc' in data:
-                        if data['acc'] == 0.0:
-                            valid_gps = False
-                            _LOGGER.warning(
-                                'Ignoring GPS in region exit because accuracy'
-                                'is zero: %s',
-                                payload)
-                        if (max_gps_accuracy is not None and
-                                data['acc'] > max_gps_accuracy):
-                            valid_gps = False
-                            _LOGGER.info(
-                                'Ignoring GPS in region exit because expected '
-                                'GPS accuracy %s is not met: %s',
-                                max_gps_accuracy, payload)
-                    if valid_gps:
-                        see(**kwargs)
-                        see_beacons(dev_id, kwargs)
+            else:
+                _LOGGER.info("Exit to GPS")
+                # Check for GPS accuracy
+                valid_gps = True
+                if 'acc' in data:
+                    if data['acc'] == 0.0:
+                        valid_gps = False
+                        _LOGGER.warning(
+                            'Ignoring GPS in region exit because accuracy'
+                            'is zero: %s',
+                            payload)
+                    if (max_gps_accuracy is not None and
+                            data['acc'] > max_gps_accuracy):
+                        valid_gps = False
+                        _LOGGER.info(
+                            'Ignoring GPS in region exit because expected '
+                            'GPS accuracy %s is not met: %s',
+                            max_gps_accuracy, payload)
+                if valid_gps:
+                    hass.async_add_job(async_see(**kwargs))
+                    async_see_beacons(dev_id, kwargs)
 
-                beacons = MOBILE_BEACONS_ACTIVE[dev_id]
-                if location in beacons:
-                    beacons.remove(location)
-                    _LOGGER.info("Remove beacon %s", location)
+            beacons = mobile_beacons_active[dev_id]
+            if location in beacons:
+                beacons.remove(location)
+                _LOGGER.info("Remove beacon %s", location)
 
         if data['event'] == 'enter':
             enter_event()
@@ -271,7 +271,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 data['event'])
             return
 
-    def owntracks_waypoint_update(topic, payload, qos):
+    @callback
+    def async_owntracks_waypoint_update(topic, payload, qos):
         """List of waypoints published by a user."""
         # Docs on available data:
         # http://owntracks.org/booklet/tech/json/#_typewaypoints
@@ -298,36 +299,43 @@ def setup_scanner(hass, config, see, discovery_info=None):
             zone = zone_comp.Zone(hass, pretty_name, lat, lon, rad,
                                   zone_comp.ICON_IMPORT, False)
             zone.entity_id = entity_id
-            zone.update_ha_state()
+            hass.async_add_job(zone.async_update_ha_state())
 
-    def see_beacons(dev_id, kwargs_param):
+    @callback
+    def async_see_beacons(dev_id, kwargs_param):
         """Set active beacons to the current location."""
         kwargs = kwargs_param.copy()
         # the battery state applies to the tracking device, not the beacon
         kwargs.pop('battery', None)
-        for beacon in MOBILE_BEACONS_ACTIVE[dev_id]:
+        for beacon in mobile_beacons_active[dev_id]:
             kwargs['dev_id'] = "{}_{}".format(BEACON_DEV_ID, beacon)
             kwargs['host_name'] = beacon
-            see(**kwargs)
+            hass.async_add_job(async_see(**kwargs))
 
-    mqtt.subscribe(hass, LOCATION_TOPIC, owntracks_location_update, 1)
-    mqtt.subscribe(hass, EVENT_TOPIC, owntracks_event_update, 1)
+    yield from mqtt.async_subscribe(
+        hass, LOCATION_TOPIC, async_owntracks_location_update, 1)
+    yield from mqtt.async_subscribe(
+        hass, EVENT_TOPIC, async_owntracks_event_update, 1)
 
     if waypoint_import:
         if waypoint_whitelist is None:
-            mqtt.subscribe(hass, WAYPOINT_TOPIC.format('+', '+'),
-                           owntracks_waypoint_update, 1)
+            yield from mqtt.async_subscribe(
+                hass, WAYPOINT_TOPIC.format('+', '+'),
+                async_owntracks_waypoint_update, 1)
         else:
             for whitelist_user in waypoint_whitelist:
-                mqtt.subscribe(hass, WAYPOINT_TOPIC.format(whitelist_user,
-                                                           '+'),
-                               owntracks_waypoint_update, 1)
+                yield from mqtt.async_subscribe(
+                    hass, WAYPOINT_TOPIC.format(whitelist_user, '+'),
+                    async_owntracks_waypoint_update, 1)
 
     return True
 
 
 def parse_topic(topic, pretty=False):
-    """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple."""
+    """Parse an MQTT topic owntracks/user/dev, return (user, dev) tuple.
+
+    Async friendly.
+    """
     parts = topic.split('/')
     dev_id_format = ''
     if pretty:
@@ -340,7 +348,10 @@ def parse_topic(topic, pretty=False):
 
 
 def _parse_see_args(topic, data):
-    """Parse the OwnTracks location parameters, into the format see expects."""
+    """Parse the OwnTracks location parameters, into the format see expects.
+
+    Async friendly.
+    """
     (host_name, dev_id) = parse_topic(topic, False)
     kwargs = {
         'dev_id': dev_id,
@@ -355,7 +366,10 @@ def _parse_see_args(topic, data):
 
 
 def _set_gps_from_zone(kwargs, location, zone):
-    """Set the see parameters from the zone parameters."""
+    """Set the see parameters from the zone parameters.
+
+    Async friendly.
+    """
     if zone is not None:
         kwargs['gps'] = (
             zone.attributes['latitude'],

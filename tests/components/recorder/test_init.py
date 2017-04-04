@@ -1,14 +1,17 @@
 """The tests for the Recorder component."""
 # pylint: disable=protected-access
 import unittest
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.core import callback
 from homeassistant.const import MATCH_ALL
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.const import DATA_INSTANCE
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.components.recorder.models import States, Events
+
 from tests.common import get_test_home_assistant, init_recorder_component
 
 
@@ -163,3 +166,18 @@ def test_saving_state_include_domain_exclude_entity(hass_recorder):
     assert len(states) == 1
     assert hass.states.get('test.ok') == states[0]
     assert hass.states.get('test.ok').state == 'state2'
+
+
+def test_recorder_setup_failure():
+    """Test some exceptions."""
+    hass = get_test_home_assistant()
+
+    with patch.object(Recorder, '_setup_connection') as setup, \
+            patch('homeassistant.components.recorder.time.sleep'):
+        setup.side_effect = ImportError("driver not found")
+        rec = Recorder(
+            hass, purge_days=0, uri='sqlite://', include={}, exclude={})
+        rec.start()
+        rec.join()
+
+    hass.stop()

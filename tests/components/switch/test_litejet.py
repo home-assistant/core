@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest import mock
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import litejet
 from tests.common import get_test_home_assistant
 import homeassistant.components.switch as switch
@@ -56,7 +56,7 @@ class TestLiteJetSwitch(unittest.TestCase):
         elif method != self.test_include_switches_unspecified:
             config['litejet']['include_switches'] = True
 
-        assert bootstrap.setup_component(self.hass, litejet.DOMAIN, config)
+        assert setup.setup_component(self.hass, litejet.DOMAIN, config)
         self.hass.block_till_done()
 
     def teardown_method(self, method):

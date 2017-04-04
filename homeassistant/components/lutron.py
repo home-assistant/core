@@ -7,8 +7,7 @@ https://home-assistant.io/components/lutron/
 import logging
 
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import (Entity, generate_entity_id)
-from homeassistant.loader import get_component
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['https://github.com/thecynic/pylutron/archive/v0.1.0.zip#'
                 'pylutron==0.1.0']
@@ -19,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
-LUTRON_GROUPS = 'lutron_groups'
 
 
 def setup(hass, base_config):
@@ -28,7 +26,6 @@ def setup(hass, base_config):
 
     hass.data[LUTRON_CONTROLLER] = None
     hass.data[LUTRON_DEVICES] = {'light': []}
-    hass.data[LUTRON_GROUPS] = {}
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
@@ -40,13 +37,8 @@ def setup(hass, base_config):
     hass.data[LUTRON_CONTROLLER].connect()
     _LOGGER.info("Connected to Main Repeater at %s", config['lutron_host'])
 
-    group = get_component('group')
-
     # Sort our devices into types
     for area in hass.data[LUTRON_CONTROLLER].areas:
-        if area.name not in hass.data[LUTRON_GROUPS]:
-            grp = group.Group.create_group(hass, area.name, [])
-            hass.data[LUTRON_GROUPS][area.name] = grp
         for output in area.outputs:
             hass.data[LUTRON_DEVICES]['light'].append((area.name, output))
 
@@ -58,16 +50,14 @@ def setup(hass, base_config):
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
-    def __init__(self, hass, domain, area_name, lutron_device, controller):
+    def __init__(self, hass, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
 
         self.hass = hass
-        object_id = '{} {}'.format(area_name, lutron_device.name)
-        self.entity_id = generate_entity_id(domain + '.{}', object_id,
-                                            hass=hass)
+        self.object_id = '{} {}'.format(area_name, lutron_device.name)
 
         self._controller.subscribe(self._lutron_device, self._update_callback)
 

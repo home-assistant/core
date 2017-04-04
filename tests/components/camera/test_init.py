@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
 import homeassistant.components.camera as camera
 import homeassistant.components.http as http

@@ -1,7 +1,7 @@
 """The tests for the MQTT switch platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, ATTR_ASSUMED_STATE
 import homeassistant.components.switch as switch
 from tests.common import (

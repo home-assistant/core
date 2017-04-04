@@ -4,7 +4,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from datetime import timedelta
 
 import homeassistant.core as ha
@@ -12,7 +12,7 @@ import homeassistant.loader as loader
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import (
-    EntityComponent, DEFAULT_SCAN_INTERVAL)
+    EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
 
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
@@ -115,6 +115,43 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert not no_poll_ent.async_update.called
         assert poll_ent.async_update.called
+
+    def test_polling_updates_entities_with_exception(self):
+        """Test the updated entities that not brake with a exception."""
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
+
+        update_ok = []
+        update_err = []
+
+        def update_mock():
+            """Mock normal update."""
+            update_ok.append(None)
+
+        def update_mock_err():
+            """Mock error update."""
+            update_err.append(None)
+            raise AssertionError("Fake error update")
+
+        ent1 = EntityTest(should_poll=True)
+        ent1.update = update_mock_err
+        ent2 = EntityTest(should_poll=True)
+        ent2.update = update_mock
+        ent3 = EntityTest(should_poll=True)
+        ent3.update = update_mock
+        ent4 = EntityTest(should_poll=True)
+        ent4.update = update_mock
+
+        component.add_entities([ent1, ent2, ent3, ent4])
+
+        update_ok.clear()
+        update_err.clear()
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=20))
+        self.hass.block_till_done()
+
+        assert len(update_ok) == 3
+        assert len(update_err) == 1
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -301,7 +338,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
            '._async_setup_platform', return_value=mock_coro())
-    @patch('homeassistant.bootstrap.async_setup_component',
+    @patch('homeassistant.setup.async_setup_component',
            return_value=mock_coro(True))
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
@@ -410,3 +447,30 @@ class TestHelpersEntityComponent(unittest.TestCase):
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))
+
+
+@asyncio.coroutine
+def test_platform_warn_slow_setup(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from component.async_setup({
+            DOMAIN: {
+                'platform': 'platform',
+            }
+        })
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == SLOW_SETUP_WARNING
+        assert logger_method == _LOGGER.warning
+
+        assert mock_call().cancel.called

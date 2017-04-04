@@ -6,7 +6,7 @@ import socket
 from datetime import timedelta
 
 from homeassistant import core as ha
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import pilight
 from homeassistant.util import dt as dt_util
 

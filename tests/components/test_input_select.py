@@ -6,7 +6,7 @@ import unittest
 from tests.common import get_test_home_assistant, mock_restore_cache
 
 from homeassistant.core import State
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_select import (
     ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
     select_option, select_next, select_previous)

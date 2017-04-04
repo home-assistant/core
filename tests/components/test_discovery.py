@@ -1,14 +1,13 @@
 """The tests for the discovery component."""
-import unittest
+import asyncio
 
-from unittest import mock
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 
-from tests.common import get_test_home_assistant
+from tests.common import mock_coro
 
 # One might consider to "mock" services, but it's easy enough to just use
 # what is already available.
@@ -34,87 +33,123 @@ IGNORE_CONFIG = {
 }
 
 
-@patch('netdisco.service.DiscoveryService')
-@patch('homeassistant.components.discovery.load_platform')
-@patch('homeassistant.components.discovery.discover')
-class DiscoveryTest(unittest.TestCase):
-    """Test the discovery component."""
+@asyncio.coroutine
+def test_unknown_service(hass):
+    """Test that unknown service is ignored."""
+    result = yield from async_setup_component(hass, 'discovery', {
+        'discovery': {},
+    })
+    assert result
 
-    def setUp(self):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        self.netdisco = mock.Mock()
+    def discover(netdisco):
+        """Fake discovery."""
+        return [('this_service_will_never_be_supported', {'info': 'some'})]
 
-    def tearDown(self):
-        """Stop everything that was started."""
-        self.hass.stop()
+    with patch.object(discovery, '_discover', discover), \
+            patch('homeassistant.components.discovery.async_discover',
+                  return_value=mock_coro()) as mock_discover, \
+            patch('homeassistant.components.discovery.async_load_platform',
+                  return_value=mock_coro()) as mock_platform:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        yield from hass.async_block_till_done()
 
-    def setup_discovery_component(self, discovery_service, config):
-        """Setup the discovery component with mocked netdisco."""
-        discovery_service.return_value = self.netdisco
+    assert not mock_discover.called
+    assert not mock_platform.called
 
-        setup_component(self.hass, discovery.DOMAIN, config)
 
-        self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
-        self.hass.block_till_done()
+@asyncio.coroutine
+def test_load_platform(hass):
+    """Test load a platform."""
+    result = yield from async_setup_component(hass, 'discovery', BASE_CONFIG)
+    assert result
 
-    def discover_service(self, discovery_service, name):
-        """Simulate that netdisco discovered a new service."""
-        self.assertTrue(self.netdisco.add_listener.called)
+    def discover(netdisco):
+        """Fake discovery."""
+        return [(SERVICE, SERVICE_INFO)]
 
-        # Extract a refernce to the service listener
-        args, _ = self.netdisco.add_listener.call_args
-        listener = args[0]
+    with patch.object(discovery, '_discover', discover), \
+            patch('homeassistant.components.discovery.async_discover',
+                  return_value=mock_coro()) as mock_discover, \
+            patch('homeassistant.components.discovery.async_load_platform',
+                  return_value=mock_coro()) as mock_platform:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        yield from hass.async_block_till_done()
 
-        # Call the listener (just like netdisco does)
-        listener(name, SERVICE_INFO)
+    assert not mock_discover.called
+    assert mock_platform.called
+    mock_platform.assert_called_with(
+        hass, SERVICE_COMPONENT, SERVICE, SERVICE_INFO, BASE_CONFIG)
 
-    def test_netdisco_is_started(
-            self, discover, load_platform, discovery_service):
-        """Test that netdisco is started."""
-        self.setup_discovery_component(discovery_service, BASE_CONFIG)
-        self.assertTrue(self.netdisco.start.called)
 
-    def test_unknown_service(
-            self, discover, load_platform, discovery_service):
-        """Test that unknown service is ignored."""
-        self.setup_discovery_component(discovery_service, BASE_CONFIG)
-        self.discover_service(discovery_service, UNKNOWN_SERVICE)
+@asyncio.coroutine
+def test_load_component(hass):
+    """Test load a component."""
+    result = yield from async_setup_component(hass, 'discovery', BASE_CONFIG)
+    assert result
 
-        self.assertFalse(load_platform.called)
-        self.assertFalse(discover.called)
+    def discover(netdisco):
+        """Fake discovery."""
+        return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
-    def test_load_platform(
-            self, discover, load_platform, discovery_service):
-        """Test load a supported platform."""
-        self.setup_discovery_component(discovery_service, BASE_CONFIG)
-        self.discover_service(discovery_service, SERVICE)
+    with patch.object(discovery, '_discover', discover), \
+            patch('homeassistant.components.discovery.async_discover',
+                  return_value=mock_coro()) as mock_discover, \
+            patch('homeassistant.components.discovery.async_load_platform',
+                  return_value=mock_coro()) as mock_platform:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        yield from hass.async_block_till_done()
 
-        load_platform.assert_called_with(self.hass,
-                                         SERVICE_COMPONENT,
-                                         SERVICE,
-                                         SERVICE_INFO,
-                                         BASE_CONFIG)
+    assert mock_discover.called
+    assert not mock_platform.called
+    mock_discover.assert_called_with(
+        hass, SERVICE_NO_PLATFORM, SERVICE_INFO,
+        SERVICE_NO_PLATFORM_COMPONENT, BASE_CONFIG)
 
-    def test_discover_platform(
-            self, discover, load_platform, discovery_service):
-        """Test discover a supported platform."""
-        self.setup_discovery_component(discovery_service, BASE_CONFIG)
-        self.discover_service(discovery_service, SERVICE_NO_PLATFORM)
 
-        discover.assert_called_with(self.hass,
-                                    SERVICE_NO_PLATFORM,
-                                    SERVICE_INFO,
-                                    SERVICE_NO_PLATFORM_COMPONENT,
-                                    BASE_CONFIG)
+@asyncio.coroutine
+def test_ignore_service(hass):
+    """Test ignore service."""
+    result = yield from async_setup_component(hass, 'discovery', IGNORE_CONFIG)
+    assert result
 
-    def test_ignore_platforms(
-            self, discover, load_platform, discovery_service):
-        """Test that ignored platforms are not setup."""
-        self.setup_discovery_component(discovery_service, IGNORE_CONFIG)
+    def discover(netdisco):
+        """Fake discovery."""
+        return [(SERVICE_NO_PLATFORM, SERVICE_INFO)]
 
-        self.discover_service(discovery_service, SERVICE_NO_PLATFORM)
-        self.assertFalse(discover.called)
+    with patch.object(discovery, '_discover', discover), \
+            patch('homeassistant.components.discovery.async_discover',
+                  return_value=mock_coro()) as mock_discover, \
+            patch('homeassistant.components.discovery.async_load_platform',
+                  return_value=mock_coro()) as mock_platform:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        yield from hass.async_block_till_done()
 
-        self.discover_service(discovery_service, SERVICE)
-        self.assertTrue(load_platform.called)
+    assert not mock_discover.called
+    assert not mock_platform.called
+
+
+@asyncio.coroutine
+def test_discover_duplicates(hass):
+    """Test load a component."""
+    result = yield from async_setup_component(hass, 'discovery', BASE_CONFIG)
+    assert result
+
+    def discover(netdisco):
+        """Fake discovery."""
+        return [(SERVICE_NO_PLATFORM, SERVICE_INFO),
+                (SERVICE_NO_PLATFORM, SERVICE_INFO)]
+
+    with patch.object(discovery, '_discover', discover), \
+            patch('homeassistant.components.discovery.async_discover',
+                  return_value=mock_coro()) as mock_discover, \
+            patch('homeassistant.components.discovery.async_load_platform',
+                  return_value=mock_coro()) as mock_platform:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        yield from hass.async_block_till_done()
+
+    assert mock_discover.called
+    assert mock_discover.call_count == 1
+    assert not mock_platform.called
+    mock_discover.assert_called_with(
+        hass, SERVICE_NO_PLATFORM, SERVICE_INFO,
+        SERVICE_NO_PLATFORM_COMPONENT, BASE_CONFIG)

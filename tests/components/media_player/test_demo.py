@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 import asyncio
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 import homeassistant.components.media_player as mp
 import homeassistant.components.http as http

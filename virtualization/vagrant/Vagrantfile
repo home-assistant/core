@@ -6,7 +6,11 @@ Vagrant.configure(2) do |config|
   config.vm.synced_folder "../../", "/home-assistant"
   config.vm.synced_folder "./config", "/root/.homeassistant"
   config.vm.network "forwarded_port", guest: 8123, host: 8123
-  config.vm.provision "shell" do |shell|
+  config.vm.provision "fix-no-tty", type: "shell" do |shell|
     shell.path = "provision.sh"
+  end
+  config.vm.provider :virtualbox do |vb|
+    vb.cpus = 2
+    vb.customize ['modifyvm', :id, '--memory', '1024']
   end
 end

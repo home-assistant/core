@@ -30,7 +30,7 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 # BEGIN: Development additions
 
 # Install nodejs
-RUN curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash - && \
+RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
     apt-get install -y nodejs
 
 # Install tox

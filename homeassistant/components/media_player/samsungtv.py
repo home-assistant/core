@@ -62,6 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = "{} ({})".format(tv_name, model)
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
+        mac = None
     else:
         _LOGGER.warning(
             'Internal error on samsungtv component. Cannot determine device')

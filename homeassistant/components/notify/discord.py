@@ -42,11 +42,14 @@ class DiscordNotificationService(BaseNotificationService):
         import discord
         discord_bot = discord.Client(loop=self.hass.loop)
 
-        yield from discord_bot.login(self.token)
+        @discord_bot.event
+        @asyncio.coroutine
+        def on_ready():  # pylint: disable=unused-variable
+            """Send the messages when the bot is ready."""
+            for channelid in kwargs[ATTR_TARGET]:
+                channel = discord.Object(id=channelid)
+                yield from discord_bot.send_message(channel, message)
+            yield from discord_bot.logout()
+            yield from discord_bot.close()
 
-        for channelid in kwargs[ATTR_TARGET]:
-            channel = discord.Object(id=channelid)
-            yield from discord_bot.send_message(channel, message)
-
-        yield from discord_bot.logout()
-        yield from discord_bot.close()
+        yield from discord_bot.start(self.token)

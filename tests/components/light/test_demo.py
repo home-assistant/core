@@ -4,7 +4,7 @@ import asyncio
 import unittest
 
 from homeassistant.core import State, CoreState
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.light as light
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
@@ -39,7 +39,7 @@ class TestDemoLight(unittest.TestCase):
         self.assertEqual((.4, .6), state.attributes.get(light.ATTR_XY_COLOR))
         self.assertEqual(25, state.attributes.get(light.ATTR_BRIGHTNESS))
         self.assertEqual(
-            (82, 91, 0), state.attributes.get(light.ATTR_RGB_COLOR))
+            (76, 95, 0), state.attributes.get(light.ATTR_RGB_COLOR))
         self.assertEqual('rainbow', state.attributes.get(light.ATTR_EFFECT))
         light.turn_on(
             self.hass, ENTITY_LIGHT, rgb_color=(251, 252, 253),

@@ -155,7 +155,7 @@ class CalendarEventDevice(Entity):
         start = _get_date(self.data.event['start'])
         end = _get_date(self.data.event['end'])
 
-        summary = self.data.event['summary']
+        summary = self.data.event.get('summary', '')
 
         # check if we have an offset tag in the message
         # time is HH:MM or MM

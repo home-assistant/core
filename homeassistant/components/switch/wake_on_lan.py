@@ -75,7 +75,11 @@ class WOLSwitch(SwitchDevice):
 
     def turn_on(self):
         """Turn the device on."""
-        self._wol.send_magic_packet(self._mac_address)
+        if self._host:
+            self._wol.send_magic_packet(self._mac_address,
+                                        ip_address=self._host)
+        else:
+            self._wol.send_magic_packet(self._mac_address)
 
     def turn_off(self):
         """Turn the device off if an off action is present."""
@@ -85,11 +89,11 @@ class WOLSwitch(SwitchDevice):
     def update(self):
         """Check if device is on and update the state."""
         if platform.system().lower() == 'windows':
-            ping_cmd = 'ping -n 1 -w {} {}'.format(
-                DEFAULT_PING_TIMEOUT * 1000, self._host)
+            ping_cmd = ['ping', '-n', '1', '-w',
+                        str(DEFAULT_PING_TIMEOUT * 1000), str(self._host)]
         else:
-            ping_cmd = 'ping -c 1 -W {} {}'.format(
-                DEFAULT_PING_TIMEOUT, self._host)
+            ping_cmd = ['ping', '-c', '1', '-W',
+                        str(DEFAULT_PING_TIMEOUT), str(self._host)]
 
-        status = sp.getstatusoutput(ping_cmd)[0]
+        status = sp.call(ping_cmd, stdout=sp.DEVNULL)
         self._state = not bool(status)

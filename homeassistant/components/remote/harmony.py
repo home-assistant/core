@@ -92,7 +92,7 @@ def _apply_service(service, service_func, *service_func_args):
 
     for device in _devices:
         service_func(device, *service_func_args)
-        device.update_ha_state(True)
+        device.schedule_update_ha_state(True)
 
 
 def _sync_service(service):

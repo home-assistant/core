@@ -5,9 +5,7 @@ import threading
 import unittest
 from unittest.mock import patch
 
-import homeassistant.core as ha
-import homeassistant.bootstrap as bootstrap
-import homeassistant.remote as remote
+from homeassistant import remote, setup, core as ha
 import homeassistant.components.http as http
 from homeassistant.const import HTTP_HEADER_HA_AUTH, EVENT_STATE_CHANGED
 import homeassistant.util.dt as dt_util
@@ -42,12 +40,12 @@ def setUpModule():
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: MASTER_PORT}})
 
-    bootstrap.setup_component(hass, 'api')
+    setup.setup_component(hass, 'api')
 
     hass.start()
 
@@ -64,7 +62,7 @@ def setUpModule():
     slave.async_track_tasks()
     slave.config.config_dir = get_test_config_dir()
     slave.config.skip_pip = True
-    bootstrap.setup_component(
+    setup.setup_component(
         slave, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
                        http.CONF_SERVER_PORT: SLAVE_PORT}})

@@ -2,7 +2,7 @@
 import json
 from unittest.mock import ANY, patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback

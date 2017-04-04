@@ -1,7 +1,7 @@
 """The tests for the MQTT component embedded server."""
 from unittest.mock import Mock, MagicMock, patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.mqtt as mqtt
 
 from tests.common import (

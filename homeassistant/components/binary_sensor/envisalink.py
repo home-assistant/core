@@ -52,8 +52,11 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorDevice):
         _LOGGER.debug('Setting up zone: ' + zone_name)
         super().__init__(zone_name, info, controller)
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         async_dispatcher_connect(
-            hass, SIGNAL_ZONE_UPDATE, self._update_callback)
+            self.hass, SIGNAL_ZONE_UPDATE, self._update_callback)
 
     @property
     def device_state_attributes(self):

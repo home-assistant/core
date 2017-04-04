@@ -1,10 +1,11 @@
 """The tests for the MQTT device tracker platform."""
+import asyncio
 import unittest
 from unittest.mock import patch
 import logging
 import os
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM
 
@@ -33,12 +34,13 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
     def test_ensure_device_tracker_platform_validation(self): \
             # pylint: disable=invalid-name
         """Test if platform validation was done."""
+        @asyncio.coroutine
         def mock_setup_scanner(hass, config, see, discovery_info=None):
             """Check that Qos was added by validation."""
             self.assertTrue('qos' in config)
 
         with patch('homeassistant.components.device_tracker.mqtt.'
-                   'setup_scanner', autospec=True,
+                   'async_setup_scanner', autospec=True,
                    side_effect=mock_setup_scanner) as mock_sp:
 
             dev_id = 'paulus'

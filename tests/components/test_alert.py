@@ -3,7 +3,7 @@
 from copy import deepcopy
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.core import callback
 import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify

@@ -143,6 +143,10 @@ class InsteonLocalSwitchDevice(SwitchDevice):
     def update(self):
         """Get the updated status of the switch."""
         resp = self.node.status(0)
+
+        while 'error' in resp and resp['error'] is True:
+            resp = self.node.status(0)
+
         if 'cmd2' in resp:
             self._state = int(resp['cmd2'], 16) > 0
 

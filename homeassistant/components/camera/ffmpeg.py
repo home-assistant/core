@@ -8,14 +8,14 @@ import asyncio
 import logging
 
 import voluptuous as vol
-from aiohttp import web
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
-
+from homeassistant.helpers.aiohttp_client import (
+    async_aiohttp_proxy_stream)
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,26 +69,10 @@ class FFmpegCamera(Camera):
         yield from stream.open_camera(
             self._input, extra_cmd=self._extra_arguments)
 
-        response = web.StreamResponse()
-        response.content_type = 'multipart/x-mixed-replace;boundary=ffserver'
-
-        yield from response.prepare(request)
-
-        try:
-            while True:
-                data = yield from stream.read(102400)
-                if not data:
-                    break
-                response.write(data)
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Close stream by frontend.")
-            response = None
-
-        finally:
-            yield from stream.close()
-            if response is not None:
-                yield from response.write_eof()
+        yield from async_aiohttp_proxy_stream(
+            self.hass, request, stream,
+            'multipart/x-mixed-replace;boundary=ffserver')
+        yield from stream.close()
 
     @property
     def name(self):

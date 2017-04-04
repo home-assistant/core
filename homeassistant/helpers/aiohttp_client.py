@@ -5,7 +5,7 @@ import sys
 import aiohttp
 from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPGatewayTimeout
+from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
 import async_timeout
 
 from homeassistant.core import callback
@@ -71,42 +71,55 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
 
 
 @asyncio.coroutine
-def async_aiohttp_proxy_stream(hass, request, stream_coro, buffer_size=102400,
-                               timeout=10):
+def async_aiohttp_proxy_web(hass, request, web_coro, buffer_size=102400,
+                            timeout=10):
     """Stream websession request to aiohttp web response."""
-    response = None
-    stream = None
-
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
-            stream = yield from stream_coro
+            req = yield from web_coro
 
-        response = web.StreamResponse()
-        response.content_type = stream.headers.get(CONTENT_TYPE)
+    except asyncio.CancelledError:
+        # The user cancelled the request
+        return
 
-        yield from response.prepare(request)
+    except asyncio.TimeoutError as err:
+        # Timeout trying to start the web request
+        raise HTTPGatewayTimeout() from err
 
+    except aiohttp.ClientError as err:
+        # Something went wrong with the connection
+        raise HTTPBadGateway() from err
+
+    yield from async_aiohttp_proxy_stream(hass, request, req.content,
+                                          req.headers.get(CONTENT_TYPE))
+
+
+@asyncio.coroutine
+def async_aiohttp_proxy_stream(hass, request, stream, content_type,
+                               buffer_size=102400, timeout=10):
+    """Stream a stream to aiohttp web response."""
+    response = web.StreamResponse()
+    response.content_type = content_type
+    yield from response.prepare(request)
+
+    try:
         while True:
-            data = yield from stream.content.read(buffer_size)
+            with async_timeout.timeout(timeout, loop=hass.loop):
+                data = yield from stream.read(buffer_size)
+
             if not data:
+                yield from response.write_eof()
                 break
+
             response.write(data)
 
-    except asyncio.TimeoutError:
-        raise HTTPGatewayTimeout()
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        # Something went wrong fetching data, close connection gracefully
+        yield from response.write_eof()
 
-    except (aiohttp.errors.ClientError,
-            aiohttp.errors.ClientDisconnectedError):
+    except asyncio.CancelledError:
+        # The user closed the connection
         pass
-
-    except (asyncio.CancelledError, ConnectionResetError):
-        response = None
-
-    finally:
-        if stream is not None:
-            stream.close()
-        if response is not None:
-            yield from response.write_eof()
 
 
 @callback
@@ -149,10 +162,10 @@ def _async_get_connector(hass, verify_ssl=True):
             connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
 
     if is_new:
-        @asyncio.coroutine
+        @callback
         def _async_close_connector(event):
             """Close connector pool."""
-            yield from connector.close()
+            connector.close()
 
         hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
