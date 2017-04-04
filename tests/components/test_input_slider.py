@@ -6,10 +6,8 @@ import unittest
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_slider import (DOMAIN, select_value)
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
-from tests.common import (
-    get_test_home_assistant, mock_component, mock_restore_cache)
+from tests.common import get_test_home_assistant, mock_restore_cache
 
 
 class TestInputSlider(unittest.TestCase):
