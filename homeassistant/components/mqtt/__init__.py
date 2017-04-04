@@ -277,7 +277,10 @@ def _async_setup_discovery(hass, config):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Start the MQTT protocol service."""
-    conf = config.get(DOMAIN, {})
+    conf = config.get(DOMAIN)
+
+    if conf is None:
+        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
