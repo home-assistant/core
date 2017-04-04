@@ -101,7 +101,6 @@ def async_test_home_assistant(loop):
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
-    hass.async_track_tasks()
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -123,7 +122,8 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        with patch('homeassistant.core._async_create_timer'):
+        with patch('homeassistant.core._async_create_timer'), \
+                patch.object(hass, 'async_stop_track_tasks', mock_coro):
             yield from orig_start()
 
     hass.async_start = mock_async_start
