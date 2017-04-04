@@ -18,11 +18,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
-    CONF_NAMESPACE, CONF_INSTANCE, CONF_BT_DEVICE_ID, CONF_BEACONS)
+    EVENT_HOMEASSISTANT_START)
 
 REQUIREMENTS = ['beacontools[scan]==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
+
+# constants
+CONF_BEACONS = 'beacons'
+CONF_BT_DEVICE_ID = 'bt_device_id'
+CONF_INSTANCE = 'instance'
+CONF_NAMESPACE = 'namespace'
 
 BEACON_SCHEMA = vol.Schema({
     vol.Required(CONF_NAMESPACE): cv.string,
@@ -65,9 +71,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info("Stopping scanner for eddystone beacons")
             mon.stop()
 
+        def monitor_start(_service_or_event):
+            """Start the monitor thread."""
+            _LOGGER.info("Starting scanner for eddystone beacons")
+            mon.start()
+
         add_devices(devices)
         mon.start()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, monitor_stop)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, monitor_start)
     else:
         _LOGGER.warning("No devices were added")
 
@@ -110,6 +122,11 @@ class EddystoneTemp(Entity):
         """Return the unit the value is expressed in."""
         return TEMP_CELSIUS
 
+    @property
+    def should_poll(self):
+        """Hass should not poll for state."""
+        return False
+
 
 class Monitor(object):
     """Continously scan for BLE advertisements."""
@@ -138,10 +155,16 @@ class Monitor(object):
 
         self.scanner = BeaconScanner(callback, bt_device_id, device_filters,
                                      EddystoneTLMFrame)
+        self.scanning = False
 
     def start(self):
         """Continously scan for BLE advertisements."""
-        self.scanner.start()
+        if not self.scanning:
+            self.scanner.start()
+            self.scanning = True
+        else:
+            _LOGGER.debug("Warning: start() called, but scanner is already"
+                          " running")
 
     def process_packet(self, namespace, instance, temperature):
         """Assign temperature to hass device."""
@@ -150,10 +173,17 @@ class Monitor(object):
 
         for dev in self.devices:
             if dev.namespace == namespace and dev.instance == instance:
-                dev.temperature = temperature
+                if dev.temperature != temperature:
+                    dev.temperature = temperature
+                    dev.schedule_update_ha_state()
 
     def stop(self):
         """Signal runner to stop and join thread."""
-        _LOGGER.debug("Stopping...")
-        self.scanner.stop()
-        _LOGGER.debug("Stopped")
+        if self.scanning:
+            _LOGGER.debug("Stopping...")
+            self.scanner.stop()
+            _LOGGER.debug("Stopped")
+            self.scanning = False
+        else:
+            _LOGGER.debug("Warning: stop() called but scanner was not"
+                          " running.")
