@@ -271,15 +271,10 @@ def mock_mqtt_component(hass):
 
 def mock_component(hass, component):
     """Mock a component is setup."""
-    setup_tasks = hass.data.get(DATA_SETUP)
-    if setup_tasks is None:
-        setup_tasks = hass.data[DATA_SETUP] = {}
-
-    if component not in setup_tasks:
+    if component in hass.config.components:
         AssertionError("Component {} is already setup".format(component))
 
     hass.config.components.add(component)
-    setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 
 
 class MockModule(object):
@@ -499,4 +494,4 @@ def mock_restore_cache(hass, states):
     assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
-    hass.config.components.add(recorder.DOMAIN)
+    mock_component(hass, recorder.DOMAIN)
