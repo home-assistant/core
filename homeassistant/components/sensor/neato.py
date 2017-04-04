@@ -8,7 +8,7 @@ import logging
 import requests
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.neato import (
-    NEATO_ROBOTS, NEATO_LOGIN, ACTION, ERRORS, MODE, ALERTS)
+    NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
 _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_STATUS = 'status'
@@ -19,10 +19,18 @@ SENSOR_TYPES = {
     SENSOR_TYPE_BATTERY: ['Battery']
 }
 
+ATTR_CLEAN_START = 'clean_start'
+ATTR_CLEAN_STOP = 'clean_stop'
+ATTR_CLEAN_AREA = 'clean_area'
+ATTR_CLEAN_BATTERY_START = 'battery_level_at_clean_start'
+ATTR_CLEAN_BATTERY_END = 'battery_level_at_clean_end'
+ATTR_CLEAN_SUSP_COUNT = 'clean_suspension_count'
+ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Neato sensor platform."""
-    if not hass.data['neato_robots']:
+    if not hass.data[NEATO_ROBOTS]:
         return False
 
     dev = []
@@ -43,6 +51,14 @@ class NeatoConnectedSensor(Entity):
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = self.robot.name + ' ' + SENSOR_TYPES[self.type][0]
         self._state = self.robot.state
+        self._mapdata = hass.data[NEATO_MAP_DATA]
+        self.clean_time_start = None
+        self.clean_time_stop = None
+        self.clean_area = None
+        self.clean_battery_start = None
+        self.clean_battery_end = None
+        self.clean_suspension_charge_count = None
+        self.clean_suspension_time = None
         self._battery_state = None
         self._status_state = None
 
@@ -82,6 +98,26 @@ class NeatoConnectedSensor(Entity):
                 self._status_state = ERRORS.get(self._state['error'])
         if self.type == SENSOR_TYPE_BATTERY:
             self._battery_state = self._state['details']['charge']
+        if self._mapdata is None:
+            return
+        self.clean_time_start = (
+            (self._mapdata[self.robot.serial]['maps'][0]['start_at'].strip('Z'))
+            .replace('T', ' '))
+        self.clean_time_stop = (
+            (self._mapdata[self.robot.serial]['maps'][0]['end_at'].strip('Z'))
+            .replace('T', ' '))
+        self.clean_area = (
+            self._mapdata[self.robot.serial]['maps'][0]['cleaned_area'])
+        self.clean_suspension_charge_count = (
+            self._mapdata[self.robot.serial]['maps'][0]
+            ['suspended_cleaning_charging_count'])
+        self.clean_suspension_time = (
+            self._mapdata[self.robot.serial]['maps'][0]
+            ['time_in_suspended_cleaning'])
+        self.clean_battery_start = (
+            self._mapdata[self.robot.serial]['maps'][0]['run_charge_at_start'])
+        self.clean_battery_end = (
+            self._mapdata[self.robot.serial]['maps'][0]['run_charge_at_end'])
 
     @property
     def unit_of_measurement(self):
@@ -109,3 +145,25 @@ class NeatoConnectedSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._robot_name
+
+    @property
+    def device_state_attributes(self):
+        """Return the device specific attributes."""
+        data = {}
+        if self.type is SENSOR_TYPE_STATUS:
+            if self.clean_time_start:
+                data[ATTR_CLEAN_START] = self.clean_time_start
+            if self.clean_time_stop:
+                data[ATTR_CLEAN_STOP] = self.clean_time_stop
+            if self.clean_area:
+                data[ATTR_CLEAN_AREA] = self.clean_area
+            if self.clean_suspension_charge_count:
+                data[ATTR_CLEAN_SUSP_COUNT] = (
+                    self.clean_suspension_charge_count)
+            if self.clean_suspension_time:
+                data[ATTR_CLEAN_SUSP_TIME] = self.clean_suspension_time
+            if self.clean_battery_start:
+                data[ATTR_CLEAN_BATTERY_START] = self.clean_battery_start
+            if self.clean_battery_end:
+                data[ATTR_CLEAN_BATTERY_END] = self.clean_battery_end
+        return data
