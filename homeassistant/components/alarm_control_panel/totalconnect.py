@@ -1,6 +1,8 @@
 """Interfaces with TotalConnect alarm control panels."""
 import logging
+
 import voluptuous as vol
+
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
