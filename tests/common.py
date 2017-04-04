@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.setup import setup_component, DATA_SETUP
+from homeassistant.setup import setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
