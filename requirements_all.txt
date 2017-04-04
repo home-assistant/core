@@ -69,6 +69,9 @@ astral==1.4
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.sensor.eddystone_temperature
+# beacontools[scan]==1.0.1
+
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
