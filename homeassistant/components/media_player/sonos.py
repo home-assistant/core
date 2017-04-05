@@ -238,6 +238,17 @@ def soco_error(funct):
     return wrapper
 
 
+def soco_coordinator(funct):
+    """Decorator to call funct on coordinator."""
+    @ft.wraps(funct)
+    def wrapper(device, *args, **kwargs):
+        if device.is_coordinator:
+            return funct(device, *args, **kwargs)
+        return funct(device.coordinator, *args, **kwargs)
+
+    return wrapper
+
+
 class SonosDevice(MediaPlayerDevice):
     """Representation of a Sonos device."""
 
@@ -810,11 +821,10 @@ class SonosDevice(MediaPlayerDevice):
         self._player.mute = mute
 
     @soco_error
+    @soco_coordinator
     def select_source(self, source):
         """Select input source."""
-        if self._coordinator:
-            self._coordinator.select_source(source)
-        elif source == SUPPORT_SOURCE_LINEIN:
+        if source == SUPPORT_SOURCE_LINEIN:
             self._source_name = SUPPORT_SOURCE_LINEIN
             self._player.switch_to_line_in()
         elif source == SUPPORT_SOURCE_TV:
@@ -861,60 +871,46 @@ class SonosDevice(MediaPlayerDevice):
         self.media_pause()
 
     @soco_error
+    @soco_coordinator
     def media_play(self):
         """Send play command."""
-        if self._coordinator:
-            self._coordinator.media_play()
-        else:
-            self._player.play()
+        self._player.play()
 
     @soco_error
+    @soco_coordinator
     def media_stop(self):
         """Send stop command."""
-        if self._coordinator:
-            self._coordinator.media_stop()
-        else:
-            self._player.stop()
+        self._player.stop()
 
     @soco_error
+    @soco_coordinator
     def media_pause(self):
         """Send pause command."""
-        if self._coordinator:
-            self._coordinator.media_pause()
-        else:
-            self._player.pause()
+        self._player.pause()
 
     @soco_error
+    @soco_coordinator
     def media_next_track(self):
         """Send next track command."""
-        if self._coordinator:
-            self._coordinator.media_next_track()
-        else:
-            self._player.next()
+        self._player.next()
 
     @soco_error
+    @soco_coordinator
     def media_previous_track(self):
         """Send next track command."""
-        if self._coordinator:
-            self._coordinator.media_previous_track()
-        else:
-            self._player.previous()
+        self._player.previous()
 
     @soco_error
+    @soco_coordinator
     def media_seek(self, position):
         """Send seek command."""
-        if self._coordinator:
-            self._coordinator.media_seek(position)
-        else:
-            self._player.seek(str(datetime.timedelta(seconds=int(position))))
+        self._player.seek(str(datetime.timedelta(seconds=int(position))))
 
     @soco_error
+    @soco_coordinator
     def clear_playlist(self):
         """Clear players playlist."""
-        if self._coordinator:
-            self._coordinator.clear_playlist()
-        else:
-            self._player.clear_queue()
+        self._player.clear_queue()
 
     @soco_error
     def turn_on(self):
@@ -922,25 +918,23 @@ class SonosDevice(MediaPlayerDevice):
         self.media_play()
 
     @soco_error
+    @soco_coordinator
     def play_media(self, media_type, media_id, **kwargs):
         """
         Send the play_media command to the media player.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if self._coordinator:
-            self._coordinator.play_media(media_type, media_id, **kwargs)
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            from soco.exceptions import SoCoUPnPException
+            try:
+                self._player.add_uri_to_queue(media_id)
+            except SoCoUPnPException:
+                _LOGGER.error('Error parsing media uri "%s", '
+                              "please check it's a valid media resource "
+                              'supported by Sonos', media_id)
         else:
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                from soco.exceptions import SoCoUPnPException
-                try:
-                    self._player.add_uri_to_queue(media_id)
-                except SoCoUPnPException:
-                    _LOGGER.error('Error parsing media uri "%s", '
-                                  "please check it's a valid media resource "
-                                  'supported by Sonos', media_id)
-            else:
-                self._player.play_uri(media_id)
+            self._player.play_uri(media_id)
 
     @soco_error
     def join(self, master):
@@ -1029,20 +1023,16 @@ class SonosDevice(MediaPlayerDevice):
                     s_dev.join(old.coordinator)
 
     @soco_error
+    @soco_coordinator
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
-        if self._coordinator:
-            self._coordinator.set_sleep_timer(sleep_time)
-        else:
-            self._player.set_sleep_timer(sleep_time)
+        self._player.set_sleep_timer(sleep_time)
 
     @soco_error
+    @soco_coordinator
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
-        if self._coordinator:
-            self._coordinator.set_sleep_timer(None)
-        else:
-            self._player.set_sleep_timer(None)
+        self._player.set_sleep_timer(None)
 
     @property
     def device_state_attributes(self):
