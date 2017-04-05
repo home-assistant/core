@@ -148,16 +148,12 @@ class MqttJson(Light):
         self._flash_times = flash_times
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
-        self._supported_features |= (rgb is not None and SUPPORT_RGB_COLOR)
-        self._supported_features |= (brightness is not None and
-                                     SUPPORT_BRIGHTNESS)
-        self._supported_features |= (color_temp is not None and
-                                     SUPPORT_COLOR_TEMP)
-        self._supported_features |= (effect is not None and
-                                     SUPPORT_EFFECT)
-        self._supported_features |= (white_value is not None and
-                                     SUPPORT_WHITE_VALUE)
-        self._supported_features |= (xy is not None and SUPPORT_XY_COLOR)
+        self._supported_features |= (rgb and SUPPORT_RGB_COLOR)
+        self._supported_features |= (brightness and SUPPORT_BRIGHTNESS)
+        self._supported_features |= (color_temp and SUPPORT_COLOR_TEMP)
+        self._supported_features |= (effect and SUPPORT_EFFECT)
+        self._supported_features |= (white_value and SUPPORT_WHITE_VALUE)
+        self._supported_features |= (xy and SUPPORT_XY_COLOR)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
