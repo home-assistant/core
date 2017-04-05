@@ -33,6 +33,9 @@ def async_trigger(hass, config, action):
 
     if (event_type == EVENT_HOMEASSISTANT_START and
             hass.state == CoreState.starting):
+        _LOGGER.warning('Deprecation: Automations should not listen to event '
+                        "'homeassistant_start'. Use platform 'homeassistant' "
+                        'instead. Feature will be removed in 0.45')
         hass.async_run_job(action, {
             'trigger': {
                 'platform': 'event',
