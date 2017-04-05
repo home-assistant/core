@@ -130,7 +130,6 @@ class NeatoHub(object):
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
-    @Throttle(timedelta(seconds=10))
     def download_map(self, url, dest_path):
         """Download a new map image."""
         self.my_neato.get_map_image(url, dest_path)
