@@ -157,8 +157,8 @@ class FidoSensor(Entity):
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
         else:
-            if self._number in self.fido_data.data and \
-                  self.fido_data.data[self._number].get(self.type) is not None:
+            if self.fido_data.data.get(self._number, {}).get(self.type) \
+                  is not None:
                 self._state = self.fido_data.data[self._number][self.type]
                 self._state = round(self._state, 2)
 
