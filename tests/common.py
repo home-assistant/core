@@ -68,7 +68,6 @@ def get_test_home_assistant():
     def stop_hass():
         """Stop hass."""
         orig_stop()
-        loop.stop()
         stop_event.wait()
         loop.close()
 
