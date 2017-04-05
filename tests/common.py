@@ -23,7 +23,7 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
@@ -137,7 +137,7 @@ def async_test_home_assistant(loop):
         global INST_COUNT
         INST_COUNT -= 1
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, clear_instance)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
     return hass
 
