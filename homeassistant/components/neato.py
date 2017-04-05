@@ -17,8 +17,8 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.1.zip'
-                '#pybotvac==0.0.1']
+REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.2.zip'
+                '#pybotvac==0.0.2']
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
