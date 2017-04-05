@@ -515,7 +515,7 @@ pyemby==1.1
 pyenvisalink==2.0
 
 # homeassistant.components.sensor.fido
-pyfido==0.1.4
+pyfido==1.0.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
