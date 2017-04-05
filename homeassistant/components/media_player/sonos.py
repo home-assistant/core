@@ -242,6 +242,7 @@ def soco_coordinator(funct):
     """Decorator to call funct on coordinator."""
     @ft.wraps(funct)
     def wrapper(device, *args, **kwargs):
+        """Wrapper for call to coordinator."""
         if device.is_coordinator:
             return funct(device, *args, **kwargs)
         return funct(device.coordinator, *args, **kwargs)
