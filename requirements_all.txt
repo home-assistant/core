@@ -503,7 +503,7 @@ pycmus==0.1.0
 pydispatcher==2.0.5
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==0.7
+pydroid-ipcam==0.8
 
 # homeassistant.components.sensor.ebox
 pyebox==0.1.0
