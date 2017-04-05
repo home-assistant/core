@@ -101,6 +101,7 @@ class MockNode(MagicMock):
                  product_type='678',
                  command_classes=None,
                  can_wake_up_value=True,
+                 network=None,
                  **kwargs):
         """Initialize a Z-Wave mock node."""
         super().__init__()
@@ -111,6 +112,8 @@ class MockNode(MagicMock):
         self.product_type = product_type
         self.can_wake_up_value = can_wake_up_value
         self._command_classes = command_classes or []
+        if network is not None:
+            self._network = network
         for attr_name in kwargs:
             setattr(self, attr_name, kwargs[attr_name])
 
@@ -138,30 +141,23 @@ class MockValue(MagicMock):
 
     def __init__(self, *,
                  label='Mock Value',
-                 data=None,
-                 data_items=None,
                  node=None,
                  instance=0,
                  index=0,
-                 command_class=None,
-                 units=None,
-                 type=None,
-                 value_id=None):
+                 value_id=None,
+                 **kwargs):
         """Initialize a Z-Wave mock value."""
         super().__init__()
         self.label = label
-        self.data = data
-        self.data_items = data_items
         self.node = node
         self.instance = instance
         self.index = index
-        self.command_class = command_class
-        self.units = units
-        self.type = type
         if value_id is None:
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
         self.value_id = value_id
+        for attr_name in kwargs:
+            setattr(self, attr_name, kwargs[attr_name])
 
     def _get_child_mock(self, **kw):
         """Create child mocks with right MagicMock class."""

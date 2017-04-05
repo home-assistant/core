@@ -15,7 +15,7 @@ def device(hass, mock_openzwave):
     node = MockNode()
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
-        temperature=MockValue(data=5, node=node),
+        temperature=MockValue(data=5, node=node, units=None),
         mode=MockValue(data=b'test1', data_items=[0, 1, 2], node=node),
         fan_mode=MockValue(data=b'test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
@@ -30,9 +30,10 @@ def device(hass, mock_openzwave):
 def device_zxt_120(hass, mock_openzwave):
     """Fixture to provide a precreated climate device."""
     node = MockNode(manufacturer_id='5254', product_id='8377')
+
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
-        temperature=MockValue(data=5, node=node),
+        temperature=MockValue(data=5, node=node, units=None),
         mode=MockValue(data=b'test1', data_items=[0, 1, 2], node=node),
         fan_mode=MockValue(data=b'test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
