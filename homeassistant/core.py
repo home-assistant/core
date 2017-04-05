@@ -251,7 +251,7 @@ class HomeAssistant(object):
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        run_coroutine_threadsafe(self.async_stop(), self.loop)
+        run_coroutine_threadsafe(self.async_stop(), self.loop).result()
 
     @asyncio.coroutine
     def async_stop(self, exit_code=0) -> None:
