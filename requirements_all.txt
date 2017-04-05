@@ -69,6 +69,9 @@ astral==1.4
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
 
+# homeassistant.components.sensor.eddystone_temperature
+# beacontools[scan]==1.0.1
+
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
@@ -500,7 +503,7 @@ pycmus==0.1.0
 pydispatcher==2.0.5
 
 # homeassistant.components.android_ip_webcam
-pydroid-ipcam==0.7
+pydroid-ipcam==0.8
 
 # homeassistant.components.sensor.ebox
 pyebox==0.1.0
@@ -512,7 +515,7 @@ pyemby==1.1
 pyenvisalink==2.0
 
 # homeassistant.components.sensor.fido
-pyfido==0.1.4
+pyfido==1.0.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -654,7 +657,7 @@ pyvera==0.2.25
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.15
+pywemo==0.4.16
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4

@@ -68,7 +68,7 @@ DATA_ZWAVE_DICT = 'zwave_devices'
 NETWORK = None
 
 RENAME_NODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_NAME): cv.string,
 })
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
@@ -393,8 +393,7 @@ def setup(hass, config):
 
     def rename_node(service):
         """Rename a node."""
-        state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
-        node_id = state.attributes.get(const.ATTR_NODE_ID)
+        node_id = service.data.get(const.ATTR_NODE_ID)
         node = NETWORK.nodes[node_id]
         name = service.data.get(const.ATTR_NAME)
         node.name = name
