@@ -789,7 +789,10 @@ class PlexClient(MediaPlayerDevice):
             media = self.device.server.library.section(
                 src['library_name']).get(src['video_name'])
 
-        if media and media_type == 'EPISODE' and str(media.type) == 'playlist':
+        import plexapi.playlist
+        if (media and media_type == 'EPISODE' and
+                isinstance(media, plexapi.playlist.Playlist)):
+            # delete episode playlist after being loaded into a play queue
             self._client_play_media(media=media, delete=True,
                                     shuffle=src['shuffle'])
         elif media:
@@ -805,7 +808,8 @@ class PlexClient(MediaPlayerDevice):
             show_name)
 
         if not season_number:
-            playlist_name = (self.entity_id + ' - ' + show_name + ' Episodes')
+            playlist_name = "{} - {} Episodes".format(
+                self.entity_id, show_name)
             return self.device.server.createPlaylist(
                 playlist_name, show.episodes())
 
@@ -821,8 +825,8 @@ class PlexClient(MediaPlayerDevice):
                           str(episode_number).zfill(2))
         else:
             if not episode_number:
-                playlist_name = (self.entity_id + ' - ' + show_name +
-                                 ' Season ' + str(season_number) + ' Episodes')
+                playlist_name = "{} - {} Season {} Episodes".format(
+                    self.entity_id, show_name, str(season_number))
                 return self.device.server.createPlaylist(
                     playlist_name, target_season.episodes())
 
@@ -850,6 +854,10 @@ class PlexClient(MediaPlayerDevice):
         playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
                                                        media, **params)
 
+        # delete dynamic playlists used to build playqueue (ex. play tv season)
+        if delete:
+            media.delete()
+
         self._local_client_control_fix()
 
         server_url = self.device.server.baseurl.split(':')
@@ -865,10 +873,6 @@ class PlexClient(MediaPlayerDevice):
             'containerKey':
             '/playQueues/%s?window=100&own=1' % playqueue.playQueueID,
         }, **params))
-
-        # delete dynamic playlists used to build playqueue (ex. play tv season)
-        if delete:
-            media.delete()
 
     @property
     def device_state_attributes(self):
