@@ -71,7 +71,7 @@ def test_if_fires_on_hass_shutdown(hass):
     assert automation.is_on(hass, 'automation.hello')
     assert len(calls) == 0
 
-    with patch.object(hass.loop, 'stop'), patch.object(hass.executor, 'shutdown'):
+    with patch.object(hass.loop, 'stop'):
         yield from hass.async_stop()
     assert len(calls) == 1
 

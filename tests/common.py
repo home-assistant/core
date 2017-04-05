@@ -28,7 +28,8 @@ from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -58,19 +59,16 @@ def get_test_home_assistant():
         loop.run_forever()
         stop_event.set()
 
-    orig_start = hass.start
     orig_stop = hass.stop
 
-    @patch.object(hass.loop, 'run_forever')
-    @patch.object(hass.loop, 'close')
     def start_hass(*mocks):
         """Helper to start hass."""
-        orig_start()
-        hass.block_till_done()
+        run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
 
     def stop_hass():
         """Stop hass."""
         orig_stop()
+        loop.stop()
         stop_event.wait()
         loop.close()
 
