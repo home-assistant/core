@@ -29,7 +29,7 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED, __version__)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
+    HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
@@ -86,10 +86,6 @@ def async_loop_exception_handler(loop, context):
     kwargs = {}
     exception = context.get('exception')
     if exception:
-        # Do not report on shutting down exceptions.
-        if isinstance(exception, ShuttingDown):
-            return
-
         kwargs['exc_info'] = (type(exception), exception,
                               exception.__traceback__)
 
@@ -371,10 +367,6 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
-        if event_type != EVENT_HOMEASSISTANT_STOP and \
-                self._hass.state == CoreState.stopping:
-            raise ShuttingDown("Home Assistant is shutting down")
-
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
