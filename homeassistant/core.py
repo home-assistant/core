@@ -165,10 +165,10 @@ class HomeAssistant(object):
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
-        _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         yield from self.async_stop_track_tasks()
         self.state = CoreState.running
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the executor pool.
@@ -239,7 +239,7 @@ class HomeAssistant(object):
     @asyncio.coroutine
     def async_block_till_done(self):
         """Block till all pending work is done."""
-        assert self._track_task, 'We are not tracking tasks'
+        assert self._track_task, 'Not tracking tasks'
 
         # To flush out any call_soon_threadsafe
         yield from asyncio.sleep(0, loop=self.loop)
