@@ -37,12 +37,6 @@ import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
-try:
-    import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-except ImportError:
-    pass
-
 DOMAIN = 'homeassistant'
 
 # How long we wait for the result of a service call
@@ -144,6 +138,7 @@ class HomeAssistant(object):
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
+            return self.exit_code
         except KeyboardInterrupt:
             self.loop.create_task(self.async_stop())
             self.loop.run_forever()
