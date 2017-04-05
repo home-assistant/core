@@ -2,7 +2,7 @@
 Offer event listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#event-trigger
+at https://home-assistant.io/docs/automation/trigger/#event-trigger
 """
 import asyncio
 import logging
