@@ -10,8 +10,8 @@ import os
 from datetime import timedelta
 
 from homeassistant.components.fan import (
-        ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
-        SUPPORT_SET_SPEED, FanEntity)
+    ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+    SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.loader import get_component
 import homeassistant.util as util
@@ -177,7 +177,7 @@ class InsteonLocalFanDevice(FanEntity):
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn device on."""
-        if speed == None:
+        if speed is None:
             if ATTR_SPEED in kwargs:
                 speed = kwargs[ATTR_SPEED]
             else:
@@ -190,5 +190,6 @@ class InsteonLocalFanDevice(FanEntity):
         self.node.off()
 
     def set_speed(self: ToggleEntity, speed: str) -> None:
+        """Set the speed of the fan."""
         if self.node.on(speed):
             self._speed = speed
