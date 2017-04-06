@@ -29,19 +29,13 @@ from homeassistant.const import (
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
     EVENT_SERVICE_REMOVED, __version__)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
+    HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
-
-try:
-    import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-except ImportError:
-    pass
 
 DOMAIN = 'homeassistant'
 
@@ -86,10 +80,6 @@ def async_loop_exception_handler(loop, context):
     kwargs = {}
     exception = context.get('exception')
     if exception:
-        # Do not report on shutting down exceptions.
-        if isinstance(exception, ShuttingDown):
-            return
-
         kwargs['exc_info'] = (type(exception), exception,
                               exception.__traceback__)
 
@@ -123,7 +113,7 @@ class HomeAssistant(object):
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(async_loop_exception_handler)
         self._pending_tasks = []
-        self._track_task = False
+        self._track_task = True
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -148,6 +138,7 @@ class HomeAssistant(object):
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
+            return self.exit_code
         except KeyboardInterrupt:
             self.loop.create_task(self.async_stop())
             self.loop.run_forever()
@@ -165,9 +156,10 @@ class HomeAssistant(object):
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
-        _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        yield from self.async_stop_track_tasks()
         self.state = CoreState.running
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the executor pool.
@@ -238,6 +230,8 @@ class HomeAssistant(object):
     @asyncio.coroutine
     def async_block_till_done(self):
         """Block till all pending work is done."""
+        assert self._track_task, 'Not tracking tasks'
+
         # To flush out any call_soon_threadsafe
         yield from asyncio.sleep(0, loop=self.loop)
 
@@ -252,7 +246,8 @@ class HomeAssistant(object):
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        run_coroutine_threadsafe(self.async_stop(), self.loop)
+        self.loop.call_soon_threadsafe(
+            self.loop.create_task, self.async_stop())
 
     @asyncio.coroutine
     def async_stop(self, exit_code=0) -> None:
@@ -368,10 +363,6 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
-        if event_type != EVENT_HOMEASSISTANT_STOP and \
-                self._hass.state == CoreState.stopping:
-            raise ShuttingDown("Home Assistant is shutting down")
-
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
