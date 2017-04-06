@@ -395,3 +395,100 @@ def test_async_hassio_supervisor_view(aioclient_mock, hass, test_client):
     assert len(aioclient_mock.mock_calls) == 2
     assert resp.status == 200
     assert aioclient_mock.mock_calls[-1][2]['beta']
+
+
+@asyncio.coroutine
+def test_async_hassio_network_view(aioclient_mock, hass, test_client):
+    """Test that it fetches the given url."""
+    os.environ['HASSIO'] = "127.0.0.1"
+
+    result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
+    assert result, 'Failed to setup hasio'
+
+    client = yield from test_client(hass.http.app)
+
+    aioclient_mock.get('http://127.0.0.1/network/info', json={
+        'result': 'ok',
+        'data': {
+            'mode': 'dhcp',
+            'ssid': 'my_wlan',
+            'password': '123456',
+        }
+    })
+
+    resp = yield from client.get('/api/hassio/network')
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert resp.status == 200
+    assert data['mode'] == 'dhcp'
+    assert data['ssid'] == 'my_wlan'
+    assert data['password'] == '123456'
+
+    aioclient_mock.get('http://127.0.0.1/network/options', json={
+        'result': 'ok',
+        'data': {},
+    })
+
+    resp = yield from client.post('/api/hassio/network', json={
+        'mode': 'dhcp',
+        'ssid': 'my_wlan2',
+        'password': '654321',
+    })
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert resp.status == 200
+    assert aioclient_mock.mock_calls[-1][2]['ssid'] == 'my_wlan2'
+    assert aioclient_mock.mock_calls[-1][2]['password'] == '654321'
+
+
+@asyncio.coroutine
+def test_async_hassio_addon_view(aioclient_mock, hass, test_client):
+    """Test that it fetches the given url."""
+    os.environ['HASSIO'] = "127.0.0.1"
+
+    result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
+    assert result, 'Failed to setup hasio'
+
+    client = yield from test_client(hass.http.app)
+
+    aioclient_mock.get('http://127.0.0.1/addons/smb_config/info', json={
+        'result': 'ok',
+        'data': {
+            'name': 'SMB Config',
+            'state': 'running',
+            'boot': 'auto',
+            'options': {
+                'bla': False,
+            }
+        }
+    })
+
+    resp = yield from client.get('/api/hassio/addons/smb_config')
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert resp.status == 200
+    assert data['name'] == 'SMB Config'
+    assert data['state'] == 'running'
+    assert data['boot'] == 'auto'
+    assert data['options']['bla']
+
+    aioclient_mock.get('http://127.0.0.1/addons/smb_config/options', json={
+        'result': 'ok',
+        'data': {},
+    })
+
+    resp = yield from client.post('/api/hassio/addons/smb_config', json={
+        'boot': 'manual',
+        'options': {
+            'bla': True,
+        }
+    })
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert resp.status == 200
+    assert aioclient_mock.mock_calls[-1][2]['boot'] == 'manual'
+    assert aioclient_mock.mock_calls[-1][2]['options']['bla']
