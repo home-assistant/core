@@ -5,7 +5,7 @@ import os
 import aiohttp
 
 import homeassistant.components.hassio as ho
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
@@ -292,3 +292,35 @@ class TestHassIOComponent(object):
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_async_hassio_host_view(aioclient_mock, hass, test_client):
+    """Test that it fetches the given url."""
+    os.environ['HASSIO'] = "127.0.0.1"
+
+    result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
+    assert result, 'Failed to setup hasio'
+
+    client = yield from test_client(hass.http.app)
+
+    aioclient_mock.get('http://127.0.0.1/host/info', json={
+        'result': 'ok',
+        'data': {
+            'os': 'resinos',
+            'version': '0.3',
+            'current': '0.4',
+            'level': 16,
+            'hostname': 'test',
+        }
+    })
+
+    resp = yield from client.get('/api/hassio/host')
+    data = yield from resp.json()
+
+    assert resp.status == 200
+    assert data['os'] == 'resinos'
+    assert data['version'] == '0.3'
+    assert data['current'] == '0.4'
+    assert data['level'] == 16
+    assert data['hostname'] == 'test'

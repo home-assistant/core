@@ -80,9 +80,13 @@ def async_setup(hass, config):
         _LOGGER.error("No HassIO supervisor detect!")
         return False
 
-    # register api views
-    for base in ('host', 'supervisor', 'network', 'homeassistant'):
+    # register base api views
+    for base in ('host', 'homeassistant'):
         hass.http.register_view(HassIOBaseView(hassio, base))
+    for base in ('supervisor', 'network'):
+        hass.http.register_view(HassIOBaseEditView(hassio, base))
+
+    # register view for addons
     hass.http.register_view(HassIOAddonsView(hassio))
 
     @asyncio.coroutine
@@ -193,7 +197,6 @@ class HassIOBaseView(HomeAssistantView):
         """Initialize a hassio base view."""
         self.hassio = hassio
         self._url_info = "/{}/info".format(base)
-        self._url_options = "/{}/options".format(base)
 
         self.url = "/api/hassio/{}".format(base)
         self.name = "api:hassio:{}".format(base)
@@ -205,6 +208,15 @@ class HassIOBaseView(HomeAssistantView):
         if not data:
             raise HTTPBadGateway()
         return web.json_response(data)
+
+
+class HassIOBaseEditView(HassIOBaseView):
+    """HassIO view to handle base with options support."""
+
+    def __init__(self, hassio, base):
+        """Initialize a hassio base edit view."""
+        super().__init__(hassio, base)
+        self._url_options = "/{}/options".format(base)
 
     @asyncio.coroutine
     def post(self, request):
