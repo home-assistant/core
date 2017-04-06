@@ -83,7 +83,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
         # Current Temp
         if self.values.temperature:
-            self._current_temperature = (round((float(self.values.temperature.data)), 1))
+            self._current_temperature = (
+                round((float(self.values.temperature.data)), 1))
             device_unit = self.values.temperature.units
             if device_unit is not None:
                 self._unit = device_unit
