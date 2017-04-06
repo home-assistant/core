@@ -1097,6 +1097,7 @@ def _async_create_timer(hass):
         if handle is not None:
             handle.cancel()
 
-    _LOGGER.info("Timer:starting")
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
+
+    _LOGGER.info("Timer:starting")
     fire_time_event(monotonic())
