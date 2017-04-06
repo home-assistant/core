@@ -473,7 +473,7 @@ def test_async_hassio_addon_view(aioclient_mock, hass, test_client):
     assert data['name'] == 'SMB Config'
     assert data['state'] == 'running'
     assert data['boot'] == 'auto'
-    assert data['options']['bla']
+    assert not data['options']['bla']
 
     aioclient_mock.get('http://127.0.0.1/addons/smb_config/options', json={
         'result': 'ok',
