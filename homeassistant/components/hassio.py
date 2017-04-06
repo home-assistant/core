@@ -73,11 +73,18 @@ SERVICE_MAP = {
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the hassio component."""
-    websession = async_get_clientsession(hass)
-    hassio = HassIO(hass.loop, websession)
-
-    if not hassio.connected:
+    try:
+        ip = os.environ['HASSIO']
+    except KeyError:
         _LOGGER.error("No HassIO supervisor detect!")
+        return False
+
+    websession = async_get_clientsession(hass)
+    hassio = HassIO(hass.loop, websession, ip)
+
+    ok = yield from hassio.is_connected()
+    if not ok:
+        _LOGGER.error("Not connected with HassIO!")
         return False
 
     # register base api views
@@ -141,19 +148,18 @@ def async_setup(hass, config):
 class HassIO(object):
     """Small API wrapper for HassIO."""
 
-    def __init__(self, loop, websession):
+    def __init__(self, loop, websession, ip):
         """Initialze HassIO api."""
         self.loop = loop
         self.websession = websession
-        try:
-            self._ip = os.environ['HASSIO']
-        except KeyError:
-            self._ip = None
+        self._ip = ip
 
-    @property
-    def connected(self):
-        """Return True if it connected to HassIO supervisor."""
-        return self._ip is not None
+    def is_connected(self):
+        """Return True if it connected to HassIO supervisor.
+
+        Return a coroutine.
+        """
+        return self.send_command("/supervisor/ping")
 
     @asyncio.coroutine
     def send_command(self, cmd, payload=None):

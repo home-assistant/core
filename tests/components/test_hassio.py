@@ -28,13 +28,19 @@ class TestHassIOSetup(object):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_component(self):
+    def test_setup_component(self, aioclient_mock):
         """Test setup component."""
+        aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+            'result': 'ok', 'data': {}
+        })
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
-    def test_setup_component_test_service(self):
+    def test_setup_component_test_service(self, aioclient_mock):
         """Test setup component and check if service exits."""
+        aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+            'result': 'ok', 'data': {}
+        })
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -79,7 +85,7 @@ class TestHassIOComponent(object):
         }
         self.ok_msg = {
             'result': 'ok',
-            'data': None,
+            'data': {},
         }
 
     def teardown_method(self):
@@ -88,6 +94,8 @@ class TestHassIOComponent(object):
 
     def test_rest_command_timeout(self, aioclient_mock):
         """Call a hassio with timeout."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -97,10 +105,12 @@ class TestHassIOComponent(object):
         self.hass.services.call(ho.DOMAIN, ho.SERVICE_HOST_UPDATE, {})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_aiohttp_error(self, aioclient_mock):
         """Call a hassio with aiohttp exception."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -110,10 +120,12 @@ class TestHassIOComponent(object):
         self.hass.services.call(ho.DOMAIN, ho.SERVICE_HOST_UPDATE, {})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_error(self, aioclient_mock):
         """Call a hassio with status code 503."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -123,10 +135,12 @@ class TestHassIOComponent(object):
         self.hass.services.call(ho.DOMAIN, ho.SERVICE_HOST_UPDATE, {})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_error_api(self, aioclient_mock):
         """Call a hassio with status code 503."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -136,10 +150,12 @@ class TestHassIOComponent(object):
         self.hass.services.call(ho.DOMAIN, ho.SERVICE_HOST_UPDATE, {})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_host_reboot(self, aioclient_mock):
         """Call a hassio for host reboot."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -149,10 +165,12 @@ class TestHassIOComponent(object):
         self.hass.services.call(ho.DOMAIN, ho.SERVICE_HOST_REBOOT, {})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_host_shutdown(self, aioclient_mock):
         """Call a hassio for host shutdown."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -162,10 +180,12 @@ class TestHassIOComponent(object):
         self.hass.services.call(ho.DOMAIN, ho.SERVICE_HOST_SHUTDOWN, {})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_host_update(self, aioclient_mock):
         """Call a hassio for host update."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -176,11 +196,13 @@ class TestHassIOComponent(object):
             ho.DOMAIN, ho.SERVICE_HOST_UPDATE, {'version': '0.4'})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['version'] == '0.4'
+        assert len(aioclient_mock.mock_calls) == 2
+        assert aioclient_mock.mock_calls[-1][2]['version'] == '0.4'
 
     def test_rest_command_http_supervisor_update(self, aioclient_mock):
         """Call a hassio for supervisor update."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -191,11 +213,13 @@ class TestHassIOComponent(object):
             ho.DOMAIN, ho.SERVICE_SUPERVISOR_UPDATE, {'version': '0.4'})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['version'] == '0.4'
+        assert len(aioclient_mock.mock_calls) == 2
+        assert aioclient_mock.mock_calls[-1][2]['version'] == '0.4'
 
     def test_rest_command_http_homeassistant_update(self, aioclient_mock):
         """Call a hassio for homeassistant update."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -206,11 +230,13 @@ class TestHassIOComponent(object):
             ho.DOMAIN, ho.SERVICE_HOMEASSISTANT_UPDATE, {'version': '0.4'})
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['version'] == '0.4'
+        assert len(aioclient_mock.mock_calls) == 2
+        assert aioclient_mock.mock_calls[-1][2]['version'] == '0.4'
 
     def test_rest_command_http_addon_install(self, aioclient_mock):
         """Call a hassio for addon install."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -224,11 +250,13 @@ class TestHassIOComponent(object):
             })
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['version'] == '0.4'
+        assert len(aioclient_mock.mock_calls) == 2
+        assert aioclient_mock.mock_calls[-1][2]['version'] == '0.4'
 
     def test_rest_command_http_addon_uninstall(self, aioclient_mock):
         """Call a hassio for addon uninstall."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -241,10 +269,12 @@ class TestHassIOComponent(object):
             })
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_addon_update(self, aioclient_mock):
         """Call a hassio for addon update."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -258,11 +288,13 @@ class TestHassIOComponent(object):
             })
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
-        assert aioclient_mock.mock_calls[0][2]['version'] == '0.4'
+        assert len(aioclient_mock.mock_calls) == 2
+        assert aioclient_mock.mock_calls[-1][2]['version'] == '0.4'
 
     def test_rest_command_http_addon_start(self, aioclient_mock):
         """Call a hassio for addon start."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -275,10 +307,12 @@ class TestHassIOComponent(object):
             })
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_addon_stop(self, aioclient_mock):
         """Call a hassio for addon stop."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
@@ -291,7 +325,7 @@ class TestHassIOComponent(object):
             })
         self.hass.block_till_done()
 
-        assert len(aioclient_mock.mock_calls) == 1
+        assert len(aioclient_mock.mock_calls) == 2
 
 
 @asyncio.coroutine
@@ -299,6 +333,9 @@ def test_async_hassio_host_view(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     os.environ['HASSIO'] = "127.0.0.1"
 
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+        'result': 'ok', 'data': {}
+    })
     result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
     assert result, 'Failed to setup hasio'
 
@@ -318,7 +355,7 @@ def test_async_hassio_host_view(aioclient_mock, hass, test_client):
     resp = yield from client.get('/api/hassio/host')
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(aioclient_mock.mock_calls) == 2
     assert resp.status == 200
     assert data['os'] == 'resinos'
     assert data['version'] == '0.3'
@@ -332,6 +369,9 @@ def test_async_hassio_homeassistant_view(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     os.environ['HASSIO'] = "127.0.0.1"
 
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+        'result': 'ok', 'data': {}
+    })
     result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
     assert result, 'Failed to setup hasio'
 
@@ -348,7 +388,7 @@ def test_async_hassio_homeassistant_view(aioclient_mock, hass, test_client):
     resp = yield from client.get('/api/hassio/homeassistant')
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(aioclient_mock.mock_calls) == 2
     assert resp.status == 200
     assert data['version'] == '0.41'
     assert data['current'] == '0.41.1'
@@ -359,6 +399,9 @@ def test_async_hassio_supervisor_view(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     os.environ['HASSIO'] = "127.0.0.1"
 
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+        'result': 'ok', 'data': {}
+    })
     result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
     assert result, 'Failed to setup hasio'
 
@@ -376,7 +419,7 @@ def test_async_hassio_supervisor_view(aioclient_mock, hass, test_client):
     resp = yield from client.get('/api/hassio/supervisor')
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(aioclient_mock.mock_calls) == 2
     assert resp.status == 200
     assert data['version'] == '0.3'
     assert data['current'] == '0.4'
@@ -392,7 +435,7 @@ def test_async_hassio_supervisor_view(aioclient_mock, hass, test_client):
     })
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 2
+    assert len(aioclient_mock.mock_calls) == 3
     assert resp.status == 200
     assert aioclient_mock.mock_calls[-1][2]['beta']
 
@@ -402,6 +445,9 @@ def test_async_hassio_network_view(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     os.environ['HASSIO'] = "127.0.0.1"
 
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+        'result': 'ok', 'data': {}
+    })
     result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
     assert result, 'Failed to setup hasio'
 
@@ -419,7 +465,7 @@ def test_async_hassio_network_view(aioclient_mock, hass, test_client):
     resp = yield from client.get('/api/hassio/network')
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(aioclient_mock.mock_calls) == 2
     assert resp.status == 200
     assert data['mode'] == 'dhcp'
     assert data['ssid'] == 'my_wlan'
@@ -437,7 +483,7 @@ def test_async_hassio_network_view(aioclient_mock, hass, test_client):
     })
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 2
+    assert len(aioclient_mock.mock_calls) == 3
     assert resp.status == 200
     assert aioclient_mock.mock_calls[-1][2]['ssid'] == 'my_wlan2'
     assert aioclient_mock.mock_calls[-1][2]['password'] == '654321'
@@ -448,6 +494,9 @@ def test_async_hassio_addon_view(aioclient_mock, hass, test_client):
     """Test that it fetches the given url."""
     os.environ['HASSIO'] = "127.0.0.1"
 
+    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+        'result': 'ok', 'data': {}
+    })
     result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
     assert result, 'Failed to setup hasio'
 
@@ -468,7 +517,7 @@ def test_async_hassio_addon_view(aioclient_mock, hass, test_client):
     resp = yield from client.get('/api/hassio/addons/smb_config')
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(aioclient_mock.mock_calls) == 2
     assert resp.status == 200
     assert data['name'] == 'SMB Config'
     assert data['state'] == 'running'
@@ -488,7 +537,7 @@ def test_async_hassio_addon_view(aioclient_mock, hass, test_client):
     })
     data = yield from resp.json()
 
-    assert len(aioclient_mock.mock_calls) == 2
+    assert len(aioclient_mock.mock_calls) == 3
     assert resp.status == 200
     assert aioclient_mock.mock_calls[-1][2]['boot'] == 'manual'
     assert aioclient_mock.mock_calls[-1][2]['options']['bla']
