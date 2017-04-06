@@ -11,11 +11,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.zone import (
-    ATTR_RADIUS, ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT)
 from homeassistant.const import (
-    CONF_INCLUDE, CONF_EXCLUDE, CONF_ZONE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME,
+    CONF_INCLUDE, CONF_EXCLUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
     LENGTH_KILOMETERS, LENGTH_METERS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -28,13 +26,15 @@ REQUIREMENTS = ['crimereports==1.0.0']
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=30)
-DEPENDENCIES = ['zone']
 DOMAIN = 'crimereports'
 EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
-NAME_FORMAT = '{} Incidents'
+CONF_RADIUS = 'radius'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    CONF_ZONE: cv.string,
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_RADIUS): vol.Coerce(float),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
     vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string])
 })
@@ -43,17 +43,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Crime Reports platform."""
-    zone_id = ZONE_ENTITY_ID_FORMAT.format(config.get(CONF_ZONE))
-    zone_state = hass.states.get(zone_id)
-    if not zone_state:
-        _LOGGER.error("could not find specified zone: %s", zone_id)
-        return
-    latitude = zone_state.attributes.get(ATTR_LATITUDE)
-    longitude = zone_state.attributes.get(ATTR_LONGITUDE)
-    radius = zone_state.attributes.get(ATTR_RADIUS)
-    zone_friendly_name = zone_state.attributes.get(ATTR_FRIENDLY_NAME)
-    name = NAME_FORMAT.format(zone_friendly_name)
-    add_devices([CrimeReportsSensor(hass, name, latitude, longitude, radius,
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    add_devices([CrimeReportsSensor(hass, config.get(CONF_NAME),
+                                    latitude, longitude,
+                                    config.get(CONF_RADIUS),
                                     config.get(CONF_INCLUDE),
                                     config.get(CONF_EXCLUDE))], True)
 
