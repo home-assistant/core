@@ -24,7 +24,8 @@ DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
-TIMEOUT = 900
+LONG_TASK_TIMEOUT = 900
+DEFAULT_TIMEOUT = 10
 
 SERVICE_HOST_SHUTDOWN = 'host_shutdown'
 SERVICE_HOST_REBOOT = 'host_reboot'
@@ -118,10 +119,12 @@ def async_setup(hass, config):
                 "/supervisor/update", payload=version)
         elif service.service == SERVICE_HOMEASSISTANT_UPDATE:
             yield from hassio.send_command(
-                "/homeassistant/update", payload=version)
+                "/homeassistant/update", payload=version,
+                timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_ADDON_INSTALL:
             yield from hassio.send_command(
-                "/addons/{}/install".format(addon), payload=version)
+                "/addons/{}/install".format(addon), payload=version,
+                timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_ADDON_UNINSTALL:
             yield from hassio.send_command(
                 "/addons/{}/uninstall".format(addon))
@@ -131,7 +134,8 @@ def async_setup(hass, config):
             yield from hassio.send_command("/addons/{}/stop".format(addon))
         elif service.service == SERVICE_ADDON_UPDATE:
             yield from hassio.send_command(
-                "/addons/{}/update".format(addon), payload=version)
+                "/addons/{}/update".format(addon), payload=version,
+                timeout=LONG_TASK_TIMEOUT)
 
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file, os.path.join(
@@ -162,7 +166,7 @@ class HassIO(object):
         return self.send_command("/supervisor/ping")
 
     @asyncio.coroutine
-    def send_command(self, cmd, payload=None):
+    def send_command(self, cmd, payload=None, timeout=DEFAULT_TIMEOUT):
         """Send request to API."""
         answer = yield from self.send_raw(cmd, payload=payload)
         if answer['result'] == 'ok':
@@ -172,10 +176,10 @@ class HassIO(object):
         return False
 
     @asyncio.coroutine
-    def send_raw(self, cmd, payload=None):
+    def send_raw(self, cmd, payload=None, timeout=DEFAULT_TIMEOUT):
         """Send raw request to API."""
         try:
-            with async_timeout.timeout(TIMEOUT, loop=self.loop):
+            with async_timeout.timeout(timeout, loop=self.loop):
                 request = yield from self.websession.get(
                     "http://{}{}".format(self._ip, cmd),
                     timeout=None, json=payload
