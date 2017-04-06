@@ -75,16 +75,16 @@ SERVICE_MAP = {
 def async_setup(hass, config):
     """Setup the hassio component."""
     try:
-        ip = os.environ['HASSIO']
+        host = os.environ['HASSIO']
     except KeyError:
         _LOGGER.error("No HassIO supervisor detect!")
         return False
 
     websession = async_get_clientsession(hass)
-    hassio = HassIO(hass.loop, websession, ip)
+    hassio = HassIO(hass.loop, websession, host)
 
-    ok = yield from hassio.is_connected()
-    if not ok:
+    api_ok = yield from hassio.is_connected()
+    if not api_ok:
         _LOGGER.error("Not connected with HassIO!")
         return False
 
