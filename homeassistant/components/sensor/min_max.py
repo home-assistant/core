@@ -63,7 +63,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     icon = config.get(CONF_ICON)
 
     async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits, icon)],
+        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits,
+                      icon)],
         True)
     return True
 
