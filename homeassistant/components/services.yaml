@@ -331,26 +331,6 @@ hassio:
         description: Optional or it will be use the latest version.
         example: '0.3'
 
-  network_options:
-    description: Set network options on HassIO host.
-    fields:
-      ip:
-        description: Optional IP address for fixed value.
-        example: '192.168.1.10'
-      ssid:
-        description: Optional SSID for wlan.
-        example: 'My_Wlan'
-      password:
-        description: Optional wlan password.
-        example: 'mysecretpasswordwlan'
-
-  supervisor_options:
-    description: Set options inside supervisor.
-    fields:
-      beta:
-        description: Optional true or false value. Set HassIO to beta upstream.
-        example: 'true'
-
   supervisor_update:
     description: Update HassIO supervisor.
     fields:
@@ -398,9 +378,6 @@ hassio:
       addon:
         description: Name of addon.
         example: 'smb_config'
-      options:
-        description: Optional options for addons customize.
-        example: '{}'
 
   addon_stop:
     description: Stop a HassIO docker addon.
