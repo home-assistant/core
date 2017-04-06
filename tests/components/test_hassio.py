@@ -318,9 +318,80 @@ def test_async_hassio_host_view(aioclient_mock, hass, test_client):
     resp = yield from client.get('/api/hassio/host')
     data = yield from resp.json()
 
+    assert len(aioclient_mock.mock_calls) == 1
     assert resp.status == 200
     assert data['os'] == 'resinos'
     assert data['version'] == '0.3'
     assert data['current'] == '0.4'
     assert data['level'] == 16
     assert data['hostname'] == 'test'
+
+
+@asyncio.coroutine
+def test_async_hassio_homeassistant_view(aioclient_mock, hass, test_client):
+    """Test that it fetches the given url."""
+    os.environ['HASSIO'] = "127.0.0.1"
+
+    result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
+    assert result, 'Failed to setup hasio'
+
+    client = yield from test_client(hass.http.app)
+
+    aioclient_mock.get('http://127.0.0.1/homeassistant/info', json={
+        'result': 'ok',
+        'data': {
+            'version': '0.41',
+            'current': '0.41.1',
+        }
+    })
+
+    resp = yield from client.get('/api/hassio/homeassistant')
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert resp.status == 200
+    assert data['version'] == '0.41'
+    assert data['current'] == '0.41.1'
+
+
+@asyncio.coroutine
+def test_async_hassio_supervisor_view(aioclient_mock, hass, test_client):
+    """Test that it fetches the given url."""
+    os.environ['HASSIO'] = "127.0.0.1"
+
+    result = yield from async_setup_component(hass, ho.DOMAIN, {ho.DOMAIN: {}})
+    assert result, 'Failed to setup hasio'
+
+    client = yield from test_client(hass.http.app)
+
+    aioclient_mock.get('http://127.0.0.1/supervisor/info', json={
+        'result': 'ok',
+        'data': {
+            'version': '0.3',
+            'current': '0.4',
+            'beta': False,
+        }
+    })
+
+    resp = yield from client.get('/api/hassio/supervisor')
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 1
+    assert resp.status == 200
+    assert data['version'] == '0.3'
+    assert data['current'] == '0.4'
+    assert not data['beta']
+
+    aioclient_mock.get('http://127.0.0.1/supervisor/options', json={
+        'result': 'ok',
+        'data': {},
+    })
+
+    resp = yield from client.post('/api/hassio/supervisor', json={
+        'beta': True,
+    })
+    data = yield from resp.json()
+
+    assert len(aioclient_mock.mock_calls) == 2
+    assert resp.status == 200
+    assert aioclient_mock.mock_calls[-1][2]['beta']
