@@ -165,7 +165,7 @@ class MinMaxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if (self._unit_of_measurement_mismatch):
+        if self._unit_of_measurement_mismatch:
             return STATE_UNKNOWN
         return getattr(self, next(
             k for k, v in SENSOR_TYPES.items() if self._sensor_type == v))
@@ -173,7 +173,7 @@ class MinMaxSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        if (self._unit_of_measurement_mismatch):
+        if self._unit_of_measurement_mismatch:
             return "ERR"
         return self._unit_of_measurement
 
