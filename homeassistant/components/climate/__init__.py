@@ -692,9 +692,9 @@ class ClimateDevice(Entity):
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        if (temp is None or not isinstance(temp, Number)):
+        if temp is None or not isinstance(temp, Number):
             return temp
-        if(self.temperature_unit != self.unit_of_measurement):
+        if self.temperature_unit != self.unit_of_measurement:
             temp = convert_temperature(temp, self.temperature_unit,
                                        self.unit_of_measurement)
         # Round in the units appropriate
