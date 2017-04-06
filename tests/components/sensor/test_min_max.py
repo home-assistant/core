@@ -260,3 +260,25 @@ class TestMinMaxSensor(unittest.TestCase):
 
         self.assertEqual(STATE_UNKNOWN, state.state)
         self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
+
+    def test_set_entity_id(self):
+        """Test for setting entity id."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test',
+                'id': 'sensor.customid',
+                'type': 'mean',
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert 'sensor.customid' not in self.hass.states.entity_ids()
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        assert 'sensor.customid' in self.hass.states.entity_ids()
