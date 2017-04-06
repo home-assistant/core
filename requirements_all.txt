@@ -337,10 +337,10 @@ insteonplm==0.7.4
 
 # homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
-jsonrpc-async==0.4
+jsonrpc-async==0.6
 
 # homeassistant.components.media_player.kodi
-jsonrpc-websocket==0.3
+jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
 keyring>=9.3,<10.0
