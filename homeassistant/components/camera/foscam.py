@@ -69,7 +69,7 @@ class FoscamCamera(Camera):
         # Handle exception if host is not reachable or url failed
         try:
             response = requests.get(self._snap_picture_url, timeout=10)
-        except requests.exceptions.ConnectionError as e:
+        except requests.exceptions.ConnectionError:
             return None
         else:
             return response.content
