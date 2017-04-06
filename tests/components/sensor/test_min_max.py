@@ -2,7 +2,8 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import (
+    STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from tests.common import get_test_home_assistant
 
 
@@ -213,3 +214,49 @@ class TestMinMaxSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_max')
         self.assertEqual(STATE_UNKNOWN, state.state)
+
+    def test_different_unit_of_measurement(self):
+        """Test for different unit of measurement."""
+        config = {
+            'sensor': {
+                'platform': 'min_max',
+                'name': 'test',
+                'type': 'mean',
+                'entity_ids': [
+                    'sensor.test_1',
+                    'sensor.test_2',
+                    'sensor.test_3',
+                ]
+            }
+        }
+
+        assert setup_component(self.hass, 'sensor', config)
+
+        entity_ids = config['sensor']['entity_ids']
+
+        self.hass.states.set(entity_ids[0], self.values[0],
+                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual(str(float(self.values[0])), state.state)
+        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
+
+        self.hass.states.set(entity_ids[1], self.values[1],
+                             {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
+
+        self.hass.states.set(entity_ids[2], self.values[2],
+                             {ATTR_UNIT_OF_MEASUREMENT: '%'})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))

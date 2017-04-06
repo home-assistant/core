@@ -115,6 +115,7 @@ class MinMaxSensor(Entity):
                 next(v for k, v in SENSOR_TYPES.items()
                      if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
+        self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
         self.states = {}
@@ -134,7 +135,10 @@ class MinMaxSensor(Entity):
 
             if self._unit_of_measurement != new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT):
-                _LOGGER.warning("Units of measurement do not match")
+                _LOGGER.warning(
+                    "Units of measurement do not match for entity %s" %
+                    self.entity_id)
+                self._unit_of_measurement_mismatch = True
 
             try:
                 self.states[entity] = float(new_state.state)
@@ -155,12 +159,16 @@ class MinMaxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if (self._unit_of_measurement_mismatch):
+            return STATE_UNKNOWN
         return getattr(self, next(
             k for k, v in SENSOR_TYPES.items() if self._sensor_type == v))
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
+        if (self._unit_of_measurement_mismatch):
+            return "ERR"
         return self._unit_of_measurement
 
     @property
