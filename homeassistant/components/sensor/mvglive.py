@@ -24,19 +24,28 @@ CONF_NEXT_DEPARTURE = 'nextdeparture'
 
 CONF_STATION = 'station'
 CONF_DESTINATIONS = 'destinations'
+CONF_UBAHNDIRECTION = 'ubahndirection'
 CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIMEOFFSET = 'timeoffset'
 
-ICON = 'mdi:bus'
+ICONS_PRODUCTS = {
+    'U-Bahn': 'mdi:subway',
+    'Tram': 'mdi:tram',
+    'Bus': 'mdi:bus',
+    'S-Bahn': 'mdi:train',
+    'SEV': 'mdi:checkbox-blank-circle-outline',
+    '-': 'mdi:clock'
+}
 ATTRIBUTION = "Data provided by MVG-live.de"
 
-SCAN_INTERVAL = timedelta(minutes=2)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
         vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_UBAHNDIRECTION, default=0): cv.positive_int,
         vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_PRODUCTS,
                      default=['U-Bahn', 'Tram',
@@ -54,6 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             MVGLiveSensor(
                 nextdeparture.get(CONF_STATION),
                 nextdeparture.get(CONF_DESTINATIONS),
+                nextdeparture.get(CONF_UBAHNDIRECTION),
                 nextdeparture.get(CONF_LINES),
                 nextdeparture.get(CONF_PRODUCTS),
                 nextdeparture.get(CONF_TIMEOFFSET),
@@ -65,16 +75,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MVGLiveSensor(Entity):
     """Implementation of an MVG Live sensor."""
 
-    def __init__(self, station, destinations, lines,
-                 products, timeoffset, name):
+    def __init__(self, station, destinations, ubahndirection,
+                 lines, products, timeoffset, name):
         """Initialize the sensor."""
         self._station = station
-        self._destinations = destinations
-        self._lines = lines
         self._name = name
-        self.data = MVGLiveData(station, destinations,
+        self.data = MVGLiveData(station, destinations, ubahndirection,
                                 lines, products, timeoffset)
         self._state = STATE_UNKNOWN
+        self._icon = ICONS_PRODUCTS['-']
 
     @property
     def name(self):
@@ -97,7 +106,7 @@ class MVGLiveSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        return self._icon
 
     @property
     def unit_of_measurement(self):
@@ -109,18 +118,22 @@ class MVGLiveSensor(Entity):
         self.data.update()
         if not self.data.departures:
             self._state = '-'
+            self._icon = ICONS_PRODUCTS['-']
         else:
             self._state = self.data.departures.get('time', '-')
+            self._icon = ICONS_PRODUCTS[self.data.departures.get('product', '-')]
 
 
 class MVGLiveData(object):
     """Pull data from the mvg-live.de web page."""
 
-    def __init__(self, station, destinations, lines, products, timeoffset):
+    def __init__(self, station, destinations, ubahndirection,
+                 lines, products, timeoffset):
         """Initialize the sensor."""
         import MVGLive
         self._station = station
         self._destinations = destinations
+        self._ubahndirection = ubahndirection
         self._lines = lines
         self._products = products
         self._timeoffset = timeoffset
@@ -147,6 +160,9 @@ class MVGLiveData(object):
             # find the first departure meeting the criteria
             if ('' not in self._destinations[:1] and
                     _departure['destination'] not in self._destinations):
+                continue
+            elif (self._ubahndirection > 0 and
+                  int(_departure['direction']) != self._ubahndirection):
                 continue
             elif ('' not in self._lines[:1] and
                   _departure['linename'] not in self._lines):
