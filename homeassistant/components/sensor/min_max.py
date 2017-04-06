@@ -110,7 +110,7 @@ class MinMaxSensor(Entity):
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
-        seld._icon = icon
+        self._icon = icon
 
         if name:
             self._name = name
