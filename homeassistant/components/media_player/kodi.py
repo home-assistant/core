@@ -27,7 +27,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 
-REQUIREMENTS = ['jsonrpc-async==0.4', 'jsonrpc-websocket==0.3']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
