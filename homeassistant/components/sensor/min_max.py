@@ -104,7 +104,8 @@ def calc_mean(sensor_values, round_digits):
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, sensor_type, round_digits, icon):
+    def __init__(self, hass, entity_ids, name, sensor_type, round_digits,
+                 icon):
         """Initialize the min/max sensor."""
         self._hass = hass
         self._entity_ids = entity_ids
