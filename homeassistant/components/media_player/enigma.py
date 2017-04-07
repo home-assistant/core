@@ -129,10 +129,10 @@ class EnigmaDevice(MediaPlayerDevice):
         self._pwstate = ''
 
         if pwstate.find('false') >=0:
-           self._pwstate = 'false'
+            self._pwstate = 'false'
 
         if pwstate.find('true') >=0:
-           self._pwstate = 'true'
+            self._pwstate = 'true'
 
         if self._name == 'Enigma2 Satelite':
             about_xml = self.__requestCall('/web/about')
@@ -213,35 +213,35 @@ class EnigmaDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         try:
-           self.__requestCall('/web/zap?sRef=' + self._sources[source])
+            self.__requestCall('/web/zap?sRef=' + self._sources[source])
         except (HTTPError, URLError, ConnectionRefusedError):
-           return False
+            return False
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         try:
-           volset = str(round(volume * MAX_VOLUME))
-           self.__requestCall('/web/vol?set=set' + volset)
+            volset = str(round(volume * MAX_VOLUME))
+            self.__requestCall('/web/vol?set=set' + volset)
         except (HTTPError, URLError, ConnectionRefusedError):
-           return False
+            return False
 
     def mute_volume(self, mute):
         """Mute or unmute media player."""
         try:
-           self.__requestCall('/web/vol?set=mute')
+            self.__requestCall('/web/vol?set=mute')
         except (HTTPError, URLError, ConnectionRefusedError):
-           return False
+            return False
 
     def turn_on(self):
         """Turn the media player on."""
         try:
-           self.__requestCall('/web/powerstate?newstate=4')
+            self.__requestCall('/web/powerstate?newstate=4')
         except (HTTPError, URLError, ConnectionRefusedError):
-           return False
+            return False
 
     def turn_off(self):
         """Turn off media player."""
         try:
-           self.__requestCall('/web/powerstate?newstate=5')
+            self.__requestCall('/web/powerstate?newstate=5')
         except (HTTPError, URLError, ConnectionRefusedError):
-           return False
+            return False
