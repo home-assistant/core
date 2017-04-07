@@ -141,7 +141,8 @@ class HomeAssistant(object):
             self.loop.run_forever()
             return self.exit_code
         except KeyboardInterrupt:
-            fire_coroutine_threadsafe(self.async_stop(), self.loop)
+            self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
