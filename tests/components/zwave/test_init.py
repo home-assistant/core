@@ -7,7 +7,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
 from homeassistant.components.binary_sensor.zwave import get_device
 from homeassistant.components.zwave import (
-    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB)
+    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, ZWAVE_NETWORK)
 from homeassistant.setup import setup_component
 
 import pytest
@@ -467,11 +467,12 @@ class TestZWaveServices(unittest.TestCase):
 
     def setUp(self):
         """Initialize values for this testcase class."""
-        self.zwave_network = MagicMock()
         self.hass = get_test_home_assistant()
         self.hass.start()
 
         # Initialize zwave
+        self.hass.data[ZWAVE_NETWORK] = MagicMock()
+        self.zwave_network = self.hass.data[ZWAVE_NETWORK]
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
         self.zwave_network.state = MockNetwork.STATE_READY
