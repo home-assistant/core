@@ -733,7 +733,7 @@ class ZWaveDeviceEntityValues():
         device = platform.get_device(
             node=self._node, values=self,
             node_config=node_config, hass=self._hass)
-        if not device:
+        if device is None:
             # No entity will be created for this value
             self._workaround_ignore = True
             return
