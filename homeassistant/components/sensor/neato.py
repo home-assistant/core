@@ -66,6 +66,7 @@ class NeatoConnectedSensor(Entity):
         """Update the properties of sensor."""
         _LOGGER.debug('Update of sensor')
         self.neato.update_robots()
+        self._mapdata = self.hass.data[NEATO_MAP_DATA]
         if not self._state:
             return
         try:
