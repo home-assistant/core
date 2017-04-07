@@ -31,7 +31,8 @@ from homeassistant.const import (
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+    run_coroutine_threadsafe, run_callback_threadsafe,
+    fire_coroutine_threadsafe)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
@@ -131,7 +132,7 @@ class HomeAssistant(object):
     def start(self) -> None:
         """Start home assistant."""
         # Register the async start
-        self.add_job(self.async_start())
+        fire_coroutine_threadsafe(self.async_start(), self.loop)
 
         # Run forever and catch keyboard interrupt
         try:
@@ -140,7 +141,7 @@ class HomeAssistant(object):
             self.loop.run_forever()
             return self.exit_code
         except KeyboardInterrupt:
-            self.loop.create_task(self.async_stop())
+            fire_coroutine_threadsafe(self.async_stop(), self.loop)
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -246,8 +247,7 @@ class HomeAssistant(object):
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        self.loop.call_soon_threadsafe(
-            self.loop.create_task, self.async_stop())
+        fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
     @asyncio.coroutine
     def async_stop(self, exit_code=0) -> None:
@@ -1092,16 +1092,12 @@ def _async_create_timer(hass):
         handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
 
     @callback
-    def start_timer(event):
-        """Create an async timer."""
-        _LOGGER.info("Timer:starting")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
-        fire_time_event(monotonic())
-
-    @callback
     def stop_timer(event):
         """Stop the timer."""
         if handle is not None:
             handle.cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_timer)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
+
+    _LOGGER.info("Timer:starting")
+    fire_time_event(monotonic())
