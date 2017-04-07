@@ -49,6 +49,8 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
+# How long to wait till things that run on startup have to finish.
+TIMEOUT_EVENT_START = 15
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,10 +158,30 @@ class HomeAssistant(object):
         _LOGGER.info("Starting Home Assistant")
         self.state = CoreState.starting
 
+        @asyncio.coroutine
+        def slow_start():
+            """Warn when we do a slow start."""
+            _LOGGER.warning(
+                'Something is blocking Hass start from finishing, going to '
+                'start anyway. Please report at http://bit.ly/2ogP58T: %s',
+                ', '.join(self.config.components))
+            yield from self.async_stop_track_tasks(False)
+            self.state = CoreState.running
+            _async_create_timer(self)
+
+        warn_task = self.loop.call_later(
+            TIMEOUT_EVENT_START, self.loop.create_task, slow_start())
+
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
         yield from self.async_stop_track_tasks()
+
+        # Warn task already did it's work
+        if self.state != CoreState.starting:
+            return
+
+        warn_task.cancel()
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -205,9 +227,10 @@ class HomeAssistant(object):
         self._track_task = True
 
     @asyncio.coroutine
-    def async_stop_track_tasks(self):
+    def async_stop_track_tasks(self, finish_current=True):
         """Track tasks so you can wait for all tasks to be done."""
-        yield from self.async_block_till_done()
+        if finish_current:
+            yield from self.async_block_till_done()
         self._track_task = False
 
     @callback
