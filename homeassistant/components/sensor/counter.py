@@ -48,9 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data.reset()
         sensor.update()
 
-    hass.services.register(DOMAIN, 'increment_counter', increment_counter)
-    hass.services.register(DOMAIN, 'reset_counter', reset_counter)
-    hass.services.register(DOMAIN, 'decrement_counter', decrement_counter)
+    hass.services.register(DOMAIN, 'counter_increment', increment_counter)
+    hass.services.register(DOMAIN, 'counter_reset', reset_counter)
+    hass.services.register(DOMAIN, 'counter_decrement', decrement_counter)
 
 
 class CounterSensor(Entity):
@@ -88,15 +88,15 @@ class CounterData(object):
 
     def increment(self):
         """Increment the counter."""
-        _LOGGER.info('Incrementing counter')
+        _LOGGER.debug('Incrementing counter')
         self.count += self._step
 
     def decrement(self):
         """Decrement the counter."""
-        _LOGGER.info('Decrementing counter')
+        _LOGGER.debug('Decrementing counter')
         self.count -= self._step
 
     def reset(self):
         """Reset the counter."""
-        _LOGGER.info('Resetting counter')
+        _LOGGER.debug('Resetting counter')
         self.count = self._initial
