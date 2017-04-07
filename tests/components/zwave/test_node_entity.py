@@ -2,6 +2,8 @@
 import asyncio
 import unittest
 from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+from tests.common import get_test_home_assistant
 import tests.mock.zwave as mock_zwave
 import pytest
 from homeassistant.components.zwave import node_entity
@@ -36,11 +38,12 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def setUp(self):
         """Initialize values for this testcase class."""
+        NETWORK = MagicMock()
         self.node = mock_zwave.MockNode(
             query_stage='Dynamic', is_awake=True, is_ready=False,
             is_failed=False, is_info_received=True, max_baud_rate=40000,
             is_zwave_plus=False, capabilities=[], neighbors=[], location=None)
-        self.entity = node_entity.ZWaveNodeEntity(self.node)
+        self.entity = node_entity.ZWaveNodeEntity(self.node, NETWORK)
 
     def test_network_node_changed_from_value(self):
         """Test for network_node_changed."""
@@ -76,6 +79,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def test_node_changed(self):
         """Test node_changed function."""
+        self.maxDiff = None
         self.assertEqual({'node_id': self.node.node_id},
                          self.entity.device_state_attributes)
 
@@ -83,7 +87,6 @@ class TestZWaveNodeEntity(unittest.TestCase):
             1: mock_zwave.MockValue(data=1800)
         }
         self.entity.node_changed()
-
         self.assertEqual(
             {'node_id': self.node.node_id,
              'query_stage': 'Dynamic',
@@ -94,7 +97,19 @@ class TestZWaveNodeEntity(unittest.TestCase):
              'max_baud_rate': 40000,
              'is_zwave_plus': False,
              'battery_level': 42,
-             'wake_up_interval': 1800},
+             'wake_up_interval': 1800,
+             'averageRequestRTT': 1,
+             'averageResponseRTT': 2,
+             'lastRequestRTT': 3,
+             'lastResponseRTT': 4,
+             'receivedCnt': 5,
+             'receivedDups': 6,
+             'receivedTS': 7,
+             'receivedUnsolicited': 8,
+             'retries': 9,
+             'sentCnt': 10,
+             'sentFailed': 11,
+             'sentTS': 12},
             self.entity.device_state_attributes)
 
         self.node.can_wake_up_value = False
