@@ -16,8 +16,7 @@ from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_START,
-    EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
 
 from tests.common import get_test_home_assistant
 
@@ -813,28 +812,21 @@ def test_create_timer(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    with patch.object(ha, 'callback', mock_callback):
-        ha._async_create_timer(hass)
-
-        assert len(funcs) == 3
-        fire_time_event, start_timer, stop_timer = funcs
-
-    assert len(hass.bus.async_listen_once.mock_calls) == 1
-    event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
-    assert event_type == EVENT_HOMEASSISTANT_START
-    assert callback is start_timer
-
     mock_monotonic.side_effect = 10.2, 10.3
 
-    with patch('homeassistant.core.dt_util.utcnow',
-               return_value=sentinel.mock_date):
-        start_timer(None)
+    with patch.object(ha, 'callback', mock_callback), \
+            patch('homeassistant.core.dt_util.utcnow',
+                  return_value=sentinel.mock_date):
+        ha._async_create_timer(hass)
 
-    assert len(hass.bus.async_listen_once.mock_calls) == 2
+        assert len(funcs) == 2
+        fire_time_event, stop_timer = funcs
+
+    assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
     assert len(hass.loop.call_later.mock_calls) == 1
 
-    event_type, callback = hass.bus.async_listen_once.mock_calls[1][1]
+    event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
@@ -859,17 +851,15 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    with patch.object(ha, 'callback', mock_callback):
-        ha._async_create_timer(hass)
-
-        assert len(funcs) == 3
-        fire_time_event, start_timer, stop_timer = funcs
-
     mock_monotonic.side_effect = 10.2, 11.3, 11.3
 
-    with patch('homeassistant.core.dt_util.utcnow',
-               return_value=sentinel.mock_date):
-        start_timer(None)
+    with patch.object(ha, 'callback', mock_callback), \
+            patch('homeassistant.core.dt_util.utcnow',
+                  return_value=sentinel.mock_date):
+        ha._async_create_timer(hass)
+
+        assert len(funcs) == 2
+        fire_time_event, stop_timer = funcs
 
     assert len(hass.loop.call_later.mock_calls) == 1
 
