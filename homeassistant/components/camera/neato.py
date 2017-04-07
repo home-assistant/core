@@ -53,6 +53,8 @@ class NeatoCleaningMap(Camera):
         """Check the contents of the map list."""
         self.neato.update_robots()
         image = None
+        self._map_data = self.hass.data[NEATO_MAP_DATA]
+        _LOGGER.debug('hass map data=%s', self.hass.data[NEATO_MAP_DATA])
         image_url = self._map_data[self._robot_serial]['maps'][0]['url']
         if image_url == self._image_url:
             _LOGGER.debug('The map image_url is the same as old')
