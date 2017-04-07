@@ -66,9 +66,13 @@ class FoscamCamera(Camera):
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = requests.get(self._snap_picture_url, timeout=10)
-
-        return response.content
+        # Handle exception if host is not reachable or url failed
+        try:
+            response = requests.get(self._snap_picture_url, timeout=10)
+        except requests.exceptions.ConnectionError:
+            return None
+        else:
+            return response.content
 
     @property
     def name(self):
