@@ -185,8 +185,8 @@ def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
-            # 112 == config command class
-            if value.command_class == 112 and value.index == value_index:
+            if (value.command_class == const.COMMAND_CLASS_CONFIGURATION
+                    and value.index == value_index):
                 return value.data
     except RuntimeError:
         # If we get an runtime error the dict has changed while
@@ -384,7 +384,7 @@ def setup(hass, config):
         _LOGGER.info("Zwave test_network have been initialized.")
         NETWORK.test()
 
-    def stop_zwave(_service_or_event):
+    def stop_network(_service_or_event):
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
@@ -532,7 +532,7 @@ def setup(hass, config):
         poll_interval = NETWORK.get_poll_interval()
         _LOGGER.info("zwave polling interval set to %d ms", poll_interval)
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_network)
 
         # Register node services for Z-Wave network
         hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node,
@@ -553,7 +553,8 @@ def setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK,
                                test_network,
                                descriptions[const.SERVICE_TEST_NETWORK])
-        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK, stop_zwave,
+        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
+                               stop_network,
                                descriptions[const.SERVICE_STOP_NETWORK])
         hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
                                start_zwave,
@@ -840,4 +841,5 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     def refresh_from_network(self):
         """Refresh all dependent values from zwave network."""
         for value in self.values:
-            self.node.refresh_value(value.value_id)
+            if value is not None:
+                self.node.refresh_value(value.value_id)
