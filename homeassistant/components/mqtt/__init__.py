@@ -569,7 +569,7 @@ class MQTT(object):
         except (AttributeError, UnicodeDecodeError):
             payload = msg.payload
             _LOGGER.info("Illegal utf-8 unicode payload from "
-                          "MQTT topic: %s", msg.topic)
+                         "MQTT topic: %s", msg.topic)
         else:
             _LOGGER.info("Received message on %s: %s", msg.topic, payload)
         dispatcher_send(
