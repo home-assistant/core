@@ -175,7 +175,6 @@ omit =
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
-    homeassistant/components/config/zwave.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/myq.py
@@ -442,7 +441,6 @@ omit =
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
-    homeassistant/components/zwave/__init__.py
     homeassistant/components/zwave/util.py
 
 
