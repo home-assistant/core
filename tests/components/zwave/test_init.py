@@ -489,8 +489,10 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.controller.add_node.called
-        assert len(self.zwave_network.controller.add_node.mock_calls) == 1
-        assert len(self.zwave_network.controller.add_node.mock_calls[0][1]) == 0
+        assert len(self.zwave_network.controller
+                   .add_node.mock_calls) == 1
+        assert len(self.zwave_network.controller
+                   .add_node.mock_calls[0][1]) == 0
 
     def test_add_node_secure(self):
         """Test zwave add_node_secure service."""
@@ -499,7 +501,8 @@ class TestZWaveServices(unittest.TestCase):
 
         assert self.zwave_network.controller.add_node.called
         assert len(self.zwave_network.controller.add_node.mock_calls) == 1
-        assert self.zwave_network.controller.add_node.mock_calls[0][1][0] is True
+        assert (self.zwave_network.controller
+                .add_node.mock_calls[0][1][0] is True)
 
     def test_remove_node(self):
         """Test zwave remove_node service."""
@@ -515,7 +518,8 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.controller.cancel_command.called
-        assert len(self.zwave_network.controller.cancel_command.mock_calls) == 1
+        assert len(self.zwave_network.controller
+                   .cancel_command.mock_calls) == 1
 
     def test_heal_network(self):
         """Test zwave heal_network service."""
