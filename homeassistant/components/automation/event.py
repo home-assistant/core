@@ -2,15 +2,15 @@
 Offer event listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#event-trigger
+at https://home-assistant.io/docs/automation/trigger/#event-trigger
 """
 import asyncio
 import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import CONF_PLATFORM
+from homeassistant.core import callback, CoreState
+from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_START
 from homeassistant.helpers import config_validation as cv
 
 CONF_EVENT_TYPE = "event_type"
@@ -30,6 +30,19 @@ def async_trigger(hass, config, action):
     """Listen for events based on configuration."""
     event_type = config.get(CONF_EVENT_TYPE)
     event_data = config.get(CONF_EVENT_DATA)
+
+    if (event_type == EVENT_HOMEASSISTANT_START and
+            hass.state == CoreState.starting):
+        _LOGGER.warning('Deprecation: Automations should not listen to event '
+                        "'homeassistant_start'. Use platform 'homeassistant' "
+                        'instead. Feature will be removed in 0.45')
+        hass.async_run_job(action, {
+            'trigger': {
+                'platform': 'event',
+                'event': None,
+            },
+        })
+        return lambda: None
 
     @callback
     def handle_event(event):

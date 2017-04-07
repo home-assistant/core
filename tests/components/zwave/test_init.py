@@ -1,11 +1,13 @@
 """Tests for the Z-Wave init."""
 import asyncio
+from collections import OrderedDict
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
 from homeassistant.components.binary_sensor.zwave import get_device
-from homeassistant.components.zwave import const
+from homeassistant.components.zwave import (
+    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB)
 from homeassistant.setup import setup_component
 
 import pytest
@@ -46,6 +48,17 @@ def test_invalid_device_config(hass, mock_openzwave):
         }})
 
     assert not result
+
+
+class TestZwave(unittest.TestCase):
+    """Test zwave init."""
+
+    def test_device_config_glob_is_ordered(self):
+        """Test that device_config_glob preserves order."""
+        conf = CONFIG_SCHEMA(
+            {'zwave': {CONF_DEVICE_CONFIG_GLOB: OrderedDict()}})
+        self.assertIsInstance(
+            conf['zwave'][CONF_DEVICE_CONFIG_GLOB], OrderedDict)
 
 
 class TestZWaveServices(unittest.TestCase):

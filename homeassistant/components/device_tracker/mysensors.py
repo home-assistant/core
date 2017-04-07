@@ -16,11 +16,11 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_scanner(hass, config, see, discovery_info=None):
     """Setup the MySensors tracker."""
-    def mysensors_callback(gateway, node_id):
+    def mysensors_callback(gateway, msg):
         """Callback for mysensors platform."""
-        node = gateway.sensors[node_id]
+        node = gateway.sensors[msg.node_id]
         if node.sketch_name is None:
-            _LOGGER.info('No sketch_name: node %s', node_id)
+            _LOGGER.info('No sketch_name: node %s', msg.node_id)
             return
 
         pres = gateway.const.Presentation
@@ -37,12 +37,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
                               'latitude,longitude,altitude', position)
                 continue
             name = '{} {} {}'.format(
-                node.sketch_name, node_id, child.id)
+                node.sketch_name, msg.node_id, child.id)
             attr = {
                 mysensors.ATTR_CHILD_ID: child.id,
                 mysensors.ATTR_DESCRIPTION: child.description,
                 mysensors.ATTR_DEVICE: gateway.device,
-                mysensors.ATTR_NODE_ID: node_id,
+                mysensors.ATTR_NODE_ID: msg.node_id,
             }
             see(
                 dev_id=slugify(name),
