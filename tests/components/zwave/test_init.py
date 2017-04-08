@@ -50,6 +50,314 @@ def test_invalid_device_config(hass, mock_openzwave):
     assert not result
 
 
+class TestZWaveDeviceEntityValues(unittest.TestCase):
+    """Tests for the ZWaveDeviceEntityValues helper."""
+
+    @pytest.fixture(autouse=True)
+    def set_mock_openzwave(self, mock_openzwave):
+        """Use the mock_openzwave fixture for this class."""
+        self.mock_openzwave = mock_openzwave
+
+    def setUp(self):
+        """Initialize values for this testcase class."""
+        self.hass = get_test_home_assistant()
+        self.hass.start()
+
+        setup_component(self.hass, 'zwave', {'zwave': {}})
+        self.hass.block_till_done()
+
+        self.node = MockNode()
+        self.mock_schema = {
+            const.DISC_COMPONENT: 'mock_component',
+            const.DISC_VALUES: {
+                const.DISC_PRIMARY: {
+                    const.DISC_COMMAND_CLASS: ['mock_primary_class'],
+                },
+                'secondary': {
+                    const.DISC_COMMAND_CLASS: ['mock_secondary_class'],
+                },
+                'optional': {
+                    const.DISC_COMMAND_CLASS: ['mock_optional_class'],
+                    const.DISC_OPTIONAL: True,
+                }}}
+        self.primary = MockValue(
+            command_class='mock_primary_class', node=self.node)
+        self.secondary = MockValue(
+            command_class='mock_secondary_class', node=self.node)
+        self.duplicate_secondary = MockValue(
+            command_class='mock_secondary_class', node=self.node)
+        self.optional = MockValue(
+            command_class='mock_optional_class', node=self.node)
+        self.no_match_value = MockValue(
+            command_class='mock_bad_class', node=self.node)
+
+        self.entity_id = '{}.{}'.format('mock_component',
+                                        zwave.object_id(self.primary))
+        self.zwave_config = {}
+        self.device_config = {self.entity_id: {}}
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_discovery(self, discovery, get_platform):
+        """Test the creation of a new entity."""
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+
+        assert values.primary is self.primary
+        assert len(list(values)) == 3
+        self.assertEqual(sorted(list(values),
+                                key=lambda a: id(a)),
+                         sorted([self.primary, None, None],
+                                key=lambda a: id(a)))
+        assert not discovery.async_load_platform.called
+
+        values.check_value(self.secondary)
+        self.hass.block_till_done()
+
+        assert values.secondary is self.secondary
+        assert len(list(values)) == 3
+        self.assertEqual(sorted(list(values),
+                                key=lambda a: id(a)),
+                         sorted([self.primary, self.secondary, None],
+                                key=lambda a: id(a)))
+
+        assert discovery.async_load_platform.called
+        # Second call is to async yield from
+        assert len(discovery.async_load_platform.mock_calls) == 2
+        args = discovery.async_load_platform.mock_calls[0][1]
+        assert args[0] == self.hass
+        assert args[1] == 'mock_component'
+        assert args[2] == 'zwave'
+        assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
+        assert args[4] == self.zwave_config
+
+        discovery.async_load_platform.reset_mock()
+        values.check_value(self.optional)
+        values.check_value(self.duplicate_secondary)
+        values.check_value(self.no_match_value)
+        self.hass.block_till_done()
+
+        assert values.optional is self.optional
+        assert len(list(values)) == 3
+        self.assertEqual(sorted(list(values),
+                                key=lambda a: id(a)),
+                         sorted([self.primary, self.secondary, self.optional],
+                                key=lambda a: id(a)))
+        assert not discovery.async_load_platform.called
+
+        assert values._entity.value_added.called
+        assert len(values._entity.value_added.mock_calls) == 1
+        assert values._entity.value_changed.called
+        assert len(values._entity.value_changed.mock_calls) == 1
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_existing_values(self, discovery, get_platform):
+        """Test the loading of already discovered values."""
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+            self.optional.value_id: self.optional,
+            self.no_match_value.value_id: self.no_match_value,
+        }
+
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        self.hass.block_till_done()
+
+        assert values.primary is self.primary
+        assert values.secondary is self.secondary
+        assert values.optional is self.optional
+        assert len(list(values)) == 3
+        self.assertEqual(sorted(list(values),
+                                key=lambda a: id(a)),
+                         sorted([self.primary, self.secondary, self.optional],
+                                key=lambda a: id(a)))
+
+        assert discovery.async_load_platform.called
+        # Second call is to async yield from
+        assert len(discovery.async_load_platform.mock_calls) == 2
+        args = discovery.async_load_platform.mock_calls[0][1]
+        assert args[0] == self.hass
+        assert args[1] == 'mock_component'
+        assert args[2] == 'zwave'
+        assert args[3] == {const.DISCOVERY_DEVICE: id(values)}
+        assert args[4] == self.zwave_config
+        assert not self.primary.enable_poll.called
+        assert self.primary.disable_poll.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_node_schema_mismatch(self, discovery, get_platform):
+        """Test node schema mismatch."""
+        self.node.generic = 'no_match'
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.mock_schema[const.DISC_GENERIC_DEVICE_CLASS] = ['generic_match']
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_workaround_component(self, discovery, get_platform):
+        """Test ignore workaround."""
+        self.node.manufacturer_id = '010f'
+        self.node.product_type = '0b00'
+        self.primary.command_class = const.COMMAND_CLASS_SENSOR_ALARM
+        self.entity_id = '{}.{}'.format('binary_sensor',
+                                        zwave.object_id(self.primary))
+        self.device_config = {self.entity_id: {}}
+
+        self.mock_schema = {
+            const.DISC_COMPONENT: 'mock_component',
+            const.DISC_VALUES: {
+                const.DISC_PRIMARY: {
+                    const.DISC_COMMAND_CLASS: [
+                        const.COMMAND_CLASS_SWITCH_BINARY],
+                }}}
+
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert discovery.async_load_platform.called
+        # Second call is to async yield from
+        assert len(discovery.async_load_platform.mock_calls) == 2
+        args = discovery.async_load_platform.mock_calls[0][1]
+        assert args[1] == 'binary_sensor'
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_workaround_ignore(self, discovery, get_platform):
+        """Test ignore workaround."""
+        self.node.manufacturer_id = '010f'
+        self.node.product_type = '0301'
+        self.primary.command_class = const.COMMAND_CLASS_SWITCH_BINARY
+
+        self.mock_schema = {
+            const.DISC_COMPONENT: 'mock_component',
+            const.DISC_VALUES: {
+                const.DISC_PRIMARY: {
+                    const.DISC_COMMAND_CLASS: [
+                        const.COMMAND_CLASS_SWITCH_BINARY],
+                }}}
+
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_config_ignore(self, discovery, get_platform):
+        """Test ignore config."""
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {self.entity_id: {
+            zwave.CONF_IGNORED: True
+        }}
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_platform_ignore(self, discovery, get_platform):
+        """Test platform ignore device."""
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        platform = MagicMock()
+        get_platform.return_value = platform
+        platform.get_device.return_value = None
+        zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_config_polling_intensity(self, discovery, get_platform):
+        """Test polling intensity."""
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {self.entity_id: {
+            zwave.CONF_POLLING_INTENSITY: 123,
+        }}
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert discovery.async_load_platform.called
+        assert self.primary.enable_poll.called
+        assert len(self.primary.enable_poll.mock_calls) == 1
+        assert self.primary.enable_poll.mock_calls[0][1][0] == 123
+        assert not self.primary.disable_poll.called
+
+
 class TestZwave(unittest.TestCase):
     """Test zwave init."""
 
