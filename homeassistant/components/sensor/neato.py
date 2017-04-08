@@ -11,6 +11,9 @@ from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['neato']
+
 SENSOR_TYPE_STATUS = 'status'
 SENSOR_TYPE_BATTERY = 'battery'
 
@@ -30,9 +33,6 @@ ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Neato sensor platform."""
-    if not hass.data[NEATO_ROBOTS]:
-        return False
-
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SENSOR_TYPES:
@@ -50,7 +50,13 @@ class NeatoConnectedSensor(Entity):
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = self.robot.name + ' ' + SENSOR_TYPES[self.type][0]
-        self._state = self.robot.state
+        self._status_state = None
+        try:
+            self._state = self.robot.state
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as ex:
+            self._state = None
+            _LOGGER.debug('Neato connection error: %s', ex)
         self._mapdata = hass.data[NEATO_MAP_DATA]
         self.clean_time_start = None
         self.clean_time_stop = None
@@ -60,21 +66,21 @@ class NeatoConnectedSensor(Entity):
         self.clean_suspension_charge_count = None
         self.clean_suspension_time = None
         self._battery_state = None
-        self._status_state = None
 
     def update(self):
         """Update the properties of sensor."""
         _LOGGER.debug('Update of sensor')
         self.neato.update_robots()
         self._mapdata = self.hass.data[NEATO_MAP_DATA]
-        if not self._state:
-            return
         try:
             self._state = self.robot.state
-        except requests.exceptions.HTTPError as ex:
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as ex:
             self._state = None
             self._status_state = 'Offline'
-            _LOGGER.debug('Neato connection issue: %s', ex)
+            _LOGGER.debug('Neato connection error: %s', ex)
+            return
+        if not self._state:
             return
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SENSOR_TYPE_STATUS:
