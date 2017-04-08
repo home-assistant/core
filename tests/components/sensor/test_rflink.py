@@ -70,3 +70,33 @@ def test_default_setup(hass, monkeypatch):
     assert new_sensor.state == '0'
     assert new_sensor.attributes['unit_of_measurement'] == '°C'
     assert new_sensor.attributes['icon'] == 'mdi:thermometer'
+
+
+@asyncio.coroutine
+def test_disable_automatic_add(hass, monkeypatch):
+    """If disabled new devices should not be automatically added."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'automatic_add': False,
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    # test event for new unconfigured sensor
+    event_callback({
+        'id': 'test2',
+        'sensor': 'temperature',
+        'value': 0,
+        'unit': '°C',
+    })
+    yield from hass.async_block_till_done()
+
+    # make sure new device is not added
+    assert not hass.states.get('sensor.test2')

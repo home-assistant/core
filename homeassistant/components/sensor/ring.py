@@ -4,48 +4,38 @@ This component provides HA sensor support for Ring Door Bell/Chimes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ring/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.ring import (
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
-    CONF_USERNAME, CONF_PASSWORD, STATE_UNKNOWN,
-    ATTR_ATTRIBUTION)
+    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
+    STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-import homeassistant.loader as loader
 
-from requests.exceptions import HTTPError, ConnectTimeout
-
-REQUIREMENTS = ['ring_doorbell==0.1.0']
+DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
 
-NOTIFICATION_ID = 'ring_notification'
-NOTIFICATION_TITLE = 'Ring Sensor Setup'
+SCAN_INTERVAL = timedelta(seconds=30)
 
-DEFAULT_ENTITY_NAMESPACE = 'ring'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
-
-CONF_ATTRIBUTION = "Data provided by Ring.com"
-
-# Sensor types: Name, category, units, icon
+# Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
-    'battery': ['Battery', ['doorbell'], '%', 'battery-50'],
-    'last_activity': ['Last Activity', ['doorbell'], None, 'history'],
-    'volume': ['Volume', ['chime', 'doorbell'], None, 'bell-ring'],
+    'battery': ['Battery', ['doorbell'], '%', 'battery-50', None],
+    'last_activity': ['Last Activity', ['doorbell'], None, 'history', None],
+    'last_ding': ['Last Ding', ['doorbell'], None, 'history', 'ding'],
+    'last_motion': ['Last Motion', ['doorbell'], None, 'history', 'motion'],
+    'volume': ['Volume', ['chime', 'doorbell'], None, 'bell-ring', None],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -53,22 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a sensor for a Ring device."""
-    from ring_doorbell import Ring
-
-    ring = Ring(config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
-
-    persistent_notification = loader.get_component('persistent_notification')
-    try:
-        ring.is_connected
-    except (ConnectTimeout, HTTPError) as ex:
-        _LOGGER.error("Unable to connect to Ring service: %s", str(ex))
-        persistent_notification.create(
-            hass, 'Error: {}<br />'
-            'You will need to restart hass after fixing.'
-            ''.format(ex),
-            title=NOTIFICATION_TITLE,
-            notification_id=NOTIFICATION_ID)
-        return False
+    ring = hass.data.get('ring')
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
@@ -98,6 +73,7 @@ class RingSensor(Entity):
         self._data = data
         self._extra = None
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[3])
+        self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
         self._name = "{0} {1}".format(self._data.name,
                                       SENSOR_TYPES.get(self._sensor_type)[0])
         self._state = STATE_UNKNOWN
@@ -125,7 +101,7 @@ class RingSensor(Entity):
         attrs['timezone'] = self._data.timezone
         attrs['type'] = self._data.family
 
-        if self._extra and self._sensor_type == 'last_activity':
+        if self._extra and self._sensor_type.startswith('last_'):
             attrs['created_at'] = self._extra['created_at']
             attrs['answered'] = self._extra['answered']
             attrs['recording_status'] = self._extra['recording']['status']
@@ -145,6 +121,8 @@ class RingSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
+        _LOGGER.debug("Pulling data from %s sensor.", self._name)
+
         self._data.update()
 
         if self._sensor_type == 'volume':
@@ -153,8 +131,11 @@ class RingSensor(Entity):
         if self._sensor_type == 'battery':
             self._state = self._data.battery_life
 
-        if self._sensor_type == 'last_activity':
-            self._extra = self._data.history(limit=1, timezone=self._tz)[0]
-            created_at = self._extra['created_at']
-            self._state = '{0:0>2}:{1:0>2}'.format(created_at.hour,
-                                                   created_at.minute)
+        if self._sensor_type.startswith('last_'):
+            history = self._data.history(timezone=self._tz,
+                                         kind=self._kind)
+            if history:
+                self._extra = history[0]
+                created_at = self._extra['created_at']
+                self._state = '{0:0>2}:{1:0>2}'.format(created_at.hour,
+                                                       created_at.minute)

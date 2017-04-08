@@ -15,7 +15,9 @@ from homeassistant.components.notify import (
     ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL
 
-REQUIREMENTS = ['matrix-client==0.0.5']
+REQUIREMENTS = ['matrix-client==0.0.6']
+
+_LOGGER = logging.getLogger(__name__)
 
 SESSION_FILE = 'matrix.conf'
 AUTH_TOKENS = dict()
@@ -30,8 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_DEFAULT_ROOM): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -49,7 +49,7 @@ def get_service(hass, config, discovery_info=None):
 
 
 class MatrixNotificationService(BaseNotificationService):
-    """Wrapper for the MatrixNotificationClient."""
+    """Wrapper for the Matrix Notification Client."""
 
     def __init__(self, homeserver, default_room, verify_ssl,
                  username, password):
@@ -107,32 +107,23 @@ def send_message(message, homeserver, target_rooms, verify_tls,
                 valid_cert_check=verify_tls
             )
         except MatrixRequestError as ex:
-            _LOGGER.info(
-                'login_by_token: (%d) %s', ex.code, ex.content
-            )
+            _LOGGER.info("login_by_token: (%d) %s", ex.code, ex.content)
 
     def login_by_password():
         """Login using password authentication."""
         try:
             _client = MatrixClient(
-                base_url=homeserver,
-                valid_cert_check=verify_tls
-            )
+                base_url=homeserver, valid_cert_check=verify_tls)
             _client.login_with_password(username, password)
             store_token(mx_id, _client.token)
             return _client
         except MatrixRequestError as ex:
-            _LOGGER.error(
-                'login_by_password: (%d) %s', ex.code, ex.content
-            )
+            _LOGGER.error("login_by_password: (%d) %s", ex.code, ex.content)
 
-    # this is as close as we can get to the mx_id, since there is no
+    # This is as close as we can get to the mx_id, since there is no
     # homeserver discovery protocol we have to fall back to the homeserver url
     # instead of the actual domain it serves.
-    mx_id = "{user}@{homeserver}".format(
-        user=username,
-        homeserver=homeserver
-    )
+    mx_id = "{user}@{homeserver}".format(user=username, homeserver=homeserver)
 
     if mx_id in AUTH_TOKENS:
         client = login_by_token()
@@ -140,14 +131,12 @@ def send_message(message, homeserver, target_rooms, verify_tls,
             client = login_by_password()
             if not client:
                 _LOGGER.error(
-                    'login failed, both token and username/password '
-                    'invalid'
-                )
+                    "Login failed, both token and username/password invalid")
                 return
     else:
         client = login_by_password()
         if not client:
-            _LOGGER.error('login failed, username/password invalid')
+            _LOGGER.error("Login failed, username/password invalid")
             return
 
     rooms = client.get_rooms()
@@ -161,6 +150,6 @@ def send_message(message, homeserver, target_rooms, verify_tls,
             _LOGGER.debug(room.send_text(message))
         except MatrixRequestError as ex:
             _LOGGER.error(
-                'Unable to deliver message to room \'%s\': (%d): %s',
+                "Unable to deliver message to room '%s': (%d): %s",
                 target_room, ex.code, ex.content
             )

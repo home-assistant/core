@@ -14,8 +14,9 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/danieljkemp/onkyo-eiscp/archive/'
-                'python3.zip#onkyo-eiscp==0.9.2']
+REQUIREMENTS = ['https://github.com/miracle2k/onkyo-eiscp/archive/'
+                '066023aec04770518d494c32fb72eea0ec5c1b7c.zip#'
+                'onkyo-eiscp==1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -127,7 +128,7 @@ class OnkyoDevice(MediaPlayerDevice):
                 self._current_source = '_'.join(
                     [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
-        self._volume = int(volume_raw[1], 16) / 80.0
+        self._volume = volume_raw[1] / 80.0
 
     @property
     def name(self):

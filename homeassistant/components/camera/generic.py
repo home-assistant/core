@@ -107,7 +107,6 @@ class GenericCamera(Camera):
                 None, fetch)
         # async
         else:
-            response = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
@@ -117,14 +116,9 @@ class GenericCamera(Camera):
             except asyncio.TimeoutError:
                 _LOGGER.error('Timeout getting camera image')
                 return self._last_image
-            except (aiohttp.errors.ClientError,
-                    aiohttp.errors.DisconnectedError,
-                    aiohttp.errors.HttpProcessingError) as err:
+            except aiohttp.ClientError as err:
                 _LOGGER.error('Error getting new camera image: %s', err)
                 return self._last_image
-            finally:
-                if response is not None:
-                    yield from response.release()
 
         self._last_url = url
         return self._last_image

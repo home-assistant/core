@@ -133,7 +133,11 @@ class GlancesSensor(Entity):
             elif self.type == 'swap_free':
                 return round(value['memswap']['free'] / 1024**3, 1)
             elif self.type == 'processor_load':
-                return value['load']['min15']
+                # Windows systems don't provide load details
+                try:
+                    return value['load']['min15']
+                except KeyError:
+                    return value['cpu']['total']
             elif self.type == 'process_running':
                 return value['processcount']['running']
             elif self.type == 'process_total':

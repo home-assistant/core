@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
@@ -36,13 +35,13 @@ class VeraSwitch(VeraDevice, SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn device on."""
         self.vera_device.switch_on()
-        self._state = STATE_ON
+        self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
         self.vera_device.switch_off()
-        self._state = STATE_OFF
+        self._state = False
         self.schedule_update_ha_state()
 
     @property

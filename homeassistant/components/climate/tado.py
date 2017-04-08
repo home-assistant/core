@@ -1,40 +1,40 @@
-﻿"""tado component to create a climate device for each zone."""
+﻿"""
+Tado component to create a climate device for each zone.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.tado/
+"""
 import logging
 
 from homeassistant.const import TEMP_CELSIUS
-
-from homeassistant.components.climate import (
-    ClimateDevice)
-from homeassistant.const import (
-    ATTR_TEMPERATURE)
-from homeassistant.components.tado import (
-    DATA_TADO)
-
-CONST_MODE_SMART_SCHEDULE = "SMART_SCHEDULE"  # Default mytado mode
-CONST_MODE_OFF = "OFF"  # Switch off heating in a zone
-
-# When we change the temperature setting, we need an overlay mode
-# wait until tado changes the mode automatic
-CONST_OVERLAY_TADO_MODE = "TADO_MODE"
-# the user has change the temperature or mode manually
-CONST_OVERLAY_MANUAL = "MANUAL"
-# the temperature will be reset after a timespan
-CONST_OVERLAY_TIMER = "TIMER"
-
-OPERATION_LIST = {
-    CONST_OVERLAY_MANUAL: "Manual",
-    CONST_OVERLAY_TIMER: "Timer",
-    CONST_OVERLAY_TADO_MODE: "Tado mode",
-    CONST_MODE_SMART_SCHEDULE: "Smart schedule",
-    CONST_MODE_OFF: "Off"}
+from homeassistant.components.climate import ClimateDevice
+from homeassistant.const import ATTR_TEMPERATURE
+from homeassistant.components.tado import DATA_TADO
 
 _LOGGER = logging.getLogger(__name__)
 
+CONST_MODE_SMART_SCHEDULE = 'SMART_SCHEDULE'  # Default mytado mode
+CONST_MODE_OFF = 'OFF'  # Switch off heating in a zone
+
+# When we change the temperature setting, we need an overlay mode
+# wait until tado changes the mode automatic
+CONST_OVERLAY_TADO_MODE = 'TADO_MODE'
+# the user has change the temperature or mode manually
+CONST_OVERLAY_MANUAL = 'MANUAL'
+# the temperature will be reset after a timespan
+CONST_OVERLAY_TIMER = 'TIMER'
+
+OPERATION_LIST = {
+    CONST_OVERLAY_MANUAL: 'Manual',
+    CONST_OVERLAY_TIMER: 'Timer',
+    CONST_OVERLAY_TADO_MODE: 'Tado mode',
+    CONST_MODE_SMART_SCHEDULE: 'Smart schedule',
+    CONST_MODE_OFF: 'Off',
+}
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the climate platform."""
-    # get the PyTado object from the hub component
+    """Set up the Tado climate platform."""
     tado = hass.data[DATA_TADO]
 
     try:
@@ -45,10 +45,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     climate_devices = []
     for zone in zones:
-        climate_devices.append(create_climate_device(tado, hass,
-                                                     zone,
-                                                     zone['name'],
-                                                     zone['id']))
+        climate_devices.append(create_climate_device(
+            tado, hass, zone, zone['name'], zone['id']))
 
     if len(climate_devices) > 0:
         add_devices(climate_devices, True)
@@ -58,13 +56,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def create_climate_device(tado, hass, zone, name, zone_id):
-    """Create a climate device."""
+    """Create a Tado climate device."""
     capabilities = tado.get_capabilities(zone_id)
 
     unit = TEMP_CELSIUS
-    min_temp = float(capabilities["temperatures"]["celsius"]["min"])
-    max_temp = float(capabilities["temperatures"]["celsius"]["max"])
-    ac_mode = capabilities["type"] != "HEATING"
+    min_temp = float(capabilities['temperatures']['celsius']['min'])
+    max_temp = float(capabilities['temperatures']['celsius']['max'])
+    ac_mode = capabilities['type'] != 'HEATING'
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
@@ -74,10 +72,10 @@ def create_climate_device(tado, hass, zone, name, zone_id):
                          ac_mode)
 
     tado.add_sensor(data_id, {
-        "id": zone_id,
-        "zone": zone,
-        "name": name,
-        "climate": device
+        'id': zone_id,
+        'zone': zone,
+        'name': name,
+        'climate': device
     })
 
     return device
@@ -89,7 +87,7 @@ class TadoClimate(ClimateDevice):
     def __init__(self, store, zone_name, zone_id, data_id,
                  min_temp, max_temp, ac_mode,
                  tolerance=0.3):
-        """Initialization of TadoClimate device."""
+        """Initialization of Tado climate device."""
         self._store = store
         self._data_id = data_id
 
@@ -202,8 +200,7 @@ class TadoClimate(ClimateDevice):
         data = self._store.get_data(self._data_id)
 
         if data is None:
-            _LOGGER.debug('Recieved no data for zone %s',
-                          self.zone_name)
+            _LOGGER.debug("Recieved no data for zone %s", self.zone_name)
             return
 
         if 'sensorDataPoints' in data:
@@ -232,11 +229,11 @@ class TadoClimate(ClimateDevice):
 
         if 'tadoMode' in data:
             mode = data['tadoMode']
-            self._is_away = mode == "AWAY"
+            self._is_away = mode == 'AWAY'
 
         if 'setting' in data:
             power = data['setting']['power']
-            if power == "OFF":
+            if power == 'OFF':
                 self._current_operation = CONST_MODE_OFF
                 self._device_is_active = False
             else:
@@ -249,48 +246,47 @@ class TadoClimate(ClimateDevice):
             overlay = False
             termination = ""
 
-        #  if you set mode manualy to off, there will be an overlay
-        #  and a termination, but we want to see the mode "OFF"
+        # If you set mode manualy to off, there will be an overlay
+        # and a termination, but we want to see the mode "OFF"
 
         if overlay and self._device_is_active:
-            #  there is an overlay the device is on
+            # There is an overlay the device is on
             self._overlay_mode = termination
             self._current_operation = termination
         else:
-            #  there is no overlay, the mode will always be
-            #  "SMART_SCHEDULE"
+            # There is no overlay, the mode will always be
+            # "SMART_SCHEDULE"
             self._overlay_mode = CONST_MODE_SMART_SCHEDULE
             self._current_operation = CONST_MODE_SMART_SCHEDULE
 
     def _control_heating(self):
         """Send new target temperature to mytado."""
-        if not self._active and None not in (self._cur_temp,
-                                             self._target_temp):
+        if not self._active and None not in (
+                self._cur_temp, self._target_temp):
             self._active = True
-            _LOGGER.info('Obtained current and target temperature. '
-                         'tado thermostat active.')
+            _LOGGER.info("Obtained current and target temperature. "
+                         "Tado thermostat active")
 
         if not self._active or self._current_operation == self._overlay_mode:
             return
 
         if self._current_operation == CONST_MODE_SMART_SCHEDULE:
-            _LOGGER.info('Switching mytado.com to SCHEDULE (default) '
-                         'for zone %s', self.zone_name)
+            _LOGGER.info("Switching mytado.com to SCHEDULE (default) "
+                         "for zone %s", self.zone_name)
             self._store.reset_zone_overlay(self.zone_id)
             self._overlay_mode = self._current_operation
             return
 
         if self._current_operation == CONST_MODE_OFF:
-            _LOGGER.info('Switching mytado.com to OFF for zone %s',
+            _LOGGER.info("Switching mytado.com to OFF for zone %s",
                          self.zone_name)
             self._store.set_zone_overlay(self.zone_id, CONST_OVERLAY_MANUAL)
             self._overlay_mode = self._current_operation
             return
 
-        _LOGGER.info('Switching mytado.com to %s mode for zone %s',
+        _LOGGER.info("Switching mytado.com to %s mode for zone %s",
                      self._current_operation, self.zone_name)
-        self._store.set_zone_overlay(self.zone_id,
-                                     self._current_operation,
-                                     self._target_temp)
+        self._store.set_zone_overlay(
+            self.zone_id, self._current_operation, self._target_temp)
 
         self._overlay_mode = self._current_operation
