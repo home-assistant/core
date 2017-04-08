@@ -82,26 +82,27 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         if sensor is None:
             # Add the entity if not exists and automatic_add is True
-            if config[ATTR_AUTOMATIC_ADD]:
-                poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
+            if not config[ATTR_AUTOMATIC_ADD]:
+                return 
 
-                if poss_dev is not None:
-                    poss_id = slugify(poss_dev.event.device.id_string.lower())
-                    _LOGGER.info("Found possible matching deviceid %s.",
-                                 poss_id)
+            poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
 
-                pkt_id = "".join("{0:02x}".format(x) for x in event.data)
-                sensor = RfxtrxBinarySensor(event, pkt_id)
-                rfxtrx.RFX_DEVICES[device_id] = sensor
-                add_devices_callback([sensor])
-                _LOGGER.info("Added binary sensor %s "
-                             "(Device_id: %s Class: %s Sub: %s)",
-                             pkt_id,
-                             slugify(event.device.id_string.lower()),
-                             event.device.__class__.__name__,
-                             event.device.subtype)
-            else:
-                return
+            if poss_dev is not None:
+                poss_id = slugify(poss_dev.event.device.id_string.lower())
+                _LOGGER.info("Found possible matching deviceid %s.",
+                             poss_id)
+
+            pkt_id = "".join("{0:02x}".format(x) for x in event.data)
+            sensor = RfxtrxBinarySensor(event, pkt_id)
+            rfxtrx.RFX_DEVICES[device_id] = sensor
+            add_devices_callback([sensor])
+            _LOGGER.info("Added binary sensor %s "
+                         "(Device_id: %s Class: %s Sub: %s)",
+                         pkt_id,
+                         slugify(event.device.id_string.lower()),
+                         event.device.__class__.__name__,
+                         event.device.subtype)
+
         elif not isinstance(sensor, RfxtrxBinarySensor):
             return
         else:
@@ -160,8 +161,6 @@ class RfxtrxBinarySensor(BinarySensorDevice):
             self._masked_id = rfxtrx.get_pt2262_deviceid(
                 event.device.id_string.lower(),
                 data_bits)
-        else:
-            self._masked_id = None
 
     def __str__(self):
         """Return the name of the sensor."""
