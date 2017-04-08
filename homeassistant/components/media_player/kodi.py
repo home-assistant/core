@@ -139,7 +139,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if not method:
             return
 
-        params = {key: value for key, value in service.data.items() 
+        params = {key: value for key, value in service.data.items()
                   if key != 'entity_id'}
 
         yield from getattr(entity, method['method'])(**params)
@@ -659,7 +659,6 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle_on):
         """Set shuffle mode, for the first player."""
-
         if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
