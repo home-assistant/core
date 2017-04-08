@@ -18,6 +18,7 @@ from time import monotonic
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
+from async_timeout import timeout
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -49,6 +50,8 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
+# How long to wait till things that run on startup have to finish.
+TIMEOUT_EVENT_START = 15
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +162,18 @@ class HomeAssistant(object):
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        yield from self.async_stop_track_tasks()
+
+        try:
+            with timeout(TIMEOUT_EVENT_START, loop=self.loop):
+                yield from self.async_stop_track_tasks()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                'Something is blocking Home Assistant from wrapping up the '
+                'start up phase. We\'re going to continue anyway. Please '
+                'report the following info at http://bit.ly/2ogP58T : %s',
+                ', '.join(self.config.components))
+            self._track_task = False
+
         self.state = CoreState.running
         _async_create_timer(self)
 
