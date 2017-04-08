@@ -478,6 +478,7 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
         self.zwave_events = []
+
         def mock_zwave_events(event):
             """Mock event."""
             self.zwave_events.append(event)
