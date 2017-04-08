@@ -116,7 +116,7 @@ class MaryTTSProvider(Provider):
                     return (None, None)
                 data = yield from request.read()
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for MaryTTS API.")
             return (None, None)
 
