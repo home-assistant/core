@@ -170,7 +170,7 @@ class HomeAssistant(object):
             _LOGGER.warning(
                 'Something is blocking Home Assistant from wrapping up the '
                 'start up phase. We\'re going to continue anyway. Please '
-                'report at http://bit.ly/2ogP58T your components: %s',
+                'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
             self._track_task = False
 
