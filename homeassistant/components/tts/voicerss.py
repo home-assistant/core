@@ -123,7 +123,6 @@ class VoiceRSSProvider(Provider):
         form_data['src'] = message
         form_data['hl'] = language
 
-        request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 request = yield from websession.post(
@@ -141,12 +140,8 @@ class VoiceRSSProvider(Provider):
                         "Error receive %s from VoiceRSS", str(data, 'utf-8'))
                     return (None, None)
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for VoiceRSS API")
             return (None, None)
-
-        finally:
-            if request is not None:
-                yield from request.release()
 
         return (self._extension, data)

@@ -13,7 +13,7 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.2.7']
+REQUIREMENTS = ['py-cpuinfo==3.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -53,8 +53,8 @@ LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
     '18': 'Locked with Keypad by user ',
     '19': 'Unlocked with Keypad by user ',
-    '21': 'Manually Locked by ',
-    '22': 'Manually Unlocked by Key or Inside thumb turn',
+    '21': 'Manually Locked ',
+    '22': 'Manually Unlocked ',
     '24': 'Locked by RF',
     '25': 'Unlocked by RF',
     '27': 'Auto re-lock',
@@ -69,8 +69,8 @@ LOCK_ALARM_TYPE = {
 }
 
 MANUAL_LOCK_ALARM_LEVEL = {
-    '1': 'Key Cylinder or Inside thumb turn',
-    '2': 'Touch function (lock and leave)'
+    '1': 'by Key Cylinder or Inside thumb turn',
+    '2': 'by Touch function (lock and leave)'
 }
 
 TAMPER_ALARM_LEVEL = {

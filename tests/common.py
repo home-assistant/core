@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.setup import setup_component, DATA_SETUP
+from homeassistant.setup import setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -23,12 +23,13 @@ import homeassistant.util.yaml as yaml
 from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
-    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import sun, mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async import (
+    run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
@@ -58,15 +59,11 @@ def get_test_home_assistant():
         loop.run_forever()
         stop_event.set()
 
-    orig_start = hass.start
     orig_stop = hass.stop
 
-    @patch.object(hass.loop, 'run_forever')
-    @patch.object(hass.loop, 'close')
     def start_hass(*mocks):
         """Helper to start hass."""
-        orig_start()
-        hass.block_till_done()
+        run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
 
     def stop_hass():
         """Stop hass."""
@@ -101,7 +98,6 @@ def async_test_home_assistant(loop):
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
-    hass.async_track_tasks()
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -123,7 +119,11 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        with patch('homeassistant.core._async_create_timer'):
+        # 1. We only mock time during tests
+        # 2. We want block_till_done that is called inside stop_track_tasks
+        with patch('homeassistant.core._async_create_timer'), \
+                patch.object(hass, 'async_stop_track_tasks',
+                             hass.async_block_till_done):
             yield from orig_start()
 
     hass.async_start = mock_async_start
@@ -134,7 +134,7 @@ def async_test_home_assistant(loop):
         global INST_COUNT
         INST_COUNT -= 1
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, clear_instance)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
     return hass
 
@@ -271,15 +271,10 @@ def mock_mqtt_component(hass):
 
 def mock_component(hass, component):
     """Mock a component is setup."""
-    setup_tasks = hass.data.get(DATA_SETUP)
-    if setup_tasks is None:
-        setup_tasks = hass.data[DATA_SETUP] = {}
-
-    if component not in setup_tasks:
+    if component in hass.config.components:
         AssertionError("Component {} is already setup".format(component))
 
     hass.config.components.add(component)
-    setup_tasks[component] = asyncio.Task(mock_coro(True), loop=hass.loop)
 
 
 class MockModule(object):
@@ -499,4 +494,4 @@ def mock_restore_cache(hass, states):
     assert len(hass.data[DATA_RESTORE_CACHE]) == len(states), \
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
-    hass.config.components.add(recorder.DOMAIN)
+    mock_component(hass, recorder.DOMAIN)

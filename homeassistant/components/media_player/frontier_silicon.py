@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Frontier Silicon platform."""
+    """Set up the Frontier Silicon platform."""
     import requests
 
     if discovery_info is not None:
@@ -59,10 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices(
             [FSAPIDevice(DEVICE_URL.format(host, port), password)],
             update_before_add=True)
-        _LOGGER.debug('FSAPI device %s:%s -> %s', host, port, password)
+        _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
         return True
     except requests.exceptions.RequestException:
-        _LOGGER.error('Could not add the FSAPI device at %s:%s -> %s',
+        _LOGGER.error("Could not add the FSAPI device at %s:%s -> %s",
                       host, port, password)
 
     return False

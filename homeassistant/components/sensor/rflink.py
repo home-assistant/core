@@ -9,9 +9,9 @@ from functools import partial
 import logging
 
 from homeassistant.components.rflink import (
-    CONF_ALIASSES, CONF_DEVICES, DATA_DEVICE_REGISTER, DATA_ENTITY_LOOKUP,
-    DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT, RflinkDevice,
-    cv, vol)
+    CONF_ALIASSES, CONF_AUTOMATIC_ADD, CONF_DEVICES, DATA_DEVICE_REGISTER,
+    DATA_ENTITY_LOOKUP, DOMAIN, EVENT_KEY_ID, EVENT_KEY_SENSOR, EVENT_KEY_UNIT,
+    RflinkDevice, cv, vol)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_PLATFORM,
     CONF_UNIT_OF_MEASUREMENT)
@@ -30,6 +30,7 @@ CONF_SENSOR_TYPE = 'sensor_type'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): DOMAIN,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=True): cv.boolean,
     vol.Optional(CONF_DEVICES, default={}): vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
@@ -88,10 +89,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_SENSOR][device_id].append(device)
 
-        # Make sure the event is processed by the new entity
-        device.handle_event(event)
+        # Schedule task to process event after entity is created
+        hass.async_add_job(device.handle_event, event)
 
-    hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
+    if config[CONF_AUTOMATIC_ADD]:
+        hass.data[DATA_DEVICE_REGISTER][EVENT_KEY_SENSOR] = add_new_device
 
 
 class RflinkSensor(RflinkDevice):
