@@ -136,10 +136,11 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         import spotipy.oauth2
         token_refreshed = False
         need_token = (self._token_info is None or
-            spotipy.oauth2.is_token_expired(self._token_info))
+                      spotipy.oauth2.is_token_expired(self._token_info))
         if need_token:
             new_token = \
-                self._oauth.refresh_access_token(self._token_info)
+                self._oauth.refresh_access_token(
+                    self._token_info['refresh_token'])
             self._token_info = new_token
             token_refreshed = True
         if self._player is None or token_refreshed:
