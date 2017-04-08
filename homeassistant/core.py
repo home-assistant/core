@@ -18,6 +18,7 @@ from time import monotonic
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
+from async_timeout import timeout
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -158,30 +159,20 @@ class HomeAssistant(object):
         _LOGGER.info("Starting Home Assistant")
         self.state = CoreState.starting
 
-        @asyncio.coroutine
-        def slow_start():
-            """Warn when we do a slow start."""
+        # pylint: disable=protected-access
+        self.loop._thread_ident = threading.get_ident()
+        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+        try:
+            with timeout(TIMEOUT_EVENT_START, loop=self.loop):
+                yield from self.async_stop_track_tasks()
+        except asyncio.TimeoutError:
             _LOGGER.warning(
                 'Something is blocking Hass start from finishing, going to '
                 'start anyway. Please report at http://bit.ly/2ogP58T: %s',
                 ', '.join(self.config.components))
-            yield from self.async_stop_track_tasks(False)
-            self.state = CoreState.running
-            _async_create_timer(self)
+            self._track_task = False
 
-        warn_task = self.loop.call_later(
-            TIMEOUT_EVENT_START, self.loop.create_task, slow_start())
-
-        # pylint: disable=protected-access
-        self.loop._thread_ident = threading.get_ident()
-        self.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        yield from self.async_stop_track_tasks()
-
-        # Warn task already did it's work
-        if self.state != CoreState.starting:
-            return
-
-        warn_task.cancel()
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -227,10 +218,9 @@ class HomeAssistant(object):
         self._track_task = True
 
     @asyncio.coroutine
-    def async_stop_track_tasks(self, finish_current=True):
+    def async_stop_track_tasks(self):
         """Track tasks so you can wait for all tasks to be done."""
-        if finish_current:
-            yield from self.async_block_till_done()
+        yield from self.async_block_till_done()
         self._track_task = False
 
     @callback
