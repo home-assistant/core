@@ -56,7 +56,7 @@ class NeatoConnectedSensor(Entity):
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError) as ex:
             self._state = None
-            _LOGGER.debug('Neato connection error: %s', ex)
+            _LOGGER.warning('Neato connection error: %s', ex)
         self._mapdata = hass.data[NEATO_MAP_DATA]
         self.clean_time_start = None
         self.clean_time_stop = None
@@ -78,7 +78,7 @@ class NeatoConnectedSensor(Entity):
                 requests.exceptions.HTTPError) as ex:
             self._state = None
             self._status_state = 'Offline'
-            _LOGGER.debug('Neato connection error: %s', ex)
+            _LOGGER.warning('Neato connection error: %s', ex)
             return
         if not self._state:
             return
