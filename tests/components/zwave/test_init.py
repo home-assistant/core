@@ -202,6 +202,63 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
+    def test_node_schema_mismatch(self, discovery, get_platform):
+        """Test node schema mismatch."""
+        self.node.generic = 'no_match'
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.mock_schema[const.DISC_GENERIC_DEVICE_CLASS] = ['generic_match']
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_workaround_component(self, discovery, get_platform):
+        """Test ignore workaround."""
+        self.node.manufacturer_id = '010f'
+        self.node.product_type = '0b00'
+        self.primary.command_class = const.COMMAND_CLASS_SENSOR_ALARM
+        self.entity_id = '{}.{}'.format('binary_sensor',
+                                        zwave.object_id(self.primary))
+        self.device_config = {self.entity_id: {}}
+
+        self.mock_schema = {
+            const.DISC_COMPONENT: 'mock_component',
+            const.DISC_VALUES: {
+                const.DISC_PRIMARY: {
+                    const.DISC_COMMAND_CLASS: [
+                        const.COMMAND_CLASS_SWITCH_BINARY],
+                }}}
+
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+        )
+        values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert discovery.async_load_platform.called
+        # Second call is to async yield from
+        assert len(discovery.async_load_platform.mock_calls) == 2
+        args = discovery.async_load_platform.mock_calls[0][1]
+        assert args[1] == 'binary_sensor'
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
     def test_entity_workaround_ignore(self, discovery, get_platform):
         """Test ignore workaround."""
         self.node.manufacturer_id = '010f'
