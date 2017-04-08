@@ -252,6 +252,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Ensuring soco methods called for sonos_group_players service."""
         sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
 
         device_master = mock.MagicMock()
         device_master.entity_id = "media_player.test"
@@ -269,6 +270,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Ensuring soco methods called for sonos_unjoin service."""
         sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+
         unjoinMock.return_value = True
         device.unjoin()
         self.assertEqual(unjoinMock.call_count, 1)
@@ -281,6 +284,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Ensuring soco methods called for sonos_set_sleep_timer service."""
         sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+
         device.set_sleep_timer(30)
         set_sleep_timerMock.assert_called_once_with(30)
 
@@ -291,6 +296,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Ensuring soco methods called for sonos_clear_sleep_timer service."""
         sonos.setup_platform(self.hass, {}, mock.MagicMock(), '192.0.2.1')
         device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+
         device.set_sleep_timer(None)
         set_sleep_timerMock.assert_called_once_with(None)
 
@@ -301,6 +308,8 @@ class TestSonosMediaPlayer(unittest.TestCase):
         """Ensuring soco methods called for sonos_snapshot service."""
         sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+
         snapshotMock.return_value = True
         device.snapshot()
         self.assertEqual(snapshotMock.call_count, 1)
@@ -311,11 +320,16 @@ class TestSonosMediaPlayer(unittest.TestCase):
     @mock.patch.object(soco.snapshot.Snapshot, 'restore')
     def test_sonos_restore(self, restoreMock, *args):
         """Ensuring soco methods called for sonos_restor service."""
+        from soco.snapshot import Snapshot
+
         sonos.setup_platform(self.hass, {}, fake_add_device, '192.0.2.1')
         device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+
         restoreMock.return_value = True
         device._snapshot_coordinator = mock.MagicMock()
         device._snapshot_coordinator.soco_device = SoCoMock('192.0.2.17')
+        device._soco_snapshot = Snapshot(device._player)
         device.restore()
         self.assertEqual(restoreMock.call_count, 1)
         self.assertEqual(restoreMock.call_args, mock.call(False))

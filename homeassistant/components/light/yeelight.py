@@ -44,12 +44,13 @@ DEVICE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
 
-SUPPORT_YEELIGHT_RGB = (SUPPORT_RGB_COLOR |
-                        SUPPORT_COLOR_TEMP)
-
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
                     SUPPORT_FLASH)
+
+SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
+                        SUPPORT_RGB_COLOR |
+                        SUPPORT_COLOR_TEMP)
 
 
 def _cmd(func):
@@ -179,9 +180,6 @@ class YeelightLight(Light):
                 self._bulb_device = yeelight.Bulb(self._ipaddr)
                 self._bulb_device.get_properties()  # force init for type
 
-                btype = self._bulb_device.bulb_type
-                if btype == yeelight.BulbType.Color:
-                    self._supported_features |= SUPPORT_YEELIGHT_RGB
                 self._available = True
             except yeelight.BulbException as ex:
                 self._available = False
@@ -202,6 +200,9 @@ class YeelightLight(Light):
         import yeelight
         try:
             self._bulb.get_properties()
+
+            if self._bulb_device.bulb_type == yeelight.BulbType.Color:
+                self._supported_features = SUPPORT_YEELIGHT_RGB
 
             self._is_on = self._properties.get("power") == "on"
 
@@ -254,7 +255,8 @@ class YeelightLight(Light):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            from yeelight import RGBTransition, SleepTransition, Flow
+            from yeelight import (RGBTransition, SleepTransition, Flow,
+                                  BulbException)
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
@@ -279,10 +281,14 @@ class YeelightLight(Light):
                               duration=duration))
 
             flow = Flow(count=count, transitions=transitions)
-            self._bulb.start_flow(flow)
+            try:
+                self._bulb.start_flow(flow)
+            except BulbException as ex:
+                _LOGGER.error("Unable to set flash: %s", ex)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
+        import yeelight
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
@@ -292,22 +298,43 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self._bulb.turn_on(duration=duration)
+        try:
+            self._bulb.turn_on(duration=duration)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb on: %s", ex)
+            return
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
-            self.set_music_mode(self.config[CONF_MODE_MUSIC])
+            try:
+                self.set_music_mode(self.config[CONF_MODE_MUSIC])
+            except yeelight.BulbException as ex:
+                _LOGGER.error("Unable to turn on music mode,"
+                              "consider disabling it: %s", ex)
 
-        # values checked for none in methods
-        self.set_rgb(rgb, duration)
-        self.set_colortemp(colortemp, duration)
-        self.set_brightness(brightness, duration)
-        self.set_flash(flash)
+        try:
+            # values checked for none in methods
+            self.set_rgb(rgb, duration)
+            self.set_colortemp(colortemp, duration)
+            self.set_brightness(brightness, duration)
+            self.set_flash(flash)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set bulb properties: %s", ex)
+            return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE]:
-            if brightness or colortemp or rgb:
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
+                                                 or colortemp
+                                                 or rgb):
+            try:
                 self.set_default()
+            except yeelight.BulbException as ex:
+                _LOGGER.error("Unable to set the defaults: %s", ex)
+                return
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
-        self._bulb.turn_off()
+        import yeelight
+        try:
+            self._bulb.turn_off()
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb off: %s", ex)

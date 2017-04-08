@@ -19,7 +19,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Lutron  Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    light_devices = bridge.get_devices_by_type("WallDimmer")
+    light_devices = bridge.get_devices_by_types(["WallDimmer", "PlugInDimmer"])
     for light_device in light_devices:
         dev = LutronCasetaLight(light_device, bridge)
         devs.append(dev)

@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_SSL, EVENT_HOMEASSISTANT_STOP, EVENT_HOMEASSISTANT_START,
     ATTR_LAST_TRIP_TIME, CONF_CUSTOMIZE)
 
-REQUIREMENTS = ['pyhik==0.1.0']
+REQUIREMENTS = ['pyhik==0.1.2']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IGNORED = 'ignored'
@@ -33,7 +33,6 @@ ATTR_DELAY = 'delay'
 DEVICE_CLASS_MAP = {
     'Motion': 'motion',
     'Line Crossing': 'motion',
-    'IO Trigger': None,
     'Field Detection': 'motion',
     'Video Loss': None,
     'Tamper Detection': 'motion',
@@ -47,6 +46,7 @@ DEVICE_CLASS_MAP = {
     'Bad Video': None,
     'PIR Alarm': 'motion',
     'Face Detection': 'motion',
+    'Scene Change Detection': 'motion',
 }
 
 CUSTOMIZE_SCHEMA = vol.Schema({
@@ -91,24 +91,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
 
-    for sensor in data.sensors:
-        # Build sensor name, then parse customize config.
-        sensor_name = sensor.replace(' ', '_')
+    for sensor, channel_list in data.sensors.items():
+        for channel in channel_list:
+            # Build sensor name, then parse customize config.
+            if data.type == 'NVR':
+                sensor_name = '{}_{}'.format(
+                    sensor.replace(' ', '_'), channel[1])
+            else:
+                sensor_name = sensor.replace(' ', '_')
 
-        custom = customize.get(sensor_name.lower(), {})
-        ignore = custom.get(CONF_IGNORED)
-        delay = custom.get(CONF_DELAY)
+            custom = customize.get(sensor_name.lower(), {})
+            ignore = custom.get(CONF_IGNORED)
+            delay = custom.get(CONF_DELAY)
 
-        _LOGGER.debug('Entity: %s - %s, Options - Ignore: %s, Delay: %s',
-                      data.name, sensor_name, ignore, delay)
-        if not ignore:
-            entities.append(HikvisionBinarySensor(hass, sensor, data, delay))
+            _LOGGER.debug('Entity: %s - %s, Options - Ignore: %s, Delay: %s',
+                          data.name, sensor_name, ignore, delay)
+            if not ignore:
+                entities.append(HikvisionBinarySensor(
+                    hass, sensor, channel[1], data, delay))
 
     add_entities(entities)
 
 
 class HikvisionData(object):
-    """Hikvision camera event stream object."""
+    """Hikvision device event stream object."""
 
     def __init__(self, hass, url, port, name, username, password):
         """Initialize the data oject."""
@@ -144,25 +150,40 @@ class HikvisionData(object):
 
     @property
     def cam_id(self):
-        """Return camera id."""
+        """Return device id."""
         return self.camdata.get_id
 
     @property
     def name(self):
-        """Return camera name."""
+        """Return device name."""
         return self._name
+
+    @property
+    def type(self):
+        """Return device type."""
+        return self.camdata.get_type
+
+    def get_attributes(self, sensor, channel):
+        """Return attribute list for sensor/channel."""
+        return self.camdata.fetch_attributes(sensor, channel)
 
 
 class HikvisionBinarySensor(BinarySensorDevice):
     """Representation of a Hikvision binary sensor."""
 
-    def __init__(self, hass, sensor, cam, delay):
+    def __init__(self, hass, sensor, channel, cam, delay):
         """Initialize the binary_sensor."""
         self._hass = hass
         self._cam = cam
-        self._name = self._cam.name + ' ' + sensor
-        self._id = self._cam.cam_id + '.' + sensor
         self._sensor = sensor
+        self._channel = channel
+
+        if self._cam.type == 'NVR':
+            self._name = '{} {} {}'.format(self._cam.name, sensor, channel)
+        else:
+            self._name = '{} {}'.format(self._cam.name, sensor)
+
+        self._id = '{}.{}.{}'.format(self._cam.cam_id, sensor, channel)
 
         if delay is None:
             self._delay = 0
@@ -176,11 +197,11 @@ class HikvisionBinarySensor(BinarySensorDevice):
 
     def _sensor_state(self):
         """Extract sensor state."""
-        return self._cam.sensors[self._sensor][0]
+        return self._cam.get_attributes(self._sensor, self._channel)[0]
 
     def _sensor_last_update(self):
         """Extract sensor last update time."""
-        return self._cam.sensors[self._sensor][3]
+        return self._cam.get_attributes(self._sensor, self._channel)[3]
 
     @property
     def name(self):

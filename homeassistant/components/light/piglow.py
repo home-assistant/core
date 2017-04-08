@@ -9,15 +9,12 @@ import subprocess
 
 import voluptuous as vol
 
-# Import the device class from the component that you want to support
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS,
-    ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
     Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
 
-# Home Assistant depends on 3rd party packages for API specific code.
 REQUIREMENTS = ['piglow==1.2.4']
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Piglow Light platform."""
+    """Set up the Piglow Light platform."""
     import piglow
 
     if subprocess.getoutput("i2cdetect  -q -y 1 | grep -o 54") != '54':
@@ -41,7 +38,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
 
-    # Add devices
     add_devices([PiglowLight(piglow, name)])
 
 

@@ -107,7 +107,7 @@ class TestRestCommandComponent(object):
         with assert_setup_component(4):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(self.url, exc=aiohttp.errors.ClientError())
+        aioclient_mock.get(self.url, exc=aiohttp.ClientError())
 
         self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
