@@ -120,14 +120,17 @@ def test_roller_commands(mock_network, mock_openzwave):
 @patch('homeassistant.components.zwave.NETWORK')
 def test_roller_reverse_open_close(mock_network, mock_openzwave):
     """Test position changed."""
-    node = MockNode(manufacturer_id='010f', product_type='0301')
+    node = MockNode()
     value = MockValue(data=50, node=node,
                       command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
     open_value = MockValue(data=False, node=node)
     close_value = MockValue(data=False, node=node)
     values = MockEntityValues(primary=value, open=open_value,
                               close=close_value, node=node)
-    device = zwave.get_device(node=node, values=values, node_config={})
+    device = zwave.get_device(
+        node=node,
+        values=values,
+        node_config={zwave.zwave.CONF_INVERT_OPENCLOSE_BUTTONS: True})
 
     device.open_cover()
     assert mock_network.manager.pressButton.called

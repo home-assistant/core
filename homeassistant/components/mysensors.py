@@ -46,7 +46,7 @@ MYSENSORS_GATEWAYS = 'mysensors_gateways'
 MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    '0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8']
+    'ff3476b70edc9c995b939cddb9d51f8d2d018581.zip#pymysensors==0.9.0']
 
 
 def is_socket_address(value):
@@ -104,8 +104,22 @@ def is_serial_port(value):
         return cv.isdevice(value)
 
 
+def deprecated(key):
+    """Mark key as deprecated in config."""
+    def validator(config):
+        """Check if key is in config, log warning and remove key."""
+        if key not in config:
+            return config
+        _LOGGER.warning(
+            '%s option for %s is deprecated. Please remove %s from your '
+            'configuration file.', key, DOMAIN, key)
+        config.pop(key)
+        return config
+    return validator
+
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.Schema(vol.All(deprecated(CONF_DEBUG), {
         vol.Required(CONF_GATEWAYS): vol.All(
             cv.ensure_list, has_all_unique_files,
             [{
@@ -125,12 +139,11 @@ CONFIG_SCHEMA = vol.Schema({
                     CONF_TOPIC_OUT_PREFIX, default=''): valid_publish_topic,
             }]
         ),
-        vol.Optional(CONF_DEBUG, default=False): cv.boolean,
         vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
         vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
         vol.Optional(CONF_RETAIN, default=True): cv.boolean,
         vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.Coerce(float),
-    })
+    }))
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -182,7 +195,6 @@ def setup(hass, config):
                     # invalid ip address
                     return
         gateway.metric = hass.config.units.is_metric
-        gateway.debug = config[DOMAIN].get(CONF_DEBUG)
         optimistic = config[DOMAIN].get(CONF_OPTIMISTIC)
         gateway = GatewayWrapper(gateway, optimistic, device)
         # pylint: disable=attribute-defined-outside-init
@@ -192,7 +204,14 @@ def setup(hass, config):
             """Callback to trigger start of gateway and any persistence."""
             if persistence:
                 for node_id in gateway.sensors:
-                    gateway.event_callback('persistence', node_id)
+                    node = gateway.sensors[node_id]
+                    for child_id in node.children:
+                        child = node.children[child_id]
+                        for value_type in child.values:
+                            msg = mysensors.Message().modify(
+                                node_id=node_id, child_id=child_id, type=1,
+                                sub_type=value_type)
+                            gateway.event_callback(msg)
             gateway.start()
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                  lambda event: gateway.stop())
@@ -249,40 +268,38 @@ def setup(hass, config):
 
 def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
     """Return a new callback for the platform."""
-    def mysensors_callback(gateway, node_id):
+    def mysensors_callback(gateway, msg):
         """Callback for mysensors platform."""
-        if gateway.sensors[node_id].sketch_name is None:
-            _LOGGER.info('No sketch_name: node %s', node_id)
+        if gateway.sensors[msg.node_id].sketch_name is None:
+            _LOGGER.debug('No sketch_name: node %s', msg.node_id)
             return
-
-        new_devices = []
-        for child in gateway.sensors[node_id].children.values():
-            for value_type in child.values.keys():
-                key = node_id, child.id, value_type
-                if child.type not in map_sv_types or \
-                        value_type not in map_sv_types[child.type]:
-                    continue
-                if key in devices:
-                    if add_devices:
-                        devices[key].schedule_update_ha_state(True)
-                    else:
-                        devices[key].update()
-                    continue
-                name = '{} {} {}'.format(
-                    gateway.sensors[node_id].sketch_name, node_id, child.id)
-                if isinstance(entity_class, dict):
-                    device_class = entity_class[child.type]
-                else:
-                    device_class = entity_class
-                devices[key] = device_class(
-                    gateway, node_id, child.id, name, value_type, child.type)
-                if add_devices:
-                    new_devices.append(devices[key])
-                else:
-                    devices[key].update()
-        if add_devices and new_devices:
-            _LOGGER.info('Adding new devices: %s', new_devices)
-            add_devices(new_devices, True)
+        child = gateway.sensors[msg.node_id].children.get(msg.child_id)
+        if child is None or child.values.get(msg.sub_type) is None:
+            return
+        key = msg.node_id, child.id, msg.sub_type
+        if child.type not in map_sv_types or \
+                msg.sub_type not in map_sv_types[child.type]:
+            return
+        if key in devices:
+            if add_devices:
+                devices[key].schedule_update_ha_state(True)
+            else:
+                devices[key].update()
+            return
+        name = '{} {} {}'.format(
+            gateway.sensors[msg.node_id].sketch_name, msg.node_id,
+            child.id)
+        if isinstance(entity_class, dict):
+            device_class = entity_class[child.type]
+        else:
+            device_class = entity_class
+        devices[key] = device_class(
+            gateway, msg.node_id, child.id, name, msg.sub_type)
+        if add_devices:
+            _LOGGER.info('Adding new devices: %s', [devices[key]])
+            add_devices([devices[key]], True)
+        else:
+            devices[key].update()
     return mysensors_callback
 
 
@@ -330,11 +347,13 @@ class GatewayWrapper(object):
 
     def callback_factory(self):
         """Return a new callback function."""
-        def node_update(update_type, node_id):
+        def node_update(msg):
             """Callback for node updates from the MySensors gateway."""
-            _LOGGER.debug('Update %s: node %s', update_type, node_id)
+            _LOGGER.debug(
+                'Update: node %s, child %s sub_type %s',
+                msg.node_id, msg.child_id, msg.sub_type)
             for callback in self.platform_callbacks:
-                callback(self, node_id)
+                callback(self, msg)
 
         return node_update
 
@@ -342,36 +361,15 @@ class GatewayWrapper(object):
 class MySensorsDeviceEntity(object):
     """Represent a MySensors entity."""
 
-    def __init__(
-            self, gateway, node_id, child_id, name, value_type, child_type):
-        """
-        Setup class attributes on instantiation.
-
-        Args:
-        gateway (GatewayWrapper): Gateway object.
-        node_id (str): Id of node.
-        child_id (str): Id of child.
-        name (str): Entity name.
-        value_type (str): Value type of child. Value is entity state.
-        child_type (str): Child type of child.
-
-        Attributes:
-        gateway (GatewayWrapper): Gateway object.
-        node_id (str): Id of node.
-        child_id (str): Id of child.
-        _name (str): Entity name.
-        value_type (str): Value type of child. Value is entity state.
-        child_type (str): Child type of child.
-        battery_level (int): Node battery level.
-        _values (dict): Child values. Non state values set as state attributes.
-        mysensors (module): Mysensors main component module.
-        """
+    def __init__(self, gateway, node_id, child_id, name, value_type):
+        """Set up MySensors device."""
         self.gateway = gateway
         self.node_id = node_id
         self.child_id = child_id
         self._name = name
         self.value_type = value_type
-        self.child_type = child_type
+        child = gateway.sensors[node_id].children[child_id]
+        self.child_type = child.type
         self._values = {}
 
     @property

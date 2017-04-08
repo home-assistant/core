@@ -115,7 +115,7 @@ def test_lock_alarm_type(mock_openzwave):
     values.alarm_type.data = 21
     value_changed(values.alarm_type)
     assert device.device_state_attributes[zwave.ATTR_LOCK_STATUS] == \
-        'Manually Locked by None'
+        'Manually Locked None'
 
     values.alarm_type.data = 18
     value_changed(values.alarm_type)

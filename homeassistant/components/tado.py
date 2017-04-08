@@ -1,30 +1,30 @@
 """
-Support for the (unofficial) tado api.
+Support for the (unofficial) Tado api.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/tado/
 """
-
 import logging
 import urllib
-
 from datetime import timedelta
+
 import voluptuous as vol
 
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers import config_validation as cv
-from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
-
-
-_LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'tado'
 
 REQUIREMENTS = ['https://github.com/wmalgadey/PyTado/archive/'
                 '0.1.10.zip#'
                 'PyTado==0.1.10']
+
+_LOGGER = logging.getLogger(__name__)
+
+DATA_TADO = 'tado_data'
+DOMAIN = 'tado'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 TADO_COMPONENTS = [
     'sensor', 'climate'
@@ -37,13 +37,9 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
-
-DATA_TADO = 'tado_data'
-
 
 def setup(hass, config):
-    """Your controller/hub specific code."""
+    """Set up of the Tado component."""
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
 
@@ -64,7 +60,7 @@ def setup(hass, config):
 
 
 class TadoDataStore:
-    """An object to store the tado data."""
+    """An object to store the Tado data."""
 
     def __init__(self, tado):
         """Initialize Tado data store."""
@@ -80,19 +76,19 @@ class TadoDataStore:
             data = None
 
             try:
-                if "zone" in sensor:
-                    _LOGGER.info("querying mytado.com for zone %s %s",
-                                 sensor["id"], sensor["name"])
-                    data = self.tado.getState(sensor["id"])
+                if 'zone' in sensor:
+                    _LOGGER.info("Querying mytado.com for zone %s %s",
+                                 sensor['id'], sensor['name'])
+                    data = self.tado.getState(sensor['id'])
 
-                if "device" in sensor:
-                    _LOGGER.info("querying mytado.com for device %s %s",
-                                 sensor["id"], sensor["name"])
+                if 'device' in sensor:
+                    _LOGGER.info("Querying mytado.com for device %s %s",
+                                 sensor['id'], sensor['name'])
                     data = self.tado.getDevices()[0]
 
             except RuntimeError:
                 _LOGGER.error("Unable to connect to myTado. %s %s",
-                              sensor["id"], sensor["id"])
+                              sensor['id'], sensor['id'])
 
             self.data[data_id] = data
 
@@ -103,7 +99,7 @@ class TadoDataStore:
 
     def get_data(self, data_id):
         """Get the cached data."""
-        data = {"error": "no data"}
+        data = {'error': 'no data'}
 
         if data_id in self.data:
             data = self.data[data_id]
@@ -126,6 +122,6 @@ class TadoDataStore:
         """Wrapper for resetZoneOverlay(..)."""
         return self.tado.resetZoneOverlay(zone_id)
 
-    def set_zone_overlay(self, zone_id, mode, temperature):
+    def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
         """Wrapper for setZoneOverlay(..)."""
-        return self.tado.setZoneOverlay(zone_id, mode, temperature)
+        return self.tado.setZoneOverlay(zone_id, mode, temperature, duration)
