@@ -3,6 +3,7 @@
 import os
 import unittest
 import unittest.mock as mock
+from collections import OrderedDict
 
 import pytest
 from voluptuous import MultipleInvalid
@@ -204,6 +205,12 @@ class TestConfig(unittest.TestCase):
                 },
             },
         })
+
+    def test_customize_glob_is_ordered(self):
+        """Test that customize_glob preserves order."""
+        conf = config_util.CORE_CONFIG_SCHEMA(
+            {'customize_glob': OrderedDict()})
+        self.assertIsInstance(conf['customize_glob'], OrderedDict)
 
     def _compute_state(self, config):
         run_coroutine_threadsafe(

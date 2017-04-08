@@ -68,7 +68,7 @@ DATA_ZWAVE_DICT = 'zwave_devices'
 NETWORK = None
 
 RENAME_NODE_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_NAME): cv.string,
 })
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
@@ -124,7 +124,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
-            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
+            cv.ordered_dict(DEVICE_CONFIG_SCHEMA_ENTRY, cv.string),
         vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
@@ -185,8 +185,8 @@ def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
-            # 112 == config command class
-            if value.command_class == 112 and value.index == value_index:
+            if (value.command_class == const.COMMAND_CLASS_CONFIGURATION
+                    and value.index == value_index):
                 return value.data
     except RuntimeError:
         # If we get an runtime error the dict has changed while
@@ -384,7 +384,7 @@ def setup(hass, config):
         _LOGGER.info("Zwave test_network have been initialized.")
         NETWORK.test()
 
-    def stop_zwave(_service_or_event):
+    def stop_network(_service_or_event):
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
@@ -393,8 +393,7 @@ def setup(hass, config):
 
     def rename_node(service):
         """Rename a node."""
-        state = hass.states.get(service.data.get(ATTR_ENTITY_ID))
-        node_id = state.attributes.get(const.ATTR_NODE_ID)
+        node_id = service.data.get(const.ATTR_NODE_ID)
         node = NETWORK.nodes[node_id]
         name = service.data.get(const.ATTR_NAME)
         node.name = name
@@ -533,7 +532,7 @@ def setup(hass, config):
         poll_interval = NETWORK.get_poll_interval()
         _LOGGER.info("zwave polling interval set to %d ms", poll_interval)
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_zwave)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_network)
 
         # Register node services for Z-Wave network
         hass.services.register(DOMAIN, const.SERVICE_ADD_NODE, add_node,
@@ -554,7 +553,8 @@ def setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_TEST_NETWORK,
                                test_network,
                                descriptions[const.SERVICE_TEST_NETWORK])
-        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK, stop_zwave,
+        hass.services.register(DOMAIN, const.SERVICE_STOP_NETWORK,
+                               stop_network,
                                descriptions[const.SERVICE_STOP_NETWORK])
         hass.services.register(DOMAIN, const.SERVICE_START_NETWORK,
                                start_zwave,
@@ -733,7 +733,7 @@ class ZWaveDeviceEntityValues():
         device = platform.get_device(
             node=self._node, values=self,
             node_config=node_config, hass=self._hass)
-        if not device:
+        if device is None:
             # No entity will be created for this value
             self._workaround_ignore = True
             return
@@ -841,4 +841,5 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
     def refresh_from_network(self):
         """Refresh all dependent values from zwave network."""
         for value in self.values:
-            self.node.refresh_value(value.value_id)
+            if value is not None:
+                self.node.refresh_value(value.value_id)
