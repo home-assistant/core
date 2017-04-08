@@ -201,7 +201,7 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 
 @asyncio.coroutine
-def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS
+def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                     encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     @callback
