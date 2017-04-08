@@ -212,7 +212,7 @@ googlemaps==2.4.6
 gps3==0.33.3
 
 # homeassistant.components.media_player.gstreamer
-gstreamer-player==1.0.0
+gstreamer-player==1.1.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.5
