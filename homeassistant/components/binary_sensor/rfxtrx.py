@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         if sensor is None:
             # Add the entity if not exists and automatic_add is True
             if not config[ATTR_AUTOMATIC_ADD]:
-                return 
+                return
 
             poss_dev = rfxtrx.find_possible_pt2262_device(device_id)
 
