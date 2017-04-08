@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_stream)
+    async_get_clientsession, async_aiohttp_proxy_web)
 
-REQUIREMENTS = ['amcrest==1.1.4']
+REQUIREMENTS = ['amcrest==1.1.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -125,7 +125,7 @@ class AmcrestCam(Camera):
         stream_coro = websession.get(
             streaming_url, auth=self._token, timeout=TIMEOUT)
 
-        yield from async_aiohttp_proxy_stream(self.hass, request, stream_coro)
+        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):

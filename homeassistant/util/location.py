@@ -76,7 +76,7 @@ def elevation(latitude, longitude):
 
     try:
         return int(float(req.json()['results'][0]['elevation']))
-    except (ValueError, KeyError):
+    except (ValueError, KeyError, IndexError):
         return 0
 
 

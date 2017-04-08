@@ -10,18 +10,19 @@ from homeassistant.components.blink import DOMAIN
 from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['blink']
+
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
     'battery': ['Battery', ''],
     'notifications': ['Notifications', '']
 }
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a Blink sensor."""
+    """Set up a Blink sensor."""
     if discovery_info is None:
         return
 

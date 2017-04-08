@@ -45,11 +45,10 @@ def _cv_input_slider(cfg):
     if minimum >= maximum:
         raise vol.Invalid('Maximum ({}) is not greater than minimum ({})'
                           .format(minimum, maximum))
-    state = cfg.get(CONF_INITIAL, minimum)
-    if state < minimum or state > maximum:
+    state = cfg.get(CONF_INITIAL)
+    if state is not None and (state < minimum or state > maximum):
         raise vol.Invalid('Initial value {} not in range {}-{}'
                           .format(state, minimum, maximum))
-    cfg[CONF_INITIAL] = state
     return cfg
 
 
@@ -88,12 +87,12 @@ def async_setup(hass, config):
         name = cfg.get(CONF_NAME)
         minimum = cfg.get(CONF_MIN)
         maximum = cfg.get(CONF_MAX)
-        state = cfg.get(CONF_INITIAL, minimum)
+        initial = cfg.get(CONF_INITIAL)
         step = cfg.get(CONF_STEP)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
 
-        entities.append(InputSlider(object_id, name, state, minimum, maximum,
+        entities.append(InputSlider(object_id, name, initial, minimum, maximum,
                                     step, icon, unit))
 
     if not entities:
@@ -120,12 +119,12 @@ def async_setup(hass, config):
 class InputSlider(Entity):
     """Represent an slider."""
 
-    def __init__(self, object_id, name, state, minimum, maximum, step, icon,
+    def __init__(self, object_id, name, initial, minimum, maximum, step, icon,
                  unit):
         """Initialize a select input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
-        self._current_value = state
+        self._current_value = initial
         self._minimum = minimum
         self._maximum = maximum
         self._step = step
@@ -169,14 +168,17 @@ class InputSlider(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Called when entity about to be added to hass."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if not state:
+        if self._current_value is not None:
             return
 
-        num_value = float(state.state)
-        if num_value < self._minimum or num_value > self._maximum:
-            return
-        self._current_value = num_value
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        value = state and float(state.state)
+
+        # Check against False because value can be 0
+        if value is not False and self._minimum < value < self._maximum:
+            self._current_value = value
+        else:
+            self._current_value = self._minimum
 
     @asyncio.coroutine
     def async_select_value(self, value):

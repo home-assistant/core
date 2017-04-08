@@ -35,7 +35,7 @@ from .util import session_scope
 
 DOMAIN = 'recorder'
 
-REQUIREMENTS = ['sqlalchemy==1.1.6']
+REQUIREMENTS = ['sqlalchemy==1.1.9']
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
@@ -166,6 +166,7 @@ class Recorder(threading.Thread):
                 migration.migrate_schema(self)
                 self._setup_run()
                 connected = True
+                _LOGGER.debug("Connected to recorder database")
             except Exception as err:  # pylint: disable=broad-except
                 _LOGGER.error("Error during connection setup: %s (retrying "
                               "in %s seconds)", err, CONNECT_RETRY_WAIT)

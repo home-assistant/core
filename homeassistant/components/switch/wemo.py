@@ -61,16 +61,14 @@ class WemoSwitch(SwitchDevice):
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
-    def _update_callback(self, _device, _params):
+    def _update_callback(self, _device, _type, _params):
         """Called by the Wemo device callback to update state."""
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
-        if self._model_name == 'CoffeeMaker':
-            self.wemo.subscription_callback(_params)
-            self._update(force_update=False)
-        else:
-            self.update()
+        updated = self.wemo.subscription_update(_type, _params)
+        self._update(force_update=(not updated))
+
         if not hasattr(self, 'hass'):
             return
         self.schedule_update_ha_state()
@@ -150,7 +148,8 @@ class WemoSwitch(SwitchDevice):
     def today_energy_kwh(self):
         """Today total energy usage in kWh."""
         if self.insight_params:
-            return convert(self.insight_params['todaymw'], float, 0.0) / 1000.0
+            miliwatts = convert(self.insight_params['todaymw'], float, 0.0)
+            return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
 
     @property
     def detail_state(self):
@@ -219,5 +218,6 @@ class WemoSwitch(SwitchDevice):
                 self.maker_params = self.wemo.maker_params
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
-        except AttributeError:
-            _LOGGER.warning('Could not update status for %s', self.name)
+        except AttributeError as err:
+            _LOGGER.warning('Could not update status for %s (%s)',
+                            self.name, err)

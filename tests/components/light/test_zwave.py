@@ -4,7 +4,9 @@ from unittest.mock import patch, MagicMock
 import homeassistant.components.zwave
 from homeassistant.components.zwave import const
 from homeassistant.components.light import (
-    zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR)
+    zwave, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_RGB_COLOR,
+    SUPPORT_COLOR_TEMP)
 
 from tests.mock.zwave import (
     MockNode, MockValue, MockEntityValues, value_changed)
@@ -15,6 +17,7 @@ class MockLightValues(MockEntityValues):
 
     def __init__(self, **kwargs):
         """Initialize the mock zwave values."""
+        self.dimming_duration = None
         self.color = None
         self.color_channels = None
         super().__init__(**kwargs)
@@ -28,7 +31,7 @@ def test_get_device_detects_dimmer(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveDimmer)
-    assert device.supported_features == zwave.SUPPORT_ZWAVE_DIMMER
+    assert device.supported_features == SUPPORT_BRIGHTNESS
 
 
 def test_get_device_detects_colorlight(mock_openzwave):
@@ -39,7 +42,7 @@ def test_get_device_detects_colorlight(mock_openzwave):
 
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
-    assert device.supported_features == zwave.SUPPORT_ZWAVE_COLOR
+    assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
 
 def test_get_device_detects_zw098(mock_openzwave):
@@ -50,7 +53,8 @@ def test_get_device_detects_zw098(mock_openzwave):
     values = MockLightValues(primary=value)
     device = zwave.get_device(node=node, values=values, node_config={})
     assert isinstance(device, zwave.ZwaveColorLight)
-    assert device.supported_features == zwave.SUPPORT_ZWAVE_COLORTEMP
+    assert device.supported_features == (
+        SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR | SUPPORT_COLOR_TEMP)
 
 
 def test_dimmer_turn_on(mock_openzwave):
@@ -76,6 +80,57 @@ def test_dimmer_turn_on(mock_openzwave):
 
     assert value_id == value.value_id
     assert brightness == 46  # int(120 / 255 * 99)
+
+    with patch.object(zwave, '_LOGGER', MagicMock()) as mock_logger:
+        device.turn_on(**{ATTR_TRANSITION: 35})
+        assert mock_logger.debug.called
+        assert node.set_dimmer.called
+        msg, entity_id = mock_logger.debug.mock_calls[0][1]
+        assert entity_id == device.entity_id
+
+
+def test_dimmer_transitions(mock_openzwave):
+    """Test dimming transition on a dimmable Z-Wave light."""
+    node = MockNode()
+    value = MockValue(data=0, node=node)
+    duration = MockValue(data=0, node=node)
+    values = MockLightValues(primary=value, dimming_duration=duration)
+    device = zwave.get_device(node=node, values=values, node_config={})
+    assert device.supported_features == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+
+    # Test turn_on
+    # Factory Default
+    device.turn_on()
+    assert duration.data == 0xFF
+
+    # Seconds transition
+    device.turn_on(**{ATTR_TRANSITION: 45})
+    assert duration.data == 45
+
+    # Minutes transition
+    device.turn_on(**{ATTR_TRANSITION: 245})
+    assert duration.data == 0x83
+
+    # Clipped transition
+    device.turn_on(**{ATTR_TRANSITION: 10000})
+    assert duration.data == 0xFE
+
+    # Test turn_off
+    # Factory Default
+    device.turn_off()
+    assert duration.data == 0xFF
+
+    # Seconds transition
+    device.turn_off(**{ATTR_TRANSITION: 45})
+    assert duration.data == 45
+
+    # Minutes transition
+    device.turn_off(**{ATTR_TRANSITION: 245})
+    assert duration.data == 0x83
+
+    # Clipped transition
+    device.turn_off(**{ATTR_TRANSITION: 10000})
+    assert duration.data == 0xFE
 
 
 def test_dimmer_turn_off(mock_openzwave):
