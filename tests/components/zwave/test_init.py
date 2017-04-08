@@ -468,19 +468,20 @@ class TestZWaveServices(unittest.TestCase):
     def setUp(self):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
-        self.hass.data[ZWAVE_NETWORK] = MockNetwork()
-        self.zwave_network = self.hass.data[ZWAVE_NETWORK]
         self.hass.start()
 
         # Initialize zwave
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
+        self.zwave_network = self.hass.data[ZWAVE_NETWORK]
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
+        self.hass.services.call('zwave', 'stop_network', {})
+        self.hass.block_till_done()
         self.hass.stop()
 
     def test_add_node(self):
