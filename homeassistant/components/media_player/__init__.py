@@ -82,7 +82,6 @@ ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
 
-
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
 MEDIA_TYPE_VIDEO = 'movie'
@@ -359,11 +358,6 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
-        else:
-            for k in service.data:
-                if k != 'entity_id':
-                    params[k] = service.data.get(k)
-
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
