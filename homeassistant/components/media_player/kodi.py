@@ -139,20 +139,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if not method:
             return
 
-        params = {}
-        for k in service.data:
-            if k != 'entity_id':
-                params[k] = service.data.get(k)
+        params = {key: value for key, value in service.data.items() 
+                  if key != 'entity_id'}
 
         yield from getattr(entity, method['method'])(**params)
 
         update_tasks = []
         if entity.should_poll:
             update_coro = entity.async_update_ha_state(True)
-            if hasattr(entity, 'async_update'):
-                update_tasks.append(update_coro)
-            else:
-                yield from update_coro
+            update_tasks.append(update_coro)
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
@@ -664,12 +659,11 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle_on):
         """Set shuffle mode, for the first player."""
-        players = yield from self._get_players()
 
-        if len(players) < 1:
+        if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
-            {"playerid": players[0]['playerid'], "shuffle": shuffle_on})
+            {"playerid": self._players[0]['playerid'], "shuffle": shuffle_on})
 
     @asyncio.coroutine
     def async_add_media_to_playlist(
