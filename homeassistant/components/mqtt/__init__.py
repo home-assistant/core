@@ -201,7 +201,8 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 
 @asyncio.coroutine
-def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS
+                    encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     @callback
     def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
@@ -209,7 +210,21 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
         if not _match_topic(topic, dp_topic):
             return
 
-        hass.async_run_job(msg_callback, dp_topic, dp_payload, dp_qos)
+        if encoding is not None:
+            try:
+                payload = dp_payload.decode(encoding)
+                _LOGGER.info("Received message on %s: %s",
+                             dp_topic, payload)
+            except (AttributeError, UnicodeDecodeError):
+                _LOGGER.error("Illegal payload encoding %s from "
+                              "MQTT topic: %s, Payload: %s", encoding,
+                              dp_topic, dp_payload)
+                return
+        else:
+            _LOGGER.info("Received binary message on %s", dp_topic)
+            payload = dp_payload
+
+        hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
 
     async_remove = async_dispatcher_connect(
         hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
@@ -564,16 +579,8 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        try:
-            payload = msg.payload.decode('utf-8')
-        except (AttributeError, UnicodeDecodeError):
-            payload = msg.payload
-            _LOGGER.info("Illegal utf-8 unicode payload from "
-                         "MQTT topic: %s", msg.topic)
-        else:
-            _LOGGER.info("Received message on %s: %s", msg.topic, payload)
         dispatcher_send(
-            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, payload,
+            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, msg.payload,
             msg.qos
         )
 
