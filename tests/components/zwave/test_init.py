@@ -477,6 +477,11 @@ class TestZWaveServices(unittest.TestCase):
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
+        self.zwave_events = []
+        def mock_zwave_events(event):
+            """Mock event."""
+            self.zwave_events.append(event)
+        self.hass.bus.listen(const.EVENT_NETWORK_STOP, mock_zwave_events)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
@@ -557,7 +562,6 @@ class TestZWaveServices(unittest.TestCase):
             assert mock_fire.called
             assert len(mock_fire.mock_calls) == 2
             assert mock_fire.mock_calls[0][1][0] == const.EVENT_NETWORK_STOP
-
 
     def test_rename_node(self):
         """Test zwave rename_node service."""
