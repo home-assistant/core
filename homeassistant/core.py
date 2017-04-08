@@ -168,8 +168,9 @@ class HomeAssistant(object):
                 yield from self.async_stop_track_tasks()
         except asyncio.TimeoutError:
             _LOGGER.warning(
-                'Something is blocking Hass start from finishing, going to '
-                'start anyway. Please report at http://bit.ly/2ogP58T: %s',
+                'Something is blocking Home Assistant from wrapping up the '
+                'start up phase. We\'re going to continue anyway. Please '
+                'report at http://bit.ly/2ogP58T: %s'
                 ', '.join(self.config.components))
             self._track_task = False
 
