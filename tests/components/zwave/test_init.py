@@ -467,12 +467,11 @@ class TestZWaveServices(unittest.TestCase):
 
     def setUp(self):
         """Initialize values for this testcase class."""
+        self.zwave_network = MagicMock()
         self.hass = get_test_home_assistant()
         self.hass.start()
 
         # Initialize zwave
-        self.hass.data[ZWAVE_NETWORK] = MagicMock()
-        self.zwave_network = self.hass.data[ZWAVE_NETWORK]
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
         self.zwave_network.state = MockNetwork.STATE_READY
@@ -518,8 +517,7 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert self.zwave_network.controller.cancel_command.called
-        assert len(self.zwave_network.controller
-                   .cancel_command.mock_calls) == 1
+        assert len(self.zwave_network.controller.cancel_command.mock_calls) == 1
 
     def test_heal_network(self):
         """Test zwave heal_network service."""
