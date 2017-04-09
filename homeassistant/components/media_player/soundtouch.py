@@ -15,7 +15,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
                                  STATE_PAUSED, STATE_PLAYING,
                                  STATE_UNAVAILABLE)
 
-REQUIREMENTS = ['libsoundtouch==0.1.0']
+REQUIREMENTS = ['libsoundtouch==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +31,8 @@ MAP_STATUS = {
     "PAUSE_STATE": STATE_PAUSED,
     "STOp_STATE": STATE_OFF
 }
+
+DATA_SOUNDTOUCH = "soundtouch"
 
 SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({
     'master': cv.entity_id,
@@ -70,19 +72,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Bose Soundtouch platform."""
-    name = config.get(CONF_NAME)
+    if DATA_SOUNDTOUCH not in hass.data:
+        hass.data[DATA_SOUNDTOUCH] = []
 
-    remote_config = {
-        'name': 'HomeAssistant',
-        'description': config.get(CONF_NAME),
-        'id': 'ha.component.soundtouch',
-        'port': config.get(CONF_PORT),
-        'host': config.get(CONF_HOST)
-    }
+    if discovery_info:
+        # Discovery
+        host = discovery_info[0]
+        port = int(discovery_info[1])
 
-    soundtouch_device = SoundTouchDevice(name, remote_config)
-    DEVICES.append(soundtouch_device)
-    add_devices([soundtouch_device])
+        # if device already exists by config
+        if host in hass.data[DATA_SOUNDTOUCH]:
+            return
+
+        remote_config = {
+            'id': 'ha.component.soundtouch',
+            'host': host,
+            'port': port
+        }
+        soundtouch_device = SoundTouchDevice(None, remote_config)
+        hass.data[DATA_SOUNDTOUCH].append(host)
+        DEVICES.append(soundtouch_device)
+        add_devices([soundtouch_device])
+    else:
+        # Config
+        name = config.get(CONF_NAME)
+        remote_config = {
+            'id': 'ha.component.soundtouch',
+            'port': config.get(CONF_PORT),
+            'host': config.get(CONF_HOST)
+        }
+        hass.data[DATA_SOUNDTOUCH].append(config.get(CONF_HOST))
+        soundtouch_device = SoundTouchDevice(name, remote_config)
+        DEVICES.append(soundtouch_device)
+        add_devices([soundtouch_device])
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -242,8 +264,11 @@ class SoundTouchDevice(MediaPlayerDevice):
     def __init__(self, name, config):
         """Create Soundtouch Entity."""
         from libsoundtouch import soundtouch_device
-        self._name = name
         self._device = soundtouch_device(config['host'], config['port'])
+        if name is None:
+            self._name = self._device.config.name
+        else:
+            self._name = name
         self._status = self._device.status()
         self._volume = self._device.volume()
         self._config = config

@@ -160,15 +160,46 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
 
     @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
     def test_ensure_setup_config(self, mocked_sountouch_device):
-        """Test setup OK."""
+        """Test setup OK with custom config."""
         soundtouch.setup_platform(self.hass,
                                   default_component(),
                                   mock.MagicMock())
-        # soundtouch.DEVICES[0].entity_id = 'entity_1'
         self.assertEqual(len(soundtouch.DEVICES), 1)
         self.assertEqual(soundtouch.DEVICES[0].name, 'soundtouch')
         self.assertEqual(soundtouch.DEVICES[0].config['port'], 8090)
         self.assertEqual(mocked_sountouch_device.call_count, 1)
+
+    @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
+    def test_ensure_setup_discovery(self, mocked_sountouch_device):
+        """Test setup with discovery."""
+        soundtouch.setup_platform(self.hass,
+                                  None,
+                                  mock.MagicMock(),
+                                  ('192.168.1.1', 8090))
+        self.assertEqual(len(soundtouch.DEVICES), 1)
+        self.assertEqual(soundtouch.DEVICES[0].config['port'], 8090)
+        self.assertEqual(soundtouch.DEVICES[0].config['host'], '192.168.1.1')
+        self.assertEqual(mocked_sountouch_device.call_count, 1)
+
+    @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
+    def test_ensure_setup_discovery_no_duplicate(self,
+                                                 mocked_sountouch_device):
+        """Test setup OK if device already exists."""
+        soundtouch.setup_platform(self.hass,
+                                  default_component(),
+                                  mock.MagicMock())
+        self.assertEqual(len(soundtouch.DEVICES), 1)
+        soundtouch.setup_platform(self.hass,
+                                  None,
+                                  mock.MagicMock(),
+                                  ('192.168.1.1', 8090))  # New device
+        self.assertEqual(len(soundtouch.DEVICES), 2)
+        soundtouch.setup_platform(self.hass,
+                                  None,
+                                  mock.MagicMock(),
+                                  ('192.168.0.1', 8090))  # Existing device
+        self.assertEqual(mocked_sountouch_device.call_count, 2)
+        self.assertEqual(len(soundtouch.DEVICES), 2)
 
     @mock.patch('libsoundtouch.device.SoundTouchDevice.volume')
     @mock.patch('libsoundtouch.device.SoundTouchDevice.status')
