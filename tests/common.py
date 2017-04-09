@@ -172,7 +172,8 @@ def mock_service(hass, domain, service):
 def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
     async_dispatcher_send(
-        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic, bytearray(payload, 'utf-8'), qos)
+        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
+        bytearray(payload, 'utf-8'), qos)
 
 
 def fire_mqtt_message(hass, topic, payload, qos=0):

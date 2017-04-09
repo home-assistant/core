@@ -255,7 +255,8 @@ class TestMQTTCallbacks(unittest.TestCase):
 
         self.assertEqual(1, len(calls))
         last_event = calls[0]
-        self.assertEqual(bytearray('Hello World!', 'utf-8'), last_event['payload'])
+        self.assertEqual(bytearray('Hello World!', 'utf-8'),
+                         last_event['payload'])
         self.assertEqual(message.topic, last_event['topic'])
         self.assertEqual(message.qos, last_event['qos'])
 
@@ -337,7 +338,7 @@ def test_setup_embedded_starts_with_no_config(hass):
     with mock.patch('homeassistant.components.mqtt.server.async_start',
                     return_value=mock_coro(
                         return_value=(True, client_config))
-                   ) as _start:
+                    ) as _start:
         yield from mock_mqtt_client(hass, {})
         assert _start.call_count == 1
 
@@ -350,7 +351,7 @@ def test_setup_embedded_with_embedded(hass):
     with mock.patch('homeassistant.components.mqtt.server.async_start',
                     return_value=mock_coro(
                         return_value=(True, client_config))
-                   ) as _start:
+                    ) as _start:
         _start.return_value = mock_coro(return_value=(True, client_config))
         yield from mock_mqtt_client(hass, {'embedded': None})
         assert _start.call_count == 1
