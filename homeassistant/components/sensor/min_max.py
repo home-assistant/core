@@ -146,7 +146,7 @@ class MinMaxSensor(Entity):
             if self._unit_of_measurement != new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT):
                 _LOGGER.warning(
-                    "Units of measurement do not match for entity %s" %
+                    "Units of measurement do not match for entity %s",
                     self.entity_id)
                 self._unit_of_measurement_mismatch = True
 
