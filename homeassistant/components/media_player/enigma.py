@@ -1,28 +1,21 @@
-"""
-Support for Enigma2 Settopboxes
-
-"""
-import logging
+"""Support for Enigma2 Settopboxes."""
+from datetime import timedelta
 import urllib.request
 import urllib.parse
-
+from urllib.error import URLError, HTTPError
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
-
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_NAME, CONF_PORT,
     CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT)
-
-REQUIREMENTS = ['beautifulsoup4==4.5.1']
-
 from homeassistant.util import Throttle
-from datetime import timedelta
-from bs4 import BeautifulSoup
-
 import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['beautifulsoup4==4.5.3']
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
@@ -48,7 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
 })
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Enigma platform."""
     enigma = EnigmaDevice(config.get(CONF_NAME),
                           config.get(CONF_HOST),
@@ -57,9 +51,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           config.get(CONF_PASSWORD),
                           config.get(CONF_TIMEOUT))
     if enigma.update():
-        add_devices([enigma])
+        async_add_devices([enigma])
         return True
     return False
+
 
 class EnigmaDevice(MediaPlayerDevice):
     """Representation of a Enigma device."""
@@ -78,48 +73,56 @@ class EnigmaDevice(MediaPlayerDevice):
         self._selected_source = ''
         self._source_names = {}
         self._sources = {}
-        self.__handle_base_auth()
-        self.__load_sources()
+        self.handle_base_auth()
+        self.load_sources()
 
-    def __handle_base_auth(self):
-        """Handle HTTP Auth"""
-        password_mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
-        password_mgr.add_password(None, self._host, self._username, self._password)
-        handler = urllib.request.HTTPBasicAuthHandler(password_mgr)
+    def handle_base_auth(self):
+        """Handle HTTP Auth."""
+        mgr = urllib.request.HTTPPasswordMgrWithDefaultRealm()
+        mgr.add_password(None, self._host, self._username, self._password)
+        handler = urllib.request.HTTPBasicAuthHandler(mgr)
         opener = urllib.request.build_opener(handler)
         urllib.request.install_opener(opener)
 
-    def __load_sources(self):
-        """Load sources from first bouquet"""
-        bouquet_reference = self.__get_bouquet_reference()
+    def load_sources(self):
+        """Load sources from first bouquet."""
+        from bs4 import BeautifulSoup
+        reference = urllib.parse.quote_plus(self.get_bouquet_reference())
         try:
-            epgbouquet_xml = self.__requestCall('/web/epgnow?bRef=' + urllib.parse.quote_plus(bouquet_reference))
+            epgbouquet_xml = self.request_call('/web/epgnow?bRef=' + reference)
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
-        epgbouquet_soup = BeautifulSoup(epgbouquet_xml, 'html.parser')
-        service_names = epgbouquet_soup.find_all('e2eventservicename')
-        self._source_names = [service_name.string for service_name in service_names]
-        service_references = epgbouquet_soup.find_all('e2eventservicereference')
-        sources = [service_reference.string for service_reference in service_references]
+
+        soup = BeautifulSoup(epgbouquet_xml, 'html.parser')
+        src_names = soup.find_all('e2eventservicename')
+        self._source_names = [src_name.string for src_name in src_names]
+
+        src_references = soup.find_all('e2eventservicereference')
+        sources = [src_reference.string for src_reference in src_references]
         self._sources = dict(zip(self._source_names, sources))
 
-    def __get_bouquet_reference(self):
-        """Get first bouquet reference"""
+    def get_bouquet_reference(self):
+        """Get first bouquet reference."""
+        from bs4 import BeautifulSoup
         try:
-            bouquets_xml = self.__requestCall('/web/bouquets')
+            bouquets_xml = self.request_call('/web/bouquets')
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
-        bouquets_soup = BeautifulSoup(bouquets_xml, 'html.parser')
-        return bouquets_soup.find('e2servicereference').renderContents().decode('UTF8')
 
-    def __requestCall(self, url):
-        return urllib.request.urlopen('http://' + self._host + url, timeout = 10).read().decode('UTF8')
+        soup = BeautifulSoup(bouquets_xml, 'html.parser')
+        return soup.find('e2servicereference').renderContents().decode('UTF8')
+
+    def request_call(self, url):
+        """Call web API request."""
+        uri = 'http://' + self._host + url
+        return urllib.request.urlopen(uri, timeout=10).read().decode('UTF8')
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def update(self):
         """Get the latest details from the device."""
+        from bs4 import BeautifulSoup
         try:
-            powerstate_xml = self.__requestCall('/web/powerstate')
+            powerstate_xml = self.request_call('/web/powerstate')
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
 
@@ -128,35 +131,35 @@ class EnigmaDevice(MediaPlayerDevice):
 
         self._pwstate = ''
 
-        if pwstate.find('false') >=0:
+        if pwstate.find('false') >= 0:
             self._pwstate = 'false'
 
-        if pwstate.find('true') >=0:
+        if pwstate.find('true') >= 0:
             self._pwstate = 'true'
 
         if self._name == 'Enigma2 Satelite':
-            about_xml = self.__requestCall('/web/about')
-            about_soup = BeautifulSoup(about_xml, 'html.parser')
-            name = about_soup.e2model.renderContents().decode('UTF8')
+            about_xml = self.request_call('/web/about')
+            soup = BeautifulSoup(about_xml, 'html.parser')
+            name = soup.e2model.renderContents().decode('UTF8')
             if name:
                 self._name = name
 
         if self._pwstate == 'false':
-            subservices_xml = self.__requestCall('/web/subservices')
-            subservices_soup = BeautifulSoup(subservices_xml, 'html.parser')
-            servicename = subservices_soup.e2servicename.renderContents().decode('UTF8')
-            service_reference = subservices_soup.e2servicereference.renderContents().decode('UTF8')
+            subservices_xml = self.request_call('/web/subservices')
+            soup = BeautifulSoup(subservices_xml, 'html.parser')
+            servicename = soup.e2servicename.renderContents().decode('UTF8')
+            reference = soup.e2servicereference.renderContents().decode('UTF8')
 
             eventtitle = 'N/A'
-            if service_reference != 'N/A':
-                epgservicenow_xml = self.__requestCall('/web/epgservicenow?sRef=' + service_reference)
-                epgservicenow_soup = BeautifulSoup(epgservicenow_xml, 'html.parser')
-                eventtitle = epgservicenow_soup.e2eventtitle.renderContents().decode('UTF8')
+            if reference != 'N/A':
+                xml = self.request_call('/web/epgservicenow?sRef=' + reference)
+                soup = BeautifulSoup(xml, 'html.parser')
+                eventtitle = soup.e2eventtitle.renderContents().decode('UTF8')
 
-            vol_xml = self.__requestCall('/web/vol')
-            vol_soup = BeautifulSoup(vol_xml, 'html.parser')
-            volcurrent = vol_soup.e2current.renderContents().decode('UTF8')
-            volmuted = vol_soup.e2ismuted.renderContents().decode('UTF8')
+            volume_xml = self.request_call('/web/vol')
+            soup = BeautifulSoup(volume_xml, 'html.parser')
+            volcurrent = soup.e2current.renderContents().decode('UTF8')
+            volmuted = soup.e2ismuted.renderContents().decode('UTF8')
 
             self._volume = int(volcurrent) / MAX_VOLUME if volcurrent else None
             self._muted = (volmuted == 'True') if volmuted else None
@@ -213,7 +216,7 @@ class EnigmaDevice(MediaPlayerDevice):
     def select_source(self, source):
         """Select input source."""
         try:
-            self.__requestCall('/web/zap?sRef=' + self._sources[source])
+            self.request_call('/web/zap?sRef=' + self._sources[source])
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
 
@@ -221,27 +224,27 @@ class EnigmaDevice(MediaPlayerDevice):
         """Set volume level, range 0..1."""
         try:
             volset = str(round(volume * MAX_VOLUME))
-            self.__requestCall('/web/vol?set=set' + volset)
+            self.request_call('/web/vol?set=set' + volset)
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
 
     def mute_volume(self, mute):
         """Mute or unmute media player."""
         try:
-            self.__requestCall('/web/vol?set=mute')
+            self.request_call('/web/vol?set=mute')
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
 
     def turn_on(self):
         """Turn the media player on."""
         try:
-            self.__requestCall('/web/powerstate?newstate=4')
+            self.request_call('/web/powerstate?newstate=4')
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
 
     def turn_off(self):
         """Turn off media player."""
         try:
-            self.__requestCall('/web/powerstate?newstate=5')
+            self.request_call('/web/powerstate?newstate=5')
         except (HTTPError, URLError, ConnectionRefusedError):
             return False
