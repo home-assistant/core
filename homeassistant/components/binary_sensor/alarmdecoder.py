@@ -28,25 +28,19 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup AlarmDecoder binary sensor devices."""
-    _configured_zones = discovery_info[CONF_ZONES]
+    configured_zones = discovery_info[CONF_ZONES]
 
-    components = {}
     devices = []
 
-    for zone_num in _configured_zones:
-        _device_config_data = ZONE_SCHEMA(_configured_zones[zone_num])
-        _type = _device_config_data[CONF_ZONE_TYPE]
-        _name = _device_config_data[CONF_ZONE_NAME]
-        _device = AlarmDecoderBinarySensor(hass,
-                                           zone_num,
-                                           _name,
-                                           _type)
-        devices.append(_device)
-
-        if _type not in components:
-            components[_type] = []
-
-        components[_type].append(_device)
+    for zone_num in configured_zones:
+        device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
+        zone_type = device_config_data[CONF_ZONE_TYPE]
+        zone_name = device_config_data[CONF_ZONE_NAME]
+        device = AlarmDecoderBinarySensor(hass,
+                                          zone_num,
+                                          zone_name,
+                                          zone_type)
+        devices.append(device)
 
     async_add_devices(devices)
 
@@ -61,7 +55,6 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._zone_number = zone_number
         self._zone_type = zone_type
         self._state = 0
-        self._hass = hass
         self._name = zone_name
         self._type = zone_type
 
@@ -120,11 +113,11 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
             self._state = 1
-            self._hass.async_add_job(self.async_update_ha_state())
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
     def _restore_callback(self, zone):
         """Update the zone's state, if needed."""
         if zone is None or int(zone) == self._zone_number:
             self._state = 0
-            self._hass.async_add_job(self.async_update_ha_state())
+            self.hass.async_add_job(self.async_update_ha_state())

@@ -56,12 +56,18 @@ SIGNAL_PANEL_DISARM = 'alarmdecoder.panel_disarm'
 SIGNAL_ZONE_FAULT = 'alarmdecoder.zone_fault'
 SIGNAL_ZONE_RESTORE = 'alarmdecoder.zone_restore'
 
-DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_DEVICE_TYPE, default=DEFAULT_DEVICE_TYPE): cv.string,
+DEVICE_SOCKET_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_TYPE): 'socket',
     vol.Optional(CONF_DEVICE_HOST, default=DEFAULT_DEVICE_HOST): cv.string,
-    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port,
+    vol.Optional(CONF_DEVICE_PORT, default=DEFAULT_DEVICE_PORT): cv.port})
+
+DEVICE_SERIAL_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_TYPE): 'serial',
     vol.Optional(CONF_DEVICE_PATH, default=DEFAULT_DEVICE_PATH): cv.string,
     vol.Optional(CONF_DEVICE_BAUD, default=DEFAULT_DEVICE_BAUD): cv.string})
+
+DEVICE_USB_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICE_TYPE): 'usb'})
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
@@ -69,7 +75,9 @@ ZONE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Required(CONF_DEVICE): DEVICE_SCHEMA,
+        vol.Required(CONF_DEVICE): vol.Any(DEVICE_SOCKET_SCHEMA,
+                                           DEVICE_SERIAL_SCHEMA,
+                                           DEVICE_USB_SCHEMA),
         vol.Optional(CONF_PANEL_DISPLAY,
                      default=DEFAULT_PANEL_DISPLAY): cv.boolean,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
@@ -81,19 +89,19 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Common setup for AlarmDecoder devices."""
     from alarmdecoder import AlarmDecoder
-    from alarmdecoder.devices import (SocketDevice, SerialDevice)
+    from alarmdecoder.devices import (SocketDevice, SerialDevice, USBDevice)
 
     conf = config.get(DOMAIN)
 
-    _device = conf.get(CONF_DEVICE)
-    _display = conf.get(CONF_PANEL_DISPLAY)
-    _zones = conf.get(CONF_ZONES)
+    device = conf.get(CONF_DEVICE)
+    display = conf.get(CONF_PANEL_DISPLAY)
+    zones = conf.get(CONF_ZONES)
 
-    _type = _device.get(CONF_DEVICE_TYPE)
-    _host = _device.get(CONF_DEVICE_HOST)
-    _port = _device.get(CONF_DEVICE_PORT)
-    _path = _device.get(CONF_DEVICE_PATH)
-    _baud = _device.get(CONF_DEVICE_BAUD)
+    device_type = device.get(CONF_DEVICE_TYPE)
+    host = DEFAULT_DEVICE_HOST
+    port = DEFAULT_DEVICE_PORT
+    path = DEFAULT_DEVICE_PATH
+    baud = DEFAULT_DEVICE_BAUD
 
     sync_connect = asyncio.Future(loop=hass.loop)
 
@@ -123,12 +131,16 @@ def async_setup(hass, config):
         async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
 
     controller = False
-    if _type == 'socket':
-        controller = AlarmDecoder(SocketDevice(interface=(_host, _port)))
-    elif _type == 'serial':
-        controller = AlarmDecoder(SerialDevice(interface=_path))
-    elif _type == 'usb':
-        _LOGGER.debug("AlarmDecoder USB Device not implemented yet.")
+    if device_type == 'socket':
+        host = device.get(CONF_DEVICE_HOST)
+        port = device.get(CONF_DEVICE_PORT)
+        controller = AlarmDecoder(SocketDevice(interface=(host, port)))
+    elif device_type == 'serial':
+        path = device.get(CONF_DEVICE_PATH)
+        baud = device.get(CONF_DEVICE_BAUD)
+        controller = AlarmDecoder(SerialDevice(interface=path))
+    elif device_type == 'usb':
+        AlarmDecoder(USBDevice.find())
         return False
 
     controller.on_open += handle_open
@@ -138,7 +150,7 @@ def async_setup(hass, config):
 
     hass.data[DATA_AD] = controller
 
-    controller.open(_baud)
+    controller.open(baud)
 
     result = yield from sync_connect
 
@@ -148,11 +160,11 @@ def async_setup(hass, config):
     hass.async_add_job(async_load_platform(hass, 'alarm_control_panel', DOMAIN,
                                            conf, config))
 
-    if _zones:
+    if zones:
         hass.async_add_job(async_load_platform(
-            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: _zones}, config))
+            hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config))
 
-    if _display:
+    if display:
         hass.async_add_job(async_load_platform(hass, 'sensor', DOMAIN,
                                                conf, config))
 

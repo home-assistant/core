@@ -25,9 +25,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Perform the setup for AlarmDecoder sensor devices."""
     _LOGGER.debug("AlarmDecoderSensor: async_setup_platform")
 
-    _device = AlarmDecoderSensor(hass)
+    device = AlarmDecoderSensor(hass)
 
-    async_add_devices([_device])
+    async_add_devices([device])
 
 
 class AlarmDecoderSensor(Entity):
@@ -36,7 +36,6 @@ class AlarmDecoderSensor(Entity):
     def __init__(self, hass):
         """Initialize the alarm panel."""
         self._display = ""
-        self._hass = hass
         self._state = STATE_UNKNOWN
         self._icon = 'mdi:alarm-check'
         self._name = 'Alarm Panel Display'

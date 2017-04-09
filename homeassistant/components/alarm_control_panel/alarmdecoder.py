@@ -28,9 +28,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Perform the setup for AlarmDecoder alarm panels."""
     _LOGGER.debug("AlarmDecoderAlarmPanel: setup")
 
-    _device = AlarmDecoderAlarmPanel("Alarm Panel", hass)
+    device = AlarmDecoderAlarmPanel("Alarm Panel", hass)
 
-    async_add_devices([_device])
+    async_add_devices([device])
 
     return True
 
@@ -42,7 +42,6 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         """Initialize the alarm panel."""
         self._display = ""
         self._name = name
-        self._hass = hass
         self._state = STATE_UNKNOWN
 
         _LOGGER.debug("AlarmDecoderAlarm: Setting up panel")
@@ -58,19 +57,19 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if message.alarm_sounding or message.fire_alarm:
             if self._state != STATE_ALARM_TRIGGERED:
                 self._state = STATE_ALARM_TRIGGERED
-                self._hass.async_add_job(self.async_update_ha_state())
+                self.hass.async_add_job(self.async_update_ha_state())
         elif message.armed_away:
             if self._state != STATE_ALARM_ARMED_AWAY:
                 self._state = STATE_ALARM_ARMED_AWAY
-                self._hass.async_add_job(self.async_update_ha_state())
+                self.hass.async_add_job(self.async_update_ha_state())
         elif message.armed_home:
             if self._state != STATE_ALARM_ARMED_HOME:
                 self._state = STATE_ALARM_ARMED_HOME
-                self._hass.async_add_job(self.async_update_ha_state())
+                self.hass.async_add_job(self.async_update_ha_state())
         else:
             if self._state != STATE_ALARM_DISARMED:
                 self._state = STATE_ALARM_DISARMED
-                self._hass.async_add_job(self.async_update_ha_state())
+                self.hass.async_add_job(self.async_update_ha_state())
 
     @property
     def name(self):
