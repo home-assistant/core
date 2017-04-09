@@ -660,7 +660,7 @@ pyvera==0.2.25
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.16
+pywemo==0.4.17
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
