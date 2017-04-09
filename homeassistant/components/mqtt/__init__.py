@@ -217,8 +217,8 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                              dp_topic, payload)
             except (AttributeError, UnicodeDecodeError):
                 _LOGGER.error("Illegal payload encoding %s from "
-                              "MQTT topic: %s, Payload: %s", encoding,
-                              dp_topic, dp_payload)
+                              "MQTT topic: %s, Payload: %s",
+                              encoding, dp_topic, dp_payload)
                 return
         else:
             _LOGGER.info("Received binary message on %s", dp_topic)
