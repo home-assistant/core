@@ -1,9 +1,10 @@
 """
-Camera that loads a picture from a MQTT topic.
+Camera that loads a picture from an MQTT topic.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.mqtt/
 """
-import asyncio
+
 import logging
 
 import voluptuous as vol
