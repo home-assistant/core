@@ -21,7 +21,7 @@ U = TypeVar('U')
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
+RE_SLUGIFY = re.compile(r'[^a-z0-9_\w]+')
 
 
 def sanitize_filename(filename: str) -> str:
