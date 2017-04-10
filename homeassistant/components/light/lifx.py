@@ -26,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.2']
+REQUIREMENTS = ['aiolifx==0.4.4']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -84,6 +84,7 @@ class LIFXManager(object):
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s register AGAIN", entity.ipaddr)
             entity.available = True
+            entity.device = device
             self.hass.async_add_job(entity.async_update_ha_state())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
@@ -215,6 +216,9 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
+        if not self.available:
+            return
+
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
@@ -265,6 +269,9 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
+        if not self.available:
+            return
+
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
