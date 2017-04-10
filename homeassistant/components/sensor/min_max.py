@@ -33,9 +33,8 @@ ATTR_TO_PROPERTY = [
 
 CONF_ENTITY_IDS = 'entity_ids'
 CONF_ROUND_DIGITS = 'round_digits'
-CONF_ICON = 'icon'
 
-DEFAULT_ICON = 'mdi:calculator'
+ICON = 'mdi:calculator'
 
 SENSOR_TYPES = {
     ATTR_MIN_VALUE: 'min',
@@ -49,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
     vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
-    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
 })
 
 
@@ -60,11 +58,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
-    icon = config.get(CONF_ICON)
 
     async_add_devices(
+<<<<<<< HEAD
         [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits,
                       icon)],
+=======
+        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
+>>>>>>> parent of fe45aec8... Make icon configurable
         True)
     return True
 
@@ -105,14 +106,12 @@ def calc_mean(sensor_values, round_digits):
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, sensor_type, round_digits,
-                 icon):
+    def __init__(self, hass, entity_ids, name, sensor_type, round_digits):
         """Initialize the min/max sensor."""
         self._hass = hass
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
-        self._icon = icon
 
         if name:
             self._name = name
@@ -194,7 +193,7 @@ class MinMaxSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return self._icon
+        return ICON
 
     @asyncio.coroutine
     def async_update(self):
