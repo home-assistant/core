@@ -70,6 +70,32 @@ def test_config_access_error():
 
 
 @asyncio.coroutine
+@patch.object(zwave, 'NETWORK')
+def test_setup_platform(mock_network, hass, mock_openzwave):
+    """Test invalid device config."""
+    mock_device = MagicMock()
+    hass.data[zwave.DATA_ZWAVE_DICT] = {456: mock_device}
+    async_add_devices = MagicMock()
+
+    result = yield from zwave.async_setup_platform(
+            hass, None, async_add_devices, None)
+    assert not result
+    assert not async_add_devices.called
+
+    result = yield from zwave.async_setup_platform(
+            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+    assert not result
+    assert not async_add_devices.called
+
+    result = yield from zwave.async_setup_platform(
+            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+    assert result
+    assert async_add_devices.called
+    assert len(async_add_devices.mock_calls) == 1
+    assert async_add_devices.mock_calls[0][1][0] == [mock_device]
+
+
+@asyncio.coroutine
 def test_zwave_ready_wait(hass, mock_openzwave):
     """Test that zwave continues after waiting for network ready."""
     # Initialize zwave

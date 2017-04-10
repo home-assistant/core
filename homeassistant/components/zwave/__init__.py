@@ -202,13 +202,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Generic Z-Wave platform setup."""
     if discovery_info is None or NETWORK is None:
         return False
+
     device = hass.data[DATA_ZWAVE_DICT].pop(
-        discovery_info[const.DISCOVERY_DEVICE])
-    if device:
-        async_add_devices([device])
-        return True
-    else:
+        discovery_info[const.DISCOVERY_DEVICE], None)
+    if device is None:
         return False
+
+    async_add_devices([device])
+    return True
 
 
 # pylint: disable=R0914
