@@ -71,10 +71,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Spotify platform."""
     import spotipy.oauth2
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
+    cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
     oauth = spotipy.oauth2.SpotifyOAuth(
         config.get(CONF_CLIENT_ID), config.get(CONF_CLIENT_SECRET),
         callback_url, scope=SCOPE,
-        cache_path=config.get(CONF_CACHE_PATH, DEFAULT_CACHE_PATH))
+        cache_path=cache)
     token_info = oauth.get_cached_token()
     if not token_info:
         _LOGGER.info('no token; requesting authorization')
@@ -133,10 +134,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def refresh_spotify_instance(self):
         """Fetch a new spotify instance."""
         import spotipy
-        import spotipy.oauth2
         token_refreshed = False
         need_token = (self._token_info is None or
-                      spotipy.oauth2.is_token_expired(self._token_info))
+                      self._oauth.is_token_expired(self._token_info))
         if need_token:
             new_token = \
                 self._oauth.refresh_access_token(
@@ -151,6 +151,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Update state and attributes."""
         self.refresh_spotify_instance()
         current = self._player.current_playback()
+        if current is None:
+            return
         item = current.get('item')
         if item:
             self._album = item.get('album').get('name')
