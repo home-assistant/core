@@ -901,7 +901,6 @@ def test_start_taking_too_long(loop, caplog):
              patch('homeassistant.core._async_create_timer') as mock_timer:
             yield from hass.async_start()
 
-        assert not hass._track_task
         assert hass.state == ha.CoreState.running
         assert len(mock_timer.mock_calls) == 1
         assert mock_timer.mock_calls[0][1][0] is hass

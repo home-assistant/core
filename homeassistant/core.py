@@ -165,8 +165,8 @@ class HomeAssistant(object):
 
         try:
             # only block for EVENT_HOMEASSISTANT_START listener
-            self._track_task = False
             with timeout(TIMEOUT_EVENT_START, loop=self.loop):
+                yield from self.async_stop_track_tasks(finish_current=False)
                 yield from self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -220,9 +220,10 @@ class HomeAssistant(object):
         self._track_task = True
 
     @asyncio.coroutine
-    def async_stop_track_tasks(self):
+    def async_stop_track_tasks(self, finish_current=True):
         """Track tasks so you can wait for all tasks to be done."""
-        yield from self.async_block_till_done()
+        if finish_current:
+            yield from self.async_block_till_done()
         self._track_task = False
 
     @callback
