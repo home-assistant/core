@@ -7,23 +7,19 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import enum
 import json
 import logging
-import time
-import threading
 import urllib.parse
 
 from typing import Optional
 
 import requests
 
-from homeassistant import setup, core as ha
+from homeassistant import core as ha
 from homeassistant.const import (
-    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
+    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
     URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
