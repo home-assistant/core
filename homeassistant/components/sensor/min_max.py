@@ -60,12 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     round_digits = config.get(CONF_ROUND_DIGITS)
 
     async_add_devices(
-<<<<<<< HEAD
-        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits,
-                      icon)],
-=======
         [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
->>>>>>> parent of fe45aec8... Make icon configurable
         True)
     return True
 
