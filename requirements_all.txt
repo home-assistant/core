@@ -475,7 +475,7 @@ pyHS100==0.2.4.2
 pyRFXtrx==0.17.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
-pyalarmdotcom==0.2.9
+pyalarmdotcom==0.3.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
