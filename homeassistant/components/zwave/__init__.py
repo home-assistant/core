@@ -13,6 +13,7 @@ from pprint import pprint
 
 import voluptuous as vol
 
+from homeassistant.core import CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
@@ -258,7 +259,7 @@ def setup(hass, config):
     NETWORK = ZWaveNetwork(options, autostart=False)
     hass.data[DATA_ZWAVE_DICT] = {}
 
-    if use_debug:
+    if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
             """Log all the signals."""
             print("")
@@ -388,7 +389,7 @@ def setup(hass, config):
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping ZWave network.")
         NETWORK.stop()
-        if hass.state == 'RUNNING':
+        if hass.state == CoreState.running:
             hass.bus.fire(const.EVENT_NETWORK_STOP)
 
     def rename_node(service):
