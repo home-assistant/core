@@ -20,7 +20,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==0.9.2']
+REQUIREMENTS = ['netdisco==1.0.0rc2']
 
 DOMAIN = 'discovery'
 
@@ -45,7 +45,6 @@ SERVICE_HANDLERS = {
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
-    'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
