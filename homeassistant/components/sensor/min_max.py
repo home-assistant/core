@@ -34,7 +34,6 @@ ATTR_TO_PROPERTY = [
 CONF_ENTITY_IDS = 'entity_ids'
 CONF_ROUND_DIGITS = 'round_digits'
 CONF_ICON = 'icon'
-CONF_ID = 'id'
 
 DEFAULT_ICON = 'mdi:calculator'
 
@@ -48,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]):
         vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ID): cv.string,
     vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
     vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.string,
@@ -60,13 +58,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the min/max/mean sensor."""
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
-    eid = config.get(CONF_ID)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
     icon = config.get(CONF_ICON)
 
     async_add_devices(
-        [MinMaxSensor(hass, entity_ids, name, eid, sensor_type, round_digits,
+        [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits,
                       icon)],
         True)
     return True
@@ -108,11 +105,10 @@ def calc_mean(sensor_values, round_digits):
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
-    def __init__(self, hass, entity_ids, name, eid, sensor_type, round_digits,
+    def __init__(self, hass, entity_ids, name, sensor_type, round_digits,
                  icon):
         """Initialize the min/max sensor."""
         self._hass = hass
-        self.entity_id = eid
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
