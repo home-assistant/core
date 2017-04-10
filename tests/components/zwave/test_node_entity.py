@@ -1,49 +1,33 @@
 """Test Z-Wave node entity."""
+import asyncio
 import unittest
-from unittest.mock import patch, Mock
-from tests.common import get_test_home_assistant
+from unittest.mock import patch
 import tests.mock.zwave as mock_zwave
 import pytest
 from homeassistant.components.zwave import node_entity
 
 
-@pytest.mark.usefixtures('mock_openzwave')
-class TestZWaveBaseEntity(unittest.TestCase):
-    """Class to test ZWaveBaseEntity."""
+@asyncio.coroutine
+def test_maybe_schedule_update(hass, mock_openzwave):
+    """Test maybe schedule update."""
+    base_entity = node_entity.ZWaveBaseEntity()
+    base_entity.hass = hass
 
-    def setUp(self):
-        """Initialize values for this testcase class."""
-        self.hass = get_test_home_assistant()
+    with patch.object(hass.loop, 'call_later') as mock_call_later:
+        base_entity._schedule_update()
+        assert mock_call_later.called
 
-        def call_soon(time, func, *args):
-            """Replace call_later by call_soon."""
-            return self.hass.loop.call_soon(func, *args)
+        base_entity._schedule_update()
+        assert len(mock_call_later.mock_calls) == 1
 
-        self.hass.loop.call_later = call_soon
-        self.base_entity = node_entity.ZWaveBaseEntity()
-        self.base_entity.hass = self.hass
-        self.hass.start()
+        do_update = mock_call_later.mock_calls[0][1][1]
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+        with patch.object(hass, 'async_add_job') as mock_add_job:
+            do_update()
+            assert mock_add_job.called
 
-    def test_maybe_schedule_update(self):
-        """Test maybe_schedule_update."""
-        with patch.object(self.base_entity, 'async_update_ha_state',
-                          Mock()) as mock_update:
-            self.base_entity.maybe_schedule_update()
-            self.hass.block_till_done()
-            mock_update.assert_called_once_with()
-
-    def test_maybe_schedule_update_called_twice(self):
-        """Test maybe_schedule_update called twice."""
-        with patch.object(self.base_entity, 'async_update_ha_state',
-                          Mock()) as mock_update:
-            self.base_entity.maybe_schedule_update()
-            self.base_entity.maybe_schedule_update()
-            self.hass.block_till_done()
-            mock_update.assert_called_once_with()
+        base_entity._schedule_update()
+        assert len(mock_call_later.mock_calls) == 2
 
 
 @pytest.mark.usefixtures('mock_openzwave')

@@ -21,7 +21,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==1.1']
+REQUIREMENTS = ['pyemby==1.2']
 
 _LOGGER = logging.getLogger(__name__)
 

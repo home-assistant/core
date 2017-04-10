@@ -28,6 +28,8 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
+REQUIREMENTS = ['paho-mqtt==1.2.1']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt'
@@ -36,8 +38,6 @@ DATA_MQTT = 'mqtt'
 
 SERVICE_PUBLISH = 'publish'
 SIGNAL_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
-
-REQUIREMENTS = ['paho-mqtt==1.2']
 
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
@@ -277,7 +277,10 @@ def _async_setup_discovery(hass, config):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Start the MQTT protocol service."""
-    conf = config.get(DOMAIN, {})
+    conf = config.get(DOMAIN)
+
+    if conf is None:
+        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)

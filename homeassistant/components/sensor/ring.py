@@ -4,22 +4,25 @@ This component provides HA sensor support for Ring Door Bell/Chimes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ring/
 """
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.ring import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DEFAULT_SCAN_INTERVAL)
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS, CONF_SCAN_INTERVAL,
+    CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
     STATE_UNKNOWN, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 # Sensor types: Name, category, units, icon, kind
 SENSOR_TYPES = {
@@ -33,8 +36,6 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -120,6 +121,8 @@ class RingSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
+        _LOGGER.debug("Pulling data from %s sensor.", self._name)
+
         self._data.update()
 
         if self._sensor_type == 'volume':
