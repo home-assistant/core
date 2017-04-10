@@ -122,9 +122,10 @@ def async_test_home_assistant(loop):
         # 1. We only mock time during tests
         # 2. We want block_till_done that is called inside stop_track_tasks
         with patch('homeassistant.core._async_create_timer'), \
-                patch.object(hass, 'async_stop_track_tasks',
-                             hass.async_block_till_done):
+                patch.object(hass, '_track_task', new=True):
             yield from orig_start()
+
+        yield from hass.async_block_till_done()
 
     hass.async_start = mock_async_start
 
