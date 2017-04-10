@@ -7,23 +7,19 @@ HomeAssistantError will be raised.
 For more details about the Python API, please refer to the documentation at
 https://home-assistant.io/developers/python_api/
 """
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 import enum
 import json
 import logging
-import time
-import threading
 import urllib.parse
 
 from typing import Optional
 
 import requests
 
-from homeassistant import setup, core as ha
+from homeassistant import core as ha
 from homeassistant.const import (
-    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API, URL_API_EVENT_FORWARD,
+    HTTP_HEADER_HA_AUTH, SERVER_PORT, URL_API,
     URL_API_EVENTS, URL_API_EVENTS_EVENT, URL_API_SERVICES, URL_API_CONFIG,
     URL_API_SERVICES_SERVICE, URL_API_STATES, URL_API_STATES_ENTITY,
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
@@ -116,195 +112,6 @@ class API(object):
             self.base_url, 'yes' if self.api_password is not None else 'no')
 
 
-class HomeAssistant(ha.HomeAssistant):
-    """Home Assistant that forwards work."""
-
-    # pylint: disable=super-init-not-called
-    def __init__(self, remote_api, local_api=None, loop=None):
-        """Initalize the forward instance."""
-        _LOGGER.warning('Remote instances of Home Assistant are deprecated. '
-                        'Will be removed by 0.43')
-        if not remote_api.validate_api():
-            raise HomeAssistantError(
-                "Remote API at {}:{} not valid: {}".format(
-                    remote_api.host, remote_api.port, remote_api.status))
-
-        self.remote_api = remote_api
-
-        self.loop = loop or asyncio.get_event_loop()
-        self.executor = ThreadPoolExecutor(max_workers=5)
-        self.loop.set_default_executor(self.executor)
-        self.loop.set_exception_handler(ha.async_loop_exception_handler)
-        self._pending_tasks = []
-        self._pending_sheduler = None
-
-        self.bus = EventBus(remote_api, self)
-        self.services = ha.ServiceRegistry(self)
-        self.states = StateMachine(self.bus, self.loop, self.remote_api)
-        self.config = ha.Config()
-        # This is a dictionary that any component can store any data on.
-        self.data = {}
-        self.state = ha.CoreState.not_running
-        self.exit_code = None
-        self.config.api = local_api
-
-    def start(self):
-        """Start the instance."""
-        # Ensure a local API exists to connect with remote
-        if 'api' not in self.config.components:
-            if not setup.setup_component(self, 'api'):
-                raise HomeAssistantError(
-                    'Unable to setup local API to receive events')
-
-        self.state = ha.CoreState.starting
-        # pylint: disable=protected-access
-        ha._async_create_timer(self)
-
-        self.bus.fire(ha.EVENT_HOMEASSISTANT_START,
-                      origin=ha.EventOrigin.remote)
-
-        # Ensure local HTTP is started
-        self.block_till_done()
-        self.state = ha.CoreState.running
-        time.sleep(0.05)
-
-        # Setup that events from remote_api get forwarded to local_api
-        # Do this after we are running, otherwise HTTP is not started
-        # or requests are blocked
-        if not connect_remote_events(self.remote_api, self.config.api):
-            raise HomeAssistantError((
-                'Could not setup event forwarding from api {} to '
-                'local api {}').format(self.remote_api, self.config.api))
-
-    def stop(self):
-        """Stop Home Assistant and shuts down all threads."""
-        _LOGGER.info("Stopping")
-        self.state = ha.CoreState.stopping
-
-        self.bus.fire(ha.EVENT_HOMEASSISTANT_STOP,
-                      origin=ha.EventOrigin.remote)
-
-        # Disconnect master event forwarding
-        disconnect_remote_events(self.remote_api, self.config.api)
-        self.state = ha.CoreState.not_running
-
-
-class EventBus(ha.EventBus):
-    """EventBus implementation that forwards fire_event to remote API."""
-
-    def __init__(self, api, hass):
-        """Initalize the eventbus."""
-        super().__init__(hass)
-        self._api = api
-
-    def fire(self, event_type, event_data=None, origin=ha.EventOrigin.local):
-        """Forward local events to remote target.
-
-        Handles remote event as usual.
-        """
-        # All local events that are not TIME_CHANGED are forwarded to API
-        if origin == ha.EventOrigin.local and \
-           event_type != ha.EVENT_TIME_CHANGED:
-
-            fire_event(self._api, event_type, event_data)
-
-        else:
-            super().fire(event_type, event_data, origin)
-
-
-class EventForwarder(object):
-    """Listens for events and forwards to specified APIs."""
-
-    def __init__(self, hass, restrict_origin=None):
-        """Initalize the event forwarder."""
-        _LOGGER.warning('API forwarding is deprecated. '
-                        'Will be removed by 0.43')
-
-        self.hass = hass
-        self.restrict_origin = restrict_origin
-
-        # We use a tuple (host, port) as key to ensure
-        # that we do not forward to the same host twice
-        self._targets = {}
-
-        self._lock = threading.Lock()
-        self._async_unsub_listener = None
-
-    @ha.callback
-    def async_connect(self, api):
-        """Attach to a Home Assistant instance and forward events.
-
-        Will overwrite old target if one exists with same host/port.
-        """
-        if self._async_unsub_listener is None:
-            self._async_unsub_listener = self.hass.bus.async_listen(
-                ha.MATCH_ALL, self._event_listener)
-
-        key = (api.host, api.port)
-
-        self._targets[key] = api
-
-    @ha.callback
-    def async_disconnect(self, api):
-        """Remove target from being forwarded to."""
-        key = (api.host, api.port)
-
-        did_remove = self._targets.pop(key, None) is None
-
-        if len(self._targets) == 0:
-            # Remove event listener if no forwarding targets present
-            self._async_unsub_listener()
-            self._async_unsub_listener = None
-
-        return did_remove
-
-    def _event_listener(self, event):
-        """Listen and forward all events."""
-        with self._lock:
-            # We don't forward time events or, if enabled, non-local events
-            if event.event_type == ha.EVENT_TIME_CHANGED or \
-               (self.restrict_origin and event.origin != self.restrict_origin):
-                return
-
-            for api in self._targets.values():
-                fire_event(api, event.event_type, event.data)
-
-
-class StateMachine(ha.StateMachine):
-    """Fire set events to an API. Uses state_change events to track states."""
-
-    def __init__(self, bus, loop, api):
-        """Initalize the statemachine."""
-        super().__init__(bus, loop)
-        self._api = api
-        self.mirror()
-
-        bus.listen(ha.EVENT_STATE_CHANGED, self._state_changed_listener)
-
-    def remove(self, entity_id):
-        """Remove the state of an entity.
-
-        Returns boolean to indicate if an entity was removed.
-        """
-        return remove_state(self._api, entity_id)
-
-    def set(self, entity_id, new_state, attributes=None, force_update=False):
-        """Call set_state on remote API."""
-        set_state(self._api, entity_id, new_state, attributes, force_update)
-
-    def mirror(self):
-        """Discard current data and mirrors the remote state machine."""
-        self._states = {state.entity_id: state for state
-                        in get_states(self._api)}
-
-    def _state_changed_listener(self, event):
-        """Listen for state changed events and applies them."""
-        if event.data['new_state'] is None:
-            self._states.pop(event.data['entity_id'], None)
-        else:
-            self._states[event.data['entity_id']] = event.data['new_state']
-
-
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
@@ -350,59 +157,6 @@ def validate_api(api):
 
     except HomeAssistantError:
         return APIStatus.CANNOT_CONNECT
-
-
-def connect_remote_events(from_api, to_api):
-    """Setup from_api to forward all events to to_api."""
-    _LOGGER.warning('Event forwarding is deprecated. '
-                    'Will be removed by 0.43')
-    data = {
-        'host': to_api.host,
-        'api_password': to_api.api_password,
-        'port': to_api.port
-    }
-
-    try:
-        req = from_api(METHOD_POST, URL_API_EVENT_FORWARD, data)
-
-        if req.status_code == 200:
-            return True
-        else:
-            _LOGGER.error(
-                "Error setting up event forwarding: %s - %s",
-                req.status_code, req.text)
-
-            return False
-
-    except HomeAssistantError:
-        _LOGGER.exception("Error setting up event forwarding")
-        return False
-
-
-def disconnect_remote_events(from_api, to_api):
-    """Disconnect forwarding events from from_api to to_api."""
-    _LOGGER.warning('Event forwarding is deprecated. '
-                    'Will be removed by 0.43')
-    data = {
-        'host': to_api.host,
-        'port': to_api.port
-    }
-
-    try:
-        req = from_api(METHOD_DELETE, URL_API_EVENT_FORWARD, data)
-
-        if req.status_code == 200:
-            return True
-        else:
-            _LOGGER.error(
-                "Error removing event forwarding: %s - %s",
-                req.status_code, req.text)
-
-            return False
-
-    except HomeAssistantError:
-        _LOGGER.exception("Error removing an event forwarder")
-        return False
 
 
 def get_event_listeners(api):
