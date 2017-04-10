@@ -1,12 +1,10 @@
 """The tests for the rss_feed_api component."""
-import json
 import unittest
 from xml.etree import ElementTree
 
 import requests
 
 from homeassistant import setup, const
-import homeassistant.core as ha
 import homeassistant.components.http as http
 
 from tests.common import get_test_instance_port, get_test_home_assistant
@@ -41,16 +39,17 @@ def setUpModule():
 
     setup.setup_component(
         hass, http.DOMAIN,
-        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-         http.CONF_SERVER_PORT: SERVER_PORT}})
+        {http.DOMAIN: {
+            http.CONF_API_PASSWORD: API_PASSWORD,
+            http.CONF_SERVER_PORT: SERVER_PORT}})
 
     setup.setup_component(
         hass, 'rss_feed_template',
-        { 'rss_feed_template':
+        {'rss_feed_template':
          {'testfeed': {
-             'title':'feed title is {{states.test.test1.state}}',
-             'items': [{'title':'item title is {{states.test.test2.state}}',
-                        'description':'desc {{states.test.test3.state}}'}]}}})
+             'title': 'feed title is {{states.test.test1.state}}',
+             'items': [{'title': 'item title is {{states.test.test2.state}}',
+                        'description': 'desc {{states.test.test3.state}}'}]}}})
 
     hass.start()
 
@@ -73,7 +72,7 @@ class TestRssFeedTemplate(unittest.TestCase):
         req = requests.get(_url('/api/rss/testfeed'),
                            headers=HA_HEADERS)
 
-        xml=ElementTree.fromstring(req.text)
+        xml = ElementTree.fromstring(req.text)
         self.assertEqual('feed title is a_state_1',
                          xml[0].text)
         self.assertEqual('item title is a_state_2',
