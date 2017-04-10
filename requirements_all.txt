@@ -388,6 +388,9 @@ miflora==0.1.16
 # homeassistant.components.tts
 mutagen==1.36.2
 
+# homeassistant.components.light.mipow
+mipow==0.2
+
 # homeassistant.components.sensor.usps
 myusps==1.0.3
 
