@@ -81,7 +81,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 params=query_payload
             )
 
-        query_resp = yield from query_req.json()
+        # Skip content type check because Synology doesn't return JSON with
+        # right content type
+        query_resp = yield from query_req.json(content_type=None)
         auth_path = query_resp['data'][AUTH_API]['path']
         camera_api = query_resp['data'][CAMERA_API]['path']
         camera_path = query_resp['data'][CAMERA_API]['path']
