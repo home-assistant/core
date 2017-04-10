@@ -10,7 +10,7 @@ import random
 import string
 from functools import wraps
 from types import MappingProxyType
-from unicodedata import normalize
+from slugify import slugify as python_slugify
 
 from typing import Any, Optional, TypeVar, Callable, Sequence, KeysView, Union
 
@@ -21,7 +21,6 @@ U = TypeVar('U')
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
-RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 
 
 def sanitize_filename(filename: str) -> str:
@@ -36,9 +35,11 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = normalize('NFKD', text).lower().replace(" ", "_")
-
-    return RE_SLUGIFY.sub("", text)
+    for char in ':.-!@#$(),':
+        text = text.replace(char, '')
+    text = python_slugify(text, regex_pattern=r'[^-a-z0-9_ ]+')
+    text = text.replace("-", "_").replace(" ", "_")
+    return text
 
 
 def repr_helper(inp: Any) -> str:
