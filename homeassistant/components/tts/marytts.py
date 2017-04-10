@@ -2,7 +2,7 @@
 Support for the MaryTTS service.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/tts/marytts/
+https://home-assistant.io/components/tts.marytts/
 """
 import asyncio
 import logging
@@ -12,6 +12,7 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -30,20 +31,18 @@ SUPPORT_CODEC = [
     'aiff', 'au', 'wav'
 ]
 
-CONF_MARYTTS_HOST = 'marytts_host'
-CONF_MARYTTS_PORT = 'marytts_port'
 CONF_VOICE = 'voice'
 CONF_CODEC = 'codec'
 
-DEFAULT_MARYTTS_HOST = 'localhost'
-DEFAULT_MARYTTS_PORT = '59125'
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 59125
 DEFAULT_LANG = 'en-US'
 DEFAULT_VOICE = 'cmu-slt-hsmm'
 DEFAULT_CODEC = 'wav'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MARYTTS_HOST, default=DEFAULT_MARYTTS_HOST): cv.string,
-    vol.Optional(CONF_MARYTTS_PORT, default=DEFAULT_MARYTTS_PORT): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
     vol.Optional(CONF_VOICE, default=DEFAULT_VOICE): vol.In(SUPPORT_VOICES),
     vol.Optional(CONF_CODEC, default=DEFAULT_CODEC): vol.In(SUPPORT_CODEC)
@@ -62,8 +61,8 @@ class MaryTTSProvider(Provider):
     def __init__(self, hass, conf):
         """Init MaryTTS TTS service."""
         self.hass = hass
-        self._marytts_host = conf.get(CONF_MARYTTS_HOST)
-        self._marytts_port = conf.get(CONF_MARYTTS_PORT)
+        self._host = conf.get(CONF_HOST)
+        self._port = conf.get(CONF_PORT)
         self._codec = conf.get(CONF_CODEC)
         self._voice = conf.get(CONF_VOICE)
         self._language = conf.get(CONF_LANG)
@@ -89,8 +88,7 @@ class MaryTTSProvider(Provider):
         request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                marytts_url = "http://" + self._marytts_host + ":" + \
-                              self._marytts_port + "/process?"
+                url = 'http://{}:{}/process?'.format(self._host, self._port)
 
                 if self._codec == 'wav':
                     audio = 'WAVE'
@@ -107,8 +105,7 @@ class MaryTTSProvider(Provider):
                     'LOCALE': actual_language
                 }
 
-                request = yield from websession.get(marytts_url,
-                                                    params=url_param)
+                request = yield from websession.get(url, params=url_param)
 
                 if request.status != 200:
                     _LOGGER.error("Error %d on load url %s.",
