@@ -235,10 +235,12 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
     return async_remove
 
 
-def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
+              encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     async_remove = run_coroutine_threadsafe(
-        async_subscribe(hass, topic, msg_callback, qos),
+        async_subscribe(hass, topic, msg_callback,
+                        qos, encoding),
         hass.loop
     ).result()
 
