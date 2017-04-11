@@ -386,7 +386,7 @@ def setup(hass, config):
     def stop_network(_service_or_event):
         """Stop Z-Wave network."""
         _LOGGER.info("Stopping ZWave network.")
-        NETWORK.stop()
+        network.stop()
         if hass.state == CoreState.running:
             hass.bus.fire(const.EVENT_NETWORK_STOP)
 

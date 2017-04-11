@@ -70,10 +70,10 @@ def test_config_access_error():
 
 
 @asyncio.coroutine
-@patch.object(zwave, 'NETWORK')
-def test_setup_platform(mock_network, hass, mock_openzwave):
+def test_setup_platform(hass, mock_openzwave):
     """Test invalid device config."""
     mock_device = MagicMock()
+    hass.data[ZWAVE_NETWORK] = MagicMock()
     hass.data[zwave.DATA_ZWAVE_DICT] = {456: mock_device}
     async_add_devices = MagicMock()
 
@@ -104,7 +104,7 @@ def test_zwave_ready_wait(hass, mock_openzwave):
 
     with patch.object(zwave.time, 'sleep') as mock_sleep:
         with patch.object(zwave, '_LOGGER') as mock_logger:
-            zwave.NETWORK.state = MockNetwork.STATE_STARTED
+            hass.data[ZWAVE_NETWORK].state = MockNetwork.STATE_STARTED
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             yield from hass.async_block_till_done()
 
@@ -552,8 +552,8 @@ class TestZWaveServices(unittest.TestCase):
             self.hass.services.call('zwave', 'stop_network', {})
             self.hass.block_till_done()
 
-            assert zwave.NETWORK.stop.called
-            assert len(zwave.NETWORK.stop.mock_calls) == 1
+            assert self.zwave_network.stop.called
+            assert len(self.zwave_network.stop.mock_calls) == 1
             assert mock_fire.called
             assert len(mock_fire.mock_calls) == 2
             assert mock_fire.mock_calls[0][1][0] == const.EVENT_NETWORK_STOP
