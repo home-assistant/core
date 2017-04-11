@@ -121,14 +121,14 @@ def setup(hass, config):
         _LOGGER.info("Refreshing Wink states from API")
         for entity in hass.data[DOMAIN]['entities']:
             entity.schedule_update_ha_state(True)
-    hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
+    hass.services.register(DOMAIN, 'Refresh_state_from_Wink', force_update)
 
     def pull_new_devices(call):
         """Pull new devices added to users Wink account since startup."""
         _LOGGER.info("Getting new devices from Wink API.")
         for component in WINK_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
-    hass.services.register(DOMAIN, 'Add new devices', pull_new_devices)
+    hass.services.register(DOMAIN, 'Add_new_devices', pull_new_devices)
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
