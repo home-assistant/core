@@ -44,7 +44,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.2
 
 # homeassistant.components.light.lifx
-aiolifx==0.4.2
+aiolifx==0.4.4
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
