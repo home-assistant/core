@@ -46,7 +46,7 @@ MYSENSORS_GATEWAYS = 'mysensors_gateways'
 MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    'ff3476b70edc9c995b939cddb9d51f8d2d018581.zip#pymysensors==0.9.0']
+    'c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1']
 
 
 def is_socket_address(value):
