@@ -693,7 +693,7 @@ schiene==0.18
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==3.6.5
+sendgrid==4.0.0
 
 # homeassistant.components.sensor.sensehat
 sense-hat==2.2.0
