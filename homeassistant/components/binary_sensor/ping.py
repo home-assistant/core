@@ -115,19 +115,19 @@ class PingData(object):
         pinger = subprocess.Popen(
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
-            out, error = pinger.communicate()
+            out = pinger.communicate()
             match = PING_MATCHER.search(str(out).split('\n')[-1])
-            min, avg, max, mdev = match.groups()
-            return {'min': min, 'avg': avg, 'max': max, 'mdev': mdev}
+            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
+            return {
+                'min': rtt_min,
+                'avg': rtt_avg,
+                'max': rtt_max,
+                'mdev': rtt_mdev}
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Retreive the latest details from the host."""
+        """Retrieve the latest details from the host."""
         self.data = self.ping()
-
-        if self.data:
-            self.available = True
-        else:
-            self.available = False
+        self.available = bool(self.data)
