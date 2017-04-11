@@ -4,6 +4,7 @@ Component for interacting with a Lutron RadioRA 2 system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lutron/
 """
+import asyncio
 import logging
 
 from homeassistant.helpers import discovery
@@ -50,15 +51,15 @@ def setup(hass, base_config):
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
-    def __init__(self, hass, area_name, lutron_device, controller):
+    def __init__(self, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
 
-        self.hass = hass
-        self.object_id = '{} {}'.format(area_name, lutron_device.name)
-
+    @asyncio.coroutine
+    def async_add_to_hass(self):
+        """Register callbacks."""
         self._controller.subscribe(self._lutron_device, self._update_callback)
 
     def _update_callback(self, _device):
@@ -68,7 +69,7 @@ class LutronDevice(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._lutron_device.name
+        return "{} {}".format(self._area_name, self._lutron_device.name)
 
     @property
     def should_poll(self):
