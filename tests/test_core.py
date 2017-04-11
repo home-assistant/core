@@ -909,3 +909,16 @@ def test_start_taking_too_long(loop, caplog):
     finally:
         yield from hass.async_stop()
         assert hass.state == ha.CoreState.not_running
+
+
+@asyncio.coroutine
+def test_track_task_functions(loop):
+    """Test function to start/stop track task and initial state."""
+    hass = ha.HomeAssistant(loop=loop)
+    assert hass._track_task
+
+    hass.async_stop_track_tasks()
+    assert not hass._track_task
+
+    hass.async_track_tasks()
+    assert hass._track_task
