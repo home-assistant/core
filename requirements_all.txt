@@ -48,7 +48,7 @@ aiolifx==0.4.2
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
-amcrest==1.1.5
+amcrest==1.1.8
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -107,6 +107,9 @@ colorlog>2.1,<3
 # homeassistant.components.alarm_control_panel.concord232
 # homeassistant.components.binary_sensor.concord232
 concord232==0.14
+
+# homeassistant.components.sensor.crimereports
+crimereports==1.0.0
 
 # homeassistant.components.sensor.metoffice
 # homeassistant.components.weather.metoffice
@@ -209,7 +212,7 @@ googlemaps==2.4.6
 gps3==0.33.3
 
 # homeassistant.components.media_player.gstreamer
-gstreamer-player==1.0.0
+gstreamer-player==1.1.0
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.5
@@ -311,7 +314,7 @@ https://github.com/tfriedel/python-lightify/archive/d6eadcf311e6e21746182d1480e9
 https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 
 # homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/0b705119389be58332f17753c53167f551254b6c.zip#pymysensors==0.8
+https://github.com/theolind/pymysensors/archive/ff3476b70edc9c995b939cddb9d51f8d2d018581.zip#pymysensors==0.9.0
 
 # homeassistant.components.sensor.modem_callerid
 https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
@@ -337,10 +340,10 @@ insteonplm==0.7.4
 
 # homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
-jsonrpc-async==0.4
+jsonrpc-async==0.6
 
 # homeassistant.components.media_player.kodi
-jsonrpc-websocket==0.3
+jsonrpc-websocket==0.5
 
 # homeassistant.scripts.keyring
 keyring>=9.3,<10.0
@@ -466,13 +469,13 @@ py-cpuinfo==3.0.0
 pyCEC==0.4.13
 
 # homeassistant.components.switch.tplink
-pyHS100==0.2.4.1
+pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.17.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
-pyalarmdotcom==0.2.9
+pyalarmdotcom==0.3.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.0.8
@@ -509,7 +512,7 @@ pydroid-ipcam==0.8
 pyebox==0.1.0
 
 # homeassistant.components.media_player.emby
-pyemby==1.1
+pyemby==1.2
 
 # homeassistant.components.envisalink
 pyenvisalink==2.0
@@ -533,7 +536,7 @@ pyhik==0.1.2
 pyhomematic==0.1.24
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==1.0.0
+pyhydroquebec==1.1.0
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
@@ -657,7 +660,7 @@ pyvera==0.2.25
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.16
+pywemo==0.4.17
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4
@@ -721,7 +724,7 @@ speedtest-cli==1.0.3
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
-sqlalchemy==1.1.8
+sqlalchemy==1.1.9
 
 # homeassistant.components.statsd
 statsd==3.2.1

@@ -4,11 +4,14 @@ Support to interface with Sonos players (via SoCo).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
 """
+import asyncio
 import datetime
+import functools as ft
 import logging
 from os import path
 import socket
 import urllib
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -107,7 +110,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return
 
         if player.is_visible:
-            device = SonosDevice(hass, player)
+            device = SonosDevice(player)
             add_devices([device], True)
             hass.data[DATA_SONOS].append(device)
             if len(hass.data[DATA_SONOS]) > 1:
@@ -132,7 +135,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.warning('No Sonos speakers found.')
             return
 
-        hass.data[DATA_SONOS] = [SonosDevice(hass, p) for p in players]
+        hass.data[DATA_SONOS] = [SonosDevice(p) for p in players]
         add_devices(hass.data[DATA_SONOS], True)
         _LOGGER.info('Added %s Sonos speakers', len(players))
 
@@ -216,19 +219,42 @@ class _ProcessSonosEventQueue():
 def _get_entity_from_soco(hass, soco):
     """Return SonosDevice from SoCo."""
     for device in hass.data[DATA_SONOS]:
-        if soco == device.soco_device:
+        if soco == device.soco:
             return device
     raise ValueError("No entity for SoCo device!")
+
+
+def soco_error(funct):
+    """Decorator to catch soco exceptions."""
+    @ft.wraps(funct)
+    def wrapper(*args, **kwargs):
+        """Wrapper for all soco exception."""
+        from soco.exceptions import SoCoException
+        try:
+            return funct(*args, **kwargs)
+        except SoCoException as err:
+            _LOGGER.error("Error on %s with %s.", funct.__name__, err)
+
+    return wrapper
+
+
+def soco_coordinator(funct):
+    """Decorator to call funct on coordinator."""
+    @ft.wraps(funct)
+    def wrapper(device, *args, **kwargs):
+        """Wrapper for call to coordinator."""
+        if device.is_coordinator:
+            return funct(device, *args, **kwargs)
+        return funct(device.coordinator, *args, **kwargs)
+
+    return wrapper
 
 
 class SonosDevice(MediaPlayerDevice):
     """Representation of a Sonos device."""
 
-    def __init__(self, hass, player):
+    def __init__(self, player):
         """Initialize the Sonos device."""
-        from soco.snapshot import Snapshot
-
-        self.hass = hass
         self.volume_increment = 5
         self._unique_id = player.uid
         self._player = player
@@ -260,8 +286,13 @@ class SonosDevice(MediaPlayerDevice):
         self._is_playing_tv = None
         self._favorite_sources = None
         self._source_name = None
-        self.soco_snapshot = Snapshot(self._player)
+        self._soco_snapshot = None
         self._snapshot_group = None
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Subscribe sonos events."""
+        self.hass.loop.run_in_executor(None, self._subscribe_to_player_events)
 
     @property
     def should_poll(self):
@@ -297,7 +328,7 @@ class SonosDevice(MediaPlayerDevice):
         return self._coordinator is None
 
     @property
-    def soco_device(self):
+    def soco(self):
         """Return soco device."""
         return self._player
 
@@ -327,7 +358,6 @@ class SonosDevice(MediaPlayerDevice):
                 auto_renew=True,
                 event_queue=self._queue)
 
-    # pylint: disable=too-many-branches, too-many-statements
     def update(self):
         """Retrieve latest state."""
         if self._speaker_info is None:
@@ -606,16 +636,6 @@ class SonosDevice(MediaPlayerDevice):
         self._is_playing_tv = is_playing_tv
         self._is_playing_line_in = is_playing_line_in
         self._source_name = source_name
-
-        # update state of the whole group
-        for device in [x for x in self.hass.data[DATA_SONOS]
-                       if x.coordinator == self]:
-            if device.entity_id is not self.entity_id:
-                self.schedule_update_ha_state()
-
-        if self._queue is None and self.entity_id is not None:
-            self._subscribe_to_player_events()
-
         self._last_avtransport_event = None
 
     def _format_media_image_url(self, url, fallback_uri):
@@ -781,27 +801,31 @@ class SonosDevice(MediaPlayerDevice):
 
         return supported
 
+    @soco_error
     def volume_up(self):
         """Volume up media player."""
         self._player.volume += self.volume_increment
 
+    @soco_error
     def volume_down(self):
         """Volume down media player."""
         self._player.volume -= self.volume_increment
 
+    @soco_error
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         self._player.volume = str(int(volume * 100))
 
+    @soco_error
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         self._player.mute = mute
 
+    @soco_error
+    @soco_coordinator
     def select_source(self, source):
         """Select input source."""
-        if self._coordinator:
-            self._coordinator.select_source(source)
-        elif source == SUPPORT_SOURCE_LINEIN:
+        if source == SUPPORT_SOURCE_LINEIN:
             self._source_name = SUPPORT_SOURCE_LINEIN
             self._player.switch_to_line_in()
         elif source == SUPPORT_SOURCE_TV:
@@ -842,83 +866,78 @@ class SonosDevice(MediaPlayerDevice):
         else:
             return self._source_name
 
+    @soco_error
     def turn_off(self):
         """Turn off media player."""
         self.media_pause()
 
+    @soco_error
+    @soco_coordinator
     def media_play(self):
         """Send play command."""
-        if self._coordinator:
-            self._coordinator.media_play()
-        else:
-            self._player.play()
+        self._player.play()
 
+    @soco_error
+    @soco_coordinator
     def media_stop(self):
         """Send stop command."""
-        if self._coordinator:
-            self._coordinator.media_stop()
-        else:
-            self._player.stop()
+        self._player.stop()
 
+    @soco_error
+    @soco_coordinator
     def media_pause(self):
         """Send pause command."""
-        if self._coordinator:
-            self._coordinator.media_pause()
-        else:
-            self._player.pause()
+        self._player.pause()
 
+    @soco_error
+    @soco_coordinator
     def media_next_track(self):
         """Send next track command."""
-        if self._coordinator:
-            self._coordinator.media_next_track()
-        else:
-            self._player.next()
+        self._player.next()
 
+    @soco_error
+    @soco_coordinator
     def media_previous_track(self):
         """Send next track command."""
-        if self._coordinator:
-            self._coordinator.media_previous_track()
-        else:
-            self._player.previous()
+        self._player.previous()
 
+    @soco_error
+    @soco_coordinator
     def media_seek(self, position):
         """Send seek command."""
-        if self._coordinator:
-            self._coordinator.media_seek(position)
-        else:
-            self._player.seek(str(datetime.timedelta(seconds=int(position))))
+        self._player.seek(str(datetime.timedelta(seconds=int(position))))
 
+    @soco_error
+    @soco_coordinator
     def clear_playlist(self):
         """Clear players playlist."""
-        if self._coordinator:
-            self._coordinator.clear_playlist()
-        else:
-            self._player.clear_queue()
+        self._player.clear_queue()
 
+    @soco_error
     def turn_on(self):
         """Turn the media player on."""
         self.media_play()
 
+    @soco_error
+    @soco_coordinator
     def play_media(self, media_type, media_id, **kwargs):
         """
         Send the play_media command to the media player.
 
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
-        if self._coordinator:
-            self._coordinator.play_media(media_type, media_id, **kwargs)
+        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            from soco.exceptions import SoCoUPnPException
+            try:
+                self._player.add_uri_to_queue(media_id)
+            except SoCoUPnPException:
+                _LOGGER.error('Error parsing media uri "%s", '
+                              "please check it's a valid media resource "
+                              'supported by Sonos', media_id)
         else:
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                from soco.exceptions import SoCoUPnPException
-                try:
-                    self._player.add_uri_to_queue(media_id)
-                except SoCoUPnPException:
-                    _LOGGER.error('Error parsing media uri "%s", '
-                                  "please check it's a valid media resource "
-                                  'supported by Sonos', media_id)
-            else:
-                self._player.play_uri(media_id)
+            self._player.play_uri(media_id)
 
+    @soco_error
     def join(self, master):
         """Join the player to a group."""
         coord = [device for device in self.hass.data[DATA_SONOS]
@@ -926,29 +945,26 @@ class SonosDevice(MediaPlayerDevice):
 
         if coord and master != self.entity_id:
             coord = coord[0]
-            if coord.soco_device.group.coordinator != coord.soco_device:
-                coord.soco_device.unjoin()
-            self._player.join(coord.soco_device)
+            if coord.soco.group.coordinator != coord.soco:
+                coord.soco.unjoin()
+            self._player.join(coord.soco)
             self._coordinator = coord
         else:
             _LOGGER.error("Master not found %s", master)
 
+    @soco_error
     def unjoin(self):
         """Unjoin the player from a group."""
         self._player.unjoin()
         self._coordinator = None
 
+    @soco_error
     def snapshot(self, with_group=True):
         """Snapshot the player."""
-        from soco.exceptions import SoCoException
-        try:
-            self.soco_snapshot.is_playing_queue = False
-            self.soco_snapshot.is_coordinator = False
-            self.soco_snapshot.snapshot()
-        except SoCoException:
-            _LOGGER.debug("Error on snapshot %s", self.entity_id)
-            self._snapshot_group = None
-            return
+        from soco.snapshot import Snapshot
+
+        self._soco_snapshot = Snapshot(self._player)
+        self._soco_snapshot.snapshot()
 
         if with_group:
             self._snapshot_group = self._player.group
@@ -957,14 +973,15 @@ class SonosDevice(MediaPlayerDevice):
         else:
             self._snapshot_group = None
 
+    @soco_error
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
         from soco.exceptions import SoCoException
         try:
             # need catch exception if a coordinator is going to slave.
             # this state will recover with group part.
-            self.soco_snapshot.restore(False)
-        except (TypeError, SoCoException):
+            self._soco_snapshot.restore(False)
+        except (TypeError, AttributeError, SoCoException):
             _LOGGER.debug("Error on restore %s", self.entity_id)
 
         # restore groups
@@ -1006,19 +1023,17 @@ class SonosDevice(MediaPlayerDevice):
                 if s_dev != old.coordinator:
                     s_dev.join(old.coordinator)
 
+    @soco_error
+    @soco_coordinator
     def set_sleep_timer(self, sleep_time):
         """Set the timer on the player."""
-        if self._coordinator:
-            self._coordinator.set_sleep_timer(sleep_time)
-        else:
-            self._player.set_sleep_timer(sleep_time)
+        self._player.set_sleep_timer(sleep_time)
 
+    @soco_error
+    @soco_coordinator
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
-        if self._coordinator:
-            self._coordinator.set_sleep_timer(None)
-        else:
-            self._player.set_sleep_timer(None)
+        self._player.set_sleep_timer(None)
 
     @property
     def device_state_attributes(self):

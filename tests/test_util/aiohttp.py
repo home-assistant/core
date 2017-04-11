@@ -75,8 +75,10 @@ class AiohttpClientMocker:
     @asyncio.coroutine
     # pylint: disable=unused-variable
     def match_request(self, method, url, *, data=None, auth=None, params=None,
-                      headers=None, allow_redirects=None):
+                      headers=None, allow_redirects=None, timeout=None,
+                      json=None):
         """Match a request against pre-registered requests."""
+        data = data or json
         for response in self._mocks:
             if response.match_request(method, url, params):
                 self.mock_calls.append((method, url, data))
