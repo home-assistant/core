@@ -24,6 +24,17 @@ CONST_OVERLAY_MANUAL = 'MANUAL'
 # the temperature will be reset after a timespan
 CONST_OVERLAY_TIMER = 'TIMER'
 
+CONST_MODE_FAN_HIGH = 'HIGH'
+CONST_MODE_FAN_MIDDLE = 'MIDDLE'
+CONST_MODE_FAN_LOW = 'LOW'
+
+FAN_MODES_LIST = {
+    CONST_MODE_FAN_HIGH = 'High',
+    CONST_MODE_FAN_MIDDLE = 'Middle',
+    CONST_MODE_FAN_LOW = 'Low',
+    CONST_MODE_OFF = 'Off',
+}
+
 OPERATION_LIST = {
     CONST_OVERLAY_MANUAL: 'Manual',
     CONST_OVERLAY_TIMER: 'Timer',
@@ -60,9 +71,14 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     capabilities = tado.get_capabilities(zone_id)
 
     unit = TEMP_CELSIUS
-    min_temp = float(capabilities['temperatures']['celsius']['min'])
-    max_temp = float(capabilities['temperatures']['celsius']['max'])
-    ac_mode = capabilities['type'] != 'HEATING'
+    ac_mode = capabilities['type'] == 'AIR_CONDITIONING'
+
+    if ac_mode:
+        min_temp = float(capabilities['HEAT']['temperatures']['celsius']['min'])
+        max_temp = float(capabilities['HEAT']['temperatures']['celsius']['max'])        
+    else:
+        min_temp = float(capabilities['temperatures']['celsius']['min'])
+        max_temp = float(capabilities['temperatures']['celsius']['max'])
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
@@ -107,7 +123,9 @@ class TadoClimate(ClimateDevice):
         self._max_temp = max_temp
         self._target_temp = None
         self._tolerance = tolerance
+        self._cooling = False
 
+        self._current_fan = CONST_MODE_OFF
         self._current_operation = CONST_MODE_SMART_SCHEDULE
         self._overlay_mode = CONST_MODE_SMART_SCHEDULE
 
@@ -129,12 +147,31 @@ class TadoClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current readable operation mode."""
-        return OPERATION_LIST.get(self._current_operation)
+        if self._cooling:
+            return "Cooling"
+        else:
+            return OPERATION_LIST.get(self._current_operation)
 
     @property
     def operation_list(self):
         """List of available operation modes (readable)."""
         return list(OPERATION_LIST.values())
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        if self.ac_mode:
+            return FAN_MODES_LIST.get(self._current_fan)
+        else:
+            return None
+
+    @property
+    def fan_list(self):
+        """List of available fan modes."""
+        if self.ac_mode:
+            return list(FAN_MODES_LIST.values())
+        else:
+            return None
 
     @property
     def temperature_unit(self):
@@ -235,29 +272,39 @@ class TadoClimate(ClimateDevice):
             power = data['setting']['power']
             if power == 'OFF':
                 self._current_operation = CONST_MODE_OFF
+                self._current_fan = CONST_MODE_OFF
+                # There is no overlay, the mode will always be
+                # "SMART_SCHEDULE"
+                self._overlay_mode = CONST_MODE_SMART_SCHEDULE
                 self._device_is_active = False
             else:
                 self._device_is_active = True
 
-        if 'overlay' in data and data['overlay'] is not None:
-            overlay = True
-            termination = data['overlay']['termination']['type']
-        else:
+        if self._device_is_active:
             overlay = False
-            termination = ""
+            overlay_data = None
+            termination = self._current_operation
+            cooling = False
+            fan_speed = CONST_MODE_OFF
 
-        # If you set mode manualy to off, there will be an overlay
-        # and a termination, but we want to see the mode "OFF"
+            if 'overlay' in data:
+                overlay_data = data['overlay']
+                overlay = overlay_data is not None
+            
+            if overlay:
+                termination = overlay_data['termination']['type']
 
-        if overlay and self._device_is_active:
-            # There is an overlay the device is on
+                if 'setting' in overlay_data:
+                    cooling = overlay_data['setting']['mode'] == 'COOL'
+                    fan_speed = overlay_data['setting']['fanSpeed']
+
+            # If you set mode manualy to off, there will be an overlay
+            # and a termination, but we want to see the mode "OFF"
+
             self._overlay_mode = termination
             self._current_operation = termination
-        else:
-            # There is no overlay, the mode will always be
-            # "SMART_SCHEDULE"
-            self._overlay_mode = CONST_MODE_SMART_SCHEDULE
-            self._current_operation = CONST_MODE_SMART_SCHEDULE
+            self._cooling = cooling
+            self._current_fan = fan_speed
 
     def _control_heating(self):
         """Send new target temperature to mytado."""
