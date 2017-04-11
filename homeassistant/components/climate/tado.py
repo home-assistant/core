@@ -205,27 +205,27 @@ class TadoClimate(ClimateDevice):
 
         if 'sensorDataPoints' in data:
             sensor_data = data['sensorDataPoints']
-            temperature = float(
-                sensor_data['insideTemperature']['celsius'])
-            humidity = float(
-                sensor_data['humidity']['percentage'])
-            setting = 0
+
+            unit = TEMP_CELSIUS
+
+            if 'insideTemperature' in sensor_data:
+                temperature = float(
+                    sensor_data['insideTemperature']['celsius'])
+                self._cur_temp = self.hass.config.units.temperature(
+                    temperature, unit)
+
+            if 'humidity' in sensor_data:
+                humidity = float(
+                    sensor_data['humidity']['percentage'])
+                self._cur_humidity = humidity
 
             # temperature setting will not exist when device is off
             if 'temperature' in data['setting'] and \
                     data['setting']['temperature'] is not None:
                 setting = float(
                     data['setting']['temperature']['celsius'])
-
-            unit = TEMP_CELSIUS
-
-            self._cur_temp = self.hass.config.units.temperature(
-                temperature, unit)
-
-            self._target_temp = self.hass.config.units.temperature(
-                setting, unit)
-
-            self._cur_humidity = humidity
+                self._target_temp = self.hass.config.units.temperature(
+                    setting, unit)
 
         if 'tadoMode' in data:
             mode = data['tadoMode']
