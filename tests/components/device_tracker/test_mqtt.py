@@ -1,5 +1,6 @@
 """The tests for the MQTT device tracker platform."""
 import asyncio
+import json
 import unittest
 from unittest.mock import patch
 import logging
@@ -13,6 +14,17 @@ from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
 
 _LOGGER = logging.getLogger(__name__)
+
+LOCATION_MESSAGE = {
+    'lon': 1.0,
+    'alt': 27,
+    'acc': 60,
+    'lat': 2.0,
+    'host_name': 'Test Device',
+    'batt': 99.9}
+
+LOCATION_MESSAGE_INCOMPLETE = {
+    'lon': 2.0}
 
 
 class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
@@ -44,7 +56,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
                    side_effect=mock_setup_scanner) as mock_sp:
 
             dev_id = 'paulus'
-            topic = '/location/paulus'
+            topic = 'location/paulus'
             assert setup_component(self.hass, device_tracker.DOMAIN, {
                 device_tracker.DOMAIN: {
                     CONF_PLATFORM: 'mqtt',
@@ -53,11 +65,11 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
             })
             assert mock_sp.call_count == 1
 
-    def test_new_message(self):
-        """Test new message."""
+    def test_location_name_message(self):
+        """Test location name message."""
         dev_id = 'paulus'
-        enttiy_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
-        topic = '/location/paulus'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        topic = 'location/paulus'
         location = 'work'
 
         self.hass.config.components = set(['mqtt', 'zone'])
@@ -69,4 +81,48 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         })
         fire_mqtt_message(self.hass, topic, location)
         self.hass.block_till_done()
-        self.assertEqual(location, self.hass.states.get(enttiy_id).state)
+        self.assertEqual(location, self.hass.states.get(entity_id).state)
+
+    def test_json_message(self):
+        """Test json location message."""
+        dev_id = 'zanzito'
+        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
+        topic = 'location/zanzito'
+        location = json.dumps(LOCATION_MESSAGE)
+
+        self.hass.config.components = set(['mqtt', 'zone'])
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                'devices': {dev_id: topic}
+            }
+        })
+        fire_mqtt_message(self.hass, topic, location)
+        self.hass.block_till_done()
+        state = self.hass.states.get('device_tracker.zanzito')
+        self.assertEqual(state.attributes.get('latitude'), 2.0)
+        self.assertEqual(state.attributes.get('longitude'), 1.0)
+
+    def test_incomplete_message(self):
+        """Test receiving an inclomplete message."""
+        dev_id = 'zanzito'
+        topic = 'location/zanzito'
+        location = json.dumps(LOCATION_MESSAGE_INCOMPLETE)
+
+        self.hass.config.components = set(['mqtt', 'zone'])
+        assert setup_component(self.hass, device_tracker.DOMAIN, {
+            device_tracker.DOMAIN: {
+                CONF_PLATFORM: 'mqtt',
+                'devices': {dev_id: topic}
+            }
+        })
+
+        with self.assertLogs(level='ERROR') as test_handle:
+            fire_mqtt_message(self.hass, topic, location)
+            self.hass.block_till_done()
+            self.assertIn(
+                "ERROR:homeassistant.components.device_tracker.mqtt:"
+                "Skipping update for following data "
+                "because of missing gps coordinates: "
+                "{'lon': 2.0}",
+                test_handle.output[0])
