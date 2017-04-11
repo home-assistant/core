@@ -477,12 +477,6 @@ class TestZWaveServices(unittest.TestCase):
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
-        self.zwave_events = []
-
-        def mock_zwave_events(event):
-            """Mock event."""
-            self.zwave_events.append(event)
-        self.hass.bus.listen(const.EVENT_NETWORK_STOP, mock_zwave_events)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
