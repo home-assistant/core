@@ -6,7 +6,7 @@ https://home-assistant.io/components/rss_feed_template/
 """
 
 import asyncio
-from cgi import escape
+from html import escape
 from aiohttp import web
 
 import voluptuous as vol
