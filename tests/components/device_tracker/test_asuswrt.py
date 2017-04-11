@@ -54,17 +54,6 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         except FileNotFoundError:
             pass
 
-    def test_password_or_pub_key_required(self): \
-            # pylint: disable=invalid-name
-        """Test creating an AsusWRT scanner without a pass or pubkey."""
-        with assert_setup_component(0):
-            assert setup_component(
-                self.hass, DOMAIN, {DOMAIN: {
-                    CONF_PLATFORM: 'asuswrt',
-                    CONF_HOST: 'fake_host',
-                    CONF_USERNAME: 'fake_user'
-                }})
-
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
@@ -166,31 +155,3 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             ssh.login.call_args,
             mock.call('fake_host', 'fake_user', password='fake_pass', port=22)
         )
-
-    def test_ssh_login_without_password_or_pubkey(self):  \
-            # pylint: disable=invalid-name
-        """Test that login is not called without password or pub_key."""
-        ssh = mock.MagicMock()
-        ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)
-        ssh_mock.start()
-        self.addCleanup(ssh_mock.stop)
-
-        conf_dict = {
-            CONF_PLATFORM: 'asuswrt',
-            CONF_HOST: 'fake_host',
-            CONF_USERNAME: 'fake_user',
-        }
-
-        with self.assertRaises(vol.Invalid):
-            conf_dict = PLATFORM_SCHEMA(conf_dict)
-
-        update_mock = mock.patch(
-            'homeassistant.components.device_tracker.asuswrt.'
-            'AsusWrtDeviceScanner.get_asuswrt_data')
-        update_mock.start()
-        self.addCleanup(update_mock.stop)
-
-        with assert_setup_component(0):
-            assert setup_component(self.hass, DOMAIN,
-                                   {DOMAIN: conf_dict})
-        ssh.login.assert_not_called()
