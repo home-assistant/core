@@ -164,15 +164,16 @@ class HomeAssistant(object):
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
+            # only block for EVENT_HOMEASSISTANT_START listener
+            self.async_stop_track_tasks()
             with timeout(TIMEOUT_EVENT_START, loop=self.loop):
-                yield from self.async_stop_track_tasks()
+                yield from self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
                 'Something is blocking Home Assistant from wrapping up the '
                 'start up phase. We\'re going to continue anyway. Please '
                 'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
-            self._track_task = False
 
         self.state = CoreState.running
         _async_create_timer(self)
@@ -218,10 +219,9 @@ class HomeAssistant(object):
         """Track tasks so you can wait for all tasks to be done."""
         self._track_task = True
 
-    @asyncio.coroutine
+    @callback
     def async_stop_track_tasks(self):
-        """Track tasks so you can wait for all tasks to be done."""
-        yield from self.async_block_till_done()
+        """Stop track tasks so you can't wait for all tasks to be done."""
         self._track_task = False
 
     @callback
@@ -246,8 +246,6 @@ class HomeAssistant(object):
     @asyncio.coroutine
     def async_block_till_done(self):
         """Block till all pending work is done."""
-        assert self._track_task, 'Not tracking tasks'
-
         # To flush out any call_soon_threadsafe
         yield from asyncio.sleep(0, loop=self.loop)
 
