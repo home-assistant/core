@@ -86,7 +86,6 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
     def test_json_message(self):
         """Test json location message."""
         dev_id = 'zanzito'
-        entity_id = device_tracker.ENTITY_ID_FORMAT.format(dev_id)
         topic = 'location/zanzito'
         location = json.dumps(LOCATION_MESSAGE)
 
