@@ -85,7 +85,6 @@ class MaryTTSProvider(Provider):
 
         actual_language = re.sub('-', '_', language)
 
-        request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 url = 'http://{}:{}/process?'.format(self._host, self._port)
@@ -116,9 +115,5 @@ class MaryTTSProvider(Provider):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Timeout for MaryTTS API.")
             return (None, None)
-
-        finally:
-            if request is not None:
-                yield from request.release()
 
         return (self._codec, data)
