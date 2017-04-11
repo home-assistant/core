@@ -216,9 +216,6 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        if not self.available:
-            return
-
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
@@ -269,9 +266,6 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        if not self.available:
-            return
-
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
