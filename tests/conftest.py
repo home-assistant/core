@@ -12,9 +12,9 @@ from homeassistant import util, setup
 from homeassistant.util import location
 from homeassistant.components import mqtt
 
-from .common import async_test_home_assistant, mock_coro
-from .test_util.aiohttp import mock_aiohttp_client
-from .mock.zwave import SIGNAL_VALUE_CHANGED, SIGNAL_NODE, SIGNAL_NOTIFICATION
+from tests.common import async_test_home_assistant, mock_coro
+from tests.test_util.aiohttp import mock_aiohttp_client
+from tests.mock.zwave import MockNetwork
 
 if os.environ.get('UVLOOP') == '1':
     import uvloop
@@ -100,9 +100,7 @@ def mock_openzwave():
     base_mock = MagicMock()
     libopenzwave = base_mock.libopenzwave
     libopenzwave.__file__ = 'test'
-    base_mock.network.ZWaveNetwork.SIGNAL_VALUE_CHANGED = SIGNAL_VALUE_CHANGED
-    base_mock.network.ZWaveNetwork.SIGNAL_NODE = SIGNAL_NODE
-    base_mock.network.ZWaveNetwork.SIGNAL_NOTIFICATION = SIGNAL_NOTIFICATION
+    base_mock.network.ZWaveNetwork = MockNetwork
 
     with patch.dict('sys.modules', {
         'libopenzwave': libopenzwave,

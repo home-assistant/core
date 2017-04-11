@@ -16,12 +16,12 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD,
-    CONF_NAME, CONF_MONITORED_VARIABLES)
+    CONF_NAME, CONF_MONITORED_VARIABLES, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==1.0.0']
+REQUIREMENTS = ['pyhydroquebec==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,28 +36,32 @@ REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 SENSOR_TYPES = {
-    'period_total_bill': ['Current period bill',
-                          PRICE, 'mdi:square-inc-cash'],
-    'period_length': ['Current period length',
-                      DAYS, 'mdi:calendar-today'],
-    'period_total_days': ['Total number of days in this period',
-                          DAYS, 'mdi:calendar-today'],
-    'period_mean_daily_bill': ['Period daily average bill',
-                               PRICE, 'mdi:square-inc-cash'],
-    'period_mean_daily_consumption': ['Period daily average consumption',
-                                      KILOWATT_HOUR, 'mdi:flash'],
-    'period_total_consumption': ['Total Consumption',
-                                 KILOWATT_HOUR, 'mdi:flash'],
-    'period_lower_price_consumption': ['Period Lower price consumption',
-                                       KILOWATT_HOUR, 'mdi:flash'],
-    'period_higher_price_consumption': ['Period Higher price consumption',
-                                        KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_total_consumption': ['Yesterday total consumption',
-                                    KILOWATT_HOUR, 'mdi:flash'],
-    'yesterday_lower_price_consumption': ['Yesterday lower price consumption',
-                                          KILOWATT_HOUR, 'mdi:flash'],
+    'period_total_bill':
+    ['Current period bill', PRICE, 'mdi:square-inc-cash'],
+    'period_length':
+    ['Current period length', DAYS, 'mdi:calendar-today'],
+    'period_total_days':
+    ['Total number of days in this period', DAYS, 'mdi:calendar-today'],
+    'period_mean_daily_bill':
+    ['Period daily average bill', PRICE, 'mdi:square-inc-cash'],
+    'period_mean_daily_consumption':
+    ['Period daily average consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_total_consumption':
+    ['Total Consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_lower_price_consumption':
+    ['Period Lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'period_higher_price_consumption':
+    ['Period Higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'yesterday_total_consumption':
+    ['Yesterday total consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'yesterday_lower_price_consumption':
+    ['Yesterday lower price consumption', KILOWATT_HOUR, 'mdi:flash'],
     'yesterday_higher_price_consumption':
     ['Yesterday higher price consumption', KILOWATT_HOUR, 'mdi:flash'],
+    'yesterday_average_temperature':
+    ['Yesterday average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'period_average_temperature':
+    ['Period average temperature', TEMP_CELSIUS, 'mdi:thermometer'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

@@ -13,6 +13,7 @@ COMMENT_REQUIREMENTS = (
     'Adafruit_BBIO',
     'fritzconnection',
     'pybluez',
+    'beacontools',
     'bluepy',
     'python-lirc',
     'gattlib',

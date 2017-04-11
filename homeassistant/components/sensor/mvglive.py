@@ -143,6 +143,9 @@ class MVGLiveData(object):
             # find the first departure meeting the criteria
             if not _departure['destination'].startswith(self._destination):
                 continue
+            elif (self._line is not None
+                  and _departure['linename'] != self._line):
+                continue
             elif _departure['time'] < self._offset:
                 continue
             # now select the relevant data

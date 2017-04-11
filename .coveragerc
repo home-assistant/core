@@ -152,6 +152,7 @@ omit =
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
+    homeassistant/components/alarm_control_panel/totalconnect.py
     homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
@@ -174,7 +175,6 @@ omit =
     homeassistant/components/climate/oem.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
-    homeassistant/components/config/zwave.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/homematic.py
     homeassistant/components/cover/myq.py
@@ -325,6 +325,7 @@ omit =
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/comed_hourly_pricing.py
     homeassistant/components/sensor/cpuspeed.py
+    homeassistant/components/sensor/crimereports.py
     homeassistant/components/sensor/cups.py
     homeassistant/components/sensor/currencylayer.py
     homeassistant/components/sensor/darksky.py
@@ -334,6 +335,7 @@ omit =
     homeassistant/components/sensor/dovado.py
     homeassistant/components/sensor/dte_energy_bridge.py
     homeassistant/components/sensor/ebox.py
+    homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
     homeassistant/components/sensor/fastdotcom.py
@@ -439,7 +441,6 @@ omit =
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
-    homeassistant/components/zwave/__init__.py
     homeassistant/components/zwave/util.py
 
 

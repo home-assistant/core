@@ -66,8 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
-        if province not in obj_holidays.PROVINCES:
-            _LOGGER.error('There is no province/state %s in country %s',
+        if province not in obj_holidays.PROVINCES and \
+                        province not in obj_holidays.STATES:
+            _LOGGER.error("There is no province/state %s in country %s",
                           province, country)
             return False
         else:
