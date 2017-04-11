@@ -174,7 +174,7 @@ class InputSlider(Entity):
         state = yield from async_get_last_state(self.hass, self.entity_id)
         value = state and float(state.state)
 
-        # Check against False because value can be 0
+        # Check against None because value can be 0
         if value is not None and self._minimum <= value <= self._maximum:
             self._current_value = value
         else:
