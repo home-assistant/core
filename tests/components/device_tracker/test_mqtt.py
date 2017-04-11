@@ -17,10 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 LOCATION_MESSAGE = {
     'lon': 1.0,
-    'alt': 27,
     'acc': 60,
     'lat': 2.0,
-    'host_name': 'Test Device',
     'batt': 99.9}
 
 LOCATION_MESSAGE_INCOMPLETE = {
