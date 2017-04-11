@@ -133,3 +133,21 @@ def test_initial_state_overrules_restore_state(hass):
     state = hass.states.get('input_slider.b2')
     assert state
     assert float(state.state) == 60
+
+
+@asyncio.coroutine
+def test_no_initial_state_and_no_restore_state(hass):
+    """Ensure that entity is create without initial and restore feature."""
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'b1': {
+                'min': 0,
+                'max': 100,
+            },
+        }})
+
+    state = hass.states.get('input_slider.b1')
+    assert state
+    assert float(state.state) == 0
