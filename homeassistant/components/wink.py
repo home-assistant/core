@@ -15,7 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.2.3', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.2.4', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,13 +97,14 @@ def setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['entities'] = []
     hass.data[DOMAIN]['unique_ids'] = []
-    hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
-        pywink.get_subscription_key(),
-        keep_alive_call)
 
     def keep_alive_call():
         pywink.wink_api_fetch()
         pywink.get_user()
+
+    hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
+        pywink.get_subscription_key(),
+        keep_alive_call)
 
     def start_subscription(event):
         """Start the pubnub subscription."""
