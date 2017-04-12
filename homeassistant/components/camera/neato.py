@@ -6,9 +6,11 @@ https://home-assistant.io/components/camera.neato/
 """
 import logging
 
+from datetime import timedelta
 from homeassistant.components.camera import Camera
 from homeassistant.components.neato import (
     NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN)
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if 'maps' in robot.traits:
             dev.append(NeatoCleaningMap(hass, robot))
     _LOGGER.debug('Adding robots for cleaning maps %s', dev)
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class NeatoCleaningMap(Camera):
@@ -35,27 +37,21 @@ class NeatoCleaningMap(Camera):
         self._robot_name = self.robot.name + ' Cleaning Map'
         self._robot_serial = self.robot.serial
         self.neato = hass.data[NEATO_LOGIN]
-        self._map_data = hass.data[NEATO_MAP_DATA]
-        self._image_url = self._map_data[self._robot_serial]['maps'][0]['url']
-        image = self.neato.download_map(self._image_url)
-        self._image = image.read()
+        self._image_url = None
+        self._image = None
 
     def camera_image(self):
         """Return image response."""
-        self.check_maps()
-        if not self._image_url:
-            _LOGGER.debug('No image to display')
-            return
-        _LOGGER.debug('Displaying: %s', self._image)
+        self.update()
         return self._image
 
-    def check_maps(self):
+    @Throttle(timedelta(seconds=10))
+    def update(self):
         """Check the contents of the map list."""
         self.neato.update_robots()
-        image = None
-        self._map_data = self.hass.data[NEATO_MAP_DATA]
-        _LOGGER.debug('hass map data=%s', self.hass.data[NEATO_MAP_DATA])
-        image_url = self._map_data[self._robot_serial]['maps'][0]['url']
+        image_url = None
+        map_data = self.hass.data[NEATO_MAP_DATA]
+        image_url = map_data[self._robot_serial]['maps'][0]['url']
         if image_url == self._image_url:
             _LOGGER.debug('The map image_url is the same as old')
             return
