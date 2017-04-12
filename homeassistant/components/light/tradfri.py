@@ -1,6 +1,4 @@
-"""
-Support for the IKEA Tradfri platform
-"""
+"""Support for the IKEA Tradfri platform."""
 
 import logging
 
@@ -50,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class IKEATradfri(Light):
-    """ The platform class required by hass """
+    """The platform class required by hass."""
 
     def __init__(self, light):
         """Initialize a Light."""
@@ -76,8 +74,7 @@ class IKEATradfri(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255).
-        """
+        """Brightness of the light (an integer in the range 1-255)."""
         return self._light.light_control.lights[0].dimmer
 
     def turn_off(self, **kwargs):
@@ -85,8 +82,7 @@ class IKEATradfri(Light):
         return self._light.light_control.set_dimmer(0)
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on.
-        """
+        """Instruct the light to turn on."""
         self._light.brightness = self._light.light_control.set_dimmer(
             kwargs.get(ATTR_BRIGHTNESS, 100))
 
