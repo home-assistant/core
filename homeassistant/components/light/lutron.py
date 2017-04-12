@@ -14,12 +14,9 @@ _LOGGER = logging.getLogger(__name__)
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Lutron lights."""
-    area_devs = {}
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]['light']:
-        dev = LutronLight(hass, area_name, device,
-                          hass.data[LUTRON_CONTROLLER])
-        area_devs.setdefault(area_name, []).append(dev)
+        dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
         devs.append(dev)
 
     add_devices(devs, True)
@@ -39,10 +36,10 @@ def to_hass_level(level):
 class LutronLight(LutronDevice, Light):
     """Representation of a Lutron Light, including dimmable."""
 
-    def __init__(self, hass, area_name, lutron_device, controller):
+    def __init__(self, area_name, lutron_device, controller):
         """Initialize the light."""
         self._prev_brightness = None
-        LutronDevice.__init__(self, hass, area_name, lutron_device, controller)
+        LutronDevice.__init__(self, area_name, lutron_device, controller)
 
     @property
     def supported_features(self):
