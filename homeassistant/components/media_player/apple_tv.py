@@ -51,7 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is not None:
         name = discovery_info['name']
         host = discovery_info['host']
-        login_id = discovery_info['hsgid']
+        login_id = discovery_info['properties']['hsgid']
         start_off = False
     else:
         name = config.get(CONF_NAME)

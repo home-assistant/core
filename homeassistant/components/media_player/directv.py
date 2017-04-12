@@ -37,14 +37,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the DirecTV platform."""
     hosts = []
 
-    if discovery_info and discovery_info in KNOWN_HOSTS:
-        return
+    if discovery_info:
+        host = discovery_info.get('host')
 
-    if discovery_info is not None:
+        if host in KNOWN_HOSTS:
+            return
+
         hosts.append([
-            'DirecTV_' + discovery_info[1],
-            discovery_info[0],
-            DEFAULT_PORT
+            'DirecTV_' + discovery_info.get('serial', ''),
+            host, DEFAULT_PORT
         ])
 
     elif CONF_HOST in config:
