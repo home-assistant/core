@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS)
 
 # Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pytradfri>=0.4']
+REQUIREMENTS = ['pytradfri==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
