@@ -98,13 +98,15 @@ def setup(hass, config):
     hass.data[DOMAIN]['entities'] = []
     hass.data[DOMAIN]['unique_ids'] = []
 
-    def keep_alive_call():
+    def keep_alive_call(event):
+        _LOGGER.info("Calling get user.")
         pywink.wink_api_fetch()
         pywink.get_user()
+    hass.services.register(DOMAIN, 'keep_alive', keep_alive_call)
 
     hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
         pywink.get_subscription_key(),
-        keep_alive_call)
+        pywink.get_user)
 
     def start_subscription(event):
         """Start the pubnub subscription."""
