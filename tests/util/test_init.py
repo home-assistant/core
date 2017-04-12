@@ -37,6 +37,7 @@ class TestUtil(unittest.TestCase):
                          util.slugify("greg_phone - exp_wayp1"))
         self.assertEqual("we_are_we_are_a_test_calendar",
                          util.slugify("We are, we are, a... Test Calendar"))
+        self.assertEqual("test_aouss_aou", util.slugify("Tèst_äöüß_ÄÖÜ"))
 
     def test_repr_helper(self):
         """Test repr_helper."""
