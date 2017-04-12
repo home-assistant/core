@@ -429,6 +429,7 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
+    homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
@@ -440,7 +441,6 @@ omit =
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/__init__.py
     homeassistant/components/zwave/util.py
-    homeassistant/components/telegram_bot/*
 
 
 [report]
