@@ -22,6 +22,10 @@ _REQUIRED_ATTRIBUTES = [
     ATTR_QUERY_STAGE, ATTR_AWAKE, ATTR_READY, ATTR_FAILED,
     'is_info_received', 'max_baud_rate', 'is_zwave_plus']
 _OPTIONAL_ATTRIBUTES = ['capabilities', 'neighbors', 'location']
+_COMM_ATTRIBUTES = [
+    'sentCnt', 'sentFailed', 'retries', 'receivedCnt', 'receivedDups',
+    'receivedUnsolicited', 'sentTS', 'receivedTS', 'lastRequestRTT',
+    'averageRequestRTT', 'lastResponseRTT', 'averageResponseRTT']
 ATTRIBUTES = _REQUIRED_ATTRIBUTES + _OPTIONAL_ATTRIBUTES
 
 
@@ -65,12 +69,13 @@ def sub_status(status, stage):
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
 
-    def __init__(self, node):
+    def __init__(self, node, network):
         """Initialize node."""
         # pylint: disable=import-error
         super().__init__()
         from openzwave.network import ZWaveNetwork
         from pydispatch import dispatcher
+        self._network = network
         self.node = node
         self.node_id = self.node.node_id
         self._name = node_name(self.node)
@@ -95,13 +100,22 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             return
         self.node_changed()
 
+    def get_node_statistics(self):
+        """Retrieve statistics from the node."""
+        return self._network.manager.getNodeStatistics(self._network.home_id,
+                                                       self.node_id)
+
     def node_changed(self):
         """Update node properties."""
         self._attributes = {}
+        stats = self.get_node_statistics()
+
         for attr in ATTRIBUTES:
             value = getattr(self.node, attr)
             if attr in _REQUIRED_ATTRIBUTES or value:
                 self._attributes[attr] = value
+        for attr in _COMM_ATTRIBUTES:
+            self._attributes[attr] = stats[attr]
 
         if self.node.can_wake_up():
             for value in self.node.get_values(COMMAND_CLASS_WAKE_UP).values():
@@ -152,4 +166,5 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             attrs[ATTR_BATTERY_LEVEL] = self.battery_level
         if self.wakeup_interval is not None:
             attrs[ATTR_WAKEUP] = self.wakeup_interval
+
         return attrs
