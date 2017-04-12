@@ -152,7 +152,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self.refresh_spotify_instance()
         current = self._player.current_playback()
         if current is None:
+            self._state = STATE_IDLE
             return
+        # Track metadata
         item = current.get('item')
         if item:
             self._album = item.get('album').get('name')
@@ -161,11 +163,19 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                                       for artist in item.get('artists')])
             self._uri = current.get('uri')
             self._image_url = item.get('album').get('images')[0].get('url')
+        # Playing state
         self._state = STATE_PAUSED
         if current.get('is_playing'):
             self._state = STATE_PLAYING
-        self._volume = current.get('device').get('volume_percent') / 100
-        self._current_device = current.get('device').get('name')
+        device = current.get('device')
+        if device is None:
+            self._state = STATE_IDLE
+        else:
+            if device.get('volume_percent'):
+                self._volume = device.get('volume_percent') / 100
+            if device.get('name'):
+                self._current_device = device.get('name')
+        # Available devices
         self._devices = {device.get('name'): device.get('id')
                          for device in self._player.devices().get('devices')}
 
