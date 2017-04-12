@@ -99,7 +99,7 @@ def setup(hass, config):
     hass.data[DOMAIN]['unique_ids'] = []
 
     def keep_alive_call(event):
-        _LOGGER.info("Calling get user.")
+        """Call the Wink API endpoints to keep PubNub working."""
         pywink.wink_api_fetch()
         pywink.get_user()
     hass.services.register(DOMAIN, 'keep_alive', keep_alive_call)
