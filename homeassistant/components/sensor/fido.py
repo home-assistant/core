@@ -153,7 +153,7 @@ class FidoSensor(Entity):
     def update(self):
         """Get the latest data from Fido and update the state."""
         self.fido_data.update()
-        if self._name == 'balance':
+        if self.type == 'balance':
             if self.fido_data.data.get(self.type) is not None:
                 self._state = round(self.fido_data.data[self.type], 2)
         else:
