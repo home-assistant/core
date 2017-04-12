@@ -215,7 +215,7 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
         if encoding is not None:
             try:
                 payload = dp_payload.decode(encoding)
-                _LOGGER.info("Received message on %s: %s",
+                _LOGGER.debug("Received message on %s: %s",
                              dp_topic, payload)
             except (AttributeError, UnicodeDecodeError):
                 _LOGGER.error("Illegal payload encoding %s from "
@@ -223,7 +223,7 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
                               encoding, dp_topic, dp_payload)
                 return
         else:
-            _LOGGER.info("Received binary message on %s", dp_topic)
+            _LOGGER.debug("Received binary message on %s", dp_topic)
             payload = dp_payload
 
         hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
