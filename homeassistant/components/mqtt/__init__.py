@@ -403,16 +403,23 @@ def async_setup(hass, config):
                     msg_topic, payload_template, exc)
                 return
         elif payload_file_path is not None:
-            # check filepath given is readable
-            if not os.access(payload_file_path, os.R_OK):
-                _LOGGER.error("Could not read file: %s",
-                              payload_file_path)
-                return
+            base_dir = hass.config.path('www')
+            file_path = base_dir + "/" + payload_file_path
+            if os.path.abspath(file_path).startswith(base_dir):
+                # check filepath given is readable
+                if not os.access(file_path, os.R_OK):
+                    _LOGGER.error("Could not read file: %s",
+                                  file_path)
+                    return
+                else:
+                    # Reads the file
+                    with open(file_path, "rb") as payload_file:
+                        file_content = payload_file.read()
+                        payload = bytearray(file_content)
             else:
-                # Reads the file
-                with open(payload_file_path, "rb") as payload_file:
-                    file_content = payload_file.read()
-                    payload = bytearray(file_content)
+                _LOGGER.error("Path traversal not allowed: %s",
+                              file_path)
+                return
 
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)

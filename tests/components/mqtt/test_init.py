@@ -115,6 +115,18 @@ class TestMQTT(unittest.TestCase):
         }, blocking=True)
         self.assertFalse(self.hass.data['mqtt'].async_publish.called)
 
+    def test_service_call_with_path_traversal_doesnt_publish(self):
+        """Test the service call with path traversal.
+
+        If 'payload_file_path' is not in 'www' then fail.
+        """
+        payload_file_path = "../configuration.yaml"
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD_FILE_PATH: payload_file_path
+        }, blocking=True)
+        self.assertFalse(self.hass.data['mqtt'].async_publish.called)
+
     def test_service_call_with_ascii_qos_retain_flags(self):
         """Test the service call with args that can be misinterpreted.
 
