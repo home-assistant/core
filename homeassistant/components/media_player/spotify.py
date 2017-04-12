@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+    CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN, STATE_IDLE)
 import homeassistant.helpers.config_validation as cv
 
 
