@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         soco.config.EVENT_ADVERTISE_IP = advertise_addr
 
     if discovery_info:
-        player = soco.SoCo(discovery_info)
+        player = soco.SoCo(discovery_info.get('host'))
 
         # if device allready exists by config
         if player.uid in [x.unique_id for x in hass.data[DATA_SONOS]]:
