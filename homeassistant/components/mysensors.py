@@ -46,7 +46,7 @@ MYSENSORS_GATEWAYS = 'mysensors_gateways'
 MQTT_COMPONENT = 'mqtt'
 REQUIREMENTS = [
     'https://github.com/theolind/pymysensors/archive/'
-    'ff3476b70edc9c995b939cddb9d51f8d2d018581.zip#pymysensors==0.9.0']
+    'c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1']
 
 
 def is_socket_address(value):
@@ -206,12 +206,9 @@ def setup(hass, config):
                 for node_id in gateway.sensors:
                     node = gateway.sensors[node_id]
                     for child_id in node.children:
-                        child = node.children[child_id]
-                        for value_type in child.values:
-                            msg = mysensors.Message().modify(
-                                node_id=node_id, child_id=child_id, type=1,
-                                sub_type=value_type)
-                            gateway.event_callback(msg)
+                        msg = mysensors.Message().modify(
+                            node_id=node_id, child_id=child_id)
+                        gateway.event_callback(msg)
             gateway.start()
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
                                  lambda event: gateway.stop())
@@ -274,32 +271,33 @@ def pf_callback_factory(map_sv_types, devices, entity_class, add_devices=None):
             _LOGGER.debug('No sketch_name: node %s', msg.node_id)
             return
         child = gateway.sensors[msg.node_id].children.get(msg.child_id)
-        if child is None or child.values.get(msg.sub_type) is None:
+        if child is None:
             return
-        key = msg.node_id, child.id, msg.sub_type
-        if child.type not in map_sv_types or \
-                msg.sub_type not in map_sv_types[child.type]:
-            return
-        if key in devices:
+        for value_type in child.values:
+            key = msg.node_id, child.id, value_type
+            if child.type not in map_sv_types or \
+                    value_type not in map_sv_types[child.type]:
+                continue
+            if key in devices:
+                if add_devices:
+                    devices[key].schedule_update_ha_state(True)
+                else:
+                    devices[key].update()
+                continue
+            name = '{} {} {}'.format(
+                gateway.sensors[msg.node_id].sketch_name, msg.node_id,
+                child.id)
+            if isinstance(entity_class, dict):
+                device_class = entity_class[child.type]
+            else:
+                device_class = entity_class
+            devices[key] = device_class(
+                gateway, msg.node_id, child.id, name, value_type)
             if add_devices:
-                devices[key].schedule_update_ha_state(True)
+                _LOGGER.info('Adding new devices: %s', [devices[key]])
+                add_devices([devices[key]], True)
             else:
                 devices[key].update()
-            return
-        name = '{} {} {}'.format(
-            gateway.sensors[msg.node_id].sketch_name, msg.node_id,
-            child.id)
-        if isinstance(entity_class, dict):
-            device_class = entity_class[child.type]
-        else:
-            device_class = entity_class
-        devices[key] = device_class(
-            gateway, msg.node_id, child.id, name, msg.sub_type)
-        if add_devices:
-            _LOGGER.info('Adding new devices: %s', [devices[key]])
-            add_devices([devices[key]], True)
-        else:
-            devices[key].update()
     return mysensors_callback
 
 
