@@ -60,7 +60,10 @@ class LutronDevice(Entity):
     @asyncio.coroutine
     def async_add_to_hass(self):
         """Register callbacks."""
-        self._controller.subscribe(self._lutron_device, self._update_callback)
+        self.hass.async_add_job(
+            self._controller.subscribe, self._lutron_device,
+            self._update_callback
+        )
 
     def _update_callback(self, _device):
         """Callback invoked by pylutron when the device state changes."""
