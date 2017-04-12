@@ -292,7 +292,7 @@ class SonosDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe sonos events."""
-        self.hass.loop.run_in_executor(None, self._subscribe_to_player_events)
+        self.hass.async_add_job(self._subscribe_to_player_events)
 
     @property
     def should_poll(self):
