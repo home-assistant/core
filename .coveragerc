@@ -8,6 +8,9 @@ omit =
     homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/alarmdecoder.py
+    homeassistant/components/*/alarmdecoder.py
+
     homeassistant/components/apcupsd.py
     homeassistant/components/*/apcupsd.py
 
@@ -431,7 +434,7 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/telegram_webhooks.py
+    homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py

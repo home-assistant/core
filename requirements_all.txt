@@ -8,6 +8,7 @@ voluptuous==0.9.3
 typing>=3,<4
 aiohttp==2.0.5
 async_timeout==1.2.0
+chardet==2.3
 
 # homeassistant.components.nuimo_controller
 --only-binary=all http://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
@@ -45,6 +46,9 @@ aiohttp_cors==0.5.2
 
 # homeassistant.components.light.lifx
 aiolifx==0.4.4
+
+# homeassistant.components.alarmdecoder
+alarmdecoder==0.12.1.0
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
@@ -314,7 +318,7 @@ https://github.com/tfriedel/python-lightify/archive/d6eadcf311e6e21746182d1480e9
 https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 
 # homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/ff3476b70edc9c995b939cddb9d51f8d2d018581.zip#pymysensors==0.9.0
+https://github.com/theolind/pymysensors/archive/c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1
 
 # homeassistant.components.sensor.modem_callerid
 https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
@@ -392,7 +396,7 @@ mutagen==1.36.2
 myusps==1.0.5
 
 # homeassistant.components.discovery
-netdisco==0.9.2
+netdisco==1.0.0rc2
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -413,7 +417,7 @@ openhomedevice==0.2.1
 orvibo==1.1.1
 
 # homeassistant.components.mqtt
-paho-mqtt==1.2.1
+paho-mqtt==1.2.2
 
 # homeassistant.components.media_player.panasonic_viera
 panasonic_viera==0.2
@@ -631,8 +635,9 @@ python-pushover==0.2
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
-# homeassistant.components.telegram_webhooks
 # homeassistant.components.notify.telegram
+# homeassistant.components.telegram_bot.polling
+# homeassistant.components.telegram_bot.webhooks
 python-telegram-bot==5.3.0
 
 # homeassistant.components.sensor.twitch
