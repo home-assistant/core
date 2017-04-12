@@ -23,7 +23,7 @@ RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
 TBL_SLUGIFY = {
-    ord(u'ß'): 'ss'
+    ord('ß'): 'ss'
 }
 
 
