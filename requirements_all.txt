@@ -821,3 +821,7 @@ zengge==0.2
 
 # homeassistant.components.zeroconf
 zeroconf==0.19.0
+
+# homeassistant.components.light.pytradfri
+pytradfri==0.4
+
