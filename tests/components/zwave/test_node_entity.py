@@ -40,6 +40,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
             query_stage='Dynamic', is_awake=True, is_ready=False,
             is_failed=False, is_info_received=True, max_baud_rate=40000,
             is_zwave_plus=False, capabilities=[], neighbors=[], location=None)
+        self.node.manufacturer_name = 'Test Manufacturer'
+        self.node.product_name = 'Test Product'
         self.entity = node_entity.ZWaveNodeEntity(self.node)
 
     def test_network_node_changed_from_value(self):
@@ -76,8 +78,10 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
     def test_node_changed(self):
         """Test node_changed function."""
-        self.assertEqual({'node_id': self.node.node_id},
-                         self.entity.device_state_attributes)
+        self.assertEqual(
+            {'node_id': self.node.node_id,
+             'product_name': 'Test Manufacturer Test Product'},
+            self.entity.device_state_attributes)
 
         self.node.get_values.return_value = {
             1: mock_zwave.MockValue(data=1800)
@@ -86,6 +90,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
 
         self.assertEqual(
             {'node_id': self.node.node_id,
+             'product_name': 'Test Manufacturer Test Product',
              'query_stage': 'Dynamic',
              'is_awake': True,
              'is_ready': False,
