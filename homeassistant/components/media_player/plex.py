@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # Via discovery
     elif discovery_info is not None:
         # Parse discovery data
-        host = urlparse(discovery_info[1]).netloc
+        host = discovery_info.get('host')
         _LOGGER.info('Discovered PLEX server: %s', host)
 
         if host in _CONFIGURING:

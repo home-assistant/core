@@ -10,7 +10,6 @@ import os
 import random
 import socket
 from datetime import timedelta
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -115,11 +114,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     allow_hue_groups = config.get(CONF_ALLOW_HUE_GROUPS)
 
     if discovery_info is not None:
-        host = urlparse(discovery_info[1]).hostname
-
-        if "HASS Bridge" in discovery_info[0]:
+        if "HASS Bridge" in discovery_info.get('name', ''):
             _LOGGER.info('Emulated hue found, will not add')
             return False
+
+        host = discovery_info.get('host')
     else:
         host = config.get(CONF_HOST, None)
 
