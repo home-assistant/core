@@ -98,7 +98,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             _LOGGER.debug("AlarmDecoderAlarm::alarm_disarm: sending %s1",
                           str(code))
-            self.hass.data[DATA_AD].send(str(code) + "1")
+            self.hass.data[DATA_AD].send("{!s}1".format(code))
 
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
@@ -107,7 +107,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             _LOGGER.debug("AlarmDecoderAlarm::alarm_arm_away: sending %s2",
                           str(code))
-            self.hass.data[DATA_AD].send(str(code) + "2")
+            self.hass.data[DATA_AD].send("{!s}2".format(code))
 
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
@@ -116,4 +116,4 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         if code:
             _LOGGER.debug("AlarmDecoderAlarm::alarm_arm_home: sending %s3",
                           str(code))
-            self.hass.data[DATA_AD].send(str(code) + "3")
+            self.hass.data[DATA_AD].send("{!s}3".format(code))
