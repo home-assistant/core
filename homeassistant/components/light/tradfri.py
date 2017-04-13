@@ -57,6 +57,10 @@ class IKEATradfri(Light):
         self._state = None
         self._brightness = None
 
+        # Caching of LightControl and light object
+        self._light_control = light.light_control
+        self._light_data = light.light_control.lights[0]
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -83,8 +87,11 @@ class IKEATradfri(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
-        self._light.brightness = self._light.light_control.set_dimmer(
-            kwargs.get(ATTR_BRIGHTNESS, 100))
+        if ATTR_BRIGHTNESS in kwargs:
+            self._light.light_control.set_dimmer(
+                kwargs.get(ATTR_BRIGHTNESS, 100))
+        else:
+            self._light.light_control.set_state(True)
 
     def update(self):
         """Fetch new state data for this light.
