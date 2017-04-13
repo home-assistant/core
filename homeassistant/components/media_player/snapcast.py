@@ -74,8 +74,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 def async_register_services(hass):
     """Register all services for Snapcast devices."""
-
     def _snapshot_service(service):
+        """Snapshot current entity state."""
         entity_ids = service.data[ATTR_ENTITY_ID]
         for entity_id in entity_ids:
             if not hass.states.get(entity_id):
@@ -91,6 +91,7 @@ def async_register_services(hass):
             }
 
     def _restore_service(service):
+        """Restore snapshotted entity state."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         for entity_id in entity_ids:
             if entity_id not in hass.data[DOMAIN]:
