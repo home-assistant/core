@@ -48,20 +48,14 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         """MQTT message received."""
         dev_id = dev_id_lookup[topic]
 
-#         try:
-#             data = 
-#         except ValueError:
-#             _LOGGER.error('Unable to parse payload as JSON: %s', payload)
-#             return
-
         try:
             data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(payload))
-        except vol.MultipleInvalid as error:
+        except vol.MultipleInvalid:
             _LOGGER.error('Skipping update for following data '
                           'because of missing or malformatted data: %s',
                           payload)
             return
-        except ValueError as error:
+        except ValueError:
             _LOGGER.error('Error parsing JSON payload: %s', payload)
             return
 
