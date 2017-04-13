@@ -13,7 +13,6 @@ from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
 from homeassistant.components.http.const import KEY_DEVELOPMENT
-from homeassistant.components.zwave import ZWAVE_NETWORK
 from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
