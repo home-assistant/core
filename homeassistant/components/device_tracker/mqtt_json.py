@@ -12,19 +12,17 @@ import voluptuous as vol
 
 import homeassistant.components.mqtt as mqtt
 from homeassistant.core import callback
-from homeassistant.const import CONF_DEVICES
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_DEVICES, ATTR_GPS_ACCURACY, ATTR_LATITUDE,
+    ATTR_LONGITUDE, ATTR_BATTERY_LEVEL)
 
 DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 
-LAT_KEY = 'lat'
-LON_KEY = 'lon'
-ACCURACY_KEY = 'acc'
-BATTERY_KEY = 'batt'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
     vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
@@ -56,7 +54,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
                           data)
             return
 
-        if LON_KEY not in data or LAT_KEY not in data:
+        if ATTR_LONGITUDE not in data or ATTR_LATITUDE not in data:
             _LOGGER.error('Skipping update for following data '
                           'because of missing gps coordinates: %s',
                           data)
@@ -77,12 +75,12 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 def _parse_see_args(dev_id, data):
     """Parse the payload location parameters, into the format see expects."""
     kwargs = {
-        'gps': (data[LAT_KEY], data[LON_KEY]),
+        'gps': (data[ATTR_LATITUDE], data[ATTR_LONGITUDE]),
         'dev_id': dev_id
     }
 
-    if 'acc' in data:
-        kwargs['gps_accuracy'] = data[ACCURACY_KEY]
-    if 'batt' in data:
-        kwargs['battery'] = data[BATTERY_KEY]
+    if ATTR_GPS_ACCURACY in data:
+        kwargs[ATTR_GPS_ACCURACY] = data[ATTR_GPS_ACCURACY]
+    if ATTR_BATTERY_LEVEL in data:
+        kwargs['battery'] = data[ATTR_BATTERY_LEVEL]
     return kwargs

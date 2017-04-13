@@ -16,13 +16,13 @@ from tests.common import (
 _LOGGER = logging.getLogger(__name__)
 
 LOCATION_MESSAGE = {
-    'lon': 1.0,
-    'acc': 60,
-    'lat': 2.0,
-    'batt': 99.9}
+    'longitude': 1.0,
+    'gps_accuracy': 60,
+    'latitude': 2.0,
+    'battery_level': 99.9}
 
 LOCATION_MESSAGE_INCOMPLETE = {
-    'lon': 2.0}
+    'longitude': 2.0}
 
 
 class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
@@ -125,5 +125,5 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
                 "ERROR:homeassistant.components.device_tracker.mqtt_json:"
                 "Skipping update for following data "
                 "because of missing gps coordinates: "
-                "{'lon': 2.0}",
+                "{'longitude': 2.0}",
                 test_handle.output[0])
