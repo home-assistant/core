@@ -251,7 +251,7 @@ https://github.com/TheRealLink/pylgtv/archive/v0.1.4.zip#pylgtv==0.1.4
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
 
 # homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.6.zip#braviarc==0.3.6
+https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.cover.myq
 https://github.com/arraylabs/pymyq/archive/v0.0.8.zip#pymyq==0.0.8
