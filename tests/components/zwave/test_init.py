@@ -1,6 +1,8 @@
 """Tests for the Z-Wave init."""
 import asyncio
 from collections import OrderedDict
+import unittest
+from unittest.mock import patch, MagicMock
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
@@ -11,8 +13,6 @@ from homeassistant.components.zwave import (
 from homeassistant.setup import setup_component
 
 import pytest
-import unittest
-from unittest.mock import patch, MagicMock
 
 from tests.common import get_test_home_assistant
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
@@ -78,17 +78,17 @@ def test_setup_platform(hass, mock_openzwave):
     async_add_devices = MagicMock()
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, None)
+        hass, None, async_add_devices, None)
     assert not result
     assert not async_add_devices.called
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
     assert not result
     assert not async_add_devices.called
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
     assert result
     assert async_add_devices.called
     assert len(async_add_devices.mock_calls) == 1
@@ -344,6 +344,48 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         assert len(discovery.async_load_platform.mock_calls) == 2
         args = discovery.async_load_platform.mock_calls[0][1]
         assert args[1] == 'binary_sensor'
+
+    @patch.object(zwave, 'discovery')
+    @patch.object(zwave, 'get_platform')
+    def test_entity_user_id(self, get_platform, discovery):
+        """Test user-provoded entity_id."""
+        device_config = {self.entity_id: {'entity_id': 'my_id'}}
+
+        def create_device(node, values, node_config, hass):
+            """Create basic zwave device."""
+            return zwave.ZWaveDeviceEntity(values, 'mock_component')
+
+        platform = MagicMock()
+        platform.get_device = create_device
+        get_platform.return_value = platform
+
+        power = MockValue(
+            command_class='mock_power_class', node=self.node,
+            data=13.333, precision=2)
+
+        self.mock_schema[const.DISC_VALUES]['power'] = {
+            const.DISC_COMMAND_CLASS: ['mock_power_class'],
+        }
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+            self.optional.value_id: self.optional,
+            self.no_match_value.value_id: self.no_match_value,
+            power.value_id: power,
+        }
+
+        values = zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=device_config,
+        )
+        self.assertIsNotNone(values._entity)
+        self.assertEqual('mock_component.my_id', values._entity.entity_id)
+        self.assertEqual(
+            'mock_component.mock_node_mock_value_567_0',
+            values._entity.device_state_attributes['discovery_entity_id'])
 
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
