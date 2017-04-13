@@ -30,8 +30,6 @@ ATTR_SENSOR = 'sensor'
 ATTR_STATES = 'states'
 ATTR_ON_GROUND = 'on_ground'
 ATTR_CALLSIGN = 'callsign'
-UNIT_OF_MEASUREMENT = 'flights'
-ICON = 'mdi:airplane'
 OPENSKY_ATTRIBUTION = "Information provided by the OpenSky Network "\
                       "(https://opensky-network.org)"
 OPENSKY_API_URL = 'https://opensky-network.org/api/states/all'
@@ -52,20 +50,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Open Sky platform."""
-    session = requests.Session()
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     add_devices([OpenSkySensor(
-        hass, config.get(CONF_NAME, DOMAIN), session, latitude, longitude,
+        hass, config.get(CONF_NAME, DOMAIN), latitude, longitude,
         config.get(CONF_RADIUS))], True)
 
 
 class OpenSkySensor(Entity):
     """Open Sky Network Sensor."""
 
-    def __init__(self, hass, name, session, latitude, longitude, radius):
+    def __init__(self, hass, name, latitude, longitude, radius):
         """Initialize the sensor."""
-        self._session = session
+        self._session = requests.Session()
         self._latitude = latitude
         self._longitude = longitude
         self._radius = radius
@@ -133,9 +130,9 @@ class OpenSkySensor(Entity):
     @property
     def unit_of_measurement(self):
         """Unit of measurement."""
-        return UNIT_OF_MEASUREMENT
+        return 'flights'
 
     @property
     def icon(self):
         """Icon."""
-        return ICON
+        return 'mdi:airplane'
