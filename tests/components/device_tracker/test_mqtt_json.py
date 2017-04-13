@@ -101,7 +101,7 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
             self.hass.block_till_done()
             self.assertIn(
                 "ERROR:homeassistant.components.device_tracker.mqtt_json:"
-                "Unable to parse payload as JSON: home",
+                "Error parsing JSON payload: home",
                 test_handle.output[0])
 
     def test_incomplete_message(self):
@@ -123,7 +123,6 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
             self.hass.block_till_done()
             self.assertIn(
                 "ERROR:homeassistant.components.device_tracker.mqtt_json:"
-                "Skipping update for following data "
-                "because of missing gps coordinates: "
-                "{'longitude': 2.0}",
+                "Skipping update for following data because of missing "
+                "or malformatted data: {\"longitude\": 2.0}",
                 test_handle.output[0])

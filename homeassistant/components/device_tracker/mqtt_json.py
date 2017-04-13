@@ -23,6 +23,12 @@ DEPENDENCIES = ['mqtt']
 
 _LOGGER = logging.getLogger(__name__)
 
+GPS_JSON_PAYLOAD_SCHEMA = vol.Schema({
+    vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+    vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+    vol.Optional(ATTR_GPS_ACCURACY, default=None): vol.Coerce(int),
+    vol.Optional(ATTR_BATTERY_LEVEL, default=None): vol.Coerce(str),
+}, extra=vol.ALLOW_EXTRA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
     vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
@@ -42,22 +48,21 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         """MQTT message received."""
         dev_id = dev_id_lookup[topic]
 
+#         try:
+#             data = 
+#         except ValueError:
+#             _LOGGER.error('Unable to parse payload as JSON: %s', payload)
+#             return
+
         try:
-            data = json.loads(payload)
-        except ValueError:
-            _LOGGER.error('Unable to parse payload as JSON: %s', payload)
-            return
-
-        if not isinstance(data, dict):
-            _LOGGER.debug('Skipping update for following data '
-                          'because of missing or malformatted data: %s',
-                          data)
-            return
-
-        if ATTR_LONGITUDE not in data or ATTR_LATITUDE not in data:
+            data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(payload))
+        except vol.MultipleInvalid as error:
             _LOGGER.error('Skipping update for following data '
-                          'because of missing gps coordinates: %s',
-                          data)
+                          'because of missing or malformatted data: %s',
+                          payload)
+            return
+        except ValueError as error:
+            _LOGGER.error('Error parsing JSON payload: %s', payload)
             return
 
         kwargs = _parse_see_args(dev_id, data)
