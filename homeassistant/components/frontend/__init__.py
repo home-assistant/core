@@ -176,7 +176,7 @@ def setup(hass, config):
 
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
-    zwave = config['zwave']
+    zwave = config.get('zwave')
     if zwave:
         register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
 
