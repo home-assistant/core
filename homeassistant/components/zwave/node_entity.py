@@ -110,13 +110,14 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def node_changed(self):
         """Update node properties."""
-        self._attributes = {}
         stats = self.get_node_statistics()
-
         for attr in ATTRIBUTES:
             value = getattr(self.node, attr)
             if attr in _REQUIRED_ATTRIBUTES or value:
                 self._attributes[attr] = value
+            else:
+                self._attributes.pop(attr, None)
+
         for attr in _COMM_ATTRIBUTES:
             self._attributes[attr] = stats[attr]
 
