@@ -216,15 +216,13 @@ class TestLight(unittest.TestCase):
         _, data = dev1.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: prof_bri,
-             light.ATTR_XY_COLOR: (prof_x, prof_y),
-             light.ATTR_RGB_COLOR: (246, 178, 74)},
+             light.ATTR_XY_COLOR: (prof_x, prof_y)},
             data)
 
         _, data = dev2.last_call('turn_on')
         self.assertEqual(
             {light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_XY_COLOR: (.4, .6),
-             light.ATTR_RGB_COLOR: (147, 181, 0)},
+             light.ATTR_XY_COLOR: (.4, .6)},
             data)
 
         # Test shitty data
@@ -299,7 +297,5 @@ class TestLight(unittest.TestCase):
         _, data = dev1.last_call('turn_on')
 
         self.assertEqual(
-            {light.ATTR_XY_COLOR: (.4, .6),
-             light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_RGB_COLOR: (147, 181, 0)},
+            {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},
             data)
