@@ -17,12 +17,13 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.1.zip'
-                '#pybotvac==0.0.1']
+REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.3.zip'
+                '#pybotvac==0.0.3']
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
 NEATO_LOGIN = 'neato_login'
+NEATO_MAP_DATA = 'neato_map_data'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -89,7 +90,7 @@ def setup(hass, config):
         _LOGGER.debug('Failed to login to Neato API')
         return False
     hub.update_robots()
-    for component in ('sensor', 'switch'):
+    for component in ('camera', 'sensor', 'switch'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -108,6 +109,7 @@ class NeatoHub(object):
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+        self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
 
     def login(self):
         """Login to My Neato."""
@@ -126,3 +128,9 @@ class NeatoHub(object):
         _LOGGER.debug('Running HUB.update_robots %s',
                       self._hass.data[NEATO_ROBOTS])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
+        self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps
+
+    def download_map(self, url):
+        """Download a new map image."""
+        map_image_data = self.my_neato.get_map_image(url)
+        return map_image_data
