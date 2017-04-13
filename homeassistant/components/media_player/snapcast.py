@@ -56,24 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     from snapcast.control.server import CONTROL_PORT
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
-    try:
-        server = yield from snapcast.control.create_server(
-            hass.loop, host, port)
-    except socket.gaierror:
-        _LOGGER.error(
-            "Could not connect to Snapcast server at %s:%d", host, port)
-        return False
-    hass.data[DOMAIN] = {}
-    async_add_devices([SnapcastClientDevice(client)
-                       for client in server.clients])
-    async_add_devices([SnapcastGroupDevice(group)
-                       for group in server.groups])
-    async_register_services(hass)
-    return True
 
-
-def async_register_services(hass):
-    """Register all services for Snapcast devices."""
     def _snapshot_service(service):
         """Snapshot current entity state."""
         entity_ids = service.data[ATTR_ENTITY_ID]
@@ -128,6 +111,20 @@ def async_register_services(hass):
         DOMAIN, SERVICE_RESTORE, _restore_service,
         descriptions.get(SERVICE_RESTORE), schema=SERVICE_SCHEMA)
 
+    try:
+        server = yield from snapcast.control.create_server(
+            hass.loop, host, port)
+    except socket.gaierror:
+        _LOGGER.error('Could not connect to Snapcast server at %s:%d',
+                      host, port)
+        return False
+    hass.data[DOMAIN] = {}
+    async_add_devices([SnapcastClientDevice(client)
+                       for client in server.clients])
+    async_add_devices([SnapcastGroupDevice(group)
+                       for group in server.groups])
+    return True
+
 
 class SnapcastGroupDevice(MediaPlayerDevice):
     """Representation of a Snapcast group device."""
@@ -179,17 +176,19 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
+    @asyncio.coroutine
     def async_select_source(self, source):
         """Set input source."""
         streams = self._group.streams_by_name()
         if source in streams:
             yield from self._group.set_stream(streams[source].identifier)
-        self.schedule_update_ha_state()
+        yield from self.async_update_ha_state()
 
+    @asyncio.coroutine
     def async_mute_volume(self, mute):
         """Send the mute command."""
         yield from self._group.set_muted(mute)
-        self.schedule_update_ha_state()
+        yield from self.async_update_ha_state()
 
 
 class SnapcastClientDevice(MediaPlayerDevice):
@@ -232,12 +231,14 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Do not poll for state."""
         return False
 
+    @asyncio.coroutine
     def async_mute_volume(self, mute):
         """Send the mute command."""
         yield from self._client.set_muted(mute)
-        self.schedule_update_ha_state()
+        yield from self.async_update_ha_state()
 
+    @asyncio.coroutine
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         yield from self._client.set_volume(round(volume * 100))
-        self.schedule_update_ha_state()
+        yield from self.async_update_ha_state()
