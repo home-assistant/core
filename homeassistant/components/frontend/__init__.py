@@ -13,6 +13,7 @@ from homeassistant.components import api, group
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import is_trusted_ip
 from homeassistant.components.http.const import KEY_DEVELOPMENT
+from homeassistant.components.zwave import ZWAVE_NETWORK
 from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
@@ -175,6 +176,10 @@ def setup(hass, config):
         hass.data[DATA_PANELS] = {}
 
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
+
+    zwave = config['zwave']
+    if zwave:
+        register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
 
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
                   'dev-template'):
