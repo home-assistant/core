@@ -58,7 +58,6 @@ class IKEATradfri(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
-        self._state = None
         self._brightness = None
 
     @property
@@ -99,4 +98,3 @@ class IKEATradfri(Light):
         """
         self._light.update()
         self._brightness = self._light_data.dimmer
-        self._state = self._light.light_control.lights[0].state
