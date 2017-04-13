@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.spotify/
 """
 
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -13,11 +14,12 @@ from homeassistant.core import callback
 from homeassistant.loader import get_component
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PLAY, SUPPORT_PAUSE,
-    SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
+    SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN, STATE_IDLE)
+    CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 
@@ -54,6 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_CACHE_PATH): cv.string
 })
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 
 def request_configuration(hass, config, add_devices, oauth):
@@ -211,10 +215,18 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
+        kwargs = {}
+        if media_type == MEDIA_TYPE_MUSIC:
+            kwargs['uris'] = [media_id]
+        elif media_type == MEDIA_TYPE_PLAYLIST:
+            kwargs['context_uri'] = media_id
+        else:
+            _LOGGER.error('media type %s is not supported', media_type)
+            return
         if not media_id.startswith('spotify:'):
             _LOGGER.error('media id must be spotify uri')
             return
-        self._player.start_playback(uris=[media_id])
+        self._player.start_playback(**kwargs)
         self.schedule_update_ha_state()
 
     @property
@@ -251,11 +263,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def media_content_id(self):
         """Media URL."""
         return self._uri
-
-    @property
-    def media_content_type(self):
-        """Media content type."""
-        return MEDIA_TYPE_MUSIC
 
     @property
     def media_image_url(self):
