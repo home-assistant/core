@@ -115,6 +115,22 @@ class TestMQTT(unittest.TestCase):
         }, blocking=True)
         self.assertFalse(self.hass.data['mqtt'].async_publish.called)
 
+    def test_service_call_with_ascii_qos_retain_flags(self):
+        """Test the service call with args that can be misinterpreted.
+
+        Empty payload message and ascii formatted qos and retain flags.
+        """
+        self.hass.services.call(mqtt.DOMAIN, mqtt.SERVICE_PUBLISH, {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_PAYLOAD: "",
+            mqtt.ATTR_QOS: '2',
+            mqtt.ATTR_RETAIN: 'no'
+        }, blocking=True)
+        self.assertTrue(self.hass.data['mqtt'].async_publish.called)
+        self.assertEqual(
+            self.hass.data['mqtt'].async_publish.call_args[0][2], 2)
+        self.assertFalse(self.hass.data['mqtt'].async_publish.call_args[0][3])
+
     def test_subscribe_topic(self):
         """Test the subscription of a topic."""
         unsub = mqtt.subscribe(self.hass, 'test-topic', self.record_calls)
