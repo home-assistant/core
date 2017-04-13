@@ -110,15 +110,15 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def node_changed(self):
         """Update node properties."""
-        self._attributes = {}
+        attributes = {}
         stats = self.get_node_statistics()
-
         for attr in ATTRIBUTES:
             value = getattr(self.node, attr)
             if attr in _REQUIRED_ATTRIBUTES or value:
-                self._attributes[attr] = value
+                attributes[attr] = value
+
         for attr in _COMM_ATTRIBUTES:
-            self._attributes[attr] = stats[attr]
+            attributes[attr] = stats[attr]
 
         if self.node.can_wake_up():
             for value in self.node.get_values(COMMAND_CLASS_WAKE_UP).values():
@@ -128,6 +128,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.wakeup_interval = None
 
         self.battery_level = self.node.get_battery_level()
+        self._attributes = attributes
 
         self.maybe_schedule_update()
 
