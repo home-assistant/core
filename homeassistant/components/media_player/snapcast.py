@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['snapcast==2.0.0']
+REQUIREMENTS = ['snapcast==2.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
