@@ -179,10 +179,6 @@ def setup(hass, config):
 
     register_built_in_panel(hass, 'map', 'Map', 'mdi:account-location')
 
-    zwave = config.get('zwave')
-    if zwave:
-        register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
-
     for panel in ('dev-event', 'dev-info', 'dev-service', 'dev-state',
                   'dev-template'):
         register_built_in_panel(hass, panel)
