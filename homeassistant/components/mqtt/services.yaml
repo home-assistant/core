@@ -14,10 +14,6 @@ publish:
       description: Template to render as payload value. Ignored if payload given.
       example: "{{ states('sensor.temperature') }}"
 
-    payload_file_path:
-      description: Path to a file within the local www directory to be published as binary payload.
-      example: "snapshot.jpg"
-
     qos:
       description: Quality of Service
       example: 2

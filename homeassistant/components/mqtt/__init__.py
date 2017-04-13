@@ -74,7 +74,6 @@ DEFAULT_TLS_PROTOCOL = 'auto'
 ATTR_TOPIC = 'topic'
 ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
-ATTR_PAYLOAD_FILE_PATH = 'payload_file_path'
 ATTR_QOS = CONF_QOS
 ATTR_RETAIN = CONF_RETAIN
 
@@ -166,7 +165,6 @@ MQTT_PUBLISH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
     vol.Exclusive(ATTR_PAYLOAD, CONF_PAYLOAD): object,
     vol.Exclusive(ATTR_PAYLOAD_TEMPLATE, CONF_PAYLOAD): cv.string,
-    vol.Exclusive(ATTR_PAYLOAD_FILE_PATH, CONF_PAYLOAD): cv.string,
     vol.Optional(ATTR_QOS, default=DEFAULT_QOS): _VALID_QOS_SCHEMA,
     vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
 }, required=True)
@@ -389,7 +387,6 @@ def async_setup(hass, config):
         msg_topic = call.data[ATTR_TOPIC]
         payload = call.data.get(ATTR_PAYLOAD)
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
-        payload_file_path = call.data.get(ATTR_PAYLOAD_FILE_PATH)
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
         if payload_template is not None:
@@ -401,24 +398,6 @@ def async_setup(hass, config):
                     "Unable to publish to '%s': rendering payload template of "
                     "'%s' failed because %s",
                     msg_topic, payload_template, exc)
-                return
-        elif payload_file_path is not None:
-            base_dir = hass.config.path('www')
-            file_path = base_dir + "/" + payload_file_path
-            if os.path.abspath(file_path).startswith(base_dir):
-                # check filepath given is readable
-                if not os.access(file_path, os.R_OK):
-                    _LOGGER.error("Could not read file: %s",
-                                  file_path)
-                    return
-                else:
-                    # Reads the file
-                    with open(file_path, "rb") as payload_file:
-                        file_content = payload_file.read()
-                        payload = bytearray(file_content)
-            else:
-                _LOGGER.error("Path traversal not allowed: %s",
-                              file_path)
                 return
 
         yield from hass.data[DATA_MQTT].async_publish(
