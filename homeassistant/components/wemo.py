@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.13']
+REQUIREMENTS = ['pywemo==0.4.17']
 
 DOMAIN = 'wemo'
 
@@ -62,7 +62,8 @@ def setup(hass, config):
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for WeMo discovery events."""
         # name, model, location, mac
-        _, model_name, _, _, serial = discovery_info
+        model_name = discovery_info.get('model_name')
+        serial = discovery_info.get('serial')
 
         # Only register a device once
         if serial in KNOWN_DEVICES:

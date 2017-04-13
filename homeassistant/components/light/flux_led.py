@@ -18,7 +18,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.16']
+REQUIREMENTS = ['flux_led==0.18']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,20 +107,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if light.is_valid:
             lights.append(light)
             light_ips.append(ipaddr)
-
-    if discovery_info:
-        device = {}
-        # discovery_info: ip address,device id,device type
-        device['ipaddr'] = discovery_info[0]
-        device['name'] = discovery_info[1]
-        # As we don't know protocol and mode set to none to autodetect.
-        device[CONF_PROTOCOL] = None
-        device[ATTR_MODE] = None
-
-        light = FluxLight(device)
-        if light.is_valid:
-            lights.append(light)
-            light_ips.append(device['ipaddr'])
 
     if not config.get(CONF_AUTOMATIC_ADD, False):
         add_devices(lights)

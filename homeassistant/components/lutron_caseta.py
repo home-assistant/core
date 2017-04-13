@@ -17,8 +17,8 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['https://github.com/gurumitts/'
-                'pylutron-caseta/archive/v0.2.4.zip#'
-                'pylutron-caseta==v0.2.4']
+                'pylutron-caseta/archive/v0.2.5.zip#'
+                'pylutron-caseta==v0.2.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,8 +77,10 @@ class LutronCasetaDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        self._smartbridge.add_subscriber(self._device_id,
-                                         self._update_callback)
+        self.hass.async_add_job(
+            self._smartbridge.add_subscriber, self._device_id,
+            self._update_callback
+        )
 
     def _update_callback(self):
         self.schedule_update_ha_state()

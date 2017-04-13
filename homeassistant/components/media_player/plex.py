@@ -39,7 +39,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.loader import get_component
 
-
 REQUIREMENTS = ['plexapi==2.0.2']
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
@@ -102,7 +101,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # Via discovery
     elif discovery_info is not None:
         # Parse discovery data
-        host = urlparse(discovery_info[1]).netloc
+        host = discovery_info.get('host')
         _LOGGER.info('Discovered PLEX server: %s', host)
 
         if host in _CONFIGURING:
@@ -265,6 +264,7 @@ class PlexClient(MediaPlayerDevice):
         self._machine_identifier = None
         self._make = ''
         self._media_content_id = None
+        self._media_content_rating = None
         self._media_content_type = None
         self._media_duration = None
         self._media_image_url = None
@@ -274,6 +274,7 @@ class PlexClient(MediaPlayerDevice):
         self._previous_volume_level = 1  # Used in fake muting
         self._session = None
         self._session_type = None
+        self._session_username = None
         self._state = STATE_IDLE
         self._volume_level = 1  # since we can't retrieve remotely
         self._volume_muted = False  # since we can't retrieve remotely
@@ -343,6 +344,8 @@ class PlexClient(MediaPlayerDevice):
                 self._session.viewOffset)
             self._media_content_id = self._convert_na_to_none(
                 self._session.ratingKey)
+            self._media_content_rating = self._convert_na_to_none(
+                self._session.contentRating)
         else:
             self._media_position = None
             self._media_content_id = None
@@ -354,6 +357,8 @@ class PlexClient(MediaPlayerDevice):
                 self._session.player.machineIdentifier)
             self._name = self._convert_na_to_none(self._session.player.title)
             self._player_state = self._session.player.state
+            self._session_username = self._convert_na_to_none(
+                self._session.username)
             self._make = self._convert_na_to_none(self._session.player.device)
         else:
             self._is_player_available = False
@@ -786,7 +791,7 @@ class PlexClient(MediaPlayerDevice):
                 src['library_name']).get(src['artist_name']).album(
                     src['album_name']).get(src['track_name'])
         elif media_type == 'EPISODE':
-            media = self._get_episode(
+            media = self._get_tv_media(
                 src['library_name'], src['show_name'],
                 src['season_number'], src['episode_number'])
         elif media_type == 'PLAYLIST':
@@ -795,18 +800,31 @@ class PlexClient(MediaPlayerDevice):
             media = self.device.server.library.section(
                 src['library_name']).get(src['video_name'])
 
-        if media:
-            self._client_play_media(media, shuffle=src['shuffle'])
+        import plexapi.playlist
+        if (media and media_type == 'EPISODE' and
+                isinstance(media, plexapi.playlist.Playlist)):
+            # delete episode playlist after being loaded into a play queue
+            self._client_play_media(media=media, delete=True,
+                                    shuffle=src['shuffle'])
+        elif media:
+            self._client_play_media(media=media, shuffle=src['shuffle'])
 
-    def _get_episode(self, library_name, show_name, season_number,
-                     episode_number):
-        """Find TV episode and return a Plex media object."""
+    def _get_tv_media(self, library_name, show_name, season_number,
+                      episode_number):
+        """Find TV media and return a Plex media object."""
         target_season = None
         target_episode = None
 
-        seasons = self.device.server.library.section(library_name).get(
-            show_name).seasons()
-        for season in seasons:
+        show = self.device.server.library.section(library_name).get(
+            show_name)
+
+        if not season_number:
+            playlist_name = "{} - {} Episodes".format(
+                self.entity_id, show_name)
+            return self.device.server.createPlaylist(
+                playlist_name, show.episodes())
+
+        for season in show.seasons():
             if int(season.seasonNumber) == int(season_number):
                 target_season = season
                 break
@@ -817,6 +835,12 @@ class PlexClient(MediaPlayerDevice):
                           str(season_number).zfill(2),
                           str(episode_number).zfill(2))
         else:
+            if not episode_number:
+                playlist_name = "{} - {} Season {} Episodes".format(
+                    self.entity_id, show_name, str(season_number))
+                return self.device.server.createPlaylist(
+                    playlist_name, target_season.episodes())
+
             for episode in target_season.episodes():
                 if int(episode.index) == int(episode_number):
                     target_episode = episode
@@ -830,7 +854,7 @@ class PlexClient(MediaPlayerDevice):
 
         return target_episode
 
-    def _client_play_media(self, media, **params):
+    def _client_play_media(self, media, delete=False, **params):
         """Instruct Plex client to play a piece of media."""
         if not (self.device and
                 'playback' in self._device_protocol_capabilities):
@@ -838,10 +862,16 @@ class PlexClient(MediaPlayerDevice):
             return
 
         import plexapi.playqueue
-        server_url = media.server.baseurl.split(':')
         playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
                                                        media, **params)
+
+        # delete dynamic playlists used to build playqueue (ex. play tv season)
+        if delete:
+            media.delete()
+
         self._local_client_control_fix()
+
+        server_url = self.device.server.baseurl.split(':')
         self.device.sendCommand('playback/playMedia', **dict({
             'machineIdentifier':
             self.device.server.machineIdentifier,
@@ -854,3 +884,13 @@ class PlexClient(MediaPlayerDevice):
             'containerKey':
             '/playQueues/%s?window=100&own=1' % playqueue.playQueueID,
         }, **params))
+
+    @property
+    def device_state_attributes(self):
+        """Return the scene state attributes."""
+        attr = {}
+        attr['media_content_rating'] = self._media_content_rating
+        attr['session_username'] = self._session_username
+        attr['media_library_name'] = self._app_name
+
+        return attr

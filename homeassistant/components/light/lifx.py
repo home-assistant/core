@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.lifx/
 import colorsys
 import logging
 import asyncio
+import sys
 from functools import partial
 from datetime import timedelta
 
@@ -25,7 +26,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.2']
+REQUIREMENTS = ['aiolifx==0.4.4']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -50,6 +51,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the LIFX platform."""
     import aiolifx
+
+    if sys.platform == 'win32':
+        _LOGGER.warning('The lifx platform is known to not work on Windows. '
+                        'Consider using the lifx_legacy platform instead.')
 
     server_addr = config.get(CONF_SERVER)
 
@@ -79,6 +84,7 @@ class LIFXManager(object):
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s register AGAIN", entity.ipaddr)
             entity.available = True
+            entity.device = device
             self.hass.async_add_job(entity.async_update_ha_state())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
@@ -90,7 +96,7 @@ class LIFXManager(object):
         entity = LIFXLight(device)
         _LOGGER.debug("%s register READY", entity.ipaddr)
         self.entities[device.mac_addr] = entity
-        self.hass.async_add_job(self.async_add_devices, [entity])
+        self.async_add_devices([entity])
 
     @callback
     def unregister(self, device):

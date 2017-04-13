@@ -128,11 +128,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
+    network = hass.data[zwave.ZWAVE_NETWORK]
 
     def set_usercode(service):
         """Set the usercode to index X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
-        lock_node = zwave.NETWORK.nodes[node_id]
+        lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
         usercode = service.data.get(ATTR_USERCODE)
 
@@ -151,7 +152,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def get_usercode(service):
         """Get a usercode at index X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
-        lock_node = zwave.NETWORK.nodes[node_id]
+        lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
 
         for value in lock_node.get_values(
@@ -164,7 +165,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def clear_usercode(service):
         """Set usercode to slot X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
-        lock_node = zwave.NETWORK.nodes[node_id]
+        lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
         data = ''
 

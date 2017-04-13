@@ -10,7 +10,6 @@ import os
 import random
 import socket
 from datetime import timedelta
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -47,7 +46,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = 'phue.conf'
 
-SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_FLASH)
+SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION)
 SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
 SUPPORT_HUE_COLOR_TEMP = (SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP)
 SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
@@ -58,6 +57,7 @@ SUPPORT_HUE = {
     'Extended color light': SUPPORT_HUE_EXTENDED,
     'Color light': SUPPORT_HUE_COLOR,
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
+    'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
     }
 
@@ -114,11 +114,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     allow_hue_groups = config.get(CONF_ALLOW_HUE_GROUPS)
 
     if discovery_info is not None:
-        host = urlparse(discovery_info[1]).hostname
-
-        if "HASS Bridge" in discovery_info[0]:
+        if "HASS Bridge" in discovery_info.get('name', ''):
             _LOGGER.info('Emulated hue found, will not add')
             return False
+
+        host = discovery_info.get('host')
     else:
         host = config.get(CONF_HOST, None)
 

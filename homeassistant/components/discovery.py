@@ -13,13 +13,14 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==0.9.2']
+REQUIREMENTS = ['netdisco==1.0.0rc2']
 
 DOMAIN = 'discovery'
 
@@ -44,7 +45,6 @@ SERVICE_HANDLERS = {
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
-    'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
@@ -105,7 +105,7 @@ def async_setup(hass, config):
                 hass, component, platform, info, config)
 
     @asyncio.coroutine
-    def scan_devices(_):
+    def scan_devices(now):
         """Scan for devices."""
         results = yield from hass.loop.run_in_executor(
             None, _discover, netdisco)
@@ -116,7 +116,12 @@ def async_setup(hass, config):
         async_track_point_in_utc_time(hass, scan_devices,
                                       dt_util.utcnow() + SCAN_INTERVAL)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, scan_devices)
+    @callback
+    def schedule_first(event):
+        """Schedule the first discovery when Home Assistant starts up."""
+        async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 
     return True
 

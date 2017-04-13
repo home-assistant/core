@@ -21,8 +21,8 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.6.zip'
-    '#braviarc==0.3.6']
+    'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
+    '#braviarc==0.3.7']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
