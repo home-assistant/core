@@ -154,6 +154,12 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def update(self):
         """Update state and attributes."""
         self.refresh_spotify_instance()
+        # Available devices
+        devices = self._player.devices().get('devices')
+        if devices is not None:
+            self._devices = {device.get('name'): device.get('id')
+                             for device in devices}
+        # Current playback state
         current = self._player.current_playback()
         if current is None:
             self._state = STATE_IDLE
@@ -179,9 +185,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 self._volume = device.get('volume_percent') / 100
             if device.get('name'):
                 self._current_device = device.get('name')
-        # Available devices
-        self._devices = {device.get('name'): device.get('id')
-                         for device in self._player.devices().get('devices')}
 
     def set_volume_level(self, volume):
         """Set the volume level."""
