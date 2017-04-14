@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['snapcast==2.0.1']
+REQUIREMENTS = ['snapcast==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,8 +33,10 @@ SERVICE_SNAPSHOT = 'snapcast_snapshot'
 SERVICE_RESTORE = 'snapcast_restore'
 
 SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
-SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
+SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
+    SUPPORT_SELECT_SOURCE
 
+GROUP_PREFIX = 'snapcast_group_'
 GROUP_SUFFIX = 'Snapcast Group'
 CLIENT_SUFFIX = 'Snapcast Client'
 
@@ -146,12 +148,22 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self._group.identifier
+        return '{}{}'.format(GROUP_PREFIX, self._group.identifier)
 
     @property
     def source(self):
         """Return the current input source."""
         return self._group.stream
+
+    @property
+    def volume_level(self):
+        """Return the volume level."""
+        return self._group.volume / 100
+
+    @property
+    def is_volume_muted(self):
+        """Volume muted."""
+        return self._group.muted
 
     @property
     def supported_features(self):
@@ -188,6 +200,12 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     def async_mute_volume(self, mute):
         """Send the mute command."""
         yield from self._group.set_muted(mute)
+        yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
+        """Set the volume level."""
+        yield from self._group.set_volume(round(volume * 100))
         yield from self.async_update_ha_state()
 
 
