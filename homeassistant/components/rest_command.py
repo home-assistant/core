@@ -13,7 +13,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD)
+    CONF_METHOD, CONF_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_CONTENT_TYPE,
+    HTTP_HEADER_CONTENT_TYPE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -39,6 +40,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+    vol.Optional(CONF_CONTENT_TYPE, default=CONTENT_TYPE_TEXT_PLAIN): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -72,6 +74,9 @@ def async_setup(hass, config):
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
+        content_type = command_config[CONF_CONTENT_TYPE]
+        headers = {HTTP_HEADER_CONTENT_TYPE: content_type}
+
         @asyncio.coroutine
         def async_service_handler(service):
             """Execute a shell command service."""
@@ -86,7 +91,8 @@ def async_setup(hass, config):
                     request = yield from getattr(websession, method)(
                         template_url.async_render(variables=service.data),
                         data=payload,
-                        auth=auth
+                        auth=auth,
+                        headers=headers
                     )
 
                 if request.status < 400:
