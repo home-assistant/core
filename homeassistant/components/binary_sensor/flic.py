@@ -52,9 +52,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     port = config.get(CONF_PORT)
     discovery = config.get(CONF_DISCOVERY)
 
-    try:
-        client = pyflic.FlicClient(host, port)
-    except ConnectionRefusedError:
+    def get_flic_client():
+        """Connect to the flic server and return FlicClient instance."""
+        try:
+            return pyflic.FlicClient(host, port)
+        except ConnectionRefusedError:
+            return None
+
+    client = yield from hass.loop.run_in_executor(None, get_flic_client)
+    if client is None:
         _LOGGER.error("Failed to connect to flic server.")
         return
 
