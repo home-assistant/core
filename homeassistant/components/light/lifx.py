@@ -218,31 +218,7 @@ class LIFXLight(Light):
         else:
             fade = 0
 
-        changed_color = False
-
-        if ATTR_RGB_COLOR in kwargs:
-            hue, saturation, brightness = \
-                convert_rgb_to_hsv(kwargs[ATTR_RGB_COLOR])
-            changed_color = True
-        else:
-            hue = self._hue
-            saturation = self._sat
-            brightness = self._bri
-
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
-            changed_color = True
-        else:
-            brightness = self._bri
-
-        if ATTR_COLOR_TEMP in kwargs:
-            kelvin = int(color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP]))
-            changed_color = True
-        else:
-            kelvin = self._kel
-
-        hsbk = [hue, saturation, brightness, kelvin]
+        hsbk, changed_color = self.find_hsbk(**kwargs)
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
                       self.who, self._power, fade, *hsbk)
 
@@ -290,6 +266,34 @@ class LIFXLight(Light):
             self.updated_event.clear()
             self.device.get_color(self.got_color)
             yield from self.updated_event.wait()
+
+    def find_hsbk(self, **kwargs):
+        """Find the desired color from a number of possible inputs."""
+        changed_color = False
+
+        if ATTR_RGB_COLOR in kwargs:
+            hue, saturation, brightness = \
+                convert_rgb_to_hsv(kwargs[ATTR_RGB_COLOR])
+            changed_color = True
+        else:
+            hue = self._hue
+            saturation = self._sat
+            brightness = self._bri
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
+            changed_color = True
+        else:
+            brightness = self._bri
+
+        if ATTR_COLOR_TEMP in kwargs:
+            kelvin = int(color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP]))
+            changed_color = True
+        else:
+            kelvin = self._kel
+
+        return [[hue, saturation, brightness, kelvin], changed_color]
 
     def set_power(self, power):
         """Set power state value."""
