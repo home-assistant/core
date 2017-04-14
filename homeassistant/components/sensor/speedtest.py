@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['speedtest-cli==1.0.3']
+REQUIREMENTS = ['speedtest-cli==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
