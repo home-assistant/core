@@ -16,6 +16,7 @@ ATTR_AWAKE = 'is_awake'
 ATTR_READY = 'is_ready'
 ATTR_FAILED = 'is_failed'
 ATTR_PRODUCT_NAME = 'product_name'
+ATTR_MANUFACTURER_NAME = 'manufacturer_name'
 
 STAGE_COMPLETE = 'Complete'
 
@@ -80,8 +81,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self.node = node
         self.node_id = self.node.node_id
         self._name = node_name(self.node)
-        self._product_name = '{} {}'.format(
-            node.manufacturer_name, node.product_name)
+        self._product_name = node.product_name
+        self._manufacturer_name = node.manufacturer_name
         self.entity_id = "{}.{}_{}".format(
             DOMAIN, slugify(self._name), self.node_id)
         self._attributes = {}
@@ -164,6 +165,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self.node_id,
+            ATTR_MANUFACTURER_NAME: self._manufacturer_name,
             ATTR_PRODUCT_NAME: self._product_name,
         }
         attrs.update(self._attributes)
