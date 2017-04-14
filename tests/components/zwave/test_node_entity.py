@@ -83,7 +83,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.maxDiff = None
         self.assertEqual(
             {'node_id': self.node.node_id,
-             'product_name': 'Test Manufacturer Test Product'},
+             'manufacturer_name': 'Test Manufacturer',
+             'product_name': 'Test Product'},
             self.entity.device_state_attributes)
 
         self.node.get_values.return_value = {
@@ -139,7 +140,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.entity.node_changed()
         self.assertEqual(
             {'node_id': self.node.node_id,
-             'product_name': 'Test Manufacturer Test Product',
+             'manufacturer_name': 'Test Manufacturer',
+             'product_name': 'Test Product',
              'query_stage': 'Dynamic',
              'is_awake': True,
              'is_ready': False,
