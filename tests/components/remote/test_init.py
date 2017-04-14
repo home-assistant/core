@@ -82,7 +82,8 @@ class TestRemote(unittest.TestCase):
 
         remote.send_command(
             self.hass, entity_id='entity_id_val',
-            device='test_device', command='test_command', num_repeats='4', delay_secs='0.6')
+            device='test_device', command='test_command',
+            num_repeats='4', delay_secs='0.6')
 
         self.hass.block_till_done()
 
@@ -92,15 +93,16 @@ class TestRemote(unittest.TestCase):
         self.assertEqual(remote.DOMAIN, call.domain)
         self.assertEqual(SERVICE_SEND_COMMAND, call.service)
         self.assertEqual('entity_id_val', call.data[ATTR_ENTITY_ID])
-		
-	def test_send_commands(self):
+
+    def test_send_commands(self):
         """Test send_commands."""
         send_commands_calls = mock_service(
             self.hass, remote.DOMAIN, SERVICE_SEND_COMMANDS)
 
         remote.send_commands(
             self.hass, entity_id='entity_id_val',
-            device='test_device', commands=['test_command_1', 'test_command_2'], delay_secs='0.7')
+            device='test_device',
+            commands=['test_command_1', 'test_command_2'], delay_secs='0.7')
 
         self.hass.block_till_done()
 

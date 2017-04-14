@@ -15,7 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
 from homeassistant.components.remote import (
-    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_COMMAND, ATTR_COMMANDS, ATTR_ACTIVITY, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
+    PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_COMMAND,
+    ATTR_COMMANDS, ATTR_ACTIVITY, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
@@ -174,7 +175,8 @@ class HarmonyRemote(remote.RemoteDevice):
         import pyharmony
         pyharmony.ha_send_command(
             self._token, self._ip, self._port, kwargs[ATTR_DEVICE],
-            kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]), float(kwargs[ATTR_DELAY_SECS]))
+            kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]),
+            float(kwargs[ATTR_DELAY_SECS]))
 
     def send_commands(self, **kwargs):
         """Send a set of commands to one device."""

@@ -89,18 +89,19 @@ def turn_off(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-def send_command(hass, device, command, entity_id=None, num_repeats=None, delay_secs=None):
+def send_command(hass, device, command, entity_id=None,
+                 num_repeats=None, delay_secs=None):
     """Send a command to a device."""
     data = {ATTR_DEVICE: str(device), ATTR_COMMAND: command}
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
-        
+
     if num_repeats:
         data[ATTR_NUM_REPEATS] = num_repeats
 
     if delay_secs:
         data[ATTR_DELAY_SECS] = delay_secs
-    
+
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
@@ -114,6 +115,7 @@ def send_commands(hass, device, commands, entity_id=None, delay_secs=None):
         data[ATTR_DELAY_SECS] = delay_secs
 
     hass.services.call(DOMAIN, SERVICE_SEND_COMMANDS, data)
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -131,15 +133,16 @@ def async_setup(hass, config):
         device = service.data.get(ATTR_DEVICE)
         command = service.data.get(ATTR_COMMAND)
         commands = service.data.get(ATTR_COMMANDS)
-        num_repeats=service.data.get(ATTR_NUM_REPEATS)
-        delay_secs=service.data.get(ATTR_DELAY_SECS)
+        num_repeats = service.data.get(ATTR_NUM_REPEATS)
+        delay_secs = service.data.get(ATTR_DELAY_SECS)
 
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
                 yield from remote.async_turn_on(activity=activity_id)
             elif service.service == SERVICE_SEND_COMMAND:
                 yield from remote.async_send_command(
-                    device=device, command=command, num_repeats=num_repeats, delay_secs=delay_secs)
+                    device=device, command=command,
+                    num_repeats=num_repeats, delay_secs=delay_secs)
             elif service.service == SERVICE_SEND_COMMANDS:
                 yield from remote.async_send_commands(
                     device=device, commands=commands, delay_secs=delay_secs)
