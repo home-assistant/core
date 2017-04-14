@@ -6,6 +6,7 @@ https://home-assistant.io/components/camera.mqtt/
 """
 
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -48,7 +49,8 @@ class MqttCamera(Camera):
         self._qos = 0
         self._last_image = None
 
-    def camera_image(self):
+    @asyncio.coroutine
+    def async_camera_image(self):
         """Return image response."""
         return self._last_image
 
