@@ -2,7 +2,6 @@
 import asyncio
 
 from homeassistant.setup import async_setup_component
-from tests.common import fire_mqtt_message
 import homeassistant.components.mqtt as mqtt
 
 
