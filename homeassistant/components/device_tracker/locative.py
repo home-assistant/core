@@ -22,20 +22,20 @@ URL = '/api/locative'
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup an endpoint for the Locative application."""
+    """Set up an endpoint for the Locative application."""
     hass.http.register_view(LocativeView(see))
 
     return True
 
 
 class LocativeView(HomeAssistantView):
-    """View to handle locative requests."""
+    """View to handle Locative requests."""
 
     url = URL
     name = 'api:locative'
 
     def __init__(self, see):
-        """Initialize Locative url endpoints."""
+        """Initialize Locative URL endpoints."""
         self.see = see
 
     @asyncio.coroutine
@@ -52,7 +52,6 @@ class LocativeView(HomeAssistantView):
         return res
 
     @asyncio.coroutine
-    # pylint: disable=too-many-return-statements
     def _handle(self, hass, data):
         """Handle locative request."""
         if 'latitude' not in data or 'longitude' not in data:
