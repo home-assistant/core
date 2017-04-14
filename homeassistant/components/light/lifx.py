@@ -10,6 +10,7 @@ import asyncio
 import sys
 from functools import partial
 from datetime import timedelta
+import async_timeout
 
 import voluptuous as vol
 
@@ -104,8 +105,40 @@ class LIFXManager(object):
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
             entity.device = None
-            entity.updated_event.set()
             self.hass.async_add_job(entity.async_update_ha_state())
+
+
+class AwaitAioLIFX:
+    """Wait for an aiolifx callback and return the message."""
+
+    def __init__(self, light):
+        """Initialize the wrapper."""
+        self.light = light
+        self.device = None
+        self.message = None
+        self.event = asyncio.Event()
+
+    @callback
+    def callback(self, device, message):
+        """Callback that aiolifx invokes when the response is received."""
+        self.device = device
+        self.message = message
+        self.event.set()
+
+    @asyncio.coroutine
+    def wait(self, method):
+        """Call an aiolifx method and wait for its response or a timeout."""
+        self.event.clear()
+        method(self.callback)
+
+        while self.light.available and not self.event.is_set():
+            try:
+                with async_timeout.timeout(1.0, loop=self.light.hass.loop):
+                    yield from self.event.wait()
+            except asyncio.TimeoutError:
+                pass
+
+        return self.message
 
 
 def convert_rgb_to_hsv(rgb):
@@ -125,7 +158,6 @@ class LIFXLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         self.device = device
-        self.updated_event = asyncio.Event()
         self.blocker = None
         self.postponed_update = None
         self._name = device.label
@@ -250,22 +282,21 @@ class LIFXLight(Light):
         if fade < BULB_LATENCY:
             self.set_power(0)
 
-    @callback
-    def got_color(self, device, msg):
-        """Callback that gets current power/color status."""
-        self.set_power(device.power_level)
-        self.set_color(*device.color)
-        self._name = device.label
-        self.updated_event.set()
-
     @asyncio.coroutine
     def async_update(self):
         """Update bulb status (if it is available)."""
         _LOGGER.debug("%s async_update", self.who)
         if self.available and self.blocker is None:
-            self.updated_event.clear()
-            self.device.get_color(self.got_color)
-            yield from self.updated_event.wait()
+            yield from self.refresh_state()
+
+    @asyncio.coroutine
+    def refresh_state(self):
+        """Ask the device about its current state and update our copy."""
+        msg = yield from AwaitAioLIFX(self).wait(self.device.get_color)
+        if msg is not None:
+            self.set_power(self.device.power_level)
+            self.set_color(*self.device.color)
+            self._name = self.device.label
 
     def find_hsbk(self, **kwargs):
         """Find the desired color from a number of possible inputs."""
