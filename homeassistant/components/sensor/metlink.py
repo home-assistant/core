@@ -7,12 +7,8 @@ import logging
 from datetime import timedelta, datetime
 
 import requests
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
