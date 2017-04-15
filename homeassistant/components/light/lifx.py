@@ -82,7 +82,6 @@ class LIFXManager(object):
         """Callback for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
-            entity.available = True
             entity.device = device
             _LOGGER.debug("%s register AGAIN", entity.who)
             self.hass.async_add_job(entity.async_update_ha_state())
@@ -104,7 +103,7 @@ class LIFXManager(object):
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
-            entity.available = False
+            entity.device = None
             entity.updated_event.set()
             self.hass.async_add_job(entity.async_update_ha_state())
 
@@ -130,19 +129,13 @@ class LIFXLight(Light):
         self.blocker = None
         self.postponed_update = None
         self._name = device.label
-        self._available = True
         self.set_power(device.power_level)
         self.set_color(*device.color)
 
     @property
     def available(self):
         """Return the availability of the device."""
-        return self._available
-
-    @available.setter
-    def available(self, value):
-        """Set the availability of the device."""
-        self._available = value
+        return self.device is not None
 
     @property
     def name(self):
