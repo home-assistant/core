@@ -184,10 +184,12 @@ flux_led==0.18
 freesms==0.1.1
 
 # homeassistant.components.device_tracker.fritz
+# fritzconnection==0.6.3
+
 # homeassistant.components.sensor.fritzbox_callmonitor
-# homeassistant.components.switch.fritzbox_callforwarding
 # homeassistant.components.sensor.fritzbox_netmonitor
-fritzconnection==0.6.3
+# homeassistant.components.switch.fritzbox_callforwarding
+# fritzconnection==0.6.4
 
 # homeassistant.components.switch.fritzdect
 fritzhome==1.0.2
@@ -636,6 +638,7 @@ python-pushover==0.2
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
+# homeassistant.components.telegram_webhooks
 # homeassistant.components.notify.telegram
 # homeassistant.components.telegram_bot.polling
 # homeassistant.components.telegram_bot.webhooks

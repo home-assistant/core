@@ -95,10 +95,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     fritz_box = None
 
     try:
-        fritz_box = FritzCallforwarding(host,
-                                        port,
-                                        username,
-                                        password)
+        fritz_box = FritzCallforwarding(address=host,
+                                        port=port,
+                                        user=username,
+                                        password=password)
     except (ValueError, TypeError, FritzConnectionException):
         fritz_box = None
 

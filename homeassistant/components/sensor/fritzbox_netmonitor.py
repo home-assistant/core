@@ -17,7 +17,7 @@ from homeassistant.util import Throttle
 
 from requests.exceptions import RequestException
 
-REQUIREMENTS = ['fritzconnection==0.6.3']
+REQUIREMENTS = ['fritzconnection==0.6.4']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
