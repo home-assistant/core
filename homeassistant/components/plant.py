@@ -70,11 +70,11 @@ PLANT_SCHEMA = vol.Schema({
 DOMAIN = 'plant'
 
 CONFIG_SCHEMA = vol.Schema({
-        DOMAIN: {
-            cv.string: PLANT_SCHEMA,
-        },
+    DOMAIN: {
+        cv.string: PLANT_SCHEMA
     },
-    extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -96,8 +96,7 @@ def async_setup(hass, config):
 
 
 class Plant(Entity):
-    """Mi Gardener reads measurements from a
-    Xiaomi Mi plant sensor via MQTT.
+    """Plant monitors the well-being of a plant.
 
     It also checks the measurements against
     configurable min and max values.
@@ -220,7 +219,9 @@ class Plant(Entity):
 
     @property
     def state_attributes(self):
-        """provide the individual measurements from the
+        """ Return the attributes of the entity.
+
+        Provide the individual measurements from the
         sensor in the attributes of the device.
         """
 
