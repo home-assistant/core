@@ -129,6 +129,7 @@ class LIFXLight(Light):
         self.updated_event = asyncio.Event()
         self.blocker = None
         self.postponed_update = None
+        self._name = device.label
         self._available = True
         self.set_power(device.power_level)
         self.set_color(*device.color)
@@ -146,7 +147,7 @@ class LIFXLight(Light):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device.label
+        return self._name
 
     @property
     def ipaddr(self):
@@ -282,6 +283,7 @@ class LIFXLight(Light):
         """Callback that gets current power/color status."""
         self.set_power(device.power_level)
         self.set_color(*device.color)
+        self._name = device.label
         self.updated_event.set()
 
     @asyncio.coroutine
