@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def active_zone(hass, latitude, longitude, radius=0):
