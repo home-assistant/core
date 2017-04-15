@@ -156,7 +156,8 @@ class Plant(Entity):
         This callback is triggered, when the sensor state changes.
         """
         value = new_state.state
-        _LOGGER.debug('received callback from %s with value %s', entity_id, value)
+        _LOGGER.debug('received callback from %s with value %s',
+                      entity_id, value)
         if value == STATE_UNKNOWN:
             return
 
@@ -172,7 +173,8 @@ class Plant(Entity):
         elif reading == READING_BRIGHTNESS:
             self._brightness = int(value)
         else:
-            raise _LOGGER.error('unknown reading from sensor %s: %s', entity_id, value)
+            raise _LOGGER.error('unknown reading from sensor %s: %s',
+                                entity_id, value)
         self._update_state()
 
     def _update_state(self):
@@ -224,7 +226,6 @@ class Plant(Entity):
         Provide the individual measurements from the
         sensor in the attributes of the device.
         """
-
         attrib = {
             ATTR_ICON: self._icon,
         }
