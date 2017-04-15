@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.mqtt/
 """
 
-import logging
 import asyncio
+import logging
 
 import voluptuous as vol
 
@@ -30,11 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Camera."""
     topic = config[CONF_TOPIC]
 
-    add_devices([MqttCamera(config[CONF_NAME], topic)])
+    async_add_devices([MqttCamera(config[CONF_NAME], topic)])
 
 
 class MqttCamera(Camera):
