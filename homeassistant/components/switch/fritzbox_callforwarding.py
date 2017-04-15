@@ -111,7 +111,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug('Successfully connected to FRITZ!Box')
 
     devices = []
-
     for call_forwarding in fritz_box.get_call_forwarding_list():
         devices.append(FritzCallForwardingSwitch(fritz_box, call_forwarding))
     add_devices(devices)
