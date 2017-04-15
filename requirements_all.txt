@@ -6,7 +6,7 @@ pip>=7.1.0
 jinja2>=2.9.5
 voluptuous==0.9.3
 typing>=3,<4
-aiohttp==2.0.5
+aiohttp==2.0.7
 async_timeout==1.2.0
 chardet==2.3
 
@@ -251,7 +251,7 @@ https://github.com/TheRealLink/pylgtv/archive/v0.1.4.zip#pylgtv==0.1.4
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
 
 # homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.6.zip#braviarc==0.3.6
+https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.cover.myq
 https://github.com/arraylabs/pymyq/archive/v0.0.8.zip#pymyq==0.0.8
@@ -269,7 +269,7 @@ https://github.com/gurumitts/pylutron-caseta/archive/v0.2.5.zip#pylutron-caseta=
 https://github.com/jabesq/netatmo-api-python/archive/v0.9.1.zip#lnetatmo==0.9.1
 
 # homeassistant.components.neato
-https://github.com/jabesq/pybotvac/archive/v0.0.1.zip#pybotvac==0.0.1
+https://github.com/jabesq/pybotvac/archive/v0.0.3.zip#pybotvac==0.0.3
 
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
@@ -652,6 +652,9 @@ python-wink==1.2.3
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
+# homeassistant.components.light.tradfri
+pytradfri==0.4
+
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.0
 
@@ -671,7 +674,7 @@ pywemo==0.4.17
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.3
+qnapstats==0.2.4
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
@@ -725,7 +728,7 @@ snapcast==1.2.2
 somecomfort==0.4.1
 
 # homeassistant.components.sensor.speedtest
-speedtest-cli==1.0.3
+speedtest-cli==1.0.4
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
@@ -764,7 +767,7 @@ transmissionrpc==0.11
 twilio==5.7.0
 
 # homeassistant.components.sensor.uber
-uber_rides==0.2.7
+uber_rides==0.4.1
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.2
