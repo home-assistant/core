@@ -26,18 +26,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([MetlinkSensor(stop_number, route_number)])
 
 
-def service_summary(service):
-    realtime = "(sched)"
-    if service.is_real_time:
-        realtime = "(real)"
-
-    return "{} {} to {}".format(
-        realtime,
-        service.origin_stop_name,
-        service.destination_stop_name,
-    )
-
-
 def pretty_timestamp(t):
     #
     # python2's strptime doesn't handle %z so here's a workaround, from:
