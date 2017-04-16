@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_CONTENT_TYPE)
+    CONF_METHOD, HTTP_HEADER_CONTENT_TYPE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
