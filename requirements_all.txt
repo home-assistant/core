@@ -8,7 +8,7 @@ voluptuous==0.9.3
 typing>=3,<4
 aiohttp==2.0.7
 async_timeout==1.2.0
-chardet==2.3
+chardet==3.0.2
 
 # homeassistant.components.nuimo_controller
 --only-binary=all http://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
