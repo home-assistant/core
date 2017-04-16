@@ -655,7 +655,7 @@ python-wink==1.2.3
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
-# homeassistant.components.light.tradfri
+# homeassistant.components.tradfri
 pytradfri==0.4
 
 # homeassistant.components.device_tracker.unifi
