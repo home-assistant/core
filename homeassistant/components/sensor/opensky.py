@@ -13,9 +13,11 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
+    LENGTH_KILOMETERS, LENGTH_METERS)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util.location import vincenty
+from homeassistant.util import distance as util_distance
+from homeassistant.util import location as util_location
 import homeassistant.helpers.config_validation as cv
 
 
@@ -65,7 +67,8 @@ class OpenSkySensor(Entity):
         self._session = requests.Session()
         self._latitude = latitude
         self._longitude = longitude
-        self._radius = radius
+        self._radius = util_distance.convert(
+            radius, LENGTH_KILOMETERS, LENGTH_METERS)
         self._state = 0
         self._hass = hass
         self._name = name
@@ -103,10 +106,10 @@ class OpenSkySensor(Entity):
                 continue
             if data.get(ATTR_ON_GROUND):
                 continue
-            distance = vincenty(
-                (self._latitude, self._longitude),
-                (data.get(ATTR_LATITUDE), data.get(ATTR_LONGITUDE)))
-            if distance > self._radius:
+            distance = util_location.distance(
+                self._latitude, self._longitude,
+                data.get(ATTR_LATITUDE), data.get(ATTR_LONGITUDE))
+            if distance is None or distance > self._radius:
                 continue
             callsign = data[ATTR_CALLSIGN].strip()
             if callsign == '':
