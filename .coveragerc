@@ -321,6 +321,7 @@ omit =
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
     homeassistant/components/scene/hunterdouglas_powerview.py
+    homeassistant/components/scene/lifx_cloud.py
     homeassistant/components/sensor/amcrest.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
