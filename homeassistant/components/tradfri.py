@@ -117,7 +117,7 @@ def _setup_gateway(hass, hass_config, host, key):
         return True
 
     gateways[gateway_id] = gateway
-    hass.loop.async_add_job(discovery.async_load_platform(
+    hass.async_add_job(discovery.async_load_platform(
         hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True
 

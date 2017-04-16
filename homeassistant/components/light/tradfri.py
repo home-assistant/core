@@ -16,7 +16,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    gateway = hass.data[KEY_GATEWAY]
+    gateway_id = discovery_info['gateway']
+    gateway = hass.data[KEY_GATEWAY][gateway_id]
     devices = gateway.get_devices()
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(Tradfri(light) for light in lights)
@@ -72,9 +73,9 @@ class Tradfri(Light):
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
         if ATTR_BRIGHTNESS in kwargs:
-            self._light.light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+            self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS])
         else:
-            self._light.light_control.set_state(True)
+            self._light_control.set_state(True)
 
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
             self._light.light_control.set_hex_color(
