@@ -15,7 +15,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
-from homeassistant.util import Throttle
 from homeassistant.const import CONF_NAME, CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ DEFAULT_NAME = 'Ping Binary sensor'
 DEFAULT_PING_COUNT = 5
 DEFAULT_SENSOR_CLASS = 'connectivity'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PING_MATCHER = re.compile(
     r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)')
@@ -59,7 +58,6 @@ class PingBinarySensor(BinarySensorDevice):
         """Initialize the Ping Binary sensor."""
         self._name = name
         self.ping = ping
-        self.update()
 
     @property
     def name(self):
@@ -126,7 +124,6 @@ class PingData(object):
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Retrieve the latest details from the host."""
         self.data = self.ping()
