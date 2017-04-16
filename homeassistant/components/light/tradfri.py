@@ -14,8 +14,8 @@ import homeassistant.helpers.config_validation as cv
 
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
-# Home Assistant depends on 3rd party packages for API specific code.
-REQUIREMENTS = ['pytradfri==0.4']
+# https://github.com/ggravlingen/pytradfri
+REQUIREMENTS = ['pytradfri==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
