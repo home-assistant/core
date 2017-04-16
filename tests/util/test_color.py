@@ -173,6 +173,11 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((127, 127, 127),
                          color_util.color_rgbw_to_rgb(0, 0, 0, 127))
 
+    def test_color_rgb_to_hex(self):
+        """Test color_rgb_to_hex."""
+        self.assertEqual('000000',
+                         color_util.color_rgb_to_hex(0, 0, 0))
+
 
 class ColorTemperatureMiredToKelvinTests(unittest.TestCase):
     """Test color_temperature_mired_to_kelvin."""
