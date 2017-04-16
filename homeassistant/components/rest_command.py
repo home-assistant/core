@@ -13,8 +13,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_TIMEOUT, CONF_USERNAME, CONF_PASSWORD, CONF_URL, CONF_PAYLOAD,
-    CONF_METHOD, CONF_CONTENT_TYPE, CONTENT_TYPE_TEXT_PLAIN,
-    HTTP_HEADER_CONTENT_TYPE)
+    CONF_METHOD, CONTENT_TYPE_TEXT_PLAIN, HTTP_HEADER_CONTENT_TYPE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -31,6 +30,8 @@ SUPPORT_REST_METHODS = [
     'put',
     'delete',
 ]
+
+CONF_CONTENT_TYPE = 'content_type'
 
 COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
