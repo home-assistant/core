@@ -41,7 +41,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
-    vol.Optional(CONF_CONTENT_TYPE, default=CONTENT_TYPE_TEXT_PLAIN): cv.string
+    vol.Optional(CONF_CONTENT_TYPE): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -75,8 +75,10 @@ def async_setup(hass, config):
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
-        content_type = command_config[CONF_CONTENT_TYPE]
-        headers = {HTTP_HEADER_CONTENT_TYPE: content_type}
+        headers = None
+        if CONF_CONTENT_TYPE in command_config:
+            content_type = command_config[CONF_CONTENT_TYPE]
+            headers = {HTTP_HEADER_CONTENT_TYPE: content_type}
 
         @asyncio.coroutine
         def async_service_handler(service):
