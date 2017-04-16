@@ -648,11 +648,7 @@ class StateMachine(object):
         Async friendly.
         """
         state_obj = self.get(entity_id)
-
-        if state_obj is None:
-            return False
-        else:
-            return state_obj.state == state
+        return state_obj is not None and state_obj.state == state
 
     def is_state_attr(self, entity_id, name, value):
         """Test if entity exists and has a state attribute set to value.
@@ -660,11 +656,8 @@ class StateMachine(object):
         Async friendly.
         """
         state_obj = self.get(entity_id)
-
-        if state_obj is None:
-            return False
-        else:
-            return state_obj.attributes.get(name, None) == value
+        return state_obj is not None and \
+            state_obj.attributes.get(name, None) == value
 
     def remove(self, entity_id):
         """Remove the state of an entity.
