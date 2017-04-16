@@ -138,7 +138,7 @@ IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_DEVICE_SCHEMA)
 IDENTIFY_APP_SCHEMA = vol.Schema({
     vol.Required(ATTR_APP_BUNDLE_IDENTIFER): cv.string,
     vol.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
-    vol.Required(ATTR_APP_VERSION_NUMBER): cv.positive_int
+    vol.Optional(ATTR_APP_VERSION_NUMBER): cv.string
 }, extra=vol.ALLOW_EXTRA)
 
 IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_APP_SCHEMA)
