@@ -28,11 +28,13 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HASS_IOS_APP = 'hass_ios'
+SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
+    SERVICE_IKEA_TRADFRI: ('tradfri', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
