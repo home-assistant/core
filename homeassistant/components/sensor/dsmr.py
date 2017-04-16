@@ -153,9 +153,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 yield from protocol.wait_closed()
 
             if hass.state != CoreState.stopping:
+                # unexpected disconnect
                 if transport:
                     # remove listerer
                     stop_listerer()
+
+                # reflect disconnect state in devices state by setting an
+                # empty telegram resulting in `unkown` states
+                update_entities_telegram({})
 
                 # throttle reconnect attempts
                 yield from asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
