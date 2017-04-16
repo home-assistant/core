@@ -57,7 +57,6 @@ class MatrixNotificationService(BaseNotificationService):
     def __init__(self, config_directory, homeserver, default_room, verify_ssl,
                  username, password):
         """Setup the client."""
-
         self.session_filepath = os.path.join(config_directory, SESSION_FILE)
         self.auth_tokens = self.get_auth_tokens()
 
@@ -75,8 +74,9 @@ class MatrixNotificationService(BaseNotificationService):
 
     def get_auth_tokens(self):
         """
-        Read sorted authentication tokens from disk and return the auth_tokens
-        dictionary.
+        Read sorted authentication tokens from disk.
+
+        Returns the auth_tokens dictionary.
         """
         if not os.path.exists(self.session_filepath):
             return {}
@@ -99,7 +99,6 @@ class MatrixNotificationService(BaseNotificationService):
 
     def store_auth_token(self, token):
         """Store authentication token to session and persistent storage."""
-
         self.auth_tokens[self.mx_id] = token
 
         try:
