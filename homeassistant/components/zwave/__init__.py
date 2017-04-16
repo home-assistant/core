@@ -616,7 +616,8 @@ def setup(hass, config):
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
 
-    register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
+    if 'frontend' in hass.config.components:
+        register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
 
     return True
 
