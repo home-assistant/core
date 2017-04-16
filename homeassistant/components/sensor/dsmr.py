@@ -207,7 +207,7 @@ class DSMREntity(Entity):
         if self._obis == obis.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value)
         else:
-            if value:
+            if value is not None:
                 return value
             else:
                 return STATE_UNKNOWN
