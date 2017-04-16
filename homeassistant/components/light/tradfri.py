@@ -5,16 +5,16 @@ import logging
 
 import voluptuous as vol
 
-# Import the device class from the component that you want to support
-from homeassistant.components.light import ATTR_BRIGHTNESS, \
-    SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA
-from homeassistant.const import CONF_HOST, CONF_API_KEY
+import homeassistant.util.color as color_util
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light,
+    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
+from homeassistant.const import CONF_API_KEY, CONF_HOST
 import homeassistant.helpers.config_validation as cv
 
+SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
-SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS)
-
-# Home Assistant depends on 3rd party packages for API specific code.
+# https://github.com/ggravlingen/pytradfri
 REQUIREMENTS = ['pytradfri==0.4']
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,7 +31,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pytradfri
 
     # Assign configuration variables.
-    # The configuration check takes care they are present.
     host = config.get(CONF_HOST)
     securitycode = config.get(CONF_API_KEY)
 
@@ -58,7 +57,9 @@ class IKEATradfri(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
+
         self._brightness = None
+        self._rgb_color = None
 
     @property
     def supported_features(self):
@@ -80,21 +81,36 @@ class IKEATradfri(Light):
         """Brightness of the light (an integer in the range 1-255)."""
         return self._light_data.dimmer
 
+    @property
+    def rgb_color(self):
+        """RGB color of the light."""
+        return self._rgb_color
+
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         return self._light_control.set_state(False)
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
+        """
+        Instruct the light to turn on.
+
+        After adding "self._light_data.hexcolor is not None"
+        for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
+        """
         if ATTR_BRIGHTNESS in kwargs:
             self._light.light_control.set_dimmer(kwargs.get(ATTR_BRIGHTNESS))
+        if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
+            self._light.light_control.set_hex_color(
+                color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))
         else:
             self._light.light_control.set_state(True)
 
     def update(self):
-        """Fetch new state data for this light.
-
-        This is the only method that should fetch new data for Home Assistant.
-        """
+        """Fetch new state data for this light."""
         self._light.update()
         self._brightness = self._light_data.dimmer
+
+        # Handle Hue lights paired with the gatway
+        if self._light_data.hex_color is not None:
+            self._rgb_color = color_util.rgb_hex_to_rgb_list(
+                self._light_data.hex_color)
