@@ -5,13 +5,12 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.util.color import rgb_hex_to_rgb_list
+import homeassistant.util.color as color_util
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light,
     PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 import homeassistant.helpers.config_validation as cv
-
 
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
@@ -101,8 +100,8 @@ class IKEATradfri(Light):
         if ATTR_BRIGHTNESS in kwargs:
             self._light.light_control.set_dimmer(kwargs.get(ATTR_BRIGHTNESS))
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
-            hex_color = '{0:02x}{1:02x}{2:02x}'.format(*kwargs[ATTR_RGB_COLOR])
-            self._light.light_control.set_hex_color(hex_color)
+            self._light.light_control.set_hex_color(
+                color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))
         else:
             self._light.light_control.set_state(True)
 
@@ -113,4 +112,5 @@ class IKEATradfri(Light):
 
         # Handle Hue lights paired with the gatway
         if self._light_data.hex_color is not None:
-            self._rgb_color = rgb_hex_to_rgb_list(self._light_data.hex_color)
+            self._rgb_color = color_util.rgb_hex_to_rgb_list(
+                self._light_data.hex_color)
