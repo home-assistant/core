@@ -51,11 +51,7 @@ class VeraSensor(VeraDevice, Entity):
         elif self.vera_device.category == "Humidity Sensor":
             return '%'
         elif self.vera_device.category == "Power meter":
-            power = convert(self.vera_device.power, float, 0)
-            if power >= 1000.0:
-                return 'kW'
-            else:
-                return 'watts'
+            return 'watts'
 
     def update(self):
         """Update the state."""
@@ -76,10 +72,7 @@ class VeraSensor(VeraDevice, Entity):
             self.current_value = self.vera_device.humidity
         elif self.vera_device.category == "Power meter":
             power = convert(self.vera_device.power, float, 0)
-            if power >= 1000.0:
-                self.current_value = round(power / 1000.0, 2)
-            else:
-                self.current_value = round(power, 0)
+            self.current_value = int(round(power, 0))
         elif self.vera_device.category == "Sensor":
             tripped = self.vera_device.is_tripped
             self.current_value = 'Tripped' if tripped else 'Not Tripped'
