@@ -38,6 +38,7 @@ SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
 
 GROUP_PREFIX = 'snapcast_group_'
 GROUP_SUFFIX = 'Snapcast Group'
+CLIENT_PREFIX = 'snapcast_client_'
 CLIENT_SUFFIX = 'Snapcast Client'
 
 SERVICE_SCHEMA = vol.Schema({
@@ -220,7 +221,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return '{} {}'.format(self._client.friendly_name, CLIENT_SUFFIX)
+        return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
 
     @property
     def volume_level(self):
@@ -243,6 +244,14 @@ class SnapcastClientDevice(MediaPlayerDevice):
         if self._client.connected:
             return STATE_ON
         return STATE_OFF
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        name = '{} {}'.format(self._client.friendly_name, CLIENT_SUFFIX)
+        return {
+            'friendly_name': name
+        }
 
     @property
     def should_poll(self):
