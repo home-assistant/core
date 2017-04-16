@@ -100,7 +100,7 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key):
     """Create a gateway."""
-    from opentradfri import cli_api_factory, Gateway, RequestError
+    from pytradfri import cli_api_factory, Gateway, RequestError
 
     try:
         api = cli_api_factory(host, key)
@@ -129,9 +129,9 @@ def _read_config(hass):
     if not os.path.isfile(path):
         return {}
 
-    with open(path) as fp:
+    with open(path) as f_handle:
         # Guard against empty file
-        return json.loads(fp.read() or '{}')
+        return json.loads(f_handle.read() or '{}')
 
 
 def _write_config(hass, config):
