@@ -180,7 +180,7 @@ class Configurator(object):
 
         # field validation goes here?
 
-        callback(call.data.get(ATTR_FIELDS, {}))
+        self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""

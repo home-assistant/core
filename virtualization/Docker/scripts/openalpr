@@ -12,7 +12,7 @@ PACKAGES=(
 apt-get install -y --no-install-recommends ${PACKAGES[@]}
 
 # Clone the latest code from GitHub
-git clone https://github.com/openalpr/openalpr.git /usr/local/src/openalpr
+git clone --depth 1 https://github.com/openalpr/openalpr.git /usr/local/src/openalpr
 
 # Setup the build directory
 cd /usr/local/src/openalpr/src
