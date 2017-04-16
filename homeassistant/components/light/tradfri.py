@@ -1,52 +1,29 @@
 """Support for the IKEA Tradfri platform."""
 
-import logging
-
-
-import voluptuous as vol
-
-import homeassistant.util.color as color_util
+from homeassistant.components.tradfri import KEY_GATEWAY
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, Light,
-    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR)
-from homeassistant.const import CONF_API_KEY, CONF_HOST
-import homeassistant.helpers.config_validation as cv
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, ATTR_RGB_COLOR,
+    SUPPORT_RGB_COLOR, PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA)
+from homeassistant.util import color as color_util
 
+DEPENDENCIES = ['tradfri']
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
-
-# https://github.com/ggravlingen/pytradfri
-REQUIREMENTS = ['pytradfri==0.4']
-
-_LOGGER = logging.getLogger(__name__)
-
-# Validation of the user's configuration
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_API_KEY): cv.string,
-})
+PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the IKEA Tradfri Light platform."""
-    import pytradfri
+    if discovery_info is None:
+        return
 
-    # Assign configuration variables.
-    host = config.get(CONF_HOST)
-    securitycode = config.get(CONF_API_KEY)
-
-    api = pytradfri.coap_cli.api_factory(host, securitycode)
-
-    gateway = pytradfri.gateway.Gateway(api)
+    gateway_id = discovery_info['gateway']
+    gateway = hass.data[KEY_GATEWAY][gateway_id]
     devices = gateway.get_devices()
     lights = [dev for dev in devices if dev.has_light_control]
-
-    _LOGGER.debug("IKEA Tradfri Hub | init | Initialization Process Complete")
-
-    add_devices(IKEATradfri(light) for light in lights)
-    _LOGGER.debug("IKEA Tradfri Hub | get_lights | All Lights Loaded")
+    add_devices(Tradfri(light) for light in lights)
 
 
-class IKEATradfri(Light):
+class Tradfri(Light):
     """The platform class required by hass."""
 
     def __init__(self, light):
@@ -57,8 +34,6 @@ class IKEATradfri(Light):
         self._light_control = light.light_control
         self._light_data = light.light_control.lights[0]
         self._name = light.name
-
-        self._brightness = None
         self._rgb_color = None
 
     @property
@@ -98,17 +73,17 @@ class IKEATradfri(Light):
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
         if ATTR_BRIGHTNESS in kwargs:
-            self._light.light_control.set_dimmer(kwargs.get(ATTR_BRIGHTNESS))
+            self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+        else:
+            self._light_control.set_state(True)
+
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
             self._light.light_control.set_hex_color(
                 color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))
-        else:
-            self._light.light_control.set_state(True)
 
     def update(self):
         """Fetch new state data for this light."""
         self._light.update()
-        self._brightness = self._light_data.dimmer
 
         # Handle Hue lights paired with the gatway
         if self._light_data.hex_color is not None:
