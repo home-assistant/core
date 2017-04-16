@@ -4,19 +4,20 @@ Support for the Automatic platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.automatic/
 """
+import asyncio
 from datetime import timedelta
 import logging
-import re
-import requests
 
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, ATTR_ATTRIBUTES)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util import datetime as dt_util
+from homeassistant.helpers.event import async_track_time_interval
+
+REQUIREMENTS = ['aioautomatic==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,129 +25,101 @@ CONF_CLIENT_ID = 'client_id'
 CONF_SECRET = 'secret'
 CONF_DEVICES = 'devices'
 
-SCOPE = 'scope:location scope:vehicle:profile scope:user:profile scope:trip'
-
-ATTR_ACCESS_TOKEN = 'access_token'
-ATTR_EXPIRES_IN = 'expires_in'
-ATTR_RESULTS = 'results'
-ATTR_VEHICLE = 'vehicle'
-ATTR_ENDED_AT = 'ended_at'
-ATTR_END_LOCATION = 'end_location'
-
-URL_AUTHORIZE = 'https://accounts.automatic.com/oauth/access_token/'
-URL_VEHICLES = 'https://api.automatic.com/vehicle/'
-URL_TRIPS = 'https://api.automatic.com/trip/'
-
-_VEHICLE_ID_REGEX = re.compile(
-    (URL_VEHICLES + '(.*)?[/]$').replace('/', r'\/'))
+DEFAULT_TIMEOUT = 5
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_DEVICES): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_DEVICES, default=None): vol.All(
+        cv.ensure_list, [cv.string])
 })
 
 
-def setup_scanner(hass, config: dict, see, discovery_info=None):
+@asyncio.coroutine
+def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return an Automatic scanner."""
+    import aioautomatic
+
+    client = aioautomatic.Client(
+        client_id=config[CONF_CLIENT_ID],
+        client_secret=config[CONF_SECRET],
+        client_session=async_get_clientsession(hass),
+        request_kwargs={'timeout': DEFAULT_TIMEOUT})
     try:
-        AutomaticDeviceScanner(hass, config, see)
-    except requests.HTTPError as err:
+        session = yield from client.create_session_from_password(
+            config[CONF_USERNAME], config[CONF_PASSWORD])
+        data = AutomaticData(hass, session, config[CONF_DEVICES], async_see)
+    except aioautomatic.exceptions.AutomaticError as err:
         _LOGGER.error(str(err))
         return False
 
+    yield from data.update()
     return True
 
 
-class AutomaticDeviceScanner(object):
-    """A class representing an Automatic device."""
+class AutomaticData(object):
+    """A class representing an Automatic cloud service connection."""
 
-    def __init__(self, hass, config: dict, see) -> None:
+    def __init__(self, hass, session, devices, async_see):
         """Initialize the automatic device scanner."""
         self.hass = hass
-        self._devices = config.get(CONF_DEVICES, None)
-        self._access_token_payload = {
-            'username': config.get(CONF_USERNAME),
-            'password': config.get(CONF_PASSWORD),
-            'client_id': config.get(CONF_CLIENT_ID),
-            'client_secret': config.get(CONF_SECRET),
-            'grant_type': 'password',
-            'scope': SCOPE
-        }
-        self._headers = None
-        self._token_expires = dt_util.now()
-        self.last_results = {}
-        self.last_trips = {}
-        self.see = see
+        self.devices = devices
+        self.session = session
+        self.async_see = async_see
 
-        self._update_info()
+        async_track_time_interval(hass, self.update, timedelta(seconds=30))
 
-        track_utc_time_change(self.hass, self._update_info,
-                              second=range(0, 60, 30))
-
-    def _update_headers(self):
-        """Get the access token from automatic."""
-        if self._headers is None or self._token_expires <= dt_util.now():
-            resp = requests.post(
-                URL_AUTHORIZE,
-                data=self._access_token_payload)
-
-            resp.raise_for_status()
-
-            json = resp.json()
-
-            access_token = json[ATTR_ACCESS_TOKEN]
-            self._token_expires = dt_util.now() + timedelta(
-                seconds=json[ATTR_EXPIRES_IN])
-            self._headers = {
-                'Authorization': 'Bearer {}'.format(access_token)
-            }
-
-    def _update_info(self, now=None) -> None:
+    @asyncio.coroutine
+    def update(self, now=None):
         """Update the device info."""
+        import aioautomatic
+
         _LOGGER.debug('Updating devices %s', now)
-        self._update_headers()
 
-        response = requests.get(URL_VEHICLES, headers=self._headers)
+        try:
+            vehicles = yield from self.session.get_vehicles()
+        except aioautomatic.exceptions.AutomaticError as err:
+            _LOGGER.error(str(err))
+            return False
 
-        response.raise_for_status()
+        for vehicle in vehicles:
+            name = vehicle.display_name
+            if name is None:
+                name = ' '.join(filter(None, (
+                    str(vehicle.year), vehicle.make, vehicle.model)))
 
-        self.last_results = [item for item in response.json()[ATTR_RESULTS]
-                             if self._devices is None or item[
-                                 'display_name'] in self._devices]
+            if self.devices is not None and name not in self.devices:
+                continue
 
-        response = requests.get(URL_TRIPS, headers=self._headers)
+            self.hass.async_add_job(self.update_vehicle(vehicle, name))
 
-        if response.status_code == 200:
-            for trip in response.json()[ATTR_RESULTS]:
-                vehicle_id = _VEHICLE_ID_REGEX.match(
-                    trip[ATTR_VEHICLE]).group(1)
-                if vehicle_id not in self.last_trips:
-                    self.last_trips[vehicle_id] = trip
-                elif self.last_trips[vehicle_id][ATTR_ENDED_AT] < trip[
-                        ATTR_ENDED_AT]:
-                    self.last_trips[vehicle_id] = trip
+    @asyncio.coroutine
+    def update_vehicle(self, vehicle, name):
+        """Updated the specified vehicle's data."""
+        import aioautomatic
 
-        for vehicle in self.last_results:
-            dev_id = vehicle.get('id')
-            host_name = vehicle.get('display_name')
+        kwargs = {
+            'dev_id': vehicle.id,
+            'host_name': name,
+            'mac': vehicle.id,
+            ATTR_ATTRIBUTES: {
+                'fuel_level': vehicle.fuel_level_percent,
+                }
+        }
 
-            attrs = {
-                'fuel_level': vehicle.get('fuel_level_percent')
-            }
+        trips = []
+        try:
+            # Get the most recent trip for this vehicle
+            trips = yield from self.session.get_trips(
+                vehicle=vehicle.id, limit=1)
+        except aioautomatic.exceptions.AutomaticError as err:
+            _LOGGER.error(str(err))
 
-            kwargs = {
-                'dev_id': dev_id,
-                'host_name': host_name,
-                'mac': dev_id,
-                ATTR_ATTRIBUTES: attrs
-            }
+        if trips:
+            end_location = trips[0].end_location
+            kwargs['gps'] = (end_location.lat, end_location.lon)
+            kwargs['gps_accuracy'] = end_location.accuracy_m
 
-            if dev_id in self.last_trips:
-                end_location = self.last_trips[dev_id][ATTR_END_LOCATION]
-                kwargs['gps'] = (end_location['lat'], end_location['lon'])
-                kwargs['gps_accuracy'] = end_location['accuracy_m']
-
-            self.see(**kwargs)
+        yield from self.async_see(**kwargs)
