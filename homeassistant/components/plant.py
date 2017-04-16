@@ -221,7 +221,7 @@ class Plant(Entity):
 
     @property
     def state_attributes(self):
-        """ Return the attributes of the entity.
+        """Return the attributes of the entity.
 
         Provide the individual measurements from the
         sensor in the attributes of the device.
