@@ -45,7 +45,9 @@ class Host(object):
 
     def ping(self):
         """Send an ICMP echo request and return True if success."""
-        pinger = subprocess.Popen(self._ping_cmd, stdout=subprocess.PIPE)
+        pinger = subprocess.Popen(self._ping_cmd,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL)
         try:
             pinger.communicate()
             return pinger.returncode == 0
