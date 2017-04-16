@@ -91,10 +91,14 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
+        if self._workaround == workaround.WORKAROUND_NO_UPDOWN:
+            self.node.set_dimmer(self.values.primary.value_id, 100)
         self._network.manager.pressButton(self._open_id)
 
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
+        if self._workaround == workaround.WORKAROUND_NO_UPDOWN:
+            self.node.set_dimmer(self.values.primary.value_id, 0)
         self._network.manager.pressButton(self._close_id)
 
     def set_cover_position(self, position, **kwargs):
@@ -103,6 +107,8 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
+        if self._workaround == workaround.WORKAROUND_NO_UPDOWN:
+            self._network.manager.releaseButton(self.values.primary.value_id)
         self._network.manager.releaseButton(self._open_id)
 
 
@@ -123,7 +129,6 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         """Return the current position of Zwave garage door."""
         return not self._state
 
-# pylint:disable=simplifiable-if-statement
     def close_cover(self):
         """Close the garage door."""
         self.values.primary.data = False
