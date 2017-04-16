@@ -159,13 +159,13 @@ def async_setup(hass, config):
 
     tasks2.append(group.Group.async_create_group(hass, 'living room', [
         lights[1], switches[0], 'input_select.living_room_preset',
-        'rollershutter.living_room_window', media_players[1],
+        'cover.living_room_window', media_players[1],
         'scene.romantic_lights']))
     tasks2.append(group.Group.async_create_group(hass, 'bedroom', [
         lights[0], switches[1], media_players[0],
         'input_slider.noise_allowance']))
     tasks2.append(group.Group.async_create_group(hass, 'kitchen', [
-        lights[2], 'rollershutter.kitchen_window', 'lock.kitchen_door']))
+        lights[2], 'cover.kitchen_window', 'lock.kitchen_door']))
     tasks2.append(group.Group.async_create_group(hass, 'doors', [
         'lock.front_door', 'lock.kitchen_door',
         'garage_door.right_garage_door', 'garage_door.left_garage_door']))
@@ -176,8 +176,8 @@ def async_setup(hass, config):
         'device_tracker.demo_paulus']))
     tasks2.append(group.Group.async_create_group(hass, 'downstairs', [
         'group.living_room', 'group.kitchen',
-        'scene.romantic_lights', 'rollershutter.kitchen_window',
-        'rollershutter.living_room_window', 'group.doors',
+        'scene.romantic_lights', 'cover.kitchen_window',
+        'cover.living_room_window', 'group.doors',
         'thermostat.ecobee',
     ], view=True))
 
