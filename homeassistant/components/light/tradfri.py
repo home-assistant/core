@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
 # https://github.com/ggravlingen/pytradfri
-REQUIREMENTS = ['pytradfri==0.5']
+REQUIREMENTS = ['pytradfri==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
