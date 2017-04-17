@@ -131,7 +131,8 @@ def async_setup(hass, config):
         elif service.service == SERVICE_ADDON_START:
             yield from hassio.send_command("/addons/{}/start".format(addon))
         elif service.service == SERVICE_ADDON_STOP:
-            yield from hassio.send_command("/addons/{}/stop".format(addon))
+            yield from hassio.send_command(
+                "/addons/{}/stop".format(addon), timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_ADDON_UPDATE:
             yield from hassio.send_command(
                 "/addons/{}/update".format(addon), payload=version,
