@@ -8,6 +8,7 @@ import colorsys
 import logging
 import asyncio
 import sys
+from os import path
 from functools import partial
 from datetime import timedelta
 import async_timeout
@@ -15,15 +16,20 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    Light, DOMAIN, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME,
+    ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+    SUPPORT_TRANSITION)
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
 from homeassistant.core import callback
+from homeassistant.config import load_yaml_config_file
+from homeassistant.const import (ATTR_ENTITY_ID)
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +42,20 @@ BULB_LATENCY = 500
 
 CONF_SERVER = 'server'
 
+SERVICE_EFFECT_BREATHE = 'lifx_effect_breathe'
+SERVICE_EFFECT_PULSE = 'lifx_effect_pulse'
+
+ATTR_POWER_ON = 'power_on'
+ATTR_PERIOD = 'period'
+ATTR_CYCLES = 'cycles'
+
+# aiolifx waveform modes
+WAVEFORM_SINE = 1
+WAVEFORM_PULSE = 4
+
+# The least visible color setting
+HSBK_NO_COLOR = [0, 0, 0, 2500]
+
 BYTE_MAX = 255
 SHORT_MAX = 65535
 
@@ -46,8 +66,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
 })
 
+LIFX_EFFECT_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
-# pylint: disable=unused-argument
+LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
+    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_COLOR_NAME: cv.string,
+    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                            vol.Coerce(tuple)),
+    vol.Optional(ATTR_PERIOD, default=1.0): vol.All(vol.Coerce(float),
+                                                    vol.Range(min=0.05)),
+    vol.Optional(ATTR_CYCLES, default=1.0): vol.All(vol.Coerce(float),
+                                                    vol.Range(min=1)),
+    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
+})
+
+LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
+
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the LIFX platform."""
@@ -66,6 +103,34 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         local_addr=(server_addr, UDP_BROADCAST_PORT))
 
     hass.async_add_job(coro)
+
+    @asyncio.coroutine
+    def async_service_handle(service):
+        """Internal func for applying a service."""
+        entity_ids = extract_entity_ids(hass, service)
+        if entity_ids:
+            devices = [entity for entity in lifx_manager.entities.values()
+                       if entity.entity_id in entity_ids]
+        else:
+            devices = lifx_manager.entities.values()
+
+        for device in devices:
+            effect_job = device.async_effect(service.service, **service.data)
+            hass.async_add_job(effect_job)
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_EFFECT_BREATHE, async_service_handle,
+        descriptions.get(SERVICE_EFFECT_BREATHE),
+        schema=LIFX_EFFECT_BREATHE_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_EFFECT_PULSE, async_service_handle,
+        descriptions.get(SERVICE_EFFECT_PULSE),
+        schema=LIFX_EFFECT_PULSE_SCHEMA)
+
     return True
 
 
@@ -298,9 +363,60 @@ class LIFXLight(Light):
             self.set_color(*self.device.color)
             self._name = self.device.label
 
+    @asyncio.coroutine
+    def async_effect(self, service, **kwargs):
+        """Play a light effect on the bulb."""
+        # Keep the current state around so it can be restored
+        yield from self.refresh_state()
+        if self.device is None:
+            return
+
+        # Temporarily turn on power for the effect to be visible
+        stashed_hsbk = None
+        if kwargs[ATTR_POWER_ON] and not self.is_on:
+            stashed_hsbk = self.device.color
+            self.device.set_color(HSBK_NO_COLOR)
+            self.device.set_power(True)
+
+        # Now find the temporary state needed for the effect
+        period = kwargs[ATTR_PERIOD]
+        cycles = kwargs[ATTR_CYCLES]
+        hsbk, changed_color = self.find_hsbk(**kwargs)
+        if not changed_color:
+            return
+
+        if service == SERVICE_EFFECT_BREATHE:
+            waveform = WAVEFORM_SINE
+        elif service == SERVICE_EFFECT_PULSE:
+            waveform = WAVEFORM_PULSE
+
+        # Start the effect
+        args = {
+            'transient': 1,
+            'color': hsbk,
+            'period': int(period*1000),
+            'cycles': cycles,
+            'duty_cycle': 0,
+            'waveform': waveform,
+        }
+        self.device.set_waveform(args)
+
+        # Wait for completion and restore the initial state
+        if stashed_hsbk is not None:
+            yield from asyncio.sleep(period*cycles)
+            if self.device:
+                self.device.set_power(False)
+                yield from asyncio.sleep(BULB_LATENCY/1000)
+            if self.device:
+                self.device.set_color(stashed_hsbk)
+
     def find_hsbk(self, **kwargs):
         """Find the desired color from a number of possible inputs."""
         changed_color = False
+
+        color_name = kwargs.pop(ATTR_COLOR_NAME, None)
+        if color_name is not None:
+            kwargs[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
 
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \
