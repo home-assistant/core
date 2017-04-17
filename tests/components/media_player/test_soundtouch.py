@@ -172,10 +172,14 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
     @mock.patch('libsoundtouch.soundtouch_device', side_effect=None)
     def test_ensure_setup_discovery(self, mocked_sountouch_device):
         """Test setup with discovery."""
+        new_device = {"port": "8090",
+                      "host": "192.168.1.1",
+                      "properties": {},
+                      "hostname": "hostname.local"}
         soundtouch.setup_platform(self.hass,
                                   None,
                                   mock.MagicMock(),
-                                  ('192.168.1.1', 8090))
+                                  new_device)
         all_devices = self.hass.data[soundtouch.DATA_SOUNDTOUCH]
         self.assertEqual(len(all_devices), 1)
         self.assertEqual(all_devices[0].config['port'], 8090)
@@ -190,15 +194,25 @@ class TestSoundtouchMediaPlayer(unittest.TestCase):
                                   default_component(),
                                   mock.MagicMock())
         self.assertEqual(len(self.hass.data[soundtouch.DATA_SOUNDTOUCH]), 1)
+        new_device = {"port": "8090",
+                      "host": "192.168.1.1",
+                      "properties": {},
+                      "hostname": "hostname.local"}
         soundtouch.setup_platform(self.hass,
                                   None,
                                   mock.MagicMock(),
-                                  ('192.168.1.1', 8090))  # New device
+                                  new_device  # New device
+                                  )
         self.assertEqual(len(self.hass.data[soundtouch.DATA_SOUNDTOUCH]), 2)
+        existing_device = {"port": "8090",
+                           "host": "192.168.0.1",
+                           "properties": {},
+                           "hostname": "hostname.local"}
         soundtouch.setup_platform(self.hass,
                                   None,
                                   mock.MagicMock(),
-                                  ('192.168.0.1', 8090))  # Existing device
+                                  existing_device  # Existing device
+                                  )
         self.assertEqual(mocked_sountouch_device.call_count, 2)
         self.assertEqual(len(self.hass.data[soundtouch.DATA_SOUNDTOUCH]), 2)
 

@@ -75,8 +75,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         # Discovery
-        host = discovery_info[0]
-        port = int(discovery_info[1])
+        host = discovery_info["host"]
+        port = int(discovery_info["port"])
 
         # if device already exists by config
         if host in [device.config['host'] for device in
