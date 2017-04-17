@@ -199,5 +199,5 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # wait for sleep to resolve
     yield from hass.async_block_till_done()
 
-    assert connection_factory.call_count == 2, \
+    assert connection_factory.call_count >= 2, \
         'connecting not retried'
