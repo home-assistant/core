@@ -168,7 +168,7 @@ class HassIO(object):
     @asyncio.coroutine
     def send_command(self, cmd, payload=None, timeout=DEFAULT_TIMEOUT):
         """Send request to API."""
-        answer = yield from self.send_raw(cmd, payload=payload)
+        answer = yield from self.send_raw(cmd, payload=payload, timeout=timeout)
         if answer['result'] == 'ok':
             return answer['data'] if answer['data'] else True
 
