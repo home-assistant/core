@@ -525,51 +525,51 @@ class YeelightLight(Light):
 
                 transitions = list()
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 flow = Flow(count=count, transitions=transitions)
@@ -580,51 +580,51 @@ class YeelightLight(Light):
 
                 transitions = list()
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=duration))
                 flow = Flow(count=count, transitions=transitions)
@@ -634,51 +634,51 @@ class YeelightLight(Light):
 
                 transitions = list()
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=250))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=500))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=1000))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
-                                  duration=200))
+                                  duration=2000))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=3000))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=4000))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=5000))
                 transitions.append(
-                    RGBTransition(random.randrange(0, 255),
-                                  random.randrange(0, 255),
-                                  random.randrange(0, 255),
+                    RGBTransition(random.randint(0, 255),
+                                  random.randint(0, 255),
+                                  random.randint(0, 255),
                                   brightness=self.brightness,
                                   duration=6000))
                 flow = Flow(count=count, transitions=transitions)
