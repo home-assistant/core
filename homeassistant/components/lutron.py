@@ -58,7 +58,7 @@ class LutronDevice(Entity):
         self._area_name = area_name
 
     @asyncio.coroutine
-    def async_add_to_hass(self):
+    def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.async_add_job(
             self._controller.subscribe, self._lutron_device,
