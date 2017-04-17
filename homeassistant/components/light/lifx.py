@@ -82,9 +82,8 @@ class LIFXManager(object):
         """Callback for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
-            _LOGGER.debug("%s register AGAIN", entity.ipaddr)
-            entity.available = True
             entity.device = device
+            _LOGGER.debug("%s register AGAIN", entity.who)
             self.hass.async_add_job(entity.async_update_ha_state())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
@@ -94,7 +93,7 @@ class LIFXManager(object):
     def ready(self, device, msg):
         """Callback that adds the device once all data is retrieved."""
         entity = LIFXLight(device)
-        _LOGGER.debug("%s register READY", entity.ipaddr)
+        _LOGGER.debug("%s register READY", entity.who)
         self.entities[device.mac_addr] = entity
         self.async_add_devices([entity])
 
@@ -103,8 +102,8 @@ class LIFXManager(object):
         """Callback for disappearing bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
-            _LOGGER.debug("%s unregister", entity.ipaddr)
-            entity.available = False
+            _LOGGER.debug("%s unregister", entity.who)
+            entity.device = None
             entity.updated_event.set()
             self.hass.async_add_job(entity.async_update_ha_state())
 
@@ -129,29 +128,27 @@ class LIFXLight(Light):
         self.updated_event = asyncio.Event()
         self.blocker = None
         self.postponed_update = None
-        self._available = True
+        self._name = device.label
         self.set_power(device.power_level)
         self.set_color(*device.color)
 
     @property
     def available(self):
         """Return the availability of the device."""
-        return self._available
-
-    @available.setter
-    def available(self, value):
-        """Set the availability of the device."""
-        self._available = value
+        return self.device is not None
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device.label
+        return self._name
 
     @property
-    def ipaddr(self):
-        """Return the IP address of the device."""
-        return self.device.ip_addr[0]
+    def who(self):
+        """Return a string identifying the device."""
+        if self.device:
+            return self.device.ip_addr[0]
+        else:
+            return "(%s)" % self.name
 
     @property
     def rgb_color(self):
@@ -247,7 +244,7 @@ class LIFXLight(Light):
 
         hsbk = [hue, saturation, brightness, kelvin]
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
-                      self.ipaddr, self._power, fade, *hsbk)
+                      self.who, self._power, fade, *hsbk)
 
         if self._power == 0:
             if changed_color:
@@ -282,12 +279,13 @@ class LIFXLight(Light):
         """Callback that gets current power/color status."""
         self.set_power(device.power_level)
         self.set_color(*device.color)
+        self._name = device.label
         self.updated_event.set()
 
     @asyncio.coroutine
     def async_update(self):
         """Update bulb status (if it is available)."""
-        _LOGGER.debug("%s async_update", self.ipaddr)
+        _LOGGER.debug("%s async_update", self.who)
         if self.available and self.blocker is None:
             self.updated_event.clear()
             self.device.get_color(self.got_color)
