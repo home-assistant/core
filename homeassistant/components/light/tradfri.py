@@ -116,17 +116,12 @@ class Tradfri(Light):
                 color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))
 
         elif ATTR_COLOR_TEMP in kwargs and \
-                self._light_data.hex_color is not None:
-            if not self._ok_temps:
-                _LOGGER.error(
-                    'no valid color temperatures found for device %s',
-                    self._name)
-                return
+                self._light_data.hex_color is not None and self._ok_temps:
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
             # find closest allowed kelvin temp from user input
             kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x-kelvin))
-            self._light.light_control.set_hex_color(self._ok_temps[kelvin])
+            self._light_control.set_hex_color(self._ok_temps[kelvin])
 
     def update(self):
         """Fetch new state data for this light."""
