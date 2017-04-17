@@ -5,10 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wink/
 """
 import logging
+import time
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -32,6 +35,9 @@ CONF_APPSPOT = 'appspot'
 CONF_DEFINED_BOTH_MSG = 'Remove access token to use oath2.'
 CONF_MISSING_OATH_MSG = 'Missing oath2 credentials.'
 CONF_TOKEN_URL = "https://winkbearertoken.appspot.com/token"
+
+SERVICE_ADD_NEW_DEVICES = 'add_new_devices'
+SERVICE_REFRESH_STATES = 'refresh_state_from_wink'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -97,16 +103,15 @@ def setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['entities'] = []
     hass.data[DOMAIN]['unique_ids'] = []
-
-    def keep_alive_call(event):
-        """Call the Wink API endpoints to keep PubNub working."""
-        pywink.wink_api_fetch()
-        pywink.get_user()
-    hass.services.register(DOMAIN, 'keep_alive', keep_alive_call)
-
     hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
-        pywink.get_subscription_key(),
-        pywink.get_user)
+        pywink.get_subscription_key())
+
+    def keep_alive_call():
+        """Call the Wink API endpoints to keep PubNub working."""
+        _LOGGER.info("Polling the Wink API to keep PubNub updates flowing.")
+        pywink.wink_api_fetch()
+        time.sleep(1)
+        pywink.get_user()
 
     def start_subscription(event):
         """Start the pubnub subscription."""
@@ -123,18 +128,22 @@ def setup(hass, config):
         _LOGGER.info("Refreshing Wink states from API")
         for entity in hass.data[DOMAIN]['entities']:
             entity.schedule_update_ha_state(True)
-    hass.services.register(DOMAIN, 'Refresh_state_from_Wink', force_update)
+    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update)
 
     def pull_new_devices(call):
         """Pull new devices added to users Wink account since startup."""
         _LOGGER.info("Getting new devices from Wink API.")
         for component in WINK_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
-    hass.services.register(DOMAIN, 'Add_new_devices', pull_new_devices)
+    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices)
+
+    # Call the Wink API every hour to keep PubNub updates flowing
+    async_track_time_interval(hass, keep_alive_call, timedelta(minutes=60))
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
+
 
     return True
 
