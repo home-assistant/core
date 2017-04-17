@@ -61,8 +61,9 @@ def setup(hass, config):
 
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for WeMo discovery events."""
-        model_name = discovery_info[1]
-        serial = discovery_info[3]
+        # name, model, location, mac
+        model_name = discovery_info.get('model_name')
+        serial = discovery_info.get('serial')
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
