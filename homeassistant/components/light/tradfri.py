@@ -1,14 +1,25 @@
 """Support for the IKEA Tradfri platform."""
+import logging
 
-from homeassistant.components.tradfri import KEY_GATEWAY
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, ATTR_RGB_COLOR,
-    SUPPORT_RGB_COLOR, PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+from homeassistant.components.light import \
+    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
+from homeassistant.components.tradfri import KEY_GATEWAY
 from homeassistant.util import color as color_util
+from homeassistant.util import slugify
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['tradfri']
 SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
+SUPPORTED_FEATURES_IKEA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
+IKEA = 'ikea_of_sweden'
+
+ALLOWED_TEMPERATURES = {IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}}
+ALLOWED_FEATURES = {IKEA: SUPPORTED_FEATURES_IKEA}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -35,10 +46,16 @@ class Tradfri(Light):
         self._light_data = light.light_control.lights[0]
         self._name = light.name
         self._rgb_color = None
+        self._ok_temps = ALLOWED_TEMPERATURES.get(
+            slugify(self._light.device_info.manufacturer))
 
     @property
     def supported_features(self):
         """Flag supported features."""
+        features = ALLOWED_FEATURES.get(
+            slugify(self._light.device_info.manufacturer))
+        if features:
+            return features
         return SUPPORTED_FEATURES
 
     @property
@@ -57,9 +74,26 @@ class Tradfri(Light):
         return self._light_data.dimmer
 
     @property
+    def color_temp(self):
+        """Return the CT color value in mireds."""
+        if not self.supported_features & SUPPORT_COLOR_TEMP or \
+                not self._ok_temps:
+            return
+        kelvin = next((
+            kelvin for kelvin, hex_color in self._ok_temps.items()
+            if hex_color == self._light_data.hex_color), None)
+        if kelvin is None:
+            _LOGGER.error(
+                'unexpected color temperature found %s',
+                self._light_data.hex_color)
+            return
+        return color_util.color_temperature_kelvin_to_mired(kelvin)
+
+    @property
     def rgb_color(self):
         """RGB color of the light."""
-        return self._rgb_color
+        if self.supported_features & SUPPORT_RGB_COLOR:
+            return self._rgb_color
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -80,6 +114,14 @@ class Tradfri(Light):
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
             self._light.light_control.set_hex_color(
                 color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))
+
+        elif ATTR_COLOR_TEMP in kwargs and \
+                self._light_data.hex_color is not None and self._ok_temps:
+            kelvin = color_util.color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP])
+            # find closest allowed kelvin temp from user input
+            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x-kelvin))
+            self._light_control.set_hex_color(self._ok_temps[kelvin])
 
     def update(self):
         """Fetch new state data for this light."""
