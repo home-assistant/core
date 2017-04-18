@@ -66,7 +66,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
-        year = datetime.datetime.now().year
         # 'state' and 'prov' are not interchangeable, so need to make
         # sure we use the right one
         if province in obj_holidays.PROVINCES:
