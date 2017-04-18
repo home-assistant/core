@@ -1,4 +1,4 @@
-"""Starts home assistant."""
+"""Start Home Assistant."""
 from __future__ import print_function
 
 import argparse
@@ -204,7 +204,7 @@ def daemonize() -> None:
     if pid > 0:
         sys.exit(0)
 
-    # redirect standard file descriptors to devnull
+    # Redirect standard file descriptors to /dev/null
     infd = open(os.devnull, 'r')
     outfd = open(os.devnull, 'a+')
     sys.stdout.flush()
@@ -215,7 +215,7 @@ def daemonize() -> None:
 
 
 def check_pid(pid_file: str) -> None:
-    """Check that HA is not already running."""
+    """Check that Home Assistant is not already running."""
     # Check pid file
     try:
         pid = int(open(pid_file, 'r').readline())
@@ -264,6 +264,7 @@ def closefds_osx(min_fd: int, max_fd: int) -> None:
             pass
 
 
+# pylint: disable=no-else-return
 def cmdline() -> List[str]:
     """Collect path and arguments to re-execute the current hass instance."""
     if sys.argv[0].endswith(os.path.sep + '__main__.py'):
@@ -277,7 +278,7 @@ def cmdline() -> List[str]:
 
 def setup_and_run_hass(config_dir: str,
                        args: argparse.Namespace) -> Optional[int]:
-    """Setup HASS and run."""
+    """Setup Home Assistant and run."""
     from homeassistant import bootstrap
 
     # Run a simple daemon runner process on Windows to handle restarts
@@ -326,7 +327,7 @@ def setup_and_run_hass(config_dir: str,
 
 
 def try_to_restart() -> None:
-    """Attempt to clean up state and start a new homeassistant instance."""
+    """Attempt to clean up state and start a new Home Assistant instance."""
     # Things should be mostly shut down already at this point, now just try
     # to clean up things that may have been left behind.
     sys.stderr.write('Home Assistant attempting to restart.\n')
@@ -341,9 +342,9 @@ def try_to_restart() -> None:
             sys.stderr.write(
                 "Found {} non-daemonic threads.\n".format(nthreads))
 
-    # Somehow we sometimes seem to trigger an assertion in the python threading
+    # Somehow we sometimes seem to trigger an assertion in the Python threading
     # module. It seems we find threads that have no associated OS level thread
-    # which are not marked as stopped at the python level.
+    # which are not marked as stopped at the Python level.
     except AssertionError:
         sys.stderr.write("Failed to count non-daemonic threads.\n")
 
@@ -358,7 +359,7 @@ def try_to_restart() -> None:
     else:
         os.closerange(3, max_fd)
 
-    # Now launch into a new instance of Home-Assistant. If this fails we
+    # Now launch into a new instance of Home Assistant. If this fails we
     # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
     # systemd will restart us when RestartForceExitStatus=100 is set in the
     # systemd.service file.

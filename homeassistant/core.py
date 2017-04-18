@@ -190,7 +190,7 @@ class HomeAssistant(object):
 
     @callback
     def async_add_job(self, target: Callable[..., None], *args: Any) -> None:
-        """Add a job from within the eventloop.
+        """Add a job from within the event loop.
 
         This method must be run in the event loop.
 
@@ -253,7 +253,7 @@ class HomeAssistant(object):
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
-            if len(pending) > 0:
+            if len(pending):
                 yield from asyncio.wait(pending, loop=self.loop)
             else:
                 yield from asyncio.sleep(0, loop=self.loop)
@@ -320,6 +320,7 @@ class Event(object):
             'time_fired': self.time_fired,
         }
 
+    # pylint: disable=no-else-return
     def __repr__(self):
         """Return the representation."""
         # pylint: disable=maybe-no-member
@@ -736,7 +737,7 @@ class StateMachine(object):
 
 
 class Service(object):
-    """Represents a callable service."""
+    """Represent a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
                  'is_callback', 'is_coroutinefunction']
@@ -759,7 +760,7 @@ class Service(object):
 
 
 class ServiceCall(object):
-    """Represents a call to a service."""
+    """Represent a call to a service."""
 
     __slots__ = ['domain', 'service', 'data', 'call_id']
 
@@ -770,8 +771,9 @@ class ServiceCall(object):
         self.data = MappingProxyType(data or {})
         self.call_id = call_id
 
+    # pylint: disable=no-else-return
     def __repr__(self):
-        """Return the represenation of the service."""
+        """Return the representation of the service."""
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
                 self.domain, self.service, util.repr_helper(self.data))
@@ -780,7 +782,7 @@ class ServiceCall(object):
 
 
 class ServiceRegistry(object):
-    """Offers services over the eventbus."""
+    """Offer services over the eventbus."""
 
     def __init__(self, hass):
         """Initialize a service registry."""

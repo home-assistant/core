@@ -130,7 +130,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a config file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -175,8 +175,8 @@ def create_default_config(config_dir, detect_location=True):
             info[attr] = getattr(location_info, prop) or default
 
         if location_info.latitude and location_info.longitude:
-            info[CONF_ELEVATION] = loc_util.elevation(location_info.latitude,
-                                                      location_info.longitude)
+            info[CONF_ELEVATION] = loc_util.elevation(
+                location_info.latitude, location_info.longitude)
 
     # Writing files with YAML does not create the most human readable results
     # So we're hard coding a YAML template.
@@ -202,13 +202,13 @@ def create_default_config(config_dir, detect_location=True):
         return config_path
 
     except IOError:
-        print('Unable to create default configuration file', config_path)
+        print("Unable to create default configuration file", config_path)
         return None
 
 
 @asyncio.coroutine
 def async_hass_config_yaml(hass):
-    """Load YAML from hass config File.
+    """Load YAML from Home Assistant configuration file.
 
     This function allow component inside asyncio loop to reload his config by
     self.
@@ -271,7 +271,7 @@ def process_ha_config_upgrade(hass):
     if conf_version == __version__:
         return
 
-    _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
+    _LOGGER.info("Upgrading config directory from %s to %s", conf_version,
                  __version__)
 
     lib_path = hass.config.path('deps')
@@ -331,7 +331,7 @@ def async_process_ha_core_config(hass, config):
             hac.time_zone = time_zone
             date_util.set_default_time_zone(time_zone)
         else:
-            _LOGGER.error('Received invalid time zone %s', time_zone_str)
+            _LOGGER.error("Received invalid time zone %s", time_zone_str)
 
     for key, attr in ((CONF_LATITUDE, 'latitude'),
                       (CONF_LONGITUDE, 'longitude'),
@@ -357,7 +357,7 @@ def async_process_ha_core_config(hass, config):
         try:
             pkg_cust = CUSTOMIZE_CONFIG_SCHEMA(pkg_cust)
         except vol.Invalid:
-            _LOGGER.warning('Package %s contains invalid customize', name)
+            _LOGGER.warning("Package %s contains invalid customize", name)
             continue
 
         cust_exact.update(pkg_cust[CONF_CUSTOMIZE])
@@ -397,7 +397,7 @@ def async_process_ha_core_config(hass, config):
             None, loc_util.detect_location_info)
 
         if info is None:
-            _LOGGER.error('Could not detect location information')
+            _LOGGER.error("Could not detect location information")
             return
 
         if hac.latitude is None and hac.longitude is None:
@@ -426,8 +426,8 @@ def async_process_ha_core_config(hass, config):
 
     if discovered:
         _LOGGER.warning(
-            'Incomplete core config. Auto detected %s',
-            ', '.join('{}: {}'.format(key, val) for key, val in discovered))
+            "Incomplete core config. Auto detected %s",
+            ", ".join('{}: {}'.format(key, val) for key, val in discovered))
 
 
 def _log_pkg_error(package, component, config, message):
@@ -583,7 +583,7 @@ def async_process_component_config(hass, config, domain):
 
 @asyncio.coroutine
 def async_check_ha_config_file(hass):
-    """Check if HA config file valid.
+    """Check if Home Assistant configuration file is valid.
 
     This method is a coroutine.
     """

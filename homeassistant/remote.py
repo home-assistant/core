@@ -25,9 +25,9 @@ from homeassistant.const import (
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
 
-METHOD_GET = "get"
-METHOD_POST = "post"
-METHOD_DELETE = "delete"
+METHOD_GET = 'get'
+METHOD_POST = 'post'
+METHOD_DELETE = 'delete'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,10 +36,10 @@ class APIStatus(enum.Enum):
     """Represent API status."""
 
     # pylint: disable=no-init, invalid-name
-    OK = "ok"
-    INVALID_PASSWORD = "invalid_password"
-    CANNOT_CONNECT = "cannot_connect"
-    UNKNOWN = "unknown"
+    OK = 'ok'
+    INVALID_PASSWORD = 'invalid_password'
+    CANNOT_CONNECT = 'cannot_connect'
+    UNKNOWN = 'unknown'
 
     def __str__(self) -> str:
         """Return the state."""
@@ -49,9 +49,10 @@ class APIStatus(enum.Enum):
 class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
-    def __init__(self, host: str, api_password: Optional[str]=None,
-                 port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
-        """Initalize the API."""
+    def __init__(self, host: str, api_password: Optional[str] = None,
+                 port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False) -> None:
+        """Initialize the API."""
         self.host = host
         self.port = port
         self.api_password = api_password
@@ -74,13 +75,14 @@ class API(object):
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
-    def validate_api(self, force_validate: bool=False) -> bool:
+    def validate_api(self, force_validate: bool = False) -> bool:
         """Test if we can communicate with the API."""
         if self.status is None or force_validate:
             self.status = validate_api(self)
 
         return self.status == APIStatus.OK
 
+    # pylint: disable=no-else-return
     def __call__(self, method, path, data=None, timeout=5):
         """Make a call to the Home Assistant API."""
         if data is not None:
@@ -115,7 +117,7 @@ class API(object):
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
-    # pylint: disable=method-hidden
+    # pylint: disable=method-hidden, arguments-differ
     def default(self, obj):
         """Convert Home Assistant objects.
 
@@ -141,6 +143,7 @@ class JSONEncoder(json.JSONEncoder):
                 return json.JSONEncoder.default(self, obj)
 
 
+# pylint: disable=no-else-return
 def validate_api(api):
     """Make a call to validate API."""
     try:
@@ -239,6 +242,7 @@ def remove_state(api, entity_id):
         return False
 
 
+# pylint: disable=no-else-return
 def set_state(api, entity_id, new_state, attributes=None, force_update=False):
     """Tell API to update state for entity_id.
 
