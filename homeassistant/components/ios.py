@@ -8,6 +8,7 @@ import asyncio
 import os
 import json
 import logging
+import datetime
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -19,6 +20,8 @@ from homeassistant.helpers import discovery
 from homeassistant.core import callback
 
 from homeassistant.components.http import HomeAssistantView
+
+from homeassistant.remote import JSONEncoder
 
 from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
                                  HTTP_BAD_REQUEST)
@@ -54,6 +57,8 @@ ATTR_DEFAULT_BEHAVIOR = "default"
 ATTR_TEXT_INPUT_BEHAVIOR = "textInput"
 
 BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
+
+ATTR_LAST_SEEN_AT = "lastSeenAt"
 
 ATTR_DEVICE = "device"
 ATTR_PUSH_TOKEN = "pushToken"
@@ -138,7 +143,7 @@ IDENTIFY_DEVICE_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_DEVICE_SCHEMA)
 IDENTIFY_APP_SCHEMA = vol.Schema({
     vol.Required(ATTR_APP_BUNDLE_IDENTIFER): cv.string,
     vol.Required(ATTR_APP_BUILD_NUMBER): cv.positive_int,
-    vol.Required(ATTR_APP_VERSION_NUMBER): cv.positive_int
+    vol.Optional(ATTR_APP_VERSION_NUMBER): cv.string
 }, extra=vol.ALLOW_EXTRA)
 
 IDENTIFY_APP_SCHEMA_CONTAINER = vol.All(dict, IDENTIFY_APP_SCHEMA)
@@ -192,7 +197,7 @@ def _save_config(filename, config):
     """Save configuration."""
     try:
         with open(filename, "w") as fdesc:
-            fdesc.write(json.dumps(config))
+            fdesc.write(json.dumps(config, cls=JSONEncoder))
     except (IOError, TypeError) as error:
         _LOGGER.error("Saving config file failed: %s", error)
         return False
@@ -285,13 +290,15 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         try:
             req_data = yield from request.json()
         except ValueError:
-            return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
+            return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
         try:
             data = IDENTIFY_SCHEMA(req_data)
         except vol.Invalid as ex:
             return self.json_message(humanize_error(request.json, ex),
                                      HTTP_BAD_REQUEST)
+
+        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now()
 
         name = data.get(ATTR_DEVICE_ID)
 

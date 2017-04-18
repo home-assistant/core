@@ -26,6 +26,7 @@ import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.components.frontend import register_built_in_panel
 
 from . import const
 from .const import DOMAIN
@@ -614,6 +615,9 @@ def setup(hass, config):
         track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
+
+    if 'frontend' in hass.config.components:
+        register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
 
     return True
 
