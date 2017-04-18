@@ -289,6 +289,9 @@ https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea
 # homeassistant.components.sensor.pocketcasts
 https://github.com/molobrakos/python-pocketcasts/archive/9f61ff00c77c7c98ffa0af9dd3540df3dce4a836.zip#python-pocketcasts==0.0.1
 
+# homeassistant.components.light.mipow
+# https://github.com/mjg59/python-mipow/releases/download/0.3/mipow-0.3.tar.gz#mipow==0.3
+
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
