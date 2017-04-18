@@ -310,25 +310,25 @@ class ZwaveColorLight(ZwaveDimmer):
             if self._zw098:
                 if kwargs[ATTR_COLOR_TEMP] > TEMP_MID_HASS:
                     self._ct = TEMP_WARM_HASS
-                    rgbw = b'#000000ff00'
+                    rgbw = '#000000ff00'
                 else:
                     self._ct = TEMP_COLD_HASS
-                    rgbw = b'#00000000ff'
+                    rgbw = '#00000000ff'
 
         elif ATTR_RGB_COLOR in kwargs:
             self._rgb = kwargs[ATTR_RGB_COLOR]
             if (not self._zw098 and (
                     self._color_channels & COLOR_CHANNEL_WARM_WHITE or
                     self._color_channels & COLOR_CHANNEL_COLD_WHITE)):
-                rgbw = b'#'
+                rgbw = '#'
                 for colorval in color_rgb_to_rgbw(*self._rgb):
-                    rgbw += format(colorval, '02x').encode('utf-8')
-                rgbw += b'00'
+                    rgbw += format(colorval, '02x')
+                rgbw += '00'
             else:
-                rgbw = b'#'
+                rgbw = '#'
                 for colorval in self._rgb:
-                    rgbw += format(colorval, '02x').encode('utf-8')
-                rgbw += b'0000'
+                    rgbw += format(colorval, '02x')
+                rgbw += '0000'
 
         if rgbw and self.values.color:
             self.values.color.data = rgbw

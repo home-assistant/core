@@ -47,7 +47,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info is not None:
         add_devices(
-            [FSAPIDevice(discovery_info, DEFAULT_PASSWORD)],
+            [FSAPIDevice(discovery_info['ssdp_description'],
+                         DEFAULT_PASSWORD)],
             update_before_add=True)
         return True
 

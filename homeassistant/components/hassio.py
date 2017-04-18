@@ -131,7 +131,8 @@ def async_setup(hass, config):
         elif service.service == SERVICE_ADDON_START:
             yield from hassio.send_command("/addons/{}/start".format(addon))
         elif service.service == SERVICE_ADDON_STOP:
-            yield from hassio.send_command("/addons/{}/stop".format(addon))
+            yield from hassio.send_command(
+                "/addons/{}/stop".format(addon), timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_ADDON_UPDATE:
             yield from hassio.send_command(
                 "/addons/{}/update".format(addon), payload=version,
@@ -168,8 +169,10 @@ class HassIO(object):
     @asyncio.coroutine
     def send_command(self, cmd, payload=None, timeout=DEFAULT_TIMEOUT):
         """Send request to API."""
-        answer = yield from self.send_raw(cmd, payload=payload)
-        if answer['result'] == 'ok':
+        answer = yield from self.send_raw(
+            cmd, payload=payload, timeout=timeout
+        )
+        if answer and answer['result'] == 'ok':
             return answer['data'] if answer['data'] else True
 
         _LOGGER.error("%s return error %s.", cmd, answer['message'])

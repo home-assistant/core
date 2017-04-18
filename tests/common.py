@@ -122,8 +122,7 @@ def async_test_home_assistant(loop):
         # 1. We only mock time during tests
         # 2. We want block_till_done that is called inside stop_track_tasks
         with patch('homeassistant.core._async_create_timer'), \
-                patch.object(hass, 'async_stop_track_tasks',
-                             hass.async_block_till_done):
+                patch.object(hass, 'async_stop_track_tasks'):
             yield from orig_start()
 
     hass.async_start = mock_async_start
@@ -171,8 +170,11 @@ def mock_service(hass, domain, service):
 @ha.callback
 def async_fire_mqtt_message(hass, topic, payload, qos=0):
     """Fire the MQTT message."""
+    if isinstance(payload, str):
+        payload = payload.encode('utf-8')
     async_dispatcher_send(
-        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic, payload, qos)
+        hass, mqtt.SIGNAL_MQTT_MESSAGE_RECEIVED, topic,
+        payload, qos)
 
 
 def fire_mqtt_message(hass, topic, payload, qos=0):

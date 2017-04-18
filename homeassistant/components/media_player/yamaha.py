@@ -59,10 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     zone_ignore = config.get(CONF_ZONE_IGNORE)
 
     if discovery_info is not None:
-        name = discovery_info[0]
-        model = discovery_info[1]
-        ctrl_url = discovery_info[2]
-        desc_url = discovery_info[3]
+        name = discovery_info.get('name')
+        model = discovery_info.get('model_name')
+        ctrl_url = discovery_info.get('control_url')
+        desc_url = discovery_info.get('description_url')
         if ctrl_url in hass.data[KNOWN]:
             _LOGGER.info("%s already manually configured", ctrl_url)
             return

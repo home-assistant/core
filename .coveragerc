@@ -8,6 +8,9 @@ omit =
     homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/alarmdecoder.py
+    homeassistant/components/*/alarmdecoder.py
+
     homeassistant/components/apcupsd.py
     homeassistant/components/*/apcupsd.py
 
@@ -93,6 +96,9 @@ omit =
     homeassistant/components/*/tellstick.py
 
     homeassistant/components/*/thinkingcleaner.py
+
+    homeassistant/components/tradfri.py
+    homeassistant/components/*/tradfri.py
 
     homeassistant/components/twilio.py
     homeassistant/components/notify/twilio_sms.py
@@ -227,13 +233,15 @@ omit =
     homeassistant/components/light/lifx.py
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/limitlessled.py
+    homeassistant/components/light/mystrom.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/pwm.py
+    homeassistant/components/light/piglow.py
     homeassistant/components/light/tikteck.py
+    homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py
     homeassistant/components/light/yeelight.py
     homeassistant/components/light/yeelightsunflower.py
-    homeassistant/components/light/piglow.py
     homeassistant/components/light/zengge.py
     homeassistant/components/lirc.py
     homeassistant/components/lock/nuki.py
@@ -315,6 +323,7 @@ omit =
     homeassistant/components/remote/harmony.py
     homeassistant/components/remote/itach.py
     homeassistant/components/scene/hunterdouglas_powerview.py
+    homeassistant/components/scene/lifx_cloud.py
     homeassistant/components/sensor/amcrest.py
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
@@ -432,7 +441,7 @@ omit =
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
     homeassistant/components/switch/wake_on_lan.py
-    homeassistant/components/telegram_webhooks.py
+    homeassistant/components/telegram_bot/*
     homeassistant/components/thingspeak.py
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
