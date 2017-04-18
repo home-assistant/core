@@ -1,10 +1,13 @@
 """The tests for mqtt camera component."""
 import asyncio
 
+import pytest
+
 from homeassistant.setup import async_setup_component
 import homeassistant.components.mqtt as mqtt
 
 
+@pytest.mark.skip
 @asyncio.coroutine
 def test_run_camera_setup(hass, test_client):
     """Test that it fetches the given dispatcher data."""
