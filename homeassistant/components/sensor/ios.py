@@ -96,7 +96,7 @@ class IOSSensor(Entity):
         elif battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED:
             if rounded_level < 10:
                 returning_icon = "{}-outline".format(DEFAULT_ICON)
-            elif battery_level == 100:
+            elif battery_level > 95:
                 returning_icon = DEFAULT_ICON
             else:
                 returning_icon = "{}-{}".format(DEFAULT_ICON,
