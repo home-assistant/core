@@ -56,7 +56,8 @@ class IOSSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "sensor_ios_battery_{}_{}".format(self.type, self._device_name)
+        device_id = self._device[ios.ATTR_DEVICE_ID]
+        return "sensor_ios_battery_{}_{}".format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):
