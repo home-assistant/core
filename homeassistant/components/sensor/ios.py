@@ -122,4 +122,4 @@ class IOSSensor(Entity):
     def update(self):
         """Get the latest state of the sensor."""
         self._device = ios.devices().get(self._device_name)
-        self._state = self._device[ios.ATTR_BATTERY][self.type]                                                                                                                                                             
+        self._state = self._device[ios.ATTR_BATTERY][self.type]
