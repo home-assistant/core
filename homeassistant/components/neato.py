@@ -81,7 +81,7 @@ ALERTS = {
 
 
 def setup(hass, config):
-    """Setup the Verisure component."""
+    """Setup the Neato component."""
     from pybotvac import Account
 
     hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account)
