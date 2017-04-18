@@ -106,12 +106,16 @@ def setup(hass, config):
     hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
         pywink.get_subscription_key())
 
-    def keep_alive_call():
+    def keep_alive_call(event_time):
         """Call the Wink API endpoints to keep PubNub working."""
         _LOGGER.info("Polling the Wink API to keep PubNub updates flowing.")
         pywink.wink_api_fetch()
         time.sleep(1)
         pywink.get_user()
+
+    # Call the Wink API every hour to keep PubNub updates flowing
+    async_track_time_interval(hass, keep_alive_call, timedelta(minutes=60))
+
 
     def start_subscription(event):
         """Start the pubnub subscription."""
@@ -136,9 +140,6 @@ def setup(hass, config):
         for component in WINK_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
     hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices)
-
-    # Call the Wink API every hour to keep PubNub updates flowing
-    async_track_time_interval(hass, keep_alive_call, timedelta(minutes=60))
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
