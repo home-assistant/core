@@ -66,15 +66,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
-        if province not in obj_holidays.PROVINCES and \
-                        province not in obj_holidays.STATES:
+        year = datetime.datetime.now().year
+        # 'state' and 'prov' are not interchangeable, so need to make
+        # sure we use the right one
+        if province in obj_holidays.PROVINCES:
+            obj_holidays = getattr(holidays, country)(prov=province,
+                                                      years=year)
+        elif province in obj_holidays.STATES:
+            obj_holidays = getattr(holidays, country)(state=province,
+                                                      years=year)
+        else:
             _LOGGER.error("There is no province/state %s in country %s",
                           province, country)
             return False
-        else:
-            year = datetime.datetime.now().year
-            obj_holidays = getattr(holidays, country)(prov=province,
-                                                      years=year)
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
