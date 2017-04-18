@@ -42,7 +42,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self._device_type == "WallDimmer":
+        if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             brightness = 255
