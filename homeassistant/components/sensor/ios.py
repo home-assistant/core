@@ -57,7 +57,8 @@ class IOSSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "sensor_ios_battery_{}_{}".format(self.type, self._device_name)
+        device_id = self._device[ios.ATTR_DEVICE_ID]
+        return "sensor_ios_battery_{}_{}".format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):
@@ -104,6 +105,10 @@ class IOSSensor(Entity):
                 returning_icon_level = "{}-outline".format(DEFAULT_ICON_LEVEL)
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
             elif battery_level == 100:
+                returning_icon_level = DEFAULT_ICON_LEVEL
+                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
+                returning_icon = "{}-outline".format(DEFAULT_ICON)
+            elif battery_level > 95:
                 returning_icon_level = DEFAULT_ICON_LEVEL
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
             else:
