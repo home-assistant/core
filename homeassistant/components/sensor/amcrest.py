@@ -19,7 +19,7 @@ import homeassistant.loader as loader
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['amcrest==1.1.5']
+REQUIREMENTS = ['amcrest==1.1.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -146,4 +146,4 @@ class AmcrestSensor(Entity):
             sd_total = self._camera.storage_total
             self._attrs['Total'] = '{0} {1}'.format(*sd_total)
             self._attrs['Used'] = '{0} {1}'.format(*sd_used)
-            self._state = self._camera.percent(sd_used[0], sd_total[0])
+            self._state = self._camera.storage_used_percent

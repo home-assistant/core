@@ -19,7 +19,7 @@ from homeassistant.components.notify import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['jsonrpc-async==0.4']
+REQUIREMENTS = ['jsonrpc-async==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

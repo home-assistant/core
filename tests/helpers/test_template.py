@@ -314,6 +314,11 @@ class TestHelpersTemplate(unittest.TestCase):
             """, self.hass)
         self.assertEqual('yes', tpl.render())
 
+        tpl = template.Template("""
+{{ is_state("test.noobject", "available") }}
+            """, self.hass)
+        self.assertEqual('False', tpl.render())
+
     def test_is_state_attr(self):
         """Test is_state_attr method."""
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
@@ -321,6 +326,11 @@ class TestHelpersTemplate(unittest.TestCase):
 {% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
                 """, self.hass)
         self.assertEqual('yes', tpl.render())
+
+        tpl = template.Template("""
+{{ is_state_attr("test.noobject", "mode", "on") }}
+                """, self.hass)
+        self.assertEqual('False', tpl.render())
 
     def test_states_function(self):
         """Test using states as a function."""

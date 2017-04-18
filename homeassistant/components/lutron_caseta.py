@@ -77,8 +77,10 @@ class LutronCasetaDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
-        self._smartbridge.add_subscriber(self._device_id,
-                                         self._update_callback)
+        self.hass.async_add_job(
+            self._smartbridge.add_subscriber, self._device_id,
+            self._update_callback
+        )
 
     def _update_callback(self):
         self.schedule_update_ha_state()

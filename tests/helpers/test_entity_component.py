@@ -50,6 +50,11 @@ class EntityTest(Entity):
         """Return the unique ID of the entity."""
         return self._handle('unique_id')
 
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle('available')
+
     def _handle(self, attr):
         """Helper for the attributes."""
         if attr in self._values:
@@ -474,3 +479,29 @@ def test_platform_warn_slow_setup(hass):
         assert logger_method == _LOGGER.warning
 
         assert mock_call().cancel.called
+
+
+@asyncio.coroutine
+def test_extract_from_service_available_device(hass):
+    """Test the extraction of entity from service and device is available."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        EntityTest(name='test_1'),
+        EntityTest(name='test_2', available=False),
+        EntityTest(name='test_3'),
+        EntityTest(name='test_4', available=False),
+    ])
+
+    call_1 = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_3'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call_1))
+
+    call_2 = ha.ServiceCall('test', 'service', data={
+        'entity_id': ['test_domain.test_3', 'test_domain.test_4'],
+    })
+
+    assert ['test_domain.test_3'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call_2))

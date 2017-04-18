@@ -81,7 +81,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 params=query_payload
             )
 
-        query_resp = yield from query_req.json()
+        # Skip content type check because Synology doesn't return JSON with
+        # right content type
+        query_resp = yield from query_req.json(content_type=None)
         auth_path = query_resp['data'][AUTH_API]['path']
         camera_api = query_resp['data'][CAMERA_API]['path']
         camera_path = query_resp['data'][CAMERA_API]['path']
@@ -127,7 +129,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.exception("Error on %s", syno_camera_url)
         return False
 
-    camera_resp = yield from camera_req.json()
+    camera_resp = yield from camera_req.json(content_type=None)
     cameras = camera_resp['data']['cameras']
 
     # add cameras
@@ -172,7 +174,7 @@ def get_session_id(hass, websession, username, password, login_url, timeout):
                 login_url,
                 params=auth_payload
             )
-        auth_resp = yield from auth_req.json()
+        auth_resp = yield from auth_req.json(content_type=None)
         return auth_resp['data']['sid']
 
     except (asyncio.TimeoutError, aiohttp.ClientError):

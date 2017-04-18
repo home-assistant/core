@@ -58,7 +58,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mac = config.get(CONF_MAC)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
-        tv_name, model, host = discovery_info
+        tv_name = discovery_info.get('name')
+        model = discovery_info.get('model_name')
+        host = discovery_info.get('host')
         name = "{} ({})".format(tv_name, model)
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
