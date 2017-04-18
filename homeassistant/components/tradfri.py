@@ -21,7 +21,7 @@ DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
-REQUIREMENTS = ['pytradfri==0.4']
+REQUIREMENTS = ['pytradfri==1.0']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -100,10 +100,10 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key):
     """Create a gateway."""
-    from pytradfri import cli_api_factory, Gateway, RequestError
+    from pytradfri import cli_api_factory, Gateway, RequestError, retry_timeout
 
     try:
-        api = cli_api_factory(host, key)
+        api = retry_timeout(cli_api_factory(host, key))
     except RequestError:
         return False
 
