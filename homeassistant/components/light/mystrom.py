@@ -57,6 +57,7 @@ class MyStromLight(Light):
         self._name = name
         self._state = None
         self._available = False
+        self._brightness = 0
         self._rgb_color = [0, 0, 0]
 
     @property
