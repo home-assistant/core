@@ -8,6 +8,7 @@ import asyncio
 import logging
 
 import aiohttp
+from aiohttp import hdrs
 import async_timeout
 import voluptuous as vol
 
@@ -31,6 +32,8 @@ SUPPORT_REST_METHODS = [
     'delete',
 ]
 
+CONF_CONTENT_TYPE = 'content_type'
+
 COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
@@ -39,6 +42,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+    vol.Optional(CONF_CONTENT_TYPE): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -72,6 +76,11 @@ def async_setup(hass, config):
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
+        headers = None
+        if CONF_CONTENT_TYPE in command_config:
+            content_type = command_config[CONF_CONTENT_TYPE]
+            headers = {hdrs.CONTENT_TYPE: content_type}
+
         @asyncio.coroutine
         def async_service_handler(service):
             """Execute a shell command service."""
@@ -86,7 +95,8 @@ def async_setup(hass, config):
                     request = yield from getattr(websession, method)(
                         template_url.async_render(variables=service.data),
                         data=payload,
-                        auth=auth
+                        auth=auth,
+                        headers=headers
                     )
 
                 if request.status < 400:
