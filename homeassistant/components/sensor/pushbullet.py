@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    #Get the PushBullet notification service.
+    # Get the PushBullet notification service.
     try:
         pushbullet = PushBullet(config.get(CONF_API_KEY))
     except InvalidKeyError:
@@ -54,9 +54,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Wrong API key supplied.{" + config.get(CONF_API_KEY) + "}"
             "Get it at https://www.pushbullet.com/account")
         return None
-    #Create a common data provider
+    # Create a common data provider
     pbprovider = PushBulletNotificationProvider(pushbullet)
-    #Create a device for each property
+    # Create a device for each property
     devices = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         devices.append(PushBulletNotificationSensor(pbprovider, sensor_type))
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class PushBulletNotificationSensor(Entity):
-    #Fetches data via a filter from the common pushbullet provider
+    # Fetches data via a filter from the common pushbullet provider
 
     def __init__(self, pb, element):
         self.pushbullet = pb
@@ -91,8 +91,9 @@ class PushBulletNotificationSensor(Entity):
     def device_state_attributes(self):
         return self._state_attributes
 
+
 class PushBulletNotificationProvider():
-    #Provider for an account, leading to multiple sensors
+    # Provider for an account, leading to multiple sensors
 
     def __init__(self, pb):
         self.pushbullet = pb
