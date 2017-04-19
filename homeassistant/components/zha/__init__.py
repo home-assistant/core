@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 
 
 # Definitions for interfacing with the rest of HA
-REQUIREMENTS = ['bellows==0.2.3']
+REQUIREMENTS = ['bellows==0.2.4']
 
 DOMAIN = 'zha'
 
