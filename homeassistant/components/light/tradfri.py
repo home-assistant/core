@@ -46,17 +46,15 @@ class Tradfri(Light):
         self._light_data = light.light_control.lights[0]
         self._name = light.name
         self._rgb_color = None
+        self._features = ALLOWED_FEATURES.get(
+            slugify(self._light.device_info.manufacturer), SUPPORTED_FEATURES)
         self._ok_temps = ALLOWED_TEMPERATURES.get(
             slugify(self._light.device_info.manufacturer))
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        features = ALLOWED_FEATURES.get(
-            slugify(self._light.device_info.manufacturer))
-        if features:
-            return features
-        return SUPPORTED_FEATURES
+        return self._features
 
     @property
     def name(self):
@@ -92,8 +90,7 @@ class Tradfri(Light):
     @property
     def rgb_color(self):
         """RGB color of the light."""
-        if self.supported_features & SUPPORT_RGB_COLOR:
-            return self._rgb_color
+        return self._rgb_color
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
