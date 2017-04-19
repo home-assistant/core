@@ -26,7 +26,7 @@ PyJWT==1.4.2
 PyMVGLive==1.1.3
 
 # homeassistant.components.arduino
-PyMata==2.13
+PyMata==2.14
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
@@ -266,7 +266,7 @@ https://github.com/bah2830/python-roku/archive/3.1.3.zip#roku==3.1.3
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
 
 # homeassistant.components.lutron_caseta
-https://github.com/gurumitts/pylutron-caseta/archive/v0.2.5.zip#pylutron-caseta==v0.2.5
+https://github.com/gurumitts/pylutron-caseta/archive/v0.2.6.zip#pylutron-caseta==v0.2.6
 
 # homeassistant.components.netatmo
 https://github.com/jabesq/netatmo-api-python/archive/v0.9.1.zip#lnetatmo==0.9.1
@@ -399,7 +399,7 @@ mutagen==1.36.2
 myusps==1.0.5
 
 # homeassistant.components.discovery
-netdisco==1.0.0rc2
+netdisco==1.0.0rc3
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -623,8 +623,9 @@ python-hpilo==3.9
 # homeassistant.components.media_player.mpd
 python-mpd2==0.5.5
 
+# homeassistant.components.light.mystrom
 # homeassistant.components.switch.mystrom
-python-mystrom==0.3.6
+python-mystrom==0.3.8
 
 # homeassistant.components.nest
 python-nest==3.1.0
@@ -656,7 +657,7 @@ python-wink==1.2.3
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==0.4
+pytradfri==1.0
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.0
@@ -665,13 +666,13 @@ pyunifi==2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.25
+pyvera==0.2.26
 
 # homeassistant.components.notify.html5
 pywebpush==0.6.1
 
 # homeassistant.components.wemo
-pywemo==0.4.17
+pywemo==0.4.18
 
 # homeassistant.components.zabbix
 pyzabbix==0.7.4

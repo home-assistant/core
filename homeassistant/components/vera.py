@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.25']
+REQUIREMENTS = ['pyvera==0.2.26']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,6 +35,7 @@ CONF_LIGHTS = 'lights'
 VERA_ID_FORMAT = '{}_{}'
 
 ATTR_CURRENT_POWER_W = "current_power_w"
+ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 
 VERA_DEVICES = defaultdict(list)
 
@@ -180,6 +181,10 @@ class VeraDevice(Entity):
         power = self.vera_device.power
         if power:
             attr[ATTR_CURRENT_POWER_W] = convert(power, float, 0.0)
+
+        energy = self.vera_device.energy
+        if energy:
+            attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
