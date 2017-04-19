@@ -107,11 +107,11 @@ class ZoneMinderCamera(MjpegCamera):
                             self._monitor_id)
             return
 
-        if status_response['success'] == False:
-            _LOGGER.warning('Alarm status API not supported or working for monitor %i',
+        if status_response['success'] is False:
+            _LOGGER.warning('Alarm status API call failed for monitor %i',
                             self._monitor_id)
             return
-        
+
         self._is_recording = status_response['status'] == ZM_STATE_ALARM
 
     @property
