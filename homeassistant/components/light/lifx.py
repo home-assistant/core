@@ -114,7 +114,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         else:
             devices = lifx_manager.entities.values()
 
-        start_effect(hass, devices, service.service, **service.data)
+        yield from start_effect(hass, devices, service.service, **service.data)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -131,8 +131,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     return True
 
+
+@asyncio.coroutine
 def start_effect(hass, devices, service, **data):
     """Start a light effect."""
+    for light in devices:
+        yield from light.stop_effect()
+
     if service in SERVICE_EFFECT_BREATHE:
         effect = LIFXEffectBreathe(hass, devices)
     elif service in SERVICE_EFFECT_PULSE:
@@ -318,6 +323,8 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
+        yield from self.stop_effect()
+
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
@@ -344,6 +351,8 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
+        yield from self.stop_effect()
+
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
@@ -483,15 +492,17 @@ class LIFXEffect(object):
 
     @asyncio.coroutine
     def async_restore(self, light):
-        """Restore to the original state."""
-        _, initial_power, initial_color = light.effect_data
-        if light.device and not initial_power:
-            light.device.set_power(False)
-            yield from asyncio.sleep(BULB_LATENCY/1000)
-        if light.device:
-            light.device.set_color(initial_color)
-        light.effect_data = None
-        self.lights.remove(light)
+        """Restore to the original state (if we are still running)."""
+        if light.effect_data:
+            if light.effect_data.effect == self:
+                if light.device and not light.effect_data.power:
+                    light.device.set_power(False)
+                    yield from asyncio.sleep(BULB_LATENCY/1000)
+                if light.device:
+                    light.device.set_color(light.effect_data.color)
+                    yield from asyncio.sleep(BULB_LATENCY/1000)
+                light.effect_data = None
+            self.lights.remove(light)
 
 
 class LIFXEffectBreathe(LIFXEffect):
@@ -513,9 +524,7 @@ class LIFXEffectBreathe(LIFXEffect):
         """Play a light effect on the bulb."""
         period = kwargs[ATTR_PERIOD]
         cycles = kwargs[ATTR_CYCLES]
-        hsbk, changed_color = light.find_hsbk(**kwargs)
-        if not changed_color:
-            return
+        hsbk, _ = light.find_hsbk(**kwargs)
 
         # Start the effect
         args = {
@@ -529,10 +538,8 @@ class LIFXEffectBreathe(LIFXEffect):
         light.device.set_waveform(args)
 
         # Wait for completion and restore the initial state
-        _, initial_power, _ = light.effect_data
-        if initial_power == False:
-            yield from asyncio.sleep(period*cycles)
-            yield from self.async_restore(light)
+        yield from asyncio.sleep(period*cycles)
+        yield from self.async_restore(light)
 
 
 class LIFXEffectPulse(LIFXEffectBreathe):
