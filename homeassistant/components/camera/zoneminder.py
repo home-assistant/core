@@ -101,11 +101,17 @@ class ZoneMinderCamera(MjpegCamera):
         status_response = zoneminder.get_state(
             'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
         )
+
         if not status_response:
             _LOGGER.warning('Could not get status for monitor %i',
                             self._monitor_id)
             return
 
+        if status_response['success'] == False:
+            _LOGGER.warning('Alarm status API not supported or working for monitor %i',
+                            self._monitor_id)
+            return
+        
         self._is_recording = status_response['status'] == ZM_STATE_ALARM
 
     @property
