@@ -35,16 +35,18 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MONITORED_CONDITIONS,
+    vol.Optional(
+        CONF_MONITORED_CONDITIONS,
         default=['title', 'body']): vol.All(
             cv.ensure_list, vol.Length(min=1),
-            [vol.In(SENSOR_TYPES.keys())]),
+            [vol.In(SENSOR_TYPES.keys())]
+            ),
     vol.Required(CONF_API_KEY): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the PushBullet notification service."""
+    #Get the PushBullet notification service.
     try:
         pushbullet = PushBullet(config.get(CONF_API_KEY))
     except InvalidKeyError:
@@ -52,9 +54,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Wrong API key supplied.{" + config.get(CONF_API_KEY) + "}"
             "Get it at https://www.pushbullet.com/account")
         return None
-    """Create a common data provider"""
+    #Create a common data provider
     pbprovider = PushBulletNotificationProvider(pushbullet)
-    """Create a device for each property"""
+    #Create a device for each property
     devices = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         devices.append(PushBulletNotificationSensor(pbprovider, sensor_type))
@@ -62,36 +64,40 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class PushBulletNotificationSensor(Entity):
-    """Fetches data via a filter from the common pushbullet provider"""
+    #Fetches data via a filter from the common pushbullet provider
 
     def __init__(self, pb, element):
-        """Initialize the service."""
         self.pushbullet = pb
         self._element = element
         self._state = None
+        self._state_attributes = None
 
     def update(self):
         try:
             self._state = self.pushbullet.data[self._element]
+            self._state_attributes = self.pushbullet.data
         except (KeyError, TypeError):
             pass
 
     @property
     def name(self):
-        return "pushbullet_" + self._element
+        return "Pushbullet " + self._element
 
     @property
     def state(self):
         return self._state
 
+    @property
+    def device_state_attributes(self):
+        return self._state_attributes
 
 class PushBulletNotificationProvider():
-    """Provider for an account, leading to multiple sensors"""
+    #Provider for an account, leading to multiple sensors
 
     def __init__(self, pb):
         self.pushbullet = pb
         self._data = None
-        self.thread = threading.Thread(target=self.async_retrive_pushes)
+        self.thread = threading.Thread(target=self.retrieve_pushes)
         self.thread.daemon = True
         self.thread.start()
 
@@ -103,10 +109,10 @@ class PushBulletNotificationProvider():
     def data(self):
         return self._data
 
-    def async_retrive_pushes(self):
+    def retrieve_pushes(self):
         self.listener = Listener(account=self.pushbullet,
                                  on_push=self.on_push)
-        _LOGGER.info("getting pushes")
+        _LOGGER.debug("getting pushes")
         try:
             self.listener.run_forever()
         finally:
