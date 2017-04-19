@@ -8,6 +8,7 @@ import colorsys
 import logging
 import asyncio
 import sys
+import random
 from os import path
 from functools import partial
 from datetime import timedelta
@@ -17,9 +18,9 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     Light, DOMAIN, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME,
-    ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION,
+    ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION)
+    SUPPORT_TRANSITION, SUPPORT_EFFECT)
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
@@ -60,7 +61,7 @@ BYTE_MAX = 255
 SHORT_MAX = 65535
 
 SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_TRANSITION)
+                SUPPORT_TRANSITION | SUPPORT_EFFECT)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
@@ -289,9 +290,25 @@ class LIFXLight(Light):
         return self._power != 0
 
     @property
+    def effect(self):
+        """Return the currently running effect."""
+        if self.effect_data is not None:
+            return self.effect_data.effect.name
+        else:
+            return None
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_LIFX
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return [
+            SERVICE_EFFECT_BREATHE,
+            SERVICE_EFFECT_PULSE,
+        ]
 
     @callback
     def update_after_transition(self, now):
@@ -324,6 +341,10 @@ class LIFXLight(Light):
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
         yield from self.stop_effect()
+
+        if ATTR_EFFECT in kwargs:
+            yield from self.default_effect(**kwargs)
+            return
 
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
@@ -370,6 +391,23 @@ class LIFXLight(Light):
         _LOGGER.debug("%s async_update", self.who)
         if self.available and self.blocker is None:
             yield from self.refresh_state()
+
+    @asyncio.coroutine
+    def default_effect(self, **kwargs):
+        """Start an effect with default (or random) parameters."""
+        service = kwargs[ATTR_EFFECT]
+        data = {
+            ATTR_ENTITY_ID: self.entity_id,
+        }
+
+        if service in (SERVICE_EFFECT_BREATHE, SERVICE_EFFECT_PULSE):
+            data[ATTR_RGB_COLOR] = [
+                random.randint(100, 255),
+                random.randint(100, 255),
+                random.randint(100, 255),
+            ]
+
+        yield from self.hass.services.async_call(DOMAIN, service, data)
 
     @asyncio.coroutine
     def stop_effect(self):
@@ -511,6 +549,7 @@ class LIFXEffectBreathe(LIFXEffect):
     def __init__(self, hass, lights):
         """Initialize the breathe effect."""
         super(LIFXEffectBreathe, self).__init__(hass, lights)
+        self.name = SERVICE_EFFECT_BREATHE
         self.waveform = WAVEFORM_SINE
 
     @asyncio.coroutine
@@ -548,4 +587,5 @@ class LIFXEffectPulse(LIFXEffectBreathe):
     def __init__(self, hass, lights):
         """Initialize the pulse effect."""
         super(LIFXEffectPulse, self).__init__(hass, lights)
+        self.name = SERVICE_EFFECT_PULSE
         self.waveform = WAVEFORM_PULSE
