@@ -54,7 +54,7 @@ WAVEFORM_SINE = 1
 WAVEFORM_PULSE = 4
 
 # The least visible color setting
-HSBK_NO_COLOR = [0, 0, 0, 2500]
+HSBK_NO_COLOR = [0, 65535, 0, 2500]
 
 BYTE_MAX = 255
 SHORT_MAX = 65535
