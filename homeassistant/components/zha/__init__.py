@@ -62,6 +62,8 @@ SERVICE_SCHEMAS = {
 
 # ZigBee definitions
 CENTICELSIUS = 'C-100'
+# Key in hass.data dict containing discovery info
+DISCOVERY_KEY = 'zha_discovery_info'
 
 # Internal definitions
 APPLICATION_CONTROLLER = None
@@ -113,6 +115,7 @@ class ApplicationListener:
         """Initialize the listener."""
         self._hass = hass
         self._config = config
+        hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
     def device_joined(self, device):
         """Handle device joined.
@@ -168,12 +171,13 @@ class ApplicationListener:
                     'new_join': join,
                 }
                 discovery_info.update(discovered_info)
+                self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
 
                 yield from discovery.async_load_platform(
                     self._hass,
                     component,
                     DOMAIN,
-                    discovery_info,
+                    {'discovery_key': device_key},
                     self._config,
                 )
 
@@ -191,12 +195,14 @@ class ApplicationListener:
                     'new_join': join,
                 }
                 discovery_info.update(discovered_info)
+                cluster_key = '%s-%s' % (device_key, cluster_id)
+                self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
                 yield from discovery.async_load_platform(
                     self._hass,
                     component,
                     DOMAIN,
-                    discovery_info,
+                    {'discovery_key': cluster_key},
                     self._config,
                 )
 
@@ -275,3 +281,21 @@ def _discover_endpoint_info(endpoint):
                 pass
 
     return extra_info
+
+
+def get_discovery_info(hass, discovery_info):
+    """Get the full discovery info for a device.
+
+    Some of the info that needs to be passed to platforms is not JSON
+    serializable, so it cannot be put in the discovery_info dictionary. This
+    component places that info we need to pass to the platform in hass.data,
+    and this function is a helper for platforms to retrieve the complete
+    discovery info.
+    """
+    if discovery_info is None:
+        return
+
+    discovery_key = discovery_info.get('discovery_key', None)
+    all_discovery_info = hass.data.get(DISCOVERY_KEY, {})
+    discovery_info = all_discovery_info.get(discovery_key, None)
+    return discovery_info

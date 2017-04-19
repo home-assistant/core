@@ -27,6 +27,7 @@ CLASS_MAPPING = {
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup Zigbee Home Automation binary sensors."""
+    discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
