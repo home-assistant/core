@@ -26,7 +26,7 @@ PyJWT==1.4.2
 PyMVGLive==1.1.3
 
 # homeassistant.components.arduino
-PyMata==2.13
+PyMata==2.14
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
