@@ -14,7 +14,7 @@ HTTP_BASE_URL = 'http://127.0.0.1:{}'.format(SERVER_PORT)
 
 
 class TestComponentsMQTTCamera(unittest.TestCase):
-    """Test JSON MQTT device tracker platform."""
+    """Test MQTT camera platform."""
 
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
