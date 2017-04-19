@@ -61,7 +61,7 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self._state == 'unknown':
-            return self._state
+            return False
         return bool(self._state)
 
     @property

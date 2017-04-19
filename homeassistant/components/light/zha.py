@@ -61,7 +61,7 @@ class Light(zha.Entity, light.Light):
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if self._state == 'unknown':
-            return self._state
+            return False
         return bool(self._state)
 
     @asyncio.coroutine
