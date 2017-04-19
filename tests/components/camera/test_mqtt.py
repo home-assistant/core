@@ -27,7 +27,7 @@ class TestComponentsMQTTCamera(unittest.TestCase):
 
     @asyncio.coroutine
     def test_run_camera_setup(self):
-        """Test that it fetches the given dispatcher data."""
+        """Test that it fetches the given payload."""
         topic = 'test/camera'
         yield from async_setup_component(self.hass, 'camera', {
             'camera': {
