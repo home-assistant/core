@@ -24,9 +24,7 @@ from homeassistant.const import (
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
-                '/archive/v0.1.4.zip'
-                '#pylgtv==0.1.4',
+REQUIREMENTS = ['pylgtv==0.1.5',
                 'websockets==3.2',
                 'wakeonlan==0.2.2']
 
