@@ -245,10 +245,6 @@ holidays==0.8.1
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
-# homeassistant.components.media_player.webostv
-# homeassistant.components.notify.webostv
-https://github.com/TheRealLink/pylgtv/archive/v0.1.4.zip#pylgtv==0.1.4
-
 # homeassistant.components.sensor.thinkingcleaner
 # homeassistant.components.switch.thinkingcleaner
 https://github.com/TheRealLink/pythinkingcleaner/archive/v0.0.2.zip#pythinkingcleaner==0.0.2
@@ -559,6 +555,10 @@ pykwb==0.0.8
 
 # homeassistant.components.sensor.lastfm
 pylast==1.8.0
+
+# homeassistant.components.media_player.webostv
+# homeassistant.components.notify.webostv
+pylgtv==0.1.5
 
 # homeassistant.components.litejet
 pylitejet==0.1
