@@ -157,3 +157,31 @@ lifx_effect_pulse:
     power_on:
       description: Powered off lights are temporarily turned on during the effect (default True)
       example: False
+
+lifx_effect_colorloop:
+  description: Run an effect with looping colors.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to run the effect on
+      example: 'light.disco1, light.disco2, light.disco3'
+
+    brightness:
+      description: Number between 0..255 indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light
+      example: 120
+
+    period:
+      description: Duration between color changes (deafult 60)
+      example: 180
+
+    change:
+      description: Hue movement per period, in degrees on a color wheel (default 20)
+      example: 45
+
+    spread:
+      description: Maximum hue difference between participating lights, in degrees on a color wheel (default 30)
+      example: 0
+
+    power_on:
+      description: Powered off lights are temporarily turned on during the effect (default True)
+      example: False

@@ -45,10 +45,14 @@ CONF_SERVER = 'server'
 
 SERVICE_EFFECT_BREATHE = 'lifx_effect_breathe'
 SERVICE_EFFECT_PULSE = 'lifx_effect_pulse'
+SERVICE_EFFECT_COLORLOOP = 'lifx_effect_colorloop'
 
 ATTR_POWER_ON = 'power_on'
 ATTR_PERIOD = 'period'
 ATTR_CYCLES = 'cycles'
+ATTR_SPREAD = 'spread'
+ATTR_CHANGE = 'change'
+ATTR_HSBK = 'hsbk'
 
 # aiolifx waveform modes
 WAVEFORM_SINE = 1
@@ -69,6 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 LIFX_EFFECT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
 })
 
 LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
@@ -80,10 +85,19 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
                                                     vol.Range(min=0.05)),
     vol.Optional(ATTR_CYCLES, default=1.0): vol.All(vol.Coerce(float),
                                                     vol.Range(min=1)),
-    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
 })
 
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
+
+LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
+    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    vol.Optional(ATTR_PERIOD, default=60): vol.All(vol.Coerce(float),
+                                                   vol.Clamp(min=1)),
+    vol.Optional(ATTR_CHANGE, default=20): vol.All(vol.Coerce(float),
+                                                   vol.Clamp(min=0, max=360)),
+    vol.Optional(ATTR_SPREAD, default=30): vol.All(vol.Coerce(float),
+                                                   vol.Clamp(min=0, max=360)),
+})
 
 
 @asyncio.coroutine
@@ -130,6 +144,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         descriptions.get(SERVICE_EFFECT_PULSE),
         schema=LIFX_EFFECT_PULSE_SCHEMA)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_EFFECT_COLORLOOP, async_service_handle,
+        descriptions.get(SERVICE_EFFECT_COLORLOOP),
+        schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
+
     return True
 
 
@@ -143,6 +162,8 @@ def start_effect(hass, devices, service, **data):
         effect = LIFXEffectBreathe(hass, devices)
     elif service in SERVICE_EFFECT_PULSE:
         effect = LIFXEffectPulse(hass, devices)
+    elif service == SERVICE_EFFECT_COLORLOOP:
+        effect = LIFXEffectColorloop(hass, devices)
 
     hass.async_add_job(effect.async_perform(**data))
 
@@ -306,6 +327,7 @@ class LIFXLight(Light):
     def effect_list(self):
         """Return the list of supported effects."""
         return [
+            SERVICE_EFFECT_COLORLOOP,
             SERVICE_EFFECT_BREATHE,
             SERVICE_EFFECT_PULSE,
         ]
@@ -427,6 +449,10 @@ class LIFXLight(Light):
     def find_hsbk(self, **kwargs):
         """Find the desired color from a number of possible inputs."""
         changed_color = False
+
+        hsbk = kwargs.pop(ATTR_HSBK, None)
+        if hsbk is not None:
+            return [hsbk, True]
 
         color_name = kwargs.pop(ATTR_COLOR_NAME, None)
         if color_name is not None:
@@ -589,3 +615,53 @@ class LIFXEffectPulse(LIFXEffectBreathe):
         super(LIFXEffectPulse, self).__init__(hass, lights)
         self.name = SERVICE_EFFECT_PULSE
         self.waveform = WAVEFORM_PULSE
+
+
+class LIFXEffectColorloop(LIFXEffect):
+    """Representation of a colorloop effect."""
+
+    def __init__(self, hass, lights):
+        """Initialize the colorloop effect."""
+        super(LIFXEffectColorloop, self).__init__(hass, lights)
+        self.name = SERVICE_EFFECT_COLORLOOP
+
+    @asyncio.coroutine
+    def async_play(self, **kwargs):
+        """Play the effect on all lights."""
+        period = kwargs[ATTR_PERIOD]
+        spread = kwargs[ATTR_SPREAD]
+        change = kwargs[ATTR_CHANGE]
+        direction = 1 if random.randint(0, 1) else -1
+
+        # Random start
+        hue = random.randint(0, 360)
+
+        while self.lights:
+            hue = (hue + direction*change) % 360
+
+            random.shuffle(self.lights)
+            lhue = hue
+
+            transition = int(1000 * random.uniform(period/2, period))
+            for light in self.lights:
+                if spread > 0:
+                    transition = int(1000 * random.uniform(period/2, period))
+
+                if ATTR_BRIGHTNESS in kwargs:
+                    brightness = int(65535/255*kwargs[ATTR_BRIGHTNESS])
+                else:
+                    brightness = light.effect_data.color[2]
+
+                hsbk = [
+                    int(65535/359*lhue),
+                    int(random.uniform(0.8, 1.0)*65535),
+                    brightness,
+                    4000,
+                ]
+                light.device.set_color(hsbk, None, transition)
+
+                # Adjust the next light so the full spread is used
+                if len(self.lights) > 1:
+                    lhue = (lhue + spread/(len(self.lights)-1)) % 360
+
+            yield from asyncio.sleep(period)
