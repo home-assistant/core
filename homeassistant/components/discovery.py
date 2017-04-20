@@ -51,6 +51,7 @@ SERVICE_HANDLERS = {
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
+    'bluesound': ('media_player', 'bluesound'),
 }
 
 CONF_IGNORE = 'ignore'
