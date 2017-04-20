@@ -34,9 +34,6 @@ ATTR_CHANGE = 'change'
 WAVEFORM_SINE = 1
 WAVEFORM_PULSE = 4
 
-# The least visible color setting
-HSBK_NO_COLOR = [0, 65535, 0, 2500]
-
 LIFX_EFFECT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
@@ -191,7 +188,8 @@ class LIFXEffect(object):
 
                 # Temporarily turn on power for the effect to be visible
                 if kwargs[ATTR_POWER_ON] and not light.is_on:
-                    light.device.set_color(HSBK_NO_COLOR)
+                    hsbk = self.from_poweroff_hsbk(light, **kwargs)
+                    light.device.set_color(hsbk)
                     light.device.set_power(True)
 
     # pylint: disable=no-self-use
@@ -213,6 +211,10 @@ class LIFXEffect(object):
                     yield from asyncio.sleep(0.5)
                 light.effect_data = None
             self.lights.remove(light)
+
+    def from_poweroff_hsbk(self, light, **kwargs):
+        """The initial color when starting from a powered off state."""
+        return None
 
 
 class LIFXEffectBreathe(LIFXEffect):
@@ -252,6 +254,11 @@ class LIFXEffectBreathe(LIFXEffect):
         yield from asyncio.sleep(period*cycles)
         yield from self.async_restore(light)
 
+    def from_poweroff_hsbk(self, light, **kwargs):
+        """Initial color is the target color, but no brightness."""
+        hsbk, _ = light.find_hsbk(**kwargs)
+        return [hsbk[0], hsbk[1], 0, hsbk[2]]
+
 
 class LIFXEffectPulse(LIFXEffectBreathe):
     """Representation of a pulse effect."""
@@ -280,7 +287,7 @@ class LIFXEffectColorloop(LIFXEffect):
         direction = 1 if random.randint(0, 1) else -1
 
         # Random start
-        hue = random.randint(0, 360)
+        hue = random.randint(0, 359)
 
         while self.lights:
             hue = (hue + direction*change) % 360
@@ -311,6 +318,10 @@ class LIFXEffectColorloop(LIFXEffect):
                     lhue = (lhue + spread/(len(self.lights)-1)) % 360
 
             yield from asyncio.sleep(period)
+
+    def from_poweroff_hsbk(self, light, **kwargs):
+        """Start from a random hue."""
+        return [random.randint(0, 65535), 65535, 0, 4000]
 
 
 class LIFXEffectStop(LIFXEffect):
