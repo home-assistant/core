@@ -39,7 +39,7 @@ ATTR_BRAND = 'brand'
 DATA_BLUESOUND = 'bluesound'
 DEFAULT_PORT = 11000
 
-SYNC_STATUS_INTERVAL = timedelta(minutes=3)
+SYNC_STATUS_INTERVAL = timedelta(minutes=5)
 UPDATE_CAPTURE_INTERVAL = timedelta(minutes=30)
 UPDATE_SERVICES_INTERVAL = timedelta(minutes=30)
 UPDATE_PRESETS_INTERVAL = timedelta(minutes=30)
@@ -251,7 +251,6 @@ class BluesoundPlayer(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Update internal status of the entity."""
-        _LOGGER.info('vhecking')
         if not self._is_online:
             return
 
@@ -298,9 +297,6 @@ class BluesoundPlayer(MediaPlayerDevice):
                 _LOGGER.debug("Failed communicating with Bluesound: %s",
                               self.host)
                 return None
-        finally:
-            if response is not None:
-                yield from response.release()
 
         return data
 
@@ -345,16 +341,13 @@ class BluesoundPlayer(MediaPlayerDevice):
             _LOGGER.info("Client connection error, marking %s as offline",
                          self._name)
             raise
-        finally:
-            if response is not None:
-                yield from response.release()
 
     @asyncio.coroutine
     @Throttle(SYNC_STATUS_INTERVAL)
     def async_update_sync_status(self, on_updated_cb=None,
                                  raise_timeout=False):
         """Update sync status."""
-        self._internal_update_sync_status(on_updated_cb, raise_timeout=False)
+        yield from self._internal_update_sync_status(on_updated_cb, raise_timeout=False)
 
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
@@ -445,7 +438,7 @@ class BluesoundPlayer(MediaPlayerDevice):
     @property
     def should_poll(self):
         """No need to poll information."""
-        return False
+        return True
 
     @property
     def media_content_type(self):
