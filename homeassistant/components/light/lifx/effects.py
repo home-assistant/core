@@ -1,8 +1,4 @@
-"""
-Support for light effects for the LIFX light platform.
-
-"""
-
+"""Support for light effects for the LIFX light platform."""
 import logging
 import asyncio
 import random
@@ -67,6 +63,7 @@ LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
     vol.Optional(ATTR_POWER_ON, default=False): cv.boolean,
 })
 
+
 def setup(hass, lifx_manager):
     """Register the LIFX effects as hass service calls."""
     @asyncio.coroutine
@@ -80,8 +77,8 @@ def setup(hass, lifx_manager):
             devices = list(lifx_manager.entities.values())
 
         if devices:
-            yield from start_effect(hass, devices, \
-                service.service, **service.data)
+            yield from start_effect(hass, devices,
+                                    service.service, **service.data)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -106,6 +103,7 @@ def setup(hass, lifx_manager):
         descriptions.get(SERVICE_EFFECT_STOP),
         schema=LIFX_EFFECT_STOP_SCHEMA)
 
+
 @asyncio.coroutine
 def start_effect(hass, devices, service, **data):
     """Start a light effect."""
@@ -125,6 +123,7 @@ def start_effect(hass, devices, service, **data):
 
     hass.async_add_job(effect.async_perform(**data))
 
+
 @asyncio.coroutine
 def default_effect(light, **kwargs):
     """Start an effect with default parameters."""
@@ -140,6 +139,7 @@ def default_effect(light, **kwargs):
         ]
         data[ATTR_BRIGHTNESS] = 255
     yield from light.hass.services.async_call(DOMAIN, service, data)
+
 
 def effect_list():
     """Return the list of supported effects."""
