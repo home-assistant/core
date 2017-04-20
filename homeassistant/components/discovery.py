@@ -48,6 +48,7 @@ SERVICE_HANDLERS = {
     'apple_tv': ('media_player', 'apple_tv'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
+    'bluesound': ('media_player', 'bluesound'),
 }
 
 CONF_IGNORE = 'ignore'
