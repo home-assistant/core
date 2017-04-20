@@ -33,8 +33,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("error connecting to powerview "
                           "hub with ip address: %s", hub_address)
         return False
-    add_devices(PowerViewScene(hass, scene, _rooms, _pv)
-                for scene in _scenes['sceneData'])
+    add_devices([PowerViewScene(hass, scene, _rooms, _pv)
+                for scene in _scenes['sceneData']])
 
     return True
 
