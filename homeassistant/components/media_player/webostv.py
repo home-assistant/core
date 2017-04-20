@@ -172,27 +172,27 @@ class LgWebOSDevice(MediaPlayerDevice):
         from websockets.exceptions import ConnectionClosed
         try:
             current_input = self._client.get_input()
-            if current_input != None:
+            if current_input is not None:
                 self._current_source_id = current_input
                 if self._state in (STATE_UNKNOWN, STATE_OFF):
                     self._state = STATE_PLAYING
 
-            if self._state != STATE_OFF:
+            if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
                 self._volume = self._client.get_volume()
 
                 self._source_list = {}
                 self._app_list = {}
-                custom_sources = self._customize.get(CONF_SOURCES, [])
+                conf_sources = self._customize.get(CONF_SOURCES, [])
 
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
                     if app['id'] == self._current_source_id:
                         self._current_source = app['title']
                         self._source_list[app['title']] = app
-                    elif (app['id'] in custom_sources or
-                          any(word in app['title'] for word in custom_sources) or
-                          any(word in app['id'] for word in custom_sources)):
+                    elif (app['id'] in conf_sources or
+                          any(word in app['title'] for word in conf_sources) or
+                          any(word in app['id'] for word in conf_sources)):
                         self._source_list[app['title']] = app
 
                 for source in self._client.get_inputs():
