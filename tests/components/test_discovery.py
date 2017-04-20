@@ -143,4 +143,4 @@ def test_load_component_hassio(hass):
                   return_value=mock_coro(return_value=True)) as mock_hassio:
         yield from mock_discovery(hass, discover)
 
-    assert mock_hassio
+    assert mock_hassio.called
