@@ -76,7 +76,9 @@ def setup(hass, lifx_manager):
         else:
             devices = lifx_manager.entities.values()
 
-        yield from start_effect(hass, devices, service.service, **service.data)
+        if devices:
+            yield from start_effect(hass, devices, \
+                service.service, **service.data)
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
@@ -99,8 +101,10 @@ def setup(hass, lifx_manager):
 @asyncio.coroutine
 def start_effect(hass, devices, service, **data):
     """Start a light effect."""
+    tasks = []
     for light in devices:
-        yield from light.stop_effect()
+        tasks.append(hass.async_add_job(light.stop_effect()))
+    yield from asyncio.wait(tasks, loop=hass.loop)
 
     if service in SERVICE_EFFECT_BREATHE:
         effect = LIFXEffectBreathe(hass, devices)
