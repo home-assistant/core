@@ -189,32 +189,26 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set the volume level."""
         self._player.volume(int(volume * 100))
-        self.schedule_update_ha_state()
 
     def media_next_track(self):
         """Skip to next track."""
         self._player.next_track()
-        self.schedule_update_ha_state()
 
     def media_previous_track(self):
         """Skip to previous track."""
         self._player.previous_track()
-        self.schedule_update_ha_state()
 
     def media_play(self):
         """Start or resume playback."""
         self._player.start_playback()
-        self.schedule_update_ha_state()
 
     def media_pause(self):
         """Pause playback."""
         self._player.pause_playback()
-        self.schedule_update_ha_state()
 
     def select_source(self, source):
         """Select playback device."""
         self._player.transfer_playback(self._devices[source])
-        self.schedule_update_ha_state()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
@@ -230,7 +224,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
             _LOGGER.error('media id must be spotify uri')
             return
         self._player.start_playback(**kwargs)
-        self.schedule_update_ha_state()
 
     @property
     def name(self):
