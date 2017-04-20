@@ -106,7 +106,7 @@ class IOSSensor(Entity):
                 returning_icon_level = "{}-outline".format(
                     DEFAULT_ICON_LEVEL)
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
-            elif battery_level > 95
+            elif battery_level > 95:
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
                 returning_icon_level = "{}-outline".format(
                     DEFAULT_ICON_LEVEL)
