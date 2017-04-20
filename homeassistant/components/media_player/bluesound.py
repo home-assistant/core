@@ -347,7 +347,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     def async_update_sync_status(self, on_updated_cb=None,
                                  raise_timeout=False):
         """Update sync status."""
-        yield from self._internal_update_sync_status(on_updated_cb, raise_timeout=False)
+        yield from self._internal_update_sync_status(on_updated_cb,
+                                                     raise_timeout=False)
 
     @asyncio.coroutine
     @Throttle(UPDATE_CAPTURE_INTERVAL)
