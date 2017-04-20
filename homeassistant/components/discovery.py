@@ -37,7 +37,7 @@ SERVICE_HANDLERS = {
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
     SERVICE_IKEA_TRADFRI: ('tradfri', None),
-    SERVICE_HASSIO: ('hassio', None)
+    SERVICE_HASSIO: ('hassio', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),

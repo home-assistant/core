@@ -134,13 +134,13 @@ def test_discover_duplicates(hass):
 @asyncio.coroutine
 def test_load_component_hassio(hass):
     """Test load hassio component."""
-    os.environ['HASSIO'] = "FAKE_HASSIO"
-
     def discover(netdisco):
         """Fake discovery."""
         return []
 
-    mock_discover, mock_platform = yield from mock_discovery(hass, discover)
+    with patch.dict(os.environ, {'HASSIO': "FAKE_HASSIO"}):
+        mock_discover, mock_platform = \
+            yield from mock_discovery(hass, discover)
 
     assert mock_discover.called
     assert not mock_platform.called
