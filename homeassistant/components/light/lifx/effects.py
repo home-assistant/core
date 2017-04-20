@@ -22,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 SERVICE_EFFECT_BREATHE = 'lifx_effect_breathe'
 SERVICE_EFFECT_PULSE = 'lifx_effect_pulse'
 SERVICE_EFFECT_COLORLOOP = 'lifx_effect_colorloop'
+SERVICE_EFFECT_STOP = 'lifx_effect_stop'
 
 ATTR_POWER_ON = 'power_on'
 ATTR_PERIOD = 'period'
@@ -64,6 +65,11 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
                                                    vol.Clamp(min=0, max=360)),
 })
 
+LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_POWER_ON, default=False): cv.boolean,
+})
+
 def setup(hass, lifx_manager):
     """Register the LIFX effects as hass service calls."""
     @asyncio.coroutine
@@ -74,7 +80,7 @@ def setup(hass, lifx_manager):
             devices = [entity for entity in lifx_manager.entities.values()
                        if entity.entity_id in entity_ids]
         else:
-            devices = lifx_manager.entities.values()
+            devices = list(lifx_manager.entities.values())
 
         if devices:
             yield from start_effect(hass, devices, \
@@ -98,6 +104,11 @@ def setup(hass, lifx_manager):
         descriptions.get(SERVICE_EFFECT_COLORLOOP),
         schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_EFFECT_STOP, async_service_handle,
+        descriptions.get(SERVICE_EFFECT_STOP),
+        schema=LIFX_EFFECT_STOP_SCHEMA)
+
 @asyncio.coroutine
 def start_effect(hass, devices, service, **data):
     """Start a light effect."""
@@ -112,6 +123,8 @@ def start_effect(hass, devices, service, **data):
         effect = LIFXEffectPulse(hass, devices)
     elif service == SERVICE_EFFECT_COLORLOOP:
         effect = LIFXEffectColorloop(hass, devices)
+    elif service == SERVICE_EFFECT_STOP:
+        effect = LIFXEffectStop(hass, devices)
 
     hass.async_add_job(effect.async_perform(**data))
 
@@ -137,6 +150,7 @@ def effect_list():
         SERVICE_EFFECT_COLORLOOP,
         SERVICE_EFFECT_BREATHE,
         SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_STOP,
     ]
 
 
@@ -297,3 +311,17 @@ class LIFXEffectColorloop(LIFXEffect):
                     lhue = (lhue + spread/(len(self.lights)-1)) % 360
 
             yield from asyncio.sleep(period)
+
+
+class LIFXEffectStop(LIFXEffect):
+    """A no-op effect, but starting it will stop an existing effect."""
+
+    def __init__(self, hass, lights):
+        """Initialize the stop effect."""
+        super(LIFXEffectStop, self).__init__(hass, lights)
+        self.name = SERVICE_EFFECT_STOP
+
+    @asyncio.coroutine
+    def async_perform(self, **kwargs):
+        """Do nothing."""
+        yield None

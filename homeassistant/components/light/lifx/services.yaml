@@ -89,3 +89,11 @@ lifx_effect_colorloop:
     power_on:
       description: Powered off lights are temporarily turned on during the effect (default True)
       example: False
+
+lifx_effect_stop:
+  description: Stop a running effect.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to stop effects on. Leave out to stop effects everywhere.
+      example: 'light.bedroom'
