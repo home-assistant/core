@@ -8,8 +8,6 @@ import colorsys
 import logging
 import asyncio
 import sys
-import random
-from os import path
 from functools import partial
 from datetime import timedelta
 import async_timeout
@@ -17,20 +15,19 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    Light, DOMAIN, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME,
-    ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
+    Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
+    ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_TRANSITION, SUPPORT_EFFECT)
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
 from homeassistant.core import callback
-from homeassistant.config import load_yaml_config_file
-from homeassistant.const import (ATTR_ENTITY_ID)
 from homeassistant.helpers.event import async_track_point_in_utc_time
-from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
+
+from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,23 +40,7 @@ BULB_LATENCY = 500
 
 CONF_SERVER = 'server'
 
-SERVICE_EFFECT_BREATHE = 'lifx_effect_breathe'
-SERVICE_EFFECT_PULSE = 'lifx_effect_pulse'
-SERVICE_EFFECT_COLORLOOP = 'lifx_effect_colorloop'
-
-ATTR_POWER_ON = 'power_on'
-ATTR_PERIOD = 'period'
-ATTR_CYCLES = 'cycles'
-ATTR_SPREAD = 'spread'
-ATTR_CHANGE = 'change'
 ATTR_HSBK = 'hsbk'
-
-# aiolifx waveform modes
-WAVEFORM_SINE = 1
-WAVEFORM_PULSE = 4
-
-# The least visible color setting
-HSBK_NO_COLOR = [0, 65535, 0, 2500]
 
 BYTE_MAX = 255
 SHORT_MAX = 65535
@@ -69,34 +50,6 @@ SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
-})
-
-LIFX_EFFECT_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
-})
-
-LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    ATTR_COLOR_NAME: cv.string,
-    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                            vol.Coerce(tuple)),
-    vol.Optional(ATTR_PERIOD, default=1.0): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=0.05)),
-    vol.Optional(ATTR_CYCLES, default=1.0): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=1)),
-})
-
-LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
-
-LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    vol.Optional(ATTR_PERIOD, default=60): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=1)),
-    vol.Optional(ATTR_CHANGE, default=20): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=0, max=360)),
-    vol.Optional(ATTR_SPREAD, default=30): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=0, max=360)),
 })
 
 
@@ -119,53 +72,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.async_add_job(coro)
 
-    @asyncio.coroutine
-    def async_service_handle(service):
-        """Internal func for applying a service."""
-        entity_ids = extract_entity_ids(hass, service)
-        if entity_ids:
-            devices = [entity for entity in lifx_manager.entities.values()
-                       if entity.entity_id in entity_ids]
-        else:
-            devices = lifx_manager.entities.values()
-
-        yield from start_effect(hass, devices, service.service, **service.data)
-
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_EFFECT_BREATHE, async_service_handle,
-        descriptions.get(SERVICE_EFFECT_BREATHE),
-        schema=LIFX_EFFECT_BREATHE_SCHEMA)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_EFFECT_PULSE, async_service_handle,
-        descriptions.get(SERVICE_EFFECT_PULSE),
-        schema=LIFX_EFFECT_PULSE_SCHEMA)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_EFFECT_COLORLOOP, async_service_handle,
-        descriptions.get(SERVICE_EFFECT_COLORLOOP),
-        schema=LIFX_EFFECT_COLORLOOP_SCHEMA)
+    lifx_effects.setup(hass, lifx_manager)
 
     return True
-
-
-@asyncio.coroutine
-def start_effect(hass, devices, service, **data):
-    """Start a light effect."""
-    for light in devices:
-        yield from light.stop_effect()
-
-    if service in SERVICE_EFFECT_BREATHE:
-        effect = LIFXEffectBreathe(hass, devices)
-    elif service in SERVICE_EFFECT_PULSE:
-        effect = LIFXEffectPulse(hass, devices)
-    elif service == SERVICE_EFFECT_COLORLOOP:
-        effect = LIFXEffectColorloop(hass, devices)
-
-    hass.async_add_job(effect.async_perform(**data))
 
 
 class LIFXManager(object):
@@ -326,11 +235,7 @@ class LIFXLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return [
-            SERVICE_EFFECT_COLORLOOP,
-            SERVICE_EFFECT_BREATHE,
-            SERVICE_EFFECT_PULSE,
-        ]
+        return lifx_effects.effect_list()
 
     @callback
     def update_after_transition(self, now):
@@ -365,7 +270,7 @@ class LIFXLight(Light):
         yield from self.stop_effect()
 
         if ATTR_EFFECT in kwargs:
-            yield from self.default_effect(**kwargs)
+            yield from lifx_effects.default_effect(self, **kwargs)
             return
 
         if ATTR_TRANSITION in kwargs:
@@ -413,23 +318,6 @@ class LIFXLight(Light):
         _LOGGER.debug("%s async_update", self.who)
         if self.available and self.blocker is None:
             yield from self.refresh_state()
-
-    @asyncio.coroutine
-    def default_effect(self, **kwargs):
-        """Start an effect with default (or random) parameters."""
-        service = kwargs[ATTR_EFFECT]
-        data = {
-            ATTR_ENTITY_ID: self.entity_id,
-        }
-
-        if service in (SERVICE_EFFECT_BREATHE, SERVICE_EFFECT_PULSE):
-            data[ATTR_RGB_COLOR] = [
-                random.randint(100, 255),
-                random.randint(100, 255),
-                random.randint(100, 255),
-            ]
-
-        yield from self.hass.services.async_call(DOMAIN, service, data)
 
     @asyncio.coroutine
     def stop_effect(self):
@@ -506,162 +394,3 @@ class LIFXLight(Light):
                       hue, sat, bri, kel, red, green, blue)
 
         self._rgb = [red, green, blue]
-
-
-class LIFXEffectData(object):
-    """Structure describing a running effect."""
-
-    def __init__(self, effect, power, color):
-        """Initialize data structure."""
-        self.effect = effect
-        self.power = power
-        self.color = color
-
-
-class LIFXEffect(object):
-    """Representation of a light effect running on a number of lights."""
-
-    def __init__(self, hass, lights):
-        """Initialize the effect."""
-        self.hass = hass
-        self.lights = lights
-
-    @asyncio.coroutine
-    def async_perform(self, **kwargs):
-        """Do common setup and play the effect."""
-        yield from self.async_setup(**kwargs)
-        yield from self.async_play(**kwargs)
-
-    @asyncio.coroutine
-    def async_setup(self, **kwargs):
-        """Prepare all lights for the effect."""
-        for light in self.lights:
-            yield from light.refresh_state()
-            if not light.device:
-                self.lights.remove(light)
-            else:
-                light.effect_data = LIFXEffectData(
-                    self, light.is_on, light.device.color)
-
-                # Temporarily turn on power for the effect to be visible
-                if kwargs[ATTR_POWER_ON] and not light.is_on:
-                    light.device.set_color(HSBK_NO_COLOR)
-                    light.device.set_power(True)
-
-    # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def async_play(self, **kwargs):
-        """Play the effect."""
-        yield None
-
-    @asyncio.coroutine
-    def async_restore(self, light):
-        """Restore to the original state (if we are still running)."""
-        if light.effect_data:
-            if light.effect_data.effect == self:
-                if light.device and not light.effect_data.power:
-                    light.device.set_power(False)
-                    yield from asyncio.sleep(BULB_LATENCY/1000)
-                if light.device:
-                    light.device.set_color(light.effect_data.color)
-                    yield from asyncio.sleep(BULB_LATENCY/1000)
-                light.effect_data = None
-            self.lights.remove(light)
-
-
-class LIFXEffectBreathe(LIFXEffect):
-    """Representation of a breathe effect."""
-
-    def __init__(self, hass, lights):
-        """Initialize the breathe effect."""
-        super(LIFXEffectBreathe, self).__init__(hass, lights)
-        self.name = SERVICE_EFFECT_BREATHE
-        self.waveform = WAVEFORM_SINE
-
-    @asyncio.coroutine
-    def async_play(self, **kwargs):
-        """Play the effect on all lights."""
-        for light in self.lights:
-            self.hass.async_add_job(self.async_light_play(light, **kwargs))
-
-    @asyncio.coroutine
-    def async_light_play(self, light, **kwargs):
-        """Play a light effect on the bulb."""
-        period = kwargs[ATTR_PERIOD]
-        cycles = kwargs[ATTR_CYCLES]
-        hsbk, _ = light.find_hsbk(**kwargs)
-
-        # Start the effect
-        args = {
-            'transient': 1,
-            'color': hsbk,
-            'period': int(period*1000),
-            'cycles': cycles,
-            'duty_cycle': 0,
-            'waveform': self.waveform,
-        }
-        light.device.set_waveform(args)
-
-        # Wait for completion and restore the initial state
-        yield from asyncio.sleep(period*cycles)
-        yield from self.async_restore(light)
-
-
-class LIFXEffectPulse(LIFXEffectBreathe):
-    """Representation of a pulse effect."""
-
-    def __init__(self, hass, lights):
-        """Initialize the pulse effect."""
-        super(LIFXEffectPulse, self).__init__(hass, lights)
-        self.name = SERVICE_EFFECT_PULSE
-        self.waveform = WAVEFORM_PULSE
-
-
-class LIFXEffectColorloop(LIFXEffect):
-    """Representation of a colorloop effect."""
-
-    def __init__(self, hass, lights):
-        """Initialize the colorloop effect."""
-        super(LIFXEffectColorloop, self).__init__(hass, lights)
-        self.name = SERVICE_EFFECT_COLORLOOP
-
-    @asyncio.coroutine
-    def async_play(self, **kwargs):
-        """Play the effect on all lights."""
-        period = kwargs[ATTR_PERIOD]
-        spread = kwargs[ATTR_SPREAD]
-        change = kwargs[ATTR_CHANGE]
-        direction = 1 if random.randint(0, 1) else -1
-
-        # Random start
-        hue = random.randint(0, 360)
-
-        while self.lights:
-            hue = (hue + direction*change) % 360
-
-            random.shuffle(self.lights)
-            lhue = hue
-
-            transition = int(1000 * random.uniform(period/2, period))
-            for light in self.lights:
-                if spread > 0:
-                    transition = int(1000 * random.uniform(period/2, period))
-
-                if ATTR_BRIGHTNESS in kwargs:
-                    brightness = int(65535/255*kwargs[ATTR_BRIGHTNESS])
-                else:
-                    brightness = light.effect_data.color[2]
-
-                hsbk = [
-                    int(65535/359*lhue),
-                    int(random.uniform(0.8, 1.0)*65535),
-                    brightness,
-                    4000,
-                ]
-                light.device.set_color(hsbk, None, transition)
-
-                # Adjust the next light so the full spread is used
-                if len(self.lights) > 1:
-                    lhue = (lhue + spread/(len(self.lights)-1)) % 360
-
-            yield from asyncio.sleep(period)
