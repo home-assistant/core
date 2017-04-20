@@ -111,7 +111,7 @@ class IOSSensor(Entity):
                 returning_icon_level = "{}-outline".format(
                     DEFAULT_ICON_LEVEL)
             else:
-                returning_icon_level = "{}-{}".format(DEFAULT_ICON_LEVEL, 
+                returning_icon_level = "{}-{}".format(DEFAULT_ICON_LEVEL,
                                                       str(rounded_level))
                 returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
