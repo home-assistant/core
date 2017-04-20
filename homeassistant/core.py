@@ -202,7 +202,7 @@ class HomeAssistant(object):
         if asyncio.iscoroutine(target):
             task = self.loop.create_task(target)
         elif is_callback(target):
-            self.loop.call_soon(target, *args)
+            task = asyncio.Task.current_task(loop=self.loop)
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
         else:
@@ -223,6 +223,10 @@ class HomeAssistant(object):
     def async_stop_track_tasks(self):
         """Stop track tasks so you can't wait for all tasks to be done."""
         self._track_task = False
+
+        # call callback after sheduled the task
+        if is_callback(target):
+            self.loop.call_soon(target, *args)
 
     @callback
     def async_run_job(self, target: Callable[..., None], *args: Any) -> None:
