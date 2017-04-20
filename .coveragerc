@@ -165,6 +165,7 @@ omit =
     homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/hikvision.py
     homeassistant/components/binary_sensor/iss.py
+    homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
