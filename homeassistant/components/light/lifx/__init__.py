@@ -222,10 +222,7 @@ class LIFXLight(Light):
     @property
     def effect(self):
         """Return the currently running effect."""
-        if self.effect_data is not None:
-            return self.effect_data.effect.name
-        else:
-            return None
+        return self.effect_data.effect.name if self.effect_data else None
 
     @property
     def supported_features(self):
