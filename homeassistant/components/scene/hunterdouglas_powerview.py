@@ -7,7 +7,7 @@ https://home-assistant.io/components/scene.hunterdouglas_powerview/
 import logging
 
 from homeassistant.components.scene import Scene, DOMAIN
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.entity import async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = [
@@ -49,9 +49,9 @@ class PowerViewScene(Scene):
         self.scene_data = scene_data
         self._sync_room_data(room_data)
         self.entity_id_format = DOMAIN + '.{}'
-        self.entity_id = generate_entity_id(self.entity_id_format,
-                                            str(self.scene_data["id"]),
-                                            hass=hass)
+        self.entity_id = async_generate_entity_id(self.entity_id_format,
+                                                  str(self.scene_data["id"]),
+                                                  hass=hass)
 
     def _sync_room_data(self, room_data):
         """Sync the room data."""
