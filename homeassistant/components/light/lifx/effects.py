@@ -120,10 +120,11 @@ def default_effect(light, **kwargs):
     }
     if service in (SERVICE_EFFECT_BREATHE, SERVICE_EFFECT_PULSE):
         data[ATTR_RGB_COLOR] = [
-            random.randint(100, 255),
-            random.randint(100, 255),
-            random.randint(100, 255),
+            random.randint(1, 127),
+            random.randint(1, 127),
+            random.randint(1, 127),
         ]
+        data[ATTR_BRIGHTNESS] = 255
     yield from light.hass.services.async_call(DOMAIN, service, data)
 
 def effect_list():
