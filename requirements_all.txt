@@ -564,7 +564,7 @@ pylast==1.8.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
-pylgtv==0.1.5
+pylgtv==0.1.6
 
 # homeassistant.components.litejet
 pylitejet==0.1

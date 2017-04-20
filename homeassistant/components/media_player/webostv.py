@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pylgtv==0.1.5',
+REQUIREMENTS = ['pylgtv==0.1.6',
                 'websockets==3.2',
                 'wakeonlan==0.2.2']
 
@@ -87,6 +87,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
     from websockets.exceptions import ConnectionClosed
+    from asyncio import TimeoutError
 
     client = WebOsClient(host, config)
 
@@ -99,7 +100,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
                 _LOGGER.warning(
                     "Connected to LG webOS TV %s but not paired", host)
                 return
-            except (OSError, ConnectionClosed):
+            except (OSError, ConnectionClosed, TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
@@ -170,6 +171,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve the latest data."""
         from websockets.exceptions import ConnectionClosed
+        from asyncio import TimeoutError
         try:
             self._state = STATE_PLAYING
             self._muted = self._client.get_muted()
@@ -196,7 +198,7 @@ class LgWebOSDevice(MediaPlayerDevice):
                 app = self._app_list[source['appId']]
                 self._source_list[app['title']] = app
 
-        except (OSError, ConnectionClosed):
+        except (OSError, ConnectionClosed, TimeoutError):
             self._state = STATE_OFF
 
     @property
@@ -217,7 +219,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self._volume / 100.0
+        return float(self._volume) / 100.0
 
     @property
     def source(self):
@@ -254,10 +256,11 @@ class LgWebOSDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         from websockets.exceptions import ConnectionClosed
+        from asyncio import TimeoutError
         self._state = STATE_OFF
         try:
             self._client.power_off()
-        except (OSError, ConnectionClosed):
+        except (OSError, ConnectionClosed, TimeoutError):
             pass
 
     def turn_on(self):
