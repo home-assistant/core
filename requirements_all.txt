@@ -468,6 +468,9 @@ pushetta==1.0.15
 # homeassistant.components.sensor.waqi
 pwaqi==3.0
 
+# homeassistant.components.light.rpi_gpio_pwm
+pwmled==1.1.1
+
 # homeassistant.components.sensor.cpuspeed
 py-cpuinfo==3.0.0
 
