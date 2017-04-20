@@ -96,7 +96,12 @@ def setup(hass, config):
         if device is None:
             device = pywemo.discovery.device_from_description(url, None)
 
-        discovery_info = (device.name, device.model_name, url, device.mac,
-                          device.serialnumber)
+        discovery_info = {
+            'model_name': device.model_name,
+            'serial': device.serialnumber,
+            'mac_address': device.mac,
+            'ssdp_description': url,
+        }
+
         discovery.discover(hass, SERVICE_WEMO, discovery_info)
     return True
