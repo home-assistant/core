@@ -14,6 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zha']
 
+# ZigBee Cluster Library Zone Type to Home Assistant device class
 CLASS_MAPPING = {
     0x000d: 'motion',
     0x0015: 'opening',
@@ -31,18 +32,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
+    from bellows.zigbee.zcl.clusters.security import IasZone
+
     clusters = discovery_info['clusters']
 
     device_class = None
-    cluster = [c for c in clusters if c.cluster_id == 0x0500][0]
+    cluster = [c for c in clusters if isinstance(c, IasZone)][0]
     if discovery_info['new_join']:
         yield from cluster.bind()
         ieee = cluster.endpoint.device.application.ieee
-        yield from cluster.write_attributes({0x10: ieee})
+        yield from cluster.write_attributes({'cie_addr': ieee})
 
-    success, _ = yield from cluster.read_attributes([1], allow_cache=True)
-    if 1 in success:
-        device_class = CLASS_MAPPING.get(success[1], None)
+    try:
+        zone_type = yield from cluster['zone_type']
+        device_class = CLASS_MAPPING.get(zone_type, None)
+    except Exception:  # pylint: disable=broad-except
+        # If we fail to read from the device, use a non-specific class
+        pass
 
     sensor = BinarySensor(device_class, **discovery_info)
     async_add_devices([sensor])
@@ -55,8 +61,10 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
 
     def __init__(self, device_class, **kwargs):
         """Initialize ZHA binary sensor."""
-        self._device_class = device_class
         super().__init__(**kwargs)
+        self._device_class = device_class
+        from bellows.zigbee.zcl.clusters.security import IasZone
+        self._ias_zone_cluster = self._clusters[IasZone.cluster_id]
 
     @property
     def is_on(self) -> bool:
@@ -78,4 +86,4 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
             self.schedule_update_ha_state()
         elif command_id == 1:
             _LOGGER.debug("Enroll requested")
-            self.hass.add_job(self._clusters[0x0500].command(0, 0, 0))
+            self.hass.add_job(self._ias_zone_cluster.enroll_response(0, 0))
