@@ -140,11 +140,7 @@ def test_load_component_hassio(hass):
 
     with patch.dict(os.environ, {'HASSIO': "FAKE_HASSIO"}), \
             patch('homeassistant.components.hassio.async_setup',
-                  return_value=mock_coro(return_value=True)):
-        mock_discover, mock_platform = \
-            yield from mock_discovery(hass, discover)
+                  return_value=mock_coro(return_value=True)) as mock_hassio:
+        yield from mock_discovery(hass, discover)
 
-    assert mock_discover.called
-    assert not mock_platform.called
-    mock_discover.assert_called_with(
-        hass, 'hassio', {}, 'hassio', BASE_CONFIG)
+    assert mock_hassio
