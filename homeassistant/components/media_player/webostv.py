@@ -238,7 +238,10 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         if self._current_source_id in self._app_list:
-            return self._app_list[self._current_source_id]['largeIcon']
+            icon = self._app_list[self._current_source_id]['largeIcon']
+            if not icon.startswith('http'):
+                icon = self._app_list[self._current_source_id]['icon']
+            return icon
         return None
 
     @property
