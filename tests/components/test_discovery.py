@@ -1,5 +1,6 @@
 """The tests for the discovery component."""
 import asyncio
+import os
 
 from unittest.mock import patch
 
@@ -128,3 +129,20 @@ def test_discover_duplicates(hass):
     mock_discover.assert_called_with(
         hass, SERVICE_NO_PLATFORM, SERVICE_INFO,
         SERVICE_NO_PLATFORM_COMPONENT, BASE_CONFIG)
+
+
+@asyncio.coroutine
+def test_load_component_hassio(hass):
+    """Test load hassio component."""
+    os.environ['HASSIO'] = "FAKE_HASSIO"
+
+    def discover(netdisco):
+        """Fake discovery."""
+        return []
+
+    mock_discover, mock_platform = yield from mock_discovery(hass, discover)
+
+    assert mock_discover.called
+    assert not mock_platform.called
+    mock_discover.assert_called_with(
+        hass, 'hassio', {}, 'hassio', BASE_CONFIG)
