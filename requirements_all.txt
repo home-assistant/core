@@ -264,6 +264,9 @@ https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b6
 # homeassistant.components.lutron_caseta
 https://github.com/gurumitts/pylutron-caseta/archive/v0.2.6.zip#pylutron-caseta==v0.2.6
 
+# homeassistant.components.media_player.spotify
+https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
+
 # homeassistant.components.netatmo
 https://github.com/jabesq/netatmo-api-python/archive/v0.9.1.zip#lnetatmo==0.9.1
 
