@@ -186,10 +186,10 @@ class LIFXLight(Light):
     @property
     def who(self):
         """Return a string identifying the device."""
+        ip_addr = '-'
         if self.device:
-            return self.device.ip_addr[0]
-        else:
-            return "(%s)" % self.name
+            ip_addr = self.device.ip_addr[0]
+        return "%s (%s)" % (ip_addr, self.name)
 
     @property
     def rgb_color(self):
