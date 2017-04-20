@@ -63,7 +63,7 @@ class TestStatisticsSensor(unittest.TestCase):
 
         state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(str(self.mean), state.state)
+        self.assertEqual(str(round(self.mean, 1)), state.state)
         self.assertEqual(self.min, state.attributes.get('min_value'))
         self.assertEqual(self.max, state.attributes.get('max_value'))
         self.assertEqual(self.variance, state.attributes.get('variance'))
