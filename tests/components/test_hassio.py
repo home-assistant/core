@@ -229,7 +229,7 @@ class TestHassIOComponent(object):
             self.url.format("supervisor/reload"), json=self.ok_msg)
 
         self.hass.services.call(
-            ho.DOMAIN, ho.SERVICE_SUPERVISOR_UPDATE, {})
+            ho.DOMAIN, ho.SERVICE_SUPERVISOR_RELOAD, {})
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 2
