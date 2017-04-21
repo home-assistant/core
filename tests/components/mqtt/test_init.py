@@ -99,7 +99,7 @@ class TestMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.assertTrue(self.hass.data['mqtt'].async_publish.called)
         self.assertEqual(
-            self.hass.data['mqtt'].async_publish.call_args[0][1], "2")
+            self.hass.data['mqtt'].async_publish.call_args[0][1], 2)
 
     def test_service_call_with_payload_doesnt_render_template(self):
         """Test the service call with unrendered template.

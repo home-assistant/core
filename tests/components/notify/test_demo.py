@@ -92,7 +92,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.block_till_done()
         last_event = self.events[-1]
         self.assertEqual(last_event.data[notify.ATTR_TITLE], 'temperature')
-        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], '10')
+        self.assertEqual(last_event.data[notify.ATTR_MESSAGE], 10)
 
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
