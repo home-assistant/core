@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import logging
-import concurrent.futures._base
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -88,6 +87,7 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
     from websockets.exceptions import ConnectionClosed
+    from concurrent import futures
 
     client = WebOsClient(host, config)
 
@@ -100,7 +100,8 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
                 _LOGGER.warning(
                     "Connected to LG webOS TV %s but not paired", host)
                 return
-            except (OSError, ConnectionClosed, concurrent.futures._base.TimeoutError):
+            except (OSError, ConnectionClosed, TypeError,
+                    futures.TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
@@ -171,6 +172,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     def update(self):
         """Retrieve the latest data."""
         from websockets.exceptions import ConnectionClosed
+        from concurrent import futures
         try:
             self._state = STATE_PLAYING
             self._muted = self._client.get_muted()
@@ -197,7 +199,8 @@ class LgWebOSDevice(MediaPlayerDevice):
                 app = self._app_list[source['appId']]
                 self._source_list[app['title']] = app
 
-        except (OSError, ConnectionClosed, concurrent.futures._base.TimeoutError):
+        except (OSError, ConnectionClosed, TypeError,
+                futures.TimeoutError):
             self._state = STATE_OFF
 
     @property
@@ -255,10 +258,12 @@ class LgWebOSDevice(MediaPlayerDevice):
     def turn_off(self):
         """Turn off media player."""
         from websockets.exceptions import ConnectionClosed
+        from concurrent import futures
         self._state = STATE_OFF
         try:
             self._client.power_off()
-        except (OSError, ConnectionClosed, concurrent.futures._base.TimeoutError):
+        except (OSError, ConnectionClosed, TypeError,
+                futures.TimeoutError):
             pass
 
     def turn_on(self):
