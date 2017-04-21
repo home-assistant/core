@@ -31,8 +31,10 @@ SERVICE_HOST_SHUTDOWN = 'host_shutdown'
 SERVICE_HOST_REBOOT = 'host_reboot'
 
 SERVICE_HOST_UPDATE = 'host_update'
-SERVICE_SUPERVISOR_UPDATE = 'supervisor_update'
 SERVICE_HOMEASSISTANT_UPDATE = 'homeassistant_update'
+
+SERVICE_SUPERVISOR_UPDATE = 'supervisor_update'
+SERVICE_SUPERVISOR_RELOAD = 'supervisor_reload'
 
 SERVICE_ADDON_INSTALL = 'addon_install'
 SERVICE_ADDON_UNINSTALL = 'addon_uninstall'
@@ -61,8 +63,9 @@ SERVICE_MAP = {
     SERVICE_HOST_SHUTDOWN: None,
     SERVICE_HOST_REBOOT: None,
     SERVICE_HOST_UPDATE: SCHEMA_SERVICE_UPDATE,
-    SERVICE_SUPERVISOR_UPDATE: SCHEMA_SERVICE_UPDATE,
     SERVICE_HOMEASSISTANT_UPDATE: SCHEMA_SERVICE_UPDATE,
+    SERVICE_SUPERVISOR_UPDATE: SCHEMA_SERVICE_UPDATE,
+    SERVICE_SUPERVISOR_RELOAD: None,
     SERVICE_ADDON_INSTALL: SCHEMA_SERVICE_ADDONS_VERSION,
     SERVICE_ADDON_UNINSTALL: SCHEMA_SERVICE_ADDONS,
     SERVICE_ADDON_START: SCHEMA_SERVICE_ADDONS,
@@ -117,6 +120,9 @@ def async_setup(hass, config):
         elif service.service == SERVICE_SUPERVISOR_UPDATE:
             yield from hassio.send_command(
                 "/supervisor/update", payload=version)
+        elif service.service == SERVICE_SUPERVISOR_RELOAD:
+            yield from hassio.send_command(
+                "/supervisor/reload", timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_HOMEASSISTANT_UPDATE:
             yield from hassio.send_command(
                 "/homeassistant/update", payload=version,
