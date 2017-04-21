@@ -38,10 +38,21 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Setup the RSS feeds."""
     for (feeduri, feedconfig) in config[DOMAIN].items():
-        rss_view = RssView(hass, feedconfig)
-        hass.http.app.router.add_route('get',
-                                       '/api/rss/%s' %
-                                       feeduri, rss_view.get)
+        url = '/api/rss_template/%s' % feeduri
+
+        title = feedconfig.get('title')
+        if title is not None:
+            title.hass = hass
+
+        items = feedconfig.get('items')
+        for item in items:
+            if 'title' in item:
+                item['title'].hass = hass
+            if 'description' in item:
+                item['description'].hass = hass
+
+        rss_view = RssView(url, title, items)
+        hass.http.register_view(rss_view)
 
     return True
 
@@ -49,21 +60,17 @@ def setup(hass, config):
 class RssView(HomeAssistantView):
     """Export states and other values as RSS."""
 
+    requires_auth = False
+    url = None
+    name = 'rss_template'
     _title = None
     _items = None
 
-    def __init__(self, hass, feedconfig):
+    def __init__(self, url, title, items):
         """Initialize the rss view."""
-        self._title = feedconfig.get('title')
-        if self._title is not None:
-            self._title.hass = hass
-
-        self._items = feedconfig.get('items')
-        for item in self._items:
-            if 'title' in item:
-                item['title'].hass = hass
-            if 'description' in item:
-                item['description'].hass = hass
+        self.url = url
+        self._title = title
+        self._items = items
 
     @asyncio.coroutine
     def get(self, request, entity_id=None):
