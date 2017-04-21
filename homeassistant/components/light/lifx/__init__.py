@@ -10,19 +10,24 @@ import asyncio
 import sys
 from functools import partial
 from datetime import timedelta
+import async_timeout
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
+    ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+    SUPPORT_TRANSITION, SUPPORT_EFFECT)
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
+
+from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,18 +40,19 @@ BULB_LATENCY = 500
 
 CONF_SERVER = 'server'
 
+ATTR_HSBK = 'hsbk'
+
 BYTE_MAX = 255
 SHORT_MAX = 65535
 
 SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_TRANSITION)
+                SUPPORT_TRANSITION | SUPPORT_EFFECT)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
 })
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the LIFX platform."""
@@ -65,6 +71,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         local_addr=(server_addr, UDP_BROADCAST_PORT))
 
     hass.async_add_job(coro)
+
+    lifx_effects.setup(hass, lifx_manager)
+
     return True
 
 
@@ -104,8 +113,40 @@ class LIFXManager(object):
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
             entity.device = None
-            entity.updated_event.set()
             self.hass.async_add_job(entity.async_update_ha_state())
+
+
+class AwaitAioLIFX:
+    """Wait for an aiolifx callback and return the message."""
+
+    def __init__(self, light):
+        """Initialize the wrapper."""
+        self.light = light
+        self.device = None
+        self.message = None
+        self.event = asyncio.Event()
+
+    @callback
+    def callback(self, device, message):
+        """Callback that aiolifx invokes when the response is received."""
+        self.device = device
+        self.message = message
+        self.event.set()
+
+    @asyncio.coroutine
+    def wait(self, method):
+        """Call an aiolifx method and wait for its response or a timeout."""
+        self.event.clear()
+        method(self.callback)
+
+        while self.light.available and not self.event.is_set():
+            try:
+                with async_timeout.timeout(1.0, loop=self.light.hass.loop):
+                    yield from self.event.wait()
+            except asyncio.TimeoutError:
+                pass
+
+        return self.message
 
 
 def convert_rgb_to_hsv(rgb):
@@ -125,8 +166,8 @@ class LIFXLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         self.device = device
-        self.updated_event = asyncio.Event()
         self.blocker = None
+        self.effect_data = None
         self.postponed_update = None
         self._name = device.label
         self.set_power(device.power_level)
@@ -145,10 +186,10 @@ class LIFXLight(Light):
     @property
     def who(self):
         """Return a string identifying the device."""
+        ip_addr = '-'
         if self.device:
-            return self.device.ip_addr[0]
-        else:
-            return "(%s)" % self.name
+            ip_addr = self.device.ip_addr[0]
+        return "%s (%s)" % (ip_addr, self.name)
 
     @property
     def rgb_color(self):
@@ -179,9 +220,19 @@ class LIFXLight(Light):
         return self._power != 0
 
     @property
+    def effect(self):
+        """Return the currently running effect."""
+        return self.effect_data.effect.name if self.effect_data else None
+
+    @property
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_LIFX
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return lifx_effects.effect_list()
 
     @callback
     def update_after_transition(self, now):
@@ -213,12 +264,84 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
+        yield from self.stop_effect()
+
+        if ATTR_EFFECT in kwargs:
+            yield from lifx_effects.default_effect(self, **kwargs)
+            return
+
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
             fade = 0
 
+        hsbk, changed_color = self.find_hsbk(**kwargs)
+        _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
+                      self.who, self._power, fade, *hsbk)
+
+        if self._power == 0:
+            if changed_color:
+                self.device.set_color(hsbk, None, 0)
+            self.device.set_power(True, None, fade)
+        else:
+            self.device.set_power(True, None, 0)     # racing for power status
+            if changed_color:
+                self.device.set_color(hsbk, None, fade)
+
+        self.update_later(0)
+        if fade < BULB_LATENCY:
+            self.set_power(1)
+            self.set_color(*hsbk)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the device off."""
+        yield from self.stop_effect()
+
+        if ATTR_TRANSITION in kwargs:
+            fade = int(kwargs[ATTR_TRANSITION] * 1000)
+        else:
+            fade = 0
+
+        self.device.set_power(False, None, fade)
+
+        self.update_later(fade)
+        if fade < BULB_LATENCY:
+            self.set_power(0)
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Update bulb status (if it is available)."""
+        _LOGGER.debug("%s async_update", self.who)
+        if self.available and self.blocker is None:
+            yield from self.refresh_state()
+
+    @asyncio.coroutine
+    def stop_effect(self):
+        """Stop the currently running effect (if any)."""
+        if self.effect_data:
+            yield from self.effect_data.effect.async_restore(self)
+
+    @asyncio.coroutine
+    def refresh_state(self):
+        """Ask the device about its current state and update our copy."""
+        msg = yield from AwaitAioLIFX(self).wait(self.device.get_color)
+        if msg is not None:
+            self.set_power(self.device.power_level)
+            self.set_color(*self.device.color)
+            self._name = self.device.label
+
+    def find_hsbk(self, **kwargs):
+        """Find the desired color from a number of possible inputs."""
         changed_color = False
+
+        hsbk = kwargs.pop(ATTR_HSBK, None)
+        if hsbk is not None:
+            return [hsbk, True]
+
+        color_name = kwargs.pop(ATTR_COLOR_NAME, None)
+        if color_name is not None:
+            kwargs[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
 
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \
@@ -242,54 +365,7 @@ class LIFXLight(Light):
         else:
             kelvin = self._kel
 
-        hsbk = [hue, saturation, brightness, kelvin]
-        _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
-                      self.who, self._power, fade, *hsbk)
-
-        if self._power == 0:
-            if changed_color:
-                self.device.set_color(hsbk, None, 0)
-            self.device.set_power(True, None, fade)
-        else:
-            self.device.set_power(True, None, 0)     # racing for power status
-            if changed_color:
-                self.device.set_color(hsbk, None, fade)
-
-        self.update_later(0)
-        if fade < BULB_LATENCY:
-            self.set_power(1)
-            self.set_color(*hsbk)
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn the device off."""
-        if ATTR_TRANSITION in kwargs:
-            fade = int(kwargs[ATTR_TRANSITION] * 1000)
-        else:
-            fade = 0
-
-        self.device.set_power(False, None, fade)
-
-        self.update_later(fade)
-        if fade < BULB_LATENCY:
-            self.set_power(0)
-
-    @callback
-    def got_color(self, device, msg):
-        """Callback that gets current power/color status."""
-        self.set_power(device.power_level)
-        self.set_color(*device.color)
-        self._name = device.label
-        self.updated_event.set()
-
-    @asyncio.coroutine
-    def async_update(self):
-        """Update bulb status (if it is available)."""
-        _LOGGER.debug("%s async_update", self.who)
-        if self.available and self.blocker is None:
-            self.updated_event.clear()
-            self.device.get_color(self.got_color)
-            yield from self.updated_event.wait()
+        return [[hue, saturation, brightness, kelvin], changed_color]
 
     def set_power(self, power):
         """Set power state value."""
