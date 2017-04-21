@@ -48,8 +48,9 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         self._invert_buttons = invert_buttons
 
         self._workaround = workaround.get_device_mapping(values.primary)
+        _LOGGER.info("Testing for workaround", workaround.get_device_mapping(values.primary))
         if self._workaround:
-            _LOGGER.debug("Using workaround %s", self._workaround)
+            _LOGGER.info("Using workaround %s", self._workaround)
         self.update_properties()
 
     def update_properties(self):
