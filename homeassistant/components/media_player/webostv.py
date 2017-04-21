@@ -221,7 +221,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return float(self._volume) / 100.0
+        return self._volume / 100.0
 
     @property
     def source(self):
