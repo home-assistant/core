@@ -140,6 +140,9 @@ distro==1.0.4
 # homeassistant.components.switch.digitalloggers
 dlipower==0.7.165
 
+# homeassistant.components.switch.dli
+dlipower==0.7.165
+
 # homeassistant.components.notify.xmpp
 dnspython3==1.15.0
 
