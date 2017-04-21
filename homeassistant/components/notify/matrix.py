@@ -92,7 +92,7 @@ class MatrixNotificationService(BaseNotificationService):
             return auth_tokens
 
         except (OSError, IOError, PermissionError) as ex:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Loading authentication tokens from file '%s' failed: %s",
                 self.session_filepath, str(ex))
             return {}
@@ -108,7 +108,7 @@ class MatrixNotificationService(BaseNotificationService):
         # Not saving the tokens to disk should not stop the client, we can just
         # login using the password every time.
         except (OSError, IOError, PermissionError) as ex:
-            _LOGGER.error(
+            _LOGGER.warning(
                 "Storing authentication tokens to file '%s' failed: %s",
                 self.session_filepath, str(ex))
 
@@ -127,10 +127,10 @@ class MatrixNotificationService(BaseNotificationService):
                 _LOGGER.debug("Logged in using stored token.")
 
             except MatrixRequestError as ex:
-                _LOGGER.info(
-                    "Login by token failed, falling back to password.")
-                _LOGGER.info("login_by_token raised: (%d) %s",
-                             ex.code, ex.content)
+                _LOGGER.warning(
+                    "Login by token failed, falling back to password. "
+                    "login_by_token raised: (%d) %s",
+                    ex.code, ex.content)
 
         # If we still don't have a client try password.
         if not client:
@@ -140,9 +140,9 @@ class MatrixNotificationService(BaseNotificationService):
 
             except MatrixRequestError as ex:
                 _LOGGER.error(
-                    "Login failed, both token and username/password invalid")
-                _LOGGER.info("login_by_password raised: (%d) %s",
-                             ex.code, ex.content)
+                    "Login failed, both token and username/password invalid "
+                    "login_by_password raised: (%d) %s",
+                    ex.code, ex.content)
 
                 # re-raise the error so the constructor can catch it.
                 raise
