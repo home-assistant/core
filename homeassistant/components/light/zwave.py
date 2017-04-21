@@ -15,9 +15,8 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
-    color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
-    color_rgb_to_rgbw, color_rgbw_to_rgb
+from homeassistant.util.color import color_temperature_mired_to_kelvin, \
+    color_temperature_to_rgb, color_rgb_to_rgbw, color_rgbw_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,9 +38,11 @@ DEVICE_MAPPINGS = {
 
 # Generate midpoint color temperatures for bulbs that have limited
 # support for white light colors
-TEMP_MID_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 2 + HASS_COLOR_MIN
-TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
-TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
+TEMP_COLOR_MAX = 500  # mireds (inverted)
+TEMP_COLOR_MIN = 154
+TEMP_MID_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 2 + TEMP_COLOR_MIN
+TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
+TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
 def get_device(node, values, node_config, **kwargs):
