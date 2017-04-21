@@ -472,7 +472,7 @@ pwaqi==3.0
 pwmled==1.1.1
 
 # homeassistant.components.sensor.cpuspeed
-py-cpuinfo==3.0.0
+py-cpuinfo==3.2.0
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
