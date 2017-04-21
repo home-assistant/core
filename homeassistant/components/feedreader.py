@@ -12,7 +12,7 @@ import pickle
 
 import voluptuous as vol
 
-from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.helpers import discovery
 from homeassistant.helpers.event import track_utc_time_change
 import homeassistant.helpers.config_validation as cv
 
@@ -40,7 +40,11 @@ def setup(hass, config):
     urls = config.get(DOMAIN)[CONF_URLS]
     data_file = hass.config.path("{}.pickle".format(DOMAIN))
     storage = StoredData(data_file)
+    hass.data[DOMAIN] = {}
     feeds = [FeedManager(url, hass, storage) for url in urls]
+
+    discovery.load_platform(hass, 'sensor', DOMAIN, urls, config)
+
     return len(feeds) > 0
 
 
@@ -56,8 +60,7 @@ class FeedManager(object):
         self._storage = storage
         self._last_entry_timestamp = None
         self._has_published_parsed = False
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                             lambda _: self._update())
+        self._update()
         track_utc_time_change(hass, lambda now: self._update(),
                               minute=0, second=0)
 
@@ -82,6 +85,7 @@ class FeedManager(object):
             # Using etag and modified, if there's no new data available,
             # the entries list will be empty
             elif len(self._feed.entries) > 0:
+                self._hass.data[DOMAIN][self._url] = self._feed.entries[0]
                 _LOGGER.debug('%s entri(es) available in feed "%s"',
                               len(self._feed.entries),
                               self._url)
