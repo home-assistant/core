@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import logging
+import asyncio
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -99,7 +100,8 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
                 _LOGGER.warning(
                     "Connected to LG webOS TV %s but not paired", host)
                 return
-            except (OSError, ConnectionClosed):
+            except (OSError, ConnectionClosed, TypeError,
+                    asyncio.TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
@@ -176,6 +178,10 @@ class LgWebOSDevice(MediaPlayerDevice):
                 self._current_source_id = current_input
                 if self._state in (STATE_UNKNOWN, STATE_OFF):
                     self._state = STATE_PLAYING
+            else:
+                self._state = STATE_OFF
+                self._current_source = None
+                self._current_source_id = None
 
             if self._state is not STATE_OFF:
                 self._muted = self._client.get_muted()
@@ -211,8 +217,11 @@ class LgWebOSDevice(MediaPlayerDevice):
                             self._source_list[source['label']] = source
                     else:
                         self._source_list[source['label']] = source
-        except (OSError, ConnectionClosed):
+        except (OSError, ConnectionClosed, TypeError,
+                asyncio.TimeoutError):
             self._state = STATE_OFF
+            self._current_source = None
+            self._current_source_id = None
 
     @property
     def name(self):
@@ -272,7 +281,8 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_OFF
         try:
             self._client.power_off()
-        except (OSError, ConnectionClosed):
+        except (OSError, ConnectionClosed, TypeError,
+                asyncio.TimeoutError):
             pass
 
     def turn_on(self):
