@@ -187,16 +187,30 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 for app in self._client.get_apps():
                     self._app_list[app['id']] = app
-                    if app['id'] == self._current_source_id:
+                    if conf_sources:
+                        if app['id'] == self._current_source_id:
+                            self._current_source = app['title']
+                            self._source_list[app['title']] = app
+                        elif (app['id'] in conf_sources or
+                              any(word in app['title']
+                              for word in conf_sources) or
+                              any(word in app['id']
+                              for word in conf_sources)):
+                            self._source_list[app['title']] = app
+                    else:
                         self._current_source = app['title']
-                        self._source_list[app['title']] = app
-                    elif (app['id'] in conf_sources or
-                          any(word in app['title'] for word in conf_sources) or
-                          any(word in app['id'] for word in conf_sources)):
                         self._source_list[app['title']] = app
 
                 for source in self._client.get_inputs():
-                    self._source_list[source['label']] = source
+                    if conf_sources:
+                        if source['id'] == self._current_source_id:
+                            self._source_list[source['label']] = source
+                        elif (source['label'] in conf_sources or
+                              any(source['label'].find(word) != -1
+                              for word in conf_sources)):
+                            self._source_list[source['label']] = source
+                    else:
+                        self._source_list[source['label']] = source
         except (OSError, ConnectionClosed):
             self._state = STATE_OFF
 
