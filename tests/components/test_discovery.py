@@ -1,5 +1,6 @@
 """The tests for the discovery component."""
 import asyncio
+import os
 
 from unittest.mock import patch
 
@@ -128,3 +129,18 @@ def test_discover_duplicates(hass):
     mock_discover.assert_called_with(
         hass, SERVICE_NO_PLATFORM, SERVICE_INFO,
         SERVICE_NO_PLATFORM_COMPONENT, BASE_CONFIG)
+
+
+@asyncio.coroutine
+def test_load_component_hassio(hass):
+    """Test load hassio component."""
+    def discover(netdisco):
+        """Fake discovery."""
+        return []
+
+    with patch.dict(os.environ, {'HASSIO': "FAKE_HASSIO"}), \
+            patch('homeassistant.components.hassio.async_setup',
+                  return_value=mock_coro(return_value=True)) as mock_hassio:
+        yield from mock_discovery(hass, discover)
+
+    assert mock_hassio.called
