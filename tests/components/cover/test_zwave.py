@@ -148,6 +148,11 @@ def test_roller_commands_no_openid(hass, mock_openzwave):
     value_id, brightness = node.set_dimmer.mock_calls[0][1]
     assert value_id == value.value_id
 
+    device.stop_cover()
+    assert mock_network.manager.releaseButton.called
+    value_id, = mock_network.manager.releaseButton.mock_calls.pop(0)[1]
+    assert value_id == value.value_id
+
 def test_roller_reverse_open_close(hass, mock_openzwave):
     """Test position changed."""
     mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()

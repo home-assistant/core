@@ -109,7 +109,10 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
-        self._network.manager.releaseButton(self._open_id)
+        if not self._open_id:
+            self._network.manager.releaseButton(self.values.primary.value_id)
+        else:
+            self._network.manager.releaseButton(self._open_id)
 
 
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
