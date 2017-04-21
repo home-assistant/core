@@ -48,8 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         pushbullet = PushBullet(config.get(CONF_API_KEY))
     except InvalidKeyError:
-        _LOGGER.error("Wrong API key supplied." \
-                "Get it at https://www.pushbullet.com/account")
+        _LOGGER.error("Wrong API key supplied."
+                      "Get it at https://www.pushbullet.com/account")
         return None
     # Create a common data provider
     pbprovider = PushBulletNotificationProvider(pushbullet)
