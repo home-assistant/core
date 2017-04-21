@@ -193,9 +193,9 @@ class LgWebOSDevice(MediaPlayerDevice):
                             self._source_list[app['title']] = app
                         elif (app['id'] in conf_sources or
                               any(word in app['title']
-                              for word in conf_sources) or
+                                  for word in conf_sources) or
                               any(word in app['id']
-                              for word in conf_sources)):
+                                  for word in conf_sources)):
                             self._source_list[app['title']] = app
                     else:
                         self._current_source = app['title']
@@ -207,7 +207,7 @@ class LgWebOSDevice(MediaPlayerDevice):
                             self._source_list[source['label']] = source
                         elif (source['label'] in conf_sources or
                               any(source['label'].find(word) != -1
-                              for word in conf_sources)):
+                                  for word in conf_sources)):
                             self._source_list[source['label']] = source
                     else:
                         self._source_list[source['label']] = source
