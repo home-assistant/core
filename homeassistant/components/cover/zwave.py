@@ -91,14 +91,14 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
-        if self._workaround == workaround.WORKAROUND_NO_UPDOWN:
+        if not self._open_id:
             self.node.set_dimmer(self.values.primary.value_id, 100)
         else:
             self._network.manager.pressButton(self._open_id)
 
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
-        if self._workaround == workaround.WORKAROUND_NO_UPDOWN:
+        if not self._close_id:
             self.node.set_dimmer(self.values.primary.value_id, 0)
         else:
             self._network.manager.pressButton(self._close_id)
@@ -109,8 +109,6 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
-        if self._workaround == workaround.WORKAROUND_NO_UPDOWN:
-            self._network.manager.releaseButton(self.values.primary.value_id)
         self._network.manager.releaseButton(self._open_id)
 
 
