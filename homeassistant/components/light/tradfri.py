@@ -47,9 +47,9 @@ class Tradfri(Light):
 
         if self._light_data.hex_color is not None:
             if self._light.device_info.manufacturer == IKEA:
-                self._features &= SUPPORT_COLOR_TEMP
+                self._features |= SUPPORT_COLOR_TEMP
             else:
-                self._features &= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_RGB_COLOR
 
         self._ok_temps = ALLOWED_TEMPERATURES.get(
             self._light.device_info.manufacturer)
