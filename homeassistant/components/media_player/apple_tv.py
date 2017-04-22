@@ -51,7 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if discovery_info is not None:
         name = discovery_info['name']
         host = discovery_info['host']
-        login_id = discovery_info['hsgid']
+        login_id = discovery_info['properties']['hG']
         start_off = False
     else:
         name = config.get(CONF_NAME)
@@ -145,6 +145,8 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
+        self._playing = playing
+
         if self.state == STATE_IDLE:
             self._artwork_hash = None
         elif self._has_playing_media_changed(playing):
@@ -153,7 +155,6 @@ class AppleTvDevice(MediaPlayerDevice):
             self._artwork_hash = hashlib.md5(
                 base.encode('utf-8')).hexdigest()
 
-        self._playing = playing
         self.hass.async_add_job(self.async_update_ha_state())
 
     def _has_playing_media_changed(self, new_playing):

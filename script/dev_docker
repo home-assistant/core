@@ -27,6 +27,7 @@ else
     -v /etc/localtime:/etc/localtime:ro \
     -v `pwd`:/usr/src/app \
     -v `pwd`/config:/config \
+    --rm \
     -t -i home-assistant-dev
 
 fi

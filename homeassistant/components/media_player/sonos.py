@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         soco.config.EVENT_ADVERTISE_IP = advertise_addr
 
     if discovery_info:
-        player = soco.SoCo(discovery_info)
+        player = soco.SoCo(discovery_info.get('host'))
 
         # if device allready exists by config
         if player.uid in [x.unique_id for x in hass.data[DATA_SONOS]]:
@@ -292,7 +292,7 @@ class SonosDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe sonos events."""
-        self.hass.loop.run_in_executor(None, self._subscribe_to_player_events)
+        self.hass.async_add_job(self._subscribe_to_player_events)
 
     @property
     def should_poll(self):

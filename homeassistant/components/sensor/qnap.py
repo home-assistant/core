@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 
 import voluptuous as vol
 
-REQUIREMENTS = ['qnapstats==0.2.3']
+REQUIREMENTS = ['qnapstats==0.2.4']
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -10,146 +10,170 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
+    )
 
 REQUIREMENTS = ['PyMVGLive==1.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BUS = 'bus'
-CONF_DEST = 'destination'
-CONF_LINE = 'line'
-CONF_OFFSET = 'offset'
-CONF_SBAHN = 'sbahn'
+CONF_NEXT_DEPARTURE = 'nextdeparture'
+
 CONF_STATION = 'station'
-CONF_TRAM = 'tram'
-CONF_UBAHN = 'ubahn'
+CONF_DESTINATIONS = 'destinations'
+CONF_DIRECTIONS = 'directions'
+CONF_LINES = 'lines'
+CONF_PRODUCTS = 'products'
+CONF_TIMEOFFSET = 'timeoffset'
 
-ICON = 'mdi:bus'
+ICONS = {
+    'U-Bahn': 'mdi:subway',
+    'Tram': 'mdi:tram',
+    'Bus': 'mdi:bus',
+    'S-Bahn': 'mdi:train',
+    'SEV': 'mdi:checkbox-blank-circle-outline',
+    '-': 'mdi:clock'
+}
+ATTRIBUTION = "Data provided by MVG-live.de"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STATION): cv.string,
-    vol.Optional(CONF_DEST, default=None): cv.string,
-    vol.Optional(CONF_LINE, default=None): cv.string,
-    vol.Optional(CONF_OFFSET, default=0): cv.positive_int,
-    vol.Optional(CONF_UBAHN, default=True): cv.boolean,
-    vol.Optional(CONF_TRAM, default=True): cv.boolean,
-    vol.Optional(CONF_BUS, default=True): cv.boolean,
-    vol.Optional(CONF_SBAHN, default=True): cv.boolean,
+    vol.Optional(CONF_NEXT_DEPARTURE): [{
+        vol.Required(CONF_STATION): cv.string,
+        vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_PRODUCTS,
+                     default=['U-Bahn', 'Tram',
+                              'Bus', 'S-Bahn']): cv.ensure_list_csv,
+        vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
+        vol.Optional(CONF_NAME): cv.string}]
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MVG Live Sensor."""
-    station = config.get(CONF_STATION)
-    destination = config.get(CONF_DEST)
-    line = config.get(CONF_LINE)
-    offset = config.get(CONF_OFFSET)
-    ubahn = config.get(CONF_UBAHN)
-    tram = config.get(CONF_TRAM)
-    bus = config.get(CONF_BUS)
-    sbahn = config.get(CONF_SBAHN)
+    """Get the MVGLive sensor."""
+    sensors = []
+    for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
+        sensors.append(
+            MVGLiveSensor(
+                nextdeparture.get(CONF_STATION),
+                nextdeparture.get(CONF_DESTINATIONS),
+                nextdeparture.get(CONF_DIRECTIONS),
+                nextdeparture.get(CONF_LINES),
+                nextdeparture.get(CONF_PRODUCTS),
+                nextdeparture.get(CONF_TIMEOFFSET),
+                nextdeparture.get(CONF_NAME)))
+    add_devices(sensors, True)
 
-    add_devices([MVGLiveSensor(
-        station, destination, line, offset, ubahn, tram, bus, sbahn)], True)
 
-
+# pylint: disable=too-few-public-methods
 class MVGLiveSensor(Entity):
     """Implementation of an MVG Live sensor."""
 
-    def __init__(self, station, destination, line,
-                 offset, ubahn, tram, bus, sbahn):
+    def __init__(self, station, destinations, directions,
+                 lines, products, timeoffset, name):
         """Initialize the sensor."""
         self._station = station
-        self._destination = destination
-        self._line = line
-        self.data = MVGLiveData(station, destination, line,
-                                offset, ubahn, tram, bus, sbahn)
+        self._name = name
+        self.data = MVGLiveData(station, destinations, directions,
+                                lines, products, timeoffset)
         self._state = STATE_UNKNOWN
+        self._icon = ICONS['-']
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        # e.g.
-        # 'Hauptbahnhof (S1)'
-        # 'Hauptbahnhof-Marienplatz'
-        # 'Hauptbahnhof-Marienplatz (S1)'
-        namestr = self._station
-        if self._destination:
-            namestr = '{}-{}'.format(namestr, self._destination)
-        if self._line:
-            namestr = '{} ({})'.format(namestr, self._line)
-        return namestr
-
-    @property
-    def icon(self):
-        """Return the icon for the frontend."""
-        return ICON
+        if self._name:
+            return self._name
+        else:
+            return self._station
 
     @property
     def state(self):
-        """Return the departure time of the next train."""
+        """Return the next departure time."""
         return self._state
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return self.data.nextdeparture
+        return self.data.departures
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "min"
 
     def update(self):
         """Get the latest data and update the state."""
         self.data.update()
-        if not self.data.nextdeparture:
+        if not self.data.departures:
             self._state = '-'
+            self._icon = ICONS['-']
         else:
-            self._state = self.data.nextdeparture.get('time', '-')
+            self._state = self.data.departures.get('time', '-')
+            self._icon = ICONS[self.data.departures.get('product', '-')]
 
 
 class MVGLiveData(object):
     """Pull data from the mvg-live.de web page."""
 
-    def __init__(self, station, destination, line,
-                 offset, ubahn, tram, bus, sbahn):
+    def __init__(self, station, destinations, directions,
+                 lines, products, timeoffset):
         """Initialize the sensor."""
         import MVGLive
         self._station = station
-        self._destination = destination
-        self._line = line
-        self._offset = offset
-        self._ubahn = ubahn
-        self._tram = tram
-        self._bus = bus
-        self._sbahn = sbahn
+        self._destinations = destinations
+        self._directions = directions
+        self._lines = lines
+        self._products = products
+        self._timeoffset = timeoffset
+        self._include_ubahn = True if 'U-Bahn' in self._products else False
+        self._include_tram = True if 'Tram' in self._products else False
+        self._include_bus = True if 'Bus' in self._products else False
+        self._include_sbahn = True if 'S-Bahn' in self._products else False
         self.mvg = MVGLive.MVGLive()
-        self.nextdeparture = {}
+        self.departures = {}
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the connection data."""
         try:
-            _departures = self.mvg.getlivedata(
-                station=self._station, ubahn=self._ubahn, tram=self._tram,
-                bus=self._bus, sbahn=self._sbahn)
+            _departures = self.mvg.getlivedata(station=self._station,
+                                               ubahn=self._include_ubahn,
+                                               tram=self._include_tram,
+                                               bus=self._include_bus,
+                                               sbahn=self._include_sbahn)
         except ValueError:
-            self.nextdeparture = {}
+            self.departures = {}
             _LOGGER.warning("Returned data not understood.")
             return
         for _departure in _departures:
             # find the first departure meeting the criteria
-            if not _departure['destination'].startswith(self._destination):
+            if ('' not in self._destinations[:1] and
+                    _departure['destination'] not in self._destinations):
                 continue
-            elif _departure['time'] < self._offset:
+            elif ('' not in self._directions[:1] and
+                  _departure['direction'] not in self._directions):
+                continue
+            elif ('' not in self._lines[:1] and
+                  _departure['linename'] not in self._lines):
+                continue
+            elif _departure['time'] < self._timeoffset:
                 continue
             # now select the relevant data
-            _nextdep = {}
+            _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
             for k in ['destination', 'linename', 'time', 'direction',
                       'product']:
                 _nextdep[k] = _departure.get(k, '')
             _nextdep['time'] = int(_nextdep['time'])
-            self.nextdeparture = _nextdep
+            self.departures = _nextdep
             break
