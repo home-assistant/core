@@ -26,14 +26,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
 
     for device in cube.devices:
-        name = '{} {}'.format(cube.room_by_id(device.room_id).name, device.name)
+        name = '{} {}'.format(
+            cube.room_by_id(device.room_id).name, device.name)
 
         # Only add thermostats and wallthermostats
         if cube.is_thermostat(device) or cube.is_wallthermostat(device):
             # Add device to HASS
             devices.append(MaxCubeClimate(hass, name, device.rf_address))
 
-    if len(devices) :
+    if len(devices):
         add_devices(devices)
 
 
