@@ -8,7 +8,6 @@ from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY
 from homeassistant.util import color as color_util
-from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +47,12 @@ class Tradfri(Light):
 
         if self._light_data.hex_color is not None:
             if self._light.device_info.manufacturer == IKEA:
-                self._features &= SUPPORT_COLOR_TEMP
+                self._features |= SUPPORT_COLOR_TEMP
             else:
-                self._features &= SUPPORT_RGB_COLOR
+                self._features |= SUPPORT_RGB_COLOR
 
         self._ok_temps = ALLOWED_TEMPERATURES.get(
-            slugify(self._light.device_info.manufacturer))
+            self._light.device_info.manufacturer)
 
     @property
     def supported_features(self):
@@ -123,7 +122,7 @@ class Tradfri(Light):
             kelvin = color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP])
             # find closest allowed kelvin temp from user input
-            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x-kelvin))
+            kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
             self._light_control.set_hex_color(self._ok_temps[kelvin])
 
     def update(self):
