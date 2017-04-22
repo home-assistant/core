@@ -30,8 +30,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
-        location = discovery_info[2]
-        mac = discovery_info[3]
+        location = discovery_info['ssdp_description']
+        mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
 
         if device:
