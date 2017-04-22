@@ -6,7 +6,7 @@ import unittest
 from tests.common import get_test_home_assistant, mock_restore_cache
 
 from homeassistant.core import State
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_select import (
     ATTR_OPTIONS, DOMAIN, SERVICE_SET_OPTIONS,
     select_option, select_next, select_previous)
@@ -229,7 +229,6 @@ def test_restore_state(hass):
             'middle option',
             'last option',
         ],
-        'initial': 'middle option',
     }
 
     yield from async_setup_component(hass, DOMAIN, {
@@ -241,6 +240,38 @@ def test_restore_state(hass):
     state = hass.states.get('input_select.s1')
     assert state
     assert state.state == 'last option'
+
+    state = hass.states.get('input_select.s2')
+    assert state
+    assert state.state == 'first option'
+
+
+@asyncio.coroutine
+def test_initial_state_overrules_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('input_select.s1', 'last option'),
+        State('input_select.s2', 'bad option'),
+    ))
+
+    options = {
+        'options': [
+            'first option',
+            'middle option',
+            'last option',
+        ],
+        'initial': 'middle option',
+    }
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            's1': options,
+            's2': options,
+        }})
+
+    state = hass.states.get('input_select.s1')
+    assert state
+    assert state.state == 'middle option'
 
     state = hass.states.get('input_select.s2')
     assert state

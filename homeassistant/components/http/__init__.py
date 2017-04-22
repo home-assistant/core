@@ -9,7 +9,6 @@ import json
 import logging
 import ssl
 from ipaddress import ip_network
-from pathlib import Path
 
 import os
 import voluptuous as vol
@@ -31,11 +30,13 @@ from .const import (
     KEY_USE_X_FORWARDED_FOR, KEY_TRUSTED_NETWORKS,
     KEY_BANS_ENABLED, KEY_LOGIN_THRESHOLD,
     KEY_DEVELOPMENT, KEY_AUTHENTICATED)
-from .static import FILE_SENDER, CACHING_FILE_SENDER, staticresource_middleware
+from .static import (
+    staticresource_middleware, CachingFileResponse, CachingStaticResource)
 from .util import get_real_ip
 
+REQUIREMENTS = ['aiohttp_cors==0.5.2']
+
 DOMAIN = 'http'
-REQUIREMENTS = ('aiohttp_cors==0.5.0',)
 
 CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
@@ -187,7 +188,7 @@ class HomeAssistantWSGI(object):
         if is_ban_enabled:
             middlewares.insert(0, ban_middleware)
 
-        self.app = web.Application(middlewares=middlewares, loop=hass.loop)
+        self.app = web.Application(middlewares=middlewares)
         self.app['hass'] = hass
         self.app[KEY_USE_X_FORWARDED_FOR] = use_x_forwarded_for
         self.app[KEY_TRUSTED_NETWORKS] = trusted_networks
@@ -255,31 +256,39 @@ class HomeAssistantWSGI(object):
 
         self.app.router.add_route('GET', url, redirect)
 
-    def register_static_path(self, url_root, path, cache_length=31):
-        """Register a folder to serve as a static path.
-
-        Specify optional cache length of asset in days.
-        """
+    def register_static_path(self, url_path, path, cache_headers=True):
+        """Register a folder or file to serve as a static path."""
         if os.path.isdir(path):
-            self.app.router.add_static(url_root, path)
+            if cache_headers:
+                resource = CachingStaticResource
+            else:
+                resource = web.StaticResource
+
+            self.app.router.register_resource(resource(url_path, path))
             return
 
-        filepath = Path(path)
-
-        @asyncio.coroutine
-        def serve_file(request):
-            """Serve file from disk."""
-            res = yield from CACHING_FILE_SENDER.send(request, filepath)
-            return res
+        if cache_headers:
+            @asyncio.coroutine
+            def serve_file(request):
+                """Serve file from disk."""
+                return CachingFileResponse(path)
+        else:
+            @asyncio.coroutine
+            def serve_file(request):
+                """Serve file from disk."""
+                return web.FileResponse(path)
 
         # aiohttp supports regex matching for variables. Using that as temp
         # to work around cache busting MD5.
         # Turns something like /static/dev-panel.html into
         # /static/{filename:dev-panel(-[a-z0-9]{32}|)\.html}
-        base, ext = url_root.rsplit('.', 1)
-        base, file = base.rsplit('/', 1)
-        regex = r"{}(-[a-z0-9]{{32}}|)\.{}".format(file, ext)
-        url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        base, ext = os.path.splitext(url_path)
+        if ext:
+            base, file = base.rsplit('/', 1)
+            regex = r"{}(-[a-z0-9]{{32}}|){}".format(file, ext)
+            url_pattern = "{}/{{filename:{}}}".format(base, regex)
+        else:
+            url_pattern = url_path
 
         self.app.router.add_route('GET', url_pattern, serve_file)
 
@@ -318,7 +327,7 @@ class HomeAssistantWSGI(object):
         # re-register all redirects, views, static paths.
         self.app._frozen = True  # pylint: disable=protected-access
 
-        self._handler = self.app.make_handler()
+        self._handler = self.app.make_handler(loop=self.hass.loop)
 
         try:
             self.server = yield from self.hass.loop.create_server(
@@ -365,8 +374,7 @@ class HomeAssistantView(object):
     def file(self, request, fil):
         """Return a file."""
         assert isinstance(fil, str), 'only string paths allowed'
-        response = yield from FILE_SENDER.send(request, Path(fil))
-        return response
+        return web.FileResponse(fil)
 
     def register(self, router):
         """Register the view with a router."""

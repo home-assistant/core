@@ -5,6 +5,7 @@ import unittest
 from unittest.mock import patch, MagicMock, sentinel
 from datetime import datetime, timedelta
 
+import logging
 import pytz
 import pytest
 
@@ -16,7 +17,7 @@ from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_HOMEASSISTANT_START)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
 
 from tests.common import get_test_home_assistant
 
@@ -619,6 +620,15 @@ class TestServiceRegistry(unittest.TestCase):
 
         self.services.register("Test_Domain", "TEST_SERVICE", mock_service)
 
+        self.calls_register = []
+
+        @ha.callback
+        def mock_event_register(event):
+            """Mock register event."""
+            self.calls_register.append(event)
+
+        self.hass.bus.listen(EVENT_SERVICE_REGISTERED, mock_event_register)
+
     # pylint: disable=invalid-name
     def tearDown(self):
         """Stop down stuff we started."""
@@ -649,8 +659,13 @@ class TestServiceRegistry(unittest.TestCase):
             """Service handler."""
             calls.append(call)
 
-        self.services.register("test_domain", "register_calls",
-                               service_handler)
+        self.services.register(
+            "test_domain", "register_calls", service_handler)
+        self.hass.block_till_done()
+
+        assert len(self.calls_register) == 1
+        assert self.calls_register[-1].data['domain'] == 'test_domain'
+        assert self.calls_register[-1].data['service'] == 'register_calls'
 
         self.assertTrue(
             self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
@@ -675,8 +690,14 @@ class TestServiceRegistry(unittest.TestCase):
             """Service handler coroutine."""
             calls.append(call)
 
-        self.services.register('test_domain', 'register_calls',
-                               service_handler)
+        self.services.register(
+            'test_domain', 'register_calls', service_handler)
+        self.hass.block_till_done()
+
+        assert len(self.calls_register) == 1
+        assert self.calls_register[-1].data['domain'] == 'test_domain'
+        assert self.calls_register[-1].data['service'] == 'register_calls'
+
         self.assertTrue(
             self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
         self.hass.block_till_done()
@@ -691,12 +712,55 @@ class TestServiceRegistry(unittest.TestCase):
             """Service handler coroutine."""
             calls.append(call)
 
-        self.services.register('test_domain', 'register_calls',
-                               service_handler)
+        self.services.register(
+            'test_domain', 'register_calls', service_handler)
+        self.hass.block_till_done()
+
+        assert len(self.calls_register) == 1
+        assert self.calls_register[-1].data['domain'] == 'test_domain'
+        assert self.calls_register[-1].data['service'] == 'register_calls'
+
         self.assertTrue(
             self.services.call('test_domain', 'REGISTER_CALLS', blocking=True))
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
+
+    def test_remove_service(self):
+        """Test remove service."""
+        calls_remove = []
+
+        @ha.callback
+        def mock_event_remove(event):
+            """Mock register event."""
+            calls_remove.append(event)
+
+        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
+
+        assert self.services.has_service('test_Domain', 'test_Service')
+
+        self.services.remove('test_Domain', 'test_Service')
+        self.hass.block_till_done()
+
+        assert not self.services.has_service('test_Domain', 'test_Service')
+        assert len(calls_remove) == 1
+        assert calls_remove[-1].data['domain'] == 'test_domain'
+        assert calls_remove[-1].data['service'] == 'test_service'
+
+    def test_remove_service_that_not_exists(self):
+        """Test remove service that not exists."""
+        calls_remove = []
+
+        @ha.callback
+        def mock_event_remove(event):
+            """Mock register event."""
+            calls_remove.append(event)
+
+        self.hass.bus.listen(EVENT_SERVICE_REMOVED, mock_event_remove)
+
+        assert not self.services.has_service('test_xxx', 'test_yyy')
+        self.services.remove('test_xxx', 'test_yyy')
+        self.hass.block_till_done()
+        assert len(calls_remove) == 0
 
 
 class TestConfig(unittest.TestCase):
@@ -749,28 +813,21 @@ def test_create_timer(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    with patch.object(ha, 'callback', mock_callback):
-        ha._async_create_timer(hass)
-
-        assert len(funcs) == 3
-        fire_time_event, start_timer, stop_timer = funcs
-
-    assert len(hass.bus.async_listen_once.mock_calls) == 1
-    event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
-    assert event_type == EVENT_HOMEASSISTANT_START
-    assert callback is start_timer
-
     mock_monotonic.side_effect = 10.2, 10.3
 
-    with patch('homeassistant.core.dt_util.utcnow',
-               return_value=sentinel.mock_date):
-        start_timer(None)
+    with patch.object(ha, 'callback', mock_callback), \
+            patch('homeassistant.core.dt_util.utcnow',
+                  return_value=sentinel.mock_date):
+        ha._async_create_timer(hass)
 
-    assert len(hass.bus.async_listen_once.mock_calls) == 2
+        assert len(funcs) == 2
+        fire_time_event, stop_timer = funcs
+
+    assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
     assert len(hass.loop.call_later.mock_calls) == 1
 
-    event_type, callback = hass.bus.async_listen_once.mock_calls[1][1]
+    event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
@@ -795,17 +852,15 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    with patch.object(ha, 'callback', mock_callback):
-        ha._async_create_timer(hass)
-
-        assert len(funcs) == 3
-        fire_time_event, start_timer, stop_timer = funcs
-
     mock_monotonic.side_effect = 10.2, 11.3, 11.3
 
-    with patch('homeassistant.core.dt_util.utcnow',
-               return_value=sentinel.mock_date):
-        start_timer(None)
+    with patch.object(ha, 'callback', mock_callback), \
+            patch('homeassistant.core.dt_util.utcnow',
+                  return_value=sentinel.mock_date):
+        ha._async_create_timer(hass)
+
+        assert len(funcs) == 2
+        fire_time_event, stop_timer = funcs
 
     assert len(hass.loop.call_later.mock_calls) == 1
 
@@ -813,3 +868,60 @@ def test_timer_out_of_sync(mock_monotonic, loop):
     assert slp_seconds == 1
     assert callback is fire_time_event
     assert abs(nxt - 12.3) < 0.001
+
+
+@asyncio.coroutine
+def test_hass_start_starts_the_timer(loop):
+    """Test when hass starts, it starts the timer."""
+    hass = ha.HomeAssistant(loop=loop)
+
+    try:
+        with patch('homeassistant.core._async_create_timer') as mock_timer:
+            yield from hass.async_start()
+
+        assert hass.state == ha.CoreState.running
+        assert not hass._track_task
+        assert len(mock_timer.mock_calls) == 1
+        assert mock_timer.mock_calls[0][1][0] is hass
+
+    finally:
+        yield from hass.async_stop()
+        assert hass.state == ha.CoreState.not_running
+
+
+@asyncio.coroutine
+def test_start_taking_too_long(loop, caplog):
+    """Test when async_start takes too long."""
+    hass = ha.HomeAssistant(loop=loop)
+    caplog.set_level(logging.WARNING)
+
+    try:
+        with patch('homeassistant.core.timeout',
+                   side_effect=asyncio.TimeoutError), \
+             patch('homeassistant.core._async_create_timer') as mock_timer:
+            yield from hass.async_start()
+
+        assert hass.state == ha.CoreState.running
+        assert len(mock_timer.mock_calls) == 1
+        assert mock_timer.mock_calls[0][1][0] is hass
+        assert 'Something is blocking Home Assistant' in caplog.text
+
+    finally:
+        yield from hass.async_stop()
+        assert hass.state == ha.CoreState.not_running
+
+
+@asyncio.coroutine
+def test_track_task_functions(loop):
+    """Test function to start/stop track task and initial state."""
+    hass = ha.HomeAssistant(loop=loop)
+    try:
+        assert hass._track_task
+
+        hass.async_stop_track_tasks()
+        assert not hass._track_task
+
+        hass.async_track_tasks()
+        assert hass._track_task
+    finally:
+        yield from hass.async_stop()

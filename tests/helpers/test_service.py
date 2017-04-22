@@ -21,22 +21,9 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass = get_test_home_assistant()
         self.calls = mock_service(self.hass, 'test_domain', 'test_service')
 
-        service.HASS = self.hass
-
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop down everything that was started."""
         self.hass.stop()
-
-    def test_service(self):
-        """Test service registration decorator."""
-        runs = []
-
-        decor = service.service('test', 'test')
-        decor(lambda x, y: runs.append(1))
-
-        self.hass.services.call('test', 'test')
-        self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
 
     def test_template_service_call(self):
         """Test service call with tempating."""
@@ -52,18 +39,14 @@ class TestServiceHelpers(unittest.TestCase):
                 'list': ['{{ \'list\' }}', '2'],
             },
         }
-        runs = []
-
-        decor = service.service('test_domain', 'test_service')
-        decor(lambda x, y: runs.append(y))
 
         service.call_from_config(self.hass, config)
         self.hass.block_till_done()
 
-        self.assertEqual('goodbye', runs[0].data['hello'])
-        self.assertEqual('complex', runs[0].data['data']['value'])
-        self.assertEqual('simple', runs[0].data['data']['simple'])
-        self.assertEqual('list', runs[0].data['list'][0])
+        self.assertEqual('goodbye', self.calls[0].data['hello'])
+        self.assertEqual('complex', self.calls[0].data['data']['value'])
+        self.assertEqual('simple', self.calls[0].data['data']['simple'])
+        self.assertEqual('list', self.calls[0].data['list'][0])
 
     def test_passing_variables_to_templates(self):
         """Test passing variables to templates."""
@@ -74,10 +57,6 @@ class TestServiceHelpers(unittest.TestCase):
                 'hello': '{{ var_data }}',
             },
         }
-        runs = []
-
-        decor = service.service('test_domain', 'test_service')
-        decor(lambda x, y: runs.append(y))
 
         service.call_from_config(self.hass, config, variables={
             'var_service': 'test_domain.test_service',
@@ -85,7 +64,7 @@ class TestServiceHelpers(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        self.assertEqual('goodbye', runs[0].data['hello'])
+        self.assertEqual('goodbye', self.calls[0].data['hello'])
 
     def test_split_entity_string(self):
         """Test splitting of entity string."""

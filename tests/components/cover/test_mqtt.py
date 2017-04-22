@@ -1,7 +1,7 @@
 """The tests for the MQTT cover platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN
 import homeassistant.components.cover as cover
 

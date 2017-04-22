@@ -4,15 +4,15 @@ import asyncio
 import unittest
 import logging
 
-from tests.common import get_test_home_assistant, mock_component
-
 from homeassistant.core import CoreState, State
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
-    DOMAIN, is_on, toggle, turn_off, turn_on)
+    DOMAIN, is_on, toggle, turn_off, turn_on, CONF_INITIAL)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+
+from tests.common import (
+    get_test_home_assistant, mock_component, mock_restore_cache)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,11 +111,11 @@ class TestInputBoolean(unittest.TestCase):
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
-    hass.data[DATA_RESTORE_CACHE] = {
-        'input_boolean.b1': State('input_boolean.b1', 'on'),
-        'input_boolean.b2': State('input_boolean.b2', 'off'),
-        'input_boolean.b3': State('input_boolean.b3', 'on'),
-    }
+    mock_restore_cache(hass, (
+        State('input_boolean.b1', 'on'),
+        State('input_boolean.b2', 'off'),
+        State('input_boolean.b3', 'on'),
+    ))
 
     hass.state = CoreState.starting
     mock_component(hass, 'recorder')
@@ -133,3 +133,28 @@ def test_restore_state(hass):
     state = hass.states.get('input_boolean.b2')
     assert state
     assert state.state == 'off'
+
+
+@asyncio.coroutine
+def test_initial_state_overrules_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('input_boolean.b1', 'on'),
+        State('input_boolean.b2', 'off'),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'b1': {CONF_INITIAL: False},
+            'b2': {CONF_INITIAL: True},
+        }})
+
+    state = hass.states.get('input_boolean.b1')
+    assert state
+    assert state.state == 'off'
+
+    state = hass.states.get('input_boolean.b2')
+    assert state
+    assert state.state == 'on'

@@ -7,18 +7,21 @@ Knows which components handle certain types, will make sure they are
 loaded before the EVENT_PLATFORM_DISCOVERED is fired.
 """
 import asyncio
+import json
 from datetime import timedelta
 import logging
+import os
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==0.9.1']
+REQUIREMENTS = ['netdisco==1.0.0rc3']
 
 DOMAIN = 'discovery'
 
@@ -26,11 +29,15 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HASS_IOS_APP = 'hass_ios'
+SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
+SERVICE_HASSIO = 'hassio'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
+    SERVICE_IKEA_TRADFRI: ('tradfri', None),
+    SERVICE_HASSIO: ('hassio', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
@@ -43,10 +50,10 @@ SERVICE_HANDLERS = {
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
-    'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
+    'bose_soundtouch': ('media_player', 'soundtouch'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -66,6 +73,7 @@ def async_setup(hass, config):
 
     logger = logging.getLogger(__name__)
     netdisco = NetworkDiscovery()
+    already_discovered = set()
 
     # Disable zeroconf logging, it spams
     logging.getLogger('zeroconf').setLevel(logging.CRITICAL)
@@ -80,13 +88,19 @@ def async_setup(hass, config):
             logger.info("Ignoring service: %s %s", service, info)
             return
 
-        logger.info("Found new service: %s %s", service, info)
-
         comp_plat = SERVICE_HANDLERS.get(service)
 
         # We do not know how to handle this service.
         if not comp_plat:
             return
+
+        discovery_hash = json.dumps([service, info], sort_keys=True)
+        if discovery_hash in already_discovered:
+            return
+
+        already_discovered.add(discovery_hash)
+
+        logger.info("Found new service: %s %s", service, info)
 
         component, platform = comp_plat
 
@@ -97,7 +111,7 @@ def async_setup(hass, config):
                 hass, component, platform, info, config)
 
     @asyncio.coroutine
-    def scan_devices(_):
+    def scan_devices(now):
         """Scan for devices."""
         results = yield from hass.loop.run_in_executor(
             None, _discover, netdisco)
@@ -108,7 +122,16 @@ def async_setup(hass, config):
         async_track_point_in_utc_time(hass, scan_devices,
                                       dt_util.utcnow() + SCAN_INTERVAL)
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, scan_devices)
+    @callback
+    def schedule_first(event):
+        """Schedule the first discovery when Home Assistant starts up."""
+        async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
+
+        # discovery local services
+        if 'HASSIO' in os.environ:
+            hass.async_add_job(new_service_found(SERVICE_HASSIO, {}))
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 
     return True
 

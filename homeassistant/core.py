@@ -18,6 +18,7 @@ from time import monotonic
 from types import MappingProxyType
 from typing import Optional, Any, Callable, List  # NOQA
 
+from async_timeout import timeout
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -26,21 +27,17 @@ from homeassistant.const import (
     ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE, __version__)
+    EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_SERVICE_REMOVED, __version__)
 from homeassistant.exceptions import (
-    HomeAssistantError, InvalidEntityFormatError, ShuttingDown)
+    HomeAssistantError, InvalidEntityFormatError)
 from homeassistant.util.async import (
-    run_coroutine_threadsafe, run_callback_threadsafe)
+    run_coroutine_threadsafe, run_callback_threadsafe,
+    fire_coroutine_threadsafe)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
-
-try:
-    import uvloop
-    asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
-except ImportError:
-    pass
 
 DOMAIN = 'homeassistant'
 
@@ -53,6 +50,8 @@ ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 # Size of a executor pool
 EXECUTOR_POOL_SIZE = 10
 
+# How long to wait till things that run on startup have to finish.
+TIMEOUT_EVENT_START = 15
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,10 +84,6 @@ def async_loop_exception_handler(loop, context):
     kwargs = {}
     exception = context.get('exception')
     if exception:
-        # Do not report on shutting down exceptions.
-        if isinstance(exception, ShuttingDown):
-            return
-
         kwargs['exc_info'] = (type(exception), exception,
                               exception.__traceback__)
 
@@ -122,7 +117,7 @@ class HomeAssistant(object):
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(async_loop_exception_handler)
         self._pending_tasks = []
-        self._track_task = False
+        self._track_task = True
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
         self.states = StateMachine(self.bus, self.loop)
@@ -140,15 +135,17 @@ class HomeAssistant(object):
     def start(self) -> None:
         """Start home assistant."""
         # Register the async start
-        self.loop.create_task(self.async_start())
+        fire_coroutine_threadsafe(self.async_start(), self.loop)
 
         # Run forever and catch keyboard interrupt
         try:
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
+            return self.exit_code
         except KeyboardInterrupt:
-            self.loop.create_task(self.async_stop())
+            self.loop.call_soon_threadsafe(
+                self.loop.create_task, self.async_stop())
             self.loop.run_forever()
         finally:
             self.loop.close()
@@ -164,9 +161,22 @@ class HomeAssistant(object):
 
         # pylint: disable=protected-access
         self.loop._thread_ident = threading.get_ident()
-        _async_create_timer(self)
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
+
+        try:
+            # only block for EVENT_HOMEASSISTANT_START listener
+            self.async_stop_track_tasks()
+            with timeout(TIMEOUT_EVENT_START, loop=self.loop):
+                yield from self.async_block_till_done()
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                'Something is blocking Home Assistant from wrapping up the '
+                'start up phase. We\'re going to continue anyway. Please '
+                'report the following info at http://bit.ly/2ogP58T : %s',
+                ', '.join(self.config.components))
+
         self.state = CoreState.running
+        _async_create_timer(self)
 
     def add_job(self, target: Callable[..., None], *args: Any) -> None:
         """Add job to the executor pool.
@@ -209,10 +219,9 @@ class HomeAssistant(object):
         """Track tasks so you can wait for all tasks to be done."""
         self._track_task = True
 
-    @asyncio.coroutine
+    @callback
     def async_stop_track_tasks(self):
-        """Track tasks so you can wait for all tasks to be done."""
-        yield from self.async_block_till_done()
+        """Stop track tasks so you can't wait for all tasks to be done."""
         self._track_task = False
 
     @callback
@@ -251,7 +260,7 @@ class HomeAssistant(object):
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
-        run_coroutine_threadsafe(self.async_stop(), self.loop)
+        fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
     @asyncio.coroutine
     def async_stop(self, exit_code=0) -> None:
@@ -367,10 +376,6 @@ class EventBus(object):
 
         This method must be run in the event loop.
         """
-        if event_type != EVENT_HOMEASSISTANT_STOP and \
-                self._hass.state == CoreState.stopping:
-            raise ShuttingDown("Home Assistant is shutting down")
-
         listeners = self._listeners.get(event_type, [])
 
         # EVENT_HOMEASSISTANT_CLOSE should go only to his listeners
@@ -643,7 +648,7 @@ class StateMachine(object):
         Async friendly.
         """
         state_obj = self.get(entity_id)
-        return state_obj and state_obj.state == state
+        return state_obj is not None and state_obj.state == state
 
     def is_state_attr(self, entity_id, name, value):
         """Test if entity exists and has a state attribute set to value.
@@ -651,7 +656,8 @@ class StateMachine(object):
         Async friendly.
         """
         state_obj = self.get(entity_id)
-        return state_obj and state_obj.attributes.get(name, None) == value
+        return state_obj is not None and \
+            state_obj.attributes.get(name, None) == value
 
     def remove(self, entity_id):
         """Remove the state of an entity.
@@ -861,6 +867,32 @@ class ServiceRegistry(object):
 
         self._hass.bus.async_fire(
             EVENT_SERVICE_REGISTERED,
+            {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
+        )
+
+    def remove(self, domain, service):
+        """Remove a registered service from service handler."""
+        run_callback_threadsafe(
+            self._hass.loop, self.async_remove, domain, service).result()
+
+    @callback
+    def async_remove(self, domain, service):
+        """Remove a registered service from service handler.
+
+        This method must be run in the event loop.
+        """
+        domain = domain.lower()
+        service = service.lower()
+
+        if service not in self._services.get(domain, {}):
+            _LOGGER.warning(
+                "Unable to remove unknown service %s/%s.", domain, service)
+            return
+
+        self._services[domain].pop(service)
+
+        self._hass.bus.async_fire(
+            EVENT_SERVICE_REMOVED,
             {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 
@@ -1074,16 +1106,12 @@ def _async_create_timer(hass):
         handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
 
     @callback
-    def start_timer(event):
-        """Create an async timer."""
-        _LOGGER.info("Timer:starting")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
-        fire_time_event(monotonic())
-
-    @callback
     def stop_timer(event):
         """Stop the timer."""
         if handle is not None:
             handle.cancel()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_timer)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
+
+    _LOGGER.info("Timer:starting")
+    fire_time_event(monotonic())

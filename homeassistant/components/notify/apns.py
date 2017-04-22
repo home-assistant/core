@@ -126,6 +126,27 @@ class ApnsDevice(object):
         return not self.__eq__(other)
 
 
+def _write_device(out, device):
+    """Write a single device to file."""
+    attributes = []
+    if device.name is not None:
+        attributes.append(
+            'name: {}'.format(device.name))
+    if device.tracking_device_id is not None:
+        attributes.append(
+            'tracking_device_id: {}'.format(device.tracking_device_id))
+    if device.disabled:
+        attributes.append('disabled: True')
+
+    out.write(device.push_id)
+    out.write(": {")
+    if len(attributes) > 0:
+        separator = ", "
+        out.write(separator.join(attributes))
+
+    out.write("}\n")
+
+
 class ApnsNotificationService(BaseNotificationService):
     """Implement the notification service for the APNS service."""
 
@@ -169,34 +190,12 @@ class ApnsNotificationService(BaseNotificationService):
         has a tracking id specified.
         """
         self.device_states[entity_id] = str(to_s.state)
-        return
-
-    @staticmethod
-    def write_device(out, device):
-        """Write a single device to file."""
-        attributes = []
-        if device.name is not None:
-            attributes.append(
-                'name: {}'.format(device.name))
-        if device.tracking_device_id is not None:
-            attributes.append(
-                'tracking_device_id: {}'.format(device.tracking_device_id))
-        if device.disabled:
-            attributes.append('disabled: True')
-
-        out.write(device.push_id)
-        out.write(": {")
-        if len(attributes) > 0:
-            separator = ", "
-            out.write(separator.join(attributes))
-
-        out.write("}\n")
 
     def write_devices(self):
         """Write all known devices to file."""
         with open(self.yaml_path, 'w+') as out:
             for _, device in self.devices.items():
-                ApnsNotificationService.write_device(out, device)
+                _write_device(out, device)
 
     def register(self, call):
         """Register a device to receive push messages."""
@@ -215,7 +214,7 @@ class ApnsNotificationService(BaseNotificationService):
         if current_device is None:
             self.devices[push_id] = device
             with open(self.yaml_path, 'a') as out:
-                self.write_device(out, device)
+                _write_device(out, device)
             return True
 
         if device != current_device:

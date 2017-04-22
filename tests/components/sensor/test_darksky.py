@@ -9,7 +9,7 @@ import requests_mock
 from datetime import timedelta
 
 from homeassistant.components.sensor import darksky
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import load_fixture, get_test_home_assistant
 
@@ -36,10 +36,8 @@ class TestDarkSkySetup(unittest.TestCase):
             'monitored_conditions': ['summary', 'icon', 'temperature_max'],
             'update_interval': timedelta(seconds=120),
         }
-        self.lat = 37.8267
-        self.lon = -122.423
-        self.hass.config.latitude = self.lat
-        self.hass.config.longitude = self.lon
+        self.lat = self.hass.config.latitude = 37.8267
+        self.lon = self.hass.config.longitude = -122.423
         self.entities = []
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -50,11 +48,6 @@ class TestDarkSkySetup(unittest.TestCase):
         """Test the platform setup with configuration."""
         self.assertTrue(
             setup_component(self.hass, 'sensor', {'darksky': self.config}))
-
-    def test_setup_no_latitude(self):
-        """Test that the component is not loaded without required config."""
-        self.hass.config.latitude = None
-        self.assertFalse(darksky.setup_platform(self.hass, {}, MagicMock()))
 
     @patch('forecastio.api.get_forecast')
     def test_setup_bad_api_key(self, mock_get_forecast):

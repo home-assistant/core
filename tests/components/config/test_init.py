@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.const import EVENT_COMPONENT_LOADED
-from homeassistant.bootstrap import async_setup_component, ATTR_COMPONENT
+from homeassistant.setup import async_setup_component, ATTR_COMPONENT
 from homeassistant.components import config
 
 from tests.common import mock_http_component, mock_coro, mock_component

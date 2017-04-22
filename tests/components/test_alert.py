@@ -3,7 +3,7 @@
 from copy import deepcopy
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.core import callback
 import homeassistant.components.alert as alert
 import homeassistant.components.notify as notify
@@ -166,7 +166,7 @@ class TestAlert(unittest.TestCase):
     def test_noack(self):
         """Test no ack feature."""
         entity = alert.Alert(self.hass, *TEST_NOACK)
-        self.hass.async_add_job(entity.begin_alerting)
+        self.hass.add_job(entity.begin_alerting)
         self.hass.block_till_done()
 
         self.assertEqual(True, entity.hidden)

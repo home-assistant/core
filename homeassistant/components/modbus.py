@@ -158,6 +158,15 @@ class ModbusHub(object):
                 count,
                 **kwargs)
 
+    def read_input_registers(self, unit, address, count):
+        """Read input registers."""
+        with self._lock:
+            kwargs = {'unit': unit} if unit else {}
+            return self._client.read_input_registers(
+                address,
+                count,
+                **kwargs)
+
     def read_holding_registers(self, unit, address, count):
         """Read holding registers."""
         with self._lock:

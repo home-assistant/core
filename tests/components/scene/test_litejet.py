@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest import mock
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import litejet
 from tests.common import get_test_home_assistant
 import homeassistant.components.scene as scene
@@ -35,7 +35,7 @@ class TestLiteJetScene(unittest.TestCase):
         self.mock_lj.scenes.return_value = range(1, 3)
         self.mock_lj.get_scene_name.side_effect = get_scene_name
 
-        assert bootstrap.setup_component(
+        assert setup.setup_component(
             self.hass,
             litejet.DOMAIN,
             {

@@ -5,7 +5,7 @@ import unittest
 from unittest.mock import patch
 import requests
 
-from homeassistant import bootstrap, const, core
+from homeassistant import setup, const, core
 import homeassistant.components as core_components
 from homeassistant.components import emulated_hue, http
 from homeassistant.util.async import run_coroutine_threadsafe
@@ -28,11 +28,11 @@ def setup_hass_instance(emulated_hue_config):
         core_components.async_setup(hass, {core.DOMAIN: {}}), hass.loop
     ).result()
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}})
 
-    bootstrap.setup_component(hass, emulated_hue.DOMAIN, emulated_hue_config)
+    setup.setup_component(hass, emulated_hue.DOMAIN, emulated_hue_config)
 
     return hass
 
@@ -57,13 +57,13 @@ class TestEmulatedHue(unittest.TestCase):
             core_components.async_setup(hass, {core.DOMAIN: {}}), hass.loop
         ).result()
 
-        bootstrap.setup_component(
+        setup.setup_component(
             hass, http.DOMAIN,
             {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}})
 
         with patch('homeassistant.components'
                    '.emulated_hue.UPNPResponderThread'):
-            bootstrap.setup_component(hass, emulated_hue.DOMAIN, {
+            setup.setup_component(hass, emulated_hue.DOMAIN, {
                 emulated_hue.DOMAIN: {
                     emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT
                 }})

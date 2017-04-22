@@ -67,7 +67,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         This method is called when there is an incoming packet associated
         with this platform.
         """
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         if value2 == 0x70:
             self.which = 0
             self.onoff = 0

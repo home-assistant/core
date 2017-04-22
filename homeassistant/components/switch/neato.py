@@ -5,12 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
 import logging
-
+import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['neato']
 
 SWITCH_TYPE_CLEAN = 'clean'
 SWITCH_TYPE_SCHEDULE = 'scedule'
@@ -23,9 +25,6 @@ SWITCH_TYPES = {
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Neato switches."""
-    if not hass.data[NEATO_ROBOTS]:
-        return False
-
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
@@ -43,7 +42,12 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
         self._robot_name = self.robot.name + ' ' + SWITCH_TYPES[self.type][0]
-        self._state = self.robot.state
+        try:
+            self._state = self.robot.state
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as ex:
+            _LOGGER.warning('Neato connection error: %s', ex)
+            self._state = None
         self._schedule_state = None
         self._clean_state = None
 
@@ -51,9 +55,13 @@ class NeatoConnectedSwitch(ToggleEntity):
         """Update the states of Neato switches."""
         _LOGGER.debug('Running switch update')
         self.neato.update_robots()
-        if not self._state:
+        try:
+            self._state = self.robot.state
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as ex:
+            _LOGGER.warning('Neato connection error: %s', ex)
+            self._state = None
             return
-        self._state = self.robot.state
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_CLEAN:
             if (self.robot.state['action'] == 1 or

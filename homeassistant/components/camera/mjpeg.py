@@ -19,7 +19,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_stream)
+    async_get_clientsession, async_aiohttp_proxy_web)
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,6 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup a MJPEG IP Camera."""
+    if discovery_info:
+        config = PLATFORM_SCHEMA(discovery_info)
     async_add_devices([MjpegCamera(hass, config)])
 
 
@@ -91,7 +93,6 @@ class MjpegCamera(Camera):
             return image
 
         websession = async_get_clientsession(self.hass)
-        response = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from websession.get(
@@ -103,13 +104,8 @@ class MjpegCamera(Camera):
         except asyncio.TimeoutError:
             _LOGGER.error('Timeout getting camera image')
 
-        except (aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as err:
+        except aiohttp.ClientError as err:
             _LOGGER.error('Error getting new camera image: %s', err)
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
     def camera_image(self):
         """Return a still image response from the camera."""
@@ -138,7 +134,7 @@ class MjpegCamera(Camera):
         websession = async_get_clientsession(self.hass)
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
-        yield from async_aiohttp_proxy_stream(self.hass, request, stream_coro)
+        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):

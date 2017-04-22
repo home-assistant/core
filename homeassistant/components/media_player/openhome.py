@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 
-REQUIREMENTS = ['openhomedevice==0.2']
+REQUIREMENTS = ['openhomedevice==0.2.1']
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
@@ -31,20 +31,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Openhome Platform."""
     from openhomedevice.Device import Device
 
-    if discovery_info:
-        _LOGGER.info('Openhome device found, (%s)', discovery_info[0])
-        device = Device(discovery_info[1])
-
-        # if device has already been discovered
-        if device.Uuid() in [x.unique_id for x in DEVICES]:
-            return True
-
-        device = OpenhomeDevice(hass, device)
-
-        add_devices([device], True)
-        DEVICES.append(device)
-
+    if not discovery_info:
         return True
+
+    name = discovery_info.get('name')
+    description = discovery_info.get('ssdp_description')
+    _LOGGER.info('Openhome device found, (%s)', name)
+    device = Device(description)
+
+    # if device has already been discovered
+    if device.Uuid() in [x.unique_id for x in DEVICES]:
+        return True
+
+    device = OpenhomeDevice(hass, device)
+
+    add_devices([device], True)
+    DEVICES.append(device)
 
     return True
 

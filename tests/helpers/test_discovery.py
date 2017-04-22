@@ -4,7 +4,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import loader, bootstrap
+from homeassistant import loader, setup
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
@@ -24,7 +24,7 @@ class TestHelpersDiscovery:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.bootstrap.async_setup_component')
+    @patch('homeassistant.setup.async_setup_component')
     def test_listen(self, mock_setup_component):
         """Test discovery listen/discover combo."""
         calls_single = []
@@ -63,7 +63,7 @@ class TestHelpersDiscovery:
         assert ['test service', 'another service'] == [info[0] for info
                                                        in calls_multi]
 
-    @patch('homeassistant.bootstrap.async_setup_component',
+    @patch('homeassistant.setup.async_setup_component',
            return_value=mock_coro(True))
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
@@ -136,7 +136,7 @@ class TestHelpersDiscovery:
             MockPlatform(setup_platform,
                          dependencies=['test_component']))
 
-        bootstrap.setup_component(self.hass, 'test_component', {
+        setup.setup_component(self.hass, 'test_component', {
             'test_component': None,
             'switch': [{
                 'platform': 'test_circular',
@@ -184,14 +184,14 @@ class TestHelpersDiscovery:
             MockModule('test_component2', setup=component2_setup))
 
         @callback
-        def setup():
+        def do_setup():
             """Setup 2 components."""
-            self.hass.async_add_job(bootstrap.async_setup_component(
+            self.hass.async_add_job(setup.async_setup_component(
                 self.hass, 'test_component1', {}))
-            self.hass.async_add_job(bootstrap.async_setup_component(
+            self.hass.async_add_job(setup.async_setup_component(
                 self.hass, 'test_component2', {}))
 
-        self.hass.add_job(setup)
+        self.hass.add_job(do_setup)
         self.hass.block_till_done()
 
         # test_component will only be setup once

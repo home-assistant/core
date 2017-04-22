@@ -3,7 +3,7 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.components.notify as notify
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.notify import demo
 from homeassistant.core import callback
 from homeassistant.helpers import discovery, script

@@ -127,6 +127,6 @@ class OctoPrintSensor(Entity):
             # Error calling the api, already logged in api.update()
             return
 
-        if self._state is None:
+        if self._state is None and self.sensor_type != "completion":
             _LOGGER.warning("Unable to locate value for %s", self.sensor_type)
             return

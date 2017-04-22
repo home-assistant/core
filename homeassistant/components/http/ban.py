@@ -4,6 +4,7 @@ from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
 import logging
+import os
 
 from aiohttp.web_exceptions import HTTPForbidden, HTTPUnauthorized
 import voluptuous as vol
@@ -115,13 +116,14 @@ def load_ip_bans_config(path: str):
     """Loading list of banned IPs from config file."""
     ip_list = []
 
+    if not os.path.isfile(path):
+        return ip_list
+
     try:
         list_ = load_yaml_config_file(path)
-    except FileNotFoundError:
-        return []
     except HomeAssistantError as err:
         _LOGGER.error('Unable to load %s: %s', path, str(err))
-        return []
+        return ip_list
 
     for ip_ban, ip_info in list_.items():
         try:

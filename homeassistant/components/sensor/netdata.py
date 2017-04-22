@@ -41,6 +41,8 @@ SENSOR_TYPES = {
     'system_load': ['System Load', '15 min', 'system.processes', 'running', 2],
     'system_io_in': ['System IO In', 'Count', 'system.io', 'in', 0],
     'system_io_out': ['System IO Out', 'Count', 'system.io', 'out', 0],
+    'ipv4_in': ['IPv4 In', 'kb/s', 'system.ipv4', 'received', 0],
+    'ipv4_out': ['IPv4 Out', 'kb/s', 'system.ipv4', 'sent', 0],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

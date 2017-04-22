@@ -13,13 +13,13 @@ from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.2.6']
+REQUIREMENTS = ['py-cpuinfo==3.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
-ATTR_VENDOR = 'Vendor ID'
+ATTR_ARCH = 'arch'
 
 DEFAULT_NAME = 'CPU speed'
 ICON = 'mdi:pulse'
@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the CPU speed sensor."""
+    """Set up the CPU speed sensor."""
     name = config.get(CONF_NAME)
 
     add_devices([CpuSpeedSensor(name)])
@@ -67,7 +67,7 @@ class CpuSpeedSensor(Entity):
         """Return the state attributes."""
         if self.info is not None:
             return {
-                ATTR_VENDOR: self.info['vendor_id'],
+                ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
                 ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
             }

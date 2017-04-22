@@ -2,7 +2,7 @@
 import asyncio
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 
 @asyncio.coroutine

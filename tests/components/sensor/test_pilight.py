@@ -1,7 +1,7 @@
 """The tests for the Pilight sensor platform."""
 import logging
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components import pilight
 

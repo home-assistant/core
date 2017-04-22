@@ -81,6 +81,25 @@ def test_default_setup(hass, monkeypatch):
 
     assert hass.states.get('light.test').state == 'off'
 
+    # should repond to group command
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'allon',
+    })
+    yield from hass.async_block_till_done()
+
+    light_after_first_command = hass.states.get('light.test')
+    assert light_after_first_command.state == 'on'
+
+    # should repond to group command
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'alloff',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.test').state == 'off'
+
     # test following aliasses
     # mock incoming command event for this device alias
     event_callback({
@@ -152,35 +171,6 @@ def test_default_setup(hass, monkeypatch):
     yield from hass.async_block_till_done()
 
     assert protocol.send_command_ack.call_args_list[5][0][1] == '7'
-
-
-@asyncio.coroutine
-def test_new_light_group(hass, monkeypatch):
-    """New devices should be added to configured group."""
-    config = {
-        'rflink': {
-            'port': '/dev/ttyABC0',
-        },
-        DOMAIN: {
-            'platform': 'rflink',
-            'new_devices_group': 'new_rflink_lights',
-        },
-    }
-
-    # setup mocking rflink module
-    event_callback, _, _, _ = yield from mock_rflink(
-        hass, config, DOMAIN, monkeypatch)
-
-    # test event for new unconfigured sensor
-    event_callback({
-        'id': 'protocol_0_0',
-        'command': 'off',
-    })
-    yield from hass.async_block_till_done()
-
-    # make sure new device is added to correct group
-    group = hass.states.get('group.new_rflink_lights')
-    assert group.attributes.get('entity_id') == ('light.protocol_0_0',)
 
 
 @asyncio.coroutine
@@ -371,3 +361,203 @@ def test_signal_repetitions_cancelling(hass, monkeypatch):
     assert protocol.send_command_ack.call_args_list[1][0][1] == 'on'
     assert protocol.send_command_ack.call_args_list[2][0][1] == 'on'
     assert protocol.send_command_ack.call_args_list[3][0][1] == 'on'
+
+
+@asyncio.coroutine
+def test_type_toggle(hass, monkeypatch):
+    """Test toggle type lights (on/on)."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'toggle_0_0': {
+                    'name': 'toggle_test',
+                    'type': 'toggle',
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get('light.toggle_test').state == 'off'
+
+    # test sending on command to toggle alias
+    event_callback({
+        'id': 'toggle_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.toggle_test').state == 'on'
+
+    # test sending group command to group alias
+    event_callback({
+        'id': 'toggle_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.toggle_test').state == 'off'
+
+
+@asyncio.coroutine
+def test_group_alias(hass, monkeypatch):
+    """Group aliases should only respond to group commands (allon/alloff)."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'group_aliasses': ['test_group_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get('light.test').state == 'off'
+
+    # test sending group command to group alias
+    event_callback({
+        'id': 'test_group_0_0',
+        'command': 'allon',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.test').state == 'on'
+
+    # test sending group command to group alias
+    event_callback({
+        'id': 'test_group_0_0',
+        'command': 'off',
+    })
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('light.test').state == 'on'
+
+
+@asyncio.coroutine
+def test_nogroup_alias(hass, monkeypatch):
+    """Non group aliases should not respond to group commands."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'protocol_0_0': {
+                    'name': 'test',
+                    'nogroup_aliasses': ['test_nogroup_0_0'],
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get('light.test').state == 'off'
+
+    # test sending group command to nogroup alias
+    event_callback({
+        'id': 'test_nogroup_0_0',
+        'command': 'allon',
+    })
+    yield from hass.async_block_till_done()
+    # should not affect state
+    assert hass.states.get('light.test').state == 'off'
+
+    # test sending group command to nogroup alias
+    event_callback({
+        'id': 'test_nogroup_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+    # should affect state
+    assert hass.states.get('light.test').state == 'on'
+
+
+@asyncio.coroutine
+def test_nogroup_device_id(hass, monkeypatch):
+    """Device id that do not respond to group commands (allon/alloff)."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'devices': {
+                'test_nogroup_0_0': {
+                    'name': 'test',
+                    'group': False,
+                },
+            },
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    assert hass.states.get('light.test').state == 'off'
+
+    # test sending group command to nogroup
+    event_callback({
+        'id': 'test_nogroup_0_0',
+        'command': 'allon',
+    })
+    yield from hass.async_block_till_done()
+    # should not affect state
+    assert hass.states.get('light.test').state == 'off'
+
+    # test sending group command to nogroup
+    event_callback({
+        'id': 'test_nogroup_0_0',
+        'command': 'on',
+    })
+    yield from hass.async_block_till_done()
+    # should affect state
+    assert hass.states.get('light.test').state == 'on'
+
+
+@asyncio.coroutine
+def test_disable_automatic_add(hass, monkeypatch):
+    """If disabled new devices should not be automatically added."""
+    config = {
+        'rflink': {
+            'port': '/dev/ttyABC0',
+        },
+        DOMAIN: {
+            'platform': 'rflink',
+            'automatic_add': False,
+        },
+    }
+
+    # setup mocking rflink module
+    event_callback, _, _, _ = yield from mock_rflink(
+        hass, config, DOMAIN, monkeypatch)
+
+    # test event for new unconfigured sensor
+    event_callback({
+        'id': 'protocol_0_0',
+        'command': 'off',
+    })
+    yield from hass.async_block_till_done()
+
+    # make sure new device is not added
+    assert not hass.states.get('light.protocol_0_0')

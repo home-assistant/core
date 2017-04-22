@@ -4,7 +4,6 @@ import email
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import datetime
-from threading import Event
 import unittest
 
 from homeassistant.helpers.template import Template
@@ -59,7 +58,8 @@ class EmailContentSensor(unittest.TestCase):
             None)
 
         sensor.entity_id = 'sensor.emailtest'
-        sensor.update()
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
         self.assertEqual("Test Message", sensor.state)
         self.assertEqual('sender@test.com',
                          sensor.device_state_attributes['from'])
@@ -87,7 +87,8 @@ class EmailContentSensor(unittest.TestCase):
             ['sender@test.com'], None)
 
         sensor.entity_id = "sensor.emailtest"
-        sensor.update()
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
         self.assertEqual("Test Message", sensor.state)
 
     def test_multi_part_only_html(self):
@@ -110,7 +111,8 @@ class EmailContentSensor(unittest.TestCase):
             None)
 
         sensor.entity_id = 'sensor.emailtest'
-        sensor.update()
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
         self.assertEqual(
             "<html><head></head><body>Test Message</body></html>",
             sensor.state)
@@ -132,7 +134,8 @@ class EmailContentSensor(unittest.TestCase):
             ['sender@test.com'], None)
 
         sensor.entity_id = 'sensor.emailtest'
-        sensor.update()
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
         self.assertEqual("Test Message", sensor.state)
 
     def test_multiple_emails(self):
@@ -151,12 +154,8 @@ class EmailContentSensor(unittest.TestCase):
         test_message2['Date'] = datetime.datetime(2016, 1, 1, 12, 44, 57)
         test_message2.set_payload("Test Message 2")
 
-        states_received = Event()
-
         def state_changed_listener(entity_id, from_s, to_s):
             states.append(to_s)
-            if len(states) == 2:
-                states_received.set()
 
         track_state_change(
             self.hass, ['sensor.emailtest'], state_changed_listener)
@@ -167,10 +166,11 @@ class EmailContentSensor(unittest.TestCase):
             'test_emails_sensor', ['sender@test.com'], None)
 
         sensor.entity_id = 'sensor.emailtest'
-        sensor.update()
 
+        sensor.schedule_update_ha_state(True)
         self.hass.block_till_done()
-        states_received.wait(5)
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
 
         self.assertEqual("Test Message", states[0].state)
         self.assertEqual("Test Message 2", states[1].state)
@@ -190,7 +190,8 @@ class EmailContentSensor(unittest.TestCase):
             'test_emails_sensor', ['other@test.com'], None)
 
         sensor.entity_id = 'sensor.emailtest'
-        sensor.update()
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
         self.assertEqual(None, sensor.state)
 
     def test_template(self):
@@ -208,7 +209,8 @@ class EmailContentSensor(unittest.TestCase):
                      self.hass))
 
         sensor.entity_id = 'sensor.emailtest'
-        sensor.update()
+        sensor.schedule_update_ha_state(True)
+        self.hass.block_till_done()
         self.assertEqual(
             "Test from sender@test.com with message Test Message",
             sensor.state)

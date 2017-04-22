@@ -231,7 +231,7 @@ class ISYDevice(Entity):
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def domain(self) -> str:

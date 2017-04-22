@@ -4,7 +4,7 @@ from unittest.mock import patch, PropertyMock, MagicMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 
 from tests.common import (

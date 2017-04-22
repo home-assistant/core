@@ -1,7 +1,7 @@
 """The tests for Home Assistant ffmpeg binary sensor."""
 from unittest.mock import patch
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)
@@ -65,7 +65,7 @@ class TestFFmpegNoiseSetup(object):
         entity = self.hass.states.get('binary_sensor.ffmpeg_noise')
         assert entity.state == 'off'
 
-        mock_ffmpeg.call_args[0][2](True)
+        self.hass.add_job(mock_ffmpeg.call_args[0][2], True)
         self.hass.block_till_done()
 
         entity = self.hass.states.get('binary_sensor.ffmpeg_noise')
@@ -130,7 +130,7 @@ class TestFFmpegMotionSetup(object):
         entity = self.hass.states.get('binary_sensor.ffmpeg_motion')
         assert entity.state == 'off'
 
-        mock_ffmpeg.call_args[0][2](True)
+        self.hass.add_job(mock_ffmpeg.call_args[0][2], True)
         self.hass.block_till_done()
 
         entity = self.hass.states.get('binary_sensor.ffmpeg_motion')

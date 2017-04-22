@@ -23,10 +23,7 @@ REQUIREMENTS = ['pynetio==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CURRENT_POWER_MWH = 'current_power_mwh'
-ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_START_DATE = 'start_date'
-ATTR_TODAY_MWH = 'today_mwh'
 ATTR_TOTAL_CONSUMPTION_KWH = 'total_energy_kwh'
 
 CONF_OUTLETS = 'outlets'
@@ -172,7 +169,6 @@ class NetioSwitch(SwitchDevice):
     def state_attributes(self):
         """Return optional state attributes."""
         return {
-            ATTR_CURRENT_POWER_W: self.current_power_w,
             ATTR_TOTAL_CONSUMPTION_KWH: self.cumulated_consumption_kwh,
             ATTR_START_DATE: self.start_date.split('|')[0]
         }

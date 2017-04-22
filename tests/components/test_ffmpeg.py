@@ -3,7 +3,7 @@ import asyncio
 from unittest.mock import patch, MagicMock
 
 import homeassistant.components.ffmpeg as ffmpeg
-from homeassistant.bootstrap import setup_component, async_setup_component
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)

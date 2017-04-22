@@ -8,7 +8,7 @@ import requests
 import requests_mock
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import updater
 
 from tests.common import (

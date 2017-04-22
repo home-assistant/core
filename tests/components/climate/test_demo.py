@@ -4,7 +4,7 @@ import unittest
 from homeassistant.util.unit_system import (
     METRIC_SYSTEM
 )
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import climate
 
 from tests.common import get_test_home_assistant

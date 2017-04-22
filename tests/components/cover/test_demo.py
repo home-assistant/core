@@ -3,7 +3,7 @@ import unittest
 from datetime import timedelta
 import homeassistant.util.dt as dt_util
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import cover
 from tests.common import get_test_home_assistant, fire_time_changed
 

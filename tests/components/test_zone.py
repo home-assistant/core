@@ -1,7 +1,7 @@
 """Test zone component."""
 import unittest
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import zone
 
 from tests.common import get_test_home_assistant
@@ -20,8 +20,8 @@ class TestComponentZone(unittest.TestCase):
 
     def test_setup_no_zones_still_adds_home_zone(self):
         """Test if no config is passed in we still get the home zone."""
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN,
-                                         {'zone': None})
+        assert setup.setup_component(self.hass, zone.DOMAIN,
+                                     {'zone': None})
 
         assert len(self.hass.states.entity_ids('zone')) == 1
         state = self.hass.states.get('zone.home')
@@ -39,7 +39,7 @@ class TestComponentZone(unittest.TestCase):
             'radius': 250,
             'passive': True
         }
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
             'zone': info
         })
 
@@ -52,7 +52,7 @@ class TestComponentZone(unittest.TestCase):
 
     def test_active_zone_skips_passive_zones(self):
         """Test active and passive zones."""
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {
                     'name': 'Passive Zone',
@@ -69,7 +69,7 @@ class TestComponentZone(unittest.TestCase):
 
     def test_active_zone_skips_passive_zones_2(self):
         """Test active and passive zones."""
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {
                     'name': 'Active Zone',
@@ -87,7 +87,7 @@ class TestComponentZone(unittest.TestCase):
         """Test zone size preferences."""
         latitude = 32.880600
         longitude = -117.237561
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {
                     'name': 'Small Zone',
@@ -111,7 +111,7 @@ class TestComponentZone(unittest.TestCase):
         """Test zone size preferences."""
         latitude = 32.880600
         longitude = -117.237561
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {
                     'name': 'Smallest Zone',
@@ -129,7 +129,7 @@ class TestComponentZone(unittest.TestCase):
         """Test working in passive zones."""
         latitude = 32.880600
         longitude = -117.237561
-        assert bootstrap.setup_component(self.hass, zone.DOMAIN, {
+        assert setup.setup_component(self.hass, zone.DOMAIN, {
             'zone': [
                 {
                     'name': 'Passive Zone',

@@ -21,8 +21,8 @@ class TestNotifySmtp(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mailer = MockSMTP('localhost', 25, 'test@test.com', 1, 'testuser',
-                               'testpass', 'testrecip@test.com', 0)
+        self.mailer = MockSMTP('localhost', 25, 5, 'test@test.com', 1,
+                               'testuser', 'testpass', 'testrecip@test.com', 0)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """"Stop down everything that was started."""

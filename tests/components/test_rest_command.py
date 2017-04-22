@@ -4,7 +4,7 @@ import asyncio
 import aiohttp
 
 import homeassistant.components.rest_command as rc
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component)
@@ -107,7 +107,7 @@ class TestRestCommandComponent(object):
         with assert_setup_component(4):
             setup_component(self.hass, rc.DOMAIN, self.config)
 
-        aioclient_mock.get(self.url, exc=aiohttp.errors.ClientError())
+        aioclient_mock.get(self.url, exc=aiohttp.ClientError())
 
         self.hass.services.call(rc.DOMAIN, 'get_test', {})
         self.hass.block_till_done()
@@ -221,3 +221,22 @@ class TestRestCommandComponent(object):
 
         assert len(aioclient_mock.mock_calls) == 1
         assert aioclient_mock.mock_calls[0][2] == b'data'
+
+    def test_rest_command_content_type(self, aioclient_mock):
+        """Call a rest command with a content type."""
+        data = {
+            'payload': 'item',
+            'content_type': 'text/plain'
+        }
+        self.config[rc.DOMAIN]['post_test'].update(data)
+
+        with assert_setup_component(4):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        aioclient_mock.post(self.url, content=b'success')
+
+        self.hass.services.call(rc.DOMAIN, 'post_test', {})
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert aioclient_mock.mock_calls[0][2] == b'item'

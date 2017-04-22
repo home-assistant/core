@@ -4,7 +4,7 @@ import os
 from unittest.mock import patch
 import logging
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST, CONF_PASSWORD)

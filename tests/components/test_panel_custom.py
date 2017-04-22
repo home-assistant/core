@@ -4,7 +4,7 @@ import shutil
 import unittest
 from unittest.mock import Mock, patch
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import panel_custom
 
 from tests.common import get_test_home_assistant
@@ -34,15 +34,15 @@ class TestPanelCustom(unittest.TestCase):
             }
         }
 
-        assert not bootstrap.setup_component(self.hass, 'panel_custom', config)
+        assert not setup.setup_component(self.hass, 'panel_custom', config)
         assert not mock_register.called
 
         path = self.hass.config.path(panel_custom.PANEL_DIR)
         os.mkdir(path)
-        self.hass.data.pop(bootstrap.DATA_SETUP)
+        self.hass.data.pop(setup.DATA_SETUP)
 
         with open(os.path.join(path, 'todomvc.html'), 'a'):
-            assert bootstrap.setup_component(self.hass, 'panel_custom', config)
+            assert setup.setup_component(self.hass, 'panel_custom', config)
             assert mock_register.called
 
     @patch('homeassistant.components.panel_custom.register_panel')
@@ -62,16 +62,16 @@ class TestPanelCustom(unittest.TestCase):
         }
 
         with patch('os.path.isfile', Mock(return_value=False)):
-            assert not bootstrap.setup_component(
+            assert not setup.setup_component(
                 self.hass, 'panel_custom', config
             )
             assert not mock_register.called
 
-        self.hass.data.pop(bootstrap.DATA_SETUP)
+        self.hass.data.pop(setup.DATA_SETUP)
 
         with patch('os.path.isfile', Mock(return_value=True)):
             with patch('os.access', Mock(return_value=True)):
-                assert bootstrap.setup_component(
+                assert setup.setup_component(
                     self.hass, 'panel_custom', config
                 )
 

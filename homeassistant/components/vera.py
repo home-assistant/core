@@ -12,7 +12,7 @@ import voluptuous as vol
 from requests.exceptions import RequestException
 
 from homeassistant.util.dt import utc_from_timestamp
-from homeassistant.util import convert
+from homeassistant.util import (convert, slugify)
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.const import (
@@ -32,7 +32,10 @@ CONF_CONTROLLER = 'vera_controller_url'
 CONF_EXCLUDE = 'exclude'
 CONF_LIGHTS = 'lights'
 
-ATTR_CURRENT_POWER_MWH = "current_power_mwh"
+VERA_ID_FORMAT = '{}_{}'
+
+ATTR_CURRENT_POWER_W = "current_power_w"
+ATTR_CURRENT_ENERGY_KWH = "current_energy_kwh"
 
 VERA_DEVICES = defaultdict(list)
 
@@ -133,8 +136,10 @@ class VeraDevice(Entity):
         self.vera_device = vera_device
         self.controller = controller
 
+        self._name = self.vera_device.name
         # Append device id to prevent name clashes in HA.
-        self._name = self.vera_device.name + ' ' + str(vera_device.device_id)
+        self.vera_id = VERA_ID_FORMAT.format(
+            slugify(vera_device.name), vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
         self.update()
@@ -177,7 +182,11 @@ class VeraDevice(Entity):
 
         power = self.vera_device.power
         if power:
-            attr[ATTR_CURRENT_POWER_MWH] = convert(power, float, 0.0) * 1000
+            attr[ATTR_CURRENT_POWER_W] = convert(power, float, 0.0)
+
+        energy = self.vera_device.energy
+        if energy:
+            attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
 
         attr['Vera Device Id'] = self.vera_device.vera_device_id
 
