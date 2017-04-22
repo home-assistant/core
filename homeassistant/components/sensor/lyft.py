@@ -159,13 +159,14 @@ class LyftSensor(Entity):
             self._product = self.data.products[self._product_id]
         except KeyError:
             return
+        self._state = None
         if self._sensortype == 'time':
             eta = self._product['eta']
             if (eta is not None) and (eta.get('is_valid_estimate')):
-                time_estimate = eta.get('eta_seconds', 0)
+                time_estimate = eta.get('eta_seconds')
+                if time_estimate is None:
+                    return
                 self._state = int(time_estimate / 60)
-            else:
-                self._state = 0
         elif self._sensortype == 'price':
             estimate = self._product['estimate']
             if (estimate is not None) and \
@@ -173,8 +174,6 @@ class LyftSensor(Entity):
                 self._state = (int(
                     (estimate.get('estimated_cost_cents_min', 0) +
                      estimate.get('estimated_cost_cents_max', 0)) / 2) / 100)
-            else:
-                self._state = 0
 
 
 class LyftEstimate(object):
