@@ -101,6 +101,7 @@ class PushBulletNotificationProvider():
         import threading
         self.pushbullet = pb
         self._data = None
+        self.listener = None
         self.thread = threading.Thread(target=self.retrieve_pushes)
         self.thread.daemon = True
         self.thread.start()
