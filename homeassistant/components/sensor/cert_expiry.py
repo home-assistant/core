@@ -81,18 +81,18 @@ class SSLCertificate(Entity):
             sock = ctx.wrap_socket(socket.socket(),
                                    server_hostname=self.server_name)
             sock.connect((self.server_name, self.server_port))
-        except Exception as e:
+        except Exception as excp:
             _LOGGER.error('Cannot connect to %s' % (self.server_name))
-            raise e
+            raise excp
 
         try:
             cert = sock.getpeercert()
-        except Exception as e:
+        except Exception as excp:
             _LOGGER.error('Cannot fetch certificate from %s' %
                           (self.server_name))
-            raise e
+            raise excp
 
-        timestamp = ssl.cert_time_to_seconds(cert['notAfter'])
-        ts = datetime.datetime.fromtimestamp(timestamp)
-        expiry = ts - datetime.datetime.today()
+        ts_seconds = ssl.cert_time_to_seconds(cert['notAfter'])
+        timestamp = datetime.datetime.fromtimestamp(ts_seconds)
+        expiry = timestamp - datetime.datetime.today()
         self._state = expiry.days
