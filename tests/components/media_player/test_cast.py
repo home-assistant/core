@@ -37,6 +37,8 @@ class TestCastMediaPlayer(unittest.TestCase):
         assert not mock_device.called
 
         # Test chromecasts as if they were automatically discovered
-        cast.setup_platform(None, {}, lambda _: _, ('some_host',
-                                                    cast.DEFAULT_PORT))
+        cast.setup_platform(None, {}, lambda _: _, {
+            'host': 'some_host',
+            'port': cast.DEFAULT_PORT,
+        })
         assert not mock_device.called

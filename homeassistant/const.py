@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 42
-PATCH_VERSION = '4'
+MINOR_VERSION = 43
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -361,7 +361,6 @@ URL_API_EVENTS = '/api/events'
 URL_API_EVENTS_EVENT = '/api/events/{}'
 URL_API_SERVICES = '/api/services'
 URL_API_SERVICES_SERVICE = '/api/services/{}/{}'
-URL_API_EVENT_FORWARD = '/api/event_forwarding'
 URL_API_COMPONENTS = '/api/components'
 URL_API_ERROR_LOG = '/api/error_log'
 URL_API_LOG_OUT = '/api/log_out'

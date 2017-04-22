@@ -95,7 +95,7 @@ class EntityComponent(object):
         ).result()
 
     def async_extract_from_service(self, service, expand_group=True):
-        """Extract all known entities from a service call.
+        """Extract all known and available entities from a service call.
 
         Will return all entities if no entities specified in call.
         Will return an empty list if entities specified but unknown.
@@ -103,11 +103,13 @@ class EntityComponent(object):
         This method must be run in the event loop.
         """
         if ATTR_ENTITY_ID not in service.data:
-            return list(self.entities.values())
+            return [entity for entity in self.entities.values()
+                    if entity.available]
 
         return [self.entities[entity_id] for entity_id
                 in extract_entity_ids(self.hass, service, expand_group)
-                if entity_id in self.entities]
+                if entity_id in self.entities and
+                self.entities[entity_id].available]
 
     @asyncio.coroutine
     def _async_setup_platform(self, platform_type, platform_config,

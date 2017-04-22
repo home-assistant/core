@@ -51,11 +51,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hosts = []
 
-    if discovery_info and discovery_info in KNOWN_HOSTS:
-        return
+    if discovery_info:
+        host = (discovery_info.get('host'), discovery_info.get('port'))
 
-    elif discovery_info:
-        hosts = [discovery_info]
+        if host in KNOWN_HOSTS:
+            return
+
+        hosts = [host]
 
     elif CONF_HOST in config:
         hosts = [(config.get(CONF_HOST), DEFAULT_PORT)]

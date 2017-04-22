@@ -338,6 +338,9 @@ hassio:
         description: Optional or it will be use the latest version.
         example: '0.3'
 
+  supervisor_reload:
+    description: Reload HassIO supervisor addons/updates/configs.
+
   homeassistant_update:
     description: Update HomeAssistant docker image.
     fields:

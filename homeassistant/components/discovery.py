@@ -10,6 +10,7 @@ import asyncio
 import json
 from datetime import timedelta
 import logging
+import os
 
 import voluptuous as vol
 
@@ -20,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==0.9.2']
+REQUIREMENTS = ['netdisco==1.0.0rc3']
 
 DOMAIN = 'discovery'
 
@@ -28,11 +29,15 @@ SCAN_INTERVAL = timedelta(seconds=300)
 SERVICE_NETGEAR = 'netgear_router'
 SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HASS_IOS_APP = 'hass_ios'
+SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
+SERVICE_HASSIO = 'hassio'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
+    SERVICE_IKEA_TRADFRI: ('tradfri', None),
+    SERVICE_HASSIO: ('hassio', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
@@ -45,10 +50,10 @@ SERVICE_HANDLERS = {
     'denonavr': ('media_player', 'denonavr'),
     'samsung_tv': ('media_player', 'samsungtv'),
     'yeelight': ('light', 'yeelight'),
-    'flux_led': ('light', 'flux_led'),
     'apple_tv': ('media_player', 'apple_tv'),
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
+    'bose_soundtouch': ('media_player', 'soundtouch'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -121,6 +126,10 @@ def async_setup(hass, config):
     def schedule_first(event):
         """Schedule the first discovery when Home Assistant starts up."""
         async_track_point_in_utc_time(hass, scan_devices, dt_util.utcnow())
+
+        # discovery local services
+        if 'HASSIO' in os.environ:
+            hass.async_add_job(new_service_found(SERVICE_HASSIO, {}))
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_first)
 
