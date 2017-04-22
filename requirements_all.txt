@@ -392,7 +392,7 @@ mficlient==0.3.0
 miflora==0.1.16
 
 # homeassistant.components.tts
-mutagen==1.36.2
+mutagen==1.37.0
 
 # homeassistant.components.sensor.usps
 myusps==1.0.5
