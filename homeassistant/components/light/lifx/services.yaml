@@ -71,19 +71,19 @@ lifx_effect_colorloop:
       example: 'light.disco1, light.disco2, light.disco3'
 
     brightness:
-      description: Number between 0..255 indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light
+      description: Number between 0 and 255 indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light
       example: 120
 
     period:
-      description: Duration between color changes (deafult 60)
+      description: Duration (in seconds) between color changes (default 60)
       example: 180
 
     change:
-      description: Hue movement per period, in degrees on a color wheel (default 20)
+      description: Hue movement per period, in degrees on a color wheel (ranges from 0 to 360, default 20)
       example: 45
 
     spread:
-      description: Maximum hue difference between participating lights, in degrees on a color wheel (default 30)
+      description: Maximum hue difference between participating lights, in degrees on a color wheel (ranges from 0 to 360, default 30)
       example: 0
 
     power_on:
