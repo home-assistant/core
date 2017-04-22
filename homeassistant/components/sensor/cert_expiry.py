@@ -4,7 +4,8 @@ Example configuration.yaml:
 
   sensor:
     - platform: cert_expiry
-      server_name: home-assistant.io
+      host: home-assistant.io
+      port: 443
 
 For more details about this sensor please refer to the
 documentation at https://home-assistant.io/components/sensor.cert_expiry
@@ -19,38 +20,41 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
+from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 
 REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SERVER_NAME = 'server_name'
-CONF_SERVER_PORT = 'server_port'
+DEFAULT_NAME = 'SSL Certificate Expiry'
+DEFAULT_PORT = 443
 ICON = 'mdi:certificate'
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=12)
-TIMEOUT = 10
+TIMEOUT = 10.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_SERVER_NAME): cv.string,
-    vol.Optional(CONF_SERVER_PORT, default=443): cv.port,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup certificate expiry sensor."""
-    server_name = config.get(CONF_SERVER_NAME)
-    server_port = config.get(CONF_SERVER_PORT)
-    add_devices([SSLCertificate(server_name, server_port)])
+    server_name = config.get(CONF_HOST)
+    server_port = config.get(CONF_PORT)
+    sensor_name = config.get(CONF_NAME)
+    add_devices([SSLCertificate(sensor_name, server_name, server_port)])
 
 
 class SSLCertificate(Entity):
     """Implements certificate expiry sensor."""
 
-    def __init__(self, server_name, server_port):
+    def __init__(self, sensor_name, server_name, server_port):
         """Initialize the sensor."""
         self.server_name = server_name
         self.server_port = server_port
-        self._name = "{} cert expiry".format(server_name)
+        self._name = sensor_name
         self._state = None
 
     @property
@@ -80,15 +84,16 @@ class SSLCertificate(Entity):
             ctx = ssl.create_default_context()
             sock = ctx.wrap_socket(socket.socket(),
                                    server_hostname=self.server_name)
+            sock.settimeout(TIMEOUT)
             sock.connect((self.server_name, self.server_port))
         except Exception as excp:
-            _LOGGER.error('Cannot connect to %s' % (self.server_name))
+            _LOGGER.error('Cannot connect to %s', self.server_name)
             raise excp
 
         try:
             cert = sock.getpeercert()
         except Exception as excp:
-            _LOGGER.error('Cannot fetch certificate from %s' %
+            _LOGGER.error('Cannot fetch certificate from %s',
                           (self.server_name))
             raise excp
 
