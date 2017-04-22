@@ -14,6 +14,7 @@ if False:
 ConfigType = Dict[str, Any]
 
 
+# pylint: disable=invalid-sequence-index
 def config_per_platform(config: ConfigType,
                         domain: str) -> Iterable[Tuple[Any, Any]]:
     """Generator to break a component config into different platforms.

@@ -20,8 +20,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
-        location = discovery_info[2]
-        mac = discovery_info[3]
+        location = discovery_info['ssdp_description']
+        mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
 
         if device:
@@ -40,12 +40,14 @@ class WemoBinarySensor(BinarySensorDevice):
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
-    def _update_callback(self, _device, _params):
-        """Called by the wemo device callback to update state."""
+    def _update_callback(self, _device, _type, _params):
+        """Called by the Wemo device callback to update state."""
         _LOGGER.info(
             'Subscription update for  %s',
             _device)
-        self.update()
+        updated = self.wemo.subscription_update(_type, _params)
+        self._update(force_update=(not updated))
+
         if not hasattr(self, 'hass'):
             return
         self.schedule_update_ha_state()
@@ -72,7 +74,11 @@ class WemoBinarySensor(BinarySensorDevice):
 
     def update(self):
         """Update WeMo state."""
+        self._update(force_update=True)
+
+    def _update(self, force_update=True):
         try:
-            self._state = self.wemo.get_state(True)
-        except AttributeError:
-            _LOGGER.warning('Could not update status for %s', self.name)
+            self._state = self.wemo.get_state(force_update)
+        except AttributeError as err:
+            _LOGGER.warning('Could not update status for %s (%s)',
+                            self.name, err)

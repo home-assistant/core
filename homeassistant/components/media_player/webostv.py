@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.webostv/
 """
 import logging
+import asyncio
 from datetime import timedelta
 from urllib.parse import urlparse
 
@@ -24,9 +25,7 @@ from homeassistant.const import (
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/TheRealLink/pylgtv'
-                '/archive/v0.1.4.zip'
-                '#pylgtv==0.1.4',
+REQUIREMENTS = ['pylgtv==0.1.6',
                 'websockets==3.2',
                 'wakeonlan==0.2.2']
 
@@ -101,7 +100,8 @@ def setup_tv(host, mac, name, customize, config, hass, add_devices):
                 _LOGGER.warning(
                     "Connected to LG webOS TV %s but not paired", host)
                 return
-            except (OSError, ConnectionClosed):
+            except (OSError, ConnectionClosed, TypeError,
+                    asyncio.TimeoutError):
                 _LOGGER.error("Unable to connect to host %s", host)
                 return
         else:
@@ -198,7 +198,8 @@ class LgWebOSDevice(MediaPlayerDevice):
                 app = self._app_list[source['appId']]
                 self._source_list[app['title']] = app
 
-        except (OSError, ConnectionClosed):
+        except (OSError, ConnectionClosed, TypeError,
+                asyncio.TimeoutError):
             self._state = STATE_OFF
 
     @property
@@ -240,7 +241,10 @@ class LgWebOSDevice(MediaPlayerDevice):
     def media_image_url(self):
         """Image url of current playing media."""
         if self._current_source_id in self._app_list:
-            return self._app_list[self._current_source_id]['largeIcon']
+            icon = self._app_list[self._current_source_id]['largeIcon']
+            if not icon.startswith('http'):
+                icon = self._app_list[self._current_source_id]['icon']
+            return icon
         return None
 
     @property
@@ -256,7 +260,8 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._state = STATE_OFF
         try:
             self._client.power_off()
-        except (OSError, ConnectionClosed):
+        except (OSError, ConnectionClosed, TypeError,
+                asyncio.TimeoutError):
             pass
 
     def turn_on(self):

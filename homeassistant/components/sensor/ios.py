@@ -14,7 +14,8 @@ SENSOR_TYPES = {
     "state": ["Battery State", None]
 }
 
-DEFAULT_ICON = "mdi:battery"
+DEFAULT_ICON_LEVEL = "mdi:battery"
+DEFAULT_ICON_STATE = "mdi:power-plug"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -56,12 +57,12 @@ class IOSSensor(Entity):
     @property
     def unique_id(self):
         """Return the unique ID of this sensor."""
-        return "sensor_ios_battery_{}_{}".format(self.type, self._device_name)
+        device_id = self._device[ios.ATTR_DEVICE_ID]
+        return "sensor_ios_battery_{}_{}".format(self.type, device_id)
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
-        return self._unit_of_measurement
 
     @property
     def device_state_attributes(self):
@@ -83,28 +84,44 @@ class IOSSensor(Entity):
         battery_state = device_battery[ios.ATTR_BATTERY_STATE]
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
         rounded_level = round(battery_level, -1)
-        returning_icon = DEFAULT_ICON
+        returning_icon_level = DEFAULT_ICON_LEVEL
         if battery_state == ios.ATTR_BATTERY_STATE_FULL:
-            returning_icon = DEFAULT_ICON
+            returning_icon_level = DEFAULT_ICON_LEVEL
+            if battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
+                returning_icon_state = DEFAULT_ICON_STATE
+            else:
+                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_CHARGING:
             # Why is MDI missing 10, 50, 70?
             if rounded_level in (20, 30, 40, 60, 80, 90, 100):
-                returning_icon = "{}-charging-{}".format(DEFAULT_ICON,
-                                                         str(rounded_level))
+                returning_icon_level = "{}-charging-{}".format(
+                    DEFAULT_ICON_LEVEL, str(rounded_level))
+                returning_icon_state = DEFAULT_ICON_STATE
             else:
-                returning_icon = "{}-charging".format(DEFAULT_ICON)
+                returning_icon_level = "{}-charging".format(
+                    DEFAULT_ICON_LEVEL)
+                returning_icon_state = DEFAULT_ICON_STATE
         elif battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED:
             if rounded_level < 10:
-                returning_icon = "{}-outline".format(DEFAULT_ICON)
-            elif battery_level == 100:
-                returning_icon = DEFAULT_ICON
+                returning_icon_level = "{}-outline".format(
+                    DEFAULT_ICON_LEVEL)
+                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
+            elif battery_level > 95:
+                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
+                returning_icon_level = "{}-outline".format(
+                    DEFAULT_ICON_LEVEL)
             else:
-                returning_icon = "{}-{}".format(DEFAULT_ICON,
-                                                str(rounded_level))
+                returning_icon_level = "{}-{}".format(DEFAULT_ICON_LEVEL,
+                                                      str(rounded_level))
+                returning_icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:
-            returning_icon = "{}-unknown".format(DEFAULT_ICON)
+            returning_icon_level = "{}-unknown".format(DEFAULT_ICON_LEVEL)
+            returning_icon_state = "{}-unknown".format(DEFAULT_ICON_LEVEL)
 
-        return returning_icon
+        if self.type == "state":
+            return returning_icon_state
+        else:
+            return returning_icon_level
 
     def update(self):
         """Get the latest state of the sensor."""

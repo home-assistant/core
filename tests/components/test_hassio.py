@@ -53,6 +53,8 @@ class TestHassIOSetup(object):
 
         assert self.hass.services.has_service(
             ho.DOMAIN, ho.SERVICE_SUPERVISOR_UPDATE)
+        assert self.hass.services.has_service(
+            ho.DOMAIN, ho.SERVICE_SUPERVISOR_RELOAD)
 
         assert self.hass.services.has_service(
             ho.DOMAIN, ho.SERVICE_ADDON_INSTALL)
@@ -215,6 +217,22 @@ class TestHassIOComponent(object):
 
         assert len(aioclient_mock.mock_calls) == 2
         assert aioclient_mock.mock_calls[-1][2]['version'] == '0.4'
+
+    def test_rest_command_http_supervisor_reload(self, aioclient_mock):
+        """Call a hassio for supervisor reload."""
+        aioclient_mock.get(
+            "http://127.0.0.1/supervisor/ping", json=self.ok_msg)
+        with assert_setup_component(0, ho.DOMAIN):
+            setup_component(self.hass, ho.DOMAIN, self.config)
+
+        aioclient_mock.get(
+            self.url.format("supervisor/reload"), json=self.ok_msg)
+
+        self.hass.services.call(
+            ho.DOMAIN, ho.SERVICE_SUPERVISOR_RELOAD, {})
+        self.hass.block_till_done()
+
+        assert len(aioclient_mock.mock_calls) == 2
 
     def test_rest_command_http_homeassistant_update(self, aioclient_mock):
         """Call a hassio for homeassistant update."""

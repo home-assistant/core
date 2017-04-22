@@ -20,13 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-def get_device(values, node_config, **kwargs):
+def get_device(hass, values, node_config, **kwargs):
     """Create zwave entity device."""
     invert_buttons = node_config.get(zwave.CONF_INVERT_OPENCLOSE_BUTTONS)
     if (values.primary.command_class ==
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
-        return ZwaveRollershutter(values, invert_buttons)
+        return ZwaveRollershutter(hass, values, invert_buttons)
     elif (values.primary.command_class in [
             zwave.const.COMMAND_CLASS_SWITCH_BINARY,
             zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
@@ -37,10 +37,11 @@ def get_device(values, node_config, **kwargs):
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave roller shutter."""
 
-    def __init__(self, values, invert_buttons):
+    def __init__(self, hass, values, invert_buttons):
         """Initialize the zwave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         # pylint: disable=no-member
+        self._network = hass.data[zwave.ZWAVE_NETWORK]
         self._open_id = None
         self._close_id = None
         self._current_position = None
@@ -90,11 +91,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
-        zwave.NETWORK.manager.pressButton(self._open_id)
+        self._network.manager.pressButton(self._open_id)
 
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
-        zwave.NETWORK.manager.pressButton(self._close_id)
+        self._network.manager.pressButton(self._close_id)
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
@@ -102,7 +103,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
-        zwave.NETWORK.manager.releaseButton(self._open_id)
+        self._network.manager.releaseButton(self._open_id)
 
 
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):

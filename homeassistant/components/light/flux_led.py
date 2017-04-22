@@ -108,20 +108,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(light)
             light_ips.append(ipaddr)
 
-    if discovery_info:
-        device = {}
-        # discovery_info: ip address,device id,device type
-        device['ipaddr'] = discovery_info[0]
-        device['name'] = discovery_info[1]
-        # As we don't know protocol and mode set to none to autodetect.
-        device[CONF_PROTOCOL] = None
-        device[ATTR_MODE] = None
-
-        light = FluxLight(device)
-        if light.is_valid:
-            lights.append(light)
-            light_ips.append(device['ipaddr'])
-
     if not config.get(CONF_AUTOMATIC_ADD, False):
         add_devices(lights)
         return
@@ -230,9 +216,9 @@ class FluxLight(Light):
                 (red, green, blue) = self._bulb.getRgb()
                 self._bulb.setRgb(red, green, blue, brightness=brightness)
         elif effect == EFFECT_RANDOM:
-            self._bulb.setRgb(random.randrange(0, 255),
-                              random.randrange(0, 255),
-                              random.randrange(0, 255))
+            self._bulb.setRgb(random.randint(0, 255),
+                              random.randint(0, 255),
+                              random.randint(0, 255))
         elif effect == EFFECT_COLORLOOP:
             self._bulb.setPresetPattern(0x25, 50)
         elif effect == EFFECT_RED_FADE:
