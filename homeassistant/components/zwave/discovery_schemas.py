@@ -81,12 +81,12 @@ DISCOVERY_SCHEMAS = [
          },
          'open': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
-             const.DISC_LABEL: ['Open', 'Up'],
+             const.DISC_LABEL: ['Open', 'Up', 'Bright'],
              const.DISC_OPTIONAL: True,
          },
          'close': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
-             const.DISC_LABEL: ['Close', 'Down'],
+             const.DISC_LABEL: ['Close', 'Down', 'Dim'],
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'cover',  # Garage Door
