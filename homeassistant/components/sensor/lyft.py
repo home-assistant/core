@@ -137,10 +137,8 @@ class LyftSensor(Entity):
             params['Trip duration (in seconds)'] = estimate.get(
                 'estimated_duration_seconds')
 
-            # Ignore the Prime Time percentage -- the Lyft API always
-            # returns 0 unless a user is logged in.
-            # params['Prime Time percentage'] = estimate.get(
-            #    'primetime_percentage')
+            params['Prime Time percentage'] = estimate.get(
+                'primetime_percentage')
 
         if self._product.get("eta") is not None:
             eta = self._product['eta']
