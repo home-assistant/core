@@ -460,6 +460,7 @@ psutil==5.2.2
 pubnubsub-handler==1.0.2
 
 # homeassistant.components.notify.pushbullet
+# homeassistant.components.sensor.pushbullet
 pushbullet.py==0.10.0
 
 # homeassistant.components.notify.pushetta
