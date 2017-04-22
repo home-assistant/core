@@ -75,7 +75,7 @@ lifx_effect_colorloop:
       example: 120
 
     period:
-      description: Duration between color changes (deafult 60)
+      description: Duration between color changes (default 60)
       example: 180
 
     change:
