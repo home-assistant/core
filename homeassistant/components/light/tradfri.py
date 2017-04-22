@@ -13,13 +13,11 @@ from homeassistant.util import slugify
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['tradfri']
-SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
-SUPPORTED_FEATURES_IKEA = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP)
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
-IKEA = 'ikea_of_sweden'
-
-ALLOWED_TEMPERATURES = {IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}}
-ALLOWED_FEATURES = {IKEA: SUPPORTED_FEATURES_IKEA}
+IKEA = 'IKEA of Sweden'
+ALLOWED_TEMPERATURES = {
+    IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -46,8 +44,14 @@ class Tradfri(Light):
         self._light_data = light.light_control.lights[0]
         self._name = light.name
         self._rgb_color = None
-        self._features = ALLOWED_FEATURES.get(
-            slugify(self._light.device_info.manufacturer), SUPPORTED_FEATURES)
+        self._features = SUPPORT_BRIGHTNESS
+
+        if self._light_data.hex_color is not None:
+            if self._light.device_info.manufacturer == IKEA:
+                self._features &= SUPPORT_COLOR_TEMP
+            else:
+                self._features &= SUPPORT_RGB_COLOR
+
         self._ok_temps = ALLOWED_TEMPERATURES.get(
             slugify(self._light.device_info.manufacturer))
 
@@ -74,16 +78,18 @@ class Tradfri(Light):
     @property
     def color_temp(self):
         """Return the CT color value in mireds."""
-        if not self.supported_features & SUPPORT_COLOR_TEMP or \
-                not self._ok_temps:
-            return
+        if (self._light_data.hex_color is None or
+                self.supported_features & SUPPORT_COLOR_TEMP == 0 or
+                not self._ok_temps):
+            return None
+
         kelvin = next((
             kelvin for kelvin, hex_color in self._ok_temps.items()
             if hex_color == self._light_data.hex_color), None)
         if kelvin is None:
             _LOGGER.error(
-                'unexpected color temperature found %s',
-                self._light_data.hex_color)
+                'unexpected color temperature found for %s: %s',
+                self.name, self._light_data.hex_color)
             return
         return color_util.color_temperature_kelvin_to_mired(kelvin)
 
