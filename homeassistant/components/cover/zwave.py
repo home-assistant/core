@@ -91,17 +91,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
-        if not self._open_id:
-            self.node.set_dimmer(self.values.primary.value_id, 100)
-        else:
-            self._network.manager.pressButton(self._open_id)
+        self._network.manager.pressButton(self._open_id)
 
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
-        if not self._close_id:
-            self.node.set_dimmer(self.values.primary.value_id, 0)
-        else:
-            self._network.manager.pressButton(self._close_id)
+        self._network.manager.pressButton(self._close_id)
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
@@ -109,10 +103,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
-        if not self._open_id:
-            self._network.manager.releaseButton(self.values.primary.value_id)
-        else:
-            self._network.manager.releaseButton(self._open_id)
+        self._network.manager.releaseButton(self._open_id)
 
 
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
