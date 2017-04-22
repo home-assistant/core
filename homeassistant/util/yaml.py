@@ -31,11 +31,17 @@ def _add_reference(obj, loader, node):
         """Wrapper class to be able to add attributes on a string."""
 
         pass
+    
+    class NodeDictClass(dict):
+        """Wrapper class to be able to add attributes on a dict."""
 
+        pass
     if isinstance(obj, list):
         obj = NodeListClass(obj)
     if isinstance(obj, str):
         obj = NodeStrClass(obj)
+    if isinstance(obj, dict):
+        obj = NodeDictClass(obj)
     setattr(obj, '__config_file__', loader.name)
     setattr(obj, '__line__', node.start_mark.line)
     return obj
