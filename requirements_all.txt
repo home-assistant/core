@@ -459,7 +459,6 @@ psutil==5.2.2
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
 
-# homeassistant.components.tererererere
 # homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
 pushbullet.py==0.10.0
