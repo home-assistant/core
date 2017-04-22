@@ -1,4 +1,4 @@
-"""Provides methods to bootstrap a home assistant instance."""
+"""Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
 import logging
 import logging.handlers
@@ -32,12 +32,12 @@ FIRST_INIT_COMPONENT = set((
 
 
 def from_config_dict(config: Dict[str, Any],
-                     hass: Optional[core.HomeAssistant]=None,
-                     config_dir: Optional[str]=None,
-                     enable_log: bool=True,
-                     verbose: bool=False,
-                     skip_pip: bool=False,
-                     log_rotate_days: Any=None) \
+                     hass: Optional[core.HomeAssistant] = None,
+                     config_dir: Optional[str] = None,
+                     enable_log: bool = True,
+                     verbose: bool = False,
+                     skip_pip: bool = False,
+                     log_rotate_days: Any = None) \
                      -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a config dict.
 
@@ -63,11 +63,11 @@ def from_config_dict(config: Dict[str, Any],
 @asyncio.coroutine
 def async_from_config_dict(config: Dict[str, Any],
                            hass: core.HomeAssistant,
-                           config_dir: Optional[str]=None,
-                           enable_log: bool=True,
-                           verbose: bool=False,
-                           skip_pip: bool=False,
-                           log_rotate_days: Any=None) \
+                           config_dir: Optional[str] = None,
+                           enable_log: bool = True,
+                           verbose: bool = False,
+                           skip_pip: bool = False,
+                           log_rotate_days: Any = None) \
                            -> Optional[core.HomeAssistant]:
     """Try to configure Home Assistant from a config dict.
 
@@ -91,8 +91,8 @@ def async_from_config_dict(config: Dict[str, Any],
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
-        _LOGGER.warning('Skipping pip installation of required modules. '
-                        'This may cause issues.')
+        _LOGGER.warning("Skipping pip installation of required modules. "
+                        "This may cause issues")
 
     if not loader.PREPARED:
         yield from hass.loop.run_in_executor(None, loader.prepare, hass)
@@ -117,13 +117,13 @@ def async_from_config_dict(config: Dict[str, Any],
     # pylint: disable=not-an-iterable
     res = yield from core_components.async_setup(hass, config)
     if not res:
-        _LOGGER.error('Home Assistant core failed to initialize. '
-                      'Further initialization aborted.')
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "Further initialization aborted")
         return hass
 
     yield from persistent_notification.async_setup(hass, config)
 
-    _LOGGER.info('Home Assistant core initialized')
+    _LOGGER.info("Home Assistant core initialized")
 
     # stage 1
     for component in components:
@@ -142,17 +142,17 @@ def async_from_config_dict(config: Dict[str, Any],
     yield from hass.async_block_till_done()
 
     stop = time()
-    _LOGGER.info('Home Assistant initialized in %.2fs', stop-start)
+    _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
     async_register_signal_handling(hass)
     return hass
 
 
 def from_config_file(config_path: str,
-                     hass: Optional[core.HomeAssistant]=None,
-                     verbose: bool=False,
-                     skip_pip: bool=True,
-                     log_rotate_days: Any=None):
+                     hass: Optional[core.HomeAssistant] = None,
+                     verbose: bool = False,
+                     skip_pip: bool = True,
+                     log_rotate_days: Any = None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -173,9 +173,9 @@ def from_config_file(config_path: str,
 @asyncio.coroutine
 def async_from_config_file(config_path: str,
                            hass: core.HomeAssistant,
-                           verbose: bool=False,
-                           skip_pip: bool=True,
-                           log_rotate_days: Any=None):
+                           verbose: bool = False,
+                           skip_pip: bool = True,
+                           log_rotate_days: Any = None):
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -193,7 +193,7 @@ def async_from_config_file(config_path: str,
         config_dict = yield from hass.loop.run_in_executor(
             None, conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
-        _LOGGER.error('Error loading %s: %s', config_path, err)
+        _LOGGER.error("Error loading %s: %s", config_path, err)
         return None
     finally:
         clear_secret_cache()
@@ -204,7 +204,7 @@ def async_from_config_file(config_path: str,
 
 
 @core.callback
-def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
+def async_enable_logging(hass: core.HomeAssistant, verbose: bool = False,
                          log_rotate_days=None) -> None:
     """Setup the logging.
 
@@ -216,7 +216,7 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
     datefmt = '%y-%m-%d %H:%M:%S'
 
-    # suppress overly verbose logs from libraries that aren't helpful
+    # Suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
@@ -274,7 +274,7 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
 
     else:
         _LOGGER.error(
-            'Unable to setup error log %s (access denied)', err_log_path)
+            "Unable to setup error log %s (access denied)", err_log_path)
 
 
 def mount_local_lib_path(config_dir: str) -> str:

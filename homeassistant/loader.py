@@ -1,5 +1,5 @@
 """
-Provides methods for loading Home Assistant components.
+Provide methods for loading Home Assistant components.
 
 This module has quite some complex parts. I have tried to add as much
 documentation as possible to keep it understandable.
@@ -209,7 +209,7 @@ def _load_order_component(comp_name: str, load_order: OrderedSet,
         dep_load_order = _load_order_component(dependency, load_order, loading)
 
         # length == 0 means error loading dependency or children
-        if len(dep_load_order) == 0:
+        if not len(dep_load_order):
             _LOGGER.error('Error loading %s dependency: %s',
                           comp_name, dependency)
             return OrderedSet()
