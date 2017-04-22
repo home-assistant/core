@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.24']
+REQUIREMENTS = ['pyvera==0.2.27']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -115,6 +115,8 @@ def map_vera_device(vera_device, remap):
         return 'climate'
     if isinstance(vera_device, veraApi.VeraCurtain):
         return 'cover'
+    if isinstance(vera_device, veraApi.VeraSceneController):
+        return 'sensor'
     if isinstance(vera_device, veraApi.VeraSwitch):
         if vera_device.device_id in remap:
             return 'light'
@@ -148,8 +150,8 @@ class VeraDevice(Entity):
 
     @property
     def should_poll(self):
-        """No polling needed."""
-        return False
+        """Get polling requirement from vera device."""
+        return self.vera_device.should_poll
 
     @property
     def device_state_attributes(self):

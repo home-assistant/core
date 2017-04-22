@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.vera/
 """
 import logging
+from datetime import timedelta
 
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
@@ -15,6 +16,8 @@ from homeassistant.components.vera import (
 DEPENDENCIES = ['vera']
 
 _LOGGER = logging.getLogger(__name__)
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -31,6 +34,7 @@ class VeraSensor(VeraDevice, Entity):
         """Initialize the sensor."""
         self.current_value = None
         self._temperature_units = None
+        self.last_changed_time = None
         VeraDevice.__init__(self, vera_device, controller)
 
     @property
@@ -65,6 +69,14 @@ class VeraSensor(VeraDevice, Entity):
             self.current_value = self.vera_device.light
         elif self.vera_device.category == "Humidity Sensor":
             self.current_value = self.vera_device.humidity
+        elif self.vera_device.category == "Scene Controller":
+            value = self.vera_device.get_last_scene_id(True)
+            time = self.vera_device.get_last_scene_time(True)
+            if time == self.last_changed_time:
+                self.current_value = None
+            else:
+                self.current_value = value
+            self.last_changed_time = time
         elif self.vera_device.category == "Sensor":
             tripped = self.vera_device.is_tripped
             self.current_value = 'Tripped' if tripped else 'Not Tripped'
