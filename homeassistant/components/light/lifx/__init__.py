@@ -370,6 +370,8 @@ class LIFXLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             kelvin = int(color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP]))
+            if not changed_color:
+                saturation = 0
             changed_color = True
         else:
             kelvin = self._kel
