@@ -20,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = [
     'https://github.com/michaelarnauts/comfoconnect'
-    '/archive/ee0a4cece4d8027b1dd3d5fc06ddcfebce3e6372.zip'
-    '#pycomfoconnect==0.1.1']
+    '/archive/0.1.zip#pycomfoconnect==0.1']
 
 SPEED_AWAY = 'away'
 SPEED_LOW = 'low'
@@ -53,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the ComfoConnect bridge."""
-    from pycomfoconnect import Bridge
+    from pycomfoconnect import (Bridge)
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -82,9 +81,8 @@ class ComfoConnectBridge(ClimateDevice):
 
     def __init__(self, hass, name, bridge, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-        from pycomfoconnect import (ComfoConnect)
         from pycomfoconnect import (
-            SENSOR_FAN_SPEED_MODE, SENSOR_TEMPERATURE_EXTRACT,
+            ComfoConnect, SENSOR_FAN_SPEED_MODE, SENSOR_TEMPERATURE_EXTRACT,
             SENSOR_TEMPERATURE_OUTDOOR, SENSOR_HUMIDITY_EXTRACT,
             SENSOR_HUMIDITY_OUTDOOR, SENSOR_FAN_SUPPLY_FLOW,
             SENSOR_FAN_EXHAUST_FLOW
@@ -92,7 +90,7 @@ class ComfoConnectBridge(ClimateDevice):
 
         self._hass = hass
         self._name = name
-        self._comfoconnect = ComfoConnect(bridge, self.sensor_callback, debug=True)
+        self._comfoconnect = ComfoConnect(bridge, self.sensor_callback)
         self._token = bytes.fromhex(token)
         self._friendly_name = friendly_name
         self._pin = pin
@@ -187,7 +185,8 @@ class ComfoConnectBridge(ClimateDevice):
 
     def set_fan_mode(self, mode):
         """Set fan speed."""
-        from pycomfoconnect import (error)
+        from pycomfoconnect.error import (
+            PyComfoConnectOtherSession, PyComfoConnectNotAllowed)
         from pycomfoconnect.const import (
             FAN_MODE_AWAY, FAN_MODE_LOW, FAN_MODE_MEDIUM,
             FAN_MODE_HIGH
@@ -209,11 +208,11 @@ class ComfoConnectBridge(ClimateDevice):
             # Update current mode
             self._data[ATTR_FAN_MODE] = mode
 
-        except error.PyComfoConnectOtherSession as ex:
+        except PyComfoConnectOtherSession as ex:
             _LOGGER.error('Another session with "%s" is active.',
                           ex.devicename)
 
-        except error.PyComfoConnectNotAllowed:
+        except PyComfoConnectNotAllowed:
             _LOGGER.error('Could not register. Invalid PIN!')
 
         finally:
@@ -221,7 +220,8 @@ class ComfoConnectBridge(ClimateDevice):
 
     def update(self):
         """Open connection to the Bridge."""
-        from pycomfoconnect import (error)
+        from pycomfoconnect.error import (
+            PyComfoConnectOtherSession, PyComfoConnectNotAllowed)
 
         try:
             self._comfoconnect.connect(
@@ -231,7 +231,7 @@ class ComfoConnectBridge(ClimateDevice):
             # Clean sensor data
             self._data = {}
 
-            # Subscribe to sensor values. Will be reported async to sensor_callback
+            # Subscribe to sensor values.
             for sensor in self._subscribed_sensors:
                 self._comfoconnect.request(sensor)
             _LOGGER.debug('Subscribed to sensors.')
@@ -240,11 +240,11 @@ class ComfoConnectBridge(ClimateDevice):
             self.wait_for_sensor_values(5)
             _LOGGER.debug('Sensor data received.')
 
-        except error.PyComfoConnectOtherSession as ex:
+        except PyComfoConnectOtherSession as ex:
             _LOGGER.error('Another session with "%s" is active.',
                           ex.devicename)
 
-        except error.PyComfoConnectNotAllowed:
+        except PyComfoConnectNotAllowed:
             _LOGGER.error('Could not register. Invalid PIN!')
 
         finally:
@@ -258,7 +258,7 @@ class ComfoConnectBridge(ClimateDevice):
                 continue
 
             if time.time() > deadline:
-                _LOGGER.error('Timeout during waiting for sensor data')
+                _LOGGER.error('Timeout while waiting for sensor data.')
                 return
 
             time.sleep(1)

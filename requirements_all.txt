@@ -334,6 +334,9 @@ https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
+# homeassistant.components.climate.comfoconnect
+https://github.com/michaelarnauts/comfoconnect/archive/0.1.zip#pycomfoconnect==0.1
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==3.0.0
