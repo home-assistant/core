@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Add device to HASS
             devices.append(MaxCubeClimate(hass, name, device.rf_address))
 
-    if len(devices):
+    if devices:
         add_devices(devices)
 
 

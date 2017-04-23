@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rfxtrx/
 """
 import logging
+
 import voluptuous as vol
 
 import homeassistant.components.rfxtrx as rfxtrx
@@ -13,8 +14,8 @@ from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 from homeassistant.components.rfxtrx import (
-    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT,
-    CONF_DEVICES, ATTR_DATA_TYPE, DATA_TYPES, ATTR_ENTITY_ID)
+    ATTR_AUTOMATIC_ADD, ATTR_NAME, ATTR_FIREEVENT, CONF_DEVICES, DATA_TYPES,
+    ATTR_DATA_TYPE, ATTR_ENTITY_ID)
 
 DEPENDENCIES = ['rfxtrx']
 
@@ -28,7 +29,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the RFXtrx platform."""
+    """Set up the RFXtrx platform."""
     from RFXtrx import SensorEvent
     sensors = []
     for packet_id, entity_info in config[CONF_DEVICES].items():
@@ -40,7 +41,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         sub_sensors = {}
         data_types = entity_info[ATTR_DATA_TYPE]
-        if len(data_types) == 0:
+        if not data_types:
             data_types = ['']
             for data_type in DATA_TYPES:
                 if data_type in event.values:

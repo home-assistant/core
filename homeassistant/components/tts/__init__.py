@@ -84,7 +84,7 @@ def async_setup(hass, config):
     tts = SpeechManager(hass)
 
     try:
-        conf = config[DOMAIN][0] if len(config.get(DOMAIN, [])) > 0 else {}
+        conf = config[DOMAIN][0] if config.get(DOMAIN, []) else {}
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)

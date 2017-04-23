@@ -101,7 +101,7 @@ def setup(hass, config):
             return
 
         try:
-            if len(whitelist) > 0 and state.entity_id not in whitelist:
+            if whitelist and state.entity_id not in whitelist:
                 return
 
             _state = float(state_helper.state_as_number(state))
@@ -154,7 +154,7 @@ def setup(hass, config):
         try:
             influx.write_points(json_body)
         except exceptions.InfluxDBClientError:
-            _LOGGER.exception('Error saving event "%s" to InfluxDB', json_body)
+            _LOGGER.exception("Error saving event %s to InfluxDB", json_body)
 
     hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 
