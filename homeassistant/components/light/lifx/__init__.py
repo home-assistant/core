@@ -374,7 +374,10 @@ class LIFXLight(Light):
                 saturation = 0
             changed_color = True
         else:
-            kelvin = self._kel
+            if changed_color:
+                kelvin = 3500
+            else:
+                kelvin = self._kel
 
         return [[hue, saturation, brightness, kelvin], changed_color]
 
