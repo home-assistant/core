@@ -256,6 +256,7 @@ class LIFXLight(Light):
 
         if self.postponed_update:
             self.postponed_update()
+            self.postponed_update = None
         if when > BULB_LATENCY:
             self.postponed_update = async_track_point_in_utc_time(
                 self.hass, self.update_after_transition,
