@@ -30,6 +30,59 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(Tradfri(light) for light in lights)
 
+    groups = gateway.get_groups()
+    lights = [dev for dev in groups]
+    add_devices(TradfriGroup(light) for light in lights)
+
+
+class TradfriGroup(Light):
+    """The platform class required by hass."""
+
+    def __init__(self, light):
+        """Initialize a Light."""
+        self._light = light
+
+        self._light_data = light
+        self._name = light.name
+        self._features = SUPPORT_BRIGHTNESS
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return self._features
+
+    @property
+    def name(self):
+        """Return the display name of this light."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """Return true if light is on."""
+        return self._light_data.state
+
+    @property
+    def brightness(self):
+        """Brightness of the light (an integer in the range 1-255)."""
+        return self._light_data.dimmer
+
+    def turn_off(self, **kwargs):
+        """Instruct the light to turn off."""
+        return self._light_data.set_values({ "5850" : 0 })
+
+    def turn_on(self, **kwargs):
+        """
+        Instruct the light to turn on.
+        """
+        if ATTR_BRIGHTNESS in kwargs:
+            self._light_data.set_values({ "5851" : kwargs[ATTR_BRIGHTNESS] } )
+        else:
+            self._light_data.set_values({ "5850" : 1 })
+
+    def update(self):
+        """Fetch new state data for this light."""
+        self._light.update()
+
 
 class Tradfri(Light):
     """The platform class required by hass."""
