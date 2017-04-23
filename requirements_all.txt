@@ -285,6 +285,9 @@ https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.7.zip#russound==0.1.7
 
+# homeassistant.components.climate.comfoconnect
+https://github.com/michaelarnauts/comfoconnect/archive/0.1.zip#pycomfoconnect==0.1
+
 # homeassistant.components.media_player.onkyo
 https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea0ec5c1b7c.zip#onkyo-eiscp==1.0
 
@@ -333,9 +336,6 @@ https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
-
-# homeassistant.components.climate.comfoconnect
-https://github.com/michaelarnauts/comfoconnect/archive/0.1.zip#pycomfoconnect==0.1
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
