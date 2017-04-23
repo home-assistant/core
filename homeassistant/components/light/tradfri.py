@@ -72,9 +72,7 @@ class TradfriGroup(Light):
         return self._light_control.set_values({"5850": 0})
 
     def turn_on(self, **kwargs):
-        """
-        Instruct the light to turn on.
-        """
+        """Instruct the light to turn on, or dim."""
         if ATTR_BRIGHTNESS in kwargs:
             self._light_control.set_values({"5851": kwargs[ATTR_BRIGHTNESS]})
         else:
