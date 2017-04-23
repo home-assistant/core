@@ -173,6 +173,12 @@ class ComfoConnectBridge(ClimateDevice):
             return self._data[ATTR_CURRENT_TEMPERATURE]
 
     @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        if ATTR_CURRENT_HUMIDITY in self._data:
+            return self._data[ATTR_CURRENT_HUMIDITY]
+
+    @property
     def current_fan_mode(self):
         """Return the current fan mode."""
         if ATTR_FAN_MODE in self._data:
