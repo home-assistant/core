@@ -534,7 +534,7 @@ pyfido==1.0.1
 pyfttt==0.3
 
 # homeassistant.components.sensor.skybeacon
-pygatt==3.0.0
+pygatt==3.1.1
 
 # homeassistant.components.remote.harmony
 pyharmony==1.0.12
