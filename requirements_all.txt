@@ -71,7 +71,7 @@ apns2==0.1.1
 astral==1.4
 
 # homeassistant.components.light.avion
-# avion==0.5
+# avion==0.6
 
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
@@ -123,7 +123,7 @@ crimereports==1.0.0
 datapoint==0.4.3
 
 # homeassistant.components.light.decora
-# decora==0.3
+# decora==0.4
 
 # homeassistant.components.media_player.denonavr
 denonavr==0.3.1
