@@ -42,6 +42,7 @@ class TradfriGroup(Light):
         """Initialize a Light."""
         self._light = light
 
+        self._light_control = light
         self._light_data = light
         self._name = light.name
         self._features = SUPPORT_BRIGHTNESS
@@ -68,16 +69,16 @@ class TradfriGroup(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        return self._light_data.set_values({ "5850" : 0 })
+        return self._light_control.set_values({ "5850" : 0 })
 
     def turn_on(self, **kwargs):
         """
         Instruct the light to turn on.
         """
         if ATTR_BRIGHTNESS in kwargs:
-            self._light_data.set_values({ "5851" : kwargs[ATTR_BRIGHTNESS] } )
+            self._light_control.set_values({ "5851" : kwargs[ATTR_BRIGHTNESS] })
         else:
-            self._light_data.set_values({ "5850" : 1 })
+            self._light_control.set_values({ "5850" : 1 })
 
     def update(self):
         """Fetch new state data for this light."""
