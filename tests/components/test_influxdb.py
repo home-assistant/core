@@ -3,8 +3,11 @@ import unittest
 import datetime
 from unittest import mock
 
+from datetime import timedelta
 import influxdb as influx_client
 
+from homeassistant.util import dt as dt_util
+from homeassistant import core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON, \
@@ -36,6 +39,7 @@ class TestInfluxDB(unittest.TestCase):
                 'database': 'db',
                 'username': 'user',
                 'password': 'password',
+                'max_retries': 4,
                 'ssl': 'False',
                 'verify_ssl': 'False',
             }
@@ -91,7 +95,7 @@ class TestInfluxDB(unittest.TestCase):
             influx_client.exceptions.InfluxDBClientError('fake')
         assert not setup_component(self.hass, influxdb.DOMAIN, config)
 
-    def _setup(self):
+    def _setup(self, **kwargs):
         """Setup the client."""
         config = {
             'influxdb': {
@@ -104,6 +108,7 @@ class TestInfluxDB(unittest.TestCase):
                 }
             }
         }
+        config['influxdb'].update(kwargs)
         assert setup_component(self.hass, influxdb.DOMAIN, config)
         self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
@@ -649,3 +654,33 @@ class TestInfluxDB(unittest.TestCase):
                 mock.call(body)
             )
             mock_client.return_value.write_points.reset_mock()
+
+    def test_scheduled_write(self, mock_client):
+        """Test the event listener to retry after write failures."""
+        self._setup(max_retries=1)
+
+        state = mock.MagicMock(
+            state=1, domain='fake', entity_id='entity.id', object_id='entity',
+            attributes={})
+        event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+        mock_client.return_value.write_points.side_effect = \
+            IOError('foo')
+
+        start = dt_util.utcnow()
+
+        self.handler_method(event)
+        json_data = mock_client.return_value.write_points.call_args[0][0]
+        self.assertEqual(mock_client.return_value.write_points.call_count, 1)
+
+        shifted_time = start + (timedelta(seconds=20 + 1))
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: shifted_time})
+        self.hass.block_till_done()
+        self.assertEqual(mock_client.return_value.write_points.call_count, 2)
+        mock_client.return_value.write_points.assert_called_with(json_data)
+
+        shifted_time = shifted_time + (timedelta(seconds=20 + 1))
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
+                           {ha.ATTR_NOW: shifted_time})
+        self.hass.block_till_done()
+        self.assertEqual(mock_client.return_value.write_points.call_count, 2)
