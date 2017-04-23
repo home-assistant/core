@@ -34,7 +34,7 @@ from .static import (
     staticresource_middleware, CachingFileResponse, CachingStaticResource)
 from .util import get_real_ip
 
-REQUIREMENTS = ['aiohttp_cors==0.5.2']
+REQUIREMENTS = ['aiohttp_cors==0.5.3']
 
 DOMAIN = 'http'
 
