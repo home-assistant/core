@@ -50,6 +50,8 @@ ATTR_TRANSITION = "transition"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
+ATTR_MIN_MIREDS = "min_mireds"
+ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE_VALUE = "white_value"
 
@@ -78,6 +80,8 @@ LIGHT_PROFILES_FILE = "light_profiles.csv"
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_temp': ATTR_COLOR_TEMP,
+    'min_mireds': ATTR_MIN_MIREDS,
+    'max_mireds': ATTR_MAX_MIREDS,
     'rgb_color': ATTR_RGB_COLOR,
     'xy_color': ATTR_XY_COLOR,
     'white_value': ATTR_WHITE_VALUE,
@@ -334,6 +338,18 @@ class Light(ToggleEntity):
     def color_temp(self):
         """Return the CT color value in mireds."""
         return None
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        # Default to the Philips Hue value that HA has always assumed
+        return 154
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        # Default to the Philips Hue value that HA has always assumed
+        return 500
 
     @property
     def white_value(self):

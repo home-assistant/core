@@ -37,9 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNREACHABLE = 'allow_unreachable'
 
-TEMP_COLOR_MAX = 500  # mireds (inverted)
-TEMP_COLOR_MIN = 154
-
 DEFAULT_ALLOW_UNREACHABLE = False
 DOMAIN = "light"
 SERVICE_HUE_SCENE = "hue_activate_scene"
@@ -409,7 +406,7 @@ class HueLight(Light):
 
         if ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
-            command['ct'] = max(TEMP_COLOR_MIN, min(temp, TEMP_COLOR_MAX))
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 
