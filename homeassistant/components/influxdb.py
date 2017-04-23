@@ -5,6 +5,10 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 import logging
+import datetime
+import functools
+
+
 import re
 
 import requests.exceptions
@@ -30,6 +34,7 @@ CONF_TAGS_ATTRIBUTES = 'tags_attributes'
 CONF_COMPONENT_CONFIG = 'component_config'
 CONF_COMPONENT_CONFIG_GLOB = 'component_config_glob'
 CONF_COMPONENT_CONFIG_DOMAIN = 'component_config_domain'
+CONF_RETRY_COUNT = 'max_retries'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -58,6 +63,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
+        vol.Optional(CONF_RETRY_COUNT): cv.positive_int,
         vol.Optional(CONF_DEFAULT_MEASUREMENT): cv.string,
         vol.Optional(CONF_OVERRIDE_MEASUREMENT): cv.string,
         vol.Optional(CONF_TAGS, default={}):
@@ -119,6 +125,8 @@ def setup(hass, config):
         conf[CONF_COMPONENT_CONFIG],
         conf[CONF_COMPONENT_CONFIG_DOMAIN],
         conf[CONF_COMPONENT_CONFIG_GLOB])
+    max_tries = conf.get(CONF_RETRY_COUNT)
+    retry_delay = datetime.timedelta(seconds=20)
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -213,10 +221,30 @@ def setup(hass, config):
 
         json_body[0]['tags'].update(tags)
 
+        _write_data(json_body)
+
+    def _write_data(json_body, current_try=0, event=None):
         try:
             influx.write_points(json_body)
+            if current_try > 0:
+                _LOGGER.info("Retried write to InfluxDB successful.")
         except exceptions.InfluxDBClientError:
             _LOGGER.exception("Error saving event %s to InfluxDB", json_body)
+        except IOError as io_error:
+            if max_tries is not None and current_try < max_tries:
+                _LOGGER.warning("Could not write data to InfluxDB, "
+                                "try %d/%d will retry: %s",
+                                current_try + 1, max_tries, io_error)
+
+                next_ts = dt_util.utcnow() + retry_delay
+                track_point_in_utc_time(hass,
+                                        functools.partial(_write_data,
+                                                          json_body,
+                                                          current_try + 1),
+                                        next_ts)
+            else:
+                _LOGGER.exception("Error saving event %s to InfluxDB",
+                                  json_body)
 
     hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 
