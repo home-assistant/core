@@ -27,7 +27,7 @@ def run(script_args: List) -> int:
     parser.add_argument(
         '--uri',
         type=str,
-        help="Connect to URI and import (if other than default swlite)"
+        help="Connect to URI and import (if other than default sqlite) "
              "eg: mysql://localhost/homeassistant")
     parser.add_argument(
         '-d', '--dbname',
@@ -89,7 +89,7 @@ def run(script_args: List) -> int:
         default=False,
         action="store_true",
         help=("Do not write points but simulate preprocessing and print "
-              "print statistics"))
+              "statistics"))
     parser.add_argument(
         '--script',
         choices=['influxdb_import'])
