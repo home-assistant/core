@@ -43,6 +43,16 @@ class TestHassIOSetup(object):
         with assert_setup_component(0, ho.DOMAIN):
             setup_component(self.hass, ho.DOMAIN, self.config)
 
+    def test_setup_component_bad(self, aioclient_mock):
+        """Test setup component bad."""
+        aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
+            'result': 'ok', 'data': {}
+        })
+        with assert_setup_component(0, ho.DOMAIN):
+            assert not setup_component(self.hass, ho.DOMAIN, self.config)
+
+        assert len(aioclient_mock.mock_calls) == 0
+
     def test_setup_component_test_service(self, aioclient_mock, hassio_env):
         """Test setup component and check if service exits."""
         aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={
