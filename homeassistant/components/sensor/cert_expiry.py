@@ -84,13 +84,17 @@ class SSLCertificate(Entity):
                                    server_hostname=self.server_name)
             sock.settimeout(TIMEOUT)
             sock.connect((self.server_name, self.server_port))
-        except Exception as excp:
+        except socket.gaierror:
+            _LOGGER.error('Cannot resolve name %s', self.server_name)
+        except socket.timeout:
+            _LOGGER.error('Connection timeout with server %s', self.server_name)
+        except OSError as excp:
             _LOGGER.error('Cannot connect to %s', self.server_name)
             raise excp
 
         try:
             cert = sock.getpeercert()
-        except Exception as excp:
+        except OSError as excp:
             _LOGGER.error('Cannot fetch certificate from %s',
                           (self.server_name))
             raise excp
