@@ -28,7 +28,7 @@ class VolvoSensor(VolvoEntity, BinarySensorDevice):
         """Return True if the binary sensor is on."""
         val = getattr(self.vehicle, self._attribute)
         if self._attribute == 'bulb_failures':
-            return len(val) > 0
+            return bool(val)
         elif self._attribute in ['doors', 'windows']:
             return any([val[key] for key in val if 'Open' in key])
         else:

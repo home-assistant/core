@@ -13,17 +13,16 @@ from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 
-DOMAIN = 'tellstick'
-
 REQUIREMENTS = ['tellcore-py==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SIGNAL_REPETITIONS = 'signal_repetitions'
-DEFAULT_SIGNAL_REPETITIONS = 1
-
-ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_DISCOVER_CONFIG = 'config'
+ATTR_DISCOVER_DEVICES = 'devices'
+ATTR_SIGNAL_REPETITIONS = 'signal_repetitions'
+
+DEFAULT_SIGNAL_REPETITIONS = 1
+DOMAIN = 'tellstick'
 
 # Use a global tellstick domain lock to avoid getting Tellcore errors when
 # calling concurrently.
@@ -42,8 +41,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def _discover(hass, config, component_name, found_tellcore_devices):
-    """Setup and send the discovery event."""
-    if not len(found_tellcore_devices):
+    """Set up and send the discovery event."""
+    if not found_tellcore_devices:
         return
 
     _LOGGER.info("Discovered %d new %s devices", len(found_tellcore_devices),
@@ -66,7 +65,7 @@ def setup(hass, config):
         tellcore_lib = TelldusCore(
             callback_dispatcher=AsyncioCallbackDispatcher(hass.loop))
     except OSError:
-        _LOGGER.exception('Could not initialize Tellstick')
+        _LOGGER.exception("Could not initialize Tellstick")
         return False
 
     # Get all devices, switches and lights alike

@@ -154,9 +154,9 @@ def _save_config(filename, config):
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the GPMDP platform."""
+    """Set up the GPMDP platform."""
     codeconfig = _load_config(hass.config.path(GPMDP_CONFIG_FILE))
-    if len(codeconfig):
+    if codeconfig:
         code = codeconfig.get('CODE')
     elif discovery_info is not None:
         if 'gpmdp' in _CONFIGURING:

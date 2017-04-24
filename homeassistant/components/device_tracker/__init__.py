@@ -37,6 +37,8 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID)
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
 
@@ -86,7 +88,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
 }
-_LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass: HomeAssistantType, entity_id: str=None):
@@ -125,7 +126,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         async_log_exception(ex, DOMAIN, config, hass)
         return False
     else:
-        conf = conf[0] if len(conf) > 0 else {}
+        conf = conf[0] if conf else {}
         consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
