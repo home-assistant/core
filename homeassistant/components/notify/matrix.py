@@ -12,8 +12,8 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+  ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL
 
 REQUIREMENTS = ['matrix-client==0.0.6']
@@ -40,7 +40,7 @@ def get_service(hass, config, discovery_info=None):
 
     try:
         return MatrixNotificationService(
-            hass.config.path(),
+            os.path.join(hass.config.path(), SESSION_FILE),
             config.get(CONF_HOMESERVER),
             config.get(CONF_DEFAULT_ROOM),
             config.get(CONF_VERIFY_SSL),
@@ -54,10 +54,10 @@ def get_service(hass, config, discovery_info=None):
 class MatrixNotificationService(BaseNotificationService):
     """Send Notifications to a Matrix Room."""
 
-    def __init__(self, config_directory, homeserver, default_room, verify_ssl,
+    def __init__(self, config_file, homeserver, default_room, verify_ssl,
                  username, password):
         """Setup the client."""
-        self.session_filepath = os.path.join(config_directory, SESSION_FILE)
+        self.session_filepath = config_file
         self.auth_tokens = self.get_auth_tokens()
 
         self.homeserver = homeserver
