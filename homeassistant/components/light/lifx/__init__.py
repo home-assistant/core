@@ -354,10 +354,7 @@ class LIFXLight(Light):
             brightness = self._bri
 
         if ATTR_XY_COLOR in kwargs:
-            hue, saturation, _ = \
-                color_util.color_xy_brightness_to_hsv(
-                    *kwargs[ATTR_XY_COLOR],
-                    ibrightness=255)
+            hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
             saturation = saturation * (BYTE_MAX + 1)
             changed_color = True
 
