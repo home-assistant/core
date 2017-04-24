@@ -50,7 +50,7 @@ def async_setup(hass, config):
             _LOGGER.error("Unknown notification service specified")
             return
 
-        _LOGGER.info("Setting up1 %s.%s", DOMAIN, p_type)
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
 
         try:
             if hasattr(platform, 'async_setup_platform'):
@@ -72,8 +72,6 @@ def async_setup(hass, config):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up platform %s', p_type)
             return
-
-        return True
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -103,10 +101,10 @@ class BaseTelegramBotEntity:
         """Check for basic message rules and fire an event if message is ok."""
         data = data.get('message')
 
-        if (not data
-                or 'from' not in data
-                or 'text' not in data
-                or data['from'].get('id') not in self.allowed_chat_ids):
+        if (not data or
+                'from' not in data or
+                'text' not in data or
+                data['from'].get('id') not in self.allowed_chat_ids):
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data.")
             return False
