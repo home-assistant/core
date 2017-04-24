@@ -14,12 +14,10 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = []
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'SSL Certificate Expiry'
 DEFAULT_PORT = 443
-ICON = 'mdi:certificate'
 
 SCAN_INTERVAL = datetime.timedelta(hours=12)
 TIMEOUT = 10.0
@@ -28,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    })
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -67,7 +65,7 @@ class SSLCertificate(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return ICON
+        return 'mdi:certificate'
 
     def update(self):
         """Fetch certificate information."""
