@@ -96,7 +96,8 @@ class TestInfluxDB(unittest.TestCase):
                 'host': 'host',
                 'username': 'user',
                 'password': 'pass',
-                'blacklist': ['fake.blacklisted']
+                'blacklist': ['fake.blacklisted'],
+                'blacklist_domains': ['another_fake']
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
@@ -262,6 +263,40 @@ class TestInfluxDB(unittest.TestCase):
             }]
             self.handler_method(event)
             if entity_id == 'ok':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_blacklist_domain(self, mock_client):
+        """Test the event listener against a blacklist."""
+        self._setup()
+
+        for domain in ('ok', 'another_fake'):
+            state = mock.MagicMock(
+                state=1, domain=domain,
+                entity_id='{}.something'.format(domain),
+                object_id='something', attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': '{}.something'.format(domain),
+                'tags': {
+                    'domain': domain,
+                    'entity_id': 'something',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if domain == 'ok':
                 self.assertEqual(
                     mock_client.return_value.write_points.call_count, 1
                 )
