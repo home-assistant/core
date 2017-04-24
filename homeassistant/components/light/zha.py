@@ -44,10 +44,12 @@ class Light(zha.Entity, light.Light):
         self._color_temp = None
         self._xy_color = None
         self._brightness = None
-        if 8 in self._clusters:
+
+        import bellows.zigbee.zcl.clusters as zcl_clusters
+        if zcl_clusters.general.LevelControl.cluster_id in self._clusters:
             self._supported_features |= light.SUPPORT_BRIGHTNESS
             self._brightness = 0
-        if 0x0300 in self._clusters:
+        if zcl_clusters.lighting.Color.cluster_id in self._clusters:
             # Not sure all color lights necessarily support this directly
             # Should we emulate it?
             self._supported_features |= light.SUPPORT_COLOR_TEMP
