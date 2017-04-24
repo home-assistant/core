@@ -1,4 +1,4 @@
-"""Template helper methods for rendering strings with HA data."""
+"""Template helper methods for rendering strings with Home Assistant data."""
 from datetime import datetime
 import json
 import logging

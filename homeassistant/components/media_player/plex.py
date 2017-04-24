@@ -12,34 +12,24 @@ from urllib.parse import urlparse
 
 import requests
 import voluptuous as vol
+
 from homeassistant import util
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO,
-    PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    MediaPlayerDevice,
-)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    DEVICE_DEFAULT_NAME,
-    STATE_IDLE,
-    STATE_OFF,
-    STATE_PAUSED,
-    STATE_PLAYING,
-)
+    DEVICE_DEFAULT_NAME, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.loader import get_component
 
 REQUIREMENTS = ['plexapi==2.0.2']
+
+_CONFIGURING = {}
+_LOGGER = logging.getLogger(__name__)
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 
@@ -59,10 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     cv.boolean,
 })
 
-# Map ip to request id for configuring
-_CONFIGURING = {}
-_LOGGER = logging.getLogger(__name__)
-
 
 def config_from_file(filename, config=None):
     """Small configuration file management function."""
@@ -72,7 +58,7 @@ def config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return True
     else:
@@ -82,7 +68,7 @@ def config_from_file(filename, config=None):
                 with open(filename, 'r') as fdesc:
                     return json.loads(fdesc.read())
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
+                _LOGGER.error("Reading config file failed: %s", error)
                 # This won't work yet
                 return False
         else:
@@ -94,7 +80,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     # get config from plex.conf
     file_config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
 
-    if len(file_config):
+    if file_config:
         # Setup a configured PlexServer
         host, token = file_config.popitem()
         token = token['token']
@@ -102,7 +88,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     elif discovery_info is not None:
         # Parse discovery data
         host = discovery_info.get('host')
-        _LOGGER.info('Discovered PLEX server: %s', host)
+        _LOGGER.info("Discovered PLEX server: %s", host)
 
         if host in _CONFIGURING:
             return
@@ -133,14 +119,14 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         request_id = _CONFIGURING.pop(host)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
-        _LOGGER.info('Discovery configuration done!')
+        _LOGGER.info("Discovery configuration done")
 
     # Save config
     if not config_from_file(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
                 'token': token
             }}):
-        _LOGGER.error('failed to save config file')
+        _LOGGER.error("Failed to save configuration file")
 
     _LOGGER.info('Connected to: http://%s', host)
 
@@ -158,7 +144,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
             _LOGGER.exception('Error listing plex devices')
             return
         except OSError:
-            _LOGGER.error('Could not connect to plex server at http://%s',
+            _LOGGER.error("Could not connect to plex server at http://%s",
                           host)
             return
 
@@ -204,7 +190,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         try:
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception('Error listing plex sessions')
+            _LOGGER.exception("Error listing plex sessions")
             return
 
         plex_sessions.clear()
@@ -386,9 +372,8 @@ class PlexClient(MediaPlayerDevice):
 
         # media type
         if self._session_type == 'clip':
-            _LOGGER.debug('Clip content type detected, '
-                          'compatibility may vary: %s',
-                          self.entity_id)
+            _LOGGER.debug("Clip content type detected, compatibility may "
+                          "vary: %s", self.entity_id)
             self._media_content_type = MEDIA_TYPE_TVSHOW
         elif self._session_type == 'episode':
             self._media_content_type = MEDIA_TYPE_TVSHOW
@@ -447,9 +432,8 @@ class PlexClient(MediaPlayerDevice):
                 self._session.originalTitle)
             # use album artist if track artist is missing
             if self._media_artist is None:
-                _LOGGER.debug(
-                    'Using album artist because track artist '
-                    'was not found: %s', self.entity_id)
+                _LOGGER.debug("Using album artist because track artist was "
+                              "not found: %s", self.entity_id)
                 self._media_artist = self._media_album_artist
         else:
             self._media_album_name = None
@@ -475,8 +459,8 @@ class PlexClient(MediaPlayerDevice):
                     self._session.grandparentThumb)
 
             if thumb_url is None:
-                _LOGGER.debug('Using media art because media thumb '
-                              'was not found: %s', self.entity_id)
+                _LOGGER.debug("Using media art because media thumb "
+                              "was not found: %s", self.entity_id)
                 thumb_url = self._get_thumbnail_url(self._session.art)
 
             self._media_image_url = thumb_url
@@ -570,9 +554,8 @@ class PlexClient(MediaPlayerDevice):
     def media_content_type(self):
         """Content type of current playing media."""
         if self._session_type == 'clip':
-            _LOGGER.debug('Clip content type detected, '
-                          'compatibility may vary: %s',
-                          self.entity_id)
+            _LOGGER.debug("Clip content type detected, "
+                          "compatibility may vary: %s", self.entity_id)
             return MEDIA_TYPE_TVSHOW
         elif self._session_type == 'episode':
             return MEDIA_TYPE_TVSHOW
@@ -657,8 +640,8 @@ class PlexClient(MediaPlayerDevice):
         # no mute support
         elif self.make.lower() == "shield android tv":
             _LOGGER.debug(
-                'Shield Android TV client detected, disabling mute '
-                'controls: %s', self.entity_id)
+                "Shield Android TV client detected, disabling mute "
+                "controls: %s", self.entity_id)
             return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
                     SUPPORT_NEXT_TRACK | SUPPORT_STOP |
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
@@ -666,8 +649,8 @@ class PlexClient(MediaPlayerDevice):
         # Only supports play,pause,stop (and off which really is stop)
         elif self.make.lower().startswith("tivo"):
             _LOGGER.debug(
-                'Tivo client detected, only enabling pause, play, '
-                'stop, and off controls: %s', self.entity_id)
+                "Tivo client detected, only enabling pause, play, "
+                "stop, and off controls: %s", self.entity_id)
             return (SUPPORT_PAUSE | SUPPORT_PLAY | SUPPORT_STOP |
                     SUPPORT_TURN_OFF)
         # Not all devices support playback functionality
@@ -693,8 +676,8 @@ class PlexClient(MediaPlayerDevice):
                 # point controls to server since that's where the
                 # playback is occuring
                 _LOGGER.debug(
-                    'Local client detected, redirecting controls to '
-                    'Plex server: %s', self.entity_id)
+                    "Local client detected, redirecting controls to "
+                    "Plex server: %s", self.entity_id)
                 server_url = self.device.server.baseurl
                 client_url = self.device.baseurl
                 self.device.baseurl = "{}://{}:{}".format(
@@ -830,7 +813,7 @@ class PlexClient(MediaPlayerDevice):
                 break
 
         if target_season is None:
-            _LOGGER.error('Season not found: %s\\%s - S%sE%s', library_name,
+            _LOGGER.error("Season not found: %s\\%s - S%sE%s", library_name,
                           show_name,
                           str(season_number).zfill(2),
                           str(episode_number).zfill(2))
@@ -847,7 +830,7 @@ class PlexClient(MediaPlayerDevice):
                     break
 
             if target_episode is None:
-                _LOGGER.error('Episode not found: %s\\%s - S%sE%s',
+                _LOGGER.error("Episode not found: %s\\%s - S%sE%s",
                               library_name, show_name,
                               str(season_number).zfill(2),
                               str(episode_number).zfill(2))
@@ -858,14 +841,14 @@ class PlexClient(MediaPlayerDevice):
         """Instruct Plex client to play a piece of media."""
         if not (self.device and
                 'playback' in self._device_protocol_capabilities):
-            _LOGGER.error('Client cannot play media: %s', self.entity_id)
+            _LOGGER.error("Client cannot play media: %s", self.entity_id)
             return
 
         import plexapi.playqueue
-        playqueue = plexapi.playqueue.PlayQueue.create(self.device.server,
-                                                       media, **params)
+        playqueue = plexapi.playqueue.PlayQueue.create(
+            self.device.server, media, **params)
 
-        # delete dynamic playlists used to build playqueue (ex. play tv season)
+        # Delete dynamic playlists used to build playqueue (ex. play tv season)
         if delete:
             media.delete()
 
@@ -873,16 +856,13 @@ class PlexClient(MediaPlayerDevice):
 
         server_url = self.device.server.baseurl.split(':')
         self.device.sendCommand('playback/playMedia', **dict({
-            'machineIdentifier':
-            self.device.server.machineIdentifier,
-            'address':
-            server_url[1].strip('/'),
-            'port':
-            server_url[-1],
-            'key':
-            media.key,
+            'machineIdentifier': self.device.server.machineIdentifier,
+            'address': server_url[1].strip('/'),
+            'port': server_url[-1],
+            'key': media.key,
             'containerKey':
-            '/playQueues/%s?window=100&own=1' % playqueue.playQueueID,
+                '/playQueues/{}?window=100&own=1'.format(
+                    playqueue.playQueueID),
         }, **params))
 
     @property

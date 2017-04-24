@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         climate_devices.append(create_climate_device(
             tado, hass, zone, zone['name'], zone['id']))
 
-    if len(climate_devices) > 0:
+    if climate_devices:
         add_devices(climate_devices, True)
         return True
     else:
