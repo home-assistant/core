@@ -24,12 +24,12 @@ SWITCH_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Neato switches."""
+    """Set up the Neato switches."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
-    _LOGGER.debug('Adding switches %s', dev)
+    _LOGGER.debug("Adding switches %s", dev)
     add_devices(dev)
 
 
@@ -41,25 +41,26 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.type = switch_type
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
-        self._robot_name = self.robot.name + ' ' + SWITCH_TYPES[self.type][0]
+        self._robot_name = '{} {}'.format(
+            self.robot.name, SWITCH_TYPES[self.type][0])
         try:
             self._state = self.robot.state
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError) as ex:
-            _LOGGER.warning('Neato connection error: %s', ex)
+            _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
         self._schedule_state = None
         self._clean_state = None
 
     def update(self):
         """Update the states of Neato switches."""
-        _LOGGER.debug('Running switch update')
+        _LOGGER.debug("Running switch update")
         self.neato.update_robots()
         try:
             self._state = self.robot.state
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError) as ex:
-            _LOGGER.warning('Neato connection error: %s', ex)
+            _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
             return
         _LOGGER.debug('self._state=%s', self._state)
@@ -71,14 +72,14 @@ class NeatoConnectedSwitch(ToggleEntity):
                 self._clean_state = STATE_ON
             else:
                 self._clean_state = STATE_OFF
-            _LOGGER.debug('schedule_state=%s', self._schedule_state)
+            _LOGGER.debug("Schedule state: %s", self._schedule_state)
         if self.type == SWITCH_TYPE_SCHEDULE:
-            _LOGGER.debug('self._state=%s', self._state)
+            _LOGGER.debug("State: %s", self._state)
             if self.robot.schedule_enabled:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
-            _LOGGER.debug('schedule_state=%s', self._schedule_state)
+            _LOGGER.debug("Shedule state: %s", self._schedule_state)
 
     @property
     def name(self):

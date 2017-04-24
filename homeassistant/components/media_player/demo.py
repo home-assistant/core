@@ -250,12 +250,12 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return self.tracks[self._cur_track][1] if len(self.tracks) > 0 else ""
+        return self.tracks[self._cur_track][1] if self.tracks else ""
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self.tracks[self._cur_track][0] if len(self.tracks) > 0 else ""
+        return self.tracks[self._cur_track][0] if self.tracks else ""
 
     @property
     def media_album_name(self):

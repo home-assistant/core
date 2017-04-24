@@ -253,7 +253,7 @@ class HomeAssistant(object):
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
-            if len(pending) > 0:
+            if pending:
                 yield from asyncio.wait(pending, loop=self.loop)
             else:
                 yield from asyncio.sleep(0, loop=self.loop)
