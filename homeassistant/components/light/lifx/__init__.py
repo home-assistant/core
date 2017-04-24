@@ -353,17 +353,11 @@ class LIFXLight(Light):
             saturation = self._sat
             brightness = self._bri
 
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
-            changed_color = True
-        else:
-            brightness = self._bri
-
         if ATTR_XY_COLOR in kwargs:
             hue, saturation, _ = \
                 color_util.color_xy_brightness_to_hsv(
                     *kwargs[ATTR_XY_COLOR],
-                    ibrightness=(brightness // (BYTE_MAX + 1)))
+                    ibrightness=255)
             saturation = saturation * (BYTE_MAX + 1)
             changed_color = True
 
@@ -378,6 +372,12 @@ class LIFXLight(Light):
                 kelvin = 3500
             else:
                 kelvin = self._kel
+
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
+            changed_color = True
+        else:
+            brightness = self._bri
 
         return [[hue, saturation, brightness, kelvin], changed_color]
 
