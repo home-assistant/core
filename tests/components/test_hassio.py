@@ -436,7 +436,7 @@ def test_async_hassio_homeassistant_view(aioclient_mock, hass, test_client,
 
     assert len(aioclient_mock.mock_calls) == 3
     assert resp.status == 200
-    assert data == content=b"That is a test log"
+    assert data == b"That is a test log"
 
 
 @asyncio.coroutine
@@ -491,7 +491,7 @@ def test_async_hassio_supervisor_view(aioclient_mock, hass, test_client,
 
     assert len(aioclient_mock.mock_calls) == 4
     assert resp.status == 200
-    assert data == content=b"That is a test log"
+    assert data == b"That is a test log"
 
 
 @asyncio.coroutine
@@ -602,4 +602,4 @@ def test_async_hassio_addon_view(aioclient_mock, hass, test_client,
 
     assert len(aioclient_mock.mock_calls) == 4
     assert resp.status == 200
-    assert data == content=b"That is a test log"
+    assert data == b"That is a test log"
