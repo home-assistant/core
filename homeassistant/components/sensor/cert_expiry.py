@@ -87,7 +87,8 @@ class SSLCertificate(Entity):
         except socket.gaierror:
             _LOGGER.error('Cannot resolve name %s', self.server_name)
         except socket.timeout:
-            _LOGGER.error('Connection timeout with server %s', self.server_name)
+            _LOGGER.error('Connection timeout with server %s',
+                          self.server_name)
         except OSError as excp:
             _LOGGER.error('Cannot connect to %s', self.server_name)
             raise excp
