@@ -143,7 +143,6 @@ class ApplicationListener:
 
             discovered_info = yield from _discover_endpoint_info(endpoint)
 
-            has_valid_profile = False
             component = None
             used_clusters = []
             device_key = '%s-%s' % (str(device.ieee), endpoint_id)
@@ -156,14 +155,14 @@ class ApplicationListener:
                                               {}).get(endpoint.device_type,
                                                       None):
                     used_clusters = profile.CLUSTERS[endpoint.device_type]
-                    has_valid_profile = True
                     profile_info = zha_const.DEVICE_CLASS[endpoint.profile_id]
                     component = profile_info[endpoint.device_type]
 
             if ha_const.CONF_TYPE in node_config:
                 component = node_config[ha_const.CONF_TYPE]
+                used_clusters = zha_const.COMPONENT_CLUSTERS[component]
 
-            if has_valid_profile and component:
+            if component:
                 clusters = [endpoint.clusters[c] for c in used_clusters if c in
                             endpoint.clusters]
                 discovery_info = {

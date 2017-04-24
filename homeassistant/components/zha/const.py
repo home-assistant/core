@@ -3,6 +3,7 @@
 # Populated by populate_data() when zha component is initialized
 DEVICE_CLASS = {}
 SINGLE_CLUSTER_DEVICE_CLASS = {}
+COMPONENT_CLUSTERS = {}
 
 
 def populate_data():
@@ -12,7 +13,7 @@ def populate_data():
     in a function.
     """
     from bellows.zigbee import zcl
-    from bellows.zigbee.profiles import zha, zll
+    from bellows.zigbee.profiles import PROFILES, zha, zll
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
         zha.DeviceType.ON_OFF_SWITCH: 'switch',
@@ -40,3 +41,12 @@ def populate_data():
         zcl.clusters.measurement.TemperatureMeasurement: 'sensor',
         zcl.clusters.security.IasZone: 'binary_sensor',
     })
+
+    # A map of hass components to all Zigbee clusters it could use
+    for profile_id, classes in DEVICE_CLASS.items():
+        profile = PROFILES[profile_id]
+        for device_type, component in classes.items():
+            if component not in COMPONENT_CLUSTERS:
+                COMPONENT_CLUSTERS[component] = set()
+            clusters = profile.CLUSTERS[device_type]
+            COMPONENT_CLUSTERS[component].update(clusters)
