@@ -151,7 +151,6 @@ def async_setup(hass, config):
     def async_service_handler(service):
         """Handle eight sleep service calls."""
         params = service.data.copy()
-        _LOGGER.debug('Service params: %s', params)
 
         sensor = params.pop(ATTR_ENTITY_ID, None)
         target = params.pop(ATTR_TARGET_HEAT, None)
@@ -195,7 +194,6 @@ class EightSleepUserEntity(Entity):
         def async_eight_user_update():
             """Update callback."""
             self.hass.async_add_job(self.async_update_ha_state(True))
-            _LOGGER.debug('Update callback called for user')
 
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_USER, async_eight_user_update)
@@ -225,7 +223,6 @@ class EightSleepHeatEntity(Entity):
         def async_eight_heat_update():
             """Update callback."""
             self.hass.async_add_job(self.async_update_ha_state(True))
-            _LOGGER.debug('Update callback called for heat')
 
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_HEAT, async_eight_heat_update)
