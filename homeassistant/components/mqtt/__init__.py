@@ -11,6 +11,7 @@ import socket
 import time
 import ssl
 import requests.certs
+import re
 
 import voluptuous as vol
 
@@ -639,12 +640,18 @@ def _raise_on_error(result):
 
 def _match_topic(subscription, topic):
     """Test if topic matches subscription."""
-    if subscription.endswith('#'):
-        return (subscription[:-2] == topic or
-                topic.startswith(subscription[:-1]))
-
+    reg_ex_parts = []
     sub_parts = subscription.split('/')
-    topic_parts = topic.split('/')
+    for sub_part in sub_parts:
+        if sub_part == "+":
+            reg_ex_parts.append("([^\/]+)")
+        elif sub_part == "#":
+            reg_ex_parts.append("(.+)")
+        else:
+            reg_ex_parts.append(sub_part)
 
-    return (len(sub_parts) == len(topic_parts) and
-            all(a == b for a, b in zip(sub_parts, topic_parts) if a != '+'))
+    reg_ex = "^" + ('\/'.join(reg_ex_parts)) + "$"
+
+    reg = re.compile(reg_ex)
+
+    return reg.match(topic) is not None
