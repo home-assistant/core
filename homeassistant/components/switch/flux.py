@@ -14,7 +14,7 @@ from homeassistant.components.light import is_on, turn_on
 from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
-from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.event import track_time_change, track_point_in_time
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired, HASS_COLOR_MIN, HASS_COLOR_MAX)
@@ -135,21 +135,36 @@ class FluxSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
+    def start_timer(self):
+        """Starts the update timer."""
+        self.stop_timer()  # just to be sure, although this should not happen
+        self.unsub_tracker = track_time_change(self.hass, self.flux_update,
+                                               second=[0, 30])
+
+    def stop_timer(self):
+        """Stops the update timer."""
+        if self.unsub_tracker is not None:
+            self.unsub_tracker()
+            self.unsub_tracker = None
+
+    def reschedule_timer(self, next_call):
+        """Reschedules next check to be at given time point."""
+        _LOGGER.debug("Rescheduling check to run at %s", next_call)
+        self.stop_timer()
+        track_point_in_time(self.hass, self.start_timer, next_call)
+
     def turn_on(self, **kwargs):
         """Turn on flux."""
         if not self._state:  # make initial update
             self.flux_update()
         self._state = True
-        self.unsub_tracker = track_time_change(self.hass, self.flux_update,
-                                               second=[0, 30])
+        self.start_timer()
+
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn off flux."""
-        if self.unsub_tracker is not None:
-            self.unsub_tracker()
-            self.unsub_tracker = None
-
+        self.stop_timer()
         self._state = False
         self.schedule_update_ha_state()
 
@@ -184,6 +199,9 @@ class FluxSwitch(SwitchDevice):
                 now_time = now
             else:
                 now_time = stop_time
+                # we have reached our stop time, so reschedule updates
+                self.reschedule_timer(start_time)
+
             temp_range = abs(self._sunset_colortemp - self._stop_colortemp)
             night_length = int(stop_time.timestamp() - sunset.timestamp())
             seconds_from_sunset = int(now_time.timestamp() -
