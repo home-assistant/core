@@ -8,7 +8,6 @@ import logging
 import functools
 import socket
 import threading
-
 from datetime import timedelta
 
 import voluptuous as vol
@@ -24,8 +23,7 @@ REQUIREMENTS = ['pilight==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-
-CONF_SEND_DELAY = "send_delay"
+CONF_SEND_DELAY = 'send_delay'
 
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_PORT = 5000
@@ -60,14 +58,14 @@ def setup(hass, config):
 
     host = config[DOMAIN][CONF_HOST]
     port = config[DOMAIN][CONF_PORT]
-    send_throttler = CallRateDelayThrottle(hass,
-                                           config[DOMAIN][CONF_SEND_DELAY])
+    send_throttler = CallRateDelayThrottle(
+        hass, config[DOMAIN][CONF_SEND_DELAY])
 
     try:
         pilight_client = pilight.Client(host=host, port=port)
     except (socket.error, socket.timeout) as err:
-        _LOGGER.error("Unable to connect to %s on port %s: %s",
-                      host, port, err)
+        _LOGGER.error(
+            "Unable to connect to %s on port %s: %s", host, port, err)
         return False
 
     def start_pilight_client(_):
@@ -92,7 +90,7 @@ def setup(hass, config):
         try:
             pilight_client.send_code(message_data)
         except IOError:
-            _LOGGER.error('Pilight send failed for %s', str(message_data))
+            _LOGGER.error("Pilight send failed for %s", str(message_data))
 
     hass.services.register(
         DOMAIN, SERVICE_NAME, send_code, schema=RF_CODE_SCHEMA)
@@ -157,7 +155,7 @@ class CallRateDelayThrottle(object):
                 with self._lock:
                     self._next_ts = dt_util.utcnow() + self._delay
 
-                    if len(self._queue) == 0:
+                    if not self._queue:
                         self._active = False
                     else:
                         next_action = self._queue.pop(0)
