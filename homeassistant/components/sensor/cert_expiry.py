@@ -18,7 +18,6 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 
@@ -29,7 +28,7 @@ DEFAULT_NAME = 'SSL Certificate Expiry'
 DEFAULT_PORT = 443
 ICON = 'mdi:certificate'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=12)
+SCAN_INTERVAL = datetime.timedelta(hours=12)
 TIMEOUT = 10.0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -77,7 +76,6 @@ class SSLCertificate(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch certificate information."""
         try:
