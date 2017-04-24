@@ -123,6 +123,7 @@ def run(script_args: List) -> int:
     engine = create_engine(uri, echo=False)
     session_factory = sessionmaker(bind=engine)
     session = session_factory()
+    step = int(args.step)
 
     tags = {}
     if args.tags:
@@ -199,7 +200,7 @@ def run(script_args: List) -> int:
         point['tags'].update(tags)
         points.append(point)
         session.expunge(event)
-        if len(points) >= args.step:
+        if len(points) >= step:
             if not simulate:
                 print("Write {} points to the database".format(len(points)))
                 client.write_points(points)
