@@ -122,7 +122,8 @@ def async_setup(hass, config):
             yield from hassio.send_command("/host/shutdown")
         elif service.service == SERVICE_SUPERVISOR_UPDATE:
             yield from hassio.send_command(
-                "/supervisor/update", payload=version)
+                "/supervisor/update", payload=version,
+                timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_SUPERVISOR_RELOAD:
             yield from hassio.send_command(
                 "/supervisor/reload", timeout=LONG_TASK_TIMEOUT)
@@ -183,8 +184,9 @@ class HassIO(object):
         )
         if answer and answer['result'] == 'ok':
             return answer['data'] if answer['data'] else True
+        elif answer:
+            _LOGGER.error("%s return error %s.", cmd, answer['message'])
 
-        _LOGGER.error("%s return error %s.", cmd, answer['message'])
         return False
 
     @asyncio.coroutine
