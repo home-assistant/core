@@ -1,12 +1,5 @@
 """Counts the days an HTTPS (TLS) certificate will expire (days).
 
-Example configuration.yaml:
-
-  sensor:
-    - platform: cert_expiry
-      host: home-assistant.io
-      port: 443
-
 For more details about this sensor please refer to the
 documentation at https://home-assistant.io/components/sensor.cert_expiry
 """
