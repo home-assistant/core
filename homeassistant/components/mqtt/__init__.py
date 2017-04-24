@@ -641,16 +641,18 @@ def _raise_on_error(result):
 def _match_topic(subscription, topic):
     """Test if topic matches subscription."""
     reg_ex_parts = []
+    suffix = ""
+    if subscription.endswith('#'):
+        subscription = subscription[:-2]
+        suffix = "(.+)"
     sub_parts = subscription.split('/')
     for sub_part in sub_parts:
         if sub_part == "+":
             reg_ex_parts.append("([^\/]+)")
-        elif sub_part == "#":
-            reg_ex_parts.append("(.+)")
         else:
             reg_ex_parts.append(sub_part)
 
-    reg_ex = "^" + ('\/'.join(reg_ex_parts)) + "$"
+    reg_ex = "^" + ('\/'.join(reg_ex_parts)) + suffix + "$"
 
     reg = re.compile(reg_ex)
 
