@@ -68,6 +68,10 @@ http:
   # base_url: example.duckdns.org:8123
 
 # Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
 updater:
 
 # Discover some devices automatically
