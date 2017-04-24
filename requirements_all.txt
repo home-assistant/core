@@ -48,7 +48,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.4.4
+aiolifx==0.4.5
 
 # homeassistant.components.alarmdecoder
 alarmdecoder==0.12.1.0
