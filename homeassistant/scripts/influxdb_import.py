@@ -1,9 +1,9 @@
 """Script to import recorded data into influxdb."""
-from typing import List
-
 import argparse
 import json
 import os
+
+from typing import List
 
 import homeassistant.config as config_util
 
