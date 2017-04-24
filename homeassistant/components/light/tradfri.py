@@ -31,56 +31,51 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(Tradfri(light) for light in lights)
 
     groups = gateway.get_groups()
-    lights = [dev for dev in groups]
-    add_devices(TradfriGroup(light) for light in lights)
+    add_devices(TradfriGroup(light) for light in groups)
 
 
 class TradfriGroup(Light):
     """The platform class required by hass."""
 
     def __init__(self, light):
-        """Initialize a Light."""
-        self._light = light
-
-        self._light_control = light
-        self._light_data = light
+        """Initialize a Group."""
+        self._group = light
         self._name = light.name
-        self._features = SUPPORT_BRIGHTNESS
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return self._features
+        return SUPPORT_BRIGHTNESS
 
     @property
     def name(self):
-        """Return the display name of this light."""
+        """Return the display name of this group."""
         return self._name
 
     @property
     def is_on(self):
-        """Return true if light is on."""
-        return self._light_data.state
+        """Return true if group lights are on."""
+        return self._group.state
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
-        return self._light_data.dimmer
+        """Brightness of the group lights (an integer in the range 1-255)."""
+        return self._group.dimmer
 
     def turn_off(self, **kwargs):
-        """Instruct the light to turn off."""
-        return self._light_control.set_values({"5850": 0})
+        """Instruct the group lights to turn off."""
+        return self._group.set_state(0)
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on, or dim."""
+        """Instruct the group lights to turn on, or dim."""
         if ATTR_BRIGHTNESS in kwargs:
-            self._light_control.set_values({"5851": kwargs[ATTR_BRIGHTNESS]})
+            self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])
         else:
-            self._light_control.set_values({"5850": 1})
+            self._group.set_state(1)
 
     def update(self):
-        """Fetch new state data for this light."""
-        self._light.update()
+        """Fetch new state data for this group."""
+        self._group.update()
 
 
 class Tradfri(Light):
