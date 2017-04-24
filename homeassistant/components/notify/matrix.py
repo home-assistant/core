@@ -12,8 +12,8 @@ from urllib.parse import urlparse
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (
-  ATTR_TARGET, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
+                                             BaseNotificationService)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_VERIFY_SSL
 
 REQUIREMENTS = ['matrix-client==0.0.6']
