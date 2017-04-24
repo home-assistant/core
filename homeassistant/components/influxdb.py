@@ -23,6 +23,7 @@ CONF_DB_NAME = 'database'
 CONF_TAGS = 'tags'
 CONF_DEFAULT_MEASUREMENT = 'default_measurement'
 CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
+CONF_BLACKLIST_DOMAINS = "blacklist_domains"
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
@@ -36,6 +37,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
         vol.Optional(CONF_BLACKLIST, default=[]):
             vol.All(cv.ensure_list, [cv.entity_id]),
+        vol.Optional(CONF_BLACKLIST_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_DB_NAME, default=DEFAULT_DATABASE): cv.string,
         vol.Optional(CONF_PORT): cv.port,
         vol.Optional(CONF_SSL): cv.boolean,
@@ -77,8 +80,9 @@ def setup(hass, config):
     if CONF_SSL in conf:
         kwargs['ssl'] = conf[CONF_SSL]
 
-    blacklist = conf.get(CONF_BLACKLIST)
-    whitelist = conf.get(CONF_WHITELIST)
+    blacklist = set(conf.get(CONF_BLACKLIST))
+    whitelist = set(conf.get(CONF_WHITELIST))
+    blacklist_domains = set(conf.get(CONF_BLACKLIST_DOMAINS))
     tags = conf.get(CONF_TAGS)
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
@@ -97,7 +101,8 @@ def setup(hass, config):
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist:
+                state.entity_id in blacklist or \
+                state.domain in blacklist_domains:
             return
 
         try:
