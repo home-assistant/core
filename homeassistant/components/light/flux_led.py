@@ -216,9 +216,9 @@ class FluxLight(Light):
                 (red, green, blue) = self._bulb.getRgb()
                 self._bulb.setRgb(red, green, blue, brightness=brightness)
         elif effect == EFFECT_RANDOM:
-            self._bulb.setRgb(random.randrange(0, 255),
-                              random.randrange(0, 255),
-                              random.randrange(0, 255))
+            self._bulb.setRgb(random.randint(0, 255),
+                              random.randint(0, 255),
+                              random.randint(0, 255))
         elif effect == EFFECT_COLORLOOP:
             self._bulb.setPresetPattern(0x25, 50)
         elif effect == EFFECT_RED_FADE:

@@ -141,7 +141,7 @@ class SCSGate(object):
         from scsgate.tasks import GetStatusTask
 
         with self._devices_to_register_lock:
-            while len(self._devices_to_register) != 0:
+            while self._devices_to_register:
                 _, device = self._devices_to_register.popitem()
                 self._devices[device.scs_id] = device
                 self._device_being_registered = device.scs_id

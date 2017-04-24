@@ -11,20 +11,18 @@ from collections import namedtuple
 import asyncio
 import aiohttp
 import async_timeout
-
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-# Configuration constant specific for tado
-CONF_HOME_ID = 'home_id'
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_HOME_ID = 'home_id'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 

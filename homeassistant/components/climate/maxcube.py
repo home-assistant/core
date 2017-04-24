@@ -4,7 +4,6 @@ Support for MAX! Thermostats via MAX! Cube.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/maxcube/
 """
-
 import socket
 import logging
 
@@ -15,29 +14,27 @@ from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_MANUAL = "manual"
-STATE_BOOST = "boost"
-STATE_VACATION = "vacation"
+STATE_MANUAL = 'manual'
+STATE_BOOST = 'boost'
+STATE_VACATION = 'vacation'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Iterate through all MAX! Devices and add thermostats to HASS."""
     cube = hass.data[MAXCUBE_HANDLE].cube
 
-    # List of devices
     devices = []
 
     for device in cube.devices:
-        # Create device name by concatenating room name + device name
-        name = "%s %s" % (cube.room_by_id(device.room_id).name, device.name)
+        name = '{} {}'.format(
+            cube.room_by_id(device.room_id).name, device.name)
 
         # Only add thermostats and wallthermostats
         if cube.is_thermostat(device) or cube.is_wallthermostat(device):
             # Add device to HASS
             devices.append(MaxCubeClimate(hass, name, device.rf_address))
 
-    # Add all devices at once
-    if len(devices) > 0:
+    if devices:
         add_devices(devices)
 
 
@@ -66,19 +63,13 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # Get the device we want (does not do any IO, just reads from memory)
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Map and return minimum temperature
         return self.map_temperature_max_hass(device.min_temperature)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        # Get the device we want (does not do any IO, just reads from memory)
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Map and return maximum temperature
         return self.map_temperature_max_hass(device.max_temperature)
 
     @property
@@ -89,7 +80,6 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        # Get the device we want (does not do any IO, just reads from memory)
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
 
         # Map and return current temperature
@@ -98,10 +88,7 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation (auto, manual, boost, vacation)."""
-        # Get the device we want (does not do any IO, just reads from memory)
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Mode Mapping
         return self.map_mode_max_hass(device.mode)
 
     @property
@@ -112,22 +99,15 @@ class MaxCubeClimate(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        # Get the device we want (does not do any IO, just reads from memory)
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Map and return target temperature
         return self.map_temperature_max_hass(device.target_temperature)
 
     def set_temperature(self, **kwargs):
         """Set new target temperatures."""
-        # Fail is target temperature has not been supplied as argument
         if kwargs.get(ATTR_TEMPERATURE) is None:
             return False
 
-        # Determine the new target temperature
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
-
-        # Write the target temperature to the MAX! Cube.
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
 
         cube = self._cubehandle.cube
@@ -141,13 +121,9 @@ class MaxCubeClimate(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
-        # Get the device we want to update
         device = self._cubehandle.cube.device_by_rf(self._rf_address)
-
-        # Mode Mapping
         mode = self.map_mode_hass_max(operation_mode)
 
-        # Write new mode to thermostat
         if mode is None:
             return False
 
@@ -160,7 +136,6 @@ class MaxCubeClimate(ClimateDevice):
 
     def update(self):
         """Get latest data from MAX! Cube."""
-        # Update the CubeHandle
         self._cubehandle.update()
 
     @staticmethod

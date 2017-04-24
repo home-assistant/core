@@ -1,4 +1,3 @@
-
 """
 Support for the Broadlink RM2 Pro (only temperature) and A1 devices.
 
@@ -9,12 +8,13 @@ from datetime import timedelta
 import binascii
 import logging
 import socket
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, CONF_MAC,
-                                 CONF_MONITORED_CONDITIONS,
-                                 CONF_NAME, TEMP_CELSIUS, CONF_TIMEOUT)
+from homeassistant.const import (
+    CONF_HOST, CONF_MAC, CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS,
+    CONF_TIMEOUT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -71,7 +71,7 @@ class BroadlinkSensor(Entity):
 
     def __init__(self, name, broadlink_data, sensor_type):
         """Initialize the sensor."""
-        self._name = "%s %s" % (name, SENSOR_TYPES[sensor_type][0])
+        self._name = '{} {}'.format(name, SENSOR_TYPES[sensor_type][0])
         self._state = None
         self._type = sensor_type
         self._broadlink_data = broadlink_data
@@ -119,7 +119,7 @@ class BroadlinkData(object):
             })
         self.update = Throttle(interval)(self._update)
         if not self._auth():
-            _LOGGER.warning("Failed to connect to device.")
+            _LOGGER.warning("Failed to connect to device")
 
     def _update(self, retry=3):
         try:
