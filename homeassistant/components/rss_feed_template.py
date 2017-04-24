@@ -22,6 +22,7 @@ CONTENT_TYPE_XML = "text/xml"
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.ordered_dict(
         vol.Schema({
+            vol.Optional('requires_api_password', default=True): cv.boolean,
             vol.Optional('title'): cv.template,
             vol.Required('items'): vol.All(
                 cv.ensure_list,
@@ -40,6 +41,8 @@ def setup(hass, config):
     for (feeduri, feedconfig) in config[DOMAIN].items():
         url = '/api/rss_template/%s' % feeduri
 
+        requires_auth = feedconfig.get('requires_api_password')
+
         title = feedconfig.get('title')
         if title is not None:
             title.hass = hass
@@ -51,7 +54,7 @@ def setup(hass, config):
             if 'description' in item:
                 item['description'].hass = hass
 
-        rss_view = RssView(url, title, items)
+        rss_view = RssView(url, requires_auth, title, items)
         hass.http.register_view(rss_view)
 
     return True
@@ -60,15 +63,16 @@ def setup(hass, config):
 class RssView(HomeAssistantView):
     """Export states and other values as RSS."""
 
-    requires_auth = False
+    requires_auth = True
     url = None
     name = 'rss_template'
     _title = None
     _items = None
 
-    def __init__(self, url, title, items):
+    def __init__(self, url, requires_auth, title, items):
         """Initialize the rss view."""
         self.url = url
+        self.requires_auth = requires_auth
         self._title = title
         self._items = items
 
