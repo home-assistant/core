@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(Tradfri(light) for light in lights)
 
     groups = gateway.get_groups()
-    add_devices(TradfriGroup(light) for light in groups)
+    add_devices(TradfriGroup(group) for group in groups)
 
 
 class TradfriGroup(Light):
