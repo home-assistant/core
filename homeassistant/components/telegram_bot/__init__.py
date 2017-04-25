@@ -105,27 +105,26 @@ class BaseTelegramBotEntity:
         self.allowed_chat_ids = allowed_chat_ids
         self.hass = hass
 
+    def _get_message_data(self, msg_data):
+        if (not msg_data or ('text' not in msg_data
+                             and 'data' not in msg_data) or
+                'from' not in msg_data or
+                msg_data['from'].get('id') not in self.allowed_chat_ids):
+            # Message is not correct.
+            _LOGGER.error("Incoming message does not have required data "
+                          "({})".format(msg_data))
+            return None
+        return {
+            ATTR_USER_ID: msg_data['from']['id'],
+            ATTR_FROM_FIRST: msg_data['from']['first_name'],
+            ATTR_FROM_LAST: msg_data['from']['last_name']}
+
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
-
-        def _get_message_data(msg_data, allowed_chat_ids):
-            if (not msg_data
-                    or 'from' not in msg_data
-                    or ('text' not in msg_data and 'data' not in msg_data)
-                    or data['from'].get('id') not in allowed_chat_ids):
-                # Message is not correct.
-                _LOGGER.error("Incoming message does not have required data "
-                              "({})".format(msg_data))
-                return None
-            return {
-                ATTR_USER_ID: msg_data['from']['id'],
-                ATTR_FROM_FIRST: msg_data['from']['first_name'],
-                ATTR_FROM_LAST: msg_data['from']['last_name']}
-
         if ATTR_MSG in data:
             event = EVENT_TELEGRAM_COMMAND
             data = data.get(ATTR_MSG)
-            event_data = _get_message_data(data, self.allowed_chat_ids)
+            event_data = self._get_message_data(data)
             if event_data is None:
                 return False
 
@@ -142,7 +141,7 @@ class BaseTelegramBotEntity:
         elif ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get('callback_query')
-            event_data = _get_message_data(data, self.allowed_chat_ids)
+            event_data = self._get_message_data(data)
             if event_data is None:
                 return False
 

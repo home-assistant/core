@@ -125,9 +125,13 @@ class TelegramNotificationService(BaseNotificationService):
         self.bot = Bot(token=self._api_key)
 
     def _get_msg_ids(self, msg_data, chat_id):
-        """Get one of (message_id, inline_message_id) from a msg dict,
-        returning a tuple. You can use 'last' as message_id to edit
-        the last sended message in the chat_id."""
+        """Get the message id to edit.
+
+        This can be one of (message_id, inline_message_id) from a msg dict,
+        returning a tuple.
+        **You can use 'last' as message_id** to edit
+        the last sended message in the chat_id.
+        """
         message_id = inline_message_id = None
         if 'message_id' in msg_data:
             message_id = msg_data['message_id']
@@ -139,8 +143,10 @@ class TelegramNotificationService(BaseNotificationService):
         return message_id, inline_message_id
 
     def _get_target_chat_ids(self, target):
-        """Validate chat_id targets, which come as list of strings (['12234'])
-        or get the default chat_id. Returns list of chat_id targets (integers).
+        """Validate chat_id targets or return default target (fist defined).
+
+        :param target: optional list of strings (['12234'])
+        :return list of chat_id targets (integers)
         """
         if target is not None:
             if isinstance(target, int):
@@ -161,13 +167,12 @@ class TelegramNotificationService(BaseNotificationService):
         return [self._default_user]
 
     def _get_msg_kwargs(self, data):
-        """Get parameters in data kwargs"""
-
+        """Get parameters in message data kwargs."""
         def _make_row_of_kb(row_keyboard):
-            """Espera un str de texto en botones separados por comas,
-            o una lista de tuplas de la forma: [(texto_b1, data_callback_b1),
-                                                (texto_b2, data_callback_b2), ]
-            Devuelve una lista de InlineKeyboardButton.
+            """Makes a list of InlineKeyboardButton's with a list of tuples.
+
+            :param row_keyboard: [(text_b1, data_callback_b1),
+                                  (text_b2, data_callback_b2), ...]
             """
             from telegram import InlineKeyboardButton
             if isinstance(row_keyboard, str):
