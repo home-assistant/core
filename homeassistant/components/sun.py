@@ -51,171 +51,142 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ABOVE_HORIZON)
 
 
-def next_dawn(hass, entity_id=None):
+def next_dawn(hass, entity_id=None, offset=None):
     """Local datetime object of the next dawn.
 
     Async friendly.
     """
-    utc_next = next_dawn_utc(hass, entity_id)
+    utc_next = next_dawn_utc(hass, entity_id, offset)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
-def next_dawn_utc(hass, entity_id=None):
+def next_dawn_utc(hass, entity_id=None, offset=None):
     """UTC datetime object of the next dawn.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_DAWN])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_DAWN does not exist
+    entity = hass.data.get(entity_id or ENTITY_ID)
+    if entity is None:
         return None
 
+    return Sun.get_next_solar_event(
+        entity.location.dawn, dt_util.utcnow(), offset)
 
-def next_dusk(hass, entity_id=None):
+
+def next_dusk(hass, entity_id=None, offset=None):
     """Local datetime object of the next dusk.
 
     Async friendly.
     """
-    utc_next = next_dusk_utc(hass, entity_id)
+    utc_next = next_dusk_utc(hass, entity_id, offset)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
-def next_dusk_utc(hass, entity_id=None):
+def next_dusk_utc(hass, entity_id=None, offset=None):
     """UTC datetime object of the next dusk.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_DUSK])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_DUSK does not exist
+    entity = hass.data.get(entity_id or ENTITY_ID)
+    if entity is None:
         return None
 
+    return Sun.get_next_solar_event(
+        entity.location.dusk, dt_util.utcnow(), offset)
 
-def next_midnight(hass, entity_id=None):
+
+def next_midnight(hass, entity_id=None, offset=None):
     """Local datetime object of the next midnight.
 
     Async friendly.
     """
-    utc_next = next_midnight_utc(hass, entity_id)
+    utc_next = next_midnight_utc(hass, entity_id, offset)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
-def next_midnight_utc(hass, entity_id=None):
+def next_midnight_utc(hass, entity_id=None, offset=None):
     """UTC datetime object of the next midnight.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_MIDNIGHT])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_MIDNIGHT does not exist
+    entity = hass.data.get(entity_id or ENTITY_ID)
+    if entity is None:
         return None
 
+    return Sun.get_next_solar_event(
+        entity.location.solar_midnight, dt_util.utcnow(), offset)
 
-def next_noon(hass, entity_id=None):
+
+def next_noon(hass, entity_id=None, offset=None):
     """Local datetime object of the next solar noon.
 
     Async friendly.
     """
-    utc_next = next_noon_utc(hass, entity_id)
+    utc_next = next_noon_utc(hass, entity_id, offset)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
-def next_noon_utc(hass, entity_id=None):
+def next_noon_utc(hass, entity_id=None, offset=None):
     """UTC datetime object of the next noon.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_NOON])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_NOON does not exist
+    entity = hass.data.get(entity_id or ENTITY_ID)
+    if entity is None:
         return None
 
+    return Sun.get_next_solar_event(
+        entity.location.solar_noon, dt_util.utcnow(), offset)
 
-def next_setting(hass, entity_id=None):
+
+def next_setting(hass, entity_id=None, offset=None):
     """Local datetime object of the next sun setting.
 
     Async friendly.
     """
-    utc_next = next_setting_utc(hass, entity_id)
+    utc_next = next_setting_utc(hass, entity_id, offset)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
-def next_setting_utc(hass, entity_id=None):
+def next_setting_utc(hass, entity_id=None, offset=None):
     """UTC datetime object of the next sun setting.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_SETTING])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_SETTING does not exist
+    entity = hass.data.get(entity_id or ENTITY_ID)
+    if entity is None:
         return None
 
+    return Sun.get_next_solar_event(
+        entity.location.sunset, dt_util.utcnow(), offset)
 
-def next_rising(hass, entity_id=None):
+
+def next_rising(hass, entity_id=None, offset=None):
     """Local datetime object of the next sun rising.
 
     Async friendly.
     """
-    utc_next = next_rising_utc(hass, entity_id)
+    utc_next = next_rising_utc(hass, entity_id, offset)
 
     return dt_util.as_local(utc_next) if utc_next else None
 
 
-def next_rising_utc(hass, entity_id=None):
+def next_rising_utc(hass, entity_id=None, offset=None):
     """UTC datetime object of the next sun rising.
 
     Async friendly.
     """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_RISING does not exist
+    entity = hass.data.get(entity_id or ENTITY_ID)
+    if entity is None:
         return None
+
+    return Sun.get_next_solar_event(
+        entity.location.sunrise, dt_util.utcnow(), offset)
 
 
 def setup(hass, config):
@@ -255,6 +226,9 @@ def setup(hass, config):
 
     sun = Sun(hass, location)
     sun.point_in_time_listener(dt_util.utcnow())
+
+    # Store a reference to the entity so helper functions can access it
+    hass.data[sun.entity_id] = sun
 
     return True
 
@@ -309,37 +283,40 @@ class Sun(Entity):
                    self.next_noon, self.next_rising, self.next_setting)
 
     @staticmethod
-    def get_next_solar_event(callable_on_astral_location,
-                             utc_point_in_time, mod, increment):
+    def get_next_solar_event(callable_on_astral_location, utc_point_in_time,
+                             offset=None):
         """Calculate sun state at a point in UTC time."""
         import astral
 
+        if offset is None:
+            offset = timedelta()
+
+        mod = -1
         while True:
             try:
                 next_dt = callable_on_astral_location(
-                    utc_point_in_time + timedelta(days=mod), local=False)
+                    utc_point_in_time + timedelta(days=mod),
+                    local=False) + offset
                 if next_dt > utc_point_in_time:
-                    break
+                    return next_dt
             except astral.AstralError:
                 pass
-            mod += increment
-
-        return next_dt
+            mod += 1
 
     def update_as_of(self, utc_point_in_time):
         """Update the attributes containing solar events."""
         self.next_dawn = Sun.get_next_solar_event(
-            self.location.dawn, utc_point_in_time, -1, 1)
+            self.location.dawn, utc_point_in_time)
         self.next_dusk = Sun.get_next_solar_event(
-            self.location.dusk, utc_point_in_time, -1, 1)
+            self.location.dusk, utc_point_in_time)
         self.next_midnight = Sun.get_next_solar_event(
-            self.location.solar_midnight, utc_point_in_time, -1, 1)
+            self.location.solar_midnight, utc_point_in_time)
         self.next_noon = Sun.get_next_solar_event(
-            self.location.solar_noon, utc_point_in_time, -1, 1)
+            self.location.solar_noon, utc_point_in_time)
         self.next_rising = Sun.get_next_solar_event(
-            self.location.sunrise, utc_point_in_time, -1, 1)
+            self.location.sunrise, utc_point_in_time)
         self.next_setting = Sun.get_next_solar_event(
-            self.location.sunset, utc_point_in_time, -1, 1)
+            self.location.sunset, utc_point_in_time)
 
     def update_sun_position(self, utc_point_in_time):
         """Calculate the position of the sun."""

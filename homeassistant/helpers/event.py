@@ -1,6 +1,5 @@
 """Helpers for listening to events."""
 import functools as ft
-from datetime import timedelta
 
 from ..core import HomeAssistant, callback
 from ..const import (
@@ -198,28 +197,20 @@ track_time_interval = threaded_listener_factory(async_track_time_interval)
 def async_track_sunrise(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunrise daily."""
     from homeassistant.components import sun
-    offset = offset or timedelta()
     remove = None
-
-    def next_rise():
-        """Return the next sunrise."""
-        next_time = sun.next_rising_utc(hass) + offset
-
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
 
     @callback
     def sunrise_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
-            hass, sunrise_automation_listener, next_rise())
+            hass, sunrise_automation_listener, sun.next_rising_utc(
+                hass, offset=offset))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
-        hass, sunrise_automation_listener, next_rise())
+        hass, sunrise_automation_listener, sun.next_rising_utc(
+            hass, offset=offset))
 
     def remove_listener():
         """Remove sunset listener."""
@@ -235,28 +226,20 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
     from homeassistant.components import sun
-    offset = offset or timedelta()
     remove = None
-
-    def next_set():
-        """Return next sunrise."""
-        next_time = sun.next_setting_utc(hass) + offset
-
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
 
     @callback
     def sunset_automation_listener(now):
         """Called when it's time for action."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
-            hass, sunset_automation_listener, next_set())
+            hass, sunset_automation_listener, sun.next_setting_utc(
+                hass, offset=offset))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
-        hass, sunset_automation_listener, next_set())
+        hass, sunset_automation_listener, sun.next_setting_utc(
+            hass, offset=offset))
 
     def remove_listener():
         """Remove sunset listener."""

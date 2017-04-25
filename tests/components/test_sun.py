@@ -46,48 +46,48 @@ class TestSun(unittest.TestCase):
 
         mod = -1
         while True:
-            next_dawn = (astral.dawn_utc(utc_now +
-                         timedelta(days=mod), latitude, longitude))
+            next_dawn = (astral.dawn_utc(
+                utc_now + timedelta(days=mod), latitude, longitude))
             if next_dawn > utc_now:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_dusk = (astral.dusk_utc(utc_now +
-                         timedelta(days=mod), latitude, longitude))
+            next_dusk = (astral.dusk_utc(
+                utc_now + timedelta(days=mod), latitude, longitude))
             if next_dusk > utc_now:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_midnight = (astral.solar_midnight_utc(utc_now +
-                             timedelta(days=mod), longitude))
+            next_midnight = (astral.solar_midnight_utc(
+                utc_now + timedelta(days=mod), longitude))
             if next_midnight > utc_now:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_noon = (astral.solar_noon_utc(utc_now +
-                         timedelta(days=mod), longitude))
+            next_noon = (astral.solar_noon_utc(
+                utc_now + timedelta(days=mod), longitude))
             if next_noon > utc_now:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_rising = (astral.sunrise_utc(utc_now +
-                           timedelta(days=mod), latitude, longitude))
+            next_rising = (astral.sunrise_utc(
+                utc_now + timedelta(days=mod), latitude, longitude))
             if next_rising > utc_now:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_setting = (astral.sunset_utc(utc_now +
-                            timedelta(days=mod), latitude, longitude))
+            next_setting = (astral.sunset_utc(
+                utc_now + timedelta(days=mod), latitude, longitude))
             if next_setting > utc_now:
                 break
             mod += 1
@@ -98,15 +98,6 @@ class TestSun(unittest.TestCase):
         self.assertEqual(next_noon, sun.next_noon_utc(self.hass))
         self.assertEqual(next_rising, sun.next_rising_utc(self.hass))
         self.assertEqual(next_setting, sun.next_setting_utc(self.hass))
-
-        # Point it at a state without the proper attributes
-        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON)
-        self.assertIsNone(sun.next_dawn(self.hass))
-        self.assertIsNone(sun.next_dusk(self.hass))
-        self.assertIsNone(sun.next_midnight(self.hass))
-        self.assertIsNone(sun.next_noon(self.hass))
-        self.assertIsNone(sun.next_rising(self.hass))
-        self.assertIsNone(sun.next_setting(self.hass))
 
         # Point it at a non-existing state
         self.assertIsNone(sun.next_dawn(self.hass, 'non.existing'))
@@ -144,15 +135,15 @@ class TestSun(unittest.TestCase):
 
         june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
-        with patch('homeassistant.helpers.condition.dt_util.utcnow',
-                   return_value=june):
-            assert setup_component(self.hass, sun.DOMAIN, {
-                sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        assert setup_component(self.hass, sun.DOMAIN, {
+            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         state = self.hass.states.get(sun.ENTITY_ID)
-
         assert state is not None
-        assert sun.next_rising_utc(self.hass) == \
-            datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
-        assert sun.next_setting_utc(self.hass) == \
-            datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=june):
+            assert sun.next_rising_utc(self.hass) == \
+                datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
+            assert sun.next_setting_utc(self.hass) == \
+                datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)

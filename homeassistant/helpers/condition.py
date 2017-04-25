@@ -234,24 +234,24 @@ def state_from_config(config, config_validation=True):
 
 def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     """Test if current time matches sun requirements."""
-    now = dt_util.now().time()
+    now = dt_util.now()
+    utcnow = dt_util.as_utc(now)
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
+    entity = hass.data[sun_cmp.ENTITY_ID]
+    sunrise = entity.location.sunrise(now, local=False)
+    sunset = entity.location.sunset(now, local=False)
 
-    if before == SUN_EVENT_SUNRISE and now > (sun_cmp.next_rising(hass) +
-                                              before_offset).time():
+    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    elif before == SUN_EVENT_SUNSET and now > (sun_cmp.next_setting(hass) +
-                                               before_offset).time():
+    elif before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
         return False
 
-    if after == SUN_EVENT_SUNRISE and now < (sun_cmp.next_rising(hass) +
-                                             after_offset).time():
+    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
         return False
 
-    elif after == SUN_EVENT_SUNSET and now < (sun_cmp.next_setting(hass) +
-                                              after_offset).time():
+    elif after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True
