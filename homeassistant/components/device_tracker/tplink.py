@@ -195,8 +195,9 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
             self.sysauth = regex_result.group(1)
             _LOGGER.info(self.sysauth)
             return True
-        except ValueError:
-            _LOGGER.error("Couldn't fetch auth tokens!")
+        except (ValueError, KeyError) as e:
+            _LOGGER.error("Couldn't fetch auth tokens!"
+                          "Response was: {}".format(response.text))
             return False
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
