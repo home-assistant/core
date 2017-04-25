@@ -20,7 +20,7 @@ chardet==3.0.2
 PyISY==1.0.7
 
 # homeassistant.components.notify.html5
-PyJWT==1.4.2
+PyJWT==1.5.0
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.3
@@ -679,7 +679,7 @@ pyunifi==2.0
 pyvera==0.2.27
 
 # homeassistant.components.notify.html5
-pywebpush==0.6.1
+pywebpush==0.8.0
 
 # homeassistant.components.wemo
 pywemo==0.4.19
