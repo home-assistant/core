@@ -2,17 +2,6 @@
 Component to receive telegram messages, including callback queries.
 
 Either by polling or webhook.
-
-callback query message:
-```
-{'chat_instance': 'XXXXXXXXXXXXXXXXXXX',
- 'data': '[/data sended]',
- 'from': {'username': '[USERNAME]',
-          'last_name': '[LAST_NAME]', 'first_name': '[FIRST_NAME]',
-          'id': 123456789},
- 'id': '1234567890123456789',
- 'message': { original_msg }
-```
 """
 
 import asyncio

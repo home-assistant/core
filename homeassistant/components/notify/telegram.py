@@ -3,16 +3,6 @@ Telegram platform for notify component.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.telegram/
-
-Changes:
-- Customized for using any of both parsers (`markdown` and `html`) in any message with: `data: {'parse_mode': 'html'}`, with markdown as default, but can be globally customized with 'parse_mode' in yaml config.
-- Inline keyboards with `data: {'inline_keyboard': [(text_btn1, data_callback_btn1), ...]}`
-- Custom reply_markup (keyboard or inline_keyboard) for every type of message (message, photo, location & document).
-- `disable_notification`, `disable_web_page_preview` and `reply_to_message_id` optional keyword args.
-- Callback replies for edit messages, reply_markup keyboards and captions, and for answering callback queries with: `data: {'callback_query'|'edit_message'| 'edit_caption'|'edit_replymarkup': ...}`
-- Line break between title and message fields: `'{}\n{}'.format(title, message)`
-- Ablility to target multiple pre-authorized chat_ids (`target=[12345, 67890]`) when sending a message.
-- BREAKING CHANGE: use array of `user_id` to allow one notifier to comunicate with multiple users (first user is the default, but you can pass a `ATTR_TARGET=chat_id_X` to send a message to other recipient). (Reading `chat_id` as User1 to work with old configuration)
 """
 import io
 import logging
@@ -36,7 +26,7 @@ PARSER_MD = 'markdown'
 PARSER_HTML = 'html'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
-ATTR_REPLY_TO_MESSAGE_ID = 'reply_to_message_id'
+ATTR_REPLY_TO_MSGID = 'reply_to_message_id'
 
 ATTR_PHOTO = 'photo'
 ATTR_KEYBOARD = 'keyboard'
@@ -208,9 +198,9 @@ class TelegramNotificationService(BaseNotificationService):
             if ATTR_DISABLE_NOTIF in data:
                 params['disable_notification'] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
-                params['disable_web_page_preview'] = data[ATTR_DISABLE_WEB_PREV]
-            if ATTR_REPLY_TO_MESSAGE_ID in data:
-                params['reply_to_message_id'] = data[ATTR_REPLY_TO_MESSAGE_ID]
+                params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
+            if ATTR_REPLY_TO_MSGID in data:
+                params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 from telegram import ReplyKeyboardMarkup
