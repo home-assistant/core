@@ -246,8 +246,8 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
-            if ATTR_ENTITY_ID in event.data:
-                entity_id = event.data[ATTR_ENTITY_ID]
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+            if entity_id is not None:
                 domain = split_entity_id(entity_id)[0]
 
                 # Exclude entities OR
