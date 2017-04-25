@@ -1,7 +1,18 @@
 """
-Component to receive telegram messages.
+Component to receive telegram messages, including callback queries.
 
 Either by polling or webhook.
+
+callback query message:
+```
+{'chat_instance': 'XXXXXXXXXXXXXXXXXXX',
+ 'data': '[/data sended]',
+ 'from': {'username': '[USERNAME]',
+          'last_name': '[LAST_NAME]', 'first_name': '[FIRST_NAME]',
+          'id': 123456789},
+ 'id': '1234567890123456789',
+ 'message': { original_msg }
+```
 """
 
 import asyncio
@@ -19,10 +30,16 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
 EVENT_TELEGRAM_TEXT = 'telegram_text'
+EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 
 ATTR_COMMAND = 'command'
 ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
+ATTR_DATA = 'data'
+ATTR_MSG = 'message'
+ATTR_CALLBACK_QUERY = 'callback_query'
+ATTR_CHAT_INSTANCE = 'chat_instance'
+ATTR_MSGID = 'id'
 ATTR_FROM_FIRST = 'from_first'
 ATTR_FROM_LAST = 'from_last'
 ATTR_TEXT = 'text'
@@ -73,6 +90,8 @@ def async_setup(hass, config):
             _LOGGER.exception('Error setting up platform %s', p_type)
             return
 
+        return True
+
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
 
@@ -99,31 +118,53 @@ class BaseTelegramBotEntity:
 
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
-        data = data.get('message')
 
-        if (not data or
-                'from' not in data or
-                'text' not in data or
-                data['from'].get('id') not in self.allowed_chat_ids):
-            # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data.")
-            return False
+        def _get_message_data(msg_data, allowed_chat_ids):
+            if (not msg_data
+                    or 'from' not in msg_data
+                    or ('text' not in msg_data and 'data' not in msg_data)
+                    or data['from'].get('id') not in allowed_chat_ids):
+                # Message is not correct.
+                _LOGGER.error("Incoming message does not have required data "
+                              "({})".format(msg_data))
+                return None
+            return {
+                ATTR_USER_ID: msg_data['from']['id'],
+                ATTR_FROM_FIRST: msg_data['from']['first_name'],
+                ATTR_FROM_LAST: msg_data['from']['last_name']}
 
-        event = EVENT_TELEGRAM_COMMAND
-        event_data = {
-            ATTR_USER_ID: data['from']['id'],
-            ATTR_FROM_FIRST: data['from'].get('first_name', 'N/A'),
-            ATTR_FROM_LAST: data['from'].get('last_name', 'N/A')}
+        if ATTR_MSG in data:
+            event = EVENT_TELEGRAM_COMMAND
+            data = data.get(ATTR_MSG)
+            event_data = _get_message_data(data, self.allowed_chat_ids)
+            if event_data is None:
+                return False
 
-        if data['text'][0] == '/':
-            pieces = data['text'].split(' ')
-            event_data[ATTR_COMMAND] = pieces[0]
-            event_data[ATTR_ARGS] = pieces[1:]
+            if data['text'][0] == '/':
+                pieces = data['text'].split(' ')
+                event_data[ATTR_COMMAND] = pieces[0]
+                event_data[ATTR_ARGS] = pieces[1:]
+            else:
+                event_data[ATTR_TEXT] = data['text']
+                event = EVENT_TELEGRAM_TEXT
 
+            self.hass.bus.async_fire(event, event_data)
+            return True
+        elif ATTR_CALLBACK_QUERY in data:
+            event = EVENT_TELEGRAM_CALLBACK
+            data = data.get('callback_query')
+            event_data = _get_message_data(data, self.allowed_chat_ids)
+            if event_data is None:
+                return False
+
+            event_data[ATTR_DATA] = data[ATTR_DATA]
+            event_data[ATTR_MSG] = data[ATTR_MSG]
+            event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
+            event_data[ATTR_MSGID] = data[ATTR_MSGID]
+
+            self.hass.bus.async_fire(event, event_data)
+            return True
         else:
-            event_data[ATTR_TEXT] = data['text']
-            event = EVENT_TELEGRAM_TEXT
-
-        self.hass.bus.async_fire(event, event_data)
-
-        return True
+            # Some other thing...
+            _LOGGER.warning('SOME OTHER THING RECEIVED --> "{}"'.format(data))
+            return False
