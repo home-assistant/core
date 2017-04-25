@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.info('Bridge found: %s (%s)', bridge.remote_uuid.hex(),
                      bridge.ip)
         add_devices([
-            ComfoConnectBridge(hass, name, bridge, token, user_agent, pin)
+            ComfoConnectBridge(name, bridge, token, user_agent, pin)
         ], True)
 
     return
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ComfoConnectBridge(ClimateDevice):
     """Representation of a ComfoConnect bridge."""
 
-    def __init__(self, hass, name, bridge, token, friendly_name, pin):
+    def __init__(self, name, bridge, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
         from pycomfoconnect import (
             ComfoConnect, SENSOR_FAN_SPEED_MODE, SENSOR_TEMPERATURE_EXTRACT,
@@ -88,7 +88,6 @@ class ComfoConnectBridge(ClimateDevice):
             SENSOR_FAN_EXHAUST_FLOW
         )
 
-        self._hass = hass
         self._name = name
         self._comfoconnect = ComfoConnect(bridge, self.sensor_callback)
         self._token = bytes.fromhex(token)
