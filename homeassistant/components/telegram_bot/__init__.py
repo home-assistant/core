@@ -111,8 +111,8 @@ class BaseTelegramBotEntity:
                 'from' not in msg_data or
                 msg_data['from'].get('id') not in self.allowed_chat_ids):
             # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data "
-                          "({})".format(msg_data))
+            _LOGGER.error("Incoming message does not have required data (%s)",
+                          msg_data)
             return None
         return {
             ATTR_USER_ID: msg_data['from']['id'],
@@ -154,5 +154,5 @@ class BaseTelegramBotEntity:
             return True
         else:
             # Some other thing...
-            _LOGGER.warning('SOME OTHER THING RECEIVED --> "{}"'.format(data))
+            _LOGGER.warning('SOME OTHER THING RECEIVED --> "%s"', data)
             return False
