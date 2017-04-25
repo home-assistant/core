@@ -253,7 +253,7 @@ def async_prepare_setup_platform(hass: core.HomeAssistant, config, domain: str,
 
         if not dep_success:
             log_error('Could not setup all dependencies.')
-            return False
+            return None
 
     if not hass.config.skip_pip and hasattr(platform, 'REQUIREMENTS'):
         req_success = yield from _async_process_requirements(

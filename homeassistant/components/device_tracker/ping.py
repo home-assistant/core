@@ -1,15 +1,8 @@
 """
-Tracks devices by sending a ICMP ping.
+Tracks devices by sending a ICMP echo request (ping).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ping/
-
-device_tracker:
-  - platform: ping
-    count: 2
-    hosts:
-      host_one: pc.local
-      host_two: 192.168.2.25
 """
 import logging
 import subprocess
@@ -18,14 +11,12 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DEFAULT_SCAN_INTERVAL, SOURCE_TYPE_ROUTER)
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant import util
 from homeassistant import const
-import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = []
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-class Host:
+class Host(object):
     """Host object with ping detection."""
 
     def __init__(self, ip_address, dev_id, hass, config):
@@ -53,8 +44,10 @@ class Host:
                               self.ip_address]
 
     def ping(self):
-        """Send ICMP ping and return True if success."""
-        pinger = subprocess.Popen(self._ping_cmd, stdout=subprocess.PIPE)
+        """Send an ICMP echo request and return True if success."""
+        pinger = subprocess.Popen(self._ping_cmd,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.DEVNULL)
         try:
             pinger.communicate()
             return pinger.returncode == 0
@@ -70,7 +63,7 @@ class Host:
                 return True
             failed += 1
 
-        _LOGGER.debug("ping KO on ip=%s failed=%d", self.ip_address, failed)
+        _LOGGER.debug("No response from %s failed=%d", self.ip_address, failed)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):

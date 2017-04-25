@@ -29,8 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 9000
 TIMEOUT = 10
 
-KNOWN_DEVICES = []
-
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
@@ -71,18 +69,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                       host, port, error)
         return False
 
-    # Combine it with port to allow multiple servers at the same host
-    key = "{}:{}".format(ipaddr, port)
-
-    # Only add a media server once
-    if key in KNOWN_DEVICES:
-        return False
-    KNOWN_DEVICES.append(key)
-
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
-    if lms is False:
-        return False
 
     players = yield from lms.create_players()
     async_add_devices(players)
@@ -172,6 +160,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._id
 
     @property
     def state(self):

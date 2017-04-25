@@ -28,7 +28,7 @@ SUPPORT_LANGUAGES = [
     'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
     'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
     'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
-    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy',
+    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk',
 ]
 
 DEFAULT_LANG = 'en'
@@ -87,7 +87,7 @@ class GoogleProvider(Provider):
             url_param = {
                 'ie': 'UTF-8',
                 'tl': language,
-                'q': yarl.quote(part),
+                'q': yarl.quote(part, strict=False),
                 'tk': part_token,
                 'total': len(message_parts),
                 'idx': idx,

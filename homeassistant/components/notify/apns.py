@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.apns/
 """
 import logging
 import os
+
 import voluptuous as vol
 
 from homeassistant.helpers.event import track_state_change
@@ -16,15 +17,17 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
-APNS_DEVICES = "apns.yaml"
-CONF_CERTFILE = "cert_file"
-CONF_TOPIC = "topic"
-CONF_SANDBOX = "sandbox"
-DEVICE_TRACKER_DOMAIN = "device_tracker"
-SERVICE_REGISTER = "apns_register"
+REQUIREMENTS = ['apns2==0.1.1']
 
-ATTR_PUSH_ID = "push_id"
-ATTR_NAME = "name"
+APNS_DEVICES = 'apns.yaml'
+CONF_CERTFILE = 'cert_file'
+CONF_TOPIC = 'topic'
+CONF_SANDBOX = 'sandbox'
+DEVICE_TRACKER_DOMAIN = 'device_tracker'
+SERVICE_REGISTER = 'apns_register'
+
+ATTR_PUSH_ID = 'push_id'
+ATTR_NAME = 'name'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'apns',
@@ -39,8 +42,6 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
 })
 
-REQUIREMENTS = ["apns2==0.1.1"]
-
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
@@ -53,17 +54,15 @@ def get_service(hass, config, discovery_info=None):
     sandbox = config.get(CONF_SANDBOX)
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
-    hass.services.register(DOMAIN,
-                           'apns_{}'.format(name),
-                           service.register,
-                           descriptions.get(SERVICE_REGISTER),
-                           schema=REGISTER_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'apns_{}'.format(name), service.register,
+        descriptions.get(SERVICE_REGISTER), schema=REGISTER_SERVICE_SCHEMA)
     return service
 
 
 class ApnsDevice(object):
     """
-    Apns Device class.
+    APNS Device class.
 
     Stores information about a device that is
     registered for push notifications.
@@ -78,7 +77,7 @@ class ApnsDevice(object):
 
     @property
     def push_id(self):
-        """The apns id for the device."""
+        """The APNS id for the device."""
         return self.device_push_id
 
     @property
@@ -104,7 +103,7 @@ class ApnsDevice(object):
         The full id of a device that is tracked by the device
         tracking component.
         """
-        return DEVICE_TRACKER_DOMAIN + '.' + self.tracking_id
+        return '{}.{}'.format(DEVICE_TRACKER_DOMAIN, self.tracking_id)
 
     @property
     def disabled(self):
@@ -140,7 +139,7 @@ def _write_device(out, device):
 
     out.write(device.push_id)
     out.write(": {")
-    if len(attributes) > 0:
+    if attributes:
         separator = ", "
         out.write(separator.join(attributes))
 

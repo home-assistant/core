@@ -68,6 +68,10 @@ http:
   # base_url: example.duckdns.org:8123
 
 # Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
 updater:
 
 # Discover some devices automatically
@@ -108,7 +112,7 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
         vol.Schema({cv.string: dict}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        vol.Schema({cv.string: dict}),
+        cv.ordered_dict(OrderedDict, cv.string),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({

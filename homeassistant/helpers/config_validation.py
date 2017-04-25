@@ -242,7 +242,7 @@ def slugify(value):
     if value is None:
         raise vol.Invalid('Slug should not be None')
     slg = util_slugify(str(value))
-    if len(slg) > 0:
+    if slg:
         return slg
     raise vol.Invalid('Unable to slugify {}'.format(value))
 
