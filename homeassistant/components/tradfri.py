@@ -21,7 +21,7 @@ DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
-REQUIREMENTS = ['pytradfri==1.0']
+REQUIREMENTS = ['pytradfri==1.1']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
