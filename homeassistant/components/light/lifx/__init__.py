@@ -361,6 +361,7 @@ class LIFXLight(Light):
             saturation = saturation * (BYTE_MAX + 1)
             changed_color = True
 
+        # When color or temperature is set, use a default value for the other
         if ATTR_COLOR_TEMP in kwargs:
             kelvin = int(color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP]))
