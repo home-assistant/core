@@ -260,10 +260,10 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                    'form=logout').format(self.host, self.stok)
             referer = 'http://{}/webpages/index.html'.format(self.host)
 
-            response = requests.post(url,
-                                     params={'operation': 'write'},
-                                     headers={'referer': referer},
-                                     cookies={'sysauth': self.sysauth})
+            requests.post(url,
+                          params={'operation': 'write'},
+                          headers={'referer': referer},
+                          cookies={'sysauth': self.sysauth})
             self.stok = ''
             self.sysauth = ''
 
