@@ -83,6 +83,9 @@ batinfo==0.4.2
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
 
+# homeassistant.components.zha
+bellows==0.2.7
+
 # homeassistant.components.blink
 blinkpy==0.5.2
 
