@@ -96,8 +96,10 @@ class TestInfluxDB(unittest.TestCase):
                 'host': 'host',
                 'username': 'user',
                 'password': 'pass',
-                'blacklist': ['fake.blacklisted'],
-                'blacklist_domains': ['another_fake']
+                'exclude': {
+                    'entities': ['fake.blacklisted'],
+                    'domains': ['another_fake']
+                }
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
@@ -378,7 +380,9 @@ class TestInfluxDB(unittest.TestCase):
                 'username': 'user',
                 'password': 'pass',
                 'default_measurement': 'state',
-                'blacklist': ['fake.blacklisted']
+                'exclude': {
+                    'entities': ['fake.blacklisted']
+                }
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
