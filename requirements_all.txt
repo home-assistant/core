@@ -520,6 +520,9 @@ pydroid-ipcam==0.8
 # homeassistant.components.sensor.ebox
 pyebox==0.1.0
 
+# homeassistant.components.notify.html5
+pyelliptic==1.5.7
+
 # homeassistant.components.media_player.emby
 pyemby==1.2
 
