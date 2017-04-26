@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
+REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 ATTR_PARSER = 'parse_mode'
 PARSER_MD = 'markdown'
@@ -70,8 +70,8 @@ def get_service(hass, config, discovery_info=None):
         default_parser = config.get(ATTR_PARSER)
         bot = Bot(token=api_key)
         username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is '@%s', users allowed: %s, default=%s",
-                     username, user_id_array, list(user_id_array)[0])
+        _LOGGER.debug("Telegram bot is '@%s', users allowed: %s, default=%s",
+                      username, user_id_array, list(user_id_array)[0])
     except HTTPError:
         _LOGGER.error("Please check your access token")
         return None
@@ -83,7 +83,7 @@ def load_data(url=None, file=None, username=None, password=None):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
-            # load photo from url
+            # Load photo from URL
             if username is not None and password is not None:
                 req = requests.get(url, auth=(username, password), timeout=15)
             else:
@@ -91,7 +91,7 @@ def load_data(url=None, file=None, username=None, password=None):
             return io.BytesIO(req.content)
 
         elif file is not None:
-            # load photo from file
+            # Load photo from file
             return open(file, "rb")
         else:
             _LOGGER.warning("Can't load photo no photo found in params!")
@@ -156,8 +156,7 @@ class TelegramNotificationService(BaseNotificationService):
                                 target, self._default_user)
             else:
                 try:
-                    chat_ids = list(filter(lambda x: x in self._users,
-                                           [int(t) for t in target]))
+                    chat_ids = [int(t) for t in target if t in self._users]
                     if len(chat_ids) > 0:
                         return chat_ids
                     _LOGGER.warning('ALL BAD TARGETS: "%s"', target)
@@ -187,7 +186,7 @@ class TelegramNotificationService(BaseNotificationService):
             else:
                 raise ValueError(str(row_keyboard))
 
-        # defaults
+        # Defaults
         params = dict(parse_mode=self._parse_mode,
                       disable_notification=False,
                       disable_web_page_preview=None,
@@ -263,7 +262,7 @@ class TelegramNotificationService(BaseNotificationService):
                 return self.send_document(data.get(ATTR_DOCUMENT),
                                           chat_id=chat_id, **params)
             elif ATTR_CALLBACK_QUERY in data:
-                # send answer to callback query
+                # Send answer to callback query
                 callback_data = data.get(ATTR_CALLBACK_QUERY)
                 callback_query_id = callback_data.pop('callback_query_id')
                 return self._send_msg(self.bot.answerCallbackQuery,
@@ -271,7 +270,7 @@ class TelegramNotificationService(BaseNotificationService):
                                       callback_query_id,
                                       text=text, **callback_data)
             elif ATTR_EDIT_MSG in data:
-                # edit existent text message
+                # Edit existent text message
                 message_id, inline_message_id = self._get_msg_ids(
                     data.get(ATTR_EDIT_MSG), chat_id)
                 _LOGGER.debug('editing message w/id %s: "%s" (%s)',
@@ -284,7 +283,7 @@ class TelegramNotificationService(BaseNotificationService):
                                       inline_message_id=inline_message_id,
                                       **params)
             elif ATTR_EDIT_CAPTION in data:
-                # edit existent caption
+                # Edit existent caption
                 caption = data.get(ATTR_EDIT_CAPTION)['caption']
                 message_id, inline_message_id = self._get_msg_ids(
                     data.get(ATTR_EDIT_CAPTION), chat_id)
@@ -297,7 +296,7 @@ class TelegramNotificationService(BaseNotificationService):
                                       inline_message_id=inline_message_id,
                                       caption=caption, **params)
             elif ATTR_EDIT_REPLYMARKUP in data:
-                # edit existent replymarkup (like the keyboard)
+                # Edit existent replymarkup (like the keyboard)
                 message_id, inline_message_id = self._get_msg_ids(
                     data.get(ATTR_EDIT_REPLYMARKUP), chat_id)
                 _LOGGER.debug('editing reply_markup w/id %s: "%s" (%s)',
@@ -318,7 +317,7 @@ class TelegramNotificationService(BaseNotificationService):
         """Send a photo."""
         caption = data.get(ATTR_CAPTION)
 
-        # send photo
+        # Send photo
         photo = load_data(
             url=data.get(ATTR_URL),
             file=data.get(ATTR_FILE),
@@ -334,7 +333,7 @@ class TelegramNotificationService(BaseNotificationService):
         """Send a document."""
         caption = data.get(ATTR_CAPTION)
 
-        # send document
+        # Send document
         document = load_data(
             url=data.get(ATTR_URL),
             file=data.get(ATTR_FILE),
@@ -351,7 +350,7 @@ class TelegramNotificationService(BaseNotificationService):
         latitude = float(gps.get(ATTR_LATITUDE, 0.0))
         longitude = float(gps.get(ATTR_LONGITUDE, 0.0))
 
-        # send location
+        # Send location
         return self._send_msg(self.bot.sendLocation,
                               "Error sending location",
                               chat_id=chat_id,
