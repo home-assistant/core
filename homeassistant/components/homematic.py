@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ["pyhomematic==0.1.24"]
+REQUIREMENTS = ["pyhomematic==0.1.25"]
 
 DOMAIN = 'homematic'
 
@@ -54,21 +54,22 @@ SERVICE_SET_DEV_VALUE = 'set_dev_value'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch',
-        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch'],
-    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer'],
+        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
-        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch'],
+        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
+        'FillingLevel', 'ValveDrive', 'EcoLogic'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch', 'MaxShutterContact'],
+        'HMWIOSwitch', 'MaxShutterContact', 'Rain', 'WiredSensor'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
