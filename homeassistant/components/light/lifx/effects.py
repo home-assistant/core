@@ -31,6 +31,8 @@ ATTR_CHANGE = 'change'
 WAVEFORM_SINE = 1
 WAVEFORM_PULSE = 4
 
+NEUTRAL_WHITE = 3500
+
 LIFX_EFFECT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
@@ -314,7 +316,7 @@ class LIFXEffectColorloop(LIFXEffect):
                     int(65535/359*lhue),
                     int(random.uniform(0.8, 1.0)*65535),
                     brightness,
-                    4000,
+                    NEUTRAL_WHITE,
                 ]
                 light.device.set_color(hsbk, None, transition)
 
@@ -326,7 +328,7 @@ class LIFXEffectColorloop(LIFXEffect):
 
     def from_poweroff_hsbk(self, light, **kwargs):
         """Start from a random hue."""
-        return [random.randint(0, 65535), 65535, 0, 4000]
+        return [random.randint(0, 65535), 65535, 0, NEUTRAL_WHITE]
 
 
 class LIFXEffectStop(LIFXEffect):
