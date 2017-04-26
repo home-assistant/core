@@ -19,7 +19,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
+REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 ATTR_PHOTO = 'photo'
 ATTR_KEYBOARD = 'keyboard'
@@ -47,7 +47,7 @@ def get_service(hass, config, discovery_info=None):
         api_key = config.get(CONF_API_KEY)
         bot = telegram.Bot(token=api_key)
         username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is '%s'", username)
+        _LOGGER.debug("Telegram bot is '%s'", username)
     except urllib.error.HTTPError:
         _LOGGER.error("Please check your access token")
         return None
@@ -59,7 +59,7 @@ def load_data(url=None, file=None, username=None, password=None):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
-            # load photo from url
+            # Load photo from URL
             if username is not None and password is not None:
                 req = requests.get(url, auth=(username, password), timeout=15)
             else:
@@ -67,7 +67,7 @@ def load_data(url=None, file=None, username=None, password=None):
             return io.BytesIO(req.content)
 
         elif file is not None:
-            # load photo from file
+            # Load photo from file
             return open(file, "rb")
         else:
             _LOGGER.warning("Can't load photo no photo found in params!")
@@ -96,7 +96,7 @@ class TelegramNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE)
         data = kwargs.get(ATTR_DATA)
 
-        # exists data for send a photo/location
+        # Exists data for send a photo/location
         if data is not None and ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO, None)
             photos = photos if isinstance(photos, list) else [photos]
@@ -120,11 +120,10 @@ class TelegramNotificationService(BaseNotificationService):
 
         parse_mode = telegram.parsemode.ParseMode.MARKDOWN
 
-        # send message
+        # Send message
         try:
-            self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=text,
-                                 parse_mode=parse_mode)
+            self.bot.sendMessage(
+                chat_id=self._chat_id, text=text, parse_mode=parse_mode)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message")
 
@@ -135,8 +134,8 @@ class TelegramNotificationService(BaseNotificationService):
         keyboard = telegram.ReplyKeyboardMarkup([
             [key.strip() for key in row.split(",")] for row in keys])
         try:
-            self.bot.sendMessage(chat_id=self._chat_id, text=message,
-                                 reply_markup=keyboard)
+            self.bot.sendMessage(
+                chat_id=self._chat_id, text=message, reply_markup=keyboard)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending message")
 
@@ -145,7 +144,7 @@ class TelegramNotificationService(BaseNotificationService):
         import telegram
         caption = data.get(ATTR_CAPTION)
 
-        # send photo
+        # Send photo
         try:
             photo = load_data(
                 url=data.get(ATTR_URL),
@@ -153,8 +152,8 @@ class TelegramNotificationService(BaseNotificationService):
                 username=data.get(ATTR_USERNAME),
                 password=data.get(ATTR_PASSWORD),
             )
-            self.bot.sendPhoto(chat_id=self._chat_id,
-                               photo=photo, caption=caption)
+            self.bot.sendPhoto(
+                chat_id=self._chat_id, photo=photo, caption=caption)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending photo")
 
@@ -171,8 +170,8 @@ class TelegramNotificationService(BaseNotificationService):
                 username=data.get(ATTR_USERNAME),
                 password=data.get(ATTR_PASSWORD),
             )
-            self.bot.sendDocument(chat_id=self._chat_id,
-                                  document=document, caption=caption)
+            self.bot.sendDocument(
+                chat_id=self._chat_id, document=document, caption=caption)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending document")
 
@@ -182,9 +181,9 @@ class TelegramNotificationService(BaseNotificationService):
         latitude = float(gps.get(ATTR_LATITUDE, 0.0))
         longitude = float(gps.get(ATTR_LONGITUDE, 0.0))
 
-        # send location
+        # Send location
         try:
-            self.bot.sendLocation(chat_id=self._chat_id,
-                                  latitude=latitude, longitude=longitude)
+            self.bot.sendLocation(
+                chat_id=self._chat_id, latitude=latitude, longitude=longitude)
         except telegram.error.TelegramError:
             _LOGGER.exception("Error sending location")
