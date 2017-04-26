@@ -17,6 +17,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.config import load_yaml_config_file
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -153,7 +154,7 @@ class HassIOBaseView(HomeAssistantView):
         return web.Response(
             text=log,
             status=client.status,
-            content_type="",
+            content_type=CONTENT_TYPE_TEXT_PLAIN,
         )
 
 
