@@ -30,6 +30,53 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(Tradfri(light) for light in lights)
 
+    groups = gateway.get_groups()
+    add_devices(TradfriGroup(group) for group in groups)
+
+
+class TradfriGroup(Light):
+    """The platform class required by hass."""
+
+    def __init__(self, light):
+        """Initialize a Group."""
+        self._group = light
+        self._name = light.name
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
+
+    @property
+    def name(self):
+        """Return the display name of this group."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """Return true if group lights are on."""
+        return self._group.state
+
+    @property
+    def brightness(self):
+        """Brightness of the group lights (an integer in the range 1-255)."""
+        return self._group.dimmer
+
+    def turn_off(self, **kwargs):
+        """Instruct the group lights to turn off."""
+        return self._group.set_state(0)
+
+    def turn_on(self, **kwargs):
+        """Instruct the group lights to turn on, or dim."""
+        if ATTR_BRIGHTNESS in kwargs:
+            self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+        else:
+            self._group.set_state(1)
+
+    def update(self):
+        """Fetch new state data for this group."""
+        self._group.update()
+
 
 class Tradfri(Light):
     """The platform class required by hass."""
@@ -129,7 +176,8 @@ class Tradfri(Light):
         """Fetch new state data for this light."""
         self._light.update()
 
-        # Handle Hue lights paired with the gatway
-        if self._light_data.hex_color is not None:
+        # Handle Hue lights paired with the gateway
+        # hex_color is 0 when bulb is unreachable
+        if self._light_data.hex_color not in (None, '0'):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)

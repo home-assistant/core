@@ -154,6 +154,10 @@ omit =
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
+    homeassistant/components/zha/__init__.py
+    homeassistant/components/zha/const.py
+    homeassistant/components/*/zha.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
@@ -335,6 +339,7 @@ omit =
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/coinmarketcap.py
+    homeassistant/components/sensor/cert_expiry.py
     homeassistant/components/sensor/comed_hourly_pricing.py
     homeassistant/components/sensor/cpuspeed.py
     homeassistant/components/sensor/crimereports.py

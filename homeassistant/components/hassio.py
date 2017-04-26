@@ -96,9 +96,12 @@ def async_setup(hass, config):
         hass.http.register_view(HassIOBaseView(hassio, base))
     for base in ('supervisor', 'network'):
         hass.http.register_view(HassIOBaseEditView(hassio, base))
+    for base in ('supervisor', 'homeassistant'):
+        hass.http.register_view(HassIOBaseLogsView(hassio, base))
 
     # register view for addons
     hass.http.register_view(HassIOAddonsView(hassio))
+    hass.http.register_view(HassIOAddonsLogsView(hassio))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -119,7 +122,8 @@ def async_setup(hass, config):
             yield from hassio.send_command("/host/shutdown")
         elif service.service == SERVICE_SUPERVISOR_UPDATE:
             yield from hassio.send_command(
-                "/supervisor/update", payload=version)
+                "/supervisor/update", payload=version,
+                timeout=LONG_TASK_TIMEOUT)
         elif service.service == SERVICE_SUPERVISOR_RELOAD:
             yield from hassio.send_command(
                 "/supervisor/reload", timeout=LONG_TASK_TIMEOUT)
@@ -180,12 +184,13 @@ class HassIO(object):
         )
         if answer and answer['result'] == 'ok':
             return answer['data'] if answer['data'] else True
+        elif answer:
+            _LOGGER.error("%s return error %s.", cmd, answer['message'])
 
-        _LOGGER.error("%s return error %s.", cmd, answer['message'])
         return False
 
     @asyncio.coroutine
-    def send_raw(self, cmd, payload=None, timeout=DEFAULT_TIMEOUT):
+    def send_raw(self, cmd, payload=None, timeout=DEFAULT_TIMEOUT, json=True):
         """Send raw request to API."""
         try:
             with async_timeout.timeout(timeout, loop=self.loop):
@@ -198,7 +203,11 @@ class HassIO(object):
                     _LOGGER.error("%s return code %d.", cmd, request.status)
                     return
 
-                return (yield from request.json())
+                if json:
+                    return (yield from request.json())
+
+                # get raw output
+                return (yield from request.read())
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on api request %s.", cmd)
@@ -249,6 +258,28 @@ class HassIOBaseEditView(HassIOBaseView):
         return web.json_response(response)
 
 
+class HassIOBaseLogsView(HomeAssistantView):
+    """HassIO view to handle base logs part."""
+
+    requires_auth = True
+
+    def __init__(self, hassio, base):
+        """Initialize a hassio base view."""
+        self.hassio = hassio
+        self._url_logs = "/{}/logs".format(base)
+
+        self.url = "/api/hassio/logs/{}".format(base)
+        self.name = "api:hassio:logs:{}".format(base)
+
+    @asyncio.coroutine
+    def get(self, request):
+        """Get logs."""
+        data = yield from self.hassio.send_raw(self._url_logs, json=False)
+        if not data:
+            raise HTTPBadGateway()
+        return web.Response(body=data)
+
+
 class HassIOAddonsView(HomeAssistantView):
     """HassIO view to handle addons part."""
 
@@ -279,3 +310,24 @@ class HassIOAddonsView(HomeAssistantView):
         if not response:
             raise HTTPBadGateway()
         return web.json_response(response)
+
+
+class HassIOAddonsLogsView(HomeAssistantView):
+    """HassIO view to handle addons logs part."""
+
+    requires_auth = True
+    url = "/api/hassio/logs/addons/{addon}"
+    name = "api:hassio:logs:addons"
+
+    def __init__(self, hassio):
+        """Initialize a hassio addon view."""
+        self.hassio = hassio
+
+    @asyncio.coroutine
+    def get(self, request, addon):
+        """Get addon data."""
+        data = yield from self.hassio.send_raw(
+            "/addons/{}/logs".format(addon), json=False)
+        if not data:
+            raise HTTPBadGateway()
+        return web.Response(body=data)

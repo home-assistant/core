@@ -112,8 +112,8 @@ class BaseTelegramBotEntity:
         event = EVENT_TELEGRAM_COMMAND
         event_data = {
             ATTR_USER_ID: data['from']['id'],
-            ATTR_FROM_FIRST: data['from']['first_name'],
-            ATTR_FROM_LAST: data['from']['last_name']}
+            ATTR_FROM_FIRST: data['from'].get('first_name', 'N/A'),
+            ATTR_FROM_LAST: data['from'].get('last_name', 'N/A')}
 
         if data['text'][0] == '/':
             pieces = data['text'].split(' ')

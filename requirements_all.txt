@@ -38,7 +38,7 @@ SoCo==0.12
 TwitterAPI==2.4.5
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.1.1
+aioautomatic==0.2.0
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -48,7 +48,7 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.4.4
+aiolifx==0.4.5
 
 # homeassistant.components.alarmdecoder
 alarmdecoder==0.12.1.0
@@ -82,6 +82,9 @@ batinfo==0.4.2
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
 beautifulsoup4==4.5.3
+
+# homeassistant.components.zha
+bellows==0.2.7
 
 # homeassistant.components.blink
 blinkpy==0.5.2
@@ -482,7 +485,7 @@ pyCEC==0.4.13
 pyHS100==0.2.4.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.17.0
+pyRFXtrx==0.18.0
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.0
@@ -521,6 +524,9 @@ pydroid-ipcam==0.8
 # homeassistant.components.sensor.ebox
 pyebox==0.1.0
 
+# homeassistant.components.notify.html5
+pyelliptic==1.5.7
+
 # homeassistant.components.media_player.emby
 pyemby==1.2
 
@@ -543,7 +549,7 @@ pyharmony==1.0.12
 pyhik==0.1.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.24
+pyhomematic==0.1.25
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.1.0
@@ -565,7 +571,7 @@ pylast==1.8.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
-pylgtv==0.1.6
+pylgtv==0.1.7
 
 # homeassistant.components.litejet
 pylitejet==0.1
@@ -649,7 +655,7 @@ python-synology==0.1.0
 # homeassistant.components.notify.telegram
 # homeassistant.components.telegram_bot.polling
 # homeassistant.components.telegram_bot.webhooks
-python-telegram-bot==5.3.0
+python-telegram-bot==5.3.1
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -664,7 +670,7 @@ python-wink==1.2.3
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri==1.0
+pytradfri==1.1
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.0
@@ -673,7 +679,7 @@ pyunifi==2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.26
+pyvera==0.2.27
 
 # homeassistant.components.notify.html5
 pywebpush==0.6.1

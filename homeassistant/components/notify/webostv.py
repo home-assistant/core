@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
     ATTR_DATA, BaseNotificationService, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_FILENAME, CONF_HOST, CONF_ICON)
 
-REQUIREMENTS = ['pylgtv==0.1.6']
+REQUIREMENTS = ['pylgtv==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 
