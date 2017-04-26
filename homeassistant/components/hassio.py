@@ -105,7 +105,7 @@ class HassIO(object):
 
     @asyncio.coroutine
     def command_proxy(self, cmd, request):
-        """Return True if it connected to HassIO supervisor.
+        """Return a client request with proxy origin for HassIO supervisor.
 
         This method is a coroutine.
         """
