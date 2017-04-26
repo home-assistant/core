@@ -21,7 +21,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.components.http.util import get_real_ip
 
 DEPENDENCIES = ['http']
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
+REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
