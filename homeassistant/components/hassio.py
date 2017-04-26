@@ -113,7 +113,7 @@ class HassIO(object):
             with async_timeout.timeout(TIMEOUT, loop=self.loop):
                 data = yield from request.read()
                 headers = {
-                    CONTENT_TYPE: request.headers.get(CONTENT_TYPE)
+                    CONTENT_TYPE: request.content_type
                 }
 
             client = yield from self.websession.get(
