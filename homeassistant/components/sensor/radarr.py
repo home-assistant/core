@@ -128,14 +128,14 @@ class RadarrSensor(Entity):
                 if self.type == 'movies':
                     self.data = list(
                         filter(
-                            lambda x: x['downloaded'] == True,
+                            lambda x: x['downloaded'],
                             res.json()
                         )
                     )
                 elif self.type == 'wanted':
                     self.data = list(
                         filter(
-                            lambda x: x['downloaded'] == False,
+                            lambda x: not x['downloaded'],
                             res.json()
                         )
                     )
@@ -213,7 +213,7 @@ class RadarrSensor(Entity):
                 attributes[to_key(movie)] = movie['hasFile']
         elif self.type == 'status':
             attributes = self.data
-                
+
         return attributes
 
     @property
@@ -228,17 +228,19 @@ def get_date(zone, offset=0):
     return datetime.date(
         datetime.fromtimestamp(time.time() + day*offset, tz=zone)
     )
-    
+
+
 def get_release_date(data):
     date = data['physicalRelease']
     if not date:
         date = data['inCinemas']
     return date
 
+
 def to_key(data):
     return '{} ({})'.format(data['title'], data['year'])
+
 
 def to_unit(value, unit):
     """Convert bytes to give unit."""
     return value / 1024**BYTE_SIZES.index(unit)
-
