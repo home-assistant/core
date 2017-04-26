@@ -14,13 +14,10 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
-import voluptuous as vol
 
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
@@ -91,7 +88,7 @@ class HassIO(object):
                 )
 
                 if request.status != 200:
-                    _LOGGER.error("%s return code %d.", cmd, request.status)
+                    _LOGGER.error("Ping return code %d.", request.status)
                     return False
 
                 answer = yield from request.json()
@@ -99,10 +96,10 @@ class HassIO(object):
                     return True
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Timeout on api request %s.", cmd)
+            _LOGGER.error("Timeout on ping request")
 
-        except aiohttp.ClientError:
-            _LOGGER.error("Client error on api request %s.", cmd)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Client error on ping request %s", err)
 
         return False
 
@@ -125,8 +122,8 @@ class HassIO(object):
 
             return client
 
-        except aiohttp.ClientError:
-            _LOGGER.error("Client error on api request %s.", cmd)
+        except aiohttp.ClientError as err:
+            _LOGGER.error("Client error on api %s request %s.", cmd, err)
 
         except asyncio.TimeoutError:
             _LOGGER.error("Client timeout error on api request %s.", cmd)
@@ -137,7 +134,8 @@ class HassIO(object):
 class HassIOBaseView(HomeAssistantView):
     """HassIO view to handle proxy part part."""
 
-    def _create_response(self, client):
+    @staticmethod
+    def _create_response(client):
         """Convert a response from client request."""
         data = yield from client.read()
         return web.Response(
@@ -146,7 +144,8 @@ class HassIOBaseView(HomeAssistantView):
             content_type=client.headers.get(CONTENT_TYPE),
         )
 
-    def _create_response_log(self, client):
+    @staticmethod
+    def _create_response_log(client):
         """Convert a response from client request."""
         data = yield from client.read()
         log = re.sub(r"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))", "", data.decode())
