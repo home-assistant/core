@@ -15,7 +15,7 @@ from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 
-from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN, CONTENT_TYPE_JSON
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -110,11 +110,13 @@ class HassIO(object):
         This method is a coroutine.
         """
         try:
+            data = None
+            headers = None
             with async_timeout.timeout(TIMEOUT, loop=self.loop):
-                data = yield from request.read()
-                headers = {
-                    CONTENT_TYPE: request.content_type
-                }
+                if request.content_type in \
+                        (CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN):
+                    data = yield from request.read()
+                    headers = {CONTENT_TYPE: request.content_type}
 
             client = yield from self.websession.get(
                 "http://{}{}".format(self._ip, cmd), data=data, headers=headers
