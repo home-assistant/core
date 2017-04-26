@@ -186,13 +186,14 @@ class HassIOAddonsView(HassIOBaseView):
     """HassIO view to handle addon part."""
 
     requires_auth = True
-    url = "/api/hassio/addons/{addon}"
-    name = "api:hassio:addons"
 
     def __init__(self, hassio, command):
         """Initialize a hassio base view."""
         self.hassio = hassio
         self._command = command
+
+        self.url = "/api/hassio/addons/{}/{}".format("{addon}", command)
+        self.name = "api:hassio:addons:{}".format(command)
 
     @asyncio.coroutine
     def get(self, request, addon):
