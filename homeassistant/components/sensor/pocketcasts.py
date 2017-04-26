@@ -17,9 +17,7 @@ from homeassistant.components.sensor import (PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-COMMIT = '9f61ff00c77c7c98ffa0af9dd3540df3dce4a836'
-REQUIREMENTS = ['https://github.com/molobrakos/python-pocketcasts/'
-                'archive/%s.zip#python-pocketcasts==0.0.1' % COMMIT]
+REQUIREMENTS = ['pocketcasts-api==0.2.2']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
@@ -35,11 +33,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the pocketcasts platform for sensors."""
     import pocketcasts
     try:
-        api = pocketcasts.Api(
+        api = pocketcasts.Pocketcasts(
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD))
         _LOGGER.debug('Found %d podcasts',
-                      len(api.my_podcasts()))
+                      len(api.get_subscribed_podcasts()))
         add_devices([PocketCastsSensor(api)])
         return True
     except OSError as err:
@@ -60,7 +58,7 @@ class PocketCastsSensor(Entity):
     def update(self):
         """Update sensor values."""
         try:
-            self._state = len(self._api.new_episodes_released())
+            self._state = len(self._api.get_new_releases())
             _LOGGER.debug('Found %d new episodes', self._state)
         except OSError as err:
             _LOGGER.warning('Failed to contact server: %s', err)
