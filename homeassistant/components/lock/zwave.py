@@ -53,8 +53,8 @@ LOCK_ALARM_TYPE = {
     '9': 'Deadbolt Jammed',
     '18': 'Locked with Keypad by user ',
     '19': 'Unlocked with Keypad by user ',
-    '21': 'Manually Locked by ',
-    '22': 'Manually Unlocked by Key or Inside thumb turn',
+    '21': 'Manually Locked ',
+    '22': 'Manually Unlocked ',
     '24': 'Locked by RF',
     '25': 'Unlocked by RF',
     '27': 'Auto re-lock',
@@ -69,8 +69,8 @@ LOCK_ALARM_TYPE = {
 }
 
 MANUAL_LOCK_ALARM_LEVEL = {
-    '1': 'Key Cylinder or Inside thumb turn',
-    '2': 'Touch function (lock and leave)'
+    '1': 'by Key Cylinder or Inside thumb turn',
+    '2': 'by Touch function (lock and leave)'
 }
 
 TAMPER_ALARM_LEVEL = {
@@ -128,11 +128,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
+    network = hass.data[zwave.ZWAVE_NETWORK]
 
     def set_usercode(service):
         """Set the usercode to index X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
-        lock_node = zwave.NETWORK.nodes[node_id]
+        lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
         usercode = service.data.get(ATTR_USERCODE)
 
@@ -151,7 +152,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def get_usercode(service):
         """Get a usercode at index X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
-        lock_node = zwave.NETWORK.nodes[node_id]
+        lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
 
         for value in lock_node.get_values(
@@ -164,7 +165,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     def clear_usercode(service):
         """Set usercode to slot X on the lock."""
         node_id = service.data.get(zwave.const.ATTR_NODE_ID)
-        lock_node = zwave.NETWORK.nodes[node_id]
+        lock_node = network.nodes[node_id]
         code_slot = service.data.get(ATTR_CODE_SLOT)
         data = ''
 

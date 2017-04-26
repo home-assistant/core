@@ -21,8 +21,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
+REQUIREMENTS = ["pyhomematic==0.1.25"]
+
 DOMAIN = 'homematic'
-REQUIREMENTS = ["pyhomematic==0.1.22"]
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -53,21 +54,22 @@ SERVICE_SET_DEV_VALUE = 'set_dev_value'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch',
-        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch'],
-    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer'],
+        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+    DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
         'ThermostatWall', 'AreaThermostat', 'RotaryHandleSensor',
         'WaterSensor', 'PowermeterGas', 'LuxSensor', 'WeatherSensor',
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
-        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch'],
+        'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
+        'FillingLevel', 'ValveDrive', 'EcoLogic'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'RemoteMotion', 'WeatherSensor', 'TiltSensor', 'IPShutterContact',
-        'HMWIOSwitch', 'MaxShutterContact'],
+        'HMWIOSwitch', 'MaxShutterContact', 'Rain', 'WiredSensor'],
     DISCOVER_COVER: ['Blind', 'KeyBlind']
 }
 
@@ -82,7 +84,12 @@ HM_ATTRIBUTE_SUPPORT = {
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
-    'CONTROL_MODE': ['mode', {0: 'Auto', 1: 'Manual', 2: 'Away', 3: 'Boost'}],
+    'CONTROL_MODE': ['mode', {0: 'Auto',
+                              1: 'Manual',
+                              2: 'Away',
+                              3: 'Boost',
+                              4: 'Comfort',
+                              5: 'Lowering'}],
     'POWER': ['power', {}],
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
@@ -119,20 +126,20 @@ CONF_LOCAL_IP = 'local_ip'
 CONF_LOCAL_PORT = 'local_port'
 CONF_IP = 'ip'
 CONF_PORT = 'port'
-CONF_CALLBACK_IP = "callback_ip"
-CONF_CALLBACK_PORT = "callback_port"
+CONF_CALLBACK_IP = 'callback_ip'
+CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
 CONF_DELAY = 'delay'
 CONF_PRIMARY = 'primary'
 
-DEFAULT_LOCAL_IP = "0.0.0.0"
+DEFAULT_LOCAL_IP = '0.0.0.0'
 DEFAULT_LOCAL_PORT = 0
 DEFAULT_RESOLVENAMES = False
 DEFAULT_PORT = 2001
-DEFAULT_USERNAME = "Admin"
-DEFAULT_PASSWORD = ""
+DEFAULT_USERNAME = 'Admin'
+DEFAULT_PASSWORD = ''
 DEFAULT_VARIABLES = False
 DEFAULT_DEVICES = True
 DEFAULT_DELAY = 0.5
@@ -140,7 +147,7 @@ DEFAULT_PRIMARY = False
 
 
 DEVICE_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): "homematic",
+    vol.Required(CONF_PLATFORM): 'homematic',
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(ATTR_ADDRESS): cv.string,
     vol.Required(ATTR_PROXY): cv.string,
@@ -237,14 +244,14 @@ def reconnect(hass):
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup the Homematic component."""
+    """Set up the Homematic component."""
     from pyhomematic import HMConnection
 
     hass.data[DATA_DELAY] = config[DOMAIN].get(CONF_DELAY)
     hass.data[DATA_DEVINIT] = {}
     hass.data[DATA_STORE] = []
 
-    # create hosts list for pyhomematic
+    # Create hosts list for pyhomematic
     remotes = {}
     hosts = {}
     for rname, rconfig in config[DOMAIN][CONF_HOSTS].items():
@@ -273,7 +280,7 @@ def setup(hass, config):
         localport=config[DOMAIN].get(CONF_LOCAL_PORT),
         remotes=remotes,
         systemcallback=bound_system_callback,
-        interface_id="homeassistant"
+        interface_id='homeassistant'
     )
 
     # Start server thread, connect to peer, initialize to receive events
@@ -283,13 +290,13 @@ def setup(hass, config):
     hass.bus.listen_once(
         EVENT_HOMEASSISTANT_STOP, hass.data[DATA_HOMEMATIC].stop)
 
-    # init homematic hubs
+    # Init homematic hubs
     entity_hubs = []
     for _, hub_data in hosts.items():
         entity_hubs.append(HMHub(
             hass, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
-    # regeister homematic services
+    # Regeister homematic services
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
@@ -299,24 +306,24 @@ def setup(hass, config):
         channel = service.data.get(ATTR_CHANNEL)
         param = service.data.get(ATTR_PARAM)
 
-        # device not found
+        # Device not found
         hmdevice = _device_from_servicecall(hass, service)
         if hmdevice is None:
             _LOGGER.error("%s not found for service virtualkey!", address)
             return
 
-        # if param exists for this device
+        # If param exists for this device
         if param not in hmdevice.ACTIONNODE:
             _LOGGER.error("%s not datapoint in hm device %s", param, address)
             return
 
-        # channel exists?
+        # Channel exists?
         if channel not in hmdevice.ACTIONNODE[param]:
             _LOGGER.error("%i is not a channel in hm device %s",
                           channel, address)
             return
 
-        # call key
+        # Call key
         hmdevice.actionNodeData(param, True, channel)
 
     hass.services.register(
@@ -364,13 +371,13 @@ def setup(hass, config):
         param = service.data.get(ATTR_PARAM)
         value = service.data.get(ATTR_VALUE)
 
-        # device not found
+        # Device not found
         hmdevice = _device_from_servicecall(hass, service)
         if hmdevice is None:
             _LOGGER.error("%s not found!", address)
             return
 
-        # call key
+        # Call key
         hmdevice.setValue(param, value, channel)
 
     hass.services.register(
@@ -389,18 +396,16 @@ def _system_callback_handler(hass, config, src, *args):
         (interface_id, dev_descriptions) = args
         proxy = interface_id.split('-')[-1]
 
-        # device support active?
+        # Device support active?
         if not hass.data[DATA_DEVINIT][proxy]:
             return
 
-        ##
         # Get list of all keys of the devices (ignoring channels)
         key_dict = {}
         for dev in dev_descriptions:
             key_dict[dev['ADDRESS'].split(':')[0]] = True
 
-        ##
-        # remove device they allready init by HA
+        # Remove device they allready init by HA
         tmp_devs = key_dict.copy()
         for dev in tmp_devs:
             if dev in hass.data[DATA_STORE]:
@@ -414,11 +419,11 @@ def _system_callback_handler(hass, config, src, *args):
         for dev in key_dict:
             hmdevice = hass.data[DATA_HOMEMATIC].devices[proxy].get(dev)
 
-            # have events?
-            if len(hmdevice.EVENTNODE) > 0:
+            # Have events?
+            if hmdevice.EVENTNODE:
                 _LOGGER.debug("Register Events from %s", dev)
-                hmdevice.setEventCallback(callback=bound_event_callback,
-                                          bequeath=True)
+                hmdevice.setEventCallback(
+                    callback=bound_event_callback, bequeath=True)
 
         # If configuration allows autodetection of devices,
         # all devices not configured are added.
@@ -554,7 +559,7 @@ def _hm_event_handler(hass, proxy, device, caller, attribute, value):
         }))
         return
 
-    _LOGGER.warning("Event is unknown and not forwarded to HA")
+    _LOGGER.warning("Event is unknown and not forwarded")
 
 
 def _device_from_servicecall(hass, service):
@@ -722,7 +727,7 @@ class HMDevice(Entity):
 
     def link_homematic(self):
         """Connect to Homematic."""
-        # device is already linked
+        # Device is already linked
         if self._connected:
             return True
 

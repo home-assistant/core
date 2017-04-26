@@ -37,6 +37,8 @@ from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID)
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
 
@@ -86,7 +88,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
 }
-_LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass: HomeAssistantType, entity_id: str=None):
@@ -125,7 +126,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         async_log_exception(ex, DOMAIN, config, hass)
         return False
     else:
-        conf = conf[0] if len(conf) > 0 else {}
+        conf = conf[0] if conf else {}
         consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
@@ -553,7 +554,6 @@ class Device(Entity):
         # bytes like 00 get truncates to 0, API needs full bytes
         oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
         url = 'http://api.macvendors.com/' + oui
-        resp = None
         try:
             websession = async_get_clientsession(self.hass)
 
@@ -570,13 +570,9 @@ class Device(Entity):
             # in the 'known_devices.yaml' file which only happens
             # the first time the device is seen.
             return 'unknown'
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             # same as above
             return 'unknown'
-        finally:
-            if resp is not None:
-                yield from resp.release()
 
     @asyncio.coroutine
     def async_added_to_hass(self):

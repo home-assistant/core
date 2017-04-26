@@ -16,11 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_MANUAL = "manual"
 STATE_BOOST = "boost"
+STATE_COMFORT = "comfort"
+STATE_LOWERING = "lowering"
 
 HM_STATE_MAP = {
     "AUTO_MODE": STATE_AUTO,
     "MANU_MODE": STATE_MANUAL,
     "BOOST_MODE": STATE_BOOST,
+    "COMFORT_MODE": STATE_COMFORT,
+    "LOWERING_MODE": STATE_LOWERING
 }
 
 HM_TEMP_MAP = [

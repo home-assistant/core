@@ -11,20 +11,18 @@ from collections import namedtuple
 import asyncio
 import aiohttp
 import async_timeout
-
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-# Configuration constant specific for tado
-CONF_HOME_ID = 'home_id'
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_HOME_ID = 'home_id'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
@@ -105,8 +103,6 @@ class TadoDeviceScanner(DeviceScanner):
         _LOGGER.debug("Requesting Tado")
 
         last_results = []
-        response = None
-        tado_json = None
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -127,13 +123,9 @@ class TadoDeviceScanner(DeviceScanner):
 
                 tado_json = yield from response.json()
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Cannot load Tado data")
             return False
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
         # Without a home_id, we fetched an URL where the mobile devices can be
         # found under the mobileDevices key.

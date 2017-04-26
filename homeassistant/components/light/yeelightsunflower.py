@@ -5,20 +5,18 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.yeelightsunflower/
 """
 import logging
+
 import voluptuous as vol
 
-from homeassistant.components.light import (Light,
-                                            ATTR_RGB_COLOR, SUPPORT_RGB_COLOR,
-                                            ATTR_BRIGHTNESS,
-                                            SUPPORT_BRIGHTNESS,
-                                            PLATFORM_SCHEMA)
-from homeassistant.const import CONF_HOST
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.light import (
+    Light, ATTR_RGB_COLOR, SUPPORT_RGB_COLOR, ATTR_BRIGHTNESS,
+    SUPPORT_BRIGHTNESS, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_HOST
 
 REQUIREMENTS = ['yeelightsunflower==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
-
 
 SUPPORT_YEELIGHT_SUNFLOWER = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR)
 
@@ -35,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hub = yeelightsunflower.Hub(host)
 
     if not hub.available:
-        _LOGGER.error('Could not connect to Yeelight Sunflower hub')
+        _LOGGER.error("Could not connect to Yeelight Sunflower hub")
         return False
 
     add_devices(SunflowerBulb(light) for light in hub.get_lights())
@@ -55,7 +53,7 @@ class SunflowerBulb(Light):
     @property
     def name(self):
         """Return the display name of this light."""
-        return "sunflower_{}".format(self._light.zid)
+        return 'sunflower_{}'.format(self._light.zid)
 
     @property
     def available(self):

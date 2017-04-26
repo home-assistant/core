@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     insteonhub = hass.data['insteon_local']
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
-    if len(conf_lights):
+    if conf_lights:
         for device_id in conf_lights:
             setup_light(device_id, conf_lights[device_id], insteonhub, hass,
                         add_devices)
@@ -175,7 +175,7 @@ class InsteonLocalDimmerDevice(Light):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS]) / 255 * 100
 
-        self.node.on(brightness)
+        self.node.change_level(brightness)
 
     def turn_off(self, **kwargs):
         """Turn device off."""

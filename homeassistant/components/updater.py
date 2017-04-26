@@ -22,7 +22,7 @@ from homeassistant.const import __version__ as CURRENT_VERSION
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.helpers import event
 
-REQUIREMENTS = ['distro==1.0.3']
+REQUIREMENTS = ['distro==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

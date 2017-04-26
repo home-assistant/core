@@ -864,20 +864,16 @@ def _async_fetch_image(hass, url):
 
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    response = None
     try:
         with async_timeout.timeout(10, loop=hass.loop):
             response = yield from websession.get(url)
-        if response.status == 200:
-            content = yield from response.read()
-            content_type = response.headers.get(CONTENT_TYPE_HEADER)
+
+            if response.status == 200:
+                content = yield from response.read()
+                content_type = response.headers.get(CONTENT_TYPE_HEADER)
 
     except asyncio.TimeoutError:
         pass
-
-    finally:
-        if response is not None:
-            yield from response.release()
 
     if not content:
         return (None, None)

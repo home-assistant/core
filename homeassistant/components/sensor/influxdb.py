@@ -168,15 +168,15 @@ class InfluxSensorData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Running query: %s', self.query)
+        _LOGGER.info("Running query: %s", self.query)
 
         points = list(self.influx.query(self.query).get_points())
-        if len(points) == 0:
-            _LOGGER.warning('Query returned no points, sensor state set'
-                            ' to UNKNOWN : %s', self.query)
+        if not points:
+            _LOGGER.warning("Query returned no points, sensor state set"
+                            " to UNKNOWN : %s", self.query)
             self.value = None
         else:
-            if len(points) > 1:
-                _LOGGER.warning('Query returned multiple points, only first'
-                                ' one shown : %s', self.query)
+            if points:
+                _LOGGER.warning("Query returned multiple points, only first"
+                                " one shown : %s", self.query)
             self.value = points[0].get('value')

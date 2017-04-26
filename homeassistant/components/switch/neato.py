@@ -5,12 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
 import logging
-
+import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['neato']
 
 SWITCH_TYPE_CLEAN = 'clean'
 SWITCH_TYPE_SCHEDULE = 'scedule'
@@ -22,15 +24,12 @@ SWITCH_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Neato switches."""
-    if not hass.data[NEATO_ROBOTS]:
-        return False
-
+    """Set up the Neato switches."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
-    _LOGGER.debug('Adding switches %s', dev)
+    _LOGGER.debug("Adding switches %s", dev)
     add_devices(dev)
 
 
@@ -42,18 +41,28 @@ class NeatoConnectedSwitch(ToggleEntity):
         self.type = switch_type
         self.robot = robot
         self.neato = hass.data[NEATO_LOGIN]
-        self._robot_name = self.robot.name + ' ' + SWITCH_TYPES[self.type][0]
-        self._state = self.robot.state
+        self._robot_name = '{} {}'.format(
+            self.robot.name, SWITCH_TYPES[self.type][0])
+        try:
+            self._state = self.robot.state
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as ex:
+            _LOGGER.warning("Neato connection error: %s", ex)
+            self._state = None
         self._schedule_state = None
         self._clean_state = None
 
     def update(self):
         """Update the states of Neato switches."""
-        _LOGGER.debug('Running switch update')
+        _LOGGER.debug("Running switch update")
         self.neato.update_robots()
-        if not self._state:
+        try:
+            self._state = self.robot.state
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as ex:
+            _LOGGER.warning("Neato connection error: %s", ex)
+            self._state = None
             return
-        self._state = self.robot.state
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_CLEAN:
             if (self.robot.state['action'] == 1 or
@@ -63,14 +72,14 @@ class NeatoConnectedSwitch(ToggleEntity):
                 self._clean_state = STATE_ON
             else:
                 self._clean_state = STATE_OFF
-            _LOGGER.debug('schedule_state=%s', self._schedule_state)
+            _LOGGER.debug("Schedule state: %s", self._schedule_state)
         if self.type == SWITCH_TYPE_SCHEDULE:
-            _LOGGER.debug('self._state=%s', self._state)
+            _LOGGER.debug("State: %s", self._state)
             if self.robot.schedule_enabled:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
-            _LOGGER.debug('schedule_state=%s', self._schedule_state)
+            _LOGGER.debug("Shedule state: %s", self._schedule_state)
 
     @property
     def name(self):

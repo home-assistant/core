@@ -12,7 +12,7 @@ import async_timeout
 import aiohttp
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -22,8 +22,12 @@ HOOK_ENDPOINT = 'https://api.gethook.io/v1/'
 TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Exclusive(CONF_PASSWORD, 'hook_secret', msg='hook: provide ' +
+                  'username/password OR token'): cv.string,
+    vol.Exclusive(CONF_TOKEN, 'hook_secret', msg='hook: provide ' +
+                  'username/password OR token'): cv.string,
+    vol.Inclusive(CONF_USERNAME, 'hook_auth'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'hook_auth'): cv.string,
 })
 
 
@@ -32,47 +36,39 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Hook by getting the access token and list of actions."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    token = config.get(CONF_TOKEN)
     websession = async_get_clientsession(hass)
+    # If password is set in config, prefer it over token
+    if username is not None and password is not None:
+        try:
+            with async_timeout.timeout(TIMEOUT, loop=hass.loop):
+                response = yield from websession.post(
+                    '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
+                    data={
+                        'username': username,
+                        'password': password})
+            # The Hook API returns JSON but calls it 'text/html'.  Setting
+            # content_type=None disables aiohttp's content-type validation.
+            data = yield from response.json(content_type=None)
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+            _LOGGER.error("Failed authentication API call: %s", error)
+            return False
 
-    response = None
-    try:
-        with async_timeout.timeout(TIMEOUT, loop=hass.loop):
-            response = yield from websession.post(
-                '{}{}'.format(HOOK_ENDPOINT, 'user/login'),
-                data={
-                    'username': username,
-                    'password': password})
-        data = yield from response.json()
-    except (asyncio.TimeoutError,
-            aiohttp.errors.ClientError,
-            aiohttp.errors.ClientDisconnectedError) as error:
-        _LOGGER.error("Failed authentication API call: %s", error)
-        return False
-    finally:
-        if response is not None:
-            yield from response.release()
+        try:
+            token = data['data']['token']
+        except KeyError:
+            _LOGGER.error("No token. Check username and password")
+            return False
 
-    try:
-        token = data['data']['token']
-    except KeyError:
-        _LOGGER.error("No token. Check username and password")
-        return False
-
-    response = None
     try:
         with async_timeout.timeout(TIMEOUT, loop=hass.loop):
             response = yield from websession.get(
                 '{}{}'.format(HOOK_ENDPOINT, 'device'),
-                params={"token": data['data']['token']})
-        data = yield from response.json()
-    except (asyncio.TimeoutError,
-            aiohttp.errors.ClientError,
-            aiohttp.errors.ClientDisconnectedError) as error:
+                params={"token": token})
+        data = yield from response.json(content_type=None)
+    except (asyncio.TimeoutError, aiohttp.ClientError) as error:
         _LOGGER.error("Failed getting devices: %s", error)
         return False
-    finally:
-        if response is not None:
-            yield from response.release()
 
     async_add_devices(
         HookSmartHome(
@@ -110,24 +106,17 @@ class HookSmartHome(SwitchDevice):
     @asyncio.coroutine
     def _send(self, url):
         """Send the url to the Hook API."""
-        response = None
         try:
             _LOGGER.debug("Sending: %s", url)
             websession = async_get_clientsession(self.hass)
             with async_timeout.timeout(TIMEOUT, loop=self.hass.loop):
                 response = yield from websession.get(
                     url, params={"token": self._token})
-            data = yield from response.json()
+            data = yield from response.json(content_type=None)
 
-        except (asyncio.TimeoutError,
-                aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as error:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed setting state: %s", error)
             return False
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
         _LOGGER.debug("Got: %s", data)
         return data['return_value'] == '1'

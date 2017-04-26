@@ -58,14 +58,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     port = config.get(CONF_PORT)
 
-    if len(DEVICES) == 0:
+    if not DEVICES:
         hass.http.register_view(NetioApiView)
 
     dev = Netio(host, port, username, password)
 
     DEVICES[host] = Device(dev, [])
 
-    # Throttle the update for all NetioSwitches of one Netio
+    # Throttle the update for all Netio switches of one Netio
     dev.update = util.Throttle(MIN_TIME_BETWEEN_SCANS)(dev.update)
 
     for key in config[CONF_OUTLETS]:
@@ -123,7 +123,7 @@ class NetioApiView(HomeAssistantView):
 
 
 class NetioSwitch(SwitchDevice):
-    """Provide a netio linked switch."""
+    """Provide a Netio linked switch."""
 
     def __init__(self, netio, outlet, name):
         """Defined to handle throttle."""

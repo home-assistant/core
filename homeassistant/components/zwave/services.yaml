@@ -102,9 +102,9 @@ test_network:
 rename_node:
   description: Set the name(s) of a node.
   fields:
-    entity_id:
-      description: Name(s) of entities to to rename
-      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+    node_id:
+      description: ID of the node to rename.
+      example: 10
     name:
       description: New Name
       example: 'kitchen'

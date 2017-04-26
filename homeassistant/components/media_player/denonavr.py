@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.3.1']
+REQUIREMENTS = ['denonavr==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,8 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info("Denon receiver at host %s initialized", host)
     # 2. option: discovery using netdisco
     if discovery_info is not None:
-        host = discovery_info[0]
-        name = discovery_info[1]
+        host = discovery_info.get('host')
+        name = discovery_info.get('name')
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)

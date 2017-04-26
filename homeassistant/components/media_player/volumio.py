@@ -1,42 +1,23 @@
 """
 Volumio Platform.
 
-The volumio platform allows you to control a Volumio media player
-from Home Assistant.
-
-
-To add a Volumio player to your installation, add the following to
-your configuration.yaml file.
-
-# Example configuration.yaml entry
-media_player:
-  - platform: volumio
-    name: 'Volumio Home Audio'
-    host: homeaudio.local
-    port: 3000
-Configuration variables:
-
-- **name** (*Optional*): Name of the device
-- **host** (*Required*): IP address or hostname of the device
-- **port** (*Required*): Port number of Volumio service
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.volumio/
 """
 import logging
 import asyncio
 import aiohttp
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_PLAY, MediaPlayerDevice,
-    PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
+    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOST, CONF_PORT, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -44,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Volumio'
 DEFAULT_PORT = 3000
+
 TIMEOUT = 10
 
 SUPPORT_VOLUMIO = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -60,10 +42,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Volumio platform."""
+    """Set up the Volumio platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
+
     async_add_devices([Volumio(name, host, port, hass)])
 
 
@@ -75,7 +58,7 @@ class Volumio(MediaPlayerDevice):
         self.host = host
         self.port = port
         self.hass = hass
-        self._url = host + ":" + str(port)
+        self._url = '{}:{}'.format(host, str(port))
         self._name = name
         self._state = {}
         self.async_update()
@@ -84,9 +67,7 @@ class Volumio(MediaPlayerDevice):
     @asyncio.coroutine
     def send_volumio_msg(self, method, params=None):
         """Send message."""
-        url = "http://{}:{}/api/v1/{}/".format(
-            self.host, self.port, method)
-        response = None
+        url = "http://{}:{}/api/v1/{}/".format(self.host, self.port, method)
 
         _LOGGER.debug("URL: %s params: %s", url, params)
 
@@ -101,14 +82,9 @@ class Volumio(MediaPlayerDevice):
                     response.status, response)
                 return False
 
-        except (asyncio.TimeoutError,
-                aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as error:
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with Volumio: %s", type(error))
             return False
-        finally:
-            if response is not None:
-                yield from response.release()
 
         try:
             return data
@@ -218,9 +194,8 @@ class Volumio(MediaPlayerDevice):
 
     def async_set_volume_level(self, volume):
         """Send volume_up command to media player."""
-        return self.send_volumio_msg('commands',
-                                     params={'cmd': 'volume',
-                                             'volume': int(volume * 100)})
+        return self.send_volumio_msg(
+            'commands', params={'cmd': 'volume', 'volume': int(volume * 100)})
 
     def async_mute_volume(self, mute):
         """Send mute command to media player."""
@@ -228,10 +203,8 @@ class Volumio(MediaPlayerDevice):
         if mute:
             # mute is implemenhted as 0 volume, do save last volume level
             self._lastvol = self._state['volume']
-            return self.send_volumio_msg('commands',
-                                         params={'cmd': 'volume',
-                                                 'volume': mutecmd})
+            return self.send_volumio_msg(
+                'commands', params={'cmd': 'volume', 'volume': mutecmd})
         else:
-            return self.send_volumio_msg('commands',
-                                         params={'cmd': 'volume',
-                                                 'volume': self._lastvol})
+            return self.send_volumio_msg(
+                'commands', params={'cmd': 'volume', 'volume': self._lastvol})

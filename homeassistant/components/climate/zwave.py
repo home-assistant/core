@@ -112,8 +112,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             _LOGGER.debug("Setpoint is 0, setting default to "
                           "current_temperature=%s",
                           self._current_temperature)
-            self._target_temperature = (
-                round((float(self._current_temperature)), 1))
+            if self._current_temperature is not None:
+                self._target_temperature = (
+                    round((float(self._current_temperature)), 1))
         else:
             self._target_temperature = round(
                 (float(self.values.primary.data)), 1)
@@ -188,19 +189,18 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
         if self.values.fan_mode:
-            self.values.fan_mode.data = bytes(fan, 'utf-8')
+            self.values.fan_mode.data = fan
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         if self.values.mode:
-            self.values.mode.data = bytes(operation_mode, 'utf-8')
+            self.values.mode.data = operation_mode
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
-                self.values.zxt_120_swing_mode.data = bytes(
-                    swing_mode, 'utf-8')
+                self.values.zxt_120_swing_mode.data = swing_mode
 
     @property
     def device_state_attributes(self):

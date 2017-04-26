@@ -20,12 +20,13 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_GARAGE = SUPPORT_OPEN | SUPPORT_CLOSE
 
 
-def get_device(values, **kwargs):
+def get_device(hass, values, node_config, **kwargs):
     """Create zwave entity device."""
+    invert_buttons = node_config.get(zwave.CONF_INVERT_OPENCLOSE_BUTTONS)
     if (values.primary.command_class ==
             zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
             and values.primary.index == 0):
-        return ZwaveRollershutter(values)
+        return ZwaveRollershutter(hass, values, invert_buttons)
     elif (values.primary.command_class in [
             zwave.const.COMMAND_CLASS_SWITCH_BINARY,
             zwave.const.COMMAND_CLASS_BARRIER_OPERATOR]):
@@ -36,13 +37,15 @@ def get_device(values, **kwargs):
 class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
     """Representation of an Zwave roller shutter."""
 
-    def __init__(self, values):
+    def __init__(self, hass, values, invert_buttons):
         """Initialize the zwave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         # pylint: disable=no-member
+        self._network = hass.data[zwave.ZWAVE_NETWORK]
         self._open_id = None
         self._close_id = None
         self._current_position = None
+        self._invert_buttons = invert_buttons
 
         self._workaround = workaround.get_device_mapping(values.primary)
         if self._workaround:
@@ -56,10 +59,9 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
         if self.values.open and self.values.close and \
                 self._open_id is None and self._close_id is None:
-            if self._workaround == workaround.WORKAROUND_REVERSE_OPEN_CLOSE:
+            if self._invert_buttons:
                 self._open_id = self.values.close.value_id
                 self._close_id = self.values.open.value_id
-                self._workaround = None
             else:
                 self._open_id = self.values.open.value_id
                 self._close_id = self.values.close.value_id
@@ -89,11 +91,11 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Move the roller shutter up."""
-        zwave.NETWORK.manager.pressButton(self._open_id)
+        self._network.manager.pressButton(self._open_id)
 
     def close_cover(self, **kwargs):
         """Move the roller shutter down."""
-        zwave.NETWORK.manager.pressButton(self._close_id)
+        self._network.manager.pressButton(self._close_id)
 
     def set_cover_position(self, position, **kwargs):
         """Move the roller shutter to a specific position."""
@@ -101,7 +103,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
 
     def stop_cover(self, **kwargs):
         """Stop the roller shutter."""
-        zwave.NETWORK.manager.releaseButton(self._open_id)
+        self._network.manager.releaseButton(self._open_id)
 
 
 class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
