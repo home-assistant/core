@@ -113,10 +113,11 @@ class HassIO(object):
             data = None
             headers = None
             with async_timeout.timeout(TIMEOUT, loop=self.loop):
-                if request.content_type in \
-                        (CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN):
-                    data = yield from request.read()
+                data = yield from request.read()
+                if data:
                     headers = {CONTENT_TYPE: request.content_type}
+                else:
+                    data = None
 
             client = yield from self.websession.get(
                 "http://{}{}".format(self._ip, cmd), data=data, headers=headers
