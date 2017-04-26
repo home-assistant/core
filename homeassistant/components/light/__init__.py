@@ -241,13 +241,31 @@ def async_setup(hass, config):
         if color_name is not None:
             params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
 
+        xy_color = params.get(ATTR_XY_COLOR, None)
+        brightness = params.get(ATTR_BRIGHTNESS, None)
+
+        # Convert xy_color/brightness for lights that do not support xy
+        params_rgb = params.copy()
+        if xy_color is not None and brightness is not None:
+            rgb = color_util.color_xy_brightness_to_RGB(
+                *xy_color,
+                ibrightness=brightness)
+            params_rgb.setdefault(ATTR_RGB_COLOR, rgb)
+
         for light in target_lights:
-            if service.service == SERVICE_TURN_ON:
-                yield from light.async_turn_on(**params)
-            elif service.service == SERVICE_TURN_OFF:
-                yield from light.async_turn_off(**params)
+            support_xy = bool(light.supported_features & SUPPORT_XY_COLOR)
+            support_rgb = bool(light.supported_features & SUPPORT_RGB_COLOR)
+            if not support_xy and support_rgb:
+                lightparams = params_rgb
             else:
-                yield from light.async_toggle(**params)
+                lightparams = params
+
+            if service.service == SERVICE_TURN_ON:
+                yield from light.async_turn_on(**lightparams)
+            elif service.service == SERVICE_TURN_OFF:
+                yield from light.async_turn_off(**lightparams)
+            else:
+                yield from light.async_toggle(**lightparams)
 
         update_tasks = []
 
