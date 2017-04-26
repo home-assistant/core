@@ -7,7 +7,8 @@ from os import path
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT)
+    DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT,
+    ATTR_TRANSITION)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID)
 from homeassistant.helpers.service import extract_entity_ids
@@ -51,11 +52,12 @@ LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
     vol.Optional(ATTR_PERIOD, default=60):
-        vol.All(vol.Coerce(float), vol.Clamp(min=1)),
+        vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
     vol.Optional(ATTR_CHANGE, default=20):
         vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
     vol.Optional(ATTR_SPREAD, default=30):
         vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+    ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Range(min=0)),
 })
 
 LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
@@ -295,9 +297,10 @@ class LIFXEffectColorloop(LIFXEffect):
             random.shuffle(self.lights)
             lhue = hue
 
-            transition = int(1000 * random.uniform(period/2, period))
             for light in self.lights:
-                if spread > 0:
+                if ATTR_TRANSITION in kwargs:
+                    transition = int(1000*kwargs[ATTR_TRANSITION])
+                elif light == self.lights[0] or spread > 0:
                     transition = int(1000 * random.uniform(period/2, period))
 
                 if ATTR_BRIGHTNESS in kwargs:
