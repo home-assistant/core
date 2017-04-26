@@ -205,6 +205,7 @@ class LIFXEffect(object):
                     light.device.set_color(light.effect_data.color)
                     yield from asyncio.sleep(0.5)
                 light.effect_data = None
+                yield from light.refresh_state()
             self.lights.remove(light)
 
     def from_poweroff_hsbk(self, light, **kwargs):
