@@ -213,7 +213,7 @@ class LIFXEffect(object):
 
     def from_poweroff_hsbk(self, light, **kwargs):
         """Return the color when starting from a powered off state."""
-        return None
+        return [random.randint(0, 65535), 65535, 0, NEUTRAL_WHITE]
 
 
 class LIFXEffectBreathe(LIFXEffect):
@@ -325,10 +325,6 @@ class LIFXEffectColorloop(LIFXEffect):
                     lhue = (lhue + spread/(len(self.lights)-1)) % 360
 
             yield from asyncio.sleep(period)
-
-    def from_poweroff_hsbk(self, light, **kwargs):
-        """Start from a random hue."""
-        return [random.randint(0, 65535), 65535, 0, NEUTRAL_WHITE]
 
 
 class LIFXEffectStop(LIFXEffect):
