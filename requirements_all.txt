@@ -648,7 +648,7 @@ python-synology==0.1.0
 # homeassistant.components.notify.telegram
 # homeassistant.components.telegram_bot.polling
 # homeassistant.components.telegram_bot.webhooks
-python-telegram-bot==5.3.0
+python-telegram-bot==5.3.1
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
