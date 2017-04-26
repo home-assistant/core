@@ -137,19 +137,17 @@ class HassIOBaseView(HomeAssistantView):
     """HassIO view to handle proxy part part."""
 
     @staticmethod
-    def _create_response(client):
+    def _create_response(client, data):
         """Convert a response from client request."""
-        data = yield from client.read()
         return web.Response(
             body=data,
             status=client.status,
-            content_type=client.headers.get(CONTENT_TYPE),
+            content_type=client.content_type,
         )
 
     @staticmethod
-    def _create_response_log(client):
+    def _create_response_log(client, data):
         """Convert a response from client request."""
-        data = yield from client.read()
         log = re.sub(r"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))", "", data.decode())
 
         return web.Response(
@@ -178,9 +176,10 @@ class HassIOView(HassIOBaseView):
         """Route data to hassio."""
         client = yield from self.hassio.command_proxy(self._cmd, request)
 
+        data = yield from client.read()
         if self._command == "logs":
-            return self._create_response_log(client)
-        return self._create_response(client)
+            return self._create_response_log(client, data)
+        return self._create_response(client, data)
 
 
 class HassIOAddonsView(HassIOBaseView):
@@ -200,7 +199,8 @@ class HassIOAddonsView(HassIOBaseView):
         """Route addon data to hassio."""
         addon_cmd = "/addons/{}/{}".format(addon, self._command)
 
+        data = yield from client.read()
         client = yield from self.hassio.command_proxy(addon_cmd, request)
         if self._command == "logs":
-            return self._create_response_log(client)
-        return self._create_response(client)
+            return self._create_response_log(client, data)
+        return self._create_response(client, data)
