@@ -199,9 +199,9 @@ class HassIOAddonsView(HassIOBaseView):
     def get(self, request, addon):
         """Route addon data to hassio."""
         addon_cmd = "/addons/{}/{}".format(addon, self._command)
+        client = yield from self.hassio.command_proxy(addon_cmd, request)
 
         data = yield from client.read()
-        client = yield from self.hassio.command_proxy(addon_cmd, request)
         if self._command == "logs":
             return self._create_response_log(client, data)
         return self._create_response(client, data)
