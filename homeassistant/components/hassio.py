@@ -12,7 +12,7 @@ import re
 import aiohttp
 from aiohttp import web
 from aiohttp.web_exceptions import (
-    HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed)
+    HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed, HTTPBadRequest)
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 
@@ -130,7 +130,8 @@ class HassIO(object):
                 else:
                     data = None
 
-            client = yield from self.websession.get(
+            method = getattr(self.websession, request.method.lower())
+            client = yield from method(
                 "http://{}/{}".format(self._ip, path), data=data,
                 headers=headers
             )
@@ -158,11 +159,15 @@ class HassIOView(HomeAssistantView):
         self.hassio = hassio
 
     @asyncio.coroutine
-    def get(self, request, path):
+    def _handle(self, request, path):
         """Route data to hassio."""
         if path.startswith('addons/'):
-            action = path.rsplit("/", 1)[-1]
-            allowed_methods = ADDON_REST_COMMANDS.get(action)
+            parts = path.split('/')
+
+            if len(parts) != 3:
+                raise HTTPNotFound()
+
+            allowed_methods = ADDON_REST_COMMANDS.get(parts[-1])
         else:
             allowed_methods = HASSIO_REST_COMMANDS.get(path)
 
@@ -177,6 +182,9 @@ class HassIOView(HomeAssistantView):
         if path.endswith('/logs'):
             return _create_response_log(client, data)
         return _create_response(client, data)
+
+    get = _handle
+    post = _handle
 
 
 def _create_response(client, data):
