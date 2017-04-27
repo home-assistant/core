@@ -41,7 +41,7 @@ HASSIO_REST_COMMANDS = {
     'homeassistant/update': ['POST'],
     'homeassistant/logs': ['GET'],
     'network/info': ['GET'],
-    'network/options': ['GET'],
+    'network/options': ['POST'],
 }
 
 ADDON_REST_COMMANDS = {
