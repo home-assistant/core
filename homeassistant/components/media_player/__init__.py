@@ -332,8 +332,9 @@ def clear_playlist(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
+
 def set_shuffle(hass, shuffle, entity_id=None):
-    """Send the media player the command for enabling/disabling shuffle mode."""
+    """Send the media player the command to enable/disable shuffle mode."""
     data = {ATTR_MEDIA_SHUFFLING: shuffle}
 
     if entity_id:
