@@ -268,10 +268,10 @@ def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-sequence-index
-def color_xy_brightness_to_hsv(vX: float, vY: float,
-                               ibrightness: int) -> Tuple[int, int, int]:
-    """Convert an xy brightness color to its hsv representation."""
-    return color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, ibrightness))
+def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
+    """Convert an xy color to its hs representation."""
+    h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
+    return (h, s)
 
 
 # pylint: disable=invalid-sequence-index
