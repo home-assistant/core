@@ -129,7 +129,8 @@ class Tradfri(Light):
         """Fetch new state data for this light."""
         self._light.update()
 
-        # Handle Hue lights paired with the gatway
-        if self._light_data.hex_color is not None:
+        # Handle Hue lights paired with the gateway
+        # hex_color is 0 when bulb is unreachable
+        if self._light_data.hex_color not in (None, '0'):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)

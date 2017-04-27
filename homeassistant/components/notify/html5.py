@@ -25,7 +25,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pywebpush==0.6.1', 'PyJWT==1.4.2']
+# pyelliptic is dependency of pywebpush and 1.5.8 contains a breaking change
+REQUIREMENTS = ['pywebpush==0.6.1', 'PyJWT==1.4.2', 'pyelliptic==1.5.7']
 
 DEPENDENCIES = ['frontend']
 
