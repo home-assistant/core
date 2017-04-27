@@ -214,7 +214,7 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s")
     colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
-    datefmt = '%y-%m-%d %H:%M:%S'
+    datefmt = '%Y-%m-%d %H:%M:%S'
 
     # suppress overly verbose logs from libraries that aren't helpful
     logging.getLogger("requests").setLevel(logging.WARNING)
