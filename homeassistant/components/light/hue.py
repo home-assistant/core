@@ -380,12 +380,10 @@ class HueLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             if self.info.get('manufacturername') == "OSRAM":
-                hsv = color_util.color_xy_brightness_to_hsv(
-                    *kwargs[ATTR_XY_COLOR],
-                    ibrightness=self.info['bri'])
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
+                hue, sat = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+                command['hue'] = hue
+                command['sat'] = sat
+                command['bri'] = self.info['bri']
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
