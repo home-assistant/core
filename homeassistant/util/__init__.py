@@ -2,13 +2,13 @@
 from collections.abc import MutableSet
 from itertools import chain
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 import enum
 import socket
 import random
 import string
-from functools import wraps
+from functools import wraps, partial
 from types import MappingProxyType
 from unicodedata import normalize
 
@@ -310,5 +310,53 @@ class Throttle(object):
                 return None
             finally:
                 throttle[0].release()
+
+        return wrapper
+
+
+class RetryOnError(object):
+    """A class for retrying a failed task a certain amount of tries.
+
+    This method decorator makes a method retrying on errors. If there was an
+    uncaught exception, it schedules another try to execute the task after a
+    retry delay. It does this up to the maximum number of retries.
+
+    It can be used for all probable "self-healing" problems like network
+    outages. The task will be rescheduled using HAs scheduling mechanism.
+
+    It takes a Hass instance, a maximum number of retries and a retry delay
+    in seconds as arguments.
+    """
+    def __init__(self, hass, retry_limit=0, retry_delay=20):
+        """Initialize the decorator."""
+        self.hass = hass
+        self.retry_limit = retry_limit
+        self.retry_delay = timedelta(seconds=retry_delay)
+
+    def __call__(self, method):
+        """This decorates the target method."""
+        from homeassistant.helpers.event import track_point_in_utc_time
+
+        @wraps(method)
+        def wrapper(*args, **kwargs):
+
+            def scheduled(retry=0, event=None):
+                """The scheduling wrapper.
+
+                It is called directly at the first time and then called
+                scheduled within the Hass mainloop.
+                """
+                try:
+                    method(*args, **kwargs)
+                except Exception:
+                    if retry == self.retry_limit:
+                        raise
+                    target = utcnow() + self.retry_delay
+                    track_point_in_utc_time(self.hass,
+                                            partial(scheduled,
+                                                    retry + 1),
+                                            target)
+
+            scheduled()
 
         return wrapper
