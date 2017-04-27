@@ -11,11 +11,12 @@ import re
 
 import aiohttp
 from aiohttp import web
-from aiohttp.web_exceptions import HTTPBadGateway
+from aiohttp.web_exceptions import (
+    HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed)
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 
-from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN, CONTENT_TYPE_JSON
+from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -27,14 +28,31 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 10
 
 HASSIO_REST_COMMANDS = {
-    "host": ["shutdown", "restart", "update", "info"],
-    "supervisor": ["info", "update", "options", "reload", "logs"],
-    "homeassistant": ["info", "update", "logs"],
-    "network": ["info", "options"],
-    "addons": [
-        "install", "uninstall", "start", "stop", "update", "options", "info",
-        "logs"
-    ]
+    'host/shutdown': ['POST'],
+    'host/reboot': ['POST'],
+    'host/update': ['GET'],
+    'host/info': ['GET'],
+    'supervisor/info': ['GET'],
+    'supervisor/update': ['POST'],
+    'supervisor/options': ['POST'],
+    'supervisor/reload': ['POST'],
+    'supervisor/logs': ['GET'],
+    'homeassistant/info': ['GET'],
+    'homeassistant/update': ['POST'],
+    'homeassistant/logs': ['GET'],
+    'network/info': ['GET'],
+    'network/options': ['GET'],
+}
+
+ADDON_REST_COMMANDS = {
+    'install': ['POST'],
+    'uninstall': ['POST'],
+    'start': ['POST'],
+    'stop': ['POST'],
+    'update': ['POST'],
+    'options': ['POST'],
+    'info': ['GET'],
+    'logs': ['GET'],
 }
 
 
@@ -55,13 +73,7 @@ def async_setup(hass, config):
         _LOGGER.error("Not connected with HassIO!")
         return False
 
-    # register view
-    for base, commands in HASSIO_REST_COMMANDS.items():
-        for command in commands:
-            if base == "addons":
-                hass.http.register_view(HassIOAddonsView(hassio, command))
-            else:
-                hass.http.register_view(HassIOView(hassio, base, command))
+    hass.http.register_view(HassIOView(hassio))
 
     return True
 
@@ -92,8 +104,7 @@ class HassIO(object):
                     return False
 
                 answer = yield from request.json()
-                if answer and answer['result'] == 'ok':
-                    return True
+                return answer and answer['result'] == 'ok'
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on ping request")
@@ -104,7 +115,7 @@ class HassIO(object):
         return False
 
     @asyncio.coroutine
-    def command_proxy(self, cmd, request):
+    def command_proxy(self, path, request):
         """Return a client request with proxy origin for HassIO supervisor.
 
         This method is a coroutine.
@@ -120,89 +131,70 @@ class HassIO(object):
                     data = None
 
             client = yield from self.websession.get(
-                "http://{}{}".format(self._ip, cmd), data=data, headers=headers
+                "http://{}/{}".format(self._ip, path), data=data,
+                headers=headers
             )
 
             return client
 
         except aiohttp.ClientError as err:
-            _LOGGER.error("Client error on api %s request %s.", cmd, err)
+            _LOGGER.error("Client error on api %s request %s.", path, err)
 
         except asyncio.TimeoutError:
-            _LOGGER.error("Client timeout error on api request %s.", cmd)
+            _LOGGER.error("Client timeout error on api request %s.", path)
 
         raise HTTPBadGateway()
 
 
-class HassIOBaseView(HomeAssistantView):
-    """HassIO view to handle proxy part part."""
-
-    @staticmethod
-    def _create_response(client, data):
-        """Convert a response from client request."""
-        return web.Response(
-            body=data,
-            status=client.status,
-            content_type=client.content_type,
-        )
-
-    @staticmethod
-    def _create_response_log(client, data):
-        """Convert a response from client request."""
-        log = re.sub(r"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))", "", data.decode())
-
-        return web.Response(
-            text=log,
-            status=client.status,
-            content_type=CONTENT_TYPE_TEXT_PLAIN,
-        )
-
-
-class HassIOView(HassIOBaseView):
+class HassIOView(HomeAssistantView):
     """HassIO view to handle base part."""
 
+    name = "api:hassio"
+    url = "/api/hassio/{path:.+}"
     requires_auth = True
 
-    def __init__(self, hassio, base, command):
+    def __init__(self, hassio):
         """Initialize a hassio base view."""
         self.hassio = hassio
-        self._cmd = "/{}/{}".format(base, command)
-        self._command = command
-
-        self.url = "/api/hassio/{}/{}".format(base, command)
-        self.name = "api:hassio:{}:{}".format(base, command)
 
     @asyncio.coroutine
-    def get(self, request):
+    def get(self, request, path):
         """Route data to hassio."""
-        client = yield from self.hassio.command_proxy(self._cmd, request)
+        if path.startswith('addons/'):
+            action = path.rsplit("/", 1)[-1]
+            allowed_methods = ADDON_REST_COMMANDS.get(action)
+        else:
+            allowed_methods = HASSIO_REST_COMMANDS.get(path)
+
+        if allowed_methods is None:
+            raise HTTPNotFound()
+        if request.method not in allowed_methods:
+            raise HTTPMethodNotAllowed(request.method, allowed_methods)
+
+        client = yield from self.hassio.command_proxy(path, request)
 
         data = yield from client.read()
-        if self._command == "logs":
-            return self._create_response_log(client, data)
-        return self._create_response(client, data)
+        if path.endswith('/logs'):
+            return _create_response_log(client, data)
+        return _create_response(client, data)
 
 
-class HassIOAddonsView(HassIOBaseView):
-    """HassIO view to handle addon part."""
+def _create_response(client, data):
+    """Convert a response from client request."""
+    return web.Response(
+        body=data,
+        status=client.status,
+        content_type=client.content_type,
+    )
 
-    requires_auth = True
 
-    def __init__(self, hassio, command):
-        """Initialize a hassio base view."""
-        self.hassio = hassio
-        self._command = command
+def _create_response_log(client, data):
+    """Convert a response from client request."""
+    # Remove color codes
+    log = re.sub(r"\x1b(\[.*?[@-~]|\].*?(\x07|\x1b\\))", "", data.decode())
 
-        self.url = "/api/hassio/addons/{}/{}".format("{addon}", command)
-        self.name = "api:hassio:addons:{}".format(command)
-
-    @asyncio.coroutine
-    def get(self, request, addon):
-        """Route addon data to hassio."""
-        addon_cmd = "/addons/{}/{}".format(addon, self._command)
-        client = yield from self.hassio.command_proxy(addon_cmd, request)
-
-        data = yield from client.read()
-        if self._command == "logs":
-            return self._create_response_log(client, data)
-        return self._create_response(client, data)
+    return web.Response(
+        text=log,
+        status=client.status,
+        content_type=CONTENT_TYPE_TEXT_PLAIN,
+    )
