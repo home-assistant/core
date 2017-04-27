@@ -19,7 +19,7 @@ if [ -d python-openzwave ]; then
   git pull --recurse-submodules=yes
   git submodule update --init --recursive
 else
-  git clone --branch python3 --recursive --depth 1 https://github.com/OpenZWave/python-openzwave.git
+  git clone --branch python3 --recursive --depth 1 https://github.com/casaiq/python-openzwave/commit/4294892d7e6fca77f118ef5ac0826227d3270a46
   cd python-openzwave
 fi
 
