@@ -40,6 +40,7 @@ class TestSun(unittest.TestCase):
 
         astral = Astral()
         utc_now = dt_util.utcnow()
+        utc_today = utc_now.date()
 
         latitude = self.hass.config.latitude
         longitude = self.hass.config.longitude
@@ -47,7 +48,7 @@ class TestSun(unittest.TestCase):
         mod = -1
         while True:
             next_dawn = (astral.dawn_utc(
-                utc_now + timedelta(days=mod), latitude, longitude))
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_dawn > utc_now:
                 break
             mod += 1
@@ -55,7 +56,7 @@ class TestSun(unittest.TestCase):
         mod = -1
         while True:
             next_dusk = (astral.dusk_utc(
-                utc_now + timedelta(days=mod), latitude, longitude))
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_dusk > utc_now:
                 break
             mod += 1
@@ -63,7 +64,7 @@ class TestSun(unittest.TestCase):
         mod = -1
         while True:
             next_midnight = (astral.solar_midnight_utc(
-                utc_now + timedelta(days=mod), longitude))
+                utc_today + timedelta(days=mod), longitude))
             if next_midnight > utc_now:
                 break
             mod += 1
@@ -71,7 +72,7 @@ class TestSun(unittest.TestCase):
         mod = -1
         while True:
             next_noon = (astral.solar_noon_utc(
-                utc_now + timedelta(days=mod), longitude))
+                utc_today + timedelta(days=mod), longitude))
             if next_noon > utc_now:
                 break
             mod += 1
@@ -79,7 +80,7 @@ class TestSun(unittest.TestCase):
         mod = -1
         while True:
             next_rising = (astral.sunrise_utc(
-                utc_now + timedelta(days=mod), latitude, longitude))
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_rising > utc_now:
                 break
             mod += 1
@@ -87,7 +88,7 @@ class TestSun(unittest.TestCase):
         mod = -1
         while True:
             next_setting = (astral.sunset_utc(
-                utc_now + timedelta(days=mod), latitude, longitude))
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_setting > utc_now:
                 break
             mod += 1
