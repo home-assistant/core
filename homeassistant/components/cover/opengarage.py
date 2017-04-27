@@ -86,7 +86,7 @@ class OpenGarageCover(CoverDevice):
         self._name = args[CONF_NAME]
         self.device_id = args['device_id']
         self._devicekey = args[CONF_DEVICEKEY]
-        self._state = STATE_UNKNOWN        
+        self._state = STATE_UNKNOWN
         self._state_before_move = None
         self.dist = None
         self.signal = None
@@ -152,7 +152,6 @@ class OpenGarageCover(CoverDevice):
         else:
             return self._state in [STATE_CLOSED, STATE_OPENING]
 
-
     def _start_watcher(self, command):
         """Start watcher."""
         _LOGGER.debug("Starting Watcher for command: %s ", command)
@@ -167,7 +166,7 @@ class OpenGarageCover(CoverDevice):
     def close_cover(self):
         """Close the cover."""
         if self._state not in [STATE_CLOSED, STATE_CLOSING]:
-            self._state_before_move = self._state #open
+            self._state_before_move = self._state
             self._state = STATE_CLOSING
             ret = self._push_button()
             self._start_watcher('close')
@@ -176,7 +175,7 @@ class OpenGarageCover(CoverDevice):
     def open_cover(self):
         """Open the cover."""
         if self._state not in [STATE_OPEN, STATE_OPENING]:
-            self._state_before_move = self._state #close
+            self._state_before_move = self._state
             self._state = STATE_OPENING
             ret = self._push_button()
             self._start_watcher('open')
@@ -185,7 +184,7 @@ class OpenGarageCover(CoverDevice):
     def stop_cover(self):
         """Stop the door where it is."""
         self._state_before_move = None
-        self._state = STATE_STOPPED        
+        self._state = STATE_STOPPED
         ret = self._push_button()
         return ret.get('result') == 1
 
