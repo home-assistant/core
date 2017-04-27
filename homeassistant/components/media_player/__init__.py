@@ -31,7 +31,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
+    SERVICE_SHUFFLE_SET)
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -81,6 +82,7 @@ ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
+ATTR_MEDIA_SHUFFLING = 'shuffle'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -104,6 +106,7 @@ SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
+SUPPORT_SHUFFLE_SET = 32768
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -131,6 +134,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
+MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SHUFFLING): cv.boolean,
 })
 
 SERVICE_TO_METHOD = {
@@ -161,6 +168,9 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+    SERVICE_SHUFFLE_SET: {
+        'method': 'async_set_shuffle',
+        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -185,6 +195,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_SHUFFLING,
 ]
 
 
@@ -321,6 +332,15 @@ def clear_playlist(hass, entity_id=None):
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
+def set_shuffle(hass, shuffle, entity_id=None):
+    """Send the media player the command for enabling/disabling shuffle mode."""
+    data = {ATTR_MEDIA_SHUFFLING: shuffle}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -358,6 +378,8 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
+        elif service.service == SERVICE_SHUFFLE_SET:
+            params['shuffle'] = service.data.get(ATTR_MEDIA_SHUFFLING)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
@@ -540,6 +562,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def is_shuffling(self):
+        """Boolean if shuffle is enabled."""
+        return None
+
+    @property
     @deprecated_substitute('supported_media_commands')
     def supported_features(self):
         """Flag media player features that are supported."""
@@ -701,6 +728,19 @@ class MediaPlayerDevice(Entity):
         return self.hass.loop.run_in_executor(
             None, self.clear_playlist)
 
+    def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        raise NotImplementedError()
+
+    def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.set_shuffle, shuffle)
+
+
     # No need to overwrite these.
     @property
     def support_play(self):
@@ -756,6 +796,11 @@ class MediaPlayerDevice(Entity):
     def support_clear_playlist(self):
         """Boolean if clear playlist command supported."""
         return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
+
+    @property
+    def support_shuffle_set(self):
+        """Boolean if shuffle is supported."""
+        return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
 
     def async_toggle(self):
         """Toggle the power on the media player.
