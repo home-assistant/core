@@ -327,6 +327,7 @@ class RetryOnError(object):
     It takes a Hass instance, a maximum number of retries and a retry delay
     in seconds as arguments.
     """
+
     def __init__(self, hass, retry_limit=0, retry_delay=20):
         """Initialize the decorator."""
         self.hass = hass
@@ -334,18 +335,19 @@ class RetryOnError(object):
         self.retry_delay = timedelta(seconds=retry_delay)
 
     def __call__(self, method):
-        """This decorates the target method."""
+        """Decorate the target method."""
         from homeassistant.helpers.event import track_point_in_utc_time
 
         @wraps(method)
         def wrapper(*args, **kwargs):
-
+            """Wrapped method."""
             def scheduled(retry=0, event=None):
-                """The scheduling wrapper.
+                """Call the target method.
 
                 It is called directly at the first time and then called
                 scheduled within the Hass mainloop.
                 """
+                # pylint: disable=broad-except
                 try:
                     method(*args, **kwargs)
                 except Exception:
