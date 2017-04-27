@@ -5,17 +5,15 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/influxdb/
 """
 import logging
-import datetime
 
-import functools
 import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
     CONF_EXCLUDE, CONF_INCLUDE, CONF_DOMAINS, CONF_ENTITIES)
+from homeassistant.util import RetryOnError
 from homeassistant.helpers import state as state_helper
-from homeassistant.helpers.event import track_point_in_utc_time
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['influxdb==3.0.0']
@@ -98,7 +96,6 @@ def setup(hass, config):
     default_measurement = conf.get(CONF_DEFAULT_MEASUREMENT)
     override_measurement = conf.get(CONF_OVERRIDE_MEASUREMENT)
     max_tries = conf.get(CONF_RETRY_COUNT)
-    retry_delay = datetime.timedelta(seconds=20)
 
     try:
         influx = InfluxDBClient(**kwargs)
@@ -172,28 +169,12 @@ def setup(hass, config):
 
         _write_data(json_body)
 
-    def _write_data(json_body, current_try=0, event=None):
+    @RetryOnError(hass, retry_limit=max_tries, retry_delay=20)
+    def _write_data(json_body):
         try:
             influx.write_points(json_body)
-            if current_try > 0:
-                _LOGGER.info("Retried write to InfluxDB successful.")
         except exceptions.InfluxDBClientError:
             _LOGGER.exception("Error saving event %s to InfluxDB", json_body)
-        except IOError as io_error:
-            if max_tries is not None and current_try < max_tries:
-                _LOGGER.warning("Could not write data to InfluxDB, "
-                                "try %d/%d will retry: %s",
-                                current_try + 1, max_tries, io_error)
-
-                next_ts = dt_util.utcnow() + retry_delay
-                track_point_in_utc_time(hass,
-                                        functools.partial(_write_data,
-                                                          json_body,
-                                                          current_try + 1),
-                                        next_ts)
-            else:
-                _LOGGER.exception("Error saving event %s to InfluxDB",
-                                  json_body)
 
     hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 
