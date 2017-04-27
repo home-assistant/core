@@ -10,7 +10,8 @@ import voluptuous as vol
 
 import requests
 
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
+from homeassistant.components.cover import (
+    CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN,
@@ -233,3 +234,13 @@ class OpenGarageCover(CoverDevice):
             self._devicekey)
         ret = requests.get(url)
         return ret.json()
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'garage'
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_OPEN | SUPPORT_CLOSE
