@@ -295,7 +295,8 @@ class Sun(Entity):
         while True:
             try:
                 next_dt = callable_on_astral_location(
-                    utc_point_in_time + timedelta(days=mod),
+                    dt_util.as_local(utc_point_in_time).date() +
+                    timedelta(days=mod),
                     local=False) + offset
                 if next_dt > utc_point_in_time:
                     return next_dt

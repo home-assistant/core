@@ -239,8 +239,8 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
     entity = hass.data[sun_cmp.ENTITY_ID]
-    sunrise = entity.location.sunrise(now, local=False)
-    sunset = entity.location.sunset(now, local=False)
+    sunrise = entity.location.sunrise(now.date(), local=False)
+    sunset = entity.location.sunset(now.date(), local=False)
 
     if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
