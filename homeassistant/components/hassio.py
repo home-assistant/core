@@ -19,6 +19,7 @@ import async_timeout
 from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.components.frontend import register_built_in_panel
 
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
@@ -74,6 +75,10 @@ def async_setup(hass, config):
         return False
 
     hass.http.register_view(HassIOView(hassio))
+
+    if 'frontend' in hass.config.components:
+        register_built_in_panel(hass, 'hassio', 'Hass.io',
+                                'mdi:access-point-network')
 
     return True
 
