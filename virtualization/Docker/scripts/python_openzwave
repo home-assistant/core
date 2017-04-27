@@ -16,14 +16,12 @@ cd build
 
 if [ -d python-openzwave ]; then
   cd python-openzwave
-  git pull --recurse-submodules=yes
-  git submodule update --init --recursive
+  git checkout v0.3.3
 else
-  git clone --branch python3 --recursive --depth 1 https://github.com/OpenZWave/python-openzwave.git
+  git clone --branch v0.3.3 --recursive --depth 1 https://github.com/OpenZWave/python-openzwave.git
   cd python-openzwave
 fi
 
-git checkout python3
 pip3 install --upgrade cython==0.24.1
 PYTHON_EXEC=`which python3` make build
 PYTHON_EXEC=`which python3` make install

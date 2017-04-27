@@ -17,7 +17,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.1.1']
+REQUIREMENTS = ['aioautomatic==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +26,8 @@ CONF_SECRET = 'secret'
 CONF_DEVICES = 'devices'
 
 DEFAULT_TIMEOUT = 5
+
+SCOPE = ['location', 'vehicle:profile', 'trip']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
@@ -49,7 +51,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         request_kwargs={'timeout': DEFAULT_TIMEOUT})
     try:
         session = yield from client.create_session_from_password(
-            config[CONF_USERNAME], config[CONF_PASSWORD])
+            SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
         data = AutomaticData(hass, session, config[CONF_DEVICES], async_see)
     except aioautomatic.exceptions.AutomaticError as err:
         _LOGGER.error(str(err))
