@@ -30,7 +30,7 @@ TIMEOUT = 10
 HASSIO_REST_COMMANDS = {
     'host/shutdown': ['POST'],
     'host/reboot': ['POST'],
-    'host/update': ['GET'],
+    'host/update': ['POST'],
     'host/info': ['GET'],
     'supervisor/info': ['GET'],
     'supervisor/update': ['POST'],
