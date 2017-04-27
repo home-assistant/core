@@ -1,9 +1,9 @@
 """The tests for the Unifi WAP device tracker platform."""
 import unittest
 from unittest import mock
-import urllib
 
 from pyunifi import controller
+import requests.packages.urllib3.exceptions as req_ex
 import voluptuous as vol
 
 from tests.common import get_test_home_assistant
@@ -106,7 +106,7 @@ class TestUnifiScanner(unittest.TestCase):
                 CONF_PASSWORD: 'password',
             }
         }
-        mock_ctrl.side_effect = urllib.error.HTTPError(
+        mock_ctrl.side_effect = req_ex.HTTPError(
             '/', 500, 'foo', {}, None)
         result = unifi.get_scanner(self.hass, config)
         self.assertFalse(result)
@@ -126,8 +126,18 @@ class TestUnifiScanner(unittest.TestCase):
     def test_scanner_update_error(self):  # pylint: disable=no-self-use
         """Test the scanner update for error."""
         ctrl = mock.MagicMock()
-        ctrl.get_clients.side_effect = urllib.error.HTTPError(
+        ctrl.get_clients.side_effect = req_ex.HTTPError(
             '/', 500, 'foo', {}, None)
+        unifi.UnifiScanner(ctrl)
+
+    def test_scanner_unifi_gone_offline(self):
+        """Test for a controller that went offline.
+
+        pyunifi 2.0 is using requests, so an offline controller will
+        often raise a urllib3 MaxRetryError.
+        """
+        ctrl = mock.MagicMock()
+        ctrl.get_clients.side_effect = req_ex.MaxRetryError(mock.ANY, mock.ANY)
         unifi.UnifiScanner(ctrl)
 
     def test_scan_devices(self):
