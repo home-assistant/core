@@ -380,7 +380,7 @@ def async_setup(hass, config):
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
         elif service.service == SERVICE_SHUFFLE_SET:
-            params['shuffle'] = service.data.get(ATTR_MEDIA_SHUFFLING)
+            params[ATTR_MEDIA_SHUFFLING] = service.data.get(ATTR_MEDIA_SHUFFLING)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
