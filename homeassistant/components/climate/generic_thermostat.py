@@ -14,7 +14,8 @@ from homeassistant.components import switch
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -174,6 +175,18 @@ class GenericThermostat(ClimateDevice):
             return ClimateDevice.max_temp.fget(self)
 
     @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register EVENT_HOMEASSISTANT_START callback."""
+        @callback
+        def _start_generic_thermostat(_event):
+            self._async_control_heating()
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START,
+            _start_generic_thermostat
+        )
+
+    @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
         """Called when temperature changes."""
         if new_state is None:
@@ -188,6 +201,7 @@ class GenericThermostat(ClimateDevice):
         """Called when heater switch changes state."""
         if new_state is None:
             return
+
         self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
