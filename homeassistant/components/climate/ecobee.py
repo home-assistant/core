@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components import ecobee
 from homeassistant.components.climate import (
     DOMAIN, STATE_COOL, STATE_HEAT, STATE_AUTO, STATE_IDLE, ClimateDevice,
-    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, ATTR_AUX_HEAT)
+    ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH)
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 from homeassistant.config import load_yaml_config_file
@@ -253,15 +253,13 @@ class Thermostat(ClimateDevice):
         """Return device specific state attributes."""
         # Move these to Thermostat Device and make them global
         status = self.thermostat['equipmentStatus']
-        operation = 'off'
-        aux_heat = False
+        operation = None
         if status == '':
             operation = STATE_IDLE
         elif 'Cool' in status:
             operation = STATE_COOL
         elif 'auxHeat' in status:
             operation = STATE_HEAT
-            aux_heat = 'on'
         elif 'heatPump' in status:
             operation = STATE_HEAT
         else:
@@ -271,7 +269,6 @@ class Thermostat(ClimateDevice):
             "fan": self.fan,
             "mode": self.mode,
             "operation": operation,
-            ATTR_AUX_HEAT: aux_heat,
             "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
         }
@@ -280,6 +277,11 @@ class Thermostat(ClimateDevice):
     def is_away_mode_on(self):
         """Return true if away mode is on."""
         return self.current_hold_mode == 'away'
+
+    @property
+    def is_aux_heat_on(self):
+        """Return true if aux heater."""
+        return 'auxHeat' in self.thermostat['equipmentStatus']
 
     def turn_away_mode_on(self):
         """Turn away on."""
