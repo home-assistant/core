@@ -178,7 +178,10 @@ class GaradgetCover(CoverDevice):
         ret = requests.post(
             url, auth=('particle', 'particle'), data=args, timeout=10)
 
-        return ret.json()['access_token']
+        try:
+            return ret.json()['access_token']
+        except KeyError:
+            _LOGGER.error("Unable to retrieve access token")
 
     def remove_token(self):
         """Remove authorization token from API."""
