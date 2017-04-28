@@ -108,6 +108,7 @@ def request_configuration(hass, name, host, serialnumber):
     instance = configurator.request_config(
         hass, title, configuration_callback,
         description='Functionality: ' + str(AXIS_INCLUDE),
+        entity_picture="/static/images/logo_axis.png",
         link_name='device live view',
         link_url='http://' + host,
         submit_caption="Confirm",
@@ -154,8 +155,6 @@ def setup(hass, base_config):
         host = discovery_info['host']
         name = discovery_info['hostname']
         serialnumber = discovery_info['properties']['macaddress']
-        # serialnumber = discovery_info['serialnumber']
-        return
 
         if serialnumber not in AXIS_DEVICES:
             config_file = _read_config(hass)
