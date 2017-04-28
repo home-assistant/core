@@ -185,9 +185,10 @@ class GaradgetCover(CoverDevice):
 
     def remove_token(self):
         """Remove authorization token from API."""
-        ret = requests.delete('{}/v1/access_tokens/{}'.format(
-            self.particle_url, self.access_token),
-            auth=(self._username, self._password), timeout=10)
+        url = '{}/v1/access_tokens/{}'.format(
+            self.particle_url, self.access_token)
+        ret = requests.delete(
+            url, auth=(self._username, self._password), timeout=10)
         return ret.text
 
     def _start_watcher(self, command):
@@ -203,29 +204,29 @@ class GaradgetCover(CoverDevice):
 
     def close_cover(self):
         """Close the cover."""
-        if self._state not in ["close", "closing"]:
-            ret = self._put_command("setState", "close")
+        if self._state not in ['close', 'closing']:
+            ret = self._put_command('setState', 'close')
             self._start_watcher('close')
             return ret.get('return_value') == 1
 
     def open_cover(self):
         """Open the cover."""
-        if self._state not in ["open", "opening"]:
-            ret = self._put_command("setState", "open")
+        if self._state not in ['open', 'opening']:
+            ret = self._put_command('setState', 'open')
             self._start_watcher('open')
             return ret.get('return_value') == 1
 
     def stop_cover(self):
         """Stop the door where it is."""
-        if self._state not in ["stopped"]:
-            ret = self._put_command("setState", "stop")
+        if self._state not in ['stopped']:
+            ret = self._put_command('setState', 'stop')
             self._start_watcher('stop')
             return ret['return_value'] == 1
 
     def update(self):
         """Get updated status from API."""
         try:
-            status = self._get_variable("doorStatus")
+            status = self._get_variable('doorStatus')
             _LOGGER.debug("Current Status: %s", status['status'])
             self._state = STATES_MAP.get(status['status'], STATE_UNKNOWN)
             self.time_in_state = status['time']
