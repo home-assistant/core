@@ -237,3 +237,211 @@ class TestCoverMQTT(unittest.TestCase):
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         self.assertEqual(50, current_cover_position)
+
+    def test_tilt_defaults(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command',
+                'tilt_status_topic': 'tilt-status'
+            }
+        }))
+
+        state_attributes_dict = self.hass.states.get(
+            'cover.test').attributes
+        self.assertTrue('current_tilt_position' in state_attributes_dict)
+        
+        current_cover_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        self.assertEqual(STATE_UNKNOWN, current_cover_position)
+
+        
+    def test_tilt_defaults(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic'
+            }
+        }))
+
+        cover.open_cover_tilt(self.hass, 'cover.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('tilt-command-topic', '100', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+        cover.close_cover_tilt(self.hass, 'cover.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('tilt-command-topic', '0', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+    def test_tilt_given_value(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': '400',
+                'tilt_closed_value': '125'
+            }
+        }))
+
+        cover.open_cover_tilt(self.hass, 'cover.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('tilt-command-topic', '400', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+        
+        cover.close_cover_tilt(self.hass, 'cover.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('tilt-command-topic', '125', 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+    def test_tilt_via_topic(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': '400',
+                'tilt_closed_value': '125'
+            }
+        }))
+
+        fire_mqtt_message(self.hass, 'tilt-status-topic', '0')
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        self.assertEqual(0, current_cover_tilt_position)
+
+
+        fire_mqtt_message(self.hass, 'tilt-status-topic', '50')
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        self.assertEqual(50, current_cover_tilt_position)
+
+    def test_tilt_via_topic_altered_range(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': '400',
+                'tilt_closed_value': '125',
+                'tilt_min': '0',
+                'tilt_max': '50'
+            }
+        }))
+
+        fire_mqtt_message(self.hass, 'tilt-status-topic', '0')
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        self.assertEqual(0, current_cover_tilt_position)
+
+
+        fire_mqtt_message(self.hass, 'tilt-status-topic', '50')
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        self.assertEqual(100, current_cover_tilt_position)
+
+        fire_mqtt_message(self.hass, 'tilt-status-topic', '25')
+        self.hass.block_till_done()
+
+        current_cover_tilt_position = self.hass.states.get(
+            'cover.test').attributes['current_tilt_position']
+        self.assertEqual(50, current_cover_tilt_position)
+
+    def test_tilt_position(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': '400',
+                'tilt_closed_value': '125'
+            }
+        }))
+
+        cover.set_cover_tilt_position(self.hass, 50, 'cover.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('tilt-command-topic', 50, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
+
+    def test_tilt_position_altered_range(self):
+        self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
+            cover.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'state-topic',
+                'command_topic': 'command-topic',
+                'qos': 0,
+                'payload_open': 'OPEN',
+                'payload_close': 'CLOSE',
+                'payload_stop': 'STOP',
+                'tilt_command_topic': 'tilt-command-topic',
+                'tilt_status_topic': 'tilt-status-topic',
+                'tilt_opened_value': '400',
+                'tilt_closed_value': '125',
+                'tilt_min': '0',
+                'tilt_max': '50'
+            }
+        }))
+
+        cover.set_cover_tilt_position(self.hass, 50, 'cover.test')
+        self.hass.block_till_done()
+
+        self.assertEqual(('tilt-command-topic', 25, 0, False),
+                         self.mock_publish.mock_calls[-2][1])
