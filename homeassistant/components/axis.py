@@ -86,7 +86,7 @@ def request_configuration(hass, name, host, serialnumber):
             callback_data[CONF_NAME] = name
         try:
             config = DEVICE_SCHEMA(callback_data)
-        except:
+        except:  # pylint: disable=W0702
             configurator.notify_errors(instance,
                                        'Bad input, please check spelling.')
             return False
@@ -135,11 +135,10 @@ def request_configuration(hass, name, host, serialnumber):
     )
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
     """Common setup for Axis devices."""
     configurator = get_component('configurator')
-    configurator._get_instance(hass)
+    configurator._get_instance(hass)  # pylint: disable=W0212
 
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the metadatastream on shutdown."""
@@ -186,7 +185,7 @@ def setup_device(config):
     device = AxisDevice(config)  # Initialize device
     enable_metadatastream = False
 
-    if device._serial_number is None:
+    if device.serial_number is None:
         # If there is no serial number a connection could not be made
         _LOGGER.error('Couldn\'t connect to %s', config[CONF_HOST])
         return False
@@ -204,12 +203,12 @@ def setup_device(config):
     if enable_metadatastream:
         device.initialize_new_event = event_initialized
         device.initiate_metadatastream()
-    AXIS_DEVICES[device._serial_number] = device
+    AXIS_DEVICES[device.serial_number] = device
     return True
 
 
 def _read_config(hass):
-    """Read tradfri config."""
+    """Read Axis config."""
     path = hass.config.path(CONFIG_FILE)
 
     if not os.path.isfile(path):
@@ -221,15 +220,15 @@ def _read_config(hass):
 
 
 def _write_config(hass, config):
-    """Write tradfri config."""
+    """Write Axis config."""
     data = json.dumps(config)
     with open(hass.config.path(CONFIG_FILE), 'w', encoding='utf-8') as outfile:
         outfile.write(data)
 
 
 def event_initialized(event):
-    """AxisDevice register events initialized on metadatastream here."""
-    hass = event._device._config['hass']
+    """Register event initialized on metadatastream here."""
+    hass = event.device_config('hass')
     discovery.load_platform(hass,
                             convert(event.topic, 'topic', 'platform'),
                             DOMAIN, {'axis_event': event})
@@ -247,7 +246,7 @@ class AxisDeviceEvent(Entity):
                                        convert(self.axis_event.topic,
                                                'topic', 'type'),
                                        self.axis_event.id)
-        self._delay = self.axis_event._device._config[CONF_SCAN_INTERVAL]
+        self._delay = self.axis_event.device_config[CONF_SCAN_INTERVAL]
         self._timer = None
         self.axis_event.callback = self._update_callback
         self.update()
@@ -260,7 +259,7 @@ class AxisDeviceEvent(Entity):
             self._timer()
             self._timer = None
 
-        if self._delay > 0 and not self.is_on:
+        if self._delay > 0 and not self.is_on:  # pylint: disable=E1101
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
@@ -270,7 +269,8 @@ class AxisDeviceEvent(Entity):
                 self._timer = None
 
             self._timer = track_point_in_utc_time(
-                self._hass, _delay_update,
+                self._hass,  # pylint: disable=E1101
+                _delay_update,
                 utcnow() + timedelta(seconds=self._delay))
         else:
             self.schedule_update_ha_state()
@@ -298,7 +298,7 @@ class AxisDeviceEvent(Entity):
         tripped = self.axis_event.is_tripped
         attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
-        location = self.axis_event._device._config['location']
+        location = self.axis_event.device_config['location']
         if location is not None:
             attr[ATTR_LOCATION] = location
 
@@ -306,7 +306,7 @@ class AxisDeviceEvent(Entity):
 
 
 def convert(item, from_key, to_key):
-    """Translates between Axis and HASS syntax."""
+    """Translate between Axis and HASS syntax."""
     for entry in REMAP:
         if entry[from_key] == item:
             return entry[to_key]
@@ -346,6 +346,4 @@ REMAP = [{'type': 'motion',
           'class': 'input',
           'topic': 'tns1:Device/tnsaxis:IO/Port',
           'subscribe': 'onvif:Device/axis:IO/Port',
-          'platform': 'sensor'},
-         # {'type': '','class': '','topic': '','subscribe': '','platform': ''},
-        ]
+          'platform': 'sensor'}, ]
