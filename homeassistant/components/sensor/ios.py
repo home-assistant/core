@@ -63,6 +63,7 @@ class IOSSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement this sensor expresses itself in."""
+        return self._unit_of_measurement
 
     @property
     def device_state_attributes(self):
