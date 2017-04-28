@@ -278,6 +278,11 @@ class Thermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self.current_hold_mode == 'away'
 
+    @property
+    def is_aux_heat_on(self):
+        """Return true if aux heater."""
+        return 'auxHeat' in self.thermostat['equipmentStatus']
+
     def turn_away_mode_on(self):
         """Turn away on."""
         self.set_hold_mode('away')
