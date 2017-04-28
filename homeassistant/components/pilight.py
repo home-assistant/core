@@ -15,6 +15,7 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 import homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT,
     CONF_WHITELIST, CONF_PROTOCOL)
@@ -30,7 +31,7 @@ DEFAULT_PORT = 5000
 DEFAULT_SEND_DELAY = 0.0
 DOMAIN = 'pilight'
 
-EVENT = 'pilight_received'
+SIGNAL = 'pilight_received'
 
 # The Pilight code schema depends on the protocol. Thus only require to have
 # the protocol information. Ensure that protocol is in a list otherwise
@@ -108,10 +109,10 @@ def setup(hass, config):
 
         # No whitelist defined, put data on event bus
         if not whitelist:
-            hass.bus.fire(EVENT, data)
+            dispatcher_send(hass, SIGNAL, data)
         # Check if data matches the defined whitelist
         elif all(str(data[key]) in whitelist[key] for key in whitelist):
-            hass.bus.fire(EVENT, data)
+            dispatcher_send(hass, SIGNAL, data)
 
     pilight_client.set_callback(handle_received_code)
 

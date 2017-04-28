@@ -9,6 +9,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.components.pilight as pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
@@ -99,10 +100,9 @@ class _ReceiveHandle(object):
 class PilightSwitch(SwitchDevice):
     """Representation of a Pilight switch."""
 
-    def __init__(self, hass, name, code_on, code_off, code_on_receive,
+    def __init__(self, name, code_on, code_off, code_on_receive,
                  code_off_receive):
         """Initialize the switch."""
-        self._hass = hass
         self._name = name
         self._state = False
         self._code_on = code_on
@@ -117,8 +117,12 @@ class PilightSwitch(SwitchDevice):
                 echo = code.pop(CONF_ECHO, True)
                 code_list.append(_ReceiveHandle(code, echo))
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         if any(self._code_on_receive) or any(self._code_off_receive):
-            hass.bus.listen(pilight.EVENT, self._handle_code)
+            async_dispatcher_connect(
+                self.hass, pilight.SIGNAL, self._handle_code)
 
     @property
     def name(self):
@@ -135,7 +139,7 @@ class PilightSwitch(SwitchDevice):
         """Return true if switch is on."""
         return self._state
 
-    def _handle_code(self, call):
+    def _handle_code(self, **kwargs):
         """Check if received code by the pilight-daemon.
 
         If the code matches the receive on/off codes of this switch the switch
@@ -146,13 +150,13 @@ class PilightSwitch(SwitchDevice):
         # - Call turn on/off only once, even if more than one code is received
         if any(self._code_on_receive):
             for on_code in self._code_on_receive:
-                if on_code.match(call.data):
+                if on_code.match(kwargs):
                     on_code.run(switch=self, turn_on=True)
                     break
 
         if any(self._code_off_receive):
             for off_code in self._code_off_receive:
-                if off_code.match(call.data):
+                if off_code.match(kwargs):
                     off_code.run(switch=self, turn_on=False)
                     break
 

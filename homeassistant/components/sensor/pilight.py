@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT, CONF_PAYLOAD)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.pilight as pilight
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +25,7 @@ DEPENDENCIES = ['pilight']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_VARIABLE): cv.string,
-    vol.Required(CONF_PAYLOAD): vol.Schema(dict),
+    vol.Required(CONF_PAYLOAD): dict,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
 })
@@ -34,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Pilight Sensor."""
     add_devices([PilightSensor(
-        hass=hass,
         name=config.get(CONF_NAME),
         variable=config.get(CONF_VARIABLE),
         payload=config.get(CONF_PAYLOAD),
@@ -45,16 +45,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PilightSensor(Entity):
     """Representation of a sensor that can be updated using Pilight."""
 
-    def __init__(self, hass, name, variable, payload, unit_of_measurement):
+    def __init__(self, name, variable, payload, unit_of_measurement):
         """Initialize the sensor."""
         self._state = STATE_UNKNOWN
-        self._hass = hass
         self._name = name
         self._variable = variable
         self._payload = payload
         self._unit_of_measurement = unit_of_measurement
 
-        hass.bus.listen(pilight.EVENT, self._handle_code)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(self.hass, pilight.SIGNAL, self._handle_code)
 
     @property
     def should_poll(self):
@@ -76,7 +78,7 @@ class PilightSensor(Entity):
         """Return the state of the entity."""
         return self._state
 
-    def _handle_code(self, call):
+    def _handle_code(self, **kwargs):
         """Handle received code by the pilight-daemon.
 
         If the code matches the defined playload
@@ -85,7 +87,7 @@ class PilightSensor(Entity):
         # Check if received code matches defined playoad
         # True if payload is contained in received code dict, not
         # all items have to match
-        if self._payload.items() <= call.data.items():
+        if self._payload.items() <= kwargs.items():
             try:
                 value = call.data[self._variable]
                 self._state = value
