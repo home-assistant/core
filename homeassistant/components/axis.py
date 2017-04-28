@@ -233,7 +233,6 @@ def event_initialized(event):
                             DOMAIN, {'axis_event': event})
 
 
-# HASS entity class
 class AxisDeviceEvent(Entity):
     """Representation of a Axis device event."""
 

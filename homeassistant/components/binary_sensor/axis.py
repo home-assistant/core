@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.components.binary_sensor import (BinarySensorDevice)
 from homeassistant.components.axis import (AxisDeviceEvent)
-# from custom_components.axis import (AxisDeviceEvent)
 
 DEPENDENCIES = ['axis']
 
@@ -28,8 +27,6 @@ class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
         self._state = False
         self._hass = hass
         AxisDeviceEvent.__init__(self, axis_event)
-        # self.entity_id = ENTITY_ID_FORMAT.format(self._name)
-        # print(self.entity_id)
 
     @property
     def is_on(self):
