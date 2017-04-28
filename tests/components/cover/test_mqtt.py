@@ -239,6 +239,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(50, current_cover_position)
 
     def test_tilt_defaults(self):
+        """Test the defaults."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -257,13 +258,13 @@ class TestCoverMQTT(unittest.TestCase):
         state_attributes_dict = self.hass.states.get(
             'cover.test').attributes
         self.assertTrue('current_tilt_position' in state_attributes_dict)
-        
+
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_tilt_position']
         self.assertEqual(STATE_UNKNOWN, current_cover_position)
 
-        
-    def test_tilt_defaults(self):
+    def test_tilt_via_invocation_defaults(self):
+        """Test tilt defaults on close/open."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -292,6 +293,7 @@ class TestCoverMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-2][1])
 
     def test_tilt_given_value(self):
+        """Test tilting to a given value."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -314,7 +316,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         self.assertEqual(('tilt-command-topic', '400', 0, False),
                          self.mock_publish.mock_calls[-2][1])
-        
+
         cover.close_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
@@ -322,6 +324,7 @@ class TestCoverMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-2][1])
 
     def test_tilt_via_topic(self):
+        """Test tilt by updating status via MQTT."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -346,7 +349,6 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test').attributes['current_tilt_position']
         self.assertEqual(0, current_cover_tilt_position)
 
-
         fire_mqtt_message(self.hass, 'tilt-status-topic', '50')
         self.hass.block_till_done()
 
@@ -355,6 +357,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(50, current_cover_tilt_position)
 
     def test_tilt_via_topic_altered_range(self):
+        """Test tilt status via MQTT with altered tilt range."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -381,7 +384,6 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test').attributes['current_tilt_position']
         self.assertEqual(0, current_cover_tilt_position)
 
-
         fire_mqtt_message(self.hass, 'tilt-status-topic', '50')
         self.hass.block_till_done()
 
@@ -397,6 +399,7 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(50, current_cover_tilt_position)
 
     def test_tilt_position(self):
+        """Test tilt via method invocation."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
@@ -421,6 +424,7 @@ class TestCoverMQTT(unittest.TestCase):
                          self.mock_publish.mock_calls[-2][1])
 
     def test_tilt_position_altered_range(self):
+        """Test tilt via method invocation with altered range."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
             cover.DOMAIN: {
                 'platform': 'mqtt',
