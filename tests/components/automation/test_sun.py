@@ -233,14 +233,14 @@ class TestAutomationSun(unittest.TestCase):
             }
         })
 
-        now = datetime(2015, 9, 16, 14, 33, 8, tzinfo=dt_util.UTC)
+        now = datetime(2015, 9, 16, 14, 32, 44, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
-        now = datetime(2015, 9, 16, 14, 33, 7, tzinfo=dt_util.UTC)
+        now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
@@ -266,14 +266,14 @@ class TestAutomationSun(unittest.TestCase):
             }
         })
 
-        now = datetime(2015, 9, 16, 14, 33, 6, tzinfo=dt_util.UTC)
+        now = datetime(2015, 9, 16, 14, 32, 42, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
-        now = datetime(2015, 9, 16, 14, 33, 7, tzinfo=dt_util.UTC)
+        now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.now',
                    return_value=now):
             self.hass.bus.fire('test_event')
@@ -341,7 +341,7 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         # Before
-        now = datetime(2015, 9, 16, 18, 54, 19,
+        now = datetime(2015, 9, 16, 18, 55, 23,
                        tzinfo=pytz.timezone('US/Mountain'))
         with patch('homeassistant.util.dt.now',
                    return_value=now):
@@ -350,7 +350,7 @@ class TestAutomationSun(unittest.TestCase):
             self.assertEqual(0, len(self.calls))
 
         # After
-        now = datetime(2015, 9, 16, 18, 54, 20,
+        now = datetime(2015, 9, 16, 18, 55, 24,
                        tzinfo=pytz.timezone('US/Mountain'))
         with patch('homeassistant.util.dt.now',
                    return_value=now):
