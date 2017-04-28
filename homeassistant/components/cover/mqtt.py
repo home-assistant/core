@@ -272,6 +272,7 @@ class MqttCover(CoverDevice):
         """Return current position of cover tilt."""
         return self._tilt_value
 
+    @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         if ATTR_TILT_POSITION in kwargs:
