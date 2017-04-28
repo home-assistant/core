@@ -54,9 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Garadget covers."""
     covers = []
-    devices = config.get(CONF_COVERS, {})
-
-    _LOGGER.debug(devices)
+    devices = config.get(CONF_COVERS)
 
     for device_id, device_config in devices.items():
         args = {
