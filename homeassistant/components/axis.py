@@ -28,10 +28,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
 
-REQUIREMENTS = ['axis==3']
-# REQUIREMENTS = ['http://github.com/Kane610/axis'
-#                 '/archive/v3.zip'
-#                 '#axis==3']
+# REQUIREMENTS = ['axis==5']
+REQUIREMENTS = ['http://github.com/Kane610/axis'
+                '/archive/v5.zip'
+                '#axis==5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,7 +150,6 @@ def setup(hass, base_config):
 
     def axis_device_discovered(service, discovery_info):
         """Called when axis devices has been found."""
-        print('discovery', service, discovery_info)
         host = discovery_info['host']
         name = discovery_info['hostname']
         serialnumber = discovery_info['properties']['macaddress']
@@ -246,7 +245,7 @@ class AxisDeviceEvent(Entity):
                                        convert(self.axis_event.topic,
                                                'topic', 'type'),
                                        self.axis_event.id)
-        self._delay = self.axis_event.device_config[CONF_SCAN_INTERVAL]
+        self._delay = self.axis_event.device_config(CONF_SCAN_INTERVAL)
         self._timer = None
         self.axis_event.callback = self._update_callback
         self.update()
@@ -298,7 +297,7 @@ class AxisDeviceEvent(Entity):
         tripped = self.axis_event.is_tripped
         attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
-        location = self.axis_event.device_config['location']
+        location = self.axis_event.device_config(ATTR_LOCATION)
         if location is not None:
             attr[ATTR_LOCATION] = location
 
