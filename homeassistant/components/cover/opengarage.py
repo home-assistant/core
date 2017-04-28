@@ -2,7 +2,7 @@
 Platform for the opengarage.io cover component.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/cover.opengarage
+https://home-assistant.io/components/cover.opengarage/
 """
 import logging
 
@@ -40,9 +40,9 @@ STATES_MAP = {
 
 # Validation of the user's configuration
 COVER_SCHEMA = vol.Schema({
+    vol.Required(CONF_DEVICEKEY): cv.string,
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Required(CONF_DEVICEKEY): cv.string,
     vol.Optional(CONF_NAME): cv.string
 })
 
@@ -56,9 +56,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup OpenGarage covers."""
     covers = []
-    devices = config.get(CONF_COVERS, {})
-
-    _LOGGER.debug(devices)
+    devices = config.get(CONF_COVERS)
 
     for device_id, device_config in devices.items():
         args = {
@@ -77,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenGarageCover(CoverDevice):
     """Representation of a OpenGarage cover."""
 
-    # pylint: disable=no-self-use, too-many-instance-attributes
+    # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.opengarage_url = 'http://{}:{}'.format(
@@ -205,7 +203,8 @@ class OpenGarageCover(CoverDevice):
             self.signal = status.get('rssi')
             self.dist = status.get('dist')
             self._available = True
-        except requests.exceptions.ConnectionError as ex:
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.ReadTimeout) as ex:
             _LOGGER.error('Unable to connect to OpenGarage device: %(reason)s',
                           dict(reason=ex))
             self._state = STATE_OFFLINE
@@ -221,18 +220,15 @@ class OpenGarageCover(CoverDevice):
 
     def _get_status(self):
         """Get latest status."""
-        url = '{}/jc'.format(
-            self.opengarage_url
-            )
-        ret = requests.get(url)
+        url = '{}/jc'.format(self.opengarage_url)
+        ret = requests.get(url, timeout=10)
         return ret.json()
 
     def _push_button(self):
         """Send commands to API."""
         url = '{}/cc?dkey={}&click=1'.format(
-            self.opengarage_url,
-            self._devicekey)
-        ret = requests.get(url)
+            self.opengarage_url, self._devicekey)
+        ret = requests.get(url, timeout=10)
         return ret.json()
 
     @property
