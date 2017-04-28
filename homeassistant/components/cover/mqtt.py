@@ -29,7 +29,6 @@ CONF_TILT_STATUS_TOPIC = 'tilt_status_topic'
 CONF_PAYLOAD_OPEN = 'payload_open'
 CONF_PAYLOAD_CLOSE = 'payload_close'
 CONF_PAYLOAD_STOP = 'payload_stop'
-CONF_PAYLOAD_TILT = 'payload_tilt'
 CONF_STATE_OPEN = 'state_open'
 CONF_STATE_CLOSED = 'state_closed'
 CONF_TILT_CLOSED_POSITION = 'tilt_closed_value'
@@ -42,7 +41,6 @@ DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
 DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
 DEFAULT_PAYLOAD_STOP = 'STOP'
-DEFAULT_PAYLOAD_TILT = 'TILT'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RETAIN = False
 DEFAULT_TILT_CLOSED_POSITION = '0'
@@ -56,7 +54,6 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
     vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
     vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-    vol.Optional(CONF_PAYLOAD_TILT, default=DEFAULT_PAYLOAD_TILT): cv.string,
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -93,7 +90,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_OPEN),
         config.get(CONF_PAYLOAD_CLOSE),
         config.get(CONF_PAYLOAD_STOP),
-        config.get(CONF_PAYLOAD_TILT),
         config.get(CONF_OPTIMISTIC),
         value_template,
         config.get(CONF_TILT_OPEN_POSITION),
@@ -127,7 +123,6 @@ class MqttCover(CoverDevice):
         self._payload_open = payload_open
         self._payload_close = payload_close
         self._payload_stop = payload_stop
-        self._payload_tilt = payload_tilt
         self._state_open = state_open
         self._state_closed = state_closed
         self._retain = retain
