@@ -277,7 +277,7 @@ class MqttCover(CoverDevice):
         if ATTR_TILT_POSITION in kwargs:
             position = float(kwargs[ATTR_TILT_POSITION])
 
-            #The position needs to be between min and max
+            # The position needs to be between min and max
             tilt_range = self._tilt_max - self._tilt_min
             percentage = position / 100.0
             level = round(tilt_range * percentage)
