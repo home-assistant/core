@@ -107,7 +107,7 @@ class ZoneMinderCamera(MjpegCamera):
                             self._monitor_id)
             return
 
-        if status_response['success'] is False:
+        if 'success' not in status_response:
             _LOGGER.warning('Alarm status API call failed for monitor %i',
                             self._monitor_id)
             return
