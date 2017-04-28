@@ -105,7 +105,7 @@ class MqttCover(CoverDevice):
 
     def __init__(self, name, state_topic, command_topic, tilt_command_topic,
                  tilt_status_topic, qos, retain, state_open, state_closed,
-                 payload_open, payload_close, payload_stop, payload_tilt,
+                 payload_open, payload_close, payload_stop, 
                  optimistic, value_template, tilt_open_position,
                  tilt_closed_position, device_class, tilt_min, tilt_max):
         """Initialize the cover."""
