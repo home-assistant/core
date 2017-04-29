@@ -41,7 +41,10 @@ class SenseHatLight(Light):
     """Representation of an Sense Hat Light."""
 
     def __init__(self, sensehat, name):
-        """Initialize an Sense Hat Light."""
+        """Initialize an Sense Hat Light.
+
+        Full brightness and white color.
+        """
         self._sensehat = sensehat
         self._name = name
         self._is_on = False
