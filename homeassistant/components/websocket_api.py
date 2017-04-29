@@ -1,4 +1,9 @@
-"""Websocket based API for Home Assistant."""
+"""
+Websocket based API for Home Assistant.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/developers/websocket_api/
+"""
 import asyncio
 from functools import partial
 import json
@@ -22,7 +27,7 @@ from homeassistant.components.http.ban import process_wrong_login
 
 DOMAIN = 'websocket_api'
 
-URL = "/api/websocket"
+URL = '/api/websocket'
 DEPENDENCIES = 'http',
 
 ERR_ID_REUSE = 1
@@ -209,15 +214,15 @@ class ActiveConnection:
 
     def debug(self, message1, message2=''):
         """Print a debug message."""
-        _LOGGER.debug('WS %s: %s %s', id(self.wsock), message1, message2)
+        _LOGGER.debug("WS %s: %s %s", id(self.wsock), message1, message2)
 
     def log_error(self, message1, message2=''):
         """Print an error message."""
-        _LOGGER.error('WS %s: %s %s', id(self.wsock), message1, message2)
+        _LOGGER.error("WS %s: %s %s", id(self.wsock), message1, message2)
 
     def send_message(self, message):
-        """Helper method to send messages."""
-        self.debug('Sending', message)
+        """Send messages."""
+        self.debug("Sending", message)
         self.wsock.send_json(message, dumps=JSON_DUMP)
 
     @asyncio.coroutine
@@ -234,10 +239,10 @@ class ActiveConnection:
             """Cancel this connection."""
             socket_task.cancel()
 
-        unsub_stop = self.hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP,
-                                                cancel_connection)
+        unsub_stop = self.hass.bus.async_listen(
+            EVENT_HOMEASSISTANT_STOP, cancel_connection)
 
-        self.debug('Connected')
+        self.debug("Connected")
 
         msg = None
         authenticated = False
@@ -255,7 +260,7 @@ class ActiveConnection:
                     authenticated = True
 
                 else:
-                    self.debug('Invalid password')
+                    self.debug("Invalid password")
                     self.send_message(auth_invalid_message('Invalid password'))
 
             if not authenticated:
@@ -269,7 +274,7 @@ class ActiveConnection:
             last_id = 0
 
             while msg:
-                self.debug('Received', msg)
+                self.debug("Received", msg)
                 msg = BASE_COMMAND_MESSAGE_SCHEMA(msg)
                 cur_id = msg['id']
 
@@ -286,7 +291,7 @@ class ActiveConnection:
                 msg = yield from wsock.receive_json()
 
         except vol.Invalid as err:
-            error_msg = 'Message incorrectly formatted: '
+            error_msg = "Message incorrectly formatted: "
             if msg:
                 error_msg += humanize_error(msg, err)
             else:
@@ -303,27 +308,27 @@ class ActiveConnection:
                 else:
                     iden = None
 
-                self.send_message(error_message(iden, ERR_INVALID_FORMAT,
-                                                error_msg))
+                self.send_message(error_message(
+                    iden, ERR_INVALID_FORMAT, error_msg))
 
         except TypeError as err:
             if wsock.closed:
-                self.debug('Connection closed by client')
+                self.debug("Connection closed by client")
             else:
-                self.log_error('Unexpected TypeError', msg)
+                self.log_error("Unexpected TypeError", msg)
 
         except ValueError as err:
-            msg = 'Received invalid JSON'
+            msg = "Received invalid JSON"
             value = getattr(err, 'doc', None)  # Py3.5+ only
             if value:
                 msg += ': {}'.format(value)
             self.log_error(msg)
 
         except asyncio.CancelledError:
-            self.debug('Connection cancelled by server')
+            self.debug("Connection cancelled by server")
 
         except Exception:  # pylint: disable=broad-except
-            error = 'Unexpected error inside websocket API. '
+            error = "Unexpected error inside websocket API. "
             if msg is not None:
                 error += str(msg)
             _LOGGER.exception(error)
@@ -335,7 +340,7 @@ class ActiveConnection:
                 unsub()
 
             yield from wsock.close()
-            self.debug('Closed connection')
+            self.debug("Closed connection")
 
         return wsock
 
@@ -345,7 +350,7 @@ class ActiveConnection:
 
         @callback
         def forward_events(event):
-            """Helper to forward events to websocket."""
+            """Forward events to websocket."""
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
@@ -380,7 +385,7 @@ class ActiveConnection:
 
         @asyncio.coroutine
         def call_service_helper(msg):
-            """Helper to call a service and fire complete message."""
+            """Call a service and fire complete message."""
             yield from self.hass.services.async_call(
                 msg['domain'], msg['service'], msg['service_data'], True)
             try:
@@ -395,22 +400,22 @@ class ActiveConnection:
         """Handle get states command."""
         msg = GET_STATES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(msg['id'],
-                                         self.hass.states.async_all()))
+        self.send_message(result_message(
+            msg['id'], self.hass.states.async_all()))
 
     def handle_get_services(self, msg):
         """Handle get services command."""
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(msg['id'],
-                                         self.hass.services.async_services()))
+        self.send_message(result_message(
+            msg['id'], self.hass.services.async_services()))
 
     def handle_get_config(self, msg):
         """Handle get config command."""
         msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(msg['id'],
-                                         self.hass.config.as_dict()))
+        self.send_message(result_message(
+            msg['id'], self.hass.config.as_dict()))
 
     def handle_get_panels(self, msg):
         """Handle get panels command."""
