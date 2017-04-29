@@ -109,8 +109,8 @@ class TomatoDeviceScanner(DeviceScanner):
             except requests.exceptions.ConnectionError:
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied.
-                self.logger.exception((
-                    "Failed to connect to the router or invalid http_id supplied"))
+                self.logger.exception("Failed to connect to the router or "
+                                      "invalid http_id supplied")
                 return False
 
             except requests.exceptions.Timeout:
