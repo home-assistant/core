@@ -155,7 +155,7 @@ def parse_mapping(mapping, parents=None):
 
 
 def setup(hass: HomeAssistant, base_config):
-    """Setup CEC capability."""
+    """Set up the CEC capability."""
     from pycec.network import HDMINetwork
     from pycec.commands import CecCommand, KeyReleaseCommand, KeyPressCommand
     from pycec.const import KEY_VOLUME_UP, KEY_VOLUME_DOWN, KEY_MUTE_ON, \
@@ -283,9 +283,9 @@ def setup(hass: HomeAssistant, base_config):
 
     def _update(call):
         """
-        Callback called when device update is needed.
+        The function called when device update is needed.
 
-        - called by service, requests CEC network to update data.
+        Called by service, requests CEC network to update data.
         """
         hdmi_network.scan()
 

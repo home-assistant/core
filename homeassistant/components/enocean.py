@@ -44,7 +44,7 @@ class EnOceanDongle:
         """Initialize the EnOcean dongle."""
         from enocean.communicators.serialcommunicator import SerialCommunicator
         self.__communicator = SerialCommunicator(
-            port=ser,  callback=self.callback)
+            port=ser, callback=self.callback)
         self.__communicator.start()
         self.__devices = []
 
