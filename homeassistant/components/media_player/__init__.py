@@ -742,7 +742,6 @@ class MediaPlayerDevice(Entity):
         return self.hass.loop.run_in_executor(
             None, self.set_shuffle, shuffle)
 
-
     # No need to overwrite these.
     @property
     def support_play(self):

@@ -53,6 +53,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._player_state = STATE_PLAYING
         self._volume_level = 1.0
         self._volume_muted = False
+        self._shuffle = False
 
     @property
     def should_poll(self):
@@ -78,6 +79,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
         return self._volume_muted
+
+    @property
+    def shuffle(self):
+        """Boolean if shuffling is enabled."""
+        return self._shuffle
 
     def turn_on(self):
         """Turn the media player on."""
