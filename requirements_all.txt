@@ -745,7 +745,7 @@ snapcast==1.2.2
 somecomfort==0.4.1
 
 # homeassistant.components.sensor.speedtest
-speedtest-cli==1.0.5
+speedtest-cli==1.0.6
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
