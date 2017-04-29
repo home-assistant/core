@@ -53,6 +53,8 @@ class TestDemoLight(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_LIGHT)
         self.assertEqual(400, state.attributes.get(light.ATTR_COLOR_TEMP))
+        self.assertEqual(154, state.attributes.get(light.ATTR_MIN_MIREDS))
+        self.assertEqual(500, state.attributes.get(light.ATTR_MAX_MIREDS))
         self.assertEqual('none', state.attributes.get(light.ATTR_EFFECT))
 
     def test_turn_off(self):

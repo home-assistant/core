@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
-    color_temperature_kelvin_to_mired, HASS_COLOR_MIN, HASS_COLOR_MAX)
+    color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
 
@@ -208,7 +208,6 @@ class FluxSwitch(SwitchDevice):
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            mired = max(HASS_COLOR_MIN, min(mired, HASS_COLOR_MAX))
             set_lights_temp(self.hass, self._lights, mired, brightness)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%%"
                          " of %s cycle complete at %s", mired, brightness,
