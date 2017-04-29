@@ -325,7 +325,7 @@ def async_process_ha_core_config(hass, config):
     hac = hass.config
 
     def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
+        """Help to set the time zone."""
         if time_zone_str is None:
             return
 
