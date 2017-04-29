@@ -26,7 +26,7 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 
-REQUIREMENTS = ['xmltodict==0.10.2']
+REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
