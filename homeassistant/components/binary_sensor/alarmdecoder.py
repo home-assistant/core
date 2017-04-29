@@ -11,7 +11,6 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
-from homeassistant.const import (STATE_ON, STATE_OFF, STATE_OPEN, STATE_CLOSED)
 from homeassistant.components.alarmdecoder import (ZONE_SCHEMA,
                                                    CONF_ZONES,
                                                    CONF_ZONE_NAME,
@@ -68,14 +67,6 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
         async_dispatcher_connect(
             self.hass, SIGNAL_ZONE_RESTORE, self._restore_callback)
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        if self._type == 'opening':
-            return STATE_OPEN if self.is_on else STATE_CLOSED
-
-        return STATE_ON if self.is_on else STATE_OFF
 
     @property
     def name(self):
