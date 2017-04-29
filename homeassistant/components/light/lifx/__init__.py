@@ -263,17 +263,19 @@ class LIFXLight(Light):
         """Return the list of supported effects."""
         return lifx_effects.effect_list()
 
-    @callback
+    @asyncio.coroutine
     def update_after_transition(self, now):
         """Request new status after completion of the last transition."""
         self.postponed_update = None
-        self.hass.async_add_job(self.async_update_ha_state(force_refresh=True))
+        yield from self.refresh_state()
+        yield from self.async_update_ha_state()
 
-    @callback
+    @asyncio.coroutine
     def unblock_updates(self, now):
         """Allow async_update after the new state has settled on the bulb."""
         self.blocker = None
-        self.hass.async_add_job(self.async_update_ha_state(force_refresh=True))
+        yield from self.refresh_state()
+        yield from self.async_update_ha_state()
 
     def update_later(self, when):
         """Block immediate update requests and schedule one for later."""
