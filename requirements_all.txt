@@ -822,7 +822,7 @@ xboxapi==0.1.1
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
-xmltodict==0.10.2
+xmltodict==0.11.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
