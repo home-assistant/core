@@ -40,14 +40,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
     octoprint = get_component('octoprint')
     name = config.get(CONF_NAME)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS,
-                                      SENSOR_TYPES.keys())
+    monitored_conditions = config.get(
+        CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
 
     devices = []
     for octo_type in monitored_conditions:
         new_sensor = OctoPrintBinarySensor(
             octoprint.OCTOPRINT, octo_type, SENSOR_TYPES[octo_type][2],
-            name, SENSOR_TYPES[octo_type][3],SENSOR_TYPES[octo_type][0],
+            name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
             SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
     add_devices(devices)
