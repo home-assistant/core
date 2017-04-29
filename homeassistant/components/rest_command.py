@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the rest_command component."""
+    """Set up the REST command component."""
     websession = async_get_clientsession(hass)
 
     def async_register_rest_command(name, command_config):

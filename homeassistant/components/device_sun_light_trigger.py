@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up the triggers to turn lights on or off based on device presence."""
+    """Set up the triggers to control lights based on device presence."""
     logger = logging.getLogger(__name__)
     device_tracker = get_component('device_tracker')
     group = get_component('group')

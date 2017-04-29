@@ -5,9 +5,11 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/join/
 """
 import logging
+
 import voluptuous as vol
-from homeassistant.const import CONF_NAME, CONF_API_KEY
+
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME, CONF_API_KEY
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-join-api/archive/'
@@ -71,7 +73,7 @@ def register_device(hass, device_id, api_key, name):
 
 
 def setup(hass, config):
-    """Setup Join services."""
+    """Set up the Join services."""
     from pyjoin import get_devices
     for device in config[DOMAIN]:
         device_id = device.get(CONF_DEVICE_ID)
