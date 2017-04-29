@@ -18,8 +18,8 @@ import voluptuous as vol
 from homeassistant.components.light import (
     Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
     ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT)
+    ATTR_POWER_ON, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
+    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT, SUPPORT_OFF_STATE)
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
@@ -47,7 +47,8 @@ BYTE_MAX = 255
 SHORT_MAX = 65535
 
 SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_XY_COLOR | SUPPORT_TRANSITION | SUPPORT_EFFECT)
+                SUPPORT_XY_COLOR | SUPPORT_TRANSITION | SUPPORT_EFFECT |
+                SUPPORT_OFF_STATE)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
@@ -316,9 +317,12 @@ class LIFXLight(Light):
         if self._power == 0:
             if changed_color:
                 self.device.set_color(hsbk, None, 0)
-            self.device.set_power(True, None, fade)
+            if kwargs[ATTR_POWER_ON]:
+                self.device.set_power(True, None, fade)
         else:
-            self.device.set_power(True, None, 0)     # racing for power status
+            if kwargs[ATTR_POWER_ON]:
+                # racing for power status, our state could be obsolete
+                self.device.set_power(True, None, 0)
             if changed_color:
                 self.device.set_color(hsbk, None, fade)
 
