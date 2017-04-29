@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def auth_middleware(app, handler):
-    """Authentication middleware."""
+    """Authenticate as middleware."""
     # If no password set, just always set authenticated=True
     if app['hass'].http.api_password is None:
         @asyncio.coroutine
@@ -32,8 +32,8 @@ def auth_middleware(app, handler):
         authenticated = False
 
         if (HTTP_HEADER_HA_AUTH in request.headers and
-                validate_password(request,
-                                  request.headers[HTTP_HEADER_HA_AUTH])):
+                validate_password(
+                    request, request.headers[HTTP_HEADER_HA_AUTH])):
             # A valid auth header has been set
             authenticated = True
 
@@ -62,5 +62,5 @@ def is_trusted_ip(request):
 
 def validate_password(request, api_password):
     """Test if password is valid."""
-    return hmac.compare_digest(api_password,
-                               request.app['hass'].http.api_password)
+    return hmac.compare_digest(
+        api_password, request.app['hass'].http.api_password)

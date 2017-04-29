@@ -14,8 +14,8 @@ from homeassistant.components.wink import WinkDevice, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_LOWEST = "lowest"
-SPEED_AUTO = "auto"
+SPEED_LOWEST = 'lowest'
+SPEED_AUTO = 'auto'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
