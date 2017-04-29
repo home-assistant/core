@@ -59,24 +59,27 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-def set_lights_xy(hass, lights, x_val, y_val, brightness):
+def set_lights(hass, lights, **kwargs):
     """Set color of array of lights."""
     for light in lights:
         if is_on(hass, light):
-            turn_on(hass, light,
-                    xy_color=[x_val, y_val],
-                    brightness=brightness,
-                    transition=30)
+            turn_on(hass, light, **kwargs)
+
+
+def set_lights_xy(hass, lights, x_val, y_val, brightness):
+    """Set color of array of lights."""
+    set_lights(hass, lights,
+               xy_color=[x_val, y_val],
+               brightness=brightness,
+               transition=30)
 
 
 def set_lights_temp(hass, lights, mired, brightness):
     """Set color of array of lights."""
-    for light in lights:
-        if is_on(hass, light):
-            turn_on(hass, light,
-                    color_temp=int(mired),
-                    brightness=brightness,
-                    transition=30)
+    set_lights(hass, lights,
+               color_temp=int(mired),
+               brightness=brightness,
+               transition=30)
 
 
 # pylint: disable=unused-argument
