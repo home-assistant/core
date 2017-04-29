@@ -197,9 +197,11 @@ class ComfoConnectBridge(ClimateDevice):
             FAN_MODE_HIGH
         )
 
+        _LOGGER.debug('Changing fan mode...')
         try:
             self._comfoconnect.connect(
                 self._token, self._friendly_name, self._pin)
+            _LOGGER.debug('Connected to bridge.')
 
             if mode == SPEED_AWAY:
                 self._comfoconnect.set_fan_mode(FAN_MODE_AWAY)
@@ -222,12 +224,14 @@ class ComfoConnectBridge(ClimateDevice):
 
         finally:
             self._comfoconnect.disconnect()
+            _LOGGER.debug('Disconnected from bridge.')
 
     def update(self):
         """Open connection to the Bridge."""
         from pycomfoconnect.error import (
             PyComfoConnectOtherSession, PyComfoConnectNotAllowed)
 
+        _LOGGER.debug('Updating sensor data...')
         try:
             self._comfoconnect.connect(
                 self._token, self._friendly_name, self._pin)
@@ -254,6 +258,7 @@ class ComfoConnectBridge(ClimateDevice):
 
         finally:
             self._comfoconnect.disconnect()
+            _LOGGER.debug('Disconnected from bridge.')
 
     def wait_for_sensor_values(self, max_seconds):
         """Wait for all the sensor values to have arrived."""
