@@ -403,7 +403,8 @@ class HueLight(Light):
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
-            command['ct'] = kwargs[ATTR_COLOR_TEMP]
+            temp = kwargs[ATTR_COLOR_TEMP]
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 
