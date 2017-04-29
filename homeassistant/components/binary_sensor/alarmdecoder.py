@@ -56,7 +56,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._name = zone_name
         self._type = zone_type
 
-        _LOGGER.debug("Setup up zone: ", zone_name)
+        _LOGGER.debug("Setup up zone: ", self._name)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

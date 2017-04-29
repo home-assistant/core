@@ -27,7 +27,7 @@ DEFAULT_NAME = 'myq'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MyQ component."""
+    """Set up the MyQ component."""
     from pymyq import MyQAPI as pymyq
 
     username = config.get(CONF_USERNAME)
@@ -39,17 +39,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     myq = pymyq(username, password, brand)
 
     if not myq.is_supported_brand():
-        logger.error('MyQ Cover - Unsupported Type. See documentation')
+        logger.error("Unsupported type. See documentation")
         return
 
     if not myq.is_login_valid():
-        logger.error('MyQ Cover - Username or Password is incorrect')
+        logger.error("Username or Password is incorrect")
         return
 
     try:
         add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
     except (TypeError, KeyError, NameError) as ex:
-        logger.error("MyQ Cover - %s", ex)
+        logger.error("%s", ex)
 
 
 class MyQDevice(CoverDevice):
@@ -74,7 +74,7 @@ class MyQDevice(CoverDevice):
 
     @property
     def is_closed(self):
-        """Return True if cover is closed, else False."""
+        """Return true if cover is closed, else False."""
         return self._status == STATE_CLOSED
 
     def close_cover(self):

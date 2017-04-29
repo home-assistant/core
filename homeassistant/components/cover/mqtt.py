@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the MQTT Cover."""
+    """Set up the MQTT Cover."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
@@ -94,13 +94,13 @@ class MqttCover(CoverDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe MQTT events.
 
         This method is a coroutine.
         """
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT message."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)

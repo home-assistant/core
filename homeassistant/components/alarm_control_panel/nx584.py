@@ -95,8 +95,7 @@ class NX584Alarm(alarm.AlarmControlPanel):
         bypassed = False
         for zone in zones:
             if zone['bypassed']:
-                _LOGGER.debug(
-                    "Zone %(zone)s is bypassed, assuming HOME",
+                _LOGGER.debug("Zone %(zone)s is bypassed, assuming HOME",
                               dict(zone=zone['number']))
                 bypassed = True
                 break
