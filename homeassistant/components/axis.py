@@ -12,8 +12,6 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from axis import AxisDevice
-
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -180,6 +178,8 @@ def setup(hass, base_config):
 
 def setup_device(config):
     """Set up device."""
+    from axis import AxisDevice
+
     hass = config['hass']
     device = AxisDevice(config)  # Initialize device
     enable_metadatastream = False
