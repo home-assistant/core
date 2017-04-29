@@ -14,22 +14,22 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematic']
 
 SENSOR_TYPES_CLASS = {
-    "Remote": None,
-    "ShutterContact": "opening",
-    "MaxShutterContact": "opening",
-    "IPShutterContact": "opening",
-    "Smoke": "smoke",
-    "SmokeV2": "smoke",
-    "Motion": "motion",
-    "MotionV2": "motion",
-    "RemoteMotion": None,
-    "WeatherSensor": None,
-    "TiltSensor": None,
+    'Remote': None,
+    'ShutterContact': 'opening',
+    'MaxShutterContact': 'opening',
+    'IPShutterContact': 'opening',
+    'Smoke': 'smoke',
+    'SmokeV2': 'smoke',
+    'Motion': 'motion',
+    'MotionV2': 'motion',
+    'RemoteMotion': None,
+    'WeatherSensor': None,
+    'TiltSensor': None,
 }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic binary sensor platform."""
+    """Set up the Homematic binary sensor platform."""
     if discovery_info is None:
         return
 
@@ -56,8 +56,8 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
     def device_class(self):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         # If state is MOTION (RemoteMotion works only)
-        if self._state == "MOTION":
-            return "motion"
+        if self._state == 'MOTION':
+            return 'motion'
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _init_data_struct(self):

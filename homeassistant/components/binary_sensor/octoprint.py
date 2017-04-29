@@ -16,7 +16,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
@@ -38,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available OctoPrint binary sensors."""
+    """Set up the available OctoPrint binary sensors."""
     octoprint = get_component('octoprint')
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS,
@@ -46,14 +45,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     devices = []
     for octo_type in monitored_conditions:
-        new_sensor = OctoPrintBinarySensor(octoprint.OCTOPRINT,
-                                           octo_type,
-                                           SENSOR_TYPES[octo_type][2],
-                                           name,
-                                           SENSOR_TYPES[octo_type][3],
-                                           SENSOR_TYPES[octo_type][0],
-                                           SENSOR_TYPES[octo_type][1],
-                                           'flags')
+        new_sensor = OctoPrintBinarySensor(
+            octoprint.OCTOPRINT, octo_type, SENSOR_TYPES[octo_type][2],
+            name, SENSOR_TYPES[octo_type][3],SENSOR_TYPES[octo_type][0],
+            SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
     add_devices(devices)
 
@@ -106,10 +101,9 @@ class OctoPrintBinarySensor(BinarySensorDevice):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self.api.update(self.sensor_type,
-                                          self.api_endpoint,
-                                          self.api_group,
-                                          self.api_tool)
+            self._state = self.api.update(
+                self.sensor_type, self.api_endpoint, self.api_group,
+                self.api_tool)
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
