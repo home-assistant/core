@@ -33,7 +33,6 @@ CONF_STATE_OPEN = 'state_open'
 CONF_STATE_CLOSED = 'state_closed'
 CONF_TILT_CLOSED_POSITION = 'tilt_closed_value'
 CONF_TILT_OPEN_POSITION = 'tilt_opened_value'
-CONF_DEVICE_CLASS = 'device_class'
 CONF_TILT_MIN = 'tilt_min'
 CONF_TILT_MAX = 'tilt_max'
 
@@ -43,11 +42,10 @@ DEFAULT_PAYLOAD_CLOSE = 'CLOSE'
 DEFAULT_PAYLOAD_STOP = 'STOP'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_RETAIN = False
-DEFAULT_TILT_CLOSED_POSITION = '0'
-DEFAULT_TILT_OPEN_POSITION = '100'
-DEFAULT_DEVICE_CLASS = 'window'
-DEFAULT_TILT_MIN = '0'
-DEFAULT_TILT_MAX = '100'
+DEFAULT_TILT_CLOSED_POSITION = 0
+DEFAULT_TILT_OPEN_POSITION = 100
+DEFAULT_TILT_MIN = 0
+DEFAULT_TILT_MAX = 100
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -58,15 +56,13 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_CLOSED_POSITION,
-                 default=DEFAULT_TILT_CLOSED_POSITION): cv.string,
+                 default=DEFAULT_TILT_CLOSED_POSITION): int,
     vol.Optional(CONF_TILT_OPEN_POSITION,
-                 default=DEFAULT_TILT_OPEN_POSITION): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS,
-                 default=DEFAULT_DEVICE_CLASS): cv.string,
+                 default=DEFAULT_TILT_OPEN_POSITION): int,
     vol.Optional(CONF_TILT_MIN,
-                 default=DEFAULT_TILT_MIN): cv.string,
+                 default=DEFAULT_TILT_MIN): int,
     vol.Optional(CONF_TILT_MAX,
-                 default=DEFAULT_TILT_MAX): cv.string,
+                 default=DEFAULT_TILT_MAX): int,
 })
 
 
@@ -94,7 +90,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         value_template,
         config.get(CONF_TILT_OPEN_POSITION),
         config.get(CONF_TILT_CLOSED_POSITION),
-        config.get(CONF_DEVICE_CLASS),
         config.get(CONF_TILT_MIN),
         config.get(CONF_TILT_MAX),
     )])
@@ -107,11 +102,8 @@ class MqttCover(CoverDevice):
                  tilt_status_topic, qos, retain, state_open, state_closed,
                  payload_open, payload_close, payload_stop,
                  optimistic, value_template, tilt_open_position,
-                 tilt_closed_position, device_class, tilt_min, tilt_max):
+                 tilt_closed_position, tilt_min, tilt_max):
         """Initialize the cover."""
-        if tilt_command_topic is not None:
-            _LOGGER.info("MQTT cover configured with tilt topic: "
-                         + tilt_command_topic)
         self._position = None
         self._state = None
         self._name = name
@@ -130,10 +122,9 @@ class MqttCover(CoverDevice):
         self._tilt_closed_position = tilt_closed_position
         self._optimistic = optimistic or state_topic is None
         self._template = value_template
-        self._device_class = device_class
         self._tilt_value = STATE_UNKNOWN
-        self._tilt_min = int(tilt_min)
-        self._tilt_max = int(tilt_max)
+        self._tilt_min = tilt_min
+        self._tilt_max = tilt_max
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -145,13 +136,11 @@ class MqttCover(CoverDevice):
         def tilt_updated(topic, payload, qos):
             """The tilt was updated."""
             if (payload.isnumeric() and
-                    self._tilt_min <= int(payload)
-                    and int(payload) <= self._tilt_max):
+                    self._tilt_min <= int(payload) <= self._tilt_max):
                 tilt_range = self._tilt_max - self._tilt_min
                 level = round(float(payload) / tilt_range * 100.0)
                 self._tilt_value = level
-                _LOGGER.info("Tilt value set to " + str(self._tilt_value))
-                self.schedule_update_ha_state()
+                self.hass.async_add_job(self.async_update_ha_state())
 
         @callback
         def message_received(topic, payload, qos):
@@ -213,9 +202,9 @@ class MqttCover(CoverDevice):
         return self._position
 
     @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return self._device_class
+    def current_cover_tilt_position(self):
+        """Return current position of cover tilt."""
+        return self._tilt_value
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
@@ -267,22 +256,18 @@ class MqttCover(CoverDevice):
         mqtt.async_publish(self.hass, self._tilt_command_topic,
                            self._tilt_closed_position, self._qos, self._retain)
 
-    @property
-    def current_cover_tilt_position(self):
-        """Return current position of cover tilt."""
-        return self._tilt_value
-
     @asyncio.coroutine
     def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
-        if ATTR_TILT_POSITION in kwargs:
-            position = float(kwargs[ATTR_TILT_POSITION])
+        if ATTR_TILT_POSITION not in kwargs:
+            return
 
-            # The position needs to be between min and max
-            tilt_range = self._tilt_max - self._tilt_min
-            percentage = position / 100.0
-            level = round(tilt_range * percentage)
+        position = float(kwargs[ATTR_TILT_POSITION])
 
-            _LOGGER.info("setting tilt value to " + str(level))
-            mqtt.async_publish(self.hass, self._tilt_command_topic,
-                               level, self._qos, self._retain)
+        # The position needs to be between min and max
+        tilt_range = self._tilt_max - self._tilt_min
+        percentage = position / 100.0
+        level = round(tilt_range * percentage)
+
+        mqtt.async_publish(self.hass, self._tilt_command_topic,
+                           level, self._qos, self._retain)

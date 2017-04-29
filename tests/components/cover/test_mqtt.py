@@ -283,13 +283,13 @@ class TestCoverMQTT(unittest.TestCase):
         cover.open_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', '100', 0, False),
+        self.assertEqual(('tilt-command-topic', 100, 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
         cover.close_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', '0', 0, False),
+        self.assertEqual(('tilt-command-topic', 0, 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
     def test_tilt_given_value(self):
@@ -306,21 +306,21 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': '400',
-                'tilt_closed_value': '125'
+                'tilt_opened_value': 400,
+                'tilt_closed_value': 125
             }
         }))
 
         cover.open_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', '400', 0, False),
+        self.assertEqual(('tilt-command-topic', 400, 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
         cover.close_cover_tilt(self.hass, 'cover.test')
         self.hass.block_till_done()
 
-        self.assertEqual(('tilt-command-topic', '125', 0, False),
+        self.assertEqual(('tilt-command-topic', 125, 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
     def test_tilt_via_topic(self):
@@ -337,8 +337,8 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': '400',
-                'tilt_closed_value': '125'
+                'tilt_opened_value': 400,
+                'tilt_closed_value': 125
             }
         }))
 
@@ -370,10 +370,10 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': '400',
-                'tilt_closed_value': '125',
-                'tilt_min': '0',
-                'tilt_max': '50'
+                'tilt_opened_value': 400,
+                'tilt_closed_value': 125,
+                'tilt_min': 0,
+                'tilt_max': 50
             }
         }))
 
@@ -412,8 +412,8 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': '400',
-                'tilt_closed_value': '125'
+                'tilt_opened_value': 400,
+                'tilt_closed_value': 125
             }
         }))
 
@@ -437,10 +437,10 @@ class TestCoverMQTT(unittest.TestCase):
                 'payload_stop': 'STOP',
                 'tilt_command_topic': 'tilt-command-topic',
                 'tilt_status_topic': 'tilt-status-topic',
-                'tilt_opened_value': '400',
-                'tilt_closed_value': '125',
-                'tilt_min': '0',
-                'tilt_max': '50'
+                'tilt_opened_value': 400,
+                'tilt_closed_value': 125,
+                'tilt_min': 0,
+                'tilt_max': 50
             }
         }))
 
