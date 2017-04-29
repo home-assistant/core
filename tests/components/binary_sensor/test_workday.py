@@ -58,7 +58,7 @@ class TestWorkdaySetup(object):
                 'platform': 'workday',
                 'country': 'DE',
                 'province': 'BW',
-                'workdays': ['holiday', 'mon', 'tue', 'wed', 'thu', 'fri'],
+                'workdays': ['holiday'],
                 'excludes': ['sat', 'sun']
             },
         }
