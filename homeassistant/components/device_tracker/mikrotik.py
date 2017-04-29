@@ -85,15 +85,12 @@ class MikrotikScanner(DeviceScanner):
             if routerboard_info:
                 _LOGGER.info('Connected to Mikrotik %s with ip %s.',
                              routerboard_info[0].get('model', 'Router'),
-                             self.host
-                             )
+                             self.host)
                 self.connected = True
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
             _LOGGER.error('Connection error: %s', api_error)
-        except Exception as exception:
-            _LOGGER.error('Internal component error: %s', exception)
 
         return self.connected
 
@@ -109,9 +106,7 @@ class MikrotikScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Retrieve latest information from the Mikrotik box.
-        Return boolean if scanning successful.
-        """
+        """Retrieve latest information from the Mikrotik box."""
         with self.lock:
             _LOGGER.info('Loading wireless device from Mikrotik...')
 
