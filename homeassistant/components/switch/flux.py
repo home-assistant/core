@@ -10,15 +10,17 @@ from datetime import time
 import logging
 import voluptuous as vol
 
-from homeassistant.components.light import is_on, turn_on
+from homeassistant.components.light import is_on, turn_on, SUPPORT_OFF_STATE
 from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+from homeassistant.const import (
+    CONF_NAME, CONF_PLATFORM, ATTR_SUPPORTED_FEATURES)
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
+from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['sun', 'light']
@@ -61,9 +63,14 @@ PLATFORM_SCHEMA = vol.Schema({
 
 def set_lights(hass, lights, **kwargs):
     """Set color of array of lights."""
-    for light in lights:
-        if is_on(hass, light):
-            turn_on(hass, light, **kwargs)
+    entity_ids = get_component('group').expand_entity_ids(hass, lights)
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+
+        if state.attributes.get(ATTR_SUPPORTED_FEATURES) & SUPPORT_OFF_STATE:
+            turn_on(hass, entity_id, power_on=False, **kwargs)
+        elif is_on(hass, entity_id):
+            turn_on(hass, entity_id, **kwargs)
 
 
 def set_lights_xy(hass, lights, x_val, y_val, brightness):
