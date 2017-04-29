@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             obj_holidays = getattr(holidays, country)(prov=province,
                                                       years=year)
         elif (hasattr(obj_holidays, "STATES") and
-                province in obj_holidays.STATES):
+              province in obj_holidays.STATES):
             obj_holidays = getattr(holidays, country)(state=province,
                                                       years=year)
         else:
