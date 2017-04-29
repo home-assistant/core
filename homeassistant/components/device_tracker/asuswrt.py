@@ -32,12 +32,11 @@ CONF_PUB_KEY = 'pub_key'
 SECRET_GROUP = 'Password or SSH Key'
 
 PLATFORM_SCHEMA = vol.All(
-    cv.has_at_least_one_key(CONF_PASSWORD, CONF_PUB_KEY, CONF_SSH_KEY),
     PLATFORM_SCHEMA.extend({
         vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_USERNAME, default='admin'): cv.string,
         vol.Optional(CONF_PROTOCOL, default='ssh'):
-            vol.In(['ssh', 'telnet']),
+            vol.In(['ssh', 'telnet', 'http']),
         vol.Optional(CONF_MODE, default='router'):
             vol.In(['router', 'ap']),
         vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
@@ -48,7 +47,7 @@ PLATFORM_SCHEMA = vol.All(
 
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.0.1', 'urllib3']
 
 _LEASES_CMD = 'cat /var/lib/misc/dnsmasq.leases'
 _LEASES_REGEX = re.compile(
@@ -91,11 +90,18 @@ _NVRAM_REGEX = re.compile(
     r'>' +
     r'.*')
 
+_FTR = [3600, 60, 1]
+
 
 # pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
-    scanner = AsusWrtDeviceScanner(config[DOMAIN])
+    protocol = config["device_tracker"][CONF_PROTOCOL]
+
+    if protocol == 'http':
+        scanner = AsusWrtHttpDeviceScanner(config[DOMAIN])
+    else:
+        scanner = AsusWrtDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -104,7 +110,7 @@ AsusWrtResult = namedtuple('AsusWrtResult', 'neighbors leases arp nvram')
 
 
 class AsusWrtDeviceScanner(DeviceScanner):
-    """This class queries a router running ASUSWRT firmware."""
+    """This class queries a router running ASUSWRT through SSH/Telnet."""
 
     # Eighth attribute needed for mode (AP mode vs router mode)
     def __init__(self, config):
@@ -360,4 +366,120 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 continue
             if match.group('ip') in devices:
                 devices[match.group('ip')]['status'] = match.group('status')
+        return devices
+
+
+class AsusWrtHttpDeviceScanner(DeviceScanner):
+    """This class queries a router running ASUSWRT through http."""
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        self.host = config[CONF_HOST]
+        self.lock = threading.Lock()
+
+        data = self.get_asuswrt_data()
+        self.success_init = data is not None
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return [client['mac'] for client in self.last_results]
+
+    def get_device_name(self, device):
+        """Return the name of the given device or None if we don't know."""
+        if not self.last_results:
+            return None
+        for client in self.last_results:
+            if client['mac'] == device and 'name' in client:
+                return client['name']
+        return None
+
+    @Throttle(MIN_TIME_BETWEEN_SCANS)
+    def _update_info(self):
+        """Ensure the information from the ASUSWRT router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        if not self.success_init:
+            return False
+
+        with self.lock:
+            _LOGGER.info("Checking ASUSWRT clients")
+            data = self.get_asuswrt_data()
+            if not data:
+                return False
+
+            active_clients = [client for client in data.values() if
+                              'wifi' in client and
+                              client['wifi'] and
+                              'connected' in client and
+                              client['connected']]
+
+            _LOGGER.debug(active_clients)
+
+            self.last_results = active_clients
+            return True
+
+    def get_asuswrt_data(self):
+        """Retrieve data from ASUSWRT via the http protocol."""
+        from collections import defaultdict
+        from urllib.request import urlopen
+        import json
+
+        data = urlopen('http://%s/update_clients.asp' % self.host).read()
+        data = data.decode('utf-8')
+
+        devices = defaultdict(dict)
+
+        device_info = re.findall(
+            r"fromNetworkmapd: '(.*?)'", data)[0].split('<')
+        for d in device_info:
+            info = d.split('>')
+            if len(info) < 2:
+                continue
+
+            devices[info[3]] = {
+                'name': info[1],
+                'ip': info[2],
+                'mac': info[3]
+            }
+
+        val = re.findall(r'([A-Za-z_0-9]*): (\[.*\])', data)
+        json_lists = {x[0]: x[1] for x in val}
+
+        for d in json.loads(json_lists['wlList_2g']):
+            mac = d[0]
+            devices[mac]['mac'] = mac
+            devices[mac]['wifi'] = True
+            devices[mac]['2g'] = True
+            devices[mac]['signal'] = d[3]
+            devices[mac]['connected'] = d[1] == 'Yes'
+
+        for d in json.loads(json_lists['wlList_5g']):
+            mac = d[0]
+            devices[mac]['mac'] = mac
+            devices[mac]['wifi'] = True
+            devices[mac]['5g'] = True
+            devices[mac]['signal'] = d[3]
+            devices[mac]['connected'] = d[1] == 'Yes'
+
+        for d in json.loads(json_lists['wlListInfo_2g']):
+            mac = d[0]
+            devices[mac]['mac'] = mac
+            devices[mac]['tx'] = d[1]
+            devices[mac]['rx'] = d[2]
+            devices[mac]['connection_time'] = sum(
+                [a*b for a, b in zip(_FTR, map(int, d[3].split(':')))])
+            # convert from 12:34:12 to seconds
+
+        for d in json.loads(json_lists['wlListInfo_5g']):
+            mac = d[0]
+            devices[mac]['mac'] = mac
+            devices[mac]['tx'] = d[1]
+            devices[mac]['rx'] = d[2]
+            devices[mac]['connection_time'] = sum(
+                [a*b for a, b in zip(_FTR, map(int, d[3].split(':')))])
+
+        _LOGGER.debug(devices)
+
         return devices
