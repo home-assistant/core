@@ -8,7 +8,7 @@ import asyncio
 import logging
 
 from homeassistant.components import light, zha
-from homeassistant.util.color import HASS_COLOR_MIN, color_RGB_to_xy
+from homeassistant.util.color import color_RGB_to_xy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ class Light(zha.Entity, light.Light):
             # Not sure all color lights necessarily support this directly
             # Should we emulate it?
             self._supported_features |= light.SUPPORT_COLOR_TEMP
-            self._color_temp = HASS_COLOR_MIN
             # Silly heuristic, not sure if it works widely
             if kwargs.get('num_primaries', 1) >= 3:
                 self._supported_features |= light.SUPPORT_XY_COLOR
