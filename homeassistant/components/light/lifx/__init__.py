@@ -32,7 +32,7 @@ from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.5']
+REQUIREMENTS = ['aiolifx==0.4.6']
 
 UDP_BROADCAST_PORT = 56700
 
