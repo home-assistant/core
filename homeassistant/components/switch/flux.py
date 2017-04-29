@@ -140,8 +140,11 @@ class FluxSwitch(SwitchDevice):
         if not self._state:  # make initial update
             self.flux_update()
         self._state = True
-        self.unsub_tracker = track_time_change(self.hass, self.flux_update,
-                                               second=[0, 30])
+
+        if self.unsub_tracker is None:
+            self.unsub_tracker = track_time_change(self.hass, self.flux_update,
+                                                   second=[0, 30])
+
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
