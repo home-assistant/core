@@ -113,7 +113,6 @@ class FluxSwitch(SwitchDevice):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
-        self._state = state
         self._lights = lights
         self._start_time = start_time
         self._stop_time = stop_time
@@ -133,15 +132,19 @@ class FluxSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        return self.unsub_tracker is not None
 
     def turn_on(self, **kwargs):
         """Turn on flux."""
-        if not self._state:  # make initial update
-            self.flux_update()
-        self._state = True
+        if self.is_on:
+            return
+
+        # make initial update
+        self.flux_update()
+
         self.unsub_tracker = track_time_change(self.hass, self.flux_update,
                                                second=[0, 30])
+
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
@@ -150,7 +153,6 @@ class FluxSwitch(SwitchDevice):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self._state = False
         self.schedule_update_ha_state()
 
     def flux_update(self, now=None):
