@@ -28,7 +28,9 @@ READING_TEMPERATURE = ATTR_TEMPERATURE
 READING_MOISTURE = 'moisture'
 READING_CONDUCTIVITY = 'conductivity'
 READING_BRIGHTNESS = 'brightness'
-CAST_FUNCTION = 'cast_function'
+
+ATTR_PROBLEM = 'problem'
+PROBLEM_NONE = 'none'
 
 CONF_MIN_BATTERY_LEVEL = 'min_' + READING_BATTERY
 CONF_MIN_TEMPERATURE = 'min_' + READING_TEMPERATURE
@@ -147,7 +149,8 @@ class Plant(Entity):
         self._conductivity = None
         self._temperature = None
         self._brightness = None
-        self._icon = None
+        self._icon = 'mdi:question-mark'
+        self._problems = PROBLEM_NONE
 
     @callback
     def state_changed(self, entity_id, _, new_state):
@@ -199,8 +202,10 @@ class Plant(Entity):
         if len(result) == 0:
             self._state = 'ok'
             self._icon = 'mdi:thumb-up'
+            self._problems = PROBLEM_NONE
         else:
-            self._state = ', '.join(result)
+            self._state = 'problem'
+            self._problems = ','.join(result)
         _LOGGER.debug('new data processed')
         self.hass.async_add_job(self.async_update_ha_state())
 
@@ -228,6 +233,7 @@ class Plant(Entity):
         """
         attrib = {
             ATTR_ICON: self._icon,
+            ATTR_PROBLEM: self._problems,
         }
 
         for reading in self._sensormap.values():

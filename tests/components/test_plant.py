@@ -64,7 +64,9 @@ class TestPlant(unittest.TestCase):
         """Test processing with low battery data and limit set."""
         self.sensor = plant.Plant(self.hass, self.GOOD_CONFIG)
         self.sensor.hass = self.hass
+        self.assertEqual(self.sensor.state_attributes['problem'], 'none')
         self.sensor.state_changed('sensor.mqtt_plant_battery',
                                   TestPlant._MockState(45),
                                   TestPlant._MockState(10))
-        self.assertEqual(self.sensor.state, 'battery low')
+        self.assertEqual(self.sensor.state, 'problem')
+        self.assertEqual(self.sensor.state_attributes['problem'], 'battery low')
