@@ -454,10 +454,9 @@ def _identify_config_schema(module):
     except (AttributeError, KeyError):
         return (None, None)
     t_schema = str(schema)
-    if (t_schema.startswith('<function ordered_dict') or
-            t_schema.startswith('<Schema({<function slug')):
+    if t_schema.startswith(('{', '<function ordered_dict')):
         return ('dict', schema)
-    if t_schema.startswith('All(<function ensure_list'):
+    if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
     return '', schema
 
