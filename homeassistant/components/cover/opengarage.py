@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         covers.append(OpenGarageCover(hass, args))
 
-    add_devices(covers)
+    add_devices(covers, True)
 
 
 class OpenGarageCover(CoverDevice):
@@ -90,35 +90,10 @@ class OpenGarageCover(CoverDevice):
         self.signal = None
         self._available = True
 
-        # Lets try to get the configured name if not provided.
-        try:
-            if self._name is None:
-                doorconfig = self._get_status()
-                if doorconfig["name"] is not None:
-                    self._name = doorconfig["name"]
-            self.update()
-        except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error('Unable to connect to server: %(reason)s',
-                          dict(reason=ex))
-            self._state = STATE_OFFLINE
-            self._available = False
-            self._name = DEFAULT_NAME
-        except KeyError as ex:
-            _LOGGER.warning('OpenGarage device %(device)s seems to be offline',
-                            dict(device=self.device_id))
-            self._name = DEFAULT_NAME
-            self._state = STATE_OFFLINE
-            self._available = False
-
     @property
     def name(self):
         """Return the name of the cover."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed for a demo cover."""
-        return True
 
     @property
     def available(self):
@@ -154,28 +129,22 @@ class OpenGarageCover(CoverDevice):
         if self._state not in [STATE_CLOSED, STATE_CLOSING]:
             self._state_before_move = self._state
             self._state = STATE_CLOSING
-            ret = self._push_button()
-            return ret.get('result') == 1
+            self._push_button()
 
     def open_cover(self):
         """Open the cover."""
         if self._state not in [STATE_OPEN, STATE_OPENING]:
             self._state_before_move = self._state
             self._state = STATE_OPENING
-            ret = self._push_button()
-            return ret.get('result') == 1
-
-    def stop_cover(self):
-        """Stop the door where it is."""
-        self._state_before_move = None
-        self._state = STATE_STOPPED
-        ret = self._push_button()
-        return ret.get('result') == 1
+            self._push_button()
 
     def update(self):
         """Get updated status from API."""
         try:
             status = self._get_status()
+            if self._name is None:
+                if status["name"] is not None:
+                    self._name = status["name"]
             state = STATES_MAP.get(status.get('door'), STATE_UNKNOWN)
             if self._state_before_move is not None:
                 if self._state_before_move != state:
@@ -188,14 +157,9 @@ class OpenGarageCover(CoverDevice):
             self.signal = status.get('rssi')
             self.dist = status.get('dist')
             self._available = True
-        except (requests.exceptions.ConnectionError,
-                requests.exceptions.ReadTimeout) as ex:
+        except (requests.exceptions.RequestException) as ex:
             _LOGGER.error('Unable to connect to OpenGarage device: %(reason)s',
                           dict(reason=ex))
-            self._state = STATE_OFFLINE
-        except KeyError as ex:
-            _LOGGER.warning('OpenGarage device %(device)s seems to be offline',
-                            dict(device=self.device_id))
             self._state = STATE_OFFLINE
 
     def _get_status(self):
@@ -208,8 +172,18 @@ class OpenGarageCover(CoverDevice):
         """Send commands to API."""
         url = '{}/cc?dkey={}&click=1'.format(
             self.opengarage_url, self._devicekey)
-        ret = requests.get(url, timeout=10)
-        return ret.json()
+        try:
+            response = requests.get(url, timeout=10).json()
+            if (response["result"] == 2):
+                _LOGGER.error("Unable to control %s: device_key is incorrect.",
+                              self._name)
+                self._state = self._state_before_move
+                self._state_before_move = None
+        except (requests.exceptions.RequestException) as ex:
+            _LOGGER.error('Unable to connect to OpenGarage device: %(reason)s',
+                          dict(reason=ex))
+            self._state = self._state_before_move
+            self._state_before_move = None
 
     @property
     def device_class(self):
