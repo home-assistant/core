@@ -213,6 +213,7 @@ class TestCoverMQTT(unittest.TestCase):
         state_attributes_dict = self.hass.states.get(
             'cover.test').attributes
         self.assertFalse('current_position' in state_attributes_dict)
+        self.assertFalse('current_tilt_position' in state_attributes_dict)
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
         self.hass.block_till_done()
