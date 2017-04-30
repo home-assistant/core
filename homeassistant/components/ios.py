@@ -11,7 +11,7 @@ import logging
 import datetime
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
+# from voluptuous.humanize import humanize_error
 
 from homeassistant.helpers import config_validation as cv
 
