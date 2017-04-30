@@ -89,12 +89,9 @@ def request_configuration(hass, name, host, serialnumber):
                                        'Bad input, please check spelling.')
             return False
 
-        config['hass'] = hass
-
-        if setup_device(config):
+        if setup_device(hass, config):
             config_file = _read_config(hass)
             config_file[serialnumber] = dict(config)
-            del config_file[serialnumber]['hass']
             _write_config(hass, config_file)
             configurator.request_done(instance)
         else:
@@ -156,8 +153,7 @@ def setup(hass, base_config):
             config_file = _read_config(hass)
             if serialnumber in config_file:
                 config = config_file[serialnumber]
-                config['hass'] = hass
-                if not setup_device(config):
+                if not setup_device(hass, config):
                     _LOGGER.error('Couldn\'t set up %s', config['name'])
             else:
                 request_configuration(hass, name, host, serialnumber)
@@ -169,18 +165,17 @@ def setup(hass, base_config):
             config = base_config[DOMAIN][device]
             if CONF_NAME not in config:
                 config[CONF_NAME] = device
-            config['hass'] = hass
-            if not setup_device(config):
+            if not setup_device(hass, config):
                 _LOGGER.error('Couldn\'t set up %s', config['name'])
 
     return True
 
 
-def setup_device(config):
+def setup_device(hass, config):
     """Set up device."""
     from axis import AxisDevice
 
-    hass = config['hass']
+    config['hass'] = hass
     device = AxisDevice(config)  # Initialize device
     enable_metadatastream = False
 
