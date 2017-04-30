@@ -262,8 +262,7 @@ class AxisDeviceEvent(Entity):
                 self._timer = None
 
             self._timer = track_point_in_utc_time(
-                self._hass,  # pylint: disable=E1101
-                _delay_update,
+                self.hass, _delay_update,
                 utcnow() + timedelta(seconds=self._delay))
         else:
             self.schedule_update_ha_state()
