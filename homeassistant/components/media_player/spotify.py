@@ -16,8 +16,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, SUPPORT_VOLUME_SET,
     SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
-    MediaPlayerDevice)
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET,
+    PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
@@ -33,7 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
-    SUPPORT_PLAY_MEDIA
+    SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
 SCOPE = 'user-read-playback-state user-modify-playback-state'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
@@ -132,6 +132,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._current_device = None
         self._devices = None
         self._volume = None
+        self._shuffle = False
         self._player = None
         self._token_info = self._oauth.get_cached_token()
 
@@ -185,10 +186,16 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 self._volume = device.get('volume_percent') / 100
             if device.get('name'):
                 self._current_device = device.get('name')
+            if device.get('shuffle_state'):
+                self._shuffle = device.get('shuffle_state')
 
     def set_volume_level(self, volume):
         """Set the volume level."""
         self._player.volume(int(volume * 100))
+
+    def set_shuffle(self, shuffle):
+        """Enable/Disable shuffle mode."""
+        self._player.shuffle(shuffle)
 
     def media_next_track(self):
         """Skip to next track."""
@@ -244,6 +251,11 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def volume_level(self):
         """Device volume."""
         return self._volume
+
+    @property
+    def shuffle(self):
+        """Shuffling state."""
+        return self._shuffle
 
     @property
     def source_list(self):
