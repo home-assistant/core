@@ -20,7 +20,7 @@ REQUIRES = [
     'pytz>=2017.02',
     'pip>=7.1.0',
     'jinja2>=2.9.5',
-    'voluptuous==0.9.3',
+    'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.0.7',
     'async_timeout==1.2.0',
