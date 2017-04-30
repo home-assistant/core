@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -91,7 +91,7 @@ def day_to_string(day):
         return None
 
 
-class IsWorkdaySensor(Entity):
+class IsWorkdaySensor(BinarySensorDevice):
     """Implementation of a Workday sensor."""
 
     def __init__(self, obj_holidays, workdays, excludes, name):
