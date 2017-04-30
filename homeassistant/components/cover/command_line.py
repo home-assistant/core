@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup cover controlled by shell commands."""
+    """Set up cover controlled by shell commands."""
     devices = config.get(CONF_COVERS, {})
     covers = []
 
@@ -78,25 +78,25 @@ class CommandCover(CoverDevice):
     @staticmethod
     def _move_cover(command):
         """Execute the actual commands."""
-        _LOGGER.info('Running command: %s', command)
+        _LOGGER.info("Running command: %s", command)
 
         success = (subprocess.call(command, shell=True) == 0)
 
         if not success:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
         return success
 
     @staticmethod
     def _query_state_value(command):
         """Execute state command for return value."""
-        _LOGGER.info('Running state command: %s', command)
+        _LOGGER.info("Running state command: %s", command)
 
         try:
             return_value = subprocess.check_output(command, shell=True)
             return return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
-            _LOGGER.error('Command failed: %s', command)
+            _LOGGER.error("Command failed: %s", command)
 
     @property
     def should_poll(self):
@@ -128,7 +128,7 @@ class CommandCover(CoverDevice):
     def _query_state(self):
         """Query for the state."""
         if not self._command_state:
-            _LOGGER.error('No state command specified')
+            _LOGGER.error("No state command specified")
             return
         return self._query_state_value(self._command_state)
 

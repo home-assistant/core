@@ -110,7 +110,7 @@ def start_scanning(config, add_entities, client):
 
 
 def setup_button(hass, config, add_entities, client, address):
-    """Setup single button device."""
+    """Set up a single button device."""
     timeout = config.get(CONF_TIMEOUT)
     ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)

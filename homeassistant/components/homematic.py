@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ["pyhomematic==0.1.25"]
+REQUIREMENTS = ['pyhomematic==0.1.25']
 
 DOMAIN = 'homematic'
 
@@ -215,7 +215,7 @@ def virtualkey(hass, address, channel, param, proxy=None):
 
 
 def set_var_value(hass, entity_id, value):
-    """Change value of homematic system variable."""
+    """Change value of a Homematic system variable."""
     data = {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
@@ -225,7 +225,7 @@ def set_var_value(hass, entity_id, value):
 
 
 def set_dev_value(hass, address, channel, param, value, proxy=None):
-    """Send virtual keypress to homematic controlller."""
+    """Send virtual keypress to the Homematic controlller."""
     data = {
         ATTR_ADDRESS: address,
         ATTR_CHANNEL: channel,
@@ -296,7 +296,7 @@ def setup(hass, config):
         entity_hubs.append(HMHub(
             hass, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
-    # Regeister homematic services
+    # Register Homematic services
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
@@ -389,7 +389,7 @@ def setup(hass, config):
 
 
 def _system_callback_handler(hass, config, src, *args):
-    """Callback handler."""
+    """Handle the callback."""
     if src == 'newDevices':
         _LOGGER.debug("newDevices with: %s", args)
         # pylint: disable=unused-variable

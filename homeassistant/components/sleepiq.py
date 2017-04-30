@@ -4,7 +4,6 @@ Support for SleepIQ from SleepNumber.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sleepiq/
 """
-
 import logging
 from datetime import timedelta
 
@@ -47,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup SleepIQ.
+    """Set up the SleepIQ component.
 
     Will automatically load sensor components to support
     devices discovered on the account.
@@ -76,7 +75,7 @@ def setup(hass, config):
 
 
 class SleepIQData(object):
-    """Gets the latest data from SleepIQ."""
+    """Get the latest data from SleepIQ."""
 
     def __init__(self, client):
         """Initialize the data object."""
@@ -112,9 +111,8 @@ class SleepIQSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'SleepNumber {} {} {}'.format(self.bed.name,
-                                             self.side.sleeper.first_name,
-                                             self._name)
+        return 'SleepNumber {} {} {}'.format(
+            self.bed.name, self.side.sleeper.first_name, self._name)
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""

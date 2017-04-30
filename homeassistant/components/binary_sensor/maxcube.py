@@ -43,7 +43,7 @@ class MaxCubeShutter(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """Polling is required."""
+        """Return the polling state."""
         return True
 
     @property

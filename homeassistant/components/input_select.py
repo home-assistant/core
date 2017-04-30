@@ -56,7 +56,7 @@ SERVICE_SET_OPTIONS_SCHEMA = vol.Schema({
 
 
 def _cv_input_select(cfg):
-    """Config validation helper for input select (Voluptuous)."""
+    """Configuration validation helper for input select (voluptuous)."""
     options = cfg[CONF_OPTIONS]
     initial = cfg.get(CONF_INITIAL)
     if initial is not None and initial not in options:
@@ -109,7 +109,7 @@ def set_options(hass, entity_id, options):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup input select."""
+    """Set up an input select."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
@@ -197,7 +197,7 @@ class InputSelect(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity about to be added to hass."""
+        """Run when entity about to be added."""
         if self._current_option is not None:
             return
 

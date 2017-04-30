@@ -14,9 +14,9 @@ from homeassistant.const import CONF_AFTER, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 
-CONF_HOURS = "hours"
-CONF_MINUTES = "minutes"
-CONF_SECONDS = "seconds"
+CONF_HOURS = 'hours'
+CONF_MINUTES = 'minutes'
+CONF_SECONDS = 'seconds'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 
 @asyncio.coroutine
 def async_trigger(hass, config, action):
-    """Listen for state changes based on configuration."""
+    """"Listen for state changes based on configuration."""
     if CONF_AFTER in config:
         after = config.get(CONF_AFTER)
         hours, minutes, seconds = after.hour, after.minute, after.second
