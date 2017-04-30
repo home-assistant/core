@@ -86,12 +86,12 @@ class SenseHatLight(Light):
     def should_poll(self):
         """Return if we should poll this device."""
         return False
-    
+
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return True
-    
+
     def turn_on(self, **kwargs):
         """Instruct the light to turn on and set correct brightness & color."""
         self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
