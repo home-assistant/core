@@ -43,13 +43,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hosts = []
 
     if discovery_info:
-        host = discovery_info[0]
+        host = discovery_info.get("host")
 
         if host in KNOWN_HOSTS:
             return
 
         _LOGGER.debug('Discovered Roku: %s', host)
-        hosts.append(discovery_info[0])
+        hosts.append(discovery_info.get("host"))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
