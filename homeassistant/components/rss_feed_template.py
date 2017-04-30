@@ -20,8 +20,8 @@ DEPENDENCIES = ['http']
 DOMAIN = 'rss_feed_template'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ordered_dict(
-        vol.Schema({
+    DOMAIN: vol.Schema({
+        cv.match_all: vol.Schema({
             vol.Optional('requires_api_password', default=True): cv.boolean,
             vol.Optional('title'): cv.template,
             vol.Required('items'): vol.All(
@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
                 }]
                 )
             })
-        )
+        })
     }, extra=vol.ALLOW_EXTRA)
 
 

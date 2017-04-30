@@ -373,29 +373,6 @@ def x10_address(value):
     return str(value).lower()
 
 
-def ordered_dict(value_validator, key_validator=match_all):
-    """Validate an ordered dict validator that maintains ordering.
-
-    value_validator will be applied to each value of the dictionary.
-    key_validator (optional) will be applied to each key of the dictionary.
-    """
-    item_validator = vol.Schema({key_validator: value_validator})
-
-    def validator(value):
-        """Validate ordered dict."""
-        config = OrderedDict()
-
-        if not isinstance(value, dict):
-            raise vol.Invalid('Value {} is not a dictionary'.format(value))
-        for key, val in value.items():
-            v_res = item_validator({key: val})
-            config.update(v_res)
-
-        return config
-
-    return validator
-
-
 def ensure_list_csv(value: Any) -> Sequence:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):

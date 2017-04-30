@@ -112,7 +112,7 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
         vol.Schema({cv.string: dict}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        cv.ordered_dict(OrderedDict, cv.string),
+        vol.Schema({cv.string: OrderedDict}),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
@@ -454,7 +454,7 @@ def _identify_config_schema(module):
     except (AttributeError, KeyError):
         return (None, None)
     t_schema = str(schema)
-    if t_schema.startswith(('{', '<function ordered_dict')):
+    if t_schema.startswith('{'):
         return ('dict', schema)
     if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
