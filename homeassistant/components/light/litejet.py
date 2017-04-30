@@ -57,7 +57,7 @@ class LiteJetLight(Light):
 
     @property
     def name(self):
-        """The light's name."""
+        """Set up the light's name."""
         return self._name
 
     @property

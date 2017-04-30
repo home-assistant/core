@@ -94,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Flux lights."""
+    """Set up the Flux lights."""
     import flux_led
     lights = []
     light_ips = []
