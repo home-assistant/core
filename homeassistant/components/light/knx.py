@@ -1,5 +1,6 @@
 """
 Support KNX Lighting actuators.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/Light.knx/
 """
@@ -33,6 +34,7 @@ class KNXLight(KNXGroupAddress, Light):
 
     def turn_on(self, **kwargs):
         """Turn the switch on.
+
         This sends a value 1 to the group address of the device
         """
         self.group_write(1)
@@ -42,6 +44,7 @@ class KNXLight(KNXGroupAddress, Light):
 
     def turn_off(self, **kwargs):
         """Turn the switch off.
+
         This sends a value 1 to the group address of the device
         """
         self.group_write(0)
