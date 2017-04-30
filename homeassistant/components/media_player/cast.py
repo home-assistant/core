@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the cast platform."""
+    """Set up the cast platform."""
     import pychromecast
 
     # import CEC IGNORE attributes
@@ -204,7 +204,7 @@ class CastDevice(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Return te title of the series of current playing media (TV only)."""
         return self.media_status.series_title if self.media_status else None
 
     @property
@@ -310,12 +310,12 @@ class CastDevice(MediaPlayerDevice):
 
     # Implementation of chromecast status_listener methods
     def new_cast_status(self, status):
-        """Called when a new cast status is received."""
+        """Handle updates of the cast status."""
         self.cast_status = status
         self.schedule_update_ha_state()
 
     def new_media_status(self, status):
-        """Called when a new media status is received."""
+        """Handle updates of the media status."""
         self.media_status = status
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
