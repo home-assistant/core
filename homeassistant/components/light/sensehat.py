@@ -105,10 +105,10 @@ class SenseHatLight(Light):
                              int(self._rgb_color[2] * percent_bright))
 
         self._is_on = True
-        this.schedule_update_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self._sensehat.clear()
         self._is_on = False
-        this.schedule_update_ha_state()
+        self.schedule_update_ha_state()
