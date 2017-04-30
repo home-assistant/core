@@ -82,7 +82,7 @@ ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
-ATTR_MEDIA_SHUFFLING = 'shuffle'
+ATTR_MEDIA_SHUFFLE = 'shuffle'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -137,7 +137,7 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 })
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_MEDIA_SHUFFLING): cv.boolean,
+    vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
 SERVICE_TO_METHOD = {
@@ -195,7 +195,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_SHUFFLING,
+    ATTR_MEDIA_SHUFFLE,
 ]
 
 
@@ -335,7 +335,7 @@ def clear_playlist(hass, entity_id=None):
 
 def set_shuffle(hass, shuffle, entity_id=None):
     """Send the media player the command to enable/disable shuffle mode."""
-    data = {ATTR_MEDIA_SHUFFLING: shuffle}
+    data = {ATTR_MEDIA_SHUFFLE: shuffle}
 
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
@@ -380,8 +380,8 @@ def async_setup(hass, config):
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
         elif service.service == SERVICE_SHUFFLE_SET:
-            params[ATTR_MEDIA_SHUFFLING] = \
-                service.data.get(ATTR_MEDIA_SHUFFLING)
+            params[ATTR_MEDIA_SHUFFLE] = \
+                service.data.get(ATTR_MEDIA_SHUFFLE)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
@@ -564,7 +564,7 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
-    def is_shuffling(self):
+    def shuffle(self):
         """Boolean if shuffle is enabled."""
         return None
 

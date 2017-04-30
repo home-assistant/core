@@ -118,7 +118,7 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle):
-        """Enable/disable shuffle mode"""
+        """Enable/disable shuffle mode."""
         self._shuffle = shuffle
         self.schedule_update_ha_state()
 

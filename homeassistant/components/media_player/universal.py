@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_POSITION, ATTR_MEDIA_SHUFFLING,
+    ATTR_MEDIA_POSITION, ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_POSITION_UPDATED_AT, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
@@ -359,8 +359,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     @property
     def shuffle(self):
         """Boolean if shuffling is enabled."""
-        return self._override_or_child_attr(ATTR_MEDIA_SHUFFLING) \
-            in [True, STATE_ON]
+        return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
 
     @property
     def supported_features(self):
@@ -390,7 +389,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
             flags |= SUPPORT_CLEAR_PLAYLIST
 
         if SERVICE_SHUFFLE_SET in self._cmds and \
-                ATTR_MEDIA_SHUFFLING in self._attrs:
+                ATTR_MEDIA_SHUFFLE in self._attrs:
             flags |= SUPPORT_SHUFFLE_SET
 
         return flags
@@ -539,7 +538,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        data = {ATTR_MEDIA_SHUFFLING: shuffle}
+        data = {ATTR_MEDIA_SHUFFLE: shuffle}
         return self._async_call_service(
             SERVICE_SHUFFLE_SET, data, allow_override=True)
 
