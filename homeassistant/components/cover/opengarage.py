@@ -12,7 +12,6 @@ import requests
 
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE)
-from homeassistant.helpers.event import track_utc_time_change
 from homeassistant.const import (
     CONF_DEVICE, CONF_NAME, STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN,
     CONF_COVERS, CONF_HOST, CONF_PORT)
@@ -89,7 +88,6 @@ class OpenGarageCover(CoverDevice):
         self._state_before_move = None
         self.dist = None
         self.signal = None
-        self._unsub_listener_cover = None
         self._available = True
 
         # Lets try to get the configured name if not provided.
@@ -151,24 +149,12 @@ class OpenGarageCover(CoverDevice):
         else:
             return self._state in [STATE_CLOSED, STATE_OPENING]
 
-    def _start_watcher(self, command):
-        """Start watcher."""
-        _LOGGER.debug("Starting Watcher for command: %s ", command)
-        if self._unsub_listener_cover is None:
-            self._unsub_listener_cover = track_utc_time_change(
-                self.hass, self._check_state)
-
-    def _check_state(self, now):
-        """Check the state of the service during an operation."""
-        self.schedule_update_ha_state(True)
-
     def close_cover(self):
         """Close the cover."""
         if self._state not in [STATE_CLOSED, STATE_CLOSING]:
             self._state_before_move = self._state
             self._state = STATE_CLOSING
             ret = self._push_button()
-            self._start_watcher('close')
             return ret.get('result') == 1
 
     def open_cover(self):
@@ -177,7 +163,6 @@ class OpenGarageCover(CoverDevice):
             self._state_before_move = self._state
             self._state = STATE_OPENING
             ret = self._push_button()
-            self._start_watcher('open')
             return ret.get('result') == 1
 
     def stop_cover(self):
@@ -212,11 +197,6 @@ class OpenGarageCover(CoverDevice):
             _LOGGER.warning('OpenGarage device %(device)s seems to be offline',
                             dict(device=self.device_id))
             self._state = STATE_OFFLINE
-
-        if self._state not in [STATE_CLOSING, STATE_OPENING]:
-            if self._unsub_listener_cover is not None:
-                self._unsub_listener_cover()
-                self._unsub_listener_cover = None
 
     def _get_status(self):
         """Get latest status."""
