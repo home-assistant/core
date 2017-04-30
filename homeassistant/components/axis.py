@@ -83,7 +83,7 @@ def request_configuration(hass, name, host, serialnumber):
             callback_data[CONF_NAME] = name
         try:
             config = DEVICE_SCHEMA(callback_data)
-        except:  # pylint: disable=W0702
+        except vol.Invalid:
             configurator.notify_errors(instance,
                                        'Bad input, please check spelling.')
             return False
