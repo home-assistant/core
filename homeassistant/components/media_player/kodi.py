@@ -271,7 +271,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_volume_changed(self, sender, data):
-        """handle the volume changes."""
+        """Handle the volume changes."""
         self._app_properties['volume'] = data['volume']
         self._app_properties['muted'] = data['muted']
         self.hass.async_add_job(self.async_update_ha_state())

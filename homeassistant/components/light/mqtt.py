@@ -293,7 +293,7 @@ class MqttLight(Light):
 
         @callback
         def white_value_received(topic, payload, qos):
-            """Handle new MQTT messages for white value"""
+            """Handle new MQTT messages for white value."""
             device_value = float(templates[CONF_WHITE_VALUE](payload))
             percent_white = device_value / self._white_value_scale
             self._white_value = int(percent_white * 255)

@@ -101,7 +101,7 @@ class AppleTvDevice(MediaPlayerDevice):
 
     @callback
     def _set_power_off(self, is_off):
-        """Set the power to off"""
+        """Set the power to off."""
         self._playing = None
         self._artwork_hash = None
         self._is_off = is_off
