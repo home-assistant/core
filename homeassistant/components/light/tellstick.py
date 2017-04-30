@@ -20,7 +20,7 @@ SUPPORT_TELLSTICK = SUPPORT_BRIGHTNESS
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick lights."""
+    """Set up Tellstick lights."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return

@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SCSGate switches."""
+    """Set up the SCSGate switches."""
     devices = config.get(CONF_DEVICES)
     lights = []
     logger = logging.getLogger(__name__)
