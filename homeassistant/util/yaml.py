@@ -65,12 +65,12 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         _LOGGER.error(exc)
         raise HomeAssistantError(exc)
     except UnicodeDecodeError as exc:
-        _LOGGER.error('Unable to read file %s: %s', fname, exc)
+        _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc)
 
 
 def dump(_dict: dict) -> str:
-    """Dump yaml to a string and remove null."""
+    """Dump YAML to a string and remove null."""
     return yaml.safe_dump(_dict, default_flow_style=False) \
         .replace(': null\n', ':\n')
 
@@ -237,8 +237,8 @@ def _secret_yaml(loader: SafeLineLoader,
         secrets = _load_secret_yaml(secret_path)
 
         if node.value in secrets:
-            _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
-                          'folder %s', node.value, secret_path)
+            _LOGGER.debug("Secret %s retrieved from secrets.yaml in "
+                          "folder %s", node.value, secret_path)
             return secrets[node.value]
 
         if secret_path == os.path.dirname(sys.path[0]):
@@ -252,10 +252,10 @@ def _secret_yaml(loader: SafeLineLoader,
         # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
-            _LOGGER.debug('Secret %s retrieved from keyring.', node.value)
+            _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
-    _LOGGER.error('Secret %s not defined.', node.value)
+    _LOGGER.error("Secret %s not defined", node.value)
     raise HomeAssistantError(node.value)
 
 

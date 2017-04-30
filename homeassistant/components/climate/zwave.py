@@ -33,7 +33,7 @@ DEVICE_MAPPINGS = {
 
 
 def get_device(hass, values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     temp_unit = hass.config.units.temperature_unit
     return ZWaveClimate(values, temp_unit)
 
@@ -65,13 +65,13 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 int(self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
-                    _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
-                                  " workaround")
+                    _LOGGER.debug(
+                        "Remotec ZXT-120 Zwave Thermostat workaround")
                     self._zxt_120 = 1
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle the data changes for node values."""
         # Operation Mode
         if self.values.mode:
             self._current_operation = self.values.mode.data
@@ -134,7 +134,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return a list of available fan modes."""
         return self._fan_list
 
     @property
@@ -144,7 +144,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def swing_list(self):
-        """List of available swing modes."""
+        """Return a list of available swing modes."""
         return self._swing_list
 
     @property
@@ -169,7 +169,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return a list of available operation modes."""
         return self._operation_list
 
     @property

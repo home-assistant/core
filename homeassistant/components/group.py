@@ -1,5 +1,5 @@
 """
-Provides functionality to group entities.
+Provide the functionality to group entities.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
@@ -168,7 +168,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup all groups found definded in the configuration."""
+    """Set up all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from _async_process_config(hass, config, component)

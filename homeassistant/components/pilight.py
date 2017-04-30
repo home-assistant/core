@@ -53,7 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Pilight component."""
+    """Set up the Pilight component."""
     from pilight import pilight
 
     host = config[DOMAIN][CONF_HOST]
@@ -69,13 +69,13 @@ def setup(hass, config):
         return False
 
     def start_pilight_client(_):
-        """Called once when Home Assistant starts."""
+        """Run when Home Assistant starts."""
         pilight_client.start()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_pilight_client)
 
     def stop_pilight_client(_):
-        """Called once when Home Assistant stops."""
+        """Run once when Home Assistant stops."""
         pilight_client.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
@@ -100,7 +100,7 @@ def setup(hass, config):
     whitelist = config[DOMAIN].get(CONF_WHITELIST)
 
     def handle_received_code(data):
-        """Called when RF codes are received."""
+        """Run when RF codes are received."""
         # Unravel dict of dicts to make event_data cut in automation rule
         # possible
         data = dict({'protocol': data['protocol'], 'uuid': data['uuid']},
@@ -140,10 +140,10 @@ class CallRateDelayThrottle(object):
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
     def limited(self, method):
-        """Decorator to delay calls on a certain method."""
+        """The decorater to delay calls on a certain method."""
         @functools.wraps(method)
         def decorated(*args, **kwargs):
-            """The decorated function."""
+            """Delay a call."""
             if self._delay.total_seconds() == 0.0:
                 method(*args, **kwargs)
                 return

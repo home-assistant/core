@@ -356,7 +356,7 @@ class Sun(Entity):
             self.location.longitude)
 
     def point_in_time_listener(self, now):
-        """Called when the state of the sun has changed."""
+        """Run when the state of the sun has changed."""
         self.update_as_of(now)
         self.schedule_update_ha_state()
 

@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Camera."""
+    """Set up the Verisure Camera."""
     if not int(hub.config.get(CONF_SMARTCAM, 1)):
         return False
     directory_path = hass.config.config_dir
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VerisureSmartcam(Camera):
-    """Local camera."""
+    """Representation of a Verisure camera."""
 
     def __init__(self, hass, device_id, directory_path):
         """Initialize Verisure File Camera component."""
@@ -50,9 +50,9 @@ class VerisureSmartcam(Camera):
         """Return image response."""
         self.check_imagelist()
         if not self._image:
-            _LOGGER.debug('No image to display')
+            _LOGGER.debug("No image to display")
             return
-        _LOGGER.debug('Trying to open %s', self._image)
+        _LOGGER.debug("Trying to open %s", self._image)
         with open(self._image, 'rb') as file:
             return file.read()
 
@@ -64,35 +64,30 @@ class VerisureSmartcam(Camera):
             return
         images = hub.smartcam_dict[self._device_id]
         new_image_id = images[0]
-        _LOGGER.debug('self._device_id=%s, self._images=%s, '
-                      'self._new_image_id=%s', self._device_id,
+        _LOGGER.debug("self._device_id=%s, self._images=%s, "
+                      "self._new_image_id=%s", self._device_id,
                       images, new_image_id)
         if (new_image_id == '-1' or
                 self._image_id == new_image_id):
-            _LOGGER.debug('The image is the same, or loading image_id')
+            _LOGGER.debug("The image is the same, or loading image_id")
             return
-        _LOGGER.debug('Download new image %s', new_image_id)
-        hub.my_pages.smartcam.download_image(self._device_id,
-                                             new_image_id,
-                                             self._directory_path)
-        _LOGGER.debug('Old image_id=%s', self._image_id)
+        _LOGGER.debug("Download new image %s", new_image_id)
+        hub.my_pages.smartcam.download_image(
+            self._device_id, new_image_id, self._directory_path)
+        _LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
         self._image_id = new_image_id
-        self._image = os.path.join(self._directory_path,
-                                   '{}{}'.format(
-                                       self._image_id,
-                                       '.jpg'))
+        self._image = os.path.join(
+            self._directory_path, '{}{}'.format(self._image_id, '.jpg'))
 
     def delete_image(self, event):
         """Delete an old image."""
-        remove_image = os.path.join(self._directory_path,
-                                    '{}{}'.format(
-                                        self._image_id,
-                                        '.jpg'))
+        remove_image = os.path.join(
+            self._directory_path, '{}{}'.format(self._image_id, '.jpg'))
         try:
             os.remove(remove_image)
-            _LOGGER.debug('Deleting old image %s', remove_image)
+            _LOGGER.debug("Deleting old image %s", remove_image)
         except OSError as error:
             if error.errno != errno.ENOENT:
                 raise
