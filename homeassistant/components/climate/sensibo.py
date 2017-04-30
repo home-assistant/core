@@ -187,42 +187,42 @@ class SensiboClimate(ClimateDevice):
             return
         yield from self._client.async_set_ac_state_property(
             self._id, 'targetTemperature', int(temperature))
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(True)
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
         """Set new target fan mode."""
         yield from self._client.async_set_ac_state_property(
             self._id, 'fanLevel', fan)
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(True)
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         yield from self._client.async_set_ac_state_property(
             self._id, 'mode', operation_mode)
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(True)
 
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
         yield from self._client.async_set_ac_state_property(
             self._id, 'swing', swing_mode)
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(True)
 
     @asyncio.coroutine
     def async_turn_aux_heat_on(self):
         """Turn Sensibo unit on."""
         yield from self._client.async_set_ac_state_property(
             self._id, 'on', True)
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(True)
 
     @asyncio.coroutine
     def async_turn_aux_heat_off(self):
         """Turn Sensibo unit on."""
         yield from self._client.async_set_ac_state_property(
             self._id, 'on', False)
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(True)
 
     @asyncio.coroutine
     def async_update(self):
