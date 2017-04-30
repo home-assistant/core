@@ -92,6 +92,9 @@ blinkpy==0.5.2
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
 
+# homeassistant.components.light.blinkt
+blinkt==0.1.0
+
 # homeassistant.components.sensor.bitcoin
 blockchain==1.3.3
 
