@@ -149,7 +149,7 @@ class Plant(Entity):
         self._conductivity = None
         self._temperature = None
         self._brightness = None
-        self._icon = 'mdi:question-mark'
+        self._icon = 'mdi:help-circle'
         self._problems = PROBLEM_NONE
 
     @callback

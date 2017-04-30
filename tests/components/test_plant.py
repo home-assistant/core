@@ -69,4 +69,5 @@ class TestPlant(unittest.TestCase):
                                   TestPlant._MockState(45),
                                   TestPlant._MockState(10))
         self.assertEqual(self.sensor.state, 'problem')
-        self.assertEqual(self.sensor.state_attributes['problem'], 'battery low')
+        self.assertEqual(self.sensor.state_attributes['problem'],
+                         'battery low')
