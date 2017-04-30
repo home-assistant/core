@@ -1,11 +1,16 @@
-"""Demo platform for the device tracker."""
+"""
+Demo platform for the Device tracker component.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/demo/
+"""
 import random
 
 from homeassistant.components.device_tracker import DOMAIN
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup the demo tracker."""
+    """Set up the demo tracker."""
     def offset():
         """Return random offset."""
         return (random.randrange(500, 2000)) / 2e5 * random.choice((-1, 1))

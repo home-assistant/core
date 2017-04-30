@@ -22,7 +22,7 @@ LUTRON_DEVICES = 'lutron_devices'
 
 
 def setup(hass, base_config):
-    """Setup the Lutron component."""
+    """Set up the Lutron component."""
     from pylutron import Lutron
 
     hass.data[LUTRON_CONTROLLER] = None
@@ -66,7 +66,7 @@ class LutronDevice(Entity):
         )
 
     def _update_callback(self, _device):
-        """Callback invoked by pylutron when the device state changes."""
+        """Run when invoked by pylutron when the device state changes."""
         self.schedule_update_ha_state()
 
     @property

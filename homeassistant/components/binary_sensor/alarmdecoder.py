@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup AlarmDecoder binary sensor devices."""
+    """Set up the AlarmDecoder binary sensor devices."""
     configured_zones = discovery_info[CONF_ZONES]
 
     devices = []
@@ -35,10 +35,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
-        device = AlarmDecoderBinarySensor(hass,
-                                          zone_num,
-                                          zone_name,
-                                          zone_type)
+        device = AlarmDecoderBinarySensor(
+            hass, zone_num, zone_name, zone_type)
         devices.append(device)
 
     async_add_devices(devices)
@@ -57,7 +55,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._name = zone_name
         self._type = zone_type
 
-        _LOGGER.debug('AlarmDecoderBinarySensor: Setup up zone: ' + zone_name)
+        _LOGGER.debug("Setup up zone: %s", self._name)
 
     @asyncio.coroutine
     def async_added_to_hass(self):

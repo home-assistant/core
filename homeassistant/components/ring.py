@@ -35,7 +35,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up Ring component."""
+    """Set up the Ring component."""
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)

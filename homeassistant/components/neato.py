@@ -10,10 +10,10 @@ from urllib.error import HTTPError
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,13 +81,13 @@ ALERTS = {
 
 
 def setup(hass, config):
-    """Setup the Neato component."""
+    """Set up the Neato component."""
     from pybotvac import Account
 
     hass.data[NEATO_LOGIN] = NeatoHub(hass, config[DOMAIN], Account)
     hub = hass.data[NEATO_LOGIN]
     if not hub.login():
-        _LOGGER.debug('Failed to login to Neato API')
+        _LOGGER.debug("Failed to login to Neato API")
         return False
     hub.update_robots()
     for component in ('camera', 'sensor', 'switch'):
@@ -114,9 +114,9 @@ class NeatoHub(object):
     def login(self):
         """Login to My Neato."""
         try:
-            _LOGGER.debug('Trying to connect to Neato API')
-            self.my_neato = self._neato(self.config[CONF_USERNAME],
-                                        self.config[CONF_PASSWORD])
+            _LOGGER.debug("Trying to connect to Neato API")
+            self.my_neato = self._neato(
+                self.config[CONF_USERNAME], self.config[CONF_PASSWORD])
             return True
         except HTTPError:
             _LOGGER.error("Unable to connect to Neato API")
@@ -125,7 +125,7 @@ class NeatoHub(object):
     @Throttle(timedelta(seconds=1))
     def update_robots(self):
         """Update the robot states."""
-        _LOGGER.debug('Running HUB.update_robots %s',
+        _LOGGER.debug("Running HUB.update_robots %s",
                       self._hass.data[NEATO_ROBOTS])
         self._hass.data[NEATO_ROBOTS] = self.my_neato.robots
         self._hass.data[NEATO_MAP_DATA] = self.my_neato.maps

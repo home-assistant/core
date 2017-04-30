@@ -11,9 +11,8 @@ CONFIG_PATH = 'groups.yaml'
 
 @asyncio.coroutine
 def async_setup(hass):
-    """Setup the Group config API."""
+    """Set up the Group config API."""
     hass.http.register_view(EditKeyBasedConfigView(
-        'group', 'config', CONFIG_PATH, cv.slug,
-        GROUP_SCHEMA
+        'group', 'config', CONFIG_PATH, cv.slug, GROUP_SCHEMA
     ))
     return True

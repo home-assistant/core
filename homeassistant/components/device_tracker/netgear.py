@@ -17,11 +17,11 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
+REQUIREMENTS = ['pynetgear==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pynetgear==0.3.3']
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 DEFAULT_HOST = 'routerlogin.net'
 DEFAULT_USER = 'admin'
@@ -60,7 +60,7 @@ class NetgearDeviceScanner(DeviceScanner):
 
         self._api = pynetgear.Netgear(password, host, username, port)
 
-        _LOGGER.info('Logging in')
+        _LOGGER.info("Logging in")
 
         results = self._api.get_attached_devices()
 
@@ -69,7 +69,7 @@ class NetgearDeviceScanner(DeviceScanner):
         if self.success_init:
             self.last_results = results
         else:
-            _LOGGER.error('Failed to Login')
+            _LOGGER.error("Failed to Login")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -95,11 +95,11 @@ class NetgearDeviceScanner(DeviceScanner):
             return
 
         with self.lock:
-            _LOGGER.info('Scanning')
+            _LOGGER.info("Scanning")
 
             results = self._api.get_attached_devices()
 
             if results is None:
-                _LOGGER.warning('Error scanning devices')
+                _LOGGER.warning("Error scanning devices")
 
             self.last_results = results or []

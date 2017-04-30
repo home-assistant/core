@@ -99,7 +99,7 @@ class AutomaticData(object):
 
     @asyncio.coroutine
     def update_vehicle(self, vehicle, name):
-        """Updated the specified vehicle's data."""
+        """Update the specified vehicle's data."""
         import aioautomatic
 
         kwargs = {

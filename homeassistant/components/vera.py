@@ -56,7 +56,7 @@ VERA_COMPONENTS = [
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
-    """Common setup for Vera devices."""
+    """Set up for Vera devices."""
     global VERA_CONTROLLER
     import pyvera as veraApi
 
@@ -102,7 +102,7 @@ def setup(hass, base_config):
 
 # pylint: disable=too-many-return-statements
 def map_vera_device(vera_device, remap):
-    """Map vera  classes to HA types."""
+    """Map vera classes to Home Assistant types."""
     import pyvera as veraApi
     if isinstance(vera_device, veraApi.VeraDimmer):
         return 'light'
@@ -145,6 +145,7 @@ class VeraDevice(Entity):
         self.update()
 
     def _update_callback(self, _device):
+        """Update the state."""
         self.update()
         self.schedule_update_ha_state()
 

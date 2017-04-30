@@ -12,7 +12,7 @@ from homeassistant.components.image_processing.microsoft_face_identify import (
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the demo image_processing platform."""
+    """Set up the demo image_processing platform."""
     add_devices([
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
         DemoImageProcessingFace(

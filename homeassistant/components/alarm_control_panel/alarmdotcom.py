@@ -1,5 +1,4 @@
 """
-
 Interfaces with Alarm.com alarm control panels.
 
 For more details about this platform, please refer to the documentation at
@@ -33,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a Alarm.com control panel."""
+    """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
