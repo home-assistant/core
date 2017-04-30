@@ -113,7 +113,7 @@ class ZabbixTriggerCountSensor(Entity):
 
     def _call_zabbix_api(self):
         return self._zapi.trigger.get(
-            output="extend", only_true=1,  monitored=1, filter={"value": 1})
+            output="extend", only_true=1, monitored=1, filter={"value": 1})
 
     def update(self):
         """Update the sensor."""

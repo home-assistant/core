@@ -10,6 +10,7 @@ import asyncio
 import binascii
 import logging
 import socket
+
 import voluptuous as vol
 
 import homeassistant.loader as loader
@@ -17,7 +18,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_COMMAND_OFF, CONF_COMMAND_ON,
-    ONF_TIMEOUT, CONF_HOST, CONF_MAC,CONF_TYPE)
+    CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['broadlink==0.3']

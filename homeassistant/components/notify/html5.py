@@ -186,8 +186,7 @@ class HTML5PushRegistrationView(HomeAssistantView):
             return self.json_message(
                 humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string(
-            'unnamed device',  self.registrations.keys())
+        name = ensure_unique_string('unnamed device', self.registrations)
 
         self.registrations[name] = data
 

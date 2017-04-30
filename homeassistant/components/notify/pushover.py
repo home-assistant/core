@@ -33,7 +33,7 @@ def get_service(hass, config, discovery_info=None):
 
     try:
         return PushoverNotificationService(
-            config[CONF_USER_KEY],  config[CONF_API_KEY])
+            config[CONF_USER_KEY], config[CONF_API_KEY])
     except InitError:
         _LOGGER.error("Wrong API key supplied")
         return None

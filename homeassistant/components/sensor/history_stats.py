@@ -304,5 +304,5 @@ class HistoryStatsHelper:
             # Common during HA startup - so just a warning
             _LOGGER.warning(ex)
             return
-        _LOGGER.error("Error parsing template for field", field)
+        _LOGGER.error("Error parsing template for field %s", field)
         _LOGGER.error(ex)

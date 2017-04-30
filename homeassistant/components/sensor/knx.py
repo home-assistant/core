@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMPERATURE, CONF_TYPE,ILLUMINANCE, SPEED_MS, CONF_MINIMUM,
+    TEMP_CELSIUS, TEMPERATURE, CONF_TYPE, ILLUMINANCE, SPEED_MS, CONF_MINIMUM,
     CONF_MAXIMUM)
 from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
 
@@ -69,8 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ])
 
 
-def update_and_define_min_max(config, minimum_default,
-                              maximum_default):
+def update_and_define_min_max(config, minimum_default, maximum_default):
     """Determinate a min/max value defined in the configuration."""
     minimum_value = minimum_default
     maximum_value = maximum_default

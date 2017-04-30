@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for tool in octoprint.OCTOPRINT.get_tools():
                 for temp_type in types:
                     new_sensor = OctoPrintSensor(
-                        octoprint.OCTOPRINT, temp_type,temp_type, name,
+                        octoprint.OCTOPRINT, temp_type, temp_type, name,
                         SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
                         SENSOR_TYPES[octo_type][1], tool)
                     devices.append(new_sensor)

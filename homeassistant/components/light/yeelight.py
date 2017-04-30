@@ -73,8 +73,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
         # Not using hostname, as it seems to vary.
-        name = 'yeelight_%s_%s'.format(
-            discovery_info['device_type'], discovery_info['properties']['mac'])
+        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+                                   discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
         lights.append(YeelightLight(device, DEVICE_SCHEMA({})))
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
             lights.append(YeelightLight(device, device_config))
 
-    add_devices(lights, True)  # true to request an update before adding.
+    add_devices(lights, True)
 
 
 class YeelightLight(Light):
