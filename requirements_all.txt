@@ -285,7 +285,7 @@ https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 # homeassistant.components.media_player.russound_rnet
 https://github.com/laf/russound/archive/0.1.7.zip#russound==0.1.7
 
-# homeassistant.components.climate.comfoconnect
+# homeassistant.components.fan.comfoconnect
 https://github.com/michaelarnauts/comfoconnect/archive/0.1.zip#pycomfoconnect==0.1
 
 # homeassistant.components.media_player.onkyo

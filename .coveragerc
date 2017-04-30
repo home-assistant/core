@@ -179,7 +179,6 @@ omit =
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
     homeassistant/components/camera/synology.py
-    homeassistant/components/climate/comfoconnect.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
@@ -222,6 +221,7 @@ omit =
     homeassistant/components/downloader.py
     homeassistant/components/emoncms_history.py
     homeassistant/components/emulated_hue/upnp.py
+    homeassistant/components/fan/comfoconnect.py
     homeassistant/components/fan/mqtt.py
     homeassistant/components/feedreader.py
     homeassistant/components/foursquare.py
