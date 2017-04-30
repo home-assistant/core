@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the DHT sensor."""
+    """Set up the DHT sensor."""
     # pylint: disable=import-error
     import Adafruit_DHT
 
@@ -139,8 +139,8 @@ class DHTClient(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the DHT sensor."""
-        humidity, temperature = self.adafruit_dht.read_retry(self.sensor,
-                                                             self.pin)
+        humidity, temperature = self.adafruit_dht.read_retry(
+            self.sensor, self.pin)
         if temperature:
             self.data[SENSOR_TEMPERATURE] = temperature
         if humidity:

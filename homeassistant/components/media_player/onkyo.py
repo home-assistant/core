@@ -92,7 +92,7 @@ class OnkyoDevice(MediaPlayerDevice):
                 self._receiver.command_socket = None
                 _LOGGER.info("Resetting connection to %s", self._name)
             else:
-                _LOGGER.info(""%s is disconnected. Attempting to reconnect"",
+                _LOGGER.info("%s is disconnected. Attempting to reconnect",
                              self._name)
             return False
         return result

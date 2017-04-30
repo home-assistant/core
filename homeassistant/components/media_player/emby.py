@@ -85,7 +85,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 new_devices.append(new)
 
             elif dev_id in inactive_emby_devices:
-                if Callbackemby.devices[dev_id].state != 'Off':
+                if emby.devices[dev_id].state != 'Off':
                     add = inactive_emby_devices.pop(dev_id)
                     active_emby_devices[dev_id] = add
                     _LOGGER.debug("Showing %s, item: %s", dev_id, add)

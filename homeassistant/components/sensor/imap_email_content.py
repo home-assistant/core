@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the EMail platform."""
+    """Set up the Email sensor platform."""
     reader = EmailReader(
         config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
         config.get(CONF_SERVER), config.get(CONF_PORT))

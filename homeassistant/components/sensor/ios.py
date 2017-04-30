@@ -7,24 +7,24 @@ https://home-assistant.io/ecosystem/ios/
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ["ios"]
+DEPENDENCIES = ['ios']
 
 SENSOR_TYPES = {
-    "level": ["Battery Level", "%"],
-    "state": ["Battery State", None]
+    'level': ['Battery Level', '%'],
+    'state': ['Battery State', None]
 }
 
-DEFAULT_ICON_LEVEL = "mdi:battery"
-DEFAULT_ICON_STATE = "mdi:power-plug"
+DEFAULT_ICON_LEVEL = 'mdi:battery'
+DEFAULT_ICON_STATE = 'mdi:power-plug'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the iOS sensor."""
+    """Set up the iOS sensor."""
     if discovery_info is None:
         return
     dev = list()
     for device_name, device in ios.devices().items():
-        for sensor_type in ("level", "state"):
+        for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
     add_devices(dev)
@@ -36,7 +36,7 @@ class IOSSensor(Entity):
     def __init__(self, sensor_type, device_name, device):
         """Initialize the sensor."""
         self._device_name = device_name
-        self._name = device_name + " " + SENSOR_TYPES[sensor_type][0]
+        self._name = "{} {}".format(device_name, SENSOR_TYPES[sensor_type][0])
         self._device = device
         self.type = sensor_type
         self._state = None

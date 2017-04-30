@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     add_devices_callback(sensors)
 
     def sensor_update(event):
-        """Callback for sensor updates from the RFXtrx gateway."""
+        """Handle sensor updates from the RFXtrx gateway."""
         if not isinstance(event, SensorEvent):
             return
 
@@ -82,8 +82,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             return
 
         pkt_id = "".join("{0:02x}".format(x) for x in event.data)
-        _LOGGER.info("Automatic add rfxtrx.sensor: %s",
-                     pkt_id)
+        _LOGGER.info("Automatic add rfxtrx.sensor: %s", pkt_id)
 
         data_type = ''
         for _data_type in DATA_TYPES:

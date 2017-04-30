@@ -112,11 +112,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the WUnderground sensor."""
-    rest = WUndergroundData(hass,
-                            config.get(CONF_API_KEY),
-                            config.get(CONF_PWS_ID),
-                            config.get(CONF_LANG))
+    """Set up the WUnderground sensor."""
+    rest = WUndergroundData(
+        hass, config.get(CONF_API_KEY), config.get(CONF_PWS_ID),
+        config.get(CONF_LANG))
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))

@@ -581,7 +581,7 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def media_track(self):
-        """Return the track number of current playing media, music track only."""
+        """Return the track number of current playing media, music only."""
         return self._media_track
 
     @property

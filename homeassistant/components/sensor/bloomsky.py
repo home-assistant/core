@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available BloomSky weather sensors."""
+    """Set up the available BloomSky weather sensors."""
     bloomsky = get_component('bloomsky')
     # Default needed in case of discovery
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
@@ -68,7 +68,7 @@ class BloomSkySensor(Entity):
 
     @property
     def name(self):
-        """The name of the BloomSky device and this sensor."""
+        """Return the name of the BloomSky device and this sensor."""
         return self._name
 
     @property
@@ -78,7 +78,7 @@ class BloomSkySensor(Entity):
 
     @property
     def state(self):
-        """The current state, eg. value, of this sensor."""
+        """Return the current state, eg. value, of this sensor."""
         return self._state
 
     @property
