@@ -17,19 +17,19 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_PLAYLIST, ATTR_MEDIA_SEASON, ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SERIES_TITLE, ATTR_MEDIA_TITLE, ATTR_MEDIA_TRACK,
     ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION, ATTR_MEDIA_SHUFFLE,
     ATTR_MEDIA_POSITION_UPDATED_AT, DOMAIN, SERVICE_PLAY_MEDIA,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST,
-    ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE, SERVICE_CLEAR_PLAYLIST,
-    MediaPlayerDevice)
+    SUPPORT_SHUFFLE_SET, ATTR_INPUT_SOURCE, SERVICE_SELECT_SOURCE,
+    SERVICE_CLEAR_PLAYLIST, MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE, CONF_NAME, SERVICE_MEDIA_NEXT_TRACK,
     SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE,
     SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE,
-    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE, STATE_OFF, STATE_ON,
-    SERVICE_MEDIA_STOP, ATTR_SUPPORTED_FEATURES)
+    SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, SERVICE_SHUFFLE_SET, STATE_IDLE,
+    STATE_OFF, STATE_ON, SERVICE_MEDIA_STOP, ATTR_SUPPORTED_FEATURES)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.service import async_call_from_config
 
@@ -357,6 +357,11 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         return self._override_or_child_attr(ATTR_INPUT_SOURCE_LIST)
 
     @property
+    def shuffle(self):
+        """Boolean if shuffling is enabled."""
+        return self._override_or_child_attr(ATTR_MEDIA_SHUFFLE)
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         flags = self._child_attr(ATTR_SUPPORTED_FEATURES) or 0
@@ -382,6 +387,10 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
         if SERVICE_CLEAR_PLAYLIST in self._cmds:
             flags |= SUPPORT_CLEAR_PLAYLIST
+
+        if SERVICE_SHUFFLE_SET in self._cmds and \
+                ATTR_MEDIA_SHUFFLE in self._attrs:
+            flags |= SUPPORT_SHUFFLE_SET
 
         return flags
 
@@ -523,6 +532,15 @@ class UniversalMediaPlayer(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         return self._async_call_service(SERVICE_CLEAR_PLAYLIST)
+
+    def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffling.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        data = {ATTR_MEDIA_SHUFFLE: shuffle}
+        return self._async_call_service(
+            SERVICE_SHUFFLE_SET, data, allow_override=True)
 
     @asyncio.coroutine
     def async_update(self):
