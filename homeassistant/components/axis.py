@@ -26,7 +26,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
 
-# REQUIREMENTS = ['axis==5']
 REQUIREMENTS = ['http://github.com/Kane610/axis'
                 '/archive/v5.zip'
                 '#axis==5']
