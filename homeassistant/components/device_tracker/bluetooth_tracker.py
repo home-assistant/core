@@ -78,7 +78,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                        dev[0] not in devs_donot_track:
                         devs_to_track.append(dev[0])
             for mac in devs_to_track:
-                _LOGGER.debug("Scanning ", mac)
+                _LOGGER.debug("Scanning %s", mac)
                 result = bluetooth.lookup_name(mac, timeout=5)
                 if not result:
                     # Could not lookup device name
