@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up Insteon Hub component.
+    """Set up the Insteon Hub component.
 
     This will automatically import associated lights.
     """
@@ -48,7 +48,7 @@ def setup(hass, config):
 
     try:
         insteonhub = Hub(host, username, password, port, timeout, _LOGGER)
-        # check for successful connection
+        # Check for successful connection
         insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
         _LOGGER.error("Error on insteon_local."

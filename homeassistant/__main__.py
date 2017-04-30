@@ -1,4 +1,4 @@
-"""Starts home assistant."""
+"""Start Home Assistant."""
 from __future__ import print_function
 
 import argparse
@@ -277,7 +277,7 @@ def cmdline() -> List[str]:
 
 def setup_and_run_hass(config_dir: str,
                        args: argparse.Namespace) -> Optional[int]:
-    """Setup HASS and run."""
+    """Set up HASS and run."""
     from homeassistant import bootstrap
 
     # Run a simple daemon runner process on Windows to handle restarts

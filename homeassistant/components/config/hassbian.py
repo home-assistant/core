@@ -32,8 +32,8 @@ _TEST_OUTPUT = """
 
 @asyncio.coroutine
 def async_setup(hass):
-    """Setup the hassbian config."""
-    # Test if is hassbian
+    """Set up the Hassbian config."""
+    # Test if is Hassbian
     test_mode = 'FORCE_HASSBIAN' in os.environ
     is_hassbian = test_mode
 
@@ -49,7 +49,7 @@ def async_setup(hass):
 @asyncio.coroutine
 def hassbian_status(hass, test_mode=False):
     """Query for the Hassbian status."""
-    # fetch real output when not in test mode
+    # Fetch real output when not in test mode
     if test_mode:
         return json.loads(_TEST_OUTPUT)
 

@@ -23,10 +23,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.util import slugify
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'microsoft_face'
 DEPENDENCIES = ['camera']
-
-_LOGGER = logging.getLogger(__name__)
 
 FACE_API_URL = "https://westus.api.cognitive.microsoft.com/face/v1.0/{0}"
 

@@ -1,5 +1,5 @@
 """
-Exposes regular rest commands as services.
+Exposes regular REST commands as services.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/hassio/
@@ -21,10 +21,10 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.frontend import register_built_in_panel
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
-
-_LOGGER = logging.getLogger(__name__)
 
 TIMEOUT = 10
 
@@ -59,7 +59,7 @@ ADDON_REST_COMMANDS = {
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the hassio component."""
+    """Set up the HASSio component."""
     try:
         host = os.environ['HASSIO']
     except KeyError:

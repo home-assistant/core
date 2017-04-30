@@ -24,19 +24,16 @@ DOMAIN = 'alarmdecoder'
 
 DATA_AD = 'alarmdecoder'
 
-
 CONF_DEVICE = 'device'
-CONF_DEVICE_TYPE = 'type'
-CONF_DEVICE_HOST = 'host'
-CONF_DEVICE_PORT = 'port'
-CONF_DEVICE_PATH = 'path'
 CONF_DEVICE_BAUD = 'baudrate'
-
-CONF_ZONES = 'zones'
+CONF_DEVICE_HOST = 'host'
+CONF_DEVICE_PATH = 'path'
+CONF_DEVICE_PORT = 'port'
+CONF_DEVICE_TYPE = 'type'
+CONF_PANEL_DISPLAY = 'panel_display'
 CONF_ZONE_NAME = 'name'
 CONF_ZONE_TYPE = 'type'
-
-CONF_PANEL_DISPLAY = 'panel_display'
+CONF_ZONES = 'zones'
 
 DEFAULT_DEVICE_TYPE = 'socket'
 DEFAULT_DEVICE_HOST = 'localhost'
@@ -87,7 +84,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Common setup for AlarmDecoder devices."""
+    """Set up for the AlarmDecoder devices."""
     from alarmdecoder import AlarmDecoder
     from alarmdecoder.devices import (SocketDevice, SerialDevice, USBDevice)
 
@@ -106,28 +103,28 @@ def async_setup(hass, config):
     sync_connect = asyncio.Future(loop=hass.loop)
 
     def handle_open(device):
-        """Callback for a successful connection."""
-        _LOGGER.info("Established a connection with the alarmdecoder.")
+        """Handle the successful connection."""
+        _LOGGER.info("Established a connection with the alarmdecoder")
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_alarmdecoder)
         sync_connect.set_result(True)
 
     @callback
     def stop_alarmdecoder(event):
-        """Callback to handle shutdown alarmdecoder."""
+        """The callback to handle shutdown AlarmDecoder."""
         _LOGGER.debug("Shutting down alarmdecoder.")
         controller.close()
 
     @callback
     def handle_message(sender, message):
-        """Callback to handle message from alarmdecoder."""
+        """The callback to handle message from AlarmDecoder."""
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
-        """Callback to handle zone fault from alarmdecoder."""
+        """The callback to handle zone fault from AlarmDecoder."""
         async_dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
 
     def zone_restore_callback(sender, zone):
-        """Callback to handle zone restore from alarmdecoder."""
+        """The callback to handle zone restore from AlarmDecoder."""
         async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
 
     controller = False
@@ -157,15 +154,16 @@ def async_setup(hass, config):
     if not result:
         return False
 
-    hass.async_add_job(async_load_platform(hass, 'alarm_control_panel', DOMAIN,
-                                           conf, config))
+    hass.async_add_job(
+        async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf,
+                            config))
 
     if zones:
         hass.async_add_job(async_load_platform(
             hass, 'binary_sensor', DOMAIN, {CONF_ZONES: zones}, config))
 
     if display:
-        hass.async_add_job(async_load_platform(hass, 'sensor', DOMAIN,
-                                               conf, config))
+        hass.async_add_job(async_load_platform(
+            hass, 'sensor', DOMAIN, conf, config))
 
     return True
