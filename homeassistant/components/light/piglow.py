@@ -59,7 +59,7 @@ class PiglowLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
+        """Return the brightness of the light."""
         return self._brightness
 
     @property

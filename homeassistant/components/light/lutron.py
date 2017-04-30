@@ -1,4 +1,7 @@
-"""Support for Lutron lights."""
+"""
+Support for Lutron lights.
+
+"""
 import logging
 
 from homeassistant.components.light import (

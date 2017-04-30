@@ -1,4 +1,8 @@
-"""Support for Lutron Caseta lights."""
+"""
+Support for Lutron Caseta lights.
+
+
+"""
 import logging
 
 from homeassistant.components.light import (
@@ -8,7 +12,6 @@ from homeassistant.components.light.lutron import (
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['lutron_caseta']
@@ -16,7 +19,7 @@ DEPENDENCIES = ['lutron_caseta']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Lutron  Caseta lights."""
+    """Set up the Lutron Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
     light_devices = bridge.get_devices_by_types(["WallDimmer", "PlugInDimmer"])

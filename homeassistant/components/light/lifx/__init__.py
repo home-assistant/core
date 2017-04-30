@@ -56,12 +56,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the LIFX platform."""
+    """Set up the LIFX platform."""
     import aiolifx
 
     if sys.platform == 'win32':
-        _LOGGER.warning('The lifx platform is known to not work on Windows. '
-                        'Consider using the lifx_legacy platform instead.')
+        _LOGGER.warning("The lifx platform is known to not work on Windows. "
+                        "Consider using the lifx_legacy platform instead")
 
     server_addr = config.get(CONF_SERVER)
 
@@ -420,9 +420,8 @@ class LIFXLight(Light):
         self._bri = bri
         self._kel = kel
 
-        red, green, blue = colorsys.hsv_to_rgb(hue / SHORT_MAX,
-                                               sat / SHORT_MAX,
-                                               bri / SHORT_MAX)
+        red, green, blue = colorsys.hsv_to_rgb(
+            hue / SHORT_MAX, sat / SHORT_MAX, bri / SHORT_MAX)
 
         red = int(red * BYTE_MAX)
         green = int(green * BYTE_MAX)
