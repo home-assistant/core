@@ -125,7 +125,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
-            cv.ordered_dict(DEVICE_CONFIG_SCHEMA_ENTRY, cv.string),
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
