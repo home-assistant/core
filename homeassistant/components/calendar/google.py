@@ -25,7 +25,6 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-
 def setup_platform(hass, config, add_devices, disc_info=None):
     """Set up the calendar platform for event devices."""
     if disc_info is None:
