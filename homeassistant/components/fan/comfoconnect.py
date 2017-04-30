@@ -2,7 +2,7 @@
 Support for Zehnder ComfoConnect bridges.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/climate.comfoconnect/
+https://home-assistant.io/components/fan.comfoconnect/
 """
 import logging
 import time
@@ -10,11 +10,12 @@ import time
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, ATTR_FAN_MODE, ATTR_CURRENT_HUMIDITY,
-    ATTR_CURRENT_TEMPERATURE, ATTR_FAN_LIST)
+from homeassistant.components.fan import (
+    FanEntity, PLATFORM_SCHEMA, ATTR_SPEED,
+    SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
+    SUPPORT_SET_SPEED)
 from homeassistant.const import (
-    CONF_HOST, CONF_TOKEN, CONF_PIN, TEMP_CELSIUS, CONF_NAME)
+    CONF_HOST, CONF_TOKEN, CONF_PIN, CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,11 +23,8 @@ REQUIREMENTS = [
     'https://github.com/michaelarnauts/comfoconnect'
     '/archive/0.1.zip#pycomfoconnect==0.1']
 
-SPEED_AWAY = 'away'
-SPEED_LOW = 'low'
-SPEED_MEDIUM = 'medium'
-SPEED_HIGH = 'high'
-
+ATTR_CURRENT_TEMPERATURE = 'current_temperature'
+ATTR_CURRENT_HUMIDITY = 'current_humidity'
 ATTR_OUTSIDE_TEMPERATURE = 'outside_temperature'
 ATTR_OUTSIDE_HUMIDITY = 'outside_humidity'
 ATTR_AIR_FLOW_SUPPLY = 'air_flow_supply'
@@ -76,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     return
 
 
-class ComfoConnectBridge(ClimateDevice):
+class ComfoConnectBridge(FanEntity):
     """Representation of a ComfoConnect bridge."""
 
     def __init__(self, name, bridge, token, friendly_name, pin):
@@ -94,6 +92,7 @@ class ComfoConnectBridge(ClimateDevice):
         self._friendly_name = friendly_name
         self._pin = pin
         self._data = {}
+        self._fresh_data = {}
 
         self._subscribed_sensors = [
             SENSOR_FAN_SPEED_MODE,
@@ -116,9 +115,69 @@ class ComfoConnectBridge(ClimateDevice):
         return 'mdi:air-conditioner'
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
+    def supported_features(self) -> int:
+        """Flag supported features."""
+        return SUPPORT_SET_SPEED
+
+    @property
+    def speed(self):
+        """Return the current fan mode."""
+        if ATTR_SPEED in self._data:
+            return self._data[ATTR_SPEED]
+
+    @property
+    def speed_list(self):
+        """List of available fan modes."""
+        return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
+
+    def turn_on(self, speed: str=None, **kwargs) -> None:
+        """Turn on the entity."""
+        if speed is None:
+            speed = SPEED_LOW
+        self.set_speed(speed)
+
+    def turn_off(self) -> None:
+        """Turn off the entity."""
+        self.set_speed(SPEED_OFF)
+
+    def set_speed(self, mode):
+        """Set fan speed."""
+        from pycomfoconnect.error import (
+            PyComfoConnectOtherSession, PyComfoConnectNotAllowed)
+        from pycomfoconnect.const import (
+            FAN_MODE_AWAY, FAN_MODE_LOW, FAN_MODE_MEDIUM,
+            FAN_MODE_HIGH
+        )
+
+        _LOGGER.debug('Changing fan mode to %s...' % mode)
+        try:
+            self._comfoconnect.connect(
+                self._token, self._friendly_name, self._pin)
+            _LOGGER.debug('Connected to bridge.')
+
+            if mode == SPEED_OFF:
+                self._comfoconnect.set_fan_mode(FAN_MODE_AWAY)
+            elif mode == SPEED_LOW:
+                self._comfoconnect.set_fan_mode(FAN_MODE_LOW)
+            elif mode == SPEED_MEDIUM:
+                self._comfoconnect.set_fan_mode(FAN_MODE_MEDIUM)
+            elif mode == SPEED_HIGH:
+                self._comfoconnect.set_fan_mode(FAN_MODE_HIGH)
+
+            # Update current mode
+            self._data[ATTR_SPEED] = mode
+            self.schedule_update_ha_state()
+
+        except PyComfoConnectOtherSession as ex:
+            _LOGGER.error('Another session with "%s" is active.',
+                          ex.devicename)
+
+        except PyComfoConnectNotAllowed:
+            _LOGGER.error('Could not register. Invalid PIN!')
+
+        finally:
+            self._comfoconnect.disconnect()
+            _LOGGER.debug('Disconnected from bridge.')
 
     @property
     def device_state_attributes(self):
@@ -130,20 +189,18 @@ class ComfoConnectBridge(ClimateDevice):
             SENSOR_HUMIDITY_OUTDOOR
         )
 
-        data = {
-            ATTR_FAN_LIST: self.fan_list
-        }
+        data = {}
 
         for key, value in self._data.items():
             if key == SENSOR_FAN_SPEED_MODE:
                 if value == 0:
-                    data[ATTR_FAN_MODE] = SPEED_AWAY
+                    data[ATTR_SPEED] = SPEED_OFF
                 elif value == 1:
-                    data[ATTR_FAN_MODE] = SPEED_LOW
+                    data[ATTR_SPEED] = SPEED_LOW
                 elif value == 2:
-                    data[ATTR_FAN_MODE] = SPEED_MEDIUM
+                    data[ATTR_SPEED] = SPEED_MEDIUM
                 elif value == 3:
-                    data[ATTR_FAN_MODE] = SPEED_HIGH
+                    data[ATTR_SPEED] = SPEED_HIGH
 
             elif key == SENSOR_HUMIDITY_EXTRACT:
                 data[ATTR_CURRENT_HUMIDITY] = value
@@ -165,67 +222,6 @@ class ComfoConnectBridge(ClimateDevice):
 
         return data
 
-    @property
-    def current_temperature(self):
-        """Return the current temperature."""
-        if ATTR_CURRENT_TEMPERATURE in self._data:
-            return self._data[ATTR_CURRENT_TEMPERATURE]
-
-    @property
-    def current_humidity(self):
-        """Return the current humidity."""
-        if ATTR_CURRENT_HUMIDITY in self._data:
-            return self._data[ATTR_CURRENT_HUMIDITY]
-
-    @property
-    def current_fan_mode(self):
-        """Return the current fan mode."""
-        if ATTR_FAN_MODE in self._data:
-            return self._data[ATTR_FAN_MODE]
-
-    @property
-    def fan_list(self):
-        """List of available fan modes."""
-        return [SPEED_AWAY, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
-
-    def set_fan_mode(self, mode):
-        """Set fan speed."""
-        from pycomfoconnect.error import (
-            PyComfoConnectOtherSession, PyComfoConnectNotAllowed)
-        from pycomfoconnect.const import (
-            FAN_MODE_AWAY, FAN_MODE_LOW, FAN_MODE_MEDIUM,
-            FAN_MODE_HIGH
-        )
-
-        _LOGGER.debug('Changing fan mode...')
-        try:
-            self._comfoconnect.connect(
-                self._token, self._friendly_name, self._pin)
-            _LOGGER.debug('Connected to bridge.')
-
-            if mode == SPEED_AWAY:
-                self._comfoconnect.set_fan_mode(FAN_MODE_AWAY)
-            elif mode == SPEED_LOW:
-                self._comfoconnect.set_fan_mode(FAN_MODE_LOW)
-            elif mode == SPEED_MEDIUM:
-                self._comfoconnect.set_fan_mode(FAN_MODE_MEDIUM)
-            elif mode == SPEED_HIGH:
-                self._comfoconnect.set_fan_mode(FAN_MODE_HIGH)
-
-            # Update current mode
-            self._data[ATTR_FAN_MODE] = mode
-
-        except PyComfoConnectOtherSession as ex:
-            _LOGGER.error('Another session with "%s" is active.',
-                          ex.devicename)
-
-        except PyComfoConnectNotAllowed:
-            _LOGGER.error('Could not register. Invalid PIN!')
-
-        finally:
-            self._comfoconnect.disconnect()
-            _LOGGER.debug('Disconnected from bridge.')
-
     def update(self):
         """Open connection to the Bridge."""
         from pycomfoconnect.error import (
@@ -238,7 +234,7 @@ class ComfoConnectBridge(ClimateDevice):
             _LOGGER.debug('Connected to bridge.')
 
             # Clean sensor data
-            self._data = {}
+            self._fresh_data = {}
 
             # Subscribe to sensor values.
             for sensor in self._subscribed_sensors:
@@ -248,6 +244,9 @@ class ComfoConnectBridge(ClimateDevice):
             # Wait maximum of 5 seconds for all the sensor values.
             self.wait_for_sensor_values(5)
             _LOGGER.debug('Sensor data received.')
+
+            # Update data with new values
+            self._data.update(self._fresh_data)
 
         except PyComfoConnectOtherSession as ex:
             _LOGGER.error('Another session with "%s" is active.',
@@ -264,7 +263,7 @@ class ComfoConnectBridge(ClimateDevice):
         """Wait for all the sensor values to have arrived."""
         deadline = time.time() + max_seconds
         for sensor in self._subscribed_sensors:
-            if sensor in self._data:
+            if sensor in self._fresh_data:
                 continue
 
             if time.time() > deadline:
@@ -275,5 +274,5 @@ class ComfoConnectBridge(ClimateDevice):
 
     def sensor_callback(self, var, value):
         """Callback function for sensor updates."""
-        _LOGGER.info('Got value from bridge: %d = %d', var, value)
-        self._data[var] = value
+        _LOGGER.debug('Got value from bridge: %d = %d', var, value)
+        self._fresh_data[var] = value
