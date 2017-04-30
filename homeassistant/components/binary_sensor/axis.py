@@ -25,7 +25,7 @@ class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
     def __init__(self, axis_event, hass):
         """Initialize the binary sensor."""
         self._state = False
-        self._hass = hass
+        self.hass = hass
         AxisDeviceEvent.__init__(self, axis_event)
 
     @property
