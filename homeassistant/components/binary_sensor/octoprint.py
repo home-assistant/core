@@ -9,8 +9,7 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, STATE_ON, STATE_OFF, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
@@ -86,17 +85,9 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.is_on
-
-    @property
     def is_on(self):
         """Return true if binary sensor is on."""
-        if self._state:
-            return STATE_ON
-        else:
-            return STATE_OFF
+        return bool(self._state)
 
     @property
     def device_class(self):
