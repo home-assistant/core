@@ -252,7 +252,7 @@ class AxisDeviceEvent(Entity):
             self._timer()
             self._timer = None
 
-        if self._delay > 0 and not self.is_on:  # pylint: disable=E1101
+        if self._delay > 0 and not self.is_on:
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
@@ -266,6 +266,11 @@ class AxisDeviceEvent(Entity):
                 utcnow() + timedelta(seconds=self._delay))
         else:
             self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Implemented in binary sensor."""
+        raise NotImplementedError
 
     @property
     def name(self):
