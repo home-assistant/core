@@ -11,7 +11,10 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components.cover import CoverDevice, ATTR_TILT_POSITION
+from homeassistant.components.cover import (
+    CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
+    SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
+    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION)
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
     STATE_CLOSED, STATE_UNKNOWN)
@@ -49,6 +52,9 @@ DEFAULT_TILT_OPEN_POSITION = 100
 DEFAULT_TILT_MIN = 0
 DEFAULT_TILT_MAX = 100
 DEFAULT_TILT_OPTIMISTIC = False
+
+TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
+                 SUPPORT_SET_TILT_POSITION)
 
 PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -130,7 +136,7 @@ class MqttCover(CoverDevice):
         self._tilt_closed_position = tilt_closed_position
         self._optimistic = optimistic or state_topic is None
         self._template = value_template
-        self._tilt_value = STATE_UNKNOWN
+        self._tilt_value = None
         self._tilt_min = tilt_min
         self._tilt_max = tilt_max
         self._tilt_optimistic = tilt_optimistic
@@ -186,6 +192,8 @@ class MqttCover(CoverDevice):
         if self._tilt_status_topic is None:
             self._tilt_optimistic = True
         else:
+            self._tilt_optimistic = False
+            self._tilt_value = STATE_UNKNOWN
             yield from mqtt.async_subscribe(
                 self.hass, self._tilt_status_topic, tilt_updated, self._qos)
 
@@ -216,6 +224,19 @@ class MqttCover(CoverDevice):
     def current_cover_tilt_position(self):
         """Return current position of cover tilt."""
         return self._tilt_value
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+
+        if self.current_cover_position is not None:
+            supported_features |= SUPPORT_SET_POSITION
+
+        if self._tilt_command_topic is not None:
+            supported_features |= TILT_FEATURES
+
+        return supported_features
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
