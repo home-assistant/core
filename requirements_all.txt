@@ -38,7 +38,7 @@ SoCo==0.12
 TwitterAPI==2.4.5
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.2.0
+aioautomatic==0.2.1
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -184,7 +184,7 @@ fitbit==0.2.3
 fixerio==0.1.1
 
 # homeassistant.components.light.flux_led
-flux_led==0.18
+flux_led==0.19
 
 # homeassistant.components.notify.free_mobile
 freesms==0.1.1
@@ -362,6 +362,9 @@ knxip==0.3.3
 
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.0
+
+# homeassistant.components.device_tracker.mikrotik
+librouteros==1.0.2
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.3.0
@@ -679,7 +682,7 @@ pyunifi==2.0
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.27
+pyvera==0.2.29
 
 # homeassistant.components.notify.html5
 pywebpush==0.6.1
@@ -720,6 +723,7 @@ scsgate==0.1.0
 # homeassistant.components.notify.sendgrid
 sendgrid==4.0.0
 
+# homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat
 sense-hat==2.2.0
 
@@ -745,7 +749,7 @@ snapcast==1.2.2
 somecomfort==0.4.1
 
 # homeassistant.components.sensor.speedtest
-speedtest-cli==1.0.5
+speedtest-cli==1.0.6
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
@@ -822,7 +826,7 @@ xboxapi==0.1.1
 # homeassistant.components.sensor.swiss_hydrological_data
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
-xmltodict==0.10.2
+xmltodict==0.11.0
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0

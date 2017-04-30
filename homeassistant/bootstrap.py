@@ -1,4 +1,4 @@
-"""Provides methods to bootstrap a home assistant instance."""
+"""Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
 import logging
 import logging.handlers
@@ -206,7 +206,7 @@ def async_from_config_file(config_path: str,
 @core.callback
 def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                          log_rotate_days=None) -> None:
-    """Setup the logging.
+    """Set up the logging.
 
     This method must be run in the event loop.
     """
@@ -214,12 +214,12 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s")
     colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
-    datefmt = '%y-%m-%d %H:%M:%S'
+    datefmt = '%Y-%m-%d %H:%M:%S'
 
-    # suppress overly verbose logs from libraries that aren't helpful
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    # Suppress overly verbose logs from libraries that aren't helpful
+    logging.getLogger('requests').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+    logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
 
     try:
         from colorlog import ColoredFormatter
@@ -274,7 +274,7 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
 
     else:
         _LOGGER.error(
-            'Unable to setup error log %s (access denied)', err_log_path)
+            "Unable to setup error log %s (access denied)", err_log_path)
 
 
 def mount_local_lib_path(config_dir: str) -> str:

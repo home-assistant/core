@@ -11,13 +11,13 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_ZONE, CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup_proximity_component(hass, name, config):
-    """Set up individual proximity component."""
+    """Set up the individual proximity component."""
     ignored_zones = config.get(CONF_IGNORED_ZONES)
     proximity_devices = config.get(CONF_DEVICES)
     tolerance = config.get(CONF_TOLERANCE)
@@ -129,7 +129,7 @@ class Proximity(Entity):
         }
 
     def check_proximity_state_change(self, entity, old_state, new_state):
-        """Function to perform the proximity checking."""
+        """Perform the proximity checking."""
         entity_name = new_state.name
         devices_to_calculate = False
         devices_in_zone = ''

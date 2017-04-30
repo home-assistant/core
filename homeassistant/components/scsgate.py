@@ -38,7 +38,7 @@ SCSGATE_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the SCSGate component."""
+    """Set up the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
     global SCSGATE
 
@@ -61,7 +61,7 @@ def setup(hass, config):
 
 
 class SCSGate(object):
-    """The class  for dealing with the SCSGate device via scsgate.Reactor."""
+    """The class for dealing with the SCSGate device via scsgate.Reactor."""
 
     def __init__(self, device, logger):
         """Initialize the SCSGate."""
@@ -81,7 +81,7 @@ class SCSGate(object):
             handle_message=self.handle_message)
 
     def handle_message(self, message):
-        """Method called whenever a message is seen on the bus."""
+        """Handle a messages seen on the bus."""
         from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
         self._logger.debug("Received message {}".format(message))
@@ -114,7 +114,7 @@ class SCSGate(object):
 
     @property
     def devices(self):
-        """Dictionary with known devices.
+        """Return a dictionary with known devices.
 
         Key is device ID, value is the device itself.
         """

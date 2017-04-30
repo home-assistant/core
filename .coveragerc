@@ -205,6 +205,7 @@ omit =
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/linksys_ap.py
     homeassistant/components/device_tracker/luci.py
+    homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ping.py
@@ -242,6 +243,7 @@ omit =
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/rpi_gpio_pwm.py
     homeassistant/components/light/piglow.py
+    homeassistant/components/light/sensehat.py
     homeassistant/components/light/tikteck.py
     homeassistant/components/light/tradfri.py
     homeassistant/components/light/x10.py

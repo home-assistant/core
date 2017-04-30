@@ -14,10 +14,10 @@ import voluptuous as vol
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
-DOMAIN = "rss_feed_template"
+CONTENT_TYPE_XML = 'text/xml'
 DEPENDENCIES = ['http']
 
-CONTENT_TYPE_XML = "text/xml"
+DOMAIN = 'rss_feed_template'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: cv.ordered_dict(
@@ -37,7 +37,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the RSS feeds."""
+    """Set up the RSS feed template component."""
     for (feeduri, feedconfig) in config[DOMAIN].items():
         url = '/api/rss_template/%s' % feeduri
 
@@ -78,7 +78,7 @@ class RssView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request, entity_id=None):
-        """Generate the rss view XML."""
+        """Generate the RSS view XML."""
         response = '<?xml version="1.0" encoding="utf-8"?>\n\n'
 
         response += '<rss>\n'

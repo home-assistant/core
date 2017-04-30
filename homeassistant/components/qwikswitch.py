@@ -123,7 +123,7 @@ class QSLight(QSToggleEntity, Light):
 
 
 def setup(hass, config):
-    """Setup the QSUSB component."""
+    """Set up the QSUSB component."""
     from pyqwikswitch import (
         QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD, PQS_VALUE, PQS_TYPE,
         QSType)

@@ -16,7 +16,7 @@ from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyRFXtrx==0.18.0']
 
-DOMAIN = "rfxtrx"
+DOMAIN = 'rfxtrx'
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
@@ -126,10 +126,10 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the RFXtrx component."""
+    """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """Callback all subscribers for RFXtrx gateway."""
+        """Handle revieved messgaes from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return

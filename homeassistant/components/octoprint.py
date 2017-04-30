@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up OctoPrint API."""
+    """Set up the OctoPrint component."""
     base_url = 'http://{}/api/'.format(config[DOMAIN][CONF_HOST])
     api_key = config[DOMAIN][CONF_API_KEY]
 
@@ -75,9 +75,8 @@ class OctoPrintAPI(object):
                     return self.printer_last_reading[0]
         url = self.api_url + endpoint
         try:
-            response = requests.get(url,
-                                    headers=self.headers,
-                                    timeout=30)
+            response = requests.get(
+                url, headers=self.headers, timeout=30)
             response.raise_for_status()
             if endpoint == "job":
                 self.job_last_reading[0] = response.json()
@@ -94,8 +93,8 @@ class OctoPrintAPI(object):
     def update(self, sensor_type, end_point, group, tool=None):
         """Return the value for sensor_type from the provided endpoint."""
         try:
-            return get_value_from_json(self.get(end_point), sensor_type,
-                                       group, tool)
+            return get_value_from_json(
+                self.get(end_point), sensor_type, group, tool)
         except requests.exceptions.ConnectionError:
             raise
 

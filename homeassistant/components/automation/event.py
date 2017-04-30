@@ -13,8 +13,8 @@ from homeassistant.core import callback, CoreState
 from homeassistant.const import CONF_PLATFORM, EVENT_HOMEASSISTANT_START
 from homeassistant.helpers import config_validation as cv
 
-CONF_EVENT_TYPE = "event_type"
-CONF_EVENT_DATA = "event_data"
+CONF_EVENT_TYPE = 'event_type'
+CONF_EVENT_DATA = 'event_data'
 
 _LOGGER = logging.getLogger(__name__)
 

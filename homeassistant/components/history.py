@@ -36,7 +36,7 @@ IGNORE_DOMAINS = ('zone', 'scene',)
 
 
 def last_recorder_run(hass):
-    """Retireve the last closed recorder run from the DB."""
+    """Retrieve the last closed recorder run from the database."""
     from homeassistant.components.recorder.models import RecorderRuns
 
     with session_scope(hass=hass) as session:
@@ -174,7 +174,7 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup the history hooks."""
+    """Set up the history hooks."""
     filters = Filters()
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
     if exclude:
