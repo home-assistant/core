@@ -205,6 +205,7 @@ omit =
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/linksys_ap.py
     homeassistant/components/device_tracker/luci.py
+    homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ping.py
