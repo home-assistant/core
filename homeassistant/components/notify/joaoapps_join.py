@@ -34,7 +34,7 @@ def get_service(hass, config, discovery_info=None):
     if api_key:
         from pyjoin import get_devices
         if not get_devices(api_key):
-            _LOGGER.error("Error connecting to Join, check API key")
+            _LOGGER.error("Error connecting to Join. Check  theAPI key")
             return False
     return JoinNotificationService(device_id, api_key)
 
@@ -52,9 +52,7 @@ class JoinNotificationService(BaseNotificationService):
         from pyjoin import send_notification
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA) or {}
-        send_notification(device_id=self._device_id,
-                          text=message,
-                          title=title,
-                          icon=data.get('icon'),
-                          smallicon=data.get('smallicon'),
-                          api_key=self._api_key)
+        send_notification(
+            device_id=self._device_id, text=message, title=title,
+            icon=data.get('icon'), smallicon=data.get('smallicon'),
+            api_key=self._api_key)
