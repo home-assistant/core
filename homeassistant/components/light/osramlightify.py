@@ -107,7 +107,7 @@ def setup_bridge(bridge, add_devices_callback, add_groups):
     update_lights()
 
 
-class Luminary():
+class Luminary(Light):
     """ABS for Lightify Lights and Groups."""
 
     def __init__(self, luminary, update_lights):
@@ -115,7 +115,7 @@ class Luminary():
         self.update_lights = update_lights
         self._luminary = luminary
         self._brightness = None
-        self._rgb = None
+        self._rgb = [None]
         self._name = None
         self._temperature = None
         self._state = False
@@ -252,7 +252,7 @@ class Luminary():
         self._name = self._luminary.name()
 
 
-class OsramLightifyLight(Luminary, Light):
+class OsramLightifyLight(Luminary):
     """Representation of an Osram Lightify Light."""
 
     def __init__(self, light_id, light, update_lights):
@@ -275,7 +275,7 @@ class OsramLightifyLight(Luminary, Light):
         self._brightness = int(self._luminary.lum() * 2.55)
 
 
-class OsramLightifyGroup(Luminary, Light):
+class OsramLightifyGroup(Luminary):
     """Representation of an Osram Lightify Group."""
 
     def __init__(self, group, bridge, update_lights):
