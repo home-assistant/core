@@ -208,7 +208,7 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup climate devices."""
+    """Set up climate devices."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     yield from component.async_setup(config)
 

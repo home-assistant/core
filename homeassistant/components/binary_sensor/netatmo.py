@@ -23,15 +23,15 @@ DEPENDENCIES = ['netatmo']
 
 # These are the available sensors mapped to binary_sensor class
 WELCOME_SENSOR_TYPES = {
-    "Someone known": "motion",
-    "Someone unknown": "motion",
-    "Motion": "motion",
+    "Someone known": 'motion',
+    "Someone unknown": 'motion',
+    "Motion": 'motion',
 }
 PRESENCE_SENSOR_TYPES = {
-    "Outdoor motion": "motion",
-    "Outdoor human": "motion",
-    "Outdoor animal": "motion",
-    "Outdoor vehicle": "motion"
+    "Outdoor motion": 'motion',
+    "Outdoor human": 'motion',
+    "Outdoor animal": 'motion',
+    "Outdoor vehicle": 'motion'
 }
 TAG_SENSOR_TYPES = {
     "Tag Vibration": 'vibration',
@@ -117,7 +117,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
 
     def __init__(self, data, camera_name, module_name, home,
                  timeout, offset, camera_type, sensor):
-        """Setup for access to the Netatmo camera events."""
+        """Set up for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
         self._module_name = module_name
