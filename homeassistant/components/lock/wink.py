@@ -4,7 +4,6 @@ Support for Wink locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.wink/
 """
-
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
@@ -12,7 +11,7 @@ DEPENDENCIES = ['wink']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Set up the Wink platform."""
     import pywink
 
     for lock in pywink.get_locks():
