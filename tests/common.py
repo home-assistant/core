@@ -62,7 +62,7 @@ def get_test_home_assistant():
     orig_stop = hass.stop
 
     def start_hass(*mocks):
-        """Helper to start hass."""
+        """Start hass."""
         run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
 
     def stop_hass():
@@ -151,12 +151,12 @@ def get_test_instance_port():
 
 
 def mock_service(hass, domain, service):
-    """Setup a fake service & return a list that logs calls to this service."""
+    """Set up a fake service & return a calls log list to this service."""
     calls = []
 
     @asyncio.coroutine
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
-        """"Mocked service call."""
+        """Mocked service call."""
         calls.append(call)
 
     if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
@@ -211,7 +211,7 @@ def ensure_sun_set(hass):
 
 
 def load_fixture(filename):
-    """Helper to load a fixture."""
+    """Load a fixture."""
     path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)
     with open(path) as fptr:
         return fptr.read()
@@ -302,7 +302,7 @@ class MockModule(object):
             self.async_setup = async_setup
 
     def setup(self, hass, config):
-        """Setup the component.
+        """Set up the component.
 
         We always define this mock because MagicMock setups will be seen by the
         executor as a coroutine, raising an exception.
@@ -326,7 +326,7 @@ class MockPlatform(object):
             self.PLATFORM_SCHEMA = platform_schema
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
-        """Setup the platform."""
+        """Set up the platform."""
         if self._setup_platform is not None:
             self._setup_platform(hass, config, add_devices, discovery_info)
 
@@ -391,7 +391,7 @@ def patch_yaml_files(files_dict, endswith=True):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
         if fname in files_dict:
-            _LOGGER.debug('patch_yaml_files match %s', fname)
+            _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
             setattr(res, 'name', fname)
             return res
@@ -399,24 +399,24 @@ def patch_yaml_files(files_dict, endswith=True):
         # Match using endswith
         for ends in matchlist:
             if fname.endswith(ends):
-                _LOGGER.debug('patch_yaml_files end match %s: %s', ends, fname)
+                _LOGGER.debug("patch_yaml_files end match %s: %s", ends, fname)
                 res = StringIO(files_dict[ends])
                 setattr(res, 'name', fname)
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)
         if 'homeassistant/components' in fname:
-            _LOGGER.debug('patch_yaml_files using real file: %s', fname)
+            _LOGGER.debug("patch_yaml_files using real file: %s", fname)
             return open(fname, encoding='utf-8')
 
         # Not found
-        raise FileNotFoundError('File not found: {}'.format(fname))
+        raise FileNotFoundError("File not found: {}".format(fname))
 
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
 def mock_coro(return_value=None):
-    """Helper method to return a coro that returns a value."""
+    """Return a coro that returns a value."""
     @asyncio.coroutine
     def coro():
         """Fake coroutine."""
@@ -426,7 +426,7 @@ def mock_coro(return_value=None):
 
 
 def mock_coro_func(return_value=None):
-    """Helper method to return a coro that returns a value."""
+    """Return a coro that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
@@ -456,7 +456,7 @@ def assert_setup_component(count, domain=None):
         res = async_process_component_config(
             hass, config_input, domain)
         config[domain] = None if res is None else res.get(domain)
-        _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
+        _LOGGER.debug("Configuration for %s, Validated: %s, Original %s",
                       domain, config[domain], config_input.get(domain))
         return res
 

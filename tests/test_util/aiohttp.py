@@ -63,7 +63,7 @@ class AiohttpClientMocker:
 
     @property
     def call_count(self):
-        """Number of requests made."""
+        """Return the number of requests made."""
         return len(self.mock_calls)
 
     def clear_requests(self):
