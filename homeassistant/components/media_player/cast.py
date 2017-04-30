@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the cast platform."""
     import pychromecast
 
-    # import CEC IGNORE attributes
+    # Import CEC IGNORE attributes
     pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
 
     hosts = []
@@ -68,8 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     casts = []
 
-    # get_chromecasts() returns Chromecast objects
-    # with the correct friendly name for grouped devices
+    # get_chromecasts() returns Chromecast objects with the correct friendly
+    # name for grouped devices
     all_chromecasts = pychromecast.get_chromecasts()
 
     for host in hosts:
@@ -204,7 +204,7 @@ class CastDevice(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
-        """Return te title of the series of current playing media (TV only)."""
+        """Return the title of the series of current playing media."""
         return self.media_status.series_title if self.media_status else None
 
     @property

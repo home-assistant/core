@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Dovado platform for sensors."""
+    """Set up the Dovado platform for sensors."""
     return Dovado().setup(hass, config, add_devices)
 
 
@@ -68,7 +68,7 @@ class Dovado:
         self._dovado = None
 
     def setup(self, hass, config, add_devices):
-        """Setup the connection."""
+        """Set up the connection."""
         import dovado
         self._dovado = dovado.Dovado(
             config.get(CONF_USERNAME), config.get(CONF_PASSWORD),

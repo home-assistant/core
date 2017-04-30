@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup MaryTTS speech component."""
+    """Set up MaryTTS speech component."""
     return MaryTTSProvider(hass, config)
 
 

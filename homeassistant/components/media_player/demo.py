@@ -26,6 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoMusicPlayer(), DemoTVShowPlayer(),
     ])
 
+
 YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
 
 YOUTUBE_PLAYER_SUPPORT = \

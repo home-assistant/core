@@ -81,7 +81,7 @@ def convert_time_to_utc(timestr):
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Google travel time platform."""
+    """Set up the Google travel time platform."""
     def run_setup(event):
         """Delay the setup until Home Assistant is fully initialized.
 

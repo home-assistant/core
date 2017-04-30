@@ -65,7 +65,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the InfluxDB component."""
+    """Set up the InfluxDB component."""
     influx_conf = {'host': config[CONF_HOST],
                    'port': config.get(CONF_PORT),
                    'username': config.get(CONF_USERNAME),

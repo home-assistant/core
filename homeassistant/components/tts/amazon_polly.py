@@ -81,7 +81,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_engine(hass, config):
-    """Setup Amazon Polly speech component."""
+    """Set up Amazon Polly speech component."""
     # pylint: disable=import-error
     output_format = config.get(CONF_OUTPUT_FORMAT)
     sample_rate = config.get(CONF_SAMPLE_RATE,

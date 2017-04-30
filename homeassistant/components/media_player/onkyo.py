@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Onkyo platform."""
+    """Set up the Onkyo platform."""
     import eiscp
     from eiscp import eISCP
 

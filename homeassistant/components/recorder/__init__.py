@@ -69,7 +69,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-
 def wait_connection_ready(hass):
     """
     Wait till the connection is ready.

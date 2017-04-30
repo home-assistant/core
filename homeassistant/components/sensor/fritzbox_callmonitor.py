@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Fritz!Box call monitor sensor platform."""
+    """Set up Fritz!Box call monitor sensor platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
