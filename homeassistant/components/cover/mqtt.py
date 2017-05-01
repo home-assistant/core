@@ -331,11 +331,14 @@ class MqttCover(CoverDevice):
             return position_percentage
 
     def find_in_range_from_percent(self, percentage):
-        """Find the adjusted value for 0-100% within the specified range."""
-        # if the range is 80-180 and the percentage is 90
-        # this method would determine the value to send on the topic
-        # by offsetting the max and min, getting the percentage value and
-        # returning the offset
+        """
+        Find the adjusted value for 0-100% within the specified range.
+
+        if the range is 80-180 and the percentage is 90
+        this method would determine the value to send on the topic
+        by offsetting the max and min, getting the percentage value and
+        returning the offset
+        """
         offset = self._tilt_min
         tilt_range = self._tilt_max - self._tilt_min
 
