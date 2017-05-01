@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Lutron lights."""
+    """Set up Lutron lights."""
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]['light']:
         dev = LutronLight(area_name, device, hass.data[LUTRON_CONTROLLER])
@@ -82,6 +82,6 @@ class LutronLight(LutronDevice, Light):
         return self._lutron_device.last_level() > 0
 
     def update(self):
-        """Called when forcing a refresh of the device."""
+        """Call when forcing a refresh of the device."""
         if self._prev_brightness is None:
             self._prev_brightness = to_hass_level(self._lutron_device.level)

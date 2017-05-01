@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the KNX light platform."""
+    """Set up the KNX light platform."""
     add_devices([KNXLight(hass, KNXConfig(config))])
 
 

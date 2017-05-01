@@ -234,7 +234,7 @@ class Config(object):
         return is_default_exposed or explicit_expose
 
     def _load_numbers_json(self):
-        """Helper method to load numbers json."""
+        """Set up helper method to load numbers json."""
         try:
             with open(self.hass.config.path(NUMBERS_FILE),
                       encoding='utf-8') as fil:
@@ -247,7 +247,7 @@ class Config(object):
             return {}
 
     def _save_numbers_json(self):
-        """Helper method to save numbers json."""
+        """Set up helper method to save numbers json."""
         try:
             with open(self.hass.config.path(NUMBERS_FILE), 'w',
                       encoding='utf-8') as fil:

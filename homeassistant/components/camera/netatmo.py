@@ -55,7 +55,7 @@ class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
     def __init__(self, data, camera_name, home, camera_type, verify_ssl):
-        """Setup for access to the Netatmo camera images."""
+        """Set up access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
