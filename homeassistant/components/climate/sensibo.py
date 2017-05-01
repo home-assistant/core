@@ -19,11 +19,12 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
-REQUIREMENTS = ['pysensibo==1.0.0']
+REQUIREMENTS = ['pysensibo==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 ALL = 'all'
+TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -42,7 +43,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     import pysensibo
 
     client = pysensibo.SensiboClient(
-        config[CONF_API_KEY], session=async_get_clientsession(hass))
+        config[CONF_API_KEY], session=async_get_clientsession(hass),
+        timeout=TIMEOUT)
     devices = []
     try:
         for dev in (
@@ -231,5 +233,5 @@ class SensiboClimate(ClimateDevice):
             data = yield from self._client.async_get_device(
                 self._id, _FETCH_FIELDS)
             self._do_update(data)
-        except aiohttp.client_exceptions.ClientConnectorError:
+        except aiohttp.client_exceptions.ClientError:
             _LOGGER.warning('Failed to connect to Sensibo servers.')
