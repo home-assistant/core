@@ -91,6 +91,7 @@ def request_configuration(hass, name, host, serialnumber):
         if setup_device(hass, config):
             config_file = _read_config(hass)
             config_file[serialnumber] = dict(config)
+            del config_file[serialnumber]['hass']
             _write_config(hass, config_file)
             configurator.request_done(instance)
         else:
