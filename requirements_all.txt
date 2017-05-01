@@ -703,7 +703,7 @@ qnapstats==0.2.4
 radiotherm==1.2
 
 # homeassistant.components.raspihats
-raspihats==2.2.1
+# raspihats==2.2.1
 
 # homeassistant.components.rflink
 rflink==0.0.31

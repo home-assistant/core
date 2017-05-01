@@ -8,6 +8,7 @@ import sys
 
 COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
+    'raspihats',
     'rpi-rf',
     'Adafruit_Python_DHT',
     'Adafruit_BBIO',
