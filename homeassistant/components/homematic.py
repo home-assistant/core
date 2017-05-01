@@ -42,9 +42,12 @@ ATTR_NAME = 'name'
 ATTR_ADDRESS = 'address'
 ATTR_VALUE = 'value'
 ATTR_PROXY = 'proxy'
+ATTR_ERRORCODE = 'error'
+ATTR_MESSAGE = 'message'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
+EVENT_ERROR = 'homematic.error'
 
 SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_RECONNECT = 'reconnect'
@@ -447,6 +450,14 @@ def _system_callback_handler(hass, config, src, *args):
                         ATTR_DISCOVER_DEVICES: found_devices
                     }, config)
 
+    elif src == 'error':
+        _LOGGER.debug("Error: %s", args)
+        (interface_id, errorcode, message) = args
+        hass.bus.fire(EVENT_ERROR, {
+            ATTR_ERRORCODE: errorcode,
+            ATTR_MESSAGE: message
+        })
+
 
 def _get_devices(hass, discovery_type, keys, proxy):
     """Get the Homematic devices for given discovery_type."""
@@ -544,19 +555,19 @@ def _hm_event_handler(hass, proxy, device, caller, attribute, value):
 
     # keypress event
     if attribute in HM_PRESS_EVENTS:
-        hass.add_job(hass.bus.async_fire(EVENT_KEYPRESS, {
+        hass.bus.fire(EVENT_KEYPRESS, {
             ATTR_NAME: hmdevice.NAME,
             ATTR_PARAM: attribute,
             ATTR_CHANNEL: channel
-        }))
+        })
         return
 
     # impulse event
     if attribute in HM_IMPULSE_EVENTS:
-        hass.add_job(hass.bus.async_fire(EVENT_KEYPRESS, {
+        hass.bus.fire(EVENT_IMPULSE, {
             ATTR_NAME: hmdevice.NAME,
             ATTR_CHANNEL: channel
-        }))
+        })
         return
 
     _LOGGER.warning("Event is unknown and not forwarded")
