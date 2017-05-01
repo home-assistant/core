@@ -7,9 +7,9 @@ https://home-assistant.io/components/binary_sensor.eight_sleep/
 import logging
 import asyncio
 
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.eight_sleep import (
     DATA_EIGHT, EightSleepHeatEntity, CONF_BINARY_SENSORS, NAME_MAP)
-from homeassistant.const import (STATE_ON, STATE_OFF)
 
 DEPENDENCIES = ['eight_sleep']
 
@@ -34,7 +34,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices(all_sensors, True)
 
 
-class EightHeatSensor(EightSleepHeatEntity):
+class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
     """Representation of a eight sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
@@ -62,16 +62,6 @@ class EightHeatSensor(EightSleepHeatEntity):
     def is_on(self):
         """Return true if the binary sensor is on."""
         return self._state
-
-    @property
-    def state(self):
-        """Return the state of the binary sensor."""
-        return STATE_ON if self.is_on else STATE_OFF
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return None
 
     @asyncio.coroutine
     def async_update(self):

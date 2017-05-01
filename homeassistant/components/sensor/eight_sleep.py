@@ -56,7 +56,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for sensor in sensors:
         if 'bed_state' in sensor:
             all_sensors.append(EightHeatSensor(name, eight, sensor))
-        elif 'current' in sensor or 'last' in sensor:
+        elif 'room_temp' in sensor:
+            all_sensors.append(EightRoomSensor(name, eight, sensor, units))
+        else:
             all_sensors.append(EightUserSensor(name, eight, sensor, units))
 
     async_add_devices(all_sensors, True)
@@ -90,6 +92,11 @@ class EightHeatSensor(EightSleepHeatEntity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return '%'
 
     @asyncio.coroutine
     def async_update(self):
@@ -140,20 +147,49 @@ class EightUserSensor(EightSleepUserEntity):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        if 'current_sleep' in self._sensor or 'last_sleep' in self._sensor:
+            return 'Score'
+        elif 'bed_temp' in self._sensor:
+            if self._units == 'si':
+                return '°C'
+            else:
+                return '°F'
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        if 'bed_temp' in self._sensor:
+            return 'mdi:thermometer'
+
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
         _LOGGER.debug('Updating User sensor: %s', self._sensor)
-        if 'current' in self._sensor_root:
+        if 'current' in self._sensor:
             self._state = self._usrobj.current_sleep_score
             self._attr = self._usrobj.current_values
-        elif 'last' in self._sensor_root:
+        elif 'last' in self._sensor:
             self._state = self._usrobj.last_sleep_score
             self._attr = self._usrobj.last_values
+        elif 'bed_temp' in self._sensor:
+            temp = self._usrobj.current_values['bed_temp']
+            if self._units == 'si':
+                self._state = round(temp, 2)
+            else:
+                self._state = round((temp*1.8)+32, 2)
+        elif 'sleep_stage' in self._sensor:
+            self._state = self._usrobj.current_values['stage']
 
     @property
     def device_state_attributes(self):
         """Return device state attributes."""
+        if self._attr is None:
+            # Skip attributes if sensor type doesn't support
+            return None
+
         state_attr = {ATTR_SESSION_START: self._attr['date']}
         state_attr[ATTR_TNT] = self._attr['tnt']
         state_attr[ATTR_PROCESSING] = self._attr['processing']
@@ -187,3 +223,51 @@ class EightUserSensor(EightSleepUserEntity):
             state_attr[ATTR_AVG_BED_TEMP] = bed_temp
 
         return state_attr
+
+
+class EightRoomSensor(EightSleepUserEntity):
+    """Representation of a eight sleep room sensor."""
+
+    def __init__(self, name, eight, sensor, units):
+        """Initialize the sensor."""
+        super().__init__(eight)
+
+        self._sensor = sensor
+        self._mapped_name = NAME_MAP.get(self._sensor, self._sensor)
+        self._name = '{} {}'.format(name, self._mapped_name)
+        self._state = None
+        self._attr = None
+        self._units = units
+
+    @property
+    def name(self):
+        """Return the name of the sensor, if any."""
+        return self._name
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug('Updating Room sensor: %s', self._sensor)
+        temp = self._eight.room_temperature()
+        if self._units == 'si':
+            self._state = round(temp, 2)
+        else:
+            self._state = round((temp*1.8)+32, 2)
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        if self._units == 'si':
+            return '°C'
+        else:
+            return '°F'
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend, if any."""
+        return 'mdi:thermometer'

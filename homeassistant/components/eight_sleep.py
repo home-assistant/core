@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pyeight==0.0.2']
+REQUIREMENTS = ['pyeight==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,13 +48,22 @@ NAME_MAP = {
     'left_last_sleep': 'Left Previous Sleep Session',
     'left_bed_state': 'Left Bed State',
     'left_presence': 'Left Bed Presence',
+    'left_bed_temp': 'Left Bed Temperature',
+    'left_sleep_stage': 'Left Sleep Stage',
     'right_current_sleep': 'Right Sleep Session',
     'right_last_sleep': 'Right Previous Sleep Session',
     'right_bed_state': 'Right Bed State',
     'right_presence': 'Right Bed Presence',
+    'right_bed_temp': 'Right Bed Temperature',
+    'right_sleep_stage': 'Right Sleep Stage',
+    'room_temp': 'Room Temperature',
 }
 
-SENSORS = ['current_sleep', 'last_sleep', 'bed_state']
+SENSORS = ['current_sleep',
+           'last_sleep',
+           'bed_state',
+           'bed_temp',
+           'sleep_stage']
 
 SERVICE_HEAT_SET = 'heat_set'
 
@@ -100,7 +109,10 @@ def async_setup(hass, config):
     hass.data[DATA_EIGHT] = eight
 
     # Authenticate, build sensors
-    yield from eight.start()
+    success = yield from eight.start()
+    if not success:
+        # Authentication failed, cannot continue
+        return False
 
     @asyncio.coroutine
     def async_update_heat_data(now):
@@ -132,6 +144,7 @@ def async_setup(hass, config):
             for sensor in SENSORS:
                 sensors.append('{}_{}'.format(obj.side, sensor))
             binary_sensors.append('{}_presence'.format(obj.side))
+        sensors.append('room_temp')
 
     hass.async_add_job(discovery.async_load_platform(
         hass, 'sensor', DOMAIN, {
@@ -203,11 +216,6 @@ class EightSleepUserEntity(Entity):
         """Return True if entity has to be polled for state."""
         return False
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return 'Score'
-
 
 class EightSleepHeatEntity(Entity):
     """The Eight Sleep device entity."""
@@ -231,8 +239,3 @@ class EightSleepHeatEntity(Entity):
     def should_poll(self):
         """Return True if entity has to be polled for state."""
         return False
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return '%'
