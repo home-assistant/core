@@ -64,7 +64,7 @@ def request_configuration(device_id, insteonhub, model, hass,
         return
 
     def insteon_light_config_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Set up actions to do when our configuration callback is called."""
         setup_light(device_id, data.get('name'), insteonhub, hass,
                     add_devices_callback)
 

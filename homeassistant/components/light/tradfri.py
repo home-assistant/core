@@ -20,7 +20,7 @@ ALLOWED_TEMPERATURES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the IKEA Tradfri Light platform."""
+    """Set up the IKEA Tradfri Light platform."""
     if discovery_info is None:
         return
 

@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup lights."""
+    """Set up lights."""
     if discovery_info is None:
         return
     add_devices(TelldusLiveLight(hass, light) for light in discovery_info)
@@ -32,7 +32,7 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
         self._last_brightness = self.brightness
 
     def changed(self):
-        """A property of the device might have changed."""
+        """Define a property of the device that might have changed."""
         self._last_brightness = self.brightness
         super().changed()
 

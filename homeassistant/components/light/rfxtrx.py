@@ -20,14 +20,14 @@ SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the RFXtrx platform."""
+    """Set up the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     lights = rfxtrx.get_devices_from_config(config, RfxtrxLight)
     add_devices(lights)
 
     def light_update(event):
-        """Callback for light updates from the RFXtrx gateway."""
+        """Define callback for light updates from the RFXtrx gateway."""
         if not isinstance(event.device, rfxtrxmod.LightingDevice) or \
                 not event.device.known_to_be_dimmable:
             return

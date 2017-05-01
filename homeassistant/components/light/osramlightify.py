@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Osram Lightify lights."""
+    """Set up the Osram Lightify lights."""
     import lightify
     host = config.get(CONF_HOST)
     if host:
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_bridge(bridge, add_devices_callback):
-    """Setup the Lightify bridge."""
+    """Set up the Lightify bridge."""
     lights = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
