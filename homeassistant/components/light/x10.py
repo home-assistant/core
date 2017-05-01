@@ -40,7 +40,7 @@ def get_unit_status(code):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the x10 Light platform."""
+    """Set up the x10 Light platform."""
     try:
         x10_command('info')
     except CalledProcessError as err:

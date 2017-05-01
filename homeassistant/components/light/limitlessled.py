@@ -95,7 +95,7 @@ def rewrite_legacy(config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LimitlessLED lights."""
+    """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
     # Two legacy configuration formats are supported to maintain backwards
@@ -123,7 +123,7 @@ def state(new_state):
     Specify True (turn on) or False (turn off).
     """
     def decorator(function):
-        """Decorator function."""
+        """Set up the decorator function."""
         # pylint: disable=no-member,protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""

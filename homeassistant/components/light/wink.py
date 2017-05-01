@@ -22,7 +22,7 @@ RGB_MODES = ['hsb', 'rgb']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink lights."""
+    """Set up the Wink lights."""
     import pywink
 
     for light in pywink.get_light_bulbs():
@@ -53,7 +53,7 @@ class WinkLight(WinkDevice, Light):
 
     @property
     def rgb_color(self):
-        """Current bulb color in RGB."""
+        """Define current bulb color in RGB."""
         if not self.wink.supports_hue_saturation():
             return None
         elif self.wink.color_model() not in RGB_MODES:
@@ -72,14 +72,14 @@ class WinkLight(WinkDevice, Light):
 
     @property
     def xy_color(self):
-        """Current bulb color in CIE 1931 (XY) color space."""
+        """Define current bulb color in CIE 1931 (XY) color space."""
         if not self.wink.supports_xy_color():
             return None
         return self.wink.color_xy()
 
     @property
     def color_temp(self):
-        """Current bulb color in degrees Kelvin."""
+        """Define current bulb color in degrees Kelvin."""
         if not self.wink.supports_temperature():
             return None
         return color_util.color_temperature_kelvin_to_mired(
