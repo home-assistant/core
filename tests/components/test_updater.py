@@ -23,12 +23,14 @@ MOCK_RESPONSE = {
 
 @pytest.fixture
 def mock_get_newest_version():
+    """Fixture to mock get_newest_version."""
     with patch('homeassistant.components.updater.get_newest_version') as mock:
         yield mock
 
 
 @pytest.fixture
 def mock_get_uuid():
+    """Fixture to mock get_uuid."""
     with patch('homeassistant.components.updater._load_uuid') as mock:
         yield mock
 
@@ -124,7 +126,6 @@ def test_get_newest_version_analytics_when_huuid(hass, aioclient_mock):
 @asyncio.coroutine
 def test_error_fetching_new_version_timeout(hass):
     """Test we do not gather analytics when no huuid is passed in."""
-
     with patch('homeassistant.components.updater.get_system_info',
                Mock(return_value=mock_coro({'fake': 'bla'}))), \
             patch('async_timeout.timeout', side_effect=asyncio.TimeoutError):
