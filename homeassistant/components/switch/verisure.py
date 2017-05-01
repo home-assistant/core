@@ -12,6 +12,8 @@ from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import CONF_SMARTPLUGS
 from homeassistant.components.switch import SwitchDevice
 
+REQUIREMENTS = ['jsonpath==0.75']
+
 _LOGGER = logging.getLogger(__name__)
 
 

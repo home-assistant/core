@@ -13,6 +13,8 @@ from homeassistant.components.verisure import (
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 
+REQUIREMENTS = ['jsonpath==0.75']
+
 _LOGGER = logging.getLogger(__name__)
 
 

@@ -11,6 +11,8 @@ from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.verisure import CONF_DOOR_WINDOW
 
+REQUIREMENTS = ['jsonpath==0.75']
+
 _LOGGER = logging.getLogger(__name__)
 
 
