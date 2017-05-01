@@ -98,6 +98,7 @@ class MQTTRoomSensor(Entity):
 
             self.hass.async_add_job(self.async_update_ha_state())
 
+        @callback
         def message_received(topic, payload, qos):
             """A new MQTT message has been received."""
             try:

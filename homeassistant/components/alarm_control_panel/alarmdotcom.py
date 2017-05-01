@@ -5,9 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import logging
-
+import asyncio
 import voluptuous as vol
-
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -15,10 +14,9 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN, CONF_CODE,
     CONF_NAME)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['https://github.com/Xorso/pyalarmdotcom'
-                '/archive/0.1.1.zip'
-                '#pyalarmdotcom==0.1.1']
+REQUIREMENTS = ['pyalarmdotcom==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,14 +30,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup an Alarm.com control panel."""
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    add_devices([AlarmDotCom(hass, name, code, username, password)], True)
+    alarmdotcom = AlarmDotCom(hass, name, code, username, password)
+    yield from alarmdotcom.async_login()
+    async_add_devices([alarmdotcom])
 
 
 class AlarmDotCom(alarm.AlarmControlPanel):
@@ -47,18 +48,30 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     def __init__(self, hass, name, code, username, password):
         """Initialize the Alarm.com status."""
-        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
-        self._alarm = Alarmdotcom(username, password, timeout=10)
+        from pyalarmdotcom import Alarmdotcom
+        _LOGGER.debug('Setting up Alarm.com...')
         self._hass = hass
         self._name = name
         self._code = str(code) if code else None
         self._username = username
         self._password = password
+        self._websession = async_get_clientsession(self._hass)
         self._state = STATE_UNKNOWN
+        self._alarm = Alarmdotcom(username,
+                                  password,
+                                  self._websession,
+                                  hass.loop)
 
-    def update(self):
+    @asyncio.coroutine
+    def async_login(self):
+        """Login to Alarm.com."""
+        yield from self._alarm.async_login()
+
+    @asyncio.coroutine
+    def async_update(self):
         """Fetch the latest state."""
-        self._state = self._alarm.state
+        yield from self._alarm.async_update()
+        return self._alarm.state
 
     @property
     def name(self):
@@ -73,45 +86,36 @@ class AlarmDotCom(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._state == 'Disarmed':
+        if self._alarm.state.lower() == 'disarmed':
             return STATE_ALARM_DISARMED
-        elif self._state == 'Armed Stay':
+        elif self._alarm.state.lower() == 'armed stay':
             return STATE_ALARM_ARMED_HOME
-        elif self._state == 'Armed Away':
+        elif self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
         else:
             return STATE_UNKNOWN
 
-    def alarm_disarm(self, code=None):
+    @asyncio.coroutine
+    def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        if not self._validate_code(code, 'disarming home'):
-            return
-        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
-        # Open another session to alarm.com to fire off the command
-        _alarm = Alarmdotcom(self._username, self._password, timeout=10)
-        _alarm.disarm()
+        if self._validate_code(code):
+            yield from self._alarm.async_alarm_disarm()
 
-    def alarm_arm_home(self, code=None):
-        """Send arm home command."""
-        if not self._validate_code(code, 'arming home'):
-            return
-        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
-        # Open another session to alarm.com to fire off the command
-        _alarm = Alarmdotcom(self._username, self._password, timeout=10)
-        _alarm.arm_stay()
+    @asyncio.coroutine
+    def async_alarm_arm_home(self, code=None):
+        """Send arm hom command."""
+        if self._validate_code(code):
+            yield from self._alarm.async_alarm_arm_home()
 
-    def alarm_arm_away(self, code=None):
+    @asyncio.coroutine
+    def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        if not self._validate_code(code, 'arming home'):
-            return
-        from pyalarmdotcom.pyalarmdotcom import Alarmdotcom
-        # Open another session to alarm.com to fire off the command
-        _alarm = Alarmdotcom(self._username, self._password, timeout=10)
-        _alarm.arm_away()
+        if self._validate_code(code):
+            yield from self._alarm.async_alarm_arm_away()
 
-    def _validate_code(self, code, state):
+    def _validate_code(self, code):
         """Validate given code."""
         check = self._code is None or code == self._code
         if not check:
-            _LOGGER.warning('Wrong code entered for %s', state)
+            _LOGGER.warning('Wrong code entered.')
         return check

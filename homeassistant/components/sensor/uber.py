@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['uber_rides==0.2.7']
+REQUIREMENTS = ['uber_rides==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_START_LONGITUDE): cv.longitude,
     vol.Optional(CONF_END_LATITUDE): cv.latitude,
     vol.Optional(CONF_END_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_PRODUCT_IDS, default=[]):
+    vol.Optional(CONF_PRODUCT_IDS):
         vol.All(cv.ensure_list, [cv.string]),
 })
 

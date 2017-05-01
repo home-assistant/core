@@ -10,7 +10,6 @@ import os
 import random
 import socket
 from datetime import timedelta
-from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -47,7 +46,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 
 PHUE_CONFIG_FILE = 'phue.conf'
 
-SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION | SUPPORT_FLASH)
+SUPPORT_HUE_ON_OFF = (SUPPORT_FLASH | SUPPORT_TRANSITION)
 SUPPORT_HUE_DIMMABLE = (SUPPORT_HUE_ON_OFF | SUPPORT_BRIGHTNESS)
 SUPPORT_HUE_COLOR_TEMP = (SUPPORT_HUE_DIMMABLE | SUPPORT_COLOR_TEMP)
 SUPPORT_HUE_COLOR = (SUPPORT_HUE_DIMMABLE | SUPPORT_EFFECT |
@@ -58,6 +57,7 @@ SUPPORT_HUE = {
     'Extended color light': SUPPORT_HUE_EXTENDED,
     'Color light': SUPPORT_HUE_COLOR,
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
+    'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
     }
 
@@ -104,7 +104,7 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Hue lights."""
+    """Set up the Hue lights."""
     # Default needed in case of discovery
     filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
     allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE,
@@ -114,11 +114,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     allow_hue_groups = config.get(CONF_ALLOW_HUE_GROUPS)
 
     if discovery_info is not None:
-        host = urlparse(discovery_info[1]).hostname
-
-        if "HASS Bridge" in discovery_info[0]:
+        if "HASS Bridge" in discovery_info.get('name', ''):
             _LOGGER.info('Emulated hue found, will not add')
             return False
+
+        host = discovery_info.get('host')
     else:
         host = config.get(CONF_HOST, None)
 
@@ -140,7 +140,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                  allow_in_emulated_hue, allow_hue_groups):
-    """Setup a phue bridge based on host parameter."""
+    """Set up a phue bridge based on host parameter."""
     import phue
 
     try:
@@ -273,7 +273,7 @@ def request_configuration(host, hass, add_devices, filename,
 
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Set up actions to do when our configuration callback is called."""
         setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                      allow_in_emulated_hue, allow_hue_groups)
 
@@ -380,12 +380,10 @@ class HueLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             if self.info.get('manufacturername') == "OSRAM":
-                hsv = color_util.color_xy_brightness_to_hsv(
-                    *kwargs[ATTR_XY_COLOR],
-                    ibrightness=self.info['bri'])
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
+                hue, sat = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+                command['hue'] = hue
+                command['sat'] = sat
+                command['bri'] = self.info['bri']
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
@@ -405,7 +403,8 @@ class HueLight(Light):
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
-            command['ct'] = kwargs[ATTR_COLOR_TEMP]
+            temp = kwargs[ATTR_COLOR_TEMP]
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 

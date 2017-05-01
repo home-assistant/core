@@ -68,7 +68,7 @@ def request_configuration(network, hass, config):
 
 
 def setup_ecobee(hass, network, config):
-    """Setup Ecobee thermostat."""
+    """Set up the Ecobee thermostat."""
     # If ecobee has a PIN then it needs to be configured.
     if network.pin is not None:
         request_configuration(network, hass, config)
@@ -80,8 +80,8 @@ def setup_ecobee(hass, network, config):
 
     hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 
-    discovery.load_platform(hass, 'climate', DOMAIN,
-                            {'hold_temp': hold_temp}, config)
+    discovery.load_platform(
+        hass, 'climate', DOMAIN, {'hold_temp': hold_temp}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
@@ -90,7 +90,7 @@ class EcobeeData(object):
     """Get the latest data and update the states."""
 
     def __init__(self, config_file):
-        """Initialize the Ecobee data object."""
+        """Init the Ecobee data object."""
         from pyecobee import Ecobee
         self.ecobee = Ecobee(config_file)
 
@@ -102,7 +102,7 @@ class EcobeeData(object):
 
 
 def setup(hass, config):
-    """Setup Ecobee.
+    """Set up the Ecobee.
 
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.

@@ -16,10 +16,10 @@ DEPENDENCIES = ['lutron_caseta']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Lutron  Caseta lights."""
+    """Set up Lutron  Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
-    light_devices = bridge.get_devices_by_type("WallDimmer")
+    light_devices = bridge.get_devices_by_types(["WallDimmer", "PlugInDimmer"])
     for light_device in light_devices:
         dev = LutronCasetaLight(light_device, bridge)
         devs.append(dev)
@@ -42,7 +42,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs and self._device_type == "WallDimmer":
+        if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             brightness = 255
@@ -59,6 +59,6 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
         return self._state["current_state"] > 0
 
     def update(self):
-        """Called when forcing a refresh of the device."""
+        """Call when forcing a refresh of the device."""
         self._state = self._smartbridge.get_device_by_id(self._device_id)
         _LOGGER.debug(self._state)

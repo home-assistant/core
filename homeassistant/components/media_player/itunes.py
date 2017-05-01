@@ -124,7 +124,7 @@ class Itunes(object):
             [playlist for playlist in playlists if
              (playlist_id_or_name in [playlist["name"], playlist["id"]])]
 
-        if len(found_playlists) > 0:
+        if found_playlists:
             playlist = found_playlists[0]
             path = '/playlists/' + playlist['id'] + '/play'
             return self._request('PUT', path)

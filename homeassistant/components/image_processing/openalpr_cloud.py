@@ -1,5 +1,5 @@
 """
-Component that will help set the openalpr cloud for alpr processing.
+Component that will help set the OpenALPR cloud for ALPR processing.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.openalpr_cloud/
@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the openalpr cloud api platform."""
+    """Set up the OpenALPR cloud API platform."""
     confidence = config[CONF_CONFIDENCE]
     params = {
         'secret_key': config[CONF_API_KEY],
@@ -70,10 +70,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class OpenAlprCloudEntity(ImageProcessingAlprEntity):
-    """OpenAlpr cloud entity."""
+    """OpenALPR cloud entity."""
 
     def __init__(self, camera_entity, params, confidence, name=None):
-        """Initialize openalpr local api."""
+        """Initialize OpenALPR cloud API."""
         super().__init__()
 
         self._params = params
@@ -112,8 +112,6 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
 
         params['image_bytes'] = str(b64encode(image), 'utf-8')
 
-        data = None
-        request = None
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 request = yield from websession.post(
@@ -127,13 +125,9 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
                                   request.status, data.get('error'))
                     return
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Timeout for openalpr api.")
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Timeout for OpenALPR API")
             return
-
-        finally:
-            if request is not None:
-                yield from request.release()
 
         # processing api data
         vehicles = 0

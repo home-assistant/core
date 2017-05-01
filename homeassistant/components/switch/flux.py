@@ -17,7 +17,7 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
-    color_temperature_kelvin_to_mired, HASS_COLOR_MIN, HASS_COLOR_MAX)
+    color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
 
@@ -113,7 +113,6 @@ class FluxSwitch(SwitchDevice):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
-        self._state = state
         self._lights = lights
         self._start_time = start_time
         self._stop_time = stop_time
@@ -133,15 +132,19 @@ class FluxSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        return self.unsub_tracker is not None
 
     def turn_on(self, **kwargs):
         """Turn on flux."""
-        if not self._state:  # make initial update
-            self.flux_update()
-        self._state = True
+        if self.is_on:
+            return
+
+        # make initial update
+        self.flux_update()
+
         self.unsub_tracker = track_time_change(self.hass, self.flux_update,
                                                second=[0, 30])
+
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
@@ -150,7 +153,6 @@ class FluxSwitch(SwitchDevice):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self._state = False
         self.schedule_update_ha_state()
 
     def flux_update(self, now=None):
@@ -208,7 +210,6 @@ class FluxSwitch(SwitchDevice):
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            mired = max(HASS_COLOR_MIN, min(mired, HASS_COLOR_MAX))
             set_lights_temp(self.hass, self._lights, mired, brightness)
             _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%%"
                          " of %s cycle complete at %s", mired, brightness,

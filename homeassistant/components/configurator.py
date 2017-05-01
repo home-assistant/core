@@ -75,7 +75,7 @@ def request_done(request_id):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the configurator component."""
+    """Set up the configurator component."""
     return True
 
 
@@ -104,7 +104,7 @@ class Configurator(object):
             self, name, callback,
             description, description_image, submit_caption,
             fields, link_name, link_url, entity_picture):
-        """Setup a request for configuration."""
+        """Set up a request for configuration."""
         entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
 
         if fields is None:
@@ -180,7 +180,7 @@ class Configurator(object):
 
         # field validation goes here?
 
-        callback(call.data.get(ATTR_FIELDS, {}))
+        self.hass.async_add_job(callback, call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""

@@ -46,6 +46,38 @@ class TestSun(unittest.TestCase):
 
         mod = -1
         while True:
+            next_dawn = (astral.dawn_utc(utc_now +
+                         timedelta(days=mod), latitude, longitude))
+            if next_dawn > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_dusk = (astral.dusk_utc(utc_now +
+                         timedelta(days=mod), latitude, longitude))
+            if next_dusk > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_midnight = (astral.solar_midnight_utc(utc_now +
+                             timedelta(days=mod), longitude))
+            if next_midnight > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_noon = (astral.solar_noon_utc(utc_now +
+                         timedelta(days=mod), longitude))
+            if next_noon > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
             next_rising = (astral.sunrise_utc(utc_now +
                            timedelta(days=mod), latitude, longitude))
             if next_rising > utc_now:
@@ -60,15 +92,27 @@ class TestSun(unittest.TestCase):
                 break
             mod += 1
 
+        self.assertEqual(next_dawn, sun.next_dawn_utc(self.hass))
+        self.assertEqual(next_dusk, sun.next_dusk_utc(self.hass))
+        self.assertEqual(next_midnight, sun.next_midnight_utc(self.hass))
+        self.assertEqual(next_noon, sun.next_noon_utc(self.hass))
         self.assertEqual(next_rising, sun.next_rising_utc(self.hass))
         self.assertEqual(next_setting, sun.next_setting_utc(self.hass))
 
         # Point it at a state without the proper attributes
         self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON)
+        self.assertIsNone(sun.next_dawn(self.hass))
+        self.assertIsNone(sun.next_dusk(self.hass))
+        self.assertIsNone(sun.next_midnight(self.hass))
+        self.assertIsNone(sun.next_noon(self.hass))
         self.assertIsNone(sun.next_rising(self.hass))
         self.assertIsNone(sun.next_setting(self.hass))
 
         # Point it at a non-existing state
+        self.assertIsNone(sun.next_dawn(self.hass, 'non.existing'))
+        self.assertIsNone(sun.next_dusk(self.hass, 'non.existing'))
+        self.assertIsNone(sun.next_midnight(self.hass, 'non.existing'))
+        self.assertIsNone(sun.next_noon(self.hass, 'non.existing'))
         self.assertIsNone(sun.next_rising(self.hass, 'non.existing'))
         self.assertIsNone(sun.next_setting(self.hass, 'non.existing'))
 

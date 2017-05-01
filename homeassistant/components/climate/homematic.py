@@ -14,13 +14,17 @@ DEPENDENCIES = ['homematic']
 
 _LOGGER = logging.getLogger(__name__)
 
-STATE_MANUAL = "manual"
-STATE_BOOST = "boost"
+STATE_MANUAL = 'manual'
+STATE_BOOST = 'boost'
+STATE_COMFORT = 'comfort'
+STATE_LOWERING = 'lowering'
 
 HM_STATE_MAP = {
-    "AUTO_MODE": STATE_AUTO,
-    "MANU_MODE": STATE_MANUAL,
-    "BOOST_MODE": STATE_BOOST,
+    'AUTO_MODE': STATE_AUTO,
+    'MANU_MODE': STATE_MANUAL,
+    'BOOST_MODE': STATE_BOOST,
+    'COMFORT_MODE': STATE_COMFORT,
+    'LOWERING_MODE': STATE_LOWERING
 }
 
 HM_TEMP_MAP = [
@@ -37,7 +41,7 @@ HM_CONTROL_MODE = 'CONTROL_MODE'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic thermostat platform."""
+    """Set up the Homematic thermostat platform."""
     if discovery_info is None:
         return
 
@@ -72,10 +76,9 @@ class HMThermostat(HMDevice, ClimateDevice):
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return the list of available operation modes."""
         op_list = []
 
-        # generate list
         for mode in self._hmdevice.ACTIONNODE:
             if mode in HM_STATE_MAP:
                 op_list.append(HM_STATE_MAP.get(mode))
@@ -128,11 +131,9 @@ class HMThermostat(HMDevice, ClimateDevice):
 
     def _init_data_struct(self):
         """Generate a data dict (self._data) from the Homematic metadata."""
-        # Add state to data dict
         self._state = next(iter(self._hmdevice.WRITENODE.keys()))
         self._data[self._state] = STATE_UNKNOWN
 
-        # support state
         if HM_CONTROL_MODE in self._hmdevice.ATTRIBUTENODE:
             self._data[HM_CONTROL_MODE] = STATE_UNKNOWN
 

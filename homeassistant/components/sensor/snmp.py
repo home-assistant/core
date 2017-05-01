@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pysnmp==4.3.4']
+REQUIREMENTS = ['pysnmp==4.3.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,9 +42,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the SNMP sensor."""
-    from pysnmp.hlapi import (getCmd, CommunityData, SnmpEngine,
-                              UdpTransportTarget, ContextData, ObjectType,
-                              ObjectIdentity)
+    from pysnmp.hlapi import (
+        getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
+        ObjectType, ObjectIdentity)
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -114,9 +114,9 @@ class SnmpData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the remote SNMP capable host."""
-        from pysnmp.hlapi import (getCmd, CommunityData, SnmpEngine,
-                                  UdpTransportTarget, ContextData, ObjectType,
-                                  ObjectIdentity)
+        from pysnmp.hlapi import (
+            getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
+            ObjectType, ObjectIdentity)
         errindication, errstatus, errindex, restable = next(
             getCmd(SnmpEngine(),
                    CommunityData(self._community, mpModel=0),

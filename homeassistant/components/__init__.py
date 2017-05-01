@@ -102,7 +102,7 @@ def reload_core_config(hass):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup general services related to Home Assistant."""
+    """Set up general services related to Home Assistant."""
     @asyncio.coroutine
     def async_handle_turn_service(service):
         """Method to handle calls to homeassistant.turn_on/off."""

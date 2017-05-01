@@ -36,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)
         )
 
-    hass.async_add_job(async_add_devices(device_list))
+    async_add_devices(device_list)
 
 
 class InsteonPLMDimmerDevice(Light):
