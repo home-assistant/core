@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default='on'): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default='off'): cv.string,
-    vol.Optional(CONF_DISARM_AFTER_TRIGGER, default='no'): cv.string
+    vol.Optional(CONF_DISARM_AFTER_TRIGGER, default=False): cv.boolean
 })
 
 
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Pilight Binary Sensor."""
     disarm = config.get(CONF_DISARM_AFTER_TRIGGER)
-    if disarm == 'yes':
+    if disarm:
         add_devices([PilightTriggerSensor(
             hass=hass,
             name=config.get(CONF_NAME),
