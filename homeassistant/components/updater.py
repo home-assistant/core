@@ -11,6 +11,7 @@ import os
 import platform
 import uuid
 from datetime import timedelta
+# pylint: disable=no-name-in-module, import-error
 from distutils.version import StrictVersion
 
 import aiohttp
@@ -135,7 +136,7 @@ def get_system_info(hass):
     elif platform.system() == 'FreeBSD':
         info_object['os_version'] = platform.release()
     elif platform.system() == 'Linux':
-        import distro  # pylint: disable=import-error
+        import distro
         linux_dist = yield from hass.async_add_job(
             distro.linux_distribution, False)
         info_object['distribution'] = linux_dist[0]
