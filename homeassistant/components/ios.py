@@ -11,7 +11,7 @@ import logging
 import datetime
 
 import voluptuous as vol
-from voluptuous.humanize import humanize_error
+# from voluptuous.humanize import humanize_error
 
 from homeassistant.helpers import config_validation as cv
 
@@ -288,15 +288,16 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     def post(self, request):
         """Handle the POST request for device identification."""
         try:
-            req_data = yield from request.json()
+            data = yield from request.json()
         except ValueError:
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
-        try:
-            data = IDENTIFY_SCHEMA(req_data)
-        except vol.Invalid as ex:
-            return self.json_message(humanize_error(request.json, ex),
-                                     HTTP_BAD_REQUEST)
+        # Commented for now while iOS app is getting frequent updates
+        # try:
+        #     data = IDENTIFY_SCHEMA(req_data)
+        # except vol.Invalid as ex:
+        #     return self.json_message(humanize_error(request.json, ex),
+        #                              HTTP_BAD_REQUEST)
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now()
 
