@@ -11,7 +11,8 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (CONF_PASSWORD, CONF_USERNAME,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 import homeassistant.config as conf_util
@@ -67,6 +68,8 @@ def setup(hass, config):
     HUB = VerisureHub(config[DOMAIN], verisure)
     if not HUB.login():
         return False
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         lambda event: HUB.logout())
     HUB.update_overview()
 
     for component in ('sensor', 'switch', 'alarm_control_panel', 'lock',
@@ -115,6 +118,15 @@ class VerisureHub(object):
             return False
         return True
 
+    def logout(self):
+        """Logout from Verisure."""
+        try:
+            self.session.logout()
+        except self._verisure.Error as ex:
+            _LOGGER.error('Could not log out from verisure, %s', ex)
+            return False
+        return True
+
     @Throttle(timedelta(seconds=60))
     def update_overview(self):
         """Update the status."""
@@ -124,8 +136,3 @@ class VerisureHub(object):
     def smartcam_capture(self, device_id):
         """Capture a new image from a smartcam."""
         self.session.capture_image(device_id)
-
-    @property
-    def available(self):
-        """Return True if hub is available."""
-        return True

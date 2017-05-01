@@ -6,6 +6,7 @@ https://home-assistant.io/components/switch.verisure/
 """
 import logging
 from jsonpath import jsonpath
+from time import sleep
 
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import CONF_SMARTPLUGS
@@ -66,12 +67,20 @@ class VerisureSmartplug(SwitchDevice):
     def turn_on(self):
         """Set smartplug status on."""
         hub.session.set_smartplug_state(self._device_label, True)
-        self.update()
+        for _ in range(10):
+            sleep(1)
+            hub.update_overview(no_throttle=True)
+            if self.is_on:
+                return
 
     def turn_off(self):
         """Set smartplug status off."""
         hub.session.set_smartplug_state(self._device_label, False)
-        self.update()
+        for _ in range(10):
+            sleep(1)
+            hub.update_overview(no_throttle=True)
+            if not self.is_on:
+                return
 
     def update(self):
         """Get the latest date of the smartplug."""

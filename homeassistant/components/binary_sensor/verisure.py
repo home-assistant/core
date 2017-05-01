@@ -18,7 +18,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup Verisure binary sensors."""
     sensors = []
     hub.update_overview()
-    print(hub.overview)
 
     if int(hub.config.get(CONF_DOOR_WINDOW, 1)):
         sensors.extend([

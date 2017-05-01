@@ -46,11 +46,6 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         return self._state
 
     @property
-    def available(self):
-        """Return True if entity is available."""
-        return hub.available
-
-    @property
     def code_format(self):
         """Return the code format as regex."""
         return '^\\d{%s}$' % self._digits
@@ -95,4 +90,4 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         while 'result' not in transaction:
             sleep(0.5)
             transaction = hub.session.get_arm_state_transaction(transaction_id)
-        hub.update_overview()
+        hub.update_overview(no_throttle=True)
