@@ -611,6 +611,9 @@ pyowm==2.6.1
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.4
 
+# homeassistant.components.paradox
+pyparadox_alarm==1.0.0
+
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
 
