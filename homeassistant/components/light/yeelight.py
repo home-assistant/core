@@ -54,7 +54,7 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
 
 
 def _cmd(func):
-    """A wrapper to catch exceptions from the bulb."""
+    """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -67,7 +67,7 @@ def _cmd(func):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yeelight bulbs."""
+    """Set up Yeelight bulbs."""
     lights = []
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])

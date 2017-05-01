@@ -113,19 +113,19 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._brightness, self._state = brightness_state(self.values.primary)
 
     def value_added(self):
-        """Called when a new value is added to this entity."""
+        """Call when a new value is added to this entity."""
         self._supported_features = SUPPORT_BRIGHTNESS
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
     def value_changed(self):
-        """Called when a value for this entity's node has changed."""
+        """Call when a value for this entity's node has changed."""
         if self._refresh_value:
             if self._refreshing:
                 self._refreshing = False
             else:
                 def _refresh_value():
-                    """Used timer callback for delayed value refresh."""
+                    """Use timer callback for delayed value refresh."""
                     self._refreshing = True
                     self.values.primary.refresh()
 
@@ -218,7 +218,7 @@ class ZwaveColorLight(ZwaveDimmer):
         super().__init__(values, refresh, delay)
 
     def value_added(self):
-        """Called when a new value is added to this entity."""
+        """Call when a new value is added to this entity."""
         super().value_added()
 
         self._supported_features |= SUPPORT_RGB_COLOR

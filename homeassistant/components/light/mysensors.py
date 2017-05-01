@@ -25,7 +25,7 @@ SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for sensors."""
+    """Set up the mysensors platform for sensors."""
     # Only act if loaded via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if discovery_info is None:
@@ -65,7 +65,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
     """Represent the value of a MySensors Light child node."""
 
     def __init__(self, *args):
-        """Setup instance attributes."""
+        """Set up instance attributes."""
         mysensors.MySensorsDeviceEntity.__init__(self, *args)
         self._state = None
         self._brightness = None

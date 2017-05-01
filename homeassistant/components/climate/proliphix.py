@@ -48,7 +48,7 @@ class ProliphixThermostat(ClimateDevice):
 
     @property
     def should_poll(self):
-        """Polling needed for thermostat."""
+        """Set up polling needed for thermostat."""
         return True
 
     def update(self):

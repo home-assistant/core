@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the pwm lights."""
+    """Set up the pwm lights."""
     from pwmled.led import SimpleLed
     from pwmled.led.rgb import RgbLed
     from pwmled.led.rgbw import RgbwLed

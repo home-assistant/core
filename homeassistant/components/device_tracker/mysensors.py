@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the MySensors tracker."""
     def mysensors_callback(gateway, msg):
-        """Callback for mysensors platform."""
+        """Set up callback for mysensors platform."""
         node = gateway.sensors[msg.node_id]
         if node.sketch_name is None:
             _LOGGER.debug("No sketch_name: node %s", msg.node_id)
