@@ -80,6 +80,8 @@ omit =
     homeassistant/components/qwikswitch.py
     homeassistant/components/*/qwikswitch.py
 
+    homeassistant/components/raspihats.py
+
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
