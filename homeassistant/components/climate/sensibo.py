@@ -28,7 +28,7 @@ TIMEOUT = 10
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, cv.string),
+    vol.Optional(CONF_ID, default=ALL): vol.All(cv.ensure_list, [cv.string]),
 })
 
 _FETCH_FIELDS = ','.join([
@@ -73,7 +73,6 @@ class SensiboClimate(ClimateDevice):
         self._do_update(data)
 
     def _do_update(self, data):
-        print(data)
         self._name = data['room']['name']
         self._measurements = data['measurements']
         self._capabilities = data['remoteCapabilities']
