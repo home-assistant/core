@@ -69,6 +69,8 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 DATA_ZWAVE_DICT = 'zwave_devices'
+OZW_LOG_FILENAME = 'OZW_Log.txt'
+URL_API_OZW_LOG = '/api/zwave/ozwlog'
 ZWAVE_NETWORK = 'zwave_network'
 
 RENAME_NODE_SCHEMA = vol.Schema({
@@ -612,6 +614,9 @@ def setup(hass, config):
         register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
         hass.http.register_view(ZWaveNodeGroupView)
         hass.http.register_view(ZWaveNodeConfigView)
+        hass.http.register_view(ZWaveUserCodeView)
+        hass.http.register_static_path(
+            URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
 
     return True
 
@@ -665,6 +670,39 @@ class ZWaveNodeConfigView(HomeAssistantView):
             return self.json(config)
         else:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
+
+
+class ZWaveUserCodeView(HomeAssistantView):
+    """View to return the nodes usercode configuration."""
+
+    url = "/api/zwave/usercodes/{node_id}"
+    name = "api:zwave:usercodes"
+
+    @ha.callback
+    def get(self, request, node_id):
+        """Retrieve usercodes of node."""
+        hass = request.app['hass']
+        network = hass.data.get(ZWAVE_NETWORK)
+        node = network.nodes[int(node_id)]
+        usercodes = {}
+        if node.has_command_class(const.COMMAND_CLASS_USER_CODE):
+            for value in (
+                    node.get_values(class_id=const.COMMAND_CLASS_USER_CODE)
+                    .values()):
+                if value.genre != const.GENRE_USER:
+                    continue
+                usercodes[value.index] = {'code': value.data,
+                                          'label': value.label,
+                                          'length': len(value.data)}
+            _LOGGER.info('Usercodes: %s', usercodes)
+            if usercodes:
+                return self.json(usercodes)
+            else:
+                return self.json_message('Node does not have usercodes',
+                                         HTTP_NOT_FOUND)
+        else:
+            return self.json_message('Node does not have usercodes',
+                                     HTTP_NOT_FOUND)
 
 
 class ZWaveDeviceEntityValues():
