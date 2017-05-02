@@ -421,7 +421,7 @@ oauth2client==4.0.0
 # homeassistant.components.climate.oem
 oemthermostat==1.1
 
-# homeassistant.component.opencv
+# homeassistant.components.opencv
 opencv-python==3.2.0.6
 
 # homeassistant.components.sensor.openevse
