@@ -115,7 +115,7 @@ class ZwaveGarageDoor(zwave.ZWaveDeviceEntity, CoverDevice):
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
 
     @property

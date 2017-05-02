@@ -96,7 +96,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.network_node_changed, ZWaveNetwork.SIGNAL_NOTIFICATION)
 
     def network_node_changed(self, node=None, args=None):
-        """Called when node has changed on the network."""
+        """Handle a changed node on the network."""
         if node and node.node_id != self.node_id:
             return
         if args is not None and 'nodeId' in args and \
@@ -106,8 +106,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def get_node_statistics(self):
         """Retrieve statistics from the node."""
-        return self._network.manager.getNodeStatistics(self._network.home_id,
-                                                       self.node_id)
+        return self._network.manager.getNodeStatistics(
+            self._network.home_id, self.node_id)
 
     def node_changed(self):
         """Update node properties."""

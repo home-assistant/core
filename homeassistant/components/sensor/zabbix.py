@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.info("Connected to Zabbix API Version %s", zapi.api_version())
 
     trigger_conf = config.get(_CONF_TRIGGERS)
-    # The following code seems overly complex.  Need to think about this...
+    # The following code seems overly complex. Need to think about this...
     if trigger_conf:
         hostids = trigger_conf.get(_CONF_HOSTIDS)
         individual = trigger_conf.get(_CONF_INDIVIDUAL)
@@ -90,7 +90,7 @@ class ZabbixTriggerCountSensor(Entity):
     """Get the active trigger count for all Zabbix monitored hosts."""
 
     def __init__(self, zApi, name="Zabbix"):
-        """Initiate Zabbix sensor."""
+        """Initialize Zabbix sensor."""
         self._name = name
         self._zapi = zApi
         self._state = None
@@ -131,7 +131,7 @@ class ZabbixSingleHostTriggerCountSensor(ZabbixTriggerCountSensor):
     """Get the active trigger count for a single Zabbix monitored host."""
 
     def __init__(self, zApi, hostid, name=None):
-        """Initiate Zabbix sensor."""
+        """Initialize Zabbix sensor."""
         super().__init__(zApi, name)
         self._hostid = hostid
         if not name:

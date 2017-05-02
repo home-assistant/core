@@ -67,7 +67,7 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
-    """Handle pushes from telegram."""
+    """Handle pushes from Telegram."""
 
     requires_auth = False
     url = TELEGRAM_HANDLER_URL

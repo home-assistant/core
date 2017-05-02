@@ -77,6 +77,6 @@ class DemoGoogleCalendar(CalendarEventDevice):
     """Representation of a Demo Calendar element."""
 
     def __init__(self, hass, calendar_data, data):
-        """The same as a google calendar but without the API calls."""
+        """Initalize Google Calendar but without the API calls."""
         self.data = calendar_data
         super().__init__(hass, data)

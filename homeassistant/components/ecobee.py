@@ -52,7 +52,7 @@ def request_configuration(network, hass, config):
 
     # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration callbacks."""
         network.request_tokens()
         network.update()
         setup_ecobee(hass, network, config)

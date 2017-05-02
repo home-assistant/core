@@ -4,7 +4,6 @@ Component for controlling Pandora stations through the pianobar client.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/media_player.pandora/
 """
-
 import logging
 import re
 import os
@@ -64,7 +63,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     """A media player that uses the Pianobar interface to Pandora."""
 
     def __init__(self, name):
-        """Initialize the demo device."""
+        """Initialize the Pandora device."""
         MediaPlayerDevice.__init__(self)
         self._name = name
         self._player_state = STATE_OFF
@@ -79,7 +78,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """Should be polled for current state."""
+        """Return the polling state."""
         return True
 
     @property

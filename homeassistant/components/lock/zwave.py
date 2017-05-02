@@ -222,7 +222,7 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
         _LOGGER.debug("Lock state set from Bool value and is %s", self._state)
         if self.values.access_control:

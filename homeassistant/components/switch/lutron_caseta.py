@@ -47,6 +47,6 @@ class LutronCasetaLight(LutronCasetaDevice, SwitchDevice):
         return self._state["current_state"] > 0
 
     def update(self):
-        """Called when forcing a refresh of the device."""
+        """Update when forcing a refresh of the device."""
         self._state = self._smartbridge.get_device_by_id(self._device_id)
         _LOGGER.debug(self._state)

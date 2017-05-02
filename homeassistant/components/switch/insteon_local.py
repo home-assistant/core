@@ -61,7 +61,7 @@ def request_configuration(
         return
 
     def insteon_switch_config_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration changes."""
         setup_switch(device_id, data.get('name'), insteonhub, hass,
                      add_devices_callback)
 
