@@ -209,6 +209,46 @@ class TestMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_subscribe_topic_level_wildcard_and_wildcard_root_topic(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hello/test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('hello/test-topic', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_topic_level_wildcard_and_wildcard_subtree_topic(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hello/test-topic/here-iam', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual('hello/test-topic/here-iam', self.calls[0][0])
+        self.assertEqual('test-payload', self.calls[0][1])
+
+    def test_subscribe_topic_level_wildcard_and_wildcard_level_wildcard_no_match(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hello/here-iam/test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_subscribe_topic_level_wildcard_and_wildcard_no_match(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, '+/test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'hello/another-test-topic', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
     def test_subscribe_binary_topic(self):
         """Test the subscription to a binary topic."""
         mqtt.subscribe(self.hass, 'test-topic', self.record_calls,
