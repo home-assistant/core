@@ -142,7 +142,7 @@ class AmazonPollyProvider(Provider):
 
     @property
     def supported_languages(self):
-        """return a list of supported languages."""
+        """Return a list of supported languages."""
         return self.supported_langs
 
     @property

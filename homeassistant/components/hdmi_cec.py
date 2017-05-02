@@ -385,7 +385,7 @@ class CecDevice(Entity):
 
     @property
     def physical_address(self):
-        """return the physical address of device in HDMI network."""
+        """Return the physical address of device in HDMI network."""
         return str(self._device.physical_address)
 
     @property

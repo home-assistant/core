@@ -298,7 +298,7 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     def node_added(node):
-        """handle a new node on the network."""
+        """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
         node_config = device_config.get(entity.entity_id)
         if node_config.get(CONF_IGNORED):
@@ -309,7 +309,7 @@ def setup(hass, config):
         component.add_entities([entity])
 
     def scene_activated(node, scene_id):
-        """handle an activated scene on any node in the network."""
+        """Handle an activated scene on any node in the network."""
         hass.bus.fire(const.EVENT_SCENE_ACTIVATED, {
             ATTR_ENTITY_ID: _node_object_id(node),
             const.ATTR_OBJECT_ID: _node_object_id(node),
@@ -785,7 +785,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             return self.value_changed()
 
     def value_added(self):
-        """handle a new value of this entity."""
+        """Handle a new value of this entity."""
         pass
 
     def value_changed(self):

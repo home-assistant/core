@@ -136,7 +136,7 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def current_power_w(self):
-        """return the current power usage in W."""
+        """Return the current power usage in W."""
         if self.insight_params:
             return convert(
                 self.insight_params['currentpower'], float, 0.0

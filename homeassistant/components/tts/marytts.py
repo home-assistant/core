@@ -70,7 +70,7 @@ class MaryTTSProvider(Provider):
 
     @property
     def default_language(self):
-        """return the default language."""
+        """Return the default language."""
         return self._language
 
     @property

@@ -76,7 +76,7 @@ class WOLSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """return the name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     def turn_on(self):

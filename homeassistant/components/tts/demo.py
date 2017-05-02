@@ -41,12 +41,12 @@ class DemoProvider(Provider):
 
     @property
     def supported_languages(self):
-        """return list of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @property
     def supported_options(self):
-        """return list of supported options like voice, emotionen."""
+        """Return list of supported options like voice, emotionen."""
         return ['voice', 'age']
 
     def get_tts_audio(self, message, language, options=None):
