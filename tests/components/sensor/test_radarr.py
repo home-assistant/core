@@ -1,7 +1,5 @@
 """The tests for the radarr platform."""
 import unittest
-import time
-from datetime import datetime
 
 import pytest
 
@@ -44,12 +42,12 @@ def mocked_requests_get(*args, **kwargs):
                     {
                         "coverType": "poster",
                         "url": "/radarr/MediaCover/12/poster.jpg"
-                             + "?lastWrite=636208663600000000"
+                            + "?lastWrite=636208663600000000"
                     },
                     {
                         "coverType": "banner",
                         "url": "/radarr/MediaCover/12/banner.jpg"
-                             + "?lastWrite=636208663600000000"
+                            + "?lastWrite=636208663600000000"
                     }
                 ],
                 "website": "",
