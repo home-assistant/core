@@ -1,9 +1,10 @@
 """Test the helper method for writing tests."""
 import asyncio
+import functools as ft
 import os
 import sys
 from datetime import timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, Mock
 from io import StringIO
 import logging
 import threading
@@ -34,6 +35,21 @@ from homeassistant.util.async import (
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INST_COUNT = 0
+
+
+def threadsafe_callback_factory(func):
+    """Create threadsafe functions out of callbacks.
+
+    Callback needs to have `hass` as first argument.
+    """
+    @ft.wraps(func)
+    def threadsafe(*args, **kwargs):
+        """Call func threadsafe."""
+        hass = args[0]
+        run_callback_threadsafe(
+            hass.loop, ft.partial(func, *args, **kwargs)).result()
+
+    return threadsafe
 
 
 def get_test_config_dir(*add_path):
@@ -93,8 +109,8 @@ def async_test_home_assistant(loop):
 
     def async_add_job(target, *args):
         """Add a magic mock."""
-        if isinstance(target, MagicMock):
-            return
+        if isinstance(target, Mock):
+            return mock_coro(target())
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
@@ -177,15 +193,16 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0):
         payload, qos)
 
 
-def fire_mqtt_message(hass, topic, payload, qos=0):
-    """Fire the MQTT message."""
-    run_callback_threadsafe(
-        hass.loop, async_fire_mqtt_message, hass, topic, payload, qos).result()
+fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
-def fire_time_changed(hass, time):
+@ha.callback
+def async_fire_time_changed(hass, time):
     """Fire a time changes event."""
-    hass.bus.fire(EVENT_TIME_CHANGED, {'now': time})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': time})
+
+
+fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
 def fire_service_discovered(hass, service, info):
@@ -271,6 +288,7 @@ def mock_mqtt_component(hass):
         return mock_mqtt
 
 
+@ha.callback
 def mock_component(hass, component):
     """Mock a component is setup."""
     if component in hass.config.components:
@@ -417,16 +435,11 @@ def patch_yaml_files(files_dict, endswith=True):
 
 def mock_coro(return_value=None):
     """Helper method to return a coro that returns a value."""
-    @asyncio.coroutine
-    def coro():
-        """Fake coroutine."""
-        return return_value
-
-    return coro()
+    return mock_coro_func(return_value)()
 
 
 def mock_coro_func(return_value=None):
-    """Helper method to return a coro that returns a value."""
+    """Helper method to create a coro function that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
