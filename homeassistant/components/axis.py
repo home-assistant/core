@@ -74,7 +74,7 @@ def request_configuration(hass, name, host, serialnumber):
         """Called when config is submitted."""
         if CONF_INCLUDE not in callback_data:
             configurator.notify_errors(instance,
-                                       'Functionality mandatory.')
+                                       "Functionality mandatory.")
             return False
         callback_data[CONF_INCLUDE] = callback_data[CONF_INCLUDE].split()
         callback_data[CONF_HOST] = host
@@ -84,7 +84,7 @@ def request_configuration(hass, name, host, serialnumber):
             config = DEVICE_SCHEMA(callback_data)
         except vol.Invalid:
             configurator.notify_errors(instance,
-                                       'Bad input, please check spelling.')
+                                       "Bad input, please check spelling.")
             return False
 
         if setup_device(hass, config):
@@ -95,7 +95,7 @@ def request_configuration(hass, name, host, serialnumber):
             configurator.request_done(instance)
         else:
             configurator.notify_errors(instance,
-                                       'Failed to register, please try again.')
+                                       "Failed to register, please try again.")
             return False
 
     title = '{} ({})'.format(name, host)
@@ -108,22 +108,22 @@ def request_configuration(hass, name, host, serialnumber):
         submit_caption="Confirm",
         fields=[
             {'id': CONF_NAME,
-             'name': 'Device name',
+             'name': "Device name",
              'type': 'text'},
             {'id': CONF_USERNAME,
-             'name': 'User name',
+             'name': "User name",
              'type': 'text'},
             {'id': CONF_PASSWORD,
              'name': 'Password',
              'type': 'password'},
             {'id': CONF_INCLUDE,
-             'name': 'Device functionality (space separated list)',
+             'name': "Device functionality (space separated list)",
              'type': 'text'},
             {'id': ATTR_LOCATION,
-             'name': 'Physical location of device (optional)',
+             'name': "Physical location of device (optional)",
              'type': 'text'},
             {'id': CONF_TRIGGER_TIME,
-             'name': 'Sensor update interval (optional)',
+             'name': "Sensor update interval (optional)",
              'type': 'number'},
         ]
     )
@@ -156,7 +156,7 @@ def setup(hass, base_config):
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                 if not setup_device(hass, config):
-                    _LOGGER.error('Couldn\'t set up %s', config['name'])
+                    _LOGGER.error("Couldn\'t set up %s", config['name'])
             else:
                 request_configuration(hass, name, host, serialnumber)
 
@@ -168,7 +168,7 @@ def setup(hass, base_config):
             if CONF_NAME not in config:
                 config[CONF_NAME] = device
             if not setup_device(hass, config):
-                _LOGGER.error('Couldn\'t set up %s', config['name'])
+                _LOGGER.error("Couldn\'t set up %s", config['name'])
 
     return True
 
@@ -183,7 +183,7 @@ def setup_device(hass, config):
 
     if device.serial_number is None:
         # If there is no serial number a connection could not be made
-        _LOGGER.error('Couldn\'t connect to %s', config[CONF_HOST])
+        _LOGGER.error("Couldn\'t connect to %s", config[CONF_HOST])
         return False
 
     for component in config[CONF_INCLUDE]:
@@ -257,7 +257,7 @@ class AxisDeviceEvent(Entity):
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug('%s Called delayed (%s sec) update.',
+                _LOGGER.debug("%s Called delayed (%s sec) update.",
                               self._name, self._delay)
                 self.schedule_update_ha_state()
                 self._timer = None
