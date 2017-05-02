@@ -155,6 +155,7 @@ def setup(hass, base_config):
                     config = DEVICE_SCHEMA(config_file[serialnumber])
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
+                    return False
                 if not setup_device(hass, config):
                     _LOGGER.error("Couldn\'t set up %s", config['name'])
             else:
