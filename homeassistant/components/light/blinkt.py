@@ -96,12 +96,12 @@ class BlinktLight(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on and set correct brightness & color."""
-        self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        percent_bright = (self._brightness / 255)
-
         if ATTR_RGB_COLOR in kwargs:
             self._rgb_color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
 
+        percent_bright = (self._brightness / 255)
         self._blinkt.set_all(self._rgb_color[0],
                              self._rgb_color[1],
                              self._rgb_color[2],
