@@ -73,6 +73,16 @@ class PiglowLight(Light):
         return SUPPORT_PIGLOW
 
     @property
+    def should_poll(self):
+        """Return if we should poll this device."""
+        return False
+
+    @property
+    def assumed_state(self) -> bool:
+        """Return True if unable to access real state of the entity."""
+        return True
+
+    @property
     def is_on(self):
         """Return true if light is on."""
         return self._is_on
@@ -94,9 +104,11 @@ class PiglowLight(Light):
             self._piglow.all(self._brightness)
         self._piglow.show()
         self._is_on = True
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
         self._piglow.clear()
         self._piglow.show()
         self._is_on = False
+        self.schedule_update_ha_state()
