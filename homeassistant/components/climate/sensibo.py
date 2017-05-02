@@ -9,6 +9,7 @@ import asyncio
 import logging
 
 import aiohttp
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -75,14 +76,17 @@ class SensiboClimate(ClimateDevice):
     def _do_update(self, data):
         self._name = data['room']['name']
         self._measurements = data['measurements']
-        self._capabilities = data['remoteCapabilities']
         self._ac_states = data['acState']
         self._status = data['connectionStatus']['isAlive']
-        self._operations = sorted(self._capabilities['modes'].keys())
-        self._current_capabilities = self._capabilities[
+        capabilities = data['remoteCapabilities']
+        self._operations = sorted(capabilities['modes'].keys())
+        self._current_capabilities = capabilities[
             'modes'][self.current_operation]
-        self._temperature_unit = TEMP_CELSIUS if self._ac_states[
-            'temperatureUnit'] == 'C' else TEMP_FAHRENHEIT
+        temperature_unit_key = self._ac_states['temperatureUnit']
+        self._temperature_unit = \
+            TEMP_CELSIUS if temperature_unit_key == 'C' else TEMP_FAHRENHEIT
+        self._temperatures_list = self._current_capabilities[
+            'temperatures'][temperature_unit_key]['values']
 
     @property
     def device_state_attributes(self):
@@ -107,7 +111,13 @@ class SensiboClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        return 1
+        if self.temperature_unit == self.unit_of_measurement:
+            # We are working in same units as the a/c unit. Use whole degrees
+            # like the API supports.
+            return 1
+        else:
+            # Unit conversion is going on. No point to stick to specific steps.
+            return None
 
     @property
     def current_operation(self):
@@ -169,16 +179,12 @@ class SensiboClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return self._current_capabilities['temperatures'][
-            'C' if self.unit_of_measurement == TEMP_CELSIUS else 'F'][
-                'values'][0]
+        return self._temperatures_list[0]
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return self._current_capabilities['temperatures'][
-            'C' if self.unit_of_measurement == TEMP_CELSIUS else 'F'][
-                'values'][-1]
+        return self._temperatures_list[-1]
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):
@@ -186,51 +192,66 @@ class SensiboClimate(ClimateDevice):
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
-        yield from self._client.async_set_ac_state_property(
-            self._id, 'targetTemperature', int(temperature))
-        yield from self.async_update_ha_state(True)
+        temperature = int(temperature)
+        if temperature not in self._temperatures_list:
+            # Requested temperature is not supported.
+            if temperature == self.target_temperature:
+                return
+            index = self._temperatures_list.index(self.target_temperature)
+            if temperature > self.target_temperature and index < len(
+                    self._temperatures_list) - 1:
+                temperature = self._temperatures_list[index + 1]
+            elif temperature < self.target_temperature and index > 0:
+                temperature = self._temperatures_list[index - 1]
+            else:
+                return
+
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'targetTemperature', temperature)
 
     @asyncio.coroutine
     def async_set_fan_mode(self, fan):
         """Set new target fan mode."""
-        yield from self._client.async_set_ac_state_property(
-            self._id, 'fanLevel', fan)
-        yield from self.async_update_ha_state(True)
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'fanLevel', fan)
 
     @asyncio.coroutine
     def async_set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        yield from self._client.async_set_ac_state_property(
-            self._id, 'mode', operation_mode)
-        yield from self.async_update_ha_state(True)
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'mode', operation_mode)
 
     @asyncio.coroutine
     def async_set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
-        yield from self._client.async_set_ac_state_property(
-            self._id, 'swing', swing_mode)
-        yield from self.async_update_ha_state(True)
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'swing', swing_mode)
 
     @asyncio.coroutine
     def async_turn_aux_heat_on(self):
         """Turn Sensibo unit on."""
-        yield from self._client.async_set_ac_state_property(
-            self._id, 'on', True)
-        yield from self.async_update_ha_state(True)
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'on', True)
 
     @asyncio.coroutine
     def async_turn_aux_heat_off(self):
         """Turn Sensibo unit on."""
-        yield from self._client.async_set_ac_state_property(
-            self._id, 'on', False)
-        yield from self.async_update_ha_state(True)
+        with async_timeout.timeout(TIMEOUT):
+            yield from self._client.async_set_ac_state_property(
+                self._id, 'on', False)
 
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
         try:
-            data = yield from self._client.async_get_device(
-                self._id, _FETCH_FIELDS)
-            self._do_update(data)
+            with async_timeout.timeout(TIMEOUT):
+                data = yield from self._client.async_get_device(
+                    self._id, _FETCH_FIELDS)
+                self._do_update(data)
         except aiohttp.client_exceptions.ClientError:
             _LOGGER.warning('Failed to connect to Sensibo servers.')
