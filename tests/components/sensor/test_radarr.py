@@ -29,26 +29,27 @@ def mocked_requests_get(*args, **kwargs):
             """Return the json of the response."""
             return self.json_data
 
-    today = datetime.date(datetime.fromtimestamp(time.time()))
     url = str(args[0])
     if 'api/calendar' in url:
         return MockResponse([
             {
-                "title": "Resident Evil: The Final Chapter",
+                "title": "Resident Evil",
                 "sortTitle": "resident evil final chapter",
                 "sizeOnDisk": 0,
                 "status": "announced",
-                "overview": "Alice, Jill, Claire, Chris, Leon, Ada, and Wesker rush to The Hive, where The Red Queen plots total destruction over the human race.",
+                "overview": "Alice, Jill, Claire, Chris, Leon, Ada, and...",
                 "inCinemas": "2017-01-25T00:00:00Z",
                 "physicalRelease": "2017-01-27T00:00:00Z",
                 "images": [
                     {
                         "coverType": "poster",
-                        "url": "/radarr/MediaCover/12/poster.jpg?lastWrite=636208663600000000"
+                        "url": "/radarr/MediaCover/12/poster.jpg"
+                             + "?lastWrite=636208663600000000"
                     },
                     {
                         "coverType": "banner",
-                        "url": "/radarr/MediaCover/12/banner.jpg?lastWrite=636208663600000000"
+                        "url": "/radarr/MediaCover/12/banner.jpg"
+                             + "?lastWrite=636208663600000000"
                     }
                 ],
                 "website": "",
@@ -102,16 +103,18 @@ def mocked_requests_get(*args, **kwargs):
                 "sortTitle": "assassins creed",
                 "sizeOnDisk": 0,
                 "status": "released",
-                "overview": "Lynch discovers he is a descendant of the secret Assassins society through unlocked genetic memories that allow him to relive the adventures of his ancestor, Aguilar, in 15th Century Spain. After gaining incredible knowledge and skills he’s poised to take on the oppressive Knights Templar in the present day.",
+                "overview": "Lynch discovers he is a descendant of...",
                 "inCinemas": "2016-12-21T00:00:00Z",
                 "images": [
                     {
                         "coverType": "poster",
-                        "url": "/radarr/MediaCover/1/poster.jpg?lastWrite=636200219330000000"
+                        "url": "/radarr/MediaCover/1/poster.jpg"
+                             + "?lastWrite=636200219330000000"
                     },
                     {
                         "coverType": "banner",
-                        "url": "/radarr/MediaCover/1/banner.jpg?lastWrite=636200219340000000"
+                        "url": "/radarr/MediaCover/1/banner.jpg"
+                             + "?lastWrite=636200219340000000"
                     }
                 ],
                 "website": "https://www.ubisoft.com/en-US/",
@@ -177,7 +180,9 @@ def mocked_requests_get(*args, **kwargs):
             "authentication": "forms",
             "sqliteVersion": "3.16.2",
             "urlBase": "",
-            "runtimeVersion": "4.6.1 (Stable 4.6.1.3/abb06f1 Mon Oct  3 07:57:59 UTC 2016)"
+            "runtimeVersion": "4.6.1 "
+                            + "(Stable 4.6.1.3/abb06f1 "
+                            + "Mon Oct  3 07:57:59 UTC 2016)"
         }, 200)
     else:
         return MockResponse({
@@ -336,7 +341,7 @@ class TestRadarrSetup(unittest.TestCase):
             self.assertEqual('Radarr Upcoming', device.name)
             self.assertEqual(
                 '2017-01-27T00:00:00Z',
-                device.device_state_attributes["Resident Evil: The Final Chapter (2017)"]
+                device.device_state_attributes["Resident Evil (2017)"]
             )
 
     @pytest.mark.skip
@@ -367,7 +372,7 @@ class TestRadarrSetup(unittest.TestCase):
             self.assertEqual('Radarr Upcoming', device.name)
             self.assertEqual(
                 '2017-01-27T00:00:00Z',
-                device.device_state_attributes["Resident Evil: The Final Chapter (2017)"]
+                device.device_state_attributes["Resident Evil (2017)"]
             )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
@@ -422,7 +427,7 @@ class TestRadarrSetup(unittest.TestCase):
             self.assertEqual('Radarr Upcoming', device.name)
             self.assertEqual(
                 '2017-01-27T00:00:00Z',
-                device.device_state_attributes["Resident Evil: The Final Chapter (2017)"]
+                device.device_state_attributes["Resident Evil (2017)"]
             )
 
     @unittest.mock.patch('requests.get', side_effect=mocked_exception)
