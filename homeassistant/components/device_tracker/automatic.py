@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.3.0']
+REQUIREMENTS = ['aioautomatic==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +34,8 @@ DEFAULT_TIMEOUT = 5
 SCOPE = ['location', 'vehicle:profile', 'trip']
 
 ATTR_FUEL_LEVEL = 'fuel_level'
+
+EVENT_AUTOMATIC_UPDATE = 'automatic_update'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
@@ -107,6 +109,9 @@ class AutomaticData(object):
     def handle_event(self, name, event):
         """Coroutine to update state for a realtime event."""
         import aioautomatic
+
+        # Fire a hass event
+        self.hass.bus.async_fire(EVENT_AUTOMATIC_UPDATE, event.data)
 
         if event.vehicle.id not in self.vehicle_info:
             # If vehicle hasn't been seen yet, request the detailed
