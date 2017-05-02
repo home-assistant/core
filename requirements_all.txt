@@ -803,7 +803,7 @@ uber_rides==0.4.1
 upsmychoice==1.0.2
 
 # homeassistant.components.opencv
-urllib==1.21
+urllib3==1.21
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
