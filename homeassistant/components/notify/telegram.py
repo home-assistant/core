@@ -9,6 +9,7 @@ import logging
 import urllib
 
 import requests
+from requests.auth import HTTPDigestAuth
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -62,6 +63,11 @@ def load_data(url=None, file=None, username=None, password=None):
             # Load photo from URL
             if username is not None and password is not None:
                 req = requests.get(url, auth=(username, password), timeout=15)
+
+                # if 401, try digest authentication
+                if req.status_code == 401:
+                    digest = HTTPDigestAuth(username, password)
+                    req = requests.get(url, auth=digest, timeout=15)
             else:
                 req = requests.get(url, timeout=15)
             return io.BytesIO(req.content)
@@ -72,7 +78,7 @@ def load_data(url=None, file=None, username=None, password=None):
         else:
             _LOGGER.warning("Can't load photo no photo found in params!")
 
-    except OSError as error:
+    except (OSError, TypeError) as error:
         _LOGGER.error("Can't load photo into ByteIO: %s", error)
 
     return None
