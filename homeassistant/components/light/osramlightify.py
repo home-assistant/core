@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 CONF_ALLOW_LIGHTIFY_GROUPS = "allow_lightify_groups"
-DEFAULT_ALLOW_LIGHTIFY_GROUPS = False
+DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
 
 SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                          SUPPORT_EFFECT | SUPPORT_RGB_COLOR |
@@ -74,10 +74,10 @@ def setup_bridge(bridge, add_devices_callback, add_groups):
         try:
             bridge.update_all_light_status()
             bridge.update_group_list()
-        except socket.error:
-            errno, errstr = sys.exc_info()[:2]
-            if errno == socket.timeout:
-                _LOGGER.error('Timeout during updating of lights.')
+        except TimeoutError:
+            _LOGGER.error('Timeout during updating of lights.')
+        except OSError:
+            _LOGGER.error('OSError during updating of lights.')
 
         new_lights = []
 
@@ -129,8 +129,6 @@ class Luminary(Light):
     @property
     def rgb_color(self):
         """Last RGB color value set."""
-        _LOGGER.debug("rgb_color light state for light: %s is: %s %s %s ",
-                      self._name, self._rgb[0], self._rgb[1], self._rgb[2])
         return self._rgb
 
     @property
@@ -141,15 +139,11 @@ class Luminary(Light):
     @property
     def brightness(self):
         """Brightness of this light between 0..255."""
-        _LOGGER.debug("brightness for light %s is: %s",
-                      self._name, self._brightness)
         return self._brightness
 
     @property
     def is_on(self):
         """Update Status to True if device is on."""
-        _LOGGER.debug("is_on light state for light: %s is: %s",
-                      self._name, self._state)
         return self._state
 
     @property
@@ -164,9 +158,6 @@ class Luminary(Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.debug("turn_on Attempting to turn on light: %s ",
-                      self._name)
-
         self._luminary.set_onoff(1)
         self._state = True
 
@@ -281,7 +272,6 @@ class OsramLightifyGroup(Luminary):
     def __init__(self, group, bridge, update_lights):
         """Init light group."""
         self._bridge = bridge
-        self._light = None
         self._light_ids = []
         super().__init__(group, update_lights)
 
@@ -290,21 +280,19 @@ class OsramLightifyGroup(Luminary):
 
         The group is on, if any of the lights in on.
         """
-        states = []
-        for light_id in self._light_ids:
-            states.append(self._bridge.lights()[light_id].on())
-        return any(states)
+        lights = self._bridge.lights()
+        return any(lights[light_id].on() for light_id in self._light_ids)
 
     def update(self):
         """Update group status."""
         super().update()
         self._light_ids = self._luminary.lights()
-        self._light = self._bridge.lights()[self._light_ids[0]]
-        self._brightness = int(self._light.lum() * 2.25)
-        self._rgb = self._light.rgb()
-        o_temp = self._light.temp()
+        light = self._bridge.lights()[self._light_ids[0]]
+        self._brightness = int(light.lum() * 2.55)
+        self._rgb = light.rgb()
+        o_temp = light.temp()
         if o_temp == 0:
             self._temperature = None
         else:
             self._temperature = color_temperature_kelvin_to_mired(o_temp)
-        self._state = self._light.on()
+        self._state = light.on()
