@@ -168,11 +168,11 @@ def setup(hass, config):
             retain = config[DOMAIN].get(CONF_RETAIN)
 
             def pub_callback(topic, payload, qos, retain):
-                """Call mqtt publish function."""
+                """Call MQTT publish function."""
                 mqtt.publish(hass, topic, payload, qos, retain)
 
             def sub_callback(topic, callback, qos):
-                """Call mqtt subscribe function."""
+                """Call MQTT subscribe function."""
                 mqtt.subscribe(hass, topic, callback, qos)
             gateway = mysensors.MQTTGateway(
                 pub_callback, sub_callback,
@@ -317,7 +317,6 @@ class GatewayWrapper(object):
         device (str): Path to serial port, ip adress or mqtt.
 
         Attributes:
-        
         _wrapped_gateway (mysensors.SerialGateway): Wrapped gateway.
         platform_callbacks (list): Callback functions, one per platform.
         optimistic (bool): Send values to actuators without feedback state.

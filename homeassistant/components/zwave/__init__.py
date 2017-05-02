@@ -431,7 +431,7 @@ def setup(hass, config):
             node.set_config_param(param, selection, size)
         else:
             if selection > i:
-                _LOGGER.info("Config parameter selection does not exist! " 
+                _LOGGER.info("Config parameter selection does not exist! "
                              "Please check zwcfg_[home_id].xml in "
                              "your homeassistant config directory. "
                              "Available selections are 0 to %s", i)

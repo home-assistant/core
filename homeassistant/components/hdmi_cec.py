@@ -290,7 +290,7 @@ def setup(hass: HomeAssistant, base_config):
 
     def _new_device(device):
         """Handle new devices which are detected by HDMI network."""
-        key =  '{}.{}'.format(DOMAIN, device.name)
+        key = '{}.{}'.format(DOMAIN, device.name)
         hass.data[key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
