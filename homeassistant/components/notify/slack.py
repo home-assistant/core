@@ -66,6 +66,7 @@ class SlackNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         import slacker
+        import json
 
         if kwargs.get(ATTR_TARGET) is None:
             targets = [self._default_channel]
@@ -75,14 +76,30 @@ class SlackNotificationService(BaseNotificationService):
         data = kwargs.get('data')
         attachments = data.get('attachments') if data else None
 
-        for target in targets:
+        status = data.get('status') if data else None
+
+        if status:
             try:
-                self.slack.chat.post_message(target, message,
-                                             as_user=self._as_user,
-                                             username=self._username,
-                                             icon_emoji=self._icon,
-                                             attachments=attachments,
-                                             link_names=True)
+                status_text = status.get('status_text', '')
+                status_emoji = status.get('status_emoji', '')
+                profile_encoded = json.dumps({
+                    'status_text': status_text,
+                    'status_emoji': status_emoji
+                    })
+                self.slack.users.profile.set(profile=profile_encoded)
             except slacker.Error as err:
-                _LOGGER.error("Could not send slack notification. Error: %s",
+                _LOGGER.error("Could not update slack status. Error: %s",
                               err)
+
+        if message:
+            for target in targets:
+                try:
+                    self.slack.chat.post_message(target, message,
+                                                 as_user=self._as_user,
+                                                 username=self._username,
+                                                 icon_emoji=self._icon,
+                                                 attachments=attachments,
+                                                 link_names=True)
+                except slacker.Error as err:
+                    _LOGGER.error("Could not send slack notification. Error: %s",
+                                  err)
