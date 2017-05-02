@@ -174,7 +174,7 @@ class OpenGarageCover(CoverDevice):
             self.opengarage_url, self._devicekey)
         try:
             response = requests.get(url, timeout=10).json()
-            if (response["result"] == 2):
+            if response["result"] == 2:
                 _LOGGER.error("Unable to control %s: device_key is incorrect.",
                               self._name)
                 self._state = self._state_before_move
