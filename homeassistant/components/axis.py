@@ -244,7 +244,6 @@ class AxisDeviceEvent(Entity):
         self._delay = self.axis_event.device_config(CONF_TRIGGER_TIME)
         self._timer = None
         self.axis_event.callback = self._update_callback
-        # self.update()
 
     def _update_callback(self):
         """Update the sensor's state, if needed."""
