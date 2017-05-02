@@ -12,18 +12,16 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.util.dt import utcnow
-
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
-
 from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_HOST, CONF_INCLUDE, CONF_NAME,
                                  CONF_PASSWORD, CONF_TRIGGER_TIME,
                                  CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.loader import get_component
+from homeassistant.util.dt import utcnow
 
 
 REQUIREMENTS = ['http://github.com/Kane610/axis'
