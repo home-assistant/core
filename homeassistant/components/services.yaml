@@ -388,3 +388,17 @@ hassio:
       addon:
         description: Name of addon.
         example: 'smb_config'
+
+eight_sleep:
+  heat_set:
+    description: Set heating level for eight sleep.
+    fields:
+      entity_id:
+        description: Entity id of the bed state to adjust.
+        example: 'sensor.eight_left_bed_state'
+      target:
+        description: Target heating level from 0-100.
+        example: 35
+      duration:
+        description: Duration to heat at the target level in seconds.
+        example: 3600
