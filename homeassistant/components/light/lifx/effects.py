@@ -198,17 +198,18 @@ class LIFXEffect(object):
     @asyncio.coroutine
     def async_restore(self, light):
         """Restore to the original state (if we are still running)."""
-        if light.effect_data:
-            if light.effect_data.effect == self:
-                if light.device and not light.effect_data.power:
-                    light.device.set_power(False)
-                    yield from asyncio.sleep(0.5)
-                if light.device:
-                    light.device.set_color(light.effect_data.color)
-                    yield from asyncio.sleep(0.5)
-                light.effect_data = None
-                yield from light.refresh_state()
+        if light in self.lights:
             self.lights.remove(light)
+
+        if light.effect_data and light.effect_data.effect == self:
+            if light.device and not light.effect_data.power:
+                light.device.set_power(False)
+                yield from asyncio.sleep(0.5)
+            if light.device:
+                light.device.set_color(light.effect_data.color)
+                yield from asyncio.sleep(0.5)
+            light.effect_data = None
+            yield from light.refresh_state()
 
     def from_poweroff_hsbk(self, light, **kwargs):
         """Return the color when starting from a powered off state."""
