@@ -11,8 +11,7 @@ import re
 
 import aiohttp
 from aiohttp import web
-from aiohttp.web_exceptions import (
-    HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed)
+from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 
