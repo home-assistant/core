@@ -17,7 +17,7 @@ DEPENDENCIES = ['zha']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up Zigbee Home Automation lights."""
+    """Set up the Zigbee Home Automation lights."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
@@ -33,12 +33,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class Light(zha.Entity, light.Light):
-    """ZHA or ZLL light."""
+    """Representation of a ZHA or ZLL light."""
 
     _domain = light.DOMAIN
 
     def __init__(self, **kwargs):
-        """Initialize ZHA light."""
+        """Initialize the ZHA light."""
         super().__init__(**kwargs)
         self._supported_features = 0
         self._color_temp = None
@@ -61,7 +61,7 @@ class Light(zha.Entity, light.Light):
 
     @property
     def is_on(self) -> bool:
-        """Return True if entity is on."""
+        """Return true if entity is on."""
         if self._state == 'unknown':
             return False
         return bool(self._state)

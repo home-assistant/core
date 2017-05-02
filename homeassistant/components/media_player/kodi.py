@@ -47,17 +47,17 @@ TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
-    "music": MEDIA_TYPE_MUSIC,
-    "artist": MEDIA_TYPE_MUSIC,
-    "album": MEDIA_TYPE_MUSIC,
-    "song": MEDIA_TYPE_MUSIC,
-    "video": MEDIA_TYPE_VIDEO,
-    "set": MEDIA_TYPE_PLAYLIST,
-    "musicvideo": MEDIA_TYPE_VIDEO,
-    "movie": MEDIA_TYPE_VIDEO,
-    "tvshow": MEDIA_TYPE_TVSHOW,
-    "season": MEDIA_TYPE_TVSHOW,
-    "episode": MEDIA_TYPE_TVSHOW,
+    'music': MEDIA_TYPE_MUSIC,
+    'artist': MEDIA_TYPE_MUSIC,
+    'album': MEDIA_TYPE_MUSIC,
+    'song': MEDIA_TYPE_MUSIC,
+    'video': MEDIA_TYPE_VIDEO,
+    'set': MEDIA_TYPE_PLAYLIST,
+    'musicvideo': MEDIA_TYPE_VIDEO,
+    'movie': MEDIA_TYPE_VIDEO,
+    'tvshow': MEDIA_TYPE_TVSHOW,
+    'season': MEDIA_TYPE_TVSHOW,
+    'episode': MEDIA_TYPE_TVSHOW,
 }
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -161,11 +161,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 def cmd(func):
-    """Decorator to catch command exceptions."""
+    """Catch command exceptions."""
     @wraps(func)
     @asyncio.coroutine
     def wrapper(obj, *args, **kwargs):
-        """Wrapper for all command methods."""
+        """Wrap all command methods."""
         import jsonrpc_base
         try:
             yield from func(obj, *args, **kwargs)
@@ -245,7 +245,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_speed_event(self, sender, data):
-        """Called when player changes between playing and paused."""
+        """Handle player changes between playing and paused."""
         self._properties['speed'] = data['player']['speed']
 
         if not hasattr(data['item'], 'id'):
@@ -259,7 +259,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_stop(self, sender, data):
-        """Called when the player stops playback."""
+        """Handle the stop of the player playback."""
         # Prevent stop notifications which are sent after quit notification
         if self._players is None:
             return
@@ -271,14 +271,14 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_volume_changed(self, sender, data):
-        """Called when the volume is changed."""
+        """Handle the volume changes."""
         self._app_properties['volume'] = data['volume']
         self._app_properties['muted'] = data['muted']
         self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
     def async_on_quit(self, sender, data):
-        """Called when the volume is changed."""
+        """Handle the muted volume."""
         self._players = None
         self._properties = {}
         self._item = {}
@@ -293,8 +293,8 @@ class KodiDevice(MediaPlayerDevice):
             return (yield from self.server.Player.GetActivePlayers())
         except jsonrpc_base.jsonrpc.TransportError:
             if self._players is not None:
-                _LOGGER.info('Unable to fetch kodi data')
-                _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
+                _LOGGER.info("Unable to fetch kodi data")
+                _LOGGER.debug("Unable to fetch kodi data", exc_info=True)
             return None
 
     @property
@@ -548,7 +548,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_set_play_state(self, state):
-        """Helper method for play/pause/toggle."""
+        """Handle play/pause/toggle."""
         players = yield from self._get_players()
 
         if players is not None and players:
@@ -590,7 +590,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def _goto(self, direction):
-        """Helper method used for previous/next track."""
+        """Handle for previous/next track."""
         players = yield from self._get_players()
 
         if players:

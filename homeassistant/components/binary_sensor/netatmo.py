@@ -34,8 +34,8 @@ PRESENCE_SENSOR_TYPES = {
     "Outdoor vehicle": "motion"
 }
 TAG_SENSOR_TYPES = {
-    "Tag Vibration": 'vibration',
-    "Tag Open": 'opening'
+    "Tag Vibration": "vibration",
+    "Tag Open": "opening"
 }
 
 CONF_HOME = 'home'
@@ -117,7 +117,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
 
     def __init__(self, data, camera_name, module_name, home,
                  timeout, offset, camera_type, sensor):
-        """Setup for access to the Netatmo camera events."""
+        """Set up for access to the Netatmo camera events."""
         self._data = data
         self._camera_name = camera_name
         self._module_name = module_name

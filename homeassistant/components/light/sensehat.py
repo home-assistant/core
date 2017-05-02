@@ -58,10 +58,7 @@ class SenseHatLight(Light):
 
     @property
     def brightness(self):
-        """Read back the brightness of the light.
-
-        Returns integer in the range of 1-255.
-        """
+        """Read back the brightness of the light."""
         return self._brightness
 
     @property

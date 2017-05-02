@@ -17,7 +17,7 @@ PLATFORM_SCHEMA = rfxtrx.DEFAULT_SCHEMA
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the RFXtrx platform."""
+    """Set up the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     # Add switch from config file

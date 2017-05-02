@@ -41,7 +41,7 @@ def get_service(hass, config, discovery_info=None):
             config.get(CONF_ICON, None))
 
     except slacker.Error:
-        _LOGGER.exception("Slack authentication failed")
+        _LOGGER.exception("Authentication failed")
         return None
 
 
@@ -77,12 +77,9 @@ class SlackNotificationService(BaseNotificationService):
 
         for target in targets:
             try:
-                self.slack.chat.post_message(target, message,
-                                             as_user=self._as_user,
-                                             username=self._username,
-                                             icon_emoji=self._icon,
-                                             attachments=attachments,
-                                             link_names=True)
+                self.slack.chat.post_message(
+                    target, message, as_user=self._as_user,
+                    username=self._username, icon_emoji=self._icon,
+                    attachments=attachments, link_names=True)
             except slacker.Error as err:
-                _LOGGER.error("Could not send slack notification. Error: %s",
-                              err)
+                _LOGGER.error("Could not send notification. Error: %s", err)

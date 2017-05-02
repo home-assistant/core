@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the HDDTemp sensor."""
+    """Set up the HDDTemp sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -118,6 +118,6 @@ class HddTempData(object):
                 host=self.host, port=self.port, timeout=DEFAULT_TIMEOUT)
             self.data = connection.read_all().decode('ascii')
         except ConnectionRefusedError:
-            _LOGGER.error('HDDTemp is not available at %s:%s', self.host,
-                          self.port)
+            _LOGGER.error(
+                "HDDTemp is not available at %s:%s", self.host, self.port)
             self.data = None

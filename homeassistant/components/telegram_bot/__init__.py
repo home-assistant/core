@@ -39,10 +39,10 @@ PLATFORM_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the telegram bot component."""
+    """Set up the telegram bot component."""
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Setup a telegram bot platform."""
+        """Set up a telegram bot platform."""
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
 

@@ -67,7 +67,7 @@ HUB = None
 
 
 def setup(hass, config):
-    """Setup Modbus component."""
+    """Set up Modbus component."""
     # Modbus connection type
     # pylint: disable=global-statement, import-error
     client_type = config[DOMAIN][CONF_TYPE]

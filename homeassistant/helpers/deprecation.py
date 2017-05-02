@@ -1,5 +1,4 @@
 """Deprecation helpers for Home Assistant."""
-
 import inspect
 import logging
 
@@ -13,9 +12,9 @@ def deprecated_substitute(substitute_name):
     warning will be issued alerting the user of the impending change.
     """
     def decorator(func):
-        """Decorator function."""
+        """Decorate function as deprecated."""
         def func_wrapper(self):
-            """Wrapper for original function."""
+            """Wrap for the original function."""
             if hasattr(self, substitute_name):
                 # If this platform is still using the old property, issue
                 # a logger warning once with instructions on how to fix it.

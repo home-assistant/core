@@ -79,8 +79,8 @@ class LyftSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(self._product['display_name'],
-                                    self._sensortype)
+        self._name = '{} {}'.format(
+            self._product['display_name'], self._sensortype)
         if 'lyft' not in self._name.lower():
             self._name = 'Lyft{}'.format(self._name)
         if self._sensortype == 'time':

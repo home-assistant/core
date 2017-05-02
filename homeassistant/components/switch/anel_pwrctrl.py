@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup PwrCtrl devices/switches."""
+    """Set up PwrCtrl devices/switches."""
     host = config.get(CONF_HOST, None)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
