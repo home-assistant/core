@@ -131,13 +131,6 @@ def default_effect(light, **kwargs):
     data = {
         ATTR_ENTITY_ID: light.entity_id,
     }
-    if service in (SERVICE_EFFECT_BREATHE, SERVICE_EFFECT_PULSE):
-        data[ATTR_RGB_COLOR] = [
-            random.randint(1, 127),
-            random.randint(1, 127),
-            random.randint(1, 127),
-        ]
-        data[ATTR_BRIGHTNESS] = 255
     yield from light.hass.services.async_call(DOMAIN, service, data)
 
 
@@ -237,7 +230,14 @@ class LIFXEffectBreathe(LIFXEffect):
         """Play a light effect on the bulb."""
         period = kwargs[ATTR_PERIOD]
         cycles = kwargs[ATTR_CYCLES]
-        hsbk, _ = light.find_hsbk(**kwargs)
+        hsbk, color_changed = light.find_hsbk(**kwargs)
+
+        # Default color is to fully (de)saturate with full brightness
+        if not color_changed:
+            if hsbk[1] > 65536/2:
+                hsbk = [hsbk[0], 0, 65535, 4000]
+            else:
+                hsbk = [hsbk[0], 65535, 65535, hsbk[3]]
 
         # Start the effect
         args = {
