@@ -81,7 +81,7 @@ def set_lights_temp(hass, lights, mired, brightness):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Flux switches."""
+    """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
@@ -139,11 +139,11 @@ class FluxSwitch(SwitchDevice):
         if self.is_on:
             return
 
-        # make initial update
+        # Make initial update
         self.flux_update()
 
-        self.unsub_tracker = track_time_change(self.hass, self.flux_update,
-                                               second=[0, 30])
+        self.unsub_tracker = track_time_change(
+            self.hass, self.flux_update, second=[0, 30])
 
         self.schedule_update_ha_state()
 
@@ -159,13 +159,12 @@ class FluxSwitch(SwitchDevice):
         """Update all the lights using flux."""
         if now is None:
             now = dt_now()
-        sunset = next_setting(self.hass, SUN).replace(day=now.day,
-                                                      month=now.month,
-                                                      year=now.year)
+        sunset = next_setting(self.hass, SUN).replace(
+            day=now.day, month=now.month, year=now.year)
         start_time = self.find_start_time(now)
-        stop_time = now.replace(hour=self._stop_time.hour,
-                                minute=self._stop_time.minute,
-                                second=0)
+        stop_time = now.replace(
+            hour=self._stop_time.hour, minute=self._stop_time.minute,
+            second=0)
 
         if start_time < now < sunset:
             # Daytime
@@ -203,26 +202,25 @@ class FluxSwitch(SwitchDevice):
         if self._mode == MODE_XY:
             set_lights_xy(self.hass, self._lights, x_val,
                           y_val, brightness)
-            _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%%"
-                         " of %s cycle complete at %s", x_val, y_val,
+            _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
+                         "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
             set_lights_temp(self.hass, self._lights, mired, brightness)
-            _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%%"
-                         " of %s cycle complete at %s", mired, brightness,
+            _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
+                         "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
         if self._start_time:
-            sunrise = now.replace(hour=self._start_time.hour,
-                                  minute=self._start_time.minute,
-                                  second=0)
+            sunrise = now.replace(
+                hour=self._start_time.hour, minute=self._start_time.minute,
+                second=0)
         else:
-            sunrise = next_rising(self.hass, SUN).replace(day=now.day,
-                                                          month=now.month,
-                                                          year=now.year)
+            sunrise = next_rising(self.hass, SUN).replace(
+                day=now.day, month=now.month, year=now.year)
         return sunrise

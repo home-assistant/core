@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Raspberry PI GPIO devices."""
+    """Set up the Raspberry PI GPIO devices."""
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
     switches = []

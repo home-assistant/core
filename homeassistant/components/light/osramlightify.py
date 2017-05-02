@@ -46,13 +46,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             bridge = lightify.Lightify(host)
         except socket.error as err:
-            msg = 'Error connecting to bridge: {} due to: {}'.format(host,
-                                                                     str(err))
+            msg = "Error connecting to bridge: {} due to: {}".format(
+                host, str(err))
             _LOGGER.exception(msg)
             return False
         setup_bridge(bridge, add_devices)
     else:
-        _LOGGER.error('No host found in configuration')
+        _LOGGER.error("No host found in configuration")
         return False
 
 
@@ -105,8 +105,8 @@ class OsramLightifyLight(Light):
 
     @property
     def rgb_color(self):
-        """Last RGB color value set."""
-        _LOGGER.debug("rgb_color light state for light: %s is: %s %s %s ",
+        """Return the last RGB color value set."""
+        _LOGGER.debug("rgb_color light state for light: %s is: %s %s %s",
                       self._name, self._rgb[0], self._rgb[1], self._rgb[2])
         return self._rgb
 
@@ -117,16 +117,16 @@ class OsramLightifyLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of this light between 0..255."""
-        _LOGGER.debug("brightness for light %s is: %s",
-                      self._name, self._brightness)
+        """Return the brightness of this light between 0..255."""
+        _LOGGER.debug(
+            "Brightness for light %s is: %s", self._name, self._brightness)
         return self._brightness
 
     @property
     def is_on(self):
         """Update Status to True if device is on."""
-        _LOGGER.debug("is_on light state for light: %s is: %s",
-                      self._name, self._state)
+        _LOGGER.debug(
+            "is_on light state for light: %s is: %s", self._name, self._state)
         return self._state
 
     @property
@@ -136,35 +136,31 @@ class OsramLightifyLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.debug("turn_on Attempting to turn on light: %s ",
-                      self._name)
+        _LOGGER.debug("turn_on Attempting to turn on light: %s ", self._name)
 
         self._light.set_onoff(1)
         self._state = self._light.on()
 
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
-            _LOGGER.debug("turn_on requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+            _LOGGER.debug("turn_on requested transition time for light: "
+                          "%s is: %s", self._name, transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_on requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+            _LOGGER.debug("turn_on requested transition time for light: "
+                          "%s is: %s", self._name, transition)
 
         if ATTR_RGB_COLOR in kwargs:
             red, green, blue = kwargs[ATTR_RGB_COLOR]
-            _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light:"
-                          " %s is: %s %s %s ",
-                          self._name, red, green, blue)
+            _LOGGER.debug("turn_on requested ATTR_RGB_COLOR for light: "
+                          "%s is: %s %s %s", self._name, red, green, blue)
             self._light.set_rgb(red, green, blue, transition)
 
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
             kelvin = int(color_temperature_mired_to_kelvin(color_t))
-            _LOGGER.debug("turn_on requested set_temperature for light:"
-                          " %s: %s ", self._name, kelvin)
+            _LOGGER.debug("turn_on requested set_temperature for light: "
+                          "%s: %s", self._name, kelvin)
             self._light.set_temperature(kelvin, transition)
 
         if ATTR_BRIGHTNESS in kwargs:
@@ -182,9 +178,8 @@ class OsramLightifyLight(Light):
                                     random.randrange(0, 255),
                                     random.randrange(0, 255),
                                     transition)
-                _LOGGER.debug("turn_on requested random effect for light:"
-                              " %s with transition %s ",
-                              self._name, transition)
+                _LOGGER.debug("turn_on requested random effect for light: "
+                              "%s with transition %s", self._name, transition)
 
         self.schedule_update_ha_state()
 
@@ -194,15 +189,13 @@ class OsramLightifyLight(Light):
                       self._name)
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
-            _LOGGER.debug("turn_off requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+            _LOGGER.debug("turn_off requested transition time for light: "
+                          "%s is: %s", self._name, transition)
             self._light.set_luminance(0, transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_off requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+            _LOGGER.debug("turn_off requested transition time for light: "
+                          "%s is: %s ", self._name, transition)
             self._light.set_onoff(0)
             self._state = self._light.on()
 

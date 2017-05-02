@@ -214,7 +214,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 # pylint: disable=R0914
 def setup(hass, config):
-    """Setup Z-Wave.
+    """Set up Z-Wave.
 
     Will automatically load components to support devices found on the network.
     """

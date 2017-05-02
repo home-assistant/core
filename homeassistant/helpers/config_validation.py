@@ -43,7 +43,7 @@ T = TypeVar('T')
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: str) -> Callable:
-    """Validator that at least one key exists."""
+    """Validate that at least one key exists."""
     def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
@@ -192,7 +192,7 @@ time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
 
 
 def match_all(value):
-    """Validator that matches all values."""
+    """Validate that matches all values."""
     return value
 
 

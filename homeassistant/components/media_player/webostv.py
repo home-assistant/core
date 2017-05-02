@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LG WebOS TV platform."""
+    """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
     else:
@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_tv(host, mac, name, customize, config, hass, add_devices):
-    """Setup a LG WebOS TV based on host parameter."""
+    """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
     from websockets.exceptions import ConnectionClosed
@@ -133,7 +133,7 @@ def request_configuration(
 
     # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration changes."""
         setup_tv(host, mac, name, customize, config, hass, add_devices)
 
     _CONFIGURING[host] = configurator.request_config(

@@ -4,8 +4,8 @@ Support for interfacing with Russound via RNET Protocol.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.russound_rnet/
 """
-
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Russound RNET platform."""
+    """Set up the Russound RNET platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
 
@@ -163,5 +163,5 @@ class RussoundRNETDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return a list of available input sources."""
         return self._sources

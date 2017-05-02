@@ -63,10 +63,10 @@ class MikrotikScanner(DeviceScanner):
         self.success_init = self.connect_to_device()
 
         if self.success_init:
-            _LOGGER.info('Start polling Mikrotik router...')
+            _LOGGER.info("Start polling Mikrotik router...")
             self._update_info()
         else:
-            _LOGGER.error('Connection to Mikrotik failed.')
+            _LOGGER.error("Connection to Mikrotik failed")
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
@@ -83,14 +83,14 @@ class MikrotikScanner(DeviceScanner):
             routerboard_info = self.client(cmd='/system/routerboard/getall')
 
             if routerboard_info:
-                _LOGGER.info('Connected to Mikrotik %s with ip %s.',
+                _LOGGER.info("Connected to Mikrotik %s with IP %s",
                              routerboard_info[0].get('model', 'Router'),
                              self.host)
                 self.connected = True
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
-            _LOGGER.error('Connection error: %s', api_error)
+            _LOGGER.error("Connection error: %s", api_error)
 
         return self.connected
 
@@ -108,7 +108,7 @@ class MikrotikScanner(DeviceScanner):
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""
         with self.lock:
-            _LOGGER.info('Loading wireless device from Mikrotik...')
+            _LOGGER.info("Loading wireless device from Mikrotik...")
 
             wireless_clients = self.client(
                 cmd='/interface/wireless/registration-table/getall'

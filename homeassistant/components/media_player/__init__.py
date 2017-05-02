@@ -897,7 +897,7 @@ class MediaPlayerDevice(Entity):
 
 @asyncio.coroutine
 def _async_fetch_image(hass, url):
-    """Helper method to fetch image.
+    """Fetch image.
 
     Images are cached in memory (the images are typically 10-100kB in size).
     """
@@ -942,8 +942,8 @@ class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
     requires_auth = False
-    url = "/api/media_player_proxy/{entity_id}"
-    name = "api:media_player:image"
+    url = '/api/media_player_proxy/{entity_id}'
+    name = 'api:media_player:image'
 
     def __init__(self, entities):
         """Initialize a media player view."""

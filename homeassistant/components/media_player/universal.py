@@ -51,7 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the universal media players."""
+    """Set up the universal media players."""
     if not validate_config(config):
         return
 
@@ -72,7 +72,7 @@ def validate_config(config):
 
     # Validate name
     if CONF_NAME not in config:
-        _LOGGER.error('Universal Media Player configuration requires name')
+        _LOGGER.error("Universal Media Player configuration requires name")
         return False
 
     validate_children(config)
@@ -83,7 +83,7 @@ def validate_config(config):
     for key in config:
         if key not in [CONF_NAME, CONF_CHILDREN, CONF_COMMANDS, CONF_ATTRS]:
             _LOGGER.warning(
-                'Universal Media Player (%s) unrecognized parameter %s',
+                "Universal Media Player (%s) unrecognized parameter %s",
                 config[CONF_NAME], key)
             del_keys.append(key)
     for key in del_keys:
@@ -96,13 +96,12 @@ def validate_children(config):
     """Validate children."""
     if CONF_CHILDREN not in config:
         _LOGGER.info(
-            'No children under Universal Media Player (%s)', config[CONF_NAME])
+            "No children under Universal Media Player (%s)", config[CONF_NAME])
         config[CONF_CHILDREN] = []
     elif not isinstance(config[CONF_CHILDREN], list):
         _LOGGER.warning(
-            'Universal Media Player (%s) children not list in config. '
-            'They will be ignored.',
-            config[CONF_NAME])
+            "Universal Media Player (%s) children not list in config. "
+            "They will be ignored", config[CONF_NAME])
         config[CONF_CHILDREN] = []
 
 
@@ -112,9 +111,8 @@ def validate_commands(config):
         config[CONF_COMMANDS] = {}
     elif not isinstance(config[CONF_COMMANDS], dict):
         _LOGGER.warning(
-            'Universal Media Player (%s) specified commands not dict in '
-            'config. They will be ignored.',
-            config[CONF_NAME])
+            "Universal Media Player (%s) specified commands not dict in "
+            "config. They will be ignored", config[CONF_NAME])
         config[CONF_COMMANDS] = {}
 
 
@@ -124,9 +122,8 @@ def validate_attributes(config):
         config[CONF_ATTRS] = {}
     elif not isinstance(config[CONF_ATTRS], dict):
         _LOGGER.warning(
-            'Universal Media Player (%s) specified attributes '
-            'not dict in config. They will be ignored.',
-            config[CONF_NAME])
+            "Universal Media Player (%s) specified attributes "
+            "not dict in config. They will be ignored", config[CONF_NAME])
         config[CONF_ATTRS] = {}
 
     for key, val in config[CONF_ATTRS].items():
@@ -173,8 +170,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def _override_or_child_attr(self, attr_name):
         """Return either the override or the active child for attr_name."""
         if attr_name in self._attrs:
-            return self._entity_lkp(self._attrs[attr_name][0],
-                                    self._attrs[attr_name][1])
+            return self._entity_lkp(
+                self._attrs[attr_name][0], self._attrs[attr_name][1])
 
         return self._child_attr(attr_name)
 
@@ -215,8 +212,8 @@ class UniversalMediaPlayer(MediaPlayerDevice):
     def master_state(self):
         """Return the master state for entity or None."""
         if CONF_STATE in self._attrs:
-            master_state = self._entity_lkp(self._attrs[CONF_STATE][0],
-                                            self._attrs[CONF_STATE][1])
+            master_state = self._entity_lkp(
+                self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1])
             return master_state if master_state else STATE_OFF
         else:
             return None
@@ -348,7 +345,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def source(self):
-        """"Return the current input source of the device."""
+        """Return the current input source of the device."""
         return self._override_or_child_attr(ATTR_INPUT_SOURCE)
 
     @property

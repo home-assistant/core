@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_engine(hass, config):
-    """Setup Demo speech component."""
+    """Set up Demo speech component."""
     return DemoProvider(config[CONF_LANG])
 
 

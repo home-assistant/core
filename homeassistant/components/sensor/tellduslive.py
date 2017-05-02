@@ -3,7 +3,6 @@ Support for Tellstick Net/Telstick Live.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.tellduslive/
-
 """
 import logging
 
@@ -36,7 +35,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick sensors."""
+    """Set up the Tellstick sensors."""
     if discovery_info is None:
         return
     add_devices(TelldusLiveSensor(hass, sensor) for sensor in discovery_info)

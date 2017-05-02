@@ -40,22 +40,22 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
-    vol.Optional(ATTR_PERIOD, default=1.0): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=0.05)),
-    vol.Optional(ATTR_CYCLES, default=1.0): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=1)),
+    vol.Optional(ATTR_PERIOD, default=1.0):
+        vol.All(vol.Coerce(float), vol.Range(min=0.05)),
+    vol.Optional(ATTR_CYCLES, default=1.0):
+        vol.All(vol.Coerce(float), vol.Range(min=1)),
 })
 
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    vol.Optional(ATTR_PERIOD, default=60): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=1)),
-    vol.Optional(ATTR_CHANGE, default=20): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=0, max=360)),
-    vol.Optional(ATTR_SPREAD, default=30): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=0, max=360)),
+    vol.Optional(ATTR_PERIOD, default=60):
+        vol.All(vol.Coerce(float), vol.Clamp(min=1)),
+    vol.Optional(ATTR_CHANGE, default=20):
+        vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+    vol.Optional(ATTR_SPREAD, default=30):
+        vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
 })
 
 LIFX_EFFECT_STOP_SCHEMA = vol.Schema({

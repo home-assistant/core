@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Template switch."""
+    """Set up the Template switch."""
     switches = []
 
     for device, device_config in config[CONF_SWITCHES].items():

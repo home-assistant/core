@@ -69,6 +69,6 @@ class FacebookNotificationService(BaseNotificationService):
                 obj = resp.json()
                 error_message = obj['error']['message']
                 error_code = obj['error']['code']
-                _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
-                              error_message,
-                              error_code)
+                _LOGGER.error(
+                    "Error %s : %s (Code %s)", resp.status_code, error_message,
+                    error_code)

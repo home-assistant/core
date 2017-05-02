@@ -54,7 +54,7 @@ class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search=None):
-        """Setup how we are going to search the google calendar."""
+        """Set up how we are going to search the google calendar."""
         self.calendar_service = calendar_service
         self.calendar_id = calendar_id
         self.search = search

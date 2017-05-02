@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup modem caller id sensor platform."""
+    """Set up modem caller ID sensor platform."""
     from basicmodem.basicmodem import BasicModem as bm
     name = config.get(CONF_NAME)
     port = config.get(CONF_DEVICE)
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class ModemCalleridSensor(Entity):
-    """Implementation of USB modem callerid sensor."""
+    """Implementation of USB modem caller ID sensor."""
 
     def __init__(self, hass, name, port, modem):
         """Initialize the sensor."""
@@ -100,7 +100,7 @@ class ModemCalleridSensor(Entity):
         return
 
     def _incomingcallcallback(self, newstate):
-        """Callback from modem, process based on new state."""
+        """Handle new states."""
         if newstate == self.modem.STATE_RING:
             if self.state == self.modem.STATE_IDLE:
                 att = {"cid_time": self.modem.get_cidtime,

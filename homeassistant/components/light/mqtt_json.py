@@ -157,13 +157,13 @@ class MqttJson(Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method is a coroutine.
         """
         @callback
         def state_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             values = json.loads(payload)
 
             if values['state'] == 'ON':
@@ -189,7 +189,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid brightness value received')
+                    _LOGGER.warning("Invalid brightness value received")
 
             if self._color_temp is not None:
                 try:
@@ -197,7 +197,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid color temp value received')
+                    _LOGGER.warning("Invalid color temp value received")
 
             if self._effect is not None:
                 try:
@@ -205,7 +205,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid effect value received')
+                    _LOGGER.warning("Invalid effect value received")
 
             if self._white_value is not None:
                 try:
@@ -213,7 +213,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid white value value received')
+                    _LOGGER.warning("Invalid white value value received")
 
             if self._xy is not None:
                 try:

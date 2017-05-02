@@ -1,10 +1,14 @@
-"""Support for Lutron Caseta switches."""
+"""
+Support for Lutron Caseta switches.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sitch.lutron_caseta/
+"""
 import logging
 
 from homeassistant.components.lutron_caseta import (
     LUTRON_CASETA_SMARTBRIDGE, LutronCasetaDevice)
 from homeassistant.components.switch import SwitchDevice
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -13,7 +17,7 @@ DEPENDENCIES = ['lutron_caseta']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Lutron switch."""
+    """Set up Lutron switch."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
     switch_devices = bridge.get_devices_by_type("WallSwitch")
