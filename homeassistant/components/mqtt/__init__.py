@@ -10,8 +10,8 @@ import os
 import socket
 import time
 import ssl
-import requests.certs
 import re
+import requests.certs
 
 import voluptuous as vol
 
@@ -648,11 +648,11 @@ def _match_topic(subscription, topic):
     sub_parts = subscription.split('/')
     for sub_part in sub_parts:
         if sub_part == "+":
-            reg_ex_parts.append("([^\/]+)")
+            reg_ex_parts.append(r"([^\/]+)")
         else:
             reg_ex_parts.append(sub_part)
 
-    reg_ex = "^" + ('\/'.join(reg_ex_parts)) + suffix + "$"
+    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
 
     reg = re.compile(reg_ex)
 
