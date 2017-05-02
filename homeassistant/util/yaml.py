@@ -20,18 +20,20 @@ _SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict
 
 
+class NodeListClass(list):
+    """Wrapper class to be able to add attributes on a list."""
+
+    pass
+
+
+class NodeStrClass(str):
+    """Wrapper class to be able to add attributes on a string."""
+
+    pass
+
+
 def _add_reference(obj, loader, node):
     """Add file reference information to an object."""
-    class NodeListClass(list):
-        """Wrapper class to be able to add attributes on a list."""
-
-        pass
-
-    class NodeStrClass(str):
-        """Wrapper class to be able to add attributes on a string."""
-
-        pass
-
     if isinstance(obj, list):
         obj = NodeListClass(obj)
     if isinstance(obj, str):
@@ -305,4 +307,9 @@ def represent_odict(dump, tag, mapping, flow_style=None):
 yaml.SafeDumper.add_representer(
     OrderedDict,
     lambda dumper, value:
-    represent_odict(dumper, u'tag:yaml.org,2002:map', value))
+    represent_odict(dumper, 'tag:yaml.org,2002:map', value))
+
+yaml.SafeDumper.add_representer(
+    NodeListClass,
+    lambda dumper, value:
+    dumper.represent_sequence('tag:yaml.org,2002:seq', value))

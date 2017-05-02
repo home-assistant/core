@@ -158,6 +158,9 @@ omit =
     homeassistant/components/zha/const.py
     homeassistant/components/*/zha.py
 
+    homeassistant/components/eight_sleep.py
+    homeassistant/components/*/eight_sleep.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/concord232.py
     homeassistant/components/alarm_control_panel/nx584.py
