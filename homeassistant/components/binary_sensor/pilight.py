@@ -105,7 +105,7 @@ class PilightBinarySensor(BinarySensorDevice):
                 payload_ok = False
                 continue
             if self._payload[key] != call.data[key]:
-                    payload_ok = False
+                payload_ok = False
         # Read out variable if payload ok
         if payload_ok:
             if self._variable not in call.data:
@@ -170,7 +170,7 @@ class PilightTriggerSensor(BinarySensorDevice):
                 payload_ok = False
                 continue
             if self._payload[key] != call.data[key]:
-                    payload_ok = False
+                payload_ok = False
         # Read out variable if payload ok
         if payload_ok:
             if self._variable not in call.data:
