@@ -40,7 +40,7 @@ CONF_TILT_OPEN_POSITION = 'tilt_opened_value'
 CONF_TILT_MIN = 'tilt_min'
 CONF_TILT_MAX = 'tilt_max'
 CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
-CONF_TILT_INVERT_STATE = "tilt_invert_state"
+CONF_TILT_INVERT_STATE = 'tilt_invert_state'
 
 DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
