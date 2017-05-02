@@ -49,15 +49,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         for device in ring.chimes:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass,
-                                          device,
-                                          sensor_type))
+                sensors.append(RingSensor(hass, device, sensor_type))
 
         for device in ring.doorbells:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
-                sensors.append(RingSensor(hass,
-                                          device,
-                                          sensor_type))
+                sensors.append(RingSensor(hass, device, sensor_type))
 
     add_devices(sensors, True)
     return True
@@ -74,8 +70,8 @@ class RingSensor(Entity):
         self._extra = None
         self._icon = 'mdi:{}'.format(SENSOR_TYPES.get(self._sensor_type)[3])
         self._kind = SENSOR_TYPES.get(self._sensor_type)[4]
-        self._name = "{0} {1}".format(self._data.name,
-                                      SENSOR_TYPES.get(self._sensor_type)[0])
+        self._name = "{0} {1}".format(
+            self._data.name, SENSOR_TYPES.get(self._sensor_type)[0])
         self._state = STATE_UNKNOWN
         self._tz = str(hass.config.time_zone)
 
@@ -121,7 +117,7 @@ class RingSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        _LOGGER.debug("Pulling data from %s sensor.", self._name)
+        _LOGGER.debug("Pulling data from %s sensor", self._name)
 
         self._data.update()
 
@@ -137,5 +133,5 @@ class RingSensor(Entity):
             if history:
                 self._extra = history[0]
                 created_at = self._extra['created_at']
-                self._state = '{0:0>2}:{1:0>2}'.format(created_at.hour,
-                                                       created_at.minute)
+                self._state = '{0:0>2}:{1:0>2}'.format(
+                    created_at.hour, created_at.minute)

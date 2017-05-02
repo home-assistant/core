@@ -76,7 +76,7 @@ class EntityComponent(object):
         # Refer to: homeassistant.components.discovery.load_platform()
         @callback
         def component_platform_discovered(platform, info):
-            """Callback to load a platform."""
+            """Handle the loading of a platform."""
             self.hass.async_add_job(
                 self._async_setup_platform(platform, {}, info))
 
@@ -114,7 +114,7 @@ class EntityComponent(object):
     @asyncio.coroutine
     def _async_setup_platform(self, platform_type, platform_config,
                               discovery_info=None):
-        """Setup a platform for this component.
+        """Set up a platform for this component.
 
         This method must be run in the event loop.
         """
@@ -140,7 +140,7 @@ class EntityComponent(object):
         self.logger.info("Setting up %s.%s", self.domain, platform_type)
         warn_task = self.hass.loop.call_later(
             SLOW_SETUP_WARNING, self.logger.warning,
-            'Setup of platform %s is taking over %s seconds.', platform_type,
+            "Setup of platform %s is taking over %s seconds.", platform_type,
             SLOW_SETUP_WARNING)
 
         try:
@@ -161,7 +161,7 @@ class EntityComponent(object):
                 '{}.{}'.format(self.domain, platform_type))
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
-                'Error while setting up platform %s', platform_type)
+                "Error while setting up platform %s", platform_type)
         finally:
             warn_task.cancel()
 
@@ -297,7 +297,7 @@ class EntityPlatform(object):
     """Keep track of entities for a single platform and stay in loop."""
 
     def __init__(self, component, platform, scan_interval, entity_namespace):
-        """Initalize the entity platform."""
+        """Initialize the entity platform."""
         self.component = component
         self.platform = platform
         self.scan_interval = scan_interval
@@ -430,7 +430,7 @@ class EntityPlatform(object):
                     yield from update_coro
                 except Exception:  # pylint: disable=broad-except
                     self.component.logger.exception(
-                        'Error while update entity from %s in %s',
+                        "Error while update entity from %s in %s",
                         self.platform, self.component.domain)
 
             if tasks:

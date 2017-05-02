@@ -4,7 +4,6 @@ Support for interacting with Spotify Connect.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.spotify/
 """
-
 import logging
 from datetime import timedelta
 
@@ -21,7 +20,6 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_NAME, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
-
 
 COMMIT = '544614f4b1d508201d363e84e871f86c90aa26b2'
 REQUIREMENTS = ['https://github.com/happyleavesaoc/spotipy/'
@@ -72,7 +70,7 @@ def request_configuration(hass, config, add_devices, oauth):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Spotify platform."""
+    """Set up the Spotify platform."""
     import spotipy.oauth2
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
     cache = config.get(CONF_CACHE_PATH, hass.config.path(DEFAULT_CACHE_PATH))
@@ -82,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         cache_path=cache)
     token_info = oauth.get_cached_token()
     if not token_info:
-        _LOGGER.info('no token; requesting authorization')
+        _LOGGER.info("no token; requesting authorization")
         hass.http.register_view(SpotifyAuthCallbackView(
             config, add_devices, oauth))
         request_configuration(hass, config, add_devices, oauth)
@@ -225,31 +223,31 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         elif media_type == MEDIA_TYPE_PLAYLIST:
             kwargs['context_uri'] = media_id
         else:
-            _LOGGER.error('media type %s is not supported', media_type)
+            _LOGGER.error("media type %s is not supported", media_type)
             return
         if not media_id.startswith('spotify:'):
-            _LOGGER.error('media id must be spotify uri')
+            _LOGGER.error("media id must be spotify uri")
             return
         self._player.start_playback(**kwargs)
 
     @property
     def name(self):
-        """Name."""
+        """Return the name."""
         return self._name
 
     @property
     def icon(self):
-        """Icon."""
+        """Return the icon."""
         return ICON
 
     @property
     def state(self):
-        """Playback state."""
+        """Return the playback state."""
         return self._state
 
     @property
     def volume_level(self):
-        """Device volume."""
+        """Return the device volume."""
         return self._volume
 
     @property
@@ -259,40 +257,40 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """Playback devices."""
+        """Return a list of source devices."""
         return list(self._devices.keys())
 
     @property
     def source(self):
-        """Current playback device."""
+        """Return the current playback device."""
         return self._current_device
 
     @property
     def media_content_id(self):
-        """Media URL."""
+        """Return the media URL."""
         return self._uri
 
     @property
     def media_image_url(self):
-        """Media image url."""
+        """Return the media image URL."""
         return self._image_url
 
     @property
     def media_artist(self):
-        """Media artist."""
+        """Return the media artist."""
         return self._artist
 
     @property
     def media_album_name(self):
-        """Media album."""
+        """Return the media album."""
         return self._album
 
     @property
     def media_title(self):
-        """Media title."""
+        """Return the media title."""
         return self._title
 
     @property
     def supported_features(self):
-        """Media player features that are supported."""
+        """Return the media player features that are supported."""
         return SUPPORT_SPOTIFY

@@ -125,7 +125,7 @@ class SpeedtestSensor(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
+        """Handle all entity which are about to be added."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
@@ -140,11 +140,10 @@ class SpeedtestData(object):
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
         if not config.get(CONF_MANUAL):
-            track_time_change(hass, self.update,
-                              second=config.get(CONF_SECOND),
-                              minute=config.get(CONF_MINUTE),
-                              hour=config.get(CONF_HOUR),
-                              day=config.get(CONF_DAY))
+            track_time_change(
+                hass, self.update, second=config.get(CONF_SECOND),
+                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
+                day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""

@@ -32,7 +32,7 @@ WEMO_STANDBY = 8
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup discovered WeMo switches."""
+    """Set up discovered WeMo switches."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:

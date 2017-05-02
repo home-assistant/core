@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MPD platform."""
+    """Set up the MPD platform."""
     daemon = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -136,23 +136,23 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def media_content_id(self):
-        """Content ID of current playing media."""
+        """Return the content ID of current playing media."""
         return self.currentsong.get('file')
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Return the content type of current playing media."""
         return MEDIA_TYPE_MUSIC
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
+        """Return the duration of current playing media in seconds."""
         # Time does not exist for streams
         return self.currentsong.get('time')
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         name = self.currentsong.get('name', None)
         title = self.currentsong.get('title', None)
 
@@ -167,12 +167,12 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def media_artist(self):
-        """Artist of current playing media (Music track only)."""
+        """Return the artist of current playing media (Music track only)."""
         return self.currentsong.get('artist')
 
     @property
     def media_album_name(self):
-        """Album of current playing media (Music track only)."""
+        """Return the album of current playing media (Music track only)."""
         return self.currentsong.get('album')
 
     @property
@@ -192,7 +192,7 @@ class MpdDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return the list of available input sources."""
         return self.playlists
 
     def select_source(self, source):

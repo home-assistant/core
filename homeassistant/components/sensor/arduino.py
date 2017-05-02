@@ -16,7 +16,6 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PINS = 'pins'
@@ -36,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Arduino platform."""
-    # Verify that the Arduino board is present
     if arduino.BOARD is None:
         _LOGGER.error("A connection has not been made to the Arduino board")
         return False

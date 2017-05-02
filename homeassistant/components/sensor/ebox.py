@@ -1,8 +1,7 @@
 """
 Support for EBox.
 
-Get data from 'My Usage Page' page:
-https://client.ebox.ca/myusage
+Get data from 'My Usage Page' page: https://client.ebox.ca/myusage
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ebox/
@@ -25,12 +24,12 @@ REQUIREMENTS = ['pyebox==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-GIGABITS = "Gb"  # type: str
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-PERCENT = "%"  # type: str
+GIGABITS = 'Gb'  # type: str
+PRICE = 'CAD'  # type: str
+DAYS = 'days'  # type: str
+PERCENT = '%'  # type: str
 
-DEFAULT_NAME = "EBox"
+DEFAULT_NAME = 'EBox'
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)

@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup an EnOcean sensor device."""
+    """Set up an EnOcean sensor device."""
     dev_id = config.get(CONF_ID)
     devname = config.get(CONF_NAME)
 
@@ -64,4 +64,4 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "W"
+        return 'W'

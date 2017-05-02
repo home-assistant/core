@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SCSGateLight(Light):
-    """representation of a SCSGate light."""
+    """Representation of a SCSGate light."""
 
     def __init__(self, scs_id, name, logger):
         """Initialize the light."""

@@ -66,7 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup VoiceRSS speech component."""
+    """Set up VoiceRSS speech component."""
     return YandexSpeechKitProvider(hass, config)
 
 

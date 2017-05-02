@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Onkyo platform."""
+    """Set up the Onkyo platform."""
     import eiscp
     from eiscp import eISCP
 
@@ -52,12 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if CONF_HOST in config and host not in KNOWN_HOSTS:
         try:
-            hosts.append(OnkyoDevice(eiscp.eISCP(host),
-                                     config.get(CONF_SOURCES),
-                                     name=config.get(CONF_NAME)))
+            hosts.append(OnkyoDevice(
+                eiscp.eISCP(host), config.get(CONF_SOURCES),
+                name=config.get(CONF_NAME)))
             KNOWN_HOSTS.append(host)
         except OSError:
-            _LOGGER.error('Unable to connect to receiver at %s.', host)
+            _LOGGER.error("Unable to connect to receiver at %s", host)
     else:
         for receiver in eISCP.discover():
             if receiver.host not in KNOWN_HOSTS:
@@ -90,9 +90,9 @@ class OnkyoDevice(MediaPlayerDevice):
         except (ValueError, OSError, AttributeError, AssertionError):
             if self._receiver.command_socket:
                 self._receiver.command_socket = None
-                _LOGGER.info('Resetting connection to %s.', self._name)
+                _LOGGER.info("Resetting connection to %s", self._name)
             else:
-                _LOGGER.info('%s is disconnected. Attempting to reconnect.',
+                _LOGGER.info("%s is disconnected. Attempting to reconnect",
                              self._name)
             return False
         return result
@@ -142,7 +142,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """Volume level of the media player (0..1)."""
+        """Return the volume level of the media player (0..1)."""
         return self._volume
 
     @property
@@ -157,7 +157,7 @@ class OnkyoDevice(MediaPlayerDevice):
 
     @property
     def source(self):
-        """"Return the current input source of the device."""
+        """Return the current input source of the device."""
         return self._current_source
 
     @property
