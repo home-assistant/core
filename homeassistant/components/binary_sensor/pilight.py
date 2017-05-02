@@ -93,11 +93,6 @@ class PilightBinarySensor(BinarySensorDevice):
         """Return True if the binary sensor is on."""
         return self._state
 
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return STATE_ON if self._state else STATE_OFF
-
     def _handle_code(self, call):
         """Handle received code by the pilight-daemon.
 
@@ -105,17 +100,21 @@ class PilightBinarySensor(BinarySensorDevice):
         of this sensor the sensor state is changed accordingly.
         """
         # Check if received code matches defined playoad
-        # True if payload is contained in received code dict, not
-        # all items have to match
-        if self._payload.items() <= call.data.items():
-            try:
-                value = call.data[self._variable]
-                self._state = (value == self._on_value)
-                self.schedule_update_ha_state()
-            except KeyError:
-                _LOGGER.error(
-                    'No variable %s in received code data %s',
-                    str(self._variable), str(call.data))
+        # True if payload is contained in received code dict
+        payload_ok = True
+        for key in self._payload:
+            if key not in call.data:
+                payload_ok = False
+                continue
+            if payload[key] != call.data[key]:
+                    payload_ok = False
+        # Read out variable if payload ok
+        if payload_ok:
+            if self._variable not in call.data:
+                return
+            value = call.data[self._variable]
+            self._state = (value == self._on_value)
+            self.schedule_update_ha_state()
 
 
 class PilightTriggerSensor(BinarySensorDevice):
@@ -154,11 +153,6 @@ class PilightTriggerSensor(BinarySensorDevice):
         """Return True if the binary sensor is on."""
         return self._state
 
-    @property
-    def state(self):
-        """Return the state of the entity."""
-        return STATE_ON if self._state else STATE_OFF
-
     def _reset_state(self, call):
         self._state = False
         self._delay_after = None
@@ -171,20 +165,24 @@ class PilightTriggerSensor(BinarySensorDevice):
         of this sensor the sensor state is changed accordingly.
         """
         # Check if received code matches defined playoad
-        # True if payload is contained in received code dict, not
-        # all items have to match
-        if self._payload.items() <= call.data.items():
-            try:
-                value = call.data[self._variable]
-                self._state = (value == self._on_value)
-                if self._delay_after is None:
-                    self._delay_after = dt_util.utcnow() + datetime.timedelta(
-                        seconds=self._reset_delay_sec)
-                    track_point_in_time(
-                        self._hass, self._reset_state,
-                        self._delay_after)
-                self.schedule_update_ha_state()
-            except KeyError:
-                _LOGGER.error(
-                    'No variable %s in received code data %s',
-                    str(self._variable), str(call.data))
+        # True if payload is contained in received code dict
+        payload_ok = True
+        for key in self._payload:
+            if key not in call.data:
+                payload_ok = False
+                continue
+            if payload[key] != call.data[key]:
+                    payload_ok = False
+        # Read out variable if payload ok
+        if payload_ok:
+            if self._variable not in call.data:
+                return            
+            value = call.data[self._variable]
+            self._state = (value == self._on_value)
+            if self._delay_after is None:
+                self._delay_after = dt_util.utcnow() + datetime.timedelta(
+                    seconds=self._reset_delay_sec)
+                track_point_in_time(
+                    self._hass, self._reset_state,
+                    self._delay_after)
+            self.schedule_update_ha_state()
