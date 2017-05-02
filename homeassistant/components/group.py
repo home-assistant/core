@@ -420,7 +420,7 @@ class Group(Entity):
 
     @property
     def _tracking_states(self):
-        """The states that the group is tracking."""
+        """Return the states that the group is tracking."""
         states = []
 
         for entity_id in self.tracking:

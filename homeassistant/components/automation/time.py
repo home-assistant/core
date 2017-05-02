@@ -32,7 +32,7 @@ TRIGGER_SCHEMA = vol.All(vol.Schema({
 
 @asyncio.coroutine
 def async_trigger(hass, config, action):
-    """"Listen for state changes based on configuration."""
+    """Listen for state changes based on configuration."""
     if CONF_AFTER in config:
         after = config.get(CONF_AFTER)
         hours, minutes, seconds = after.hour, after.minute, after.second

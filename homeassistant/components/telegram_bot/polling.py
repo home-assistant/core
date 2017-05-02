@@ -105,7 +105,7 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     @asyncio.coroutine
     def handle(self):
-        """" Receiving and processing incoming messages."""
+        """Receiving and processing incoming messages."""
         _updates = yield from self.get_updates(self.update_id)
         for update in _updates['result']:
             self.update_id = update['update_id'] + 1
@@ -113,7 +113,7 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     @asyncio.coroutine
     def check_incoming(self):
-        """"Loop which continuously checks for incoming telegram messages."""
+        """Loop which continuously checks for incoming telegram messages."""
         try:
             while True:
                 # Each handle call sends a long polling post request
@@ -122,4 +122,4 @@ class TelegramPoll(BaseTelegramBotEntity):
                 # timeout will for this reason not really stress the processor.
                 yield from self.handle()
         except CancelledError:
-            _LOGGER.debug("Stopping telegram polling bot")
+            _LOGGER.debug("Stopping Telegram polling bot")

@@ -33,7 +33,6 @@ SUPPORT_LANGUAGES = [
 
 DEFAULT_LANG = 'en'
 
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.In(SUPPORT_LANGUAGES),
 })
@@ -62,12 +61,12 @@ class GoogleProvider(Provider):
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return self._lang
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine

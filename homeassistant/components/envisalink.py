@@ -109,7 +109,7 @@ def async_setup(hass, config):
 
     @callback
     def login_fail_callback(data):
-        """The callback for when the evl rejects our login."""
+        """Handle when the evl rejects our login."""
         _LOGGER.error("The Envisalink rejected your credentials")
         sync_connect.set_result(False)
 
@@ -121,7 +121,7 @@ def async_setup(hass, config):
 
     @callback
     def connection_success_callback(data):
-        """The callback for a successful connection."""
+        """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
         sync_connect.set_result(True)

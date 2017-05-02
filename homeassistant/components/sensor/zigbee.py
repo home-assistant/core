@@ -67,7 +67,7 @@ class ZigBeeTemperatureSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit of measurement the value is expressed in."""
         return TEMP_CELSIUS
 
     def update(self, *args):

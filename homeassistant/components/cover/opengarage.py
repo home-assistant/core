@@ -6,9 +6,8 @@ https://home-assistant.io/components/cover.opengarage/
 """
 import logging
 
-import voluptuous as vol
-
 import requests
+import voluptuous as vol
 
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE)
@@ -17,27 +16,27 @@ from homeassistant.const import (
     CONF_COVERS, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME = 'OpenGarage'
-DEFAULT_PORT = 80
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_DISTANCE_SENSOR = "distance_sensor"
+ATTR_DOOR_STATE = "door_state"
+ATTR_SIGNAL_STRENGTH = "wifi_signal"
 
 CONF_DEVICEKEY = "device_key"
 
-ATTR_SIGNAL_STRENGTH = "wifi_signal"
-ATTR_DISTANCE_SENSOR = "distance_sensor"
-ATTR_DOOR_STATE = "door_state"
+DEFAULT_NAME = 'OpenGarage'
+DEFAULT_PORT = 80
 
-STATE_OPENING = "opening"
 STATE_CLOSING = "closing"
-STATE_STOPPED = "stopped"
 STATE_OFFLINE = "offline"
+STATE_OPENING = "opening"
+STATE_STOPPED = "stopped"
 
 STATES_MAP = {
     0: STATE_CLOSED,
     1: STATE_OPEN
 }
 
-
-# Validation of the user's configuration
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICEKEY): cv.string,
     vol.Required(CONF_HOST): cv.string,
@@ -49,11 +48,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup OpenGarage covers."""
+    """Set up OpenGarage covers."""
     covers = []
     devices = config.get(CONF_COVERS)
 
@@ -78,8 +75,7 @@ class OpenGarageCover(CoverDevice):
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.opengarage_url = 'http://{}:{}'.format(
-            args[CONF_HOST],
-            args[CONF_PORT])
+            args[CONF_HOST], args[CONF_PORT])
         self.hass = hass
         self._name = args[CONF_NAME]
         self.device_id = args['device_id']
@@ -158,7 +154,7 @@ class OpenGarageCover(CoverDevice):
             self.dist = status.get('dist')
             self._available = True
         except (requests.exceptions.RequestException) as ex:
-            _LOGGER.error('Unable to connect to OpenGarage device: %(reason)s',
+            _LOGGER.error("Unable to connect to OpenGarage device: %(reason)s",
                           dict(reason=ex))
             self._state = STATE_OFFLINE
 
@@ -180,7 +176,7 @@ class OpenGarageCover(CoverDevice):
                 self._state = self._state_before_move
                 self._state_before_move = None
         except (requests.exceptions.RequestException) as ex:
-            _LOGGER.error('Unable to connect to OpenGarage device: %(reason)s',
+            _LOGGER.error("Unable to connect to OpenGarage device: %(reason)s",
                           dict(reason=ex))
             self._state = self._state_before_move
             self._state_before_move = None

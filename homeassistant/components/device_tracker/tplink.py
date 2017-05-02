@@ -218,7 +218,8 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
             response = requests.post(url,
                                      params={'operation': 'load'},
                                      headers={'referer': referer},
-                                     cookies={'sysauth': self.sysauth})
+                                     cookies={'sysauth': self.sysauth},
+                                     timeout=5)
 
             try:
                 json_response = response.json()
@@ -227,18 +228,17 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                     result = response.json().get('data')
                 else:
                     if json_response.get('errorcode') == 'timeout':
-                        _LOGGER.info("Token timed out. "
-                                     "Relogging on next scan.")
+                        _LOGGER.info("Token timed out. Relogging on next scan")
                         self.stok = ''
                         self.sysauth = ''
                         return False
                     else:
-                        _LOGGER.error("An unknown error happened "
-                                      "while fetching data.")
+                        _LOGGER.error(
+                            "An unknown error happened while fetching data")
                         return False
             except ValueError:
                 _LOGGER.error("Router didn't respond with JSON. "
-                              "Check if credentials are correct.")
+                              "Check if credentials are correct")
                 return False
 
             if result:
@@ -267,7 +267,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get the name of the wireless device."""
         return None
 
     def _get_auth_tokens(self):
@@ -298,7 +298,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
             self.token = result.group(1)
             return True
         except ValueError:
-            _LOGGER.error("Couldn't fetch auth tokens!")
+            _LOGGER.error("Couldn't fetch auth tokens")
             return False
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)

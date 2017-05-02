@@ -8,11 +8,10 @@ import asyncio
 import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -110,21 +109,21 @@ def async_setup(hass, config):
 
     @callback
     def stop_alarmdecoder(event):
-        """The callback to handle shutdown AlarmDecoder."""
-        _LOGGER.debug("Shutting down alarmdecoder.")
+        """Handle the shutdown of AlarmDecoder."""
+        _LOGGER.debug("Shutting down alarmdecoder")
         controller.close()
 
     @callback
     def handle_message(sender, message):
-        """The callback to handle message from AlarmDecoder."""
+        """Handle message from AlarmDecoder."""
         async_dispatcher_send(hass, SIGNAL_PANEL_MESSAGE, message)
 
     def zone_fault_callback(sender, zone):
-        """The callback to handle zone fault from AlarmDecoder."""
+        """Handle zone fault from AlarmDecoder."""
         async_dispatcher_send(hass, SIGNAL_ZONE_FAULT, zone)
 
     def zone_restore_callback(sender, zone):
-        """The callback to handle zone restore from AlarmDecoder."""
+        """Handle zone restore from AlarmDecoder."""
         async_dispatcher_send(hass, SIGNAL_ZONE_RESTORE, zone)
 
     controller = False

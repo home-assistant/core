@@ -1,14 +1,14 @@
-"""Component to monitor plants.
-
-This is meant to be used with Xiaomi Mi Plant sensors, but will
-work with any sensor that provides the right parameters.
-To read the sensor data and send it via MQTT,
-see https://github.com/ChristianKuehnel/plantgateway
 """
+Component to monitor plants.
 
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/plant/
+"""
 import logging
 import asyncio
+
 import voluptuous as vol
+
 from homeassistant.const import (
     STATE_UNKNOWN, TEMP_CELSIUS, ATTR_TEMPERATURE, CONF_SENSORS,
     ATTR_UNIT_OF_MEASUREMENT, ATTR_ICON)
@@ -17,7 +17,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_state_change
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,15 +79,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up Plant component."""
+    """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
     for plant_name, plant_config in config[DOMAIN].items():
-        _LOGGER.info('added plant %s', plant_name)
+        _LOGGER.info("Added plant %s", plant_name)
         entity = Plant(plant_name, plant_config)
         sensor_entity_ids = list(plant_config[CONF_SENSORS].values())
-        _LOGGER.debug('subscribing to entity_ids %s', sensor_entity_ids)
+        _LOGGER.debug("Subscribing to entity_ids %s", sensor_entity_ids)
         async_track_state_change(hass, sensor_entity_ids, entity.state_changed)
         entities.append(entity)
 
@@ -137,7 +136,7 @@ class Plant(Entity):
     }
 
     def __init__(self, name, config):
-        """Default constructor."""
+        """Initalize the Plant component."""
         self._config = config
         self._sensormap = dict()
         for reading, entity_id in config['sensors'].items():
@@ -159,7 +158,7 @@ class Plant(Entity):
         This callback is triggered, when the sensor state changes.
         """
         value = new_state.state
-        _LOGGER.debug('received callback from %s with value %s',
+        _LOGGER.debug("Received callback from %s with value %s",
                       entity_id, value)
         if value == STATE_UNKNOWN:
             return
@@ -176,12 +175,12 @@ class Plant(Entity):
         elif reading == READING_BRIGHTNESS:
             self._brightness = int(value)
         else:
-            raise _LOGGER.error('unknown reading from sensor %s: %s',
+            raise _LOGGER.error("Unknown reading from sensor %s: %s",
                                 entity_id, value)
         self._update_state()
 
     def _update_state(self):
-        """"Update the state of the class based sensor data."""
+        """Update the state of the class based sensor data."""
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
@@ -206,7 +205,7 @@ class Plant(Entity):
         else:
             self._state = 'problem'
             self._problems = ','.join(result)
-        _LOGGER.debug('new data processed')
+        _LOGGER.debug("New data processed")
         self.hass.async_add_job(self.async_update_ha_state())
 
     @property

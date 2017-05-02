@@ -65,7 +65,7 @@ class EnOceanDongle:
         return output
 
     def callback(self, temp):
-        """Function for an EnOcean device's callback.
+        """Handle EnOcean device's callback.
 
         This is the callback function called by python-enocan whenever there
         is an incoming packet.

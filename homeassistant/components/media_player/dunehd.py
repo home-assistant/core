@@ -34,7 +34,7 @@ DUNEHD_PLAYER_SUPPORT = \
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the media player demo platform."""
+    """Set up the DuneHD media player platform."""
     sources = config.get(CONF_SOURCES, {})
 
     from pdunehd import DuneHDPlayer
@@ -136,7 +136,7 @@ class DuneHDPlayerEntity(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        """Current media source."""
+        """Return the current media source."""
         self.__update_title()
         if self._media_title:
             return self._media_title

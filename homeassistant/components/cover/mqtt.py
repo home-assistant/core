@@ -70,10 +70,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_CLOSED_POSITION): int,
     vol.Optional(CONF_TILT_OPEN_POSITION,
                  default=DEFAULT_TILT_OPEN_POSITION): int,
-    vol.Optional(CONF_TILT_MIN,
-                 default=DEFAULT_TILT_MIN): int,
-    vol.Optional(CONF_TILT_MAX,
-                 default=DEFAULT_TILT_MAX): int,
+    vol.Optional(CONF_TILT_MIN, default=DEFAULT_TILT_MIN): int,
+    vol.Optional(CONF_TILT_MAX, default=DEFAULT_TILT_MAX): int,
     vol.Optional(CONF_TILT_STATE_OPTIMISTIC,
                  default=DEFAULT_TILT_OPTIMISTIC): cv.boolean,
 })
@@ -149,7 +147,7 @@ class MqttCover(CoverDevice):
         """
         @callback
         def tilt_updated(topic, payload, qos):
-            """The tilt was updated."""
+            """Handle tilt updates."""
             if (payload.isnumeric() and
                     self._tilt_min <= int(payload) <= self._tilt_max):
                 tilt_range = self._tilt_max - self._tilt_min

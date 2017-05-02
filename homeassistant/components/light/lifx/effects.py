@@ -68,7 +68,7 @@ def setup(hass, lifx_manager):
     """Register the LIFX effects as hass service calls."""
     @asyncio.coroutine
     def async_service_handle(service):
-        """Internal func for applying a service."""
+        """Apply a service."""
         entity_ids = extract_entity_ids(hass, service)
         if entity_ids:
             devices = [entity for entity in lifx_manager.entities.values()
@@ -213,7 +213,7 @@ class LIFXEffect(object):
             self.lights.remove(light)
 
     def from_poweroff_hsbk(self, light, **kwargs):
-        """The initial color when starting from a powered off state."""
+        """Return the color when starting from a powered off state."""
         return None
 
 
@@ -255,7 +255,7 @@ class LIFXEffectBreathe(LIFXEffect):
         yield from self.async_restore(light)
 
     def from_poweroff_hsbk(self, light, **kwargs):
-        """Initial color is the target color, but no brightness."""
+        """Return the color is the target color, but no brightness."""
         hsbk, _ = light.find_hsbk(**kwargs)
         return [hsbk[0], hsbk[1], 0, hsbk[2]]
 
