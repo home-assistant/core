@@ -20,7 +20,7 @@ from homeassistant.helpers import discovery
 
 from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_HOST, CONF_INCLUDE, CONF_NAME,
-                                 CONF_PASSWORD, CONF_SCAN_INTERVAL,
+                                 CONF_PASSWORD, CONF_TRIGGER_TIME,
                                  CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
@@ -55,7 +55,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=0): cv.positive_int,
+    vol.Optional(CONF_TRIGGER_TIME, default=0): cv.positive_int,
     vol.Optional(ATTR_LOCATION, default=''): cv.string,
 })
 
@@ -122,7 +122,7 @@ def request_configuration(hass, name, host, serialnumber):
             {'id': ATTR_LOCATION,
              'name': 'Physical location of device (optional)',
              'type': 'text'},
-            {'id': CONF_SCAN_INTERVAL,
+            {'id': CONF_TRIGGER_TIME,
              'name': 'Sensor update interval (optional)',
              'type': 'number'},
         ]
@@ -241,7 +241,7 @@ class AxisDeviceEvent(Entity):
                                        convert(self.axis_event.topic,
                                                'topic', 'type'),
                                        self.axis_event.id)
-        self._delay = self.axis_event.device_config(CONF_SCAN_INTERVAL)
+        self._delay = self.axis_event.device_config(CONF_TRIGGER_TIME)
         self._timer = None
         self.axis_event.callback = self._update_callback
         # self.update()
