@@ -225,7 +225,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def state(self):
-        """Current state of media player.
+        """Return the current state of media player.
 
         Off if master state is off
         else Status of first active child
@@ -254,17 +254,17 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def media_content_id(self):
-        """Content ID of current playing media."""
+        """Return the content ID of current playing media."""
         return self._child_attr(ATTR_MEDIA_CONTENT_ID)
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Return the content type of current playing media."""
         return self._child_attr(ATTR_MEDIA_CONTENT_TYPE)
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
+        """Return the duration of current playing media in seconds."""
         return self._child_attr(ATTR_MEDIA_DURATION)
 
     @property
@@ -310,7 +310,7 @@ class UniversalMediaPlayer(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Return the title of the series of current playing media (TV)."""
         return self._child_attr(ATTR_MEDIA_SERIES_TITLE)
 
     @property

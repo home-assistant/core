@@ -79,7 +79,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH] = []
 
     if discovery_info:
-        # Discovery
         host = discovery_info['host']
         port = int(discovery_info['port'])
 
@@ -97,7 +96,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
         add_devices([soundtouch_device])
     else:
-        # Config
         name = config.get(CONF_NAME)
         remote_config = {
             'id': 'ha.component.soundtouch',
@@ -112,7 +110,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         path.join(path.dirname(__file__), 'services.yaml'))
 
     def service_handle(service):
-        """Internal func for applying a service."""
+        """Handle the applying of a service."""
         master_device_id = service.data.get('master')
         slaves_ids = service.data.get('slaves')
         slaves = []

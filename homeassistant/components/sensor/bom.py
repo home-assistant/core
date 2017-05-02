@@ -272,7 +272,7 @@ def closest_station(lat, lon, cache_dir):
     stations = bom_stations(cache_dir)
 
     def comparable_dist(wmo_id):
-        """A fast key function for psudeo-distance from lat/lon."""
+        """Create a psudeo-distance from lat/lon."""
         station_lat, station_lon = stations[wmo_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

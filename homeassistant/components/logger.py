@@ -62,7 +62,7 @@ class HomeAssistantLogFilter(logging.Filter):
         self.logfilter = logfilter
 
     def filter(self, record):
-        """The filter to use."""
+        """Filter the log entries."""
         # Log with filtered severity
         if LOGGER_LOGS in self.logfilter:
             for filtername in self.logfilter[LOGGER_LOGS]:

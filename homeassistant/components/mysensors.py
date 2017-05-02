@@ -168,11 +168,11 @@ def setup(hass, config):
             retain = config[DOMAIN].get(CONF_RETAIN)
 
             def pub_callback(topic, payload, qos, retain):
-                """Call mqtt publish function."""
+                """Call MQTT publish function."""
                 mqtt.publish(hass, topic, payload, qos, retain)
 
             def sub_callback(topic, callback, qos):
-                """Call mqtt subscribe function."""
+                """Call MQTT subscribe function."""
                 mqtt.subscribe(hass, topic, callback, qos)
             gateway = mysensors.MQTTGateway(
                 pub_callback, sub_callback,
@@ -350,7 +350,7 @@ class GatewayWrapper(object):
     def callback_factory(self):
         """Return a new callback function."""
         def node_update(msg):
-            """Callback for node updates from the MySensors gateway."""
+            """Handle node updates from the MySensors gateway."""
             _LOGGER.debug(
                 "Update: node %s, child %s sub_type %s",
                 msg.node_id, msg.child_id, msg.sub_type)
@@ -381,7 +381,7 @@ class MySensorsDeviceEntity(object):
 
     @property
     def name(self):
-        """The name of this entity."""
+        """Return the name of this entity."""
         return self._name
 
     @property
@@ -403,14 +403,14 @@ class MySensorsDeviceEntity(object):
             try:
                 attr[set_req(value_type).name] = value
             except ValueError:
-                _LOGGER.error('Value_type %s is not valid for mysensors '
-                              'version %s', value_type,
+                _LOGGER.error("Value_type %s is not valid for mysensors "
+                              "version %s", value_type,
                               self.gateway.protocol_version)
         return attr
 
     @property
     def available(self):
-        """Return True if entity is available."""
+        """Return true if entity is available."""
         return self.value_type in self._values
 
     def update(self):

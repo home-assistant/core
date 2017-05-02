@@ -42,7 +42,7 @@ class BlinkSensor(Entity):
     """A Blink camera sensor."""
 
     def __init__(self, name, sensor_type, index, data):
-        """A method to initialize sensors from Blink camera."""
+        """Initialize sensors from Blink camera."""
         self._name = 'blink_' + name + '_' + SENSOR_TYPES[sensor_type][0]
         self._camera_name = name
         self._type = sensor_type

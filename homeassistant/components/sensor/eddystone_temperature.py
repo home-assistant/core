@@ -118,7 +118,7 @@ class EddystoneTemp(Entity):
 
     @property
     def should_poll(self):
-        """Hass should not poll for state."""
+        """Return the polling state."""
         return False
 
 
@@ -135,7 +135,7 @@ class Monitor(object):
         self.bt_device_id = bt_device_id
 
         def callback(bt_addr, _, packet, additional_info):
-            """Callback for new packets."""
+            """Handle new packets."""
             self.process_packet(
                 additional_info['namespace'], additional_info['instance'],
                 packet.temperature)
@@ -157,10 +157,10 @@ class Monitor(object):
             self.scanning = True
         else:
             _LOGGER.debug(
-                "Warning: start() called, but scanner is already running")
+                "start() called, but scanner is already running")
 
     def process_packet(self, namespace, instance, temperature):
-        """Assign temperature to hass device."""
+        """Assign temperature to device."""
         _LOGGER.debug("Received temperature for <%s,%s>: %d",
                       namespace, instance, temperature)
 
@@ -179,4 +179,4 @@ class Monitor(object):
             self.scanning = False
         else:
             _LOGGER.debug(
-                "Warning: stop() called but scanner was not running")
+                "stop() called but scanner was not running")

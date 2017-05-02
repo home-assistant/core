@@ -51,7 +51,7 @@ class ZMSensorMonitors(Entity):
     """Get the status of each ZoneMinder monitor."""
 
     def __init__(self, monitor_id, monitor_name):
-        """Initiate monitor sensor."""
+        """Initialize monitor sensor."""
         self._monitor_id = monitor_id
         self._monitor_name = monitor_name
         self._state = None

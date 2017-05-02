@@ -73,7 +73,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     @callback
     def device_update_callback(data):
-        """Callback for when devices are added to emby."""
+        """Handle devices which are added to Emby."""
         new_devices = []
         active_devices = []
         for dev_id in emby.devices:
@@ -244,12 +244,12 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
+        """Return the duration of current playing media in seconds."""
         return self.device.media_runtime
 
     @property
     def media_position(self):
-        """Position of current playing media in seconds."""
+        """Return the position of current playing media in seconds."""
         return self.media_status_last_position
 
     @property
@@ -263,12 +263,12 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
-        """Image url of current playing media."""
+        """Return the image URL of current playing media."""
         return self.device.media_image_url
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         return self.device.media_title
 
     @property
@@ -278,27 +278,27 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Return the title of the series of current playing media (TV)."""
         return self.device.media_series_title
 
     @property
     def media_episode(self):
-        """Episode of current playing media (TV Show only)."""
+        """Return the episode of current playing media (TV only)."""
         return self.device.media_episode
 
     @property
     def media_album_name(self):
-        """Album name of current playing media (Music track only)."""
+        """Return the album name of current playing media (Music only)."""
         return self.device.media_album_name
 
     @property
     def media_artist(self):
-        """Artist of current playing media (Music track only)."""
+        """Return the artist of current playing media (Music track only)."""
         return self.device.media_artist
 
     @property
     def media_album_artist(self):
-        """Album artist of current playing media (Music track only)."""
+        """Return the album artist of current playing media (Music only)."""
         return self.device.media_album_artist
 
     @property

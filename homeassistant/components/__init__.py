@@ -105,7 +105,7 @@ def async_setup(hass, config):
     """Set up general services related to Home Assistant."""
     @asyncio.coroutine
     def async_handle_turn_service(service):
-        """Method to handle calls to homeassistant.turn_on/off."""
+        """Handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
         # Generic turn on/off method requires entity id

@@ -140,7 +140,7 @@ class CallRateDelayThrottle(object):
         self._schedule = functools.partial(track_point_in_utc_time, hass)
 
     def limited(self, method):
-        """The decorater to delay calls on a certain method."""
+        """Decorate to delay calls on a certain method."""
         @functools.wraps(method)
         def decorated(*args, **kwargs):
             """Delay a call."""
@@ -149,7 +149,7 @@ class CallRateDelayThrottle(object):
                 return
 
             def action(event):
-                """The action wrapper that gets scheduled."""
+                """Wrap an action that gets scheduled."""
                 method(*args, **kwargs)
 
                 with self._lock:

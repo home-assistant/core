@@ -62,7 +62,7 @@ def request_configuration(hass, config, url, add_devices_callback):
 
     # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration changes."""
         while True:
             from websocket import _exceptions
             try:
