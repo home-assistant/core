@@ -83,7 +83,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def new_service_found(service, info):
-        """Called when a new service is found."""
+        """Handle a new service if one is found."""
         if service in ignored_platforms:
             logger.info("Ignoring service: %s %s", service, info)
             return

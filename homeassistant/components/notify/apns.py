@@ -62,10 +62,10 @@ def get_service(hass, config, discovery_info=None):
 
 class ApnsDevice(object):
     """
-    APNS Device class.
+    The APNS Device class.
 
-    Stores information about a device that is
-    registered for push notifications.
+    Stores information about a device that is registered for push
+    notifications.
     """
 
     def __init__(self, push_id, name, tracking_device_id=None, disabled=False):
@@ -181,10 +181,9 @@ class ApnsNotificationService(BaseNotificationService):
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """
-        Listener for sate change.
+        Listen for sate change.
 
-        Track device state change if a device
-        has a tracking id specified.
+        Track device state change if a device has a tracking id specified.
         """
         self.device_states[entity_id] = str(to_s.state)
 

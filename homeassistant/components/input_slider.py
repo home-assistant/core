@@ -16,9 +16,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'input_slider'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-_LOGGER = logging.getLogger(__name__)
 
 CONF_INITIAL = 'initial'
 CONF_MIN = 'min'
@@ -39,7 +40,7 @@ SERVICE_SELECT_VALUE_SCHEMA = vol.Schema({
 
 
 def _cv_input_slider(cfg):
-    """Configuration validation helper for input slider (voluptuous)."""
+    """Configure validation helper for input slider (voluptuous)."""
     minimum = cfg.get(CONF_MIN)
     maximum = cfg.get(CONF_MAX)
     if minimum >= maximum:
@@ -59,8 +60,8 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Required(CONF_MIN): vol.Coerce(float),
             vol.Required(CONF_MAX): vol.Coerce(float),
             vol.Optional(CONF_INITIAL): vol.Coerce(float),
-            vol.Optional(CONF_STEP, default=1): vol.All(vol.Coerce(float),
-                                                        vol.Range(min=1e-3)),
+            vol.Optional(CONF_STEP, default=1):
+                vol.All(vol.Coerce(float), vol.Range(min=1e-3)),
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string
         }, _cv_input_slider)

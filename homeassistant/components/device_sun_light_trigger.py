@@ -84,7 +84,7 @@ def async_setup(hass, config):
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
     def async_turn_on_before_sunset(light_id):
-        """Function to turn on lights."""
+        """Turn on lights."""
         if not device_tracker.is_on(hass) or light.is_on(hass, light_id):
             return
         light.async_turn_on(hass, light_id,
@@ -92,7 +92,7 @@ def async_setup(hass, config):
                             profile=light_profile)
 
     def async_turn_on_factory(light_id):
-        """Factory to generate turn on callbacks."""
+        """Generate turn on callbacks as factory."""
         @callback
         def async_turn_on_light(now):
             """Turn on specific light."""
@@ -104,7 +104,7 @@ def async_setup(hass, config):
     # pre-sun set event
     @callback
     def schedule_light_turn_on(entity, old_state, new_state):
-        """The moment sun sets we want to have all the lights on.
+        """Turn on all the lights at the moment sun sets.
 
         We will schedule to have each light start after one another
         and slowly transition in.

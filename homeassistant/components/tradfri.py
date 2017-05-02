@@ -45,7 +45,7 @@ def request_configuration(hass, config, host):
 
     @asyncio.coroutine
     def configuration_callback(callback_data):
-        """Called when config is submitted."""
+        """Handle the submitted configuration."""
         res = yield from _setup_gateway(hass, config, host,
                                         callback_data.get('key'))
         if not res:

@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the eight sleep sensors."""
+    """Set up the eight sleep sensors."""
     if discovery_info is None:
         return
 
@@ -80,7 +80,7 @@ class EightHeatSensor(EightSleepHeatEntity):
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug('Heat Sensor: %s, Side: %s, User: %s',
+        _LOGGER.debug("Heat Sensor: %s, Side: %s, User: %s",
                       self._sensor, self._side, self._userid)
 
     @property
@@ -101,7 +101,7 @@ class EightHeatSensor(EightSleepHeatEntity):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug('Updating Heat sensor: %s', self._sensor)
+        _LOGGER.debug("Updating Heat sensor: %s", self._sensor)
         self._state = self._usrobj.heating_level
 
     @property
@@ -134,7 +134,7 @@ class EightUserSensor(EightSleepUserEntity):
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug('User Sensor: %s, Side: %s, User: %s',
+        _LOGGER.debug("User Sensor: %s, Side: %s, User: %s",
                       self._sensor, self._side, self._userid)
 
     @property
@@ -167,7 +167,7 @@ class EightUserSensor(EightSleepUserEntity):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug('Updating User sensor: %s', self._sensor)
+        _LOGGER.debug("Updating User sensor: %s", self._sensor)
         if 'current' in self._sensor:
             self._state = self._usrobj.current_sleep_score
             self._attr = self._usrobj.current_values
@@ -252,7 +252,7 @@ class EightRoomSensor(EightSleepUserEntity):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
-        _LOGGER.debug('Updating Room sensor: %s', self._sensor)
+        _LOGGER.debug("Updating Room sensor: %s", self._sensor)
         temp = self._eight.room_temperature()
         if self._units == 'si':
             self._state = round(temp, 2)

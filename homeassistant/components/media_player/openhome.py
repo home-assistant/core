@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = discovery_info.get('name')
     description = discovery_info.get('ssdp_description')
-    _LOGGER.info('Openhome device found: %s', name)
+    _LOGGER.info("Openhome device found: %s", name)
     device = Device(description)
 
     # if device has already been discovered
@@ -152,7 +152,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     @property

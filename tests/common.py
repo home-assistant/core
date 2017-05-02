@@ -172,7 +172,7 @@ def mock_service(hass, domain, service):
 
     @asyncio.coroutine
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
-        """Mocked service call."""
+        """Mock service call."""
         calls.append(call)
 
     if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():

@@ -25,7 +25,7 @@ DEPENDENCIES = ['alarmdecoder']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Perform the setup for AlarmDecoder alarm panels."""
+    """Set up for AlarmDecoder alarm panels."""
     _LOGGER.debug("AlarmDecoderAlarmPanel: setup")
 
     device = AlarmDecoderAlarmPanel("Alarm Panel", hass)
@@ -78,12 +78,12 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
     def code_format(self):
-        """Regex for code format or None if no code is required."""
+        """Return the regex for code format or None if no code is required."""
         return '^\\d{4,6}$'
 
     @property

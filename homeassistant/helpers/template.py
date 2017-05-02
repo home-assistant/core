@@ -54,7 +54,7 @@ class Template(object):
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
-        """Instantiate a Template."""
+        """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError('Expected template to be a string')
 
@@ -336,7 +336,7 @@ class LocationMethods(object):
 
 
 def forgiving_round(value, precision=0):
-    """Rounding filter that accepts strings."""
+    """Round accepted strings."""
     try:
         value = round(float(value), precision)
         return int(value) if precision == 0 else value
