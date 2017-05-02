@@ -5,7 +5,6 @@ from unittest.mock import patch, Mock, MagicMock
 
 import pytest
 
-import homeassistant.components.hassio as ho
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro, mock_http_component_app
