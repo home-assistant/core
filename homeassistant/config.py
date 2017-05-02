@@ -505,6 +505,13 @@ def merge_packages_config(config, packages):
                         continue
 
                     for key, val in comp_conf.items():
+                        # entities in a group should be mergeable
+                        if(comp_name == 'group' and key in config[comp_name]
+                           and 'entities' in config[comp_name][key]):
+                            config[comp_name][key]['entities'].extend(
+                                cv.ensure_list(comp_conf[key]['entities']))
+                            continue
+
                         if key in config[comp_name]:
                             _log_pkg_error(pack_name, comp_name, config,
                                            "duplicate key '{}'".format(key))

@@ -564,3 +564,22 @@ def test_merge_customize(hass):
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get('b.b') == \
         {'friendly_name': 'BB'}
+
+
+def test_merge_groups(merge_log_err):
+    """Test if we can merge groups in packages."""
+    packages = {
+        'pack_1': {'input_boolean': {'ib2': None},
+                   'group': {'test_group': {'entities': ['ib2']}}},
+        'pack_2': {'input_boolean': {'ib3': None},
+                   'group': {'test_group': {'entities': ['ib3']}}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'group': {'test_group': {'entities': ['ib1']}},
+        'input_boolean': {'ib1': None},
+    }
+    config_util.merge_packages_config(config, packages)
+
+    assert merge_log_err.call_count == 0
+    assert len(config['group']['test_group']['entities']) == 3
