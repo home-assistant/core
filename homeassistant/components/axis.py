@@ -44,7 +44,6 @@ PLATFORMS = ['camera']
 
 AXIS_INCLUDE = EVENT_TYPES + PLATFORMS
 
-AXIS_DEFAULT_NAME = 'Axis network device'
 AXIS_DEFAULT_HOST = '192.168.0.90'
 AXIS_DEFAULT_USERNAME = 'root'
 AXIS_DEFAULT_PASSWORD = 'pass'
@@ -52,19 +51,19 @@ AXIS_DEFAULT_PASSWORD = 'pass'
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_INCLUDE):
         vol.All(cv.ensure_list, [vol.In(AXIS_INCLUDE)]),
-    vol.Optional(CONF_NAME, default=AXIS_DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_HOST, default=AXIS_DEFAULT_HOST): cv.string,
     vol.Optional(CONF_USERNAME, default=AXIS_DEFAULT_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=AXIS_DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL, default=0): cv.positive_int,
-    vol.Optional(ATTR_LOCATION, default=None): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+    vol.Optional(ATTR_LOCATION, default=''): cv.string,
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: DEVICE_SCHEMA,
     }),
-}, required=False, extra=vol.ALLOW_EXTRA)
+}, extra=vol.ALLOW_EXTRA)
 
 
 def request_configuration(hass, name, host, serialnumber):
@@ -154,8 +153,8 @@ def setup(hass, base_config):
             if serialnumber in config_file:
                 try:
                     config = DEVICE_SCHEMA(config_file[serialnumber])
-                except vol.Invalid:
-                    _LOGGER.error("Bad data from %s.", CONFIG_FILE)
+                except vol.Invalid as err:
+                    _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                 if not setup_device(hass, config):
                     _LOGGER.error('Couldn\'t set up %s', config['name'])
             else:
@@ -299,7 +298,7 @@ class AxisDeviceEvent(Entity):
         attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
 
         location = self.axis_event.device_config(ATTR_LOCATION)
-        if location is not None:
+        if location:
             attr[ATTR_LOCATION] = location
 
         return attr
