@@ -24,7 +24,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.2.1']
+REQUIREMENTS = ['http://github.com/home-assistant/pyatv/archive/'
+                'fa93513579ced672bc8ff3c1c314e86ec9177fc4.zip#pyatv==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
