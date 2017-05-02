@@ -6,15 +6,15 @@ https://home-assistant.io/components/sensor.radarr/
 """
 import logging
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONF_PORT)
-from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.const import CONF_SSL
+from homeassistant.const import (
+    CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS,
+    CONF_SSL)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
@@ -31,6 +31,8 @@ DEFAULT_URLBASE = ''
 DEFAULT_DAYS = '1'
 DEFAULT_UNIT = 'GB'
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 SENSOR_TYPES = {
     'diskspace': ['Disk Space', 'GB', 'mdi:harddisk'],
     'upcoming': ['Upcoming', 'Movies', 'mdi:television'],
@@ -41,13 +43,12 @@ SENSOR_TYPES = {
 }
 
 ENDPOINTS = {
-    'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace?apikey={4}',
+    'diskspace': 'http{0}://{1}:{2}/{3}api/diskspace',
     'upcoming':
-        'http{0}://{1}:{2}/{3}api/calendar?apikey={4}&start={5}&end={6}',
-    'wanted': 'http{0}://{1}:{2}/{3}api/movie?apikey={4}',
-    'movies': 'http{0}://{1}:{2}/{3}api/movie?apikey={4}',
-    'commands': 'http{0}://{1}:{2}/{3}api/command?apikey={4}',
-    'status': 'http{0}://{1}:{2}/{3}api/system/status?apikey={4}'
+        'http{0}://{1}:{2}/{3}api/calendar?start={4}&end={5}',
+    'movies': 'http{0}://{1}:{2}/{3}api/movie',
+    'commands': 'http{0}://{1}:{2}/{3}api/command',
+    'status': 'http{0}://{1}:{2}/{3}api/system/status'
 }
 
 # Support to Yottabytes for the future, why not
@@ -55,7 +56,7 @@ BYTE_SIZES = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
-        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES.keys()))]),
+        vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
     vol.Optional(CONF_INCLUDED, default=[]): cv.ensure_list,
     vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
@@ -86,7 +87,7 @@ class RadarrSensor(Entity):
         self.port = conf.get(CONF_PORT)
         self.urlbase = conf.get(CONF_URLBASE)
         if self.urlbase:
-            self.urlbase = "%s/" % self.urlbase.strip('/')
+            self.urlbase = '%s/'.format(self.urlbase.strip('/'))
         self.apikey = conf.get(CONF_API_KEY)
         self.included = conf.get(CONF_INCLUDED)
         self.days = int(conf.get(CONF_DAYS))
@@ -115,7 +116,8 @@ class RadarrSensor(Entity):
             res = requests.get(
                 ENDPOINTS[self.type].format(
                     self.ssl, self.host, self.port,
-                    self.urlbase, self.apikey, start, end),
+                    self.urlbase, start, end),
+                headers={'X-Api-Key': self.apikey},
                 timeout=5)
         except OSError:
             _LOGGER.error('Host %s is not available', self.host)
@@ -124,23 +126,8 @@ class RadarrSensor(Entity):
             return
 
         if res.status_code == 200:
-            if self.type in ['wanted', 'upcoming', 'movies', 'commands']:
-                if self.type == 'movies':
-                    self.data = list(
-                        filter(
-                            lambda x: x['downloaded'],
-                            res.json()
-                        )
-                    )
-                elif self.type == 'wanted':
-                    self.data = list(
-                        filter(
-                            lambda x: not x['downloaded'],
-                            res.json()
-                        )
-                    )
-                else:
-                    self.data = res.json()
+            if self.type in ['upcoming', 'movies', 'commands']:
+                self.data = res.json()
                 self._state = len(self.data)
             elif self.type == 'diskspace':
                 # If included paths are not provided, use all data
@@ -192,9 +179,6 @@ class RadarrSensor(Entity):
         if self.type == 'upcoming':
             for movie in self.data:
                 attributes[to_key(movie)] = get_release_date(movie)
-        elif self.type == 'wanted':
-            for movie in self.data:
-                attributes[to_key(movie)] = movie['status']
         elif self.type == 'commands':
             for command in self.data:
                 attributes[command['name']] = command['state']
@@ -210,7 +194,7 @@ class RadarrSensor(Entity):
                 )
         elif self.type == 'movies':
             for movie in self.data:
-                attributes[to_key(movie)] = movie['hasFile']
+                attributes[to_key(movie)] = movie['downloaded']
         elif self.type == 'status':
             attributes = self.data
 
