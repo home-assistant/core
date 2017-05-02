@@ -1,12 +1,9 @@
-"""
-Component to receive telegram messages.
-
-Either by polling or webhook.
-"""
-
+"""Component to receive telegram messages."""
 import asyncio
 import logging
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_PLATFORM, CONF_API_KEY
 from homeassistant.exceptions import HomeAssistantError
@@ -32,8 +29,8 @@ CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_ALLOWED_CHAT_IDS): vol.All(cv.ensure_list,
-                                                 [cv.positive_int])
+    vol.Required(CONF_ALLOWED_CHAT_IDS):
+        vol.All(cv.ensure_list, [cv.positive_int])
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -62,11 +59,11 @@ def async_setup(hass, config):
                     None, platform.setup_platform, hass, p_config,
                     discovery_info)
             else:
-                raise HomeAssistantError("Invalid telegram bot platform.")
+                raise HomeAssistantError("Invalid Telegram bot platform")
 
             if notify_service is None:
                 _LOGGER.error(
-                    "Failed to initialize telegram bot %s", p_type)
+                    "Failed to initialize Telegram bot %s", p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
@@ -105,8 +102,7 @@ class BaseTelegramBotEntity:
                 'from' not in data or
                 'text' not in data or
                 data['from'].get('id') not in self.allowed_chat_ids):
-            # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data.")
+            _LOGGER.error("Incoming message does not have required data")
             return False
 
         event = EVENT_TELEGRAM_COMMAND

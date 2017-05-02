@@ -11,14 +11,14 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.eight_sleep import (
     DATA_EIGHT, EightSleepHeatEntity, CONF_BINARY_SENSORS, NAME_MAP)
 
-DEPENDENCIES = ['eight_sleep']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['eight_sleep']
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the eight sleep binary sensor."""
+    """Set up the eight sleep binary sensor."""
     if discovery_info is None:
         return
 
@@ -35,7 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
-    """Representation of a eight sleep heat-based sensor."""
+    """Representation of a Eight Sleep heat-based sensor."""
 
     def __init__(self, name, eight, sensor):
         """Initialize the sensor."""
@@ -50,7 +50,7 @@ class EightHeatSensor(EightSleepHeatEntity, BinarySensorDevice):
         self._userid = self._eight.fetch_userid(self._side)
         self._usrobj = self._eight.users[self._userid]
 
-        _LOGGER.debug('Presence Sensor: %s, Side: %s, User: %s',
+        _LOGGER.debug("Presence Sensor: %s, Side: %s, User: %s",
                       self._sensor, self._side, self._userid)
 
     @property

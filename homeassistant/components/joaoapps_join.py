@@ -1,7 +1,7 @@
 """
 Component for Joaoapps Join services.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/join/
 """
 import logging
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def register_device(hass, device_id, api_key, name):
-    """Method to register services for each join device listed."""
+    """Register services for each join device listed."""
     from pyjoin import (ring_device, set_wallpaper, send_sms,
                         send_file, send_url, send_notification)
 

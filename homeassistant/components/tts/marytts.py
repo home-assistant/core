@@ -70,12 +70,12 @@ class MaryTTSProvider(Provider):
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return self._language
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
@@ -105,13 +105,13 @@ class MaryTTSProvider(Provider):
                 request = yield from websession.get(url, params=url_param)
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load url %s.",
+                    _LOGGER.error("Error %d on load url %s",
                                   request.status, request.url)
                     return (None, None)
                 data = yield from request.read()
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Timeout for MaryTTS API.")
+            _LOGGER.error("Timeout for MaryTTS API")
             return (None, None)
 
         return (self._codec, data)

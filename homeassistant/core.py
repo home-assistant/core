@@ -350,7 +350,7 @@ class EventBus(object):
 
     @callback
     def async_listeners(self):
-        """Dictionary with events and the number of listeners.
+        """Return dictionary with events and the number of listeners.
 
         This method must be run in the event loop.
         """
@@ -359,7 +359,7 @@ class EventBus(object):
 
     @property
     def listeners(self):
-        """Dictionary with events and the number of listeners."""
+        """Return dictionary with events and the number of listeners."""
         return run_callback_threadsafe(
             self._hass.loop, self.async_listeners
         ).result()
@@ -799,14 +799,14 @@ class ServiceRegistry(object):
 
     @property
     def services(self):
-        """Dictionary with per domain a list of available services."""
+        """Return dictionary with per domain a list of available services."""
         return run_callback_threadsafe(
             self._hass.loop, self.async_services,
         ).result()
 
     @callback
     def async_services(self):
-        """Dictionary with per domain a list of available services.
+        """Return dictionary with per domain a list of available services.
 
         This method must be run in the event loop.
         """
@@ -952,7 +952,7 @@ class ServiceRegistry(object):
 
             @callback
             def service_executed(event):
-                """Method that is called when service is executed."""
+                """Handle an executed service."""
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
 
@@ -970,7 +970,7 @@ class ServiceRegistry(object):
 
     @asyncio.coroutine
     def _event_to_service_call(self, event):
-        """Method for the SERVICE_CALLED events from the EventBus."""
+        """Handle the SERVICE_CALLED events from the EventBus."""
         service_data = event.data.get(ATTR_SERVICE_DATA) or {}
         domain = event.data.get(ATTR_DOMAIN).lower()
         service = event.data.get(ATTR_SERVICE).lower()

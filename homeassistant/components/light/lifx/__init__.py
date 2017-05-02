@@ -89,7 +89,7 @@ class LIFXManager(object):
 
     @callback
     def register(self, device):
-        """Callback for newly detected bulb."""
+        """Handle for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             entity.device = device
@@ -106,7 +106,7 @@ class LIFXManager(object):
 
     @callback
     def ready(self, device, msg):
-        """Callback that adds the device once all data is retrieved."""
+        """Handle the device once all data is retrieved."""
         entity = LIFXLight(device)
         _LOGGER.debug("%s register READY", entity.who)
         self.entities[device.mac_addr] = entity
@@ -114,7 +114,7 @@ class LIFXManager(object):
 
     @callback
     def unregister(self, device):
-        """Callback for disappearing bulb."""
+        """Handle disappearing bulbs."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
@@ -134,7 +134,7 @@ class AwaitAioLIFX:
 
     @callback
     def callback(self, device, message):
-        """Callback that aiolifx invokes when the response is received."""
+        """Handle responses."""
         self.device = device
         self.message = message
         self.event.set()

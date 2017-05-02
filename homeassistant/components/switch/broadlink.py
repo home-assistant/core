@@ -174,7 +174,7 @@ class BroadlinkRMSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
@@ -257,7 +257,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     def update(self):
