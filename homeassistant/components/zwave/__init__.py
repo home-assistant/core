@@ -234,9 +234,6 @@ def setup(hass, config):
     from openzwave.network import ZWaveNetwork
     from openzwave.group import ZWaveGroup
 
-    default_zwave_config_path = os.path.join(os.path.dirname(
-        libopenzwave.__file__), 'config')
-
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
     autoheal = config[DOMAIN].get(CONF_AUTOHEAL)
@@ -249,8 +246,7 @@ def setup(hass, config):
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH),
         user_path=hass.config.config_dir,
-        config_path=config[DOMAIN].get(
-            CONF_CONFIG_PATH, default_zwave_config_path))
+        config_path=config[DOMAIN].get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
     options.lock()
