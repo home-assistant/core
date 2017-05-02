@@ -136,8 +136,8 @@ def setup(hass, base_config):
 
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the metadatastream on shutdown."""
-        for name, device in AXIS_DEVICES.items():
-            _LOGGER.info("Stopping metadatastream for %s.", name)
+        for serialnumber, device in AXIS_DEVICES.items():
+            _LOGGER.info("Stopping metadatastream for %s.", serialnumber)
             device.stop_metadatastream()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
