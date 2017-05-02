@@ -152,7 +152,10 @@ def setup(hass, base_config):
         if serialnumber not in AXIS_DEVICES:
             config_file = _read_config(hass)
             if serialnumber in config_file:
-                config = config_file[serialnumber]
+                try:
+                    config = DEVICE_SCHEMA(config_file[serialnumber])
+                except vol.Invalid:
+                    _LOGGER.error("Bad data from %s.", CONFIG_FILE)
                 if not setup_device(hass, config):
                     _LOGGER.error('Couldn\'t set up %s', config['name'])
             else:
