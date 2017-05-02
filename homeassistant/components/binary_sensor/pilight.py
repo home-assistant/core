@@ -18,9 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_PAYLOAD_OFF,
-    CONF_PAYLOAD_ON,
-    STATE_OFF,
-    STATE_ON,
+    CONF_PAYLOAD_ON
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import track_point_in_time
@@ -106,7 +104,7 @@ class PilightBinarySensor(BinarySensorDevice):
             if key not in call.data:
                 payload_ok = False
                 continue
-            if payload[key] != call.data[key]:
+            if self._payload[key] != call.data[key]:
                     payload_ok = False
         # Read out variable if payload ok
         if payload_ok:
@@ -171,12 +169,12 @@ class PilightTriggerSensor(BinarySensorDevice):
             if key not in call.data:
                 payload_ok = False
                 continue
-            if payload[key] != call.data[key]:
+            if self._payload[key] != call.data[key]:
                     payload_ok = False
         # Read out variable if payload ok
         if payload_ok:
             if self._variable not in call.data:
-                return            
+                return
             value = call.data[self._variable]
             self._state = (value == self._on_value)
             if self._delay_after is None:
