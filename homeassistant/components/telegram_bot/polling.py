@@ -1,5 +1,9 @@
-"""Telegram bot polling implementation."""
+"""
+Telegram bot polling implementation.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.polling/
+"""
 import asyncio
 from asyncio.futures import CancelledError
 import logging
@@ -23,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the polling platform."""
+    """Set up the Telegram polling platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])

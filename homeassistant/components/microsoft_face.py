@@ -111,7 +111,7 @@ def face_person(hass, group, person, camera_entity):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup microsoft face."""
+    """Set up microsoft face."""
     entities = {}
     face = MicrosoftFace(
         hass,

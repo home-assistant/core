@@ -20,7 +20,7 @@ SUPPORT_VERA = SUPPORT_BRIGHTNESS
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up Vera lights."""
+    """Set up the Vera lights."""
     add_devices(
         VeraLight(device, VERA_CONTROLLER) for device in VERA_DEVICES['light'])
 

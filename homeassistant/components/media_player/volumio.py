@@ -140,7 +140,7 @@ class Volumio(MediaPlayerDevice):
         if str(url[0:2]).lower() == 'ht':
             mediaurl = url
         else:
-            mediaurl = "http://" + self.host + ":" + str(self.port) + url
+            mediaurl = "http://{}:{}{}".format(self.host, self.port, url)
         return mediaurl
 
     @property

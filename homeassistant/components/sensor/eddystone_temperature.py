@@ -136,9 +136,9 @@ class Monitor(object):
 
         def callback(bt_addr, _, packet, additional_info):
             """Callback for new packets."""
-            self.process_packet(additional_info['namespace'],
-                                additional_info['instance'],
-                                packet.temperature)
+            self.process_packet(
+                additional_info['namespace'], additional_info['instance'],
+                packet.temperature)
 
         # pylint: disable=import-error
         from beacontools import (

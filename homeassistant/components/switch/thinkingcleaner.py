@@ -31,7 +31,7 @@ SWITCH_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ThinkingCleaner platform."""
+    """Set up the ThinkingCleaner platform."""
     from pythinkingcleaner import Discovery
 
     discovery = Discovery()

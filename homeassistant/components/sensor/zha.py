@@ -19,7 +19,7 @@ DEPENDENCIES = ['zha']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Zigbee Home Automation sensors."""
+    """Set up Zigbee Home Automation sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
@@ -44,10 +44,7 @@ def make_sensor(discovery_info):
         cluster = clusters[0]
         yield from cluster.bind()
         yield from cluster.configure_reporting(
-            attr,
-            300,
-            600,
-            sensor.min_reportable_change,
+            attr, 300, 600, sensor.min_reportable_change,
         )
 
     return sensor
@@ -95,5 +92,5 @@ class TemperatureSensor(Sensor):
         if self._state == 'unknown':
             return 'unknown'
         celsius = round(float(self._state) / 100, 1)
-        return convert_temperature(celsius, TEMP_CELSIUS,
-                                   self.unit_of_measurement)
+        return convert_temperature(
+            celsius, TEMP_CELSIUS, self.unit_of_measurement)

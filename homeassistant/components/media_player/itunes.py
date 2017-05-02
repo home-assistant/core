@@ -154,7 +154,7 @@ class Itunes(object):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the iTunes platform."""
+    """Set up the iTunes platform."""
     add_devices([
         ItunesDevice(
             config.get(CONF_NAME),

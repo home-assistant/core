@@ -20,7 +20,7 @@ HUB_ADDRESS = 'address'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the powerview scenes stored in a Powerview hub."""
+    """Set up the powerview scenes stored in a Powerview hub."""
     from powerview_api import powerview
 
     hub_address = config.get(HUB_ADDRESS)
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _scenes = _pv.get_scenes()
         _rooms = _pv.get_rooms()
     except ConnectionError:
-        _LOGGER.exception("error connecting to powerview "
+        _LOGGER.exception("Error connecting to powerview "
                           "hub with ip address: %s", hub_address)
         return False
     add_devices(PowerViewScene(hass, scene, _rooms, _pv)
@@ -49,9 +49,8 @@ class PowerViewScene(Scene):
         self.scene_data = scene_data
         self._sync_room_data(room_data)
         self.entity_id_format = DOMAIN + '.{}'
-        self.entity_id = generate_entity_id(self.entity_id_format,
-                                            str(self.scene_data["id"]),
-                                            hass=hass)
+        self.entity_id = generate_entity_id(
+            self.entity_id_format, str(self.scene_data["id"]), hass=hass)
 
     def _sync_room_data(self, room_data):
         """Sync the room data."""

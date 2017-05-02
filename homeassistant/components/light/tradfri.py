@@ -59,7 +59,7 @@ class TradfriGroup(Light):
 
     @property
     def brightness(self):
-        """Brightness of the group lights (an integer in the range 1-255)."""
+        """Return the brightness of the group lights."""
         return self._group.dimmer
 
     def turn_off(self, **kwargs):
@@ -79,7 +79,7 @@ class TradfriGroup(Light):
 
 
 class Tradfri(Light):
-    """The platform class required by hass."""
+    """The platform class required by Home Asisstant."""
 
     def __init__(self, light):
         """Initialize a Light."""
@@ -118,7 +118,7 @@ class Tradfri(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
+        """Return the brightness of the light."""
         return self._light_data.dimmer
 
     @property
@@ -134,7 +134,7 @@ class Tradfri(Light):
             if hex_color == self._light_data.hex_color), None)
         if kelvin is None:
             _LOGGER.error(
-                'unexpected color temperature found for %s: %s',
+                "Unexpected color temperature found for %s: %s",
                 self.name, self._light_data.hex_color)
             return
         return color_util.color_temperature_kelvin_to_mired(kelvin)

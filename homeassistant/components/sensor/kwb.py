@@ -15,7 +15,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
-
 REQUIREMENTS = ['pykwb==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the KWB component."""
+    """Set up the KWB component."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     device = config.get(CONF_DEVICE)

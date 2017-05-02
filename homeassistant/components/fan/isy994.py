@@ -35,7 +35,7 @@ STATES = [SPEED_OFF, SPEED_LOW, 'med', SPEED_HIGH]
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 fan platform."""
+    """Set up the ISY994 fan platform."""
     if isy.ISY is None or not isy.ISY.connected:
         _LOGGER.error("A connection has not been made to the ISY controller")
         return False

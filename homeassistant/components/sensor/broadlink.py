@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Broadlink device sensors."""
+    """Set up the Broadlink device sensors."""
     mac = config.get(CONF_MAC).encode().replace(b':', b'')
     mac_addr = binascii.unhexlify(mac)
     broadlink_data = BroadlinkData(

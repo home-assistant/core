@@ -43,6 +43,6 @@ class CommandLineNotificationService(BaseNotificationService):
                                     stdin=subprocess.PIPE, shell=True)
             proc.communicate(input=message)
             if proc.returncode != 0:
-                _LOGGER.error('Command failed: %s', self.command)
+                _LOGGER.error("Command failed: %s", self.command)
         except subprocess.SubprocessError:
-            _LOGGER.error('Error trying to exec Command: %s', self.command)
+            _LOGGER.error("Error trying to exec Command: %s", self.command)
