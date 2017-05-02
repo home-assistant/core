@@ -218,7 +218,7 @@ class AutomaticData(object):
                 ATTR_MAC: vehicle.id,
                 ATTR_ATTRIBUTES: {
                     ATTR_FUEL_LEVEL: vehicle.fuel_level_percent,
-                    }
+                }
             }
 
         if vehicle.latest_location is not None:
