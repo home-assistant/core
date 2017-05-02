@@ -28,23 +28,6 @@ DEPENDENCIES = ['http']
 
 TIMEOUT = 10
 
-HASSIO_REST_COMMANDS = {
-    'host/shutdown': ['POST'],
-    'host/reboot': ['POST'],
-    'host/update': ['POST'],
-    'host/info': ['GET'],
-    'supervisor/info': ['GET'],
-    'supervisor/update': ['POST'],
-    'supervisor/options': ['POST'],
-    'supervisor/reload': ['POST'],
-    'supervisor/logs': ['GET'],
-    'homeassistant/info': ['GET'],
-    'homeassistant/update': ['POST'],
-    'homeassistant/logs': ['GET'],
-    'network/info': ['GET'],
-    'network/options': ['POST'],
-}
-
 ADDON_REST_COMMANDS = {
     'install': ['POST'],
     'uninstall': ['POST'],
@@ -166,21 +149,6 @@ class HassIOView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, request, path):
         """Route data to hassio."""
-        if path.startswith('addons/'):
-            parts = path.split('/')
-
-            if len(parts) != 3:
-                raise HTTPNotFound()
-
-            allowed_methods = ADDON_REST_COMMANDS.get(parts[-1])
-        else:
-            allowed_methods = HASSIO_REST_COMMANDS.get(path)
-
-        if allowed_methods is None:
-            raise HTTPNotFound()
-        if request.method not in allowed_methods:
-            raise HTTPMethodNotAllowed(request.method, allowed_methods)
-
         client = yield from self.hassio.command_proxy(path, request)
 
         data = yield from client.read()
