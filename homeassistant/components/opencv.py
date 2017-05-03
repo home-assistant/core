@@ -88,7 +88,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def cv_image_to_bytes(cv_image):
     """Convert OpenCV image to bytes."""
-    import cv2
+    import cv2  # pylint: disable=import-error
 
     # pylint: disable=no-member
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
@@ -103,7 +103,7 @@ def cv_image_to_bytes(cv_image):
 
 def cv_image_from_bytes(image):
     """Convert image bytes to OpenCV image."""
-    import cv2
+    import cv2  # pylint: disable=import-error
     import numpy
 
     # pylint: disable=no-member
@@ -112,7 +112,7 @@ def cv_image_from_bytes(image):
 
 def process_image(image, classifier_group, is_camera):
     """Process the image given a classifier group."""
-    import cv2
+    import cv2  # pylint: disable=import-error
     import numpy
 
     # pylint: disable=no-member
