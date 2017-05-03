@@ -24,9 +24,7 @@ from homeassistant.loader import get_component
 from homeassistant.util.dt import utcnow
 
 
-REQUIREMENTS = ['http://github.com/Kane610/axis'
-                '/archive/v5.zip'
-                '#axis==5']
+REQUIREMENTS = ['axis==7']
 
 _LOGGER = logging.getLogger(__name__)
 
