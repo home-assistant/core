@@ -408,11 +408,17 @@ netdisco==1.0.0rc3
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
 
+# homeassistant.components.opencv
+numpy==1.12.0
+
 # homeassistant.components.google
 oauth2client==4.0.0
 
 # homeassistant.components.climate.oem
 oemthermostat==1.1
+
+# homeassistant.components.opencv
+opencv-python==3.2.0.6
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
@@ -801,6 +807,9 @@ uber_rides==0.4.1
 
 # homeassistant.components.sensor.ups
 upsmychoice==1.0.2
+
+# homeassistant.components.opencv
+urllib3==1.21
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
