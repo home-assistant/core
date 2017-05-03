@@ -161,11 +161,11 @@ def setup(hass, config):
     if not os.path.isfile(default_classifier):
         _LOGGER.info('Downloading default classifier')
 
-        r_class = requests.get(CASCADE_URL, stream=True)
-        with open(default_classifier, 'wb') as f_class:
-            for chunk in r_class.iter_content(chunk_size=1024):
+        req = requests.get(CASCADE_URL, stream=True)
+        with open(default_classifier, 'wb') as fil:
+            for chunk in req.iter_content(chunk_size=1024):
                 if chunk:  # filter out keep-alive new chunks
-                    f_class.write(chunk)
+                    fil.write(chunk)
 
     for group in config[DOMAIN][CONF_GROUPS]:
         grp = {}
