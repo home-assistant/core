@@ -86,6 +86,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         found = []
         for unknown_face in unknowns:
             for name, face in self._faces.items():
+                # pylint: disable=undefined-loop-variable
                 result = face_recognition.compare_faces([face], unknown_face)
                 if result[0]:
                     found.append({
