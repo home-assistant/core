@@ -8,6 +8,7 @@ import colorsys
 import logging
 import asyncio
 import sys
+import math
 from functools import partial
 from datetime import timedelta
 import async_timeout
@@ -55,12 +56,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the LIFX platform."""
+    """Set up the LIFX platform."""
     import aiolifx
 
     if sys.platform == 'win32':
-        _LOGGER.warning('The lifx platform is known to not work on Windows. '
-                        'Consider using the lifx_legacy platform instead.')
+        _LOGGER.warning("The lifx platform is known to not work on Windows. "
+                        "Consider using the lifx_legacy platform instead")
 
     server_addr = config.get(CONF_SERVER)
 
@@ -88,7 +89,7 @@ class LIFXManager(object):
 
     @callback
     def register(self, device):
-        """Callback for newly detected bulb."""
+        """Handle for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             entity.device = device
@@ -96,11 +97,16 @@ class LIFXManager(object):
             self.hass.async_add_job(entity.async_update_ha_state())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
-            device.get_color(self.ready)
+            device.get_version(self.got_version)
+
+    @callback
+    def got_version(self, device, msg):
+        """Request current color setting once we have the product version."""
+        device.get_color(self.ready)
 
     @callback
     def ready(self, device, msg):
-        """Callback that adds the device once all data is retrieved."""
+        """Handle the device once all data is retrieved."""
         entity = LIFXLight(device)
         _LOGGER.debug("%s register READY", entity.who)
         self.entities[device.mac_addr] = entity
@@ -108,7 +114,7 @@ class LIFXManager(object):
 
     @callback
     def unregister(self, device):
-        """Callback for disappearing bulb."""
+        """Handle disappearing bulbs."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
@@ -128,7 +134,7 @@ class AwaitAioLIFX:
 
     @callback
     def callback(self, device, message):
-        """Callback that aiolifx invokes when the response is received."""
+        """Handle responses."""
         self.device = device
         self.message = message
         self.event.set()
@@ -166,6 +172,7 @@ class LIFXLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         self.device = device
+        self.product = device.product
         self.blocker = None
         self.effect_data = None
         self.postponed_update = None
@@ -212,6 +219,28 @@ class LIFXLight(Light):
 
         _LOGGER.debug("color_temp: %d", temperature)
         return temperature
+
+    @property
+    def min_mireds(self):
+        """Return the coldest color_temp that this light supports."""
+        # The 3 LIFX "White" products supported a limited temperature range
+        # https://lan.developer.lifx.com/docs/lifx-products
+        if self.product in [10, 11, 18]:
+            kelvin = 6500
+        else:
+            kelvin = 9000
+        return math.floor(color_temperature_kelvin_to_mired(kelvin))
+
+    @property
+    def max_mireds(self):
+        """Return the warmest color_temp that this light supports."""
+        # The 3 LIFX "White" products supported a limited temperature range
+        # https://lan.developer.lifx.com/docs/lifx-products
+        if self.product in [10, 11, 18]:
+            kelvin = 2700
+        else:
+            kelvin = 2500
+        return math.ceil(color_temperature_kelvin_to_mired(kelvin))
 
     @property
     def is_on(self):
@@ -353,26 +382,29 @@ class LIFXLight(Light):
             saturation = self._sat
             brightness = self._bri
 
+        if ATTR_XY_COLOR in kwargs:
+            hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+            saturation = saturation * (BYTE_MAX + 1)
+            changed_color = True
+
+        # When color or temperature is set, use a default value for the other
+        if ATTR_COLOR_TEMP in kwargs:
+            kelvin = int(color_temperature_mired_to_kelvin(
+                kwargs[ATTR_COLOR_TEMP]))
+            if not changed_color:
+                saturation = 0
+            changed_color = True
+        else:
+            if changed_color:
+                kelvin = 3500
+            else:
+                kelvin = self._kel
+
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
             changed_color = True
         else:
             brightness = self._bri
-
-        if ATTR_XY_COLOR in kwargs:
-            hue, saturation, _ = \
-                color_util.color_xy_brightness_to_hsv(
-                    *kwargs[ATTR_XY_COLOR],
-                    ibrightness=(brightness // (BYTE_MAX + 1)))
-            saturation = saturation * (BYTE_MAX + 1)
-            changed_color = True
-
-        if ATTR_COLOR_TEMP in kwargs:
-            kelvin = int(color_temperature_mired_to_kelvin(
-                kwargs[ATTR_COLOR_TEMP]))
-            changed_color = True
-        else:
-            kelvin = self._kel
 
         return [[hue, saturation, brightness, kelvin], changed_color]
 
@@ -388,9 +420,8 @@ class LIFXLight(Light):
         self._bri = bri
         self._kel = kel
 
-        red, green, blue = colorsys.hsv_to_rgb(hue / SHORT_MAX,
-                                               sat / SHORT_MAX,
-                                               bri / SHORT_MAX)
+        red, green, blue = colorsys.hsv_to_rgb(
+            hue / SHORT_MAX, sat / SHORT_MAX, bri / SHORT_MAX)
 
         red = int(red * BYTE_MAX)
         green = int(green * BYTE_MAX)

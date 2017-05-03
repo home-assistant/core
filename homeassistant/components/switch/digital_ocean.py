@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Digital Ocean droplet switch."""
+    """Set up the Digital Ocean droplet switch."""
     digital_ocean = get_component('digital_ocean')
     droplets = config.get(CONF_DROPLETS)
 

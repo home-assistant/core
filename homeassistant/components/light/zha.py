@@ -8,7 +8,7 @@ import asyncio
 import logging
 
 from homeassistant.components import light, zha
-from homeassistant.util.color import HASS_COLOR_MIN, color_RGB_to_xy
+from homeassistant.util.color import color_RGB_to_xy
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ DEPENDENCIES = ['zha']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Zigbee Home Automation lights."""
+    """Set up the Zigbee Home Automation lights."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
@@ -33,12 +33,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class Light(zha.Entity, light.Light):
-    """ZHA or ZLL light."""
+    """Representation of a ZHA or ZLL light."""
 
     _domain = light.DOMAIN
 
     def __init__(self, **kwargs):
-        """Initialize ZHA light."""
+        """Initialize the ZHA light."""
         super().__init__(**kwargs)
         self._supported_features = 0
         self._color_temp = None
@@ -53,7 +53,6 @@ class Light(zha.Entity, light.Light):
             # Not sure all color lights necessarily support this directly
             # Should we emulate it?
             self._supported_features |= light.SUPPORT_COLOR_TEMP
-            self._color_temp = HASS_COLOR_MIN
             # Silly heuristic, not sure if it works widely
             if kwargs.get('num_primaries', 1) >= 3:
                 self._supported_features |= light.SUPPORT_XY_COLOR
@@ -62,7 +61,7 @@ class Light(zha.Entity, light.Light):
 
     @property
     def is_on(self) -> bool:
-        """Return True if entity is on."""
+        """Return true if entity is on."""
         if self._state == 'unknown':
             return False
         return bool(self._state)

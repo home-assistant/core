@@ -39,17 +39,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Roku platform."""
+    """Set up the Roku platform."""
     hosts = []
 
     if discovery_info:
-        host = discovery_info[0]
+        host = discovery_info.get("host")
 
         if host in KNOWN_HOSTS:
             return
 
-        _LOGGER.debug('Discovered Roku: %s', host)
-        hosts.append(discovery_info[0])
+        _LOGGER.debug("Discovered Roku: %s", host)
+        hosts.append(discovery_info.get("host"))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
@@ -175,9 +175,8 @@ class RokuDevice(MediaPlayerDevice):
         elif self.current_app.id is None:
             return None
 
-        return 'http://{0}:{1}/query/icon/{2}'.format(self.ip_address,
-                                                      DEFAULT_PORT,
-                                                      self.current_app.id)
+        return 'http://{0}:{1}/query/icon/{2}'.format(
+            self.ip_address, DEFAULT_PORT, self.current_app.id)
 
     @property
     def app_name(self):

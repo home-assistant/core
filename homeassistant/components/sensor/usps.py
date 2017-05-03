@@ -39,15 +39,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the USPS platform."""
+    """Set up the USPS platform."""
     import myusps
     try:
         cookie = hass.config.path(COOKIE)
-        session = myusps.get_session(config.get(CONF_USERNAME),
-                                     config.get(CONF_PASSWORD),
-                                     cookie_path=cookie)
+        session = myusps.get_session(
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
+            cookie_path=cookie)
     except myusps.USPSError:
-        _LOGGER.exception('Could not connect to My USPS')
+        _LOGGER.exception("Could not connect to My USPS")
         return False
 
     add_devices([USPSSensor(session, config.get(CONF_NAME),

@@ -23,10 +23,10 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.util import slugify
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'microsoft_face'
 DEPENDENCIES = ['camera']
-
-_LOGGER = logging.getLogger(__name__)
 
 FACE_API_URL = "https://westus.api.cognitive.microsoft.com/face/v1.0/{0}"
 
@@ -111,7 +111,7 @@ def face_person(hass, group, person, camera_entity):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup microsoft face."""
+    """Set up microsoft face."""
     entities = {}
     face = MicrosoftFace(
         hass,

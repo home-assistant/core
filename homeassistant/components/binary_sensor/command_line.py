@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Command line Binary Sensor."""
+    """Set up the Command line Binary Sensor."""
     name = config.get(CONF_NAME)
     command = config.get(CONF_COMMAND)
     payload_off = config.get(CONF_PAYLOAD_OFF)
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class CommandBinarySensor(BinarySensorDevice):
-    """Represent a command line binary sensor."""
+    """Representation of a command line binary sensor."""
 
     def __init__(self, hass, data, name, device_class, payload_on,
                  payload_off, value_template):

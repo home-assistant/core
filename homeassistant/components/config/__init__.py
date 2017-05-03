@@ -20,14 +20,14 @@ ON_DEMAND = ('zwave', )
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the config component."""
+    """Set up the config component."""
     register_built_in_panel(hass, 'config', 'Configuration', 'mdi:settings')
 
     @asyncio.coroutine
     def setup_panel(panel_name):
-        """Setup a panel."""
-        panel = yield from async_prepare_setup_platform(hass, config, DOMAIN,
-                                                        panel_name)
+        """Set up a panel."""
+        panel = yield from async_prepare_setup_platform(
+            hass, config, DOMAIN, panel_name)
 
         if not panel:
             return

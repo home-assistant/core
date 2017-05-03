@@ -76,7 +76,7 @@ def async_get_image(hass, entity_id, timeout=10):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the camera component."""
+    """Set up the camera component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     hass.http.register_view(CameraImageView(component.entities))
@@ -121,12 +121,12 @@ class Camera(Entity):
 
     @property
     def brand(self):
-        """Camera brand."""
+        """Return the camera brand."""
         return None
 
     @property
     def model(self):
-        """Camera model."""
+        """Return the camera model."""
         return None
 
     def camera_image(self):
@@ -191,7 +191,7 @@ class Camera(Entity):
 
     @property
     def state(self):
-        """Camera state."""
+        """Return the camera state."""
         if self.is_recording:
             return STATE_RECORDING
         elif self.is_streaming:
@@ -201,7 +201,7 @@ class Camera(Entity):
 
     @property
     def state_attributes(self):
-        """Camera state attributes."""
+        """Return the camera state attributes."""
         attr = {
             'access_token': self.access_tokens[-1],
         }
@@ -233,7 +233,7 @@ class CameraView(HomeAssistantView):
 
     @asyncio.coroutine
     def get(self, request, entity_id):
-        """Start a get request."""
+        """Start a GET request."""
         camera = self.entities.get(entity_id)
 
         if camera is None:
@@ -251,15 +251,15 @@ class CameraView(HomeAssistantView):
 
     @asyncio.coroutine
     def handle(self, request, camera):
-        """Hanlde the camera request."""
+        """Handle the camera request."""
         raise NotImplementedError()
 
 
 class CameraImageView(CameraView):
     """Camera view to serve an image."""
 
-    url = "/api/camera_proxy/{entity_id}"
-    name = "api:camera:image"
+    url = '/api/camera_proxy/{entity_id}'
+    name = 'api:camera:image'
 
     @asyncio.coroutine
     def handle(self, request, camera):
@@ -277,8 +277,8 @@ class CameraImageView(CameraView):
 class CameraMjpegStream(CameraView):
     """Camera View to serve an MJPEG stream."""
 
-    url = "/api/camera_proxy_stream/{entity_id}"
-    name = "api:camera:stream"
+    url = '/api/camera_proxy_stream/{entity_id}'
+    name = 'api:camera:stream'
 
     @asyncio.coroutine
     def handle(self, request, camera):

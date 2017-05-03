@@ -42,7 +42,7 @@ class BlinkSensor(Entity):
     """A Blink camera sensor."""
 
     def __init__(self, name, sensor_type, index, data):
-        """A method to initialize sensors from Blink camera."""
+        """Initialize sensors from Blink camera."""
         self._name = 'blink_' + name + '_' + SENSOR_TYPES[sensor_type][0]
         self._camera_name = name
         self._type = sensor_type
@@ -53,26 +53,26 @@ class BlinkSensor(Entity):
 
     @property
     def name(self):
-        """A method to return the name of the camera."""
+        """Return the name of the camera."""
         return self._name
 
     @property
     def state(self):
-        """A camera's current state."""
+        """Return the camera's current state."""
         return self._state
 
     @property
     def unique_id(self):
-        """A unique camera sensor identifier."""
+        """Return the unique camera sensor identifier."""
         return "sensor_{}_{}".format(self._name, self.index)
 
     @property
     def unit_of_measurement(self):
-        """A method to determine the unit of measurement for temperature."""
+        """Return the unit of measurement."""
         return self._unit_of_measurement
 
     def update(self):
-        """A method to retrieve sensor data from the camera."""
+        """Retrieve sensor data from the camera."""
         camera = self.data.cameras[self._camera_name]
         if self._type == 'temperature':
             self._state = camera.temperature

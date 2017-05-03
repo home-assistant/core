@@ -133,7 +133,7 @@ def async_reproduce_state(hass, states, blocking=False):
     for state in states:
 
         if hass.states.get(state.entity_id) is None:
-            _LOGGER.warning('reproduce_state: Unable to find entity %s',
+            _LOGGER.warning("reproduce_state: Unable to find entity %s",
                             state.entity_id)
             continue
 

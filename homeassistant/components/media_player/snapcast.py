@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Snapcast platform."""
+    """Set up the Snapcast platform."""
     import snapcast.control
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, snapcast.control.CONTROL_PORT)
@@ -42,8 +42,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         server = snapcast.control.Snapserver(host, port)
     except socket.gaierror:
-        _LOGGER.error('Could not connect to Snapcast server at %s:%d',
-                      host, port)
+        _LOGGER.error(
+            "Could not connect to Snapcast server at %s:%d", host, port)
         return False
 
     add_devices([SnapcastDevice(client) for client in server.clients])

@@ -1,13 +1,15 @@
 """
 Component for Joaoapps Join services.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/join/
 """
 import logging
+
 import voluptuous as vol
-from homeassistant.const import CONF_NAME, CONF_API_KEY
+
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_NAME, CONF_API_KEY
 
 REQUIREMENTS = [
     'https://github.com/nkgilley/python-join-api/archive/'
@@ -28,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def register_device(hass, device_id, api_key, name):
-    """Method to register services for each join device listed."""
+    """Register services for each join device listed."""
     from pyjoin import (ring_device, set_wallpaper, send_sms,
                         send_file, send_url, send_notification)
 
@@ -71,7 +73,7 @@ def register_device(hass, device_id, api_key, name):
 
 
 def setup(hass, config):
-    """Setup Join services."""
+    """Set up the Join services."""
     from pyjoin import get_devices
     for device in config[DOMAIN]:
         device_id = device.get(CONF_DEVICE_ID)

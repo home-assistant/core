@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Verisure switch platform."""
+    """Set up the Verisure switch platform."""
     if not int(hub.config.get(CONF_SMARTPLUGS, 1)):
         return False
 

@@ -1,6 +1,5 @@
-"""Constants related to the zha component."""
+"""All constants related to the ZHA component."""
 
-# Populated by populate_data() when zha component is initialized
 DEVICE_CLASS = {}
 SINGLE_CLUSTER_DEVICE_CLASS = {}
 COMPONENT_CLUSTERS = {}

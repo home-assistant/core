@@ -77,7 +77,7 @@ class ThresholdSensor(BinarySensorDevice):
         # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
-            """Called when the sensor changes state."""
+            """Handle sensor state changes."""
             if new_state.state == STATE_UNKNOWN:
                 return
 

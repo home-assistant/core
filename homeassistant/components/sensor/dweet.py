@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Dweet sensor."""
+    """Set up the Dweet sensor."""
     import dweepy
 
     name = config.get(CONF_NAME)
@@ -48,11 +48,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
-        _LOGGER.error("Device/thing '%s' could not be found", device)
+        _LOGGER.error("Device/thing %s could not be found", device)
         return False
 
     if value_template.render_with_possible_json_value(content) == '':
-        _LOGGER.error("'%s' was not found", value_template)
+        _LOGGER.error("%s was not found", value_template)
         return False
 
     dweet = DweetData(device)
@@ -115,5 +115,5 @@ class DweetData(object):
         try:
             self.data = dweepy.get_latest_dweet_for(self._device)
         except dweepy.DweepyError:
-            _LOGGER.error("Device '%s' could not be found", self._device)
+            _LOGGER.error("Device %s could not be found", self._device)
             self.data = None

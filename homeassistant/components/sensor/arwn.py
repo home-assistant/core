@@ -135,17 +135,17 @@ class ArwnSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit this state is expressed in."""
+        """Return the unit of measurement the state is expressed in."""
         return self._unit_of_measurement
 
     @property
     def should_poll(self):
-        """Should we poll."""
+        """Return the polling state."""
         return False
 
     @property
     def icon(self):
-        """Icon of device based on its type."""
+        """Return the icon of device based on its type."""
         if self._icon:
             return self._icon
         else:

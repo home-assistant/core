@@ -71,8 +71,8 @@ class RestNotificationService(BaseNotificationService):
         }
 
         if self._title_param_name is not None:
-            data[self._title_param_name] = kwargs.get(ATTR_TITLE,
-                                                      ATTR_TITLE_DEFAULT)
+            data[self._title_param_name] = kwargs.get(
+                ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
         if self._target_param_name is not None and ATTR_TARGET in kwargs:
             # Target is a list as of 0.29 and we don't want to break existing

@@ -60,8 +60,8 @@ class TikteckLight(Light):
         self._rgb = [255, 255, 255]
         self._state = False
         self.is_valid = True
-        self._bulb = tikteck.tikteck(self._address, "Smart Light",
-                                     self._password)
+        self._bulb = tikteck.tikteck(
+            self._address, "Smart Light", self._password)
         if self._bulb.connect() is False:
             self.is_valid = False
             _LOGGER.error(
@@ -99,12 +99,12 @@ class TikteckLight(Light):
 
     @property
     def should_poll(self):
-        """Don't poll."""
+        """Return the polling state."""
         return False
 
     @property
     def assumed_state(self):
-        """We can't read the actual state, so assume it matches."""
+        """Return the assumed state."""
         return True
 
     def set_state(self, red, green, blue, brightness):

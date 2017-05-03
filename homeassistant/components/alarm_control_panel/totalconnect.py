@@ -1,15 +1,20 @@
-"""Interfaces with TotalConnect alarm control panels."""
+"""
+Interfaces with TotalConnect alarm control panels.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/alarm_control_panel.totalconnect/
+"""
 import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN,
     CONF_NAME)
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['total_connect_client==0.7']
 
@@ -25,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a TotalConnect control panel."""
+    """Set up a TotalConnect control panel."""
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -41,13 +46,13 @@ class TotalConnect(alarm.AlarmControlPanel):
         """Initialize the TotalConnect status."""
         from total_connect_client import TotalConnectClient
 
-        _LOGGER.debug('Setting up TotalConnect...')
+        _LOGGER.debug("Setting up TotalConnect...")
         self._name = name
         self._username = username
         self._password = password
         self._state = STATE_UNKNOWN
-        self._client = TotalConnectClient.TotalConnectClient(username,
-                                                             password)
+        self._client = TotalConnectClient.TotalConnectClient(
+            username, password)
 
     @property
     def name(self):

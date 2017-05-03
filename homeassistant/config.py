@@ -112,7 +112,7 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
         vol.Schema({cv.string: dict}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        cv.ordered_dict(OrderedDict, cv.string),
+        vol.Schema({cv.string: OrderedDict}),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
@@ -325,7 +325,7 @@ def async_process_ha_core_config(hass, config):
     hac = hass.config
 
     def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
+        """Help to set the time zone."""
         if time_zone_str is None:
             return
 
@@ -454,10 +454,9 @@ def _identify_config_schema(module):
     except (AttributeError, KeyError):
         return (None, None)
     t_schema = str(schema)
-    if (t_schema.startswith('<function ordered_dict') or
-            t_schema.startswith('<Schema({<function slug')):
+    if t_schema.startswith('{'):
         return ('dict', schema)
-    if t_schema.startswith('All(<function ensure_list'):
+    if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
     return '', schema
 

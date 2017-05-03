@@ -25,7 +25,7 @@ turn_on:
       example: '[0.52, 0.43]'
 
     color_temp:
-      description: Color temperature for the light in mireds (154-500)
+      description: Color temperature for the light in mireds
       example: '250'
 
     white_value:

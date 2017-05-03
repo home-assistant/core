@@ -7,7 +7,7 @@ from homeassistant.config import async_check_ha_config_file
 
 @asyncio.coroutine
 def async_setup(hass):
-    """Setup the hassbian config."""
+    """Set up the Hassbian config."""
     hass.http.register_view(CheckConfigView)
     return True
 
@@ -20,7 +20,7 @@ class CheckConfigView(HomeAssistantView):
 
     @asyncio.coroutine
     def post(self, request):
-        """Validate config and return results."""
+        """Validate configuration and return results."""
         errors = yield from async_check_ha_config_file(request.app['hass'])
 
         state = 'invalid' if errors else 'valid'

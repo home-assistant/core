@@ -34,7 +34,7 @@ def get_service(hass, config, discovery_info=None):
         # validates the api key
         client.balance()
     except messagebird.client.ErrorException:
-        _LOGGER.error('The specified MessageBird API key is invalid.')
+        _LOGGER.error("The specified MessageBird API key is invalid")
         return None
 
     return MessageBirdNotificationService(config.get(CONF_SENDER), client)
@@ -54,15 +54,13 @@ class MessageBirdNotificationService(BaseNotificationService):
 
         targets = kwargs.get(ATTR_TARGET)
         if not targets:
-            _LOGGER.error('No target specified.')
+            _LOGGER.error("No target specified")
             return
 
         for target in targets:
             try:
-                self.client.message_create(self.sender,
-                                           target,
-                                           message,
-                                           {'reference': 'HA'})
+                self.client.message_create(
+                    self.sender, target, message, {'reference': 'HA'})
             except ErrorException as exception:
-                _LOGGER.error('Failed to notify %s: %s', target, exception)
+                _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

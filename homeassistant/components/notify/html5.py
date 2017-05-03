@@ -90,12 +90,10 @@ CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'
 
-# badge and timestamp are Chrome specific (not in official spec)
-
-HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir',
-                                     'icon', 'lang', 'renotify',
-                                     'requireInteraction', 'tag', 'timestamp',
-                                     'vibrate')
+# Badge and timestamp are Chrome specific (not in official spec)
+HTML5_SHOWNOTIFICATION_PARAMETERS = (
+    'actions', 'badge', 'body', 'dir', 'icon', 'lang', 'renotify',
+    'requireInteraction', 'tag', 'timestamp', 'vibrate')
 
 
 def get_service(hass, config, discovery_info=None):
@@ -115,8 +113,8 @@ def get_service(hass, config, discovery_info=None):
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
 
     if gcm_sender_id is not None:
-        add_manifest_json_key(ATTR_GCM_SENDER_ID,
-                              config.get(ATTR_GCM_SENDER_ID))
+        add_manifest_json_key(
+            ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
     return HTML5NotificationService(gcm_api_key, registrations)
 
@@ -136,7 +134,7 @@ def _load_config(filename):
 
         return json.loads(inp)
     except (IOError, ValueError) as error:
-        _LOGGER.error('Reading config file %s failed: %s', filename, error)
+        _LOGGER.error("Reading config file %s failed: %s", filename, error)
         return None
 
 
@@ -158,7 +156,7 @@ def _save_config(filename, config):
             fdesc.write(json.dumps(
                 config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
     except (IOError, TypeError) as error:
-        _LOGGER.error('Saving config file failed: %s', error)
+        _LOGGER.error("Saving config file failed: %s", error)
         return False
     return True
 
@@ -185,17 +183,16 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = REGISTER_SCHEMA(data)
         except vol.Invalid as ex:
-            return self.json_message(humanize_error(data, ex),
-                                     HTTP_BAD_REQUEST)
+            return self.json_message(
+                humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string('unnamed device',
-                                    self.registrations.keys())
+        name = ensure_unique_string('unnamed device', self.registrations)
 
         self.registrations[name] = data
 
         if not _save_config(self.json_path, self.registrations):
-            return self.json_message('Error saving registration.',
-                                     HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber registered.')
 
@@ -224,8 +221,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         if not _save_config(self.json_path, self.registrations):
             self.registrations[found] = reg
-            return self.json_message('Error saving registration.',
-                                     HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber unregistered.')
 
@@ -318,7 +315,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         try:
             event_payload = CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
         except vol.Invalid as ex:
-            _LOGGER.warning('Callback event payload is not valid! %s',
+            _LOGGER.warning("Callback event payload is not valid: %s",
                             humanize_error(event_payload, ex))
 
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
@@ -390,8 +387,8 @@ class HTML5NotificationService(BaseNotificationService):
         for target in targets:
             info = self.registrations.get(target)
             if info is None:
-                _LOGGER.error('%s is not a valid HTML5 push notification'
-                              ' target!', target)
+                _LOGGER.error("%s is not a valid HTML5 push notification"
+                              " target", target)
                 continue
 
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +

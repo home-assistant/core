@@ -22,16 +22,18 @@ from homeassistant.const import (
     STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
 from homeassistant.components import group
 
-DOMAIN = 'lock'
-SCAN_INTERVAL = timedelta(seconds=30)
 ATTR_CHANGED_BY = 'changed_by'
 
-GROUP_NAME_ALL_LOCKS = 'all locks'
-ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
+DOMAIN = 'lock'
 
+ENTITY_ID_ALL_LOCKS = group.ENTITY_ID_FORMAT.format('all_locks')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+GROUP_NAME_ALL_LOCKS = 'all locks'
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 LOCK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
