@@ -4,7 +4,6 @@ Component that will help set the dlib face detect processing.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.dlib_face_identify/
 """
-import asyncio
 import logging
 import io
 
@@ -21,6 +20,7 @@ REQUIREMENTS = ['face_recognition==0.1.12']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_NAME = 'name'
 CONF_FACES = 'faces'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -58,7 +58,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         self._faces = {}
         for name, face_file in faces.items():
             image = face_recognition.load_image_file(face_file)
-            self._faces[name] = face_recognition.face_encodings(face_file)[0]
+            self._faces[name] = face_recognition.face_encodings(image)[0]
 
     @property
     def camera_entity(self):
@@ -82,7 +82,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         unknowns = face_recognition.face_encodings(image)
 
         found = []
-        for unknown_face in unkowns:
+        for unknown_face in unknowns:
             for name, face in self._faces.items():
                 result = face_recognition.compare_faces([face], unknown_face)
                 if result[0]:

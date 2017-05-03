@@ -8,8 +8,8 @@ import logging
 import io
 
 from homeassistant.core import split_entity_id
-from homeassistant.components.image_processing import (
-    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)  # noqa
+from homeassistant.components.image_processing import (  # noqa
+    PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
 from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
 
