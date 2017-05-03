@@ -13,7 +13,7 @@ from homeassistant.components.image_processing import (  # noqa
 from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
 
-REQUIREMENTS = ['face_recognition==0.1.12']
+REQUIREMENTS = ['face_recognition==0.1.14']
 
 _LOGGER = logging.getLogger(__name__)
 
