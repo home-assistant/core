@@ -126,7 +126,7 @@ class NetioSwitch(SwitchDevice):
     """Provide a Netio linked switch."""
 
     def __init__(self, netio, outlet, name):
-        """Initalize the Netio switch."""
+        """Initialize the Netio switch."""
         self._name = name
         self.outlet = outlet
         self.netio = netio

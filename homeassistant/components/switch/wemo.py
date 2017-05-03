@@ -62,7 +62,7 @@ class WemoSwitch(SwitchDevice):
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
     def _update_callback(self, _device, _type, _params):
-        """Called by the Wemo device callback to update state."""
+        """Update the state by the Wemo device."""
         _LOGGER.info("Subscription update for  %s", _device)
         updated = self.wemo.subscription_update(_type, _params)
         self._update(force_update=(not updated))

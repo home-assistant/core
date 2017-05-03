@@ -322,6 +322,7 @@ class GatewayWrapper(object):
         optimistic (bool): Send values to actuators without feedback state.
         device (str): Device configured as gateway.
         __initialised (bool): True if GatewayWrapper is initialised.
+
         """
         self._wrapped_gateway = gateway
         self.platform_callbacks = []
