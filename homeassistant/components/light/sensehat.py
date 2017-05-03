@@ -91,7 +91,8 @@ class SenseHatLight(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on and set correct brightness & color."""
-        self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
         percent_bright = (self._brightness / 255)
 
         if ATTR_RGB_COLOR in kwargs:
