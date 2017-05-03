@@ -44,6 +44,7 @@ def test_valid_credentials(mock_create_session, hass):
     vehicle.id = 'mock_id'
     vehicle.display_name = 'mock_display_name'
     vehicle.fuel_level_percent = 45.6
+    vehicle.latest_location = None
 
     trip.end_location.lat = 45.567
     trip.end_location.lon = 34.345
