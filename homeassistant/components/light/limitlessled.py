@@ -376,12 +376,12 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
 
 def _from_hass_temperature(temperature):
     """Convert Home Assistant color temperature units to percentage."""
-    return (temperature - 154) / 346
+    return 1 - (temperature - 154) / 346
 
 
 def _to_hass_temperature(temperature):
     """Convert percentage to Home Assistant color temperature units."""
-    return int(temperature * 346) + 154
+    return 500 - int(temperature * 346)
 
 
 def _from_hass_brightness(brightness):
