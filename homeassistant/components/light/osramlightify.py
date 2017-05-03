@@ -4,7 +4,6 @@ Support for Osram Lightify.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.osramlightify/
 """
-import sys
 import logging
 import socket
 import random
@@ -159,7 +158,6 @@ class Luminary(Light):
     def turn_on(self, **kwargs):
         """Turn the device on."""
         self._luminary.set_onoff(1)
-        self._state = True
 
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
@@ -234,7 +232,6 @@ class Luminary(Light):
                           " %s is: %s ",
                           self._name, transition)
         self._luminary.set_onoff(0)
-        self._state = False
         self.schedule_update_ha_state()
 
     def update(self):
