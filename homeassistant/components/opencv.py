@@ -31,7 +31,6 @@ CASCADE_URL = \
     'https://raw.githubusercontent.com/opencv/opencv/master/data/' +\
     'lbpcascades/lbpcascade_frontalface.xml'
 
-CONF_CAMERA = 'add_camera'
 CONF_CLASSIFIER = 'classifier'
 CONF_COLOR = 'color'
 CONF_GROUPS = 'classifier_group'
@@ -41,7 +40,6 @@ CONF_SCALE = 'scale'
 
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
-DEFAULT_CAMERA = True
 DEFAULT_COLOR = (255, 255, 0)
 DEFAULT_CLASSIFIER_PATH = os.path.join(
     os.path.dirname(BASE_PATH),
@@ -72,7 +70,6 @@ CLASSIFIER_GROUP_CONFIG = {
         })]),
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_CAMERA, default=DEFAULT_CAMERA): cv.boolean,
 }
 CLASSIFIER_GROUP_SCHEMA = vol.Schema(CLASSIFIER_GROUP_CONFIG)
 
@@ -181,7 +178,5 @@ def async_setup(hass, config):
 
     for group in config[DOMAIN][CONF_GROUPS]:
         discovery.load_platform(hass, 'image_processing', DOMAIN, group)
-        if group[CONF_CAMERA]:
-            discovery.load_platform(hass, 'camera', DOMAIN, group)
 
     return True
