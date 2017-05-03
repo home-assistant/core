@@ -58,7 +58,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     def update(self):
         """Update alarm status."""
         hub.update_overview()
-        status = hub.get("$.armState.statusType")
+        status = hub.get_first("$.armState.statusType")
         if status == 'DISARMED':
             self._state = STATE_ALARM_DISARMED
         elif status == 'ARMED_HOME':
@@ -67,7 +67,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_ARMED_AWAY
         elif status != 'PENDING':
             _LOGGER.error('Unknown alarm state %s', status)
-        self._changed_by = hub.get("$.armState.name")
+        self._changed_by = hub.get_first("$.armState.name")
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

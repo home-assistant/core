@@ -45,26 +45,23 @@ class VerisureThermometer(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        res = hub.get(
+        return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
             self._device_label)
-        return res[0] if res else 'UNKNOWN'
 
     @property
     def state(self):
         """Return the state of the device."""
-        res = hub.get(
+        return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].temperature",
             self._device_label)
-        return res[0] if res else 'UNKNOWN'
 
     @property
     def available(self):
         """Return True if entity is available."""
-        res = hub.get(
+        return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].temperature",
-            self._device_label)
-        return True if res else False
+            self._device_label) is not None
 
     @property
     def unit_of_measurement(self):
@@ -86,26 +83,23 @@ class VerisureHygrometer(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        res = hub.get(
+        return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
             self._device_label)
-        return res[0] if res else 'UNKNOWN'
 
     @property
     def state(self):
         """Return the state of the device."""
-        res = hub.get(
+        return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].humidity",
             self._device_label)
-        return res[0] if res else 'UNKNOWN'
 
     @property
     def available(self):
         """Return True if entity is available."""
-        res = hub.get(
+        return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].humidity",
-            self._device_label)
-        return True if res else False
+            self._device_label) is not None
 
     @property
     def unit_of_measurement(self):

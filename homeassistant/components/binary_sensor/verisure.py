@@ -36,26 +36,23 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        res = hub.get(
+        return hub.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
             self._device_label)
-        return res[0] if res else "UNKNOWN"
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        res = hub.get(
+        return hub.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
-            self._device_label)
-        return res[0] == "OPEN" if res else False
+            self._device_label) == "OPEN"
 
     @property
     def available(self):
         """Return True if entity is available."""
-        res = hub.get(
+        return hub.get_first(
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
-            self._device_label)
-        return True if res else False
+            self._device_label) is not None
 
     def update(self):
         """Update the state of the sensor."""

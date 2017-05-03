@@ -141,5 +141,10 @@ class VerisureHub(object):
         self.session.capture_image(device_id)
 
     def get(self, jpath, *args):
-        """Get a value from the overview."""
+        """Get values from the overview that matches the jsonpath."""
         return self.jsonpath(self.overview, jpath % args)
+
+    def get_first(self, jpath, *args):
+        """Get first value from the overview that matches the jsonpath."""
+        res = self.get(jpath, *args)
+        return res[0] if res else None
