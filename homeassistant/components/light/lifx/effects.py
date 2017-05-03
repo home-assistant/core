@@ -176,18 +176,16 @@ class LIFXEffect(object):
     def async_setup(self, **kwargs):
         """Prepare all lights for the effect."""
         for light in self.lights:
+            # Remember the current state (as far as we know it)
             yield from light.refresh_state()
-            if not light.device:
-                self.lights.remove(light)
-            else:
-                light.effect_data = LIFXEffectData(
-                    self, light.is_on, light.device.color)
+            light.effect_data = LIFXEffectData(
+                self, light.is_on, light.device.color)
 
-                # Temporarily turn on power for the effect to be visible
-                if kwargs[ATTR_POWER_ON] and not light.is_on:
-                    hsbk = self.from_poweroff_hsbk(light, **kwargs)
-                    light.device.set_color(hsbk)
-                    light.device.set_power(True)
+            # Temporarily turn on power for the effect to be visible
+            if kwargs[ATTR_POWER_ON] and not light.is_on:
+                hsbk = self.from_poweroff_hsbk(light, **kwargs)
+                light.device.set_color(hsbk)
+                light.device.set_power(True)
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
@@ -202,12 +200,13 @@ class LIFXEffect(object):
             self.lights.remove(light)
 
         if light.effect_data and light.effect_data.effect == self:
-            if light.device and not light.effect_data.power:
+            if not light.effect_data.power:
                 light.device.set_power(False)
                 yield from asyncio.sleep(0.5)
-            if light.device:
-                light.device.set_color(light.effect_data.color)
-                yield from asyncio.sleep(0.5)
+
+            light.device.set_color(light.effect_data.color)
+            yield from asyncio.sleep(0.5)
+
             light.effect_data = None
             yield from light.refresh_state()
 
