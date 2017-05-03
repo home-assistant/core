@@ -189,7 +189,7 @@ class Luminary(Light):
             kelvin = int(color_temperature_mired_to_kelvin(color_t))
             _LOGGER.debug("turn_on requested set_temperature for light: "
                           "%s: %s", self._name, kelvin)
-            self._light.set_temperature(kelvin, transition)
+            self._luminary.set_temperature(kelvin, transition)
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -202,11 +202,10 @@ class Luminary(Light):
         if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
             if effect == EFFECT_RANDOM:
-
-                self._light.set_rgb(random.randrange(0, 255),
-                                    random.randrange(0, 255),
-                                    random.randrange(0, 255),
-                                    transition)
+                self._luminary.set_rgb(random.randrange(0, 255),
+                                       random.randrange(0, 255),
+                                       random.randrange(0, 255),
+                                       transition)
                 _LOGGER.debug("turn_on requested random effect for light: "
                               "%s with transition %s", self._name, transition)
 
