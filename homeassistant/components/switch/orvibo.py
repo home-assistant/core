@@ -72,7 +72,7 @@ class S20Switch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Polling is needed."""
+        """Return the polling state."""
         return True
 
     @property

@@ -136,7 +136,7 @@ class Plant(Entity):
     }
 
     def __init__(self, name, config):
-        """Initalize the Plant component."""
+        """Initialize the Plant component."""
         self._config = config
         self._sensormap = dict()
         for reading, entity_id in config['sensors'].items():
