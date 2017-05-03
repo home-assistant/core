@@ -630,11 +630,23 @@ class ZWaveNodeGroupView(HomeAssistantView):
     @ha.callback
     def get(self, request, node_id):
         """Retrieve groups of node."""
+        from openzwave.group import ZWaveGroup
+
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        _LOGGER.info(network.nodes[int(node_id)])
-        node = network.nodes[int(node_id)]
-        groups = node.groups_to_dict()
+        _LOGGER.info(network.nodes.get(int(node_id)))
+        node = network.nodes.get(int(node_id))
+        if node is None:
+            return self.json_message('Node not found', HTTP_NOT_FOUND)
+        groupdata = node.groups_to_dict()
+        groups = {}
+        for key in groupdata.keys():
+            groupnode = ZWaveGroup(key, network, int(node_id))
+            groups[key] = {'associations': groupnode.associations,
+                           'association_instances':
+                           groupnode.associations_instances,
+                           'label': groupnode.label,
+                           'max_associations': groupnode.max_associations}
         _LOGGER.info('Groups: %s', groups)
         if groups:
             return self.json(groups)
@@ -653,7 +665,9 @@ class ZWaveNodeConfigView(HomeAssistantView):
         """Retrieve configurations of node."""
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        node = network.nodes[int(node_id)]
+        node = network.nodes.get(int(node_id))
+        if node is None:
+            return self.json_message('Node not found', HTTP_NOT_FOUND)
         config = {}
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
@@ -683,7 +697,9 @@ class ZWaveUserCodeView(HomeAssistantView):
         """Retrieve usercodes of node."""
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        node = network.nodes[int(node_id)]
+        node = network.nodes.get[int(node_id)]
+        if node is None:
+            return self.json_message('Node not found', HTTP_NOT_FOUND)
         usercodes = {}
         if node.has_command_class(const.COMMAND_CLASS_USER_CODE):
             for value in (
