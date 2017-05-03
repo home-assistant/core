@@ -4,10 +4,11 @@ Support for OpenCV image/video processing.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/opencv/
 """
-import asyncio
 import logging
 import os
 import voluptuous as vol
+
+import requests
 
 from homeassistant.const import (
     CONF_NAME,
@@ -19,7 +20,7 @@ from homeassistant.helpers import (
     config_validation as cv,
 )
 
-REQUIREMENTS = ['opencv-python==3.2.0.6', 'numpy==1.12.0', 'urllib3==1.21']
+REQUIREMENTS = ['opencv-python==3.2.0.6', 'numpy==1.12.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,9 +42,7 @@ CONF_SCALE = 'scale'
 DATA_CLASSIFIER_GROUPS = 'classifier_groups'
 
 DEFAULT_COLOR = (255, 255, 0)
-DEFAULT_CLASSIFIER_PATH = os.path.join(
-    os.path.dirname(BASE_PATH),
-    'lbp_frontalface.xml')
+DEFAULT_CLASSIFIER_PATH = 'lbp_frontalface.xml'
 DEFAULT_NAME = 'OpenCV'
 DEFAULT_MIN_SIZE = (30, 30)
 DEFAULT_NEIGHBORS = 4
@@ -57,8 +56,7 @@ CLASSIFIER_GROUP_CONFIG = {
         [vol.Schema({
             vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
                 vol.Schema((int, int, int)),
-            vol.Optional(CONF_FILE_PATH, default=DEFAULT_CLASSIFIER_PATH):
-                cv.isfile,
+            vol.Optional(CONF_FILE_PATH, default=None): cv.isfile,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME):
                 cv.string,
             vol.Optional(CONF_MIN_SIZE, default=DEFAULT_MIN_SIZE):
@@ -156,27 +154,30 @@ def process_image(image, classifier_group, is_camera):
         return group_matches
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up the OpenCV platform entities."""
-    _LOGGER.info('Async setup for opencv')
-    if not os.path.isfile(DEFAULT_CLASSIFIER_PATH):
+    default_classifier = hass.config.path(DEFAULT_CLASSIFIER_PATH)
+
+    if not os.path.isfile(default_classifier):
         _LOGGER.info('Downloading default classifier')
-        import urllib3
 
-        http = urllib3.PoolManager()
-        request = http.request('GET', CASCADE_URL, preload_content=False)
-
-        with open(DEFAULT_CLASSIFIER_PATH, 'wb') as out:
-            while True:
-                data = request.read(1028)
-                if not data:
-                    break
-                out.write(data)
-
-        request.release_conn()
+        r_class = requests.get(CASCADE_URL, stream=True)
+        with open(default_classifier, 'wb') as f_class:
+            for chunk in r_class.iter_content(chunk_size=1024):
+                if chunk:  # filter out keep-alive new chunks
+                    f_class.write(chunk)
 
     for group in config[DOMAIN][CONF_GROUPS]:
-        discovery.load_platform(hass, 'image_processing', DOMAIN, group)
+        grp = {}
+
+        for classifier, config in group.items():
+            config = dict(config)
+
+            if config[CONF_FILE_PATH] is None:
+                config[CONF_FILE_PATH] = default_classifier
+
+            grp[classifier] = config
+
+        discovery.load_platform(hass, 'image_processing', DOMAIN, grp)
 
     return True
