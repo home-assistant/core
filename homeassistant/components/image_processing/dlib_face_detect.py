@@ -7,19 +7,15 @@ https://home-assistant.io/components/image_processing.dlib_face_detect/
 import logging
 import io
 
-import voluptuous as vol
-
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)  # noqa
 from homeassistant.components.image_processing.microsoft_face_identify import (
     ImageProcessingFaceEntity)
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['face_recognition==0.1.12']
 
 _LOGGER = logging.getLogger(__name__)
-
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -40,9 +36,7 @@ class DlibFaceDetectEntity(ImageProcessingFaceEntity):
         """Initialize Dlib."""
         super().__init__()
 
-        self._api = api
         self._camera = camera_entity
-        self._attributes = attributes
 
         if name:
             self._name = name

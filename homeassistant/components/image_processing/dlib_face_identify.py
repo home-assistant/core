@@ -47,9 +47,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         import face_recognition
         super().__init__()
 
-        self._api = api
         self._camera = camera_entity
-        self._attributes = attributes
 
         if name:
             self._name = name
@@ -58,7 +56,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
                 split_entity_id(camera_entity)[1])
 
         self._faces = {}
-        for name, face_file in faces.items()
+        for name, face_file in faces.items():
             image = face_recognition.load_image_file(face_file)
             self._faces[name] = face_recognition.face_encodings(face_file)[0]
 
