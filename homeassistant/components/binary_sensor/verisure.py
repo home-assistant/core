@@ -5,13 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.verisure/
 """
 import logging
-from jsonpath import jsonpath
 
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.verisure import CONF_DOOR_WINDOW
-
-REQUIREMENTS = ['jsonpath==0.75']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +21,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if int(hub.config.get(CONF_DOOR_WINDOW, 1)):
         sensors.extend([
             VerisureDoorWindowSensor(device_label)
-            for device_label in jsonpath(
-                hub.overview,
+            for device_label in hub.get(
                 "$.doorWindow.doorWindowDevice[*].deviceLabel")])
     add_devices(sensors)
 
@@ -40,28 +36,25 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the binary sensor."""
-        res = jsonpath(
-            hub.overview,
-            ("$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area"
-             % self._device_label))
+        res = hub.get(
+            "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].area",
+            self._device_label)
         return res[0] if res else "UNKNOWN"
 
     @property
     def is_on(self):
         """Return the state of the sensor."""
-        res = jsonpath(
-            hub.overview,
-            ("$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state"
-             % self._device_label))
+        res = hub.get(
+            "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')].state",
+            self._device_label)
         return res[0] == "OPEN" if res else False
 
     @property
     def available(self):
         """Return True if entity is available."""
-        res = jsonpath(
-            hub.overview,
-            ("$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]"
-             % self._device_label))
+        res = hub.get(
+            "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
+            self._device_label)
         return True if res else False
 
     def update(self):

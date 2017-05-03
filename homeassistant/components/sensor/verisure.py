@@ -5,15 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.verisure/
 """
 import logging
-from jsonpath import jsonpath
 
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import (
     CONF_THERMOMETERS, CONF_HYDROMETERS)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-
-REQUIREMENTS = ['jsonpath==0.75']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +23,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if int(hub.config.get(CONF_THERMOMETERS, 1)):
         sensors.extend([
             VerisureThermometer(device_label)
-            for device_label in jsonpath(
-                hub.overview,
+            for device_label in hub.get(
                 '$.climateValues[?(@.temperature)].deviceLabel')])
 
     if int(hub.config.get(CONF_HYDROMETERS, 1)):
         sensors.extend([
             VerisureHygrometer(device_label)
-            for device_label in jsonpath(
-                hub.overview,
+            for device_label in hub.get(
                 '$.climateValues[?(@.humidity)].deviceLabel')])
 
     add_devices(sensors)
@@ -50,28 +45,25 @@ class VerisureThermometer(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        res = jsonpath(
-            hub.overview,
-            ("$.climateValues[?(@.deviceLabel=='%s')].deviceArea"
-             % self._device_label))
+        res = hub.get(
+            "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
+            self._device_label)
         return res[0] if res else 'UNKNOWN'
 
     @property
     def state(self):
         """Return the state of the device."""
-        res = jsonpath(
-            hub.overview,
-            ("$.climateValues[?(@.deviceLabel=='%s')].temperature"
-             % self._device_label))
+        res = hub.get(
+            "$.climateValues[?(@.deviceLabel=='%s')].temperature",
+            self._device_label)
         return res[0] if res else 'UNKNOWN'
 
     @property
     def available(self):
         """Return True if entity is available."""
-        res = jsonpath(
-            hub.overview,
-            ("$.climateValues[?(@.deviceLabel=='%s')].temperature"
-             % self._device_label))
+        res = hub.get(
+            "$.climateValues[?(@.deviceLabel=='%s')].temperature",
+            self._device_label)
         return True if res else False
 
     @property
@@ -94,28 +86,25 @@ class VerisureHygrometer(Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        res = jsonpath(
-            hub.overview,
-            ("$.climateValues[?(@.deviceLabel=='%s')].deviceArea"
-             % self._device_label))
+        res = hub.get(
+            "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
+            self._device_label)
         return res[0] if res else 'UNKNOWN'
 
     @property
     def state(self):
         """Return the state of the device."""
-        res = jsonpath(
-            hub.overview,
-            ("$.climateValues[?(@.deviceLabel=='%s')].humidity"
-             % self._device_label))
+        res = hub.get(
+            "$.climateValues[?(@.deviceLabel=='%s')].humidity",
+            self._device_label)
         return res[0] if res else 'UNKNOWN'
 
     @property
     def available(self):
         """Return True if entity is available."""
-        res = jsonpath(
-            hub.overview,
-            ("$.climateValues[?(@.deviceLabel=='%s')].humidity"
-             % self._device_label))
+        res = hub.get(
+            "$.climateValues[?(@.deviceLabel=='%s')].humidity",
+            self._device_label)
         return True if res else False
 
     @property

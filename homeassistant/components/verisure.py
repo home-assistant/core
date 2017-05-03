@@ -18,7 +18,7 @@ from homeassistant.util import Throttle
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['vsure==1.3.5']
+REQUIREMENTS = ['vsure==1.3.5', 'jsonpath==0.75']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -109,6 +109,9 @@ class VerisureHub(object):
             domain_config[CONF_USERNAME],
             domain_config[CONF_PASSWORD])
 
+        import jsonpath
+        self.jsonpath = jsonpath.jsonpath
+
     def login(self):
         """Login to Verisure."""
         try:
@@ -136,3 +139,7 @@ class VerisureHub(object):
     def smartcam_capture(self, device_id):
         """Capture a new image from a smartcam."""
         self.session.capture_image(device_id)
+
+    def get(self, jpath, *args):
+        """Get a value from the overview."""
+        return self.jsonpath(self.overview, jpath % args)

@@ -14,8 +14,6 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_UNKNOWN)
 
-REQUIREMENTS = ['jsonpath==0.75']
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -60,7 +58,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     def update(self):
         """Update alarm status."""
         hub.update_overview()
-        status = hub.overview['armState']['statusType']
+        status = hub.get("$.armState.statusType")
         if status == 'DISARMED':
             self._state = STATE_ALARM_DISARMED
         elif status == 'ARMED_HOME':
@@ -69,7 +67,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_ARMED_AWAY
         elif status != 'PENDING':
             _LOGGER.error('Unknown alarm state %s', status)
-        self._changed_by = hub.overview['armState']['name']
+        self._changed_by = hub.get("$.armState.name")
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
