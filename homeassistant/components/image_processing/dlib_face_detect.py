@@ -56,6 +56,7 @@ class DlibFaceDetectEntity(ImageProcessingFaceEntity):
 
     def process_image(self, image):
         """Process image."""
+        # pylint: disable=import-error
         import face_recognition
 
         fak_file = io.BytesIO(image)

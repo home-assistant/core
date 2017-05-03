@@ -22,7 +22,8 @@ COMMENT_REQUIREMENTS = (
     'pycups',
     'python-eq3bt',
     'avion',
-    'decora'
+    'decora',
+    'face_recognition'
 )
 
 IGNORE_PACKAGES = (
