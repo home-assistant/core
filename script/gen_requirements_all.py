@@ -15,6 +15,7 @@ COMMENT_REQUIREMENTS = (
     'pybluez',
     'beacontools',
     'bluepy',
+    'opencv-python',
     'python-lirc',
     'gattlib',
     'pyuserinput',
