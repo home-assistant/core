@@ -41,6 +41,7 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
     def __init__(self, wink, hass):
         """Initialize the Wink alarm."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['alarm_control_panel'].append(self)
 
     @property
     def state(self):

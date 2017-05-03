@@ -39,6 +39,7 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['switch'].append(self)
 
     @property
     def is_on(self):

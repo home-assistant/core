@@ -37,6 +37,7 @@ class WinkLight(WinkDevice, Light):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['light'].append(self)
 
     @property
     def is_on(self):

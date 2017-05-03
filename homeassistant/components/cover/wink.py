@@ -30,6 +30,7 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
     def __init__(self, wink, hass):
         """Initialize the cover."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['cover'].append(self)
 
     def close_cover(self):
         """Close the shade."""

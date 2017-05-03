@@ -92,6 +92,7 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['binary_sensor'].append(self)
         if hasattr(self.wink, 'unit'):
             self._unit_of_measurement = self.wink.unit()
         else:

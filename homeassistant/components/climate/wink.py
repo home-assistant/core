@@ -50,6 +50,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
     def __init__(self, wink, hass, temp_unit):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['climate'].append(self)
         self._config_temp_unit = temp_unit
 
     @property

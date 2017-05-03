@@ -52,6 +52,7 @@ class WinkSensorDevice(WinkDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['sensor'].append(self)
         self.capability = self.wink.capability()
         if self.wink.unit() == '°':
             self._unit_of_measurement = TEMP_CELSIUS

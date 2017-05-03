@@ -29,6 +29,7 @@ class WinkScene(WinkDevice, Scene):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+        hass.data[DOMAIN]['entities']['scene'].append(self)
 
     @property
     def is_on(self):
