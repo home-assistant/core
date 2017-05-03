@@ -54,7 +54,7 @@ class BlinkStickLight(Light):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Set up polling."""
         return True
 
     @property

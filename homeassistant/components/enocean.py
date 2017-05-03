@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the EnOcean component."""
+    """Set up the EnOcean component."""
     global ENOCEAN_DONGLE
 
     serial_dev = config[DOMAIN].get(CONF_DEVICE)
@@ -43,8 +43,8 @@ class EnOceanDongle:
     def __init__(self, hass, ser):
         """Initialize the EnOcean dongle."""
         from enocean.communicators.serialcommunicator import SerialCommunicator
-        self.__communicator = SerialCommunicator(port=ser,
-                                                 callback=self.callback)
+        self.__communicator = SerialCommunicator(
+            port=ser, callback=self.callback)
         self.__communicator.start()
         self.__devices = []
 
@@ -65,11 +65,10 @@ class EnOceanDongle:
         return output
 
     def callback(self, temp):
-        """Callback function for EnOcean Device.
+        """Handle EnOcean device's callback.
 
-        This is the callback function called by
-        python-enocan whenever there is an incoming
-        packet.
+        This is the callback function called by python-enocan whenever there
+        is an incoming packet.
         """
         from enocean.protocol.packet import RadioPacket
         if isinstance(temp, RadioPacket):

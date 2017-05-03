@@ -52,7 +52,7 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 
 
 def setup(hass, config):
-    """Setup the IFTTT service component."""
+    """Set up the IFTTT service component."""
     key = config[DOMAIN][CONF_KEY]
 
     def trigger_service(call):

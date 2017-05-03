@@ -7,7 +7,7 @@ from homeassistant.components.lock import zwave
 from homeassistant.components.zwave import const
 
 from tests.mock.zwave import (
-   MockNode, MockValue, MockEntityValues, value_changed)
+    MockNode, MockValue, MockEntityValues, value_changed)
 
 
 def test_get_device_detects_lock(mock_openzwave):
@@ -171,6 +171,7 @@ def test_lock_alarm_level(mock_openzwave):
 @asyncio.coroutine
 def test_lock_set_usercode_service(hass, mock_openzwave):
     """Test the zwave lock set_usercode service."""
+    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data=None, node=node, index=1)
@@ -182,31 +183,29 @@ def test_lock_set_usercode_service(hass, mock_openzwave):
         value1.value_id: value1,
     }
 
-    with patch.object(zwave.zwave, 'NETWORK') as mock_network:
-        mock_network.nodes = {
-            node.node_id: node
-        }
-        yield from hass.services.async_call(
-            zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
-                const.ATTR_NODE_ID: node.node_id,
-                zwave.ATTR_USERCODE: '1234',
-                zwave.ATTR_CODE_SLOT: 1,
-                })
-        yield from hass.async_block_till_done()
+    mock_network.nodes = {
+        node.node_id: node
+    }
+    yield from hass.services.async_call(
+        zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
+            const.ATTR_NODE_ID: node.node_id,
+            zwave.ATTR_USERCODE: '1234',
+            zwave.ATTR_CODE_SLOT: 1,
+            })
+    yield from hass.async_block_till_done()
 
     assert value1.data == '1234'
 
-    with patch.object(zwave.zwave, 'NETWORK') as mock_network:
-        mock_network.nodes = {
-            node.node_id: node
-        }
-        yield from hass.services.async_call(
-            zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
-                const.ATTR_NODE_ID: node.node_id,
-                zwave.ATTR_USERCODE: '12345',
-                zwave.ATTR_CODE_SLOT: 1,
-                })
-        yield from hass.async_block_till_done()
+    mock_network.nodes = {
+        node.node_id: node
+    }
+    yield from hass.services.async_call(
+        zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
+            const.ATTR_NODE_ID: node.node_id,
+            zwave.ATTR_USERCODE: '12345',
+            zwave.ATTR_CODE_SLOT: 1,
+            })
+    yield from hass.async_block_till_done()
 
     assert value1.data == '1234'
 
@@ -214,6 +213,7 @@ def test_lock_set_usercode_service(hass, mock_openzwave):
 @asyncio.coroutine
 def test_lock_get_usercode_service(hass, mock_openzwave):
     """Test the zwave lock get_usercode service."""
+    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data='1234', node=node, index=1)
@@ -225,27 +225,24 @@ def test_lock_get_usercode_service(hass, mock_openzwave):
         value1.value_id: value1,
     }
 
-    with patch.object(zwave.zwave, 'NETWORK') as mock_network:
-        with patch.object(zwave, '_LOGGER') as mock_logger:
-            mock_network.nodes = {
-                node.node_id: node
-            }
-            yield from hass.services.async_call(
-                zwave.DOMAIN, zwave.SERVICE_GET_USERCODE, {
-                    const.ATTR_NODE_ID: node.node_id,
-                    zwave.ATTR_CODE_SLOT: 1,
-                    })
-            yield from hass.async_block_till_done()
-
-            # This service only seems to write to the log
-            assert mock_logger.info.called
-            assert len(mock_logger.info.mock_calls) == 1
-            assert mock_logger.info.mock_calls[0][1][2] == '1234'
+    with patch.object(zwave, '_LOGGER') as mock_logger:
+        mock_network.nodes = {node.node_id: node}
+        yield from hass.services.async_call(
+            zwave.DOMAIN, zwave.SERVICE_GET_USERCODE, {
+                const.ATTR_NODE_ID: node.node_id,
+                zwave.ATTR_CODE_SLOT: 1,
+                })
+        yield from hass.async_block_till_done()
+        # This service only seems to write to the log
+        assert mock_logger.info.called
+        assert len(mock_logger.info.mock_calls) == 1
+        assert mock_logger.info.mock_calls[0][1][2] == '1234'
 
 
 @asyncio.coroutine
 def test_lock_clear_usercode_service(hass, mock_openzwave):
     """Test the zwave lock clear_usercode service."""
+    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data='123', node=node, index=1)
@@ -257,15 +254,14 @@ def test_lock_clear_usercode_service(hass, mock_openzwave):
         value1.value_id: value1,
     }
 
-    with patch.object(zwave.zwave, 'NETWORK') as mock_network:
-        mock_network.nodes = {
-            node.node_id: node
-        }
-        yield from hass.services.async_call(
-            zwave.DOMAIN, zwave.SERVICE_CLEAR_USERCODE, {
-                const.ATTR_NODE_ID: node.node_id,
-                zwave.ATTR_CODE_SLOT: 1
-                })
-        yield from hass.async_block_till_done()
+    mock_network.nodes = {
+        node.node_id: node
+    }
+    yield from hass.services.async_call(
+        zwave.DOMAIN, zwave.SERVICE_CLEAR_USERCODE, {
+            const.ATTR_NODE_ID: node.node_id,
+            zwave.ATTR_CODE_SLOT: 1
+        })
+    yield from hass.async_block_till_done()
 
     assert value1.data == '\0\0\0'

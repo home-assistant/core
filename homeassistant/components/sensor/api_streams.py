@@ -1,11 +1,15 @@
-"""Entity to track connections to stream API."""
+"""
+Entity to track connections to stream API.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.api_stream/
+"""
 import asyncio
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-
 
 NAME_WS = 'homeassistant.components.websocket_api'
 NAME_STREAM = 'homeassistant.components.api'
@@ -46,7 +50,7 @@ class StreamHandler(logging.Handler):
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the logger for filters."""
+    """Set up the API stream platform."""
     entity = APICount()
     handler = StreamHandler(entity)
 
@@ -83,5 +87,5 @@ class APICount(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement."""
+        """Return the unit of measurement."""
         return "clients"

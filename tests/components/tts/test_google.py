@@ -23,10 +23,11 @@ class TestTTSGooglePlatform(object):
         self.url = "http://translate.google.com/translate_tts"
         self.url_param = {
             'tl': 'en',
-            'q': 'I%20person%20is%20on%20front%20of%20your%20door.',
+            'q':
+            '90%25%20of%20I%20person%20is%20on%20front%20of%20your%20door.',
             'tk': 5,
             'client': 'tw-ob',
-            'textlen': 34,
+            'textlen': 41,
             'total': 1,
             'idx': 0,
             'ie': 'UTF-8',
@@ -70,7 +71,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 
@@ -99,7 +100,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 
@@ -126,7 +127,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
             tts.ATTR_LANGUAGE: "de"
         })
         self.hass.block_till_done()
@@ -153,7 +154,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 
@@ -179,7 +180,7 @@ class TestTTSGooglePlatform(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
         self.hass.services.call(tts.DOMAIN, 'google_say', {
-            tts.ATTR_MESSAGE: "I person is on front of your door.",
+            tts.ATTR_MESSAGE: "90% of I person is on front of your door.",
         })
         self.hass.block_till_done()
 

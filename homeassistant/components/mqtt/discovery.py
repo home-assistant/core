@@ -19,18 +19,19 @@ _LOGGER = logging.getLogger(__name__)
 TOPIC_MATCHER = re.compile(
     r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>\w+)/config')
 
-SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor']
+SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor', 'switch']
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
     'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
-    'sensor': ['mqtt']
+    'sensor': ['mqtt'],
+    'switch': ['mqtt'],
 }
 
 
 @asyncio.coroutine
 def async_start(hass, discovery_topic, hass_config):
-    """Initialization of MQTT Discovery."""
+    """Initialize of MQTT Discovery."""
     # pylint: disable=unused-variable
     @asyncio.coroutine
     def async_device_message_received(topic, payload, qos):

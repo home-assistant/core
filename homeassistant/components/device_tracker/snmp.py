@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pysnmp==4.3.4']
+REQUIREMENTS = ['pysnmp==4.3.5']
 
 CONF_COMMUNITY = 'community'
 CONF_AUTHKEY = 'authkey'
@@ -125,7 +125,10 @@ class SnmpScanner(DeviceScanner):
 
         for resrow in restable:
             for _, val in resrow:
-                mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                try:
+                    mac = binascii.hexlify(val.asOctets()).decode('utf-8')
+                except AttributeError:
+                    continue
                 _LOGGER.debug("Found MAC %s", mac)
                 mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})

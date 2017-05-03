@@ -81,12 +81,12 @@ DISCOVERY_SCHEMAS = [
          },
          'open': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
-             const.DISC_LABEL: ['Open', 'Up'],
+             const.DISC_LABEL: ['Open', 'Up', 'Bright'],
              const.DISC_OPTIONAL: True,
          },
          'close': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
-             const.DISC_LABEL: ['Close', 'Down'],
+             const.DISC_LABEL: ['Close', 'Down', 'Dim'],
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'cover',  # Garage Door
@@ -120,6 +120,13 @@ DISCOVERY_SCHEMAS = [
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
              const.DISC_GENRE: const.GENRE_USER,
              const.DISC_TYPE: const.TYPE_BYTE,
+         },
+         'dimming_duration': {
+             const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_MULTILEVEL],
+             const.DISC_GENRE: const.GENRE_SYSTEM,
+             const.DISC_TYPE: const.TYPE_BYTE,
+             const.DISC_LABEL: 'Dimming Duration',
+             const.DISC_OPTIONAL: True,
          },
          'color': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_SWITCH_COLOR],
@@ -164,7 +171,6 @@ DISCOVERY_SCHEMAS = [
          'v2btze_advanced': {
              const.DISC_COMMAND_CLASS: [const.COMMAND_CLASS_CONFIGURATION],
              const.DISC_INDEX: [12],
-             const.DISC_LABEL: 'Access Control',
              const.DISC_OPTIONAL: True,
          }})},
     {const.DISC_COMPONENT: 'sensor',

@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Osram Lightify lights."""
+    """Set up the Osram Lightify lights."""
     import lightify
     host = config.get(CONF_HOST)
     add_groups = config.get(CONF_ALLOW_LIGHTIFY_GROUPS)
@@ -53,13 +53,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         try:
             bridge = lightify.Lightify(host)
         except socket.error as err:
-            msg = 'Error connecting to bridge: {} due to: {}'.format(host,
-                                                                     str(err))
+            msg = "Error connecting to bridge: {} due to: {}".format(
+                host, str(err))
             _LOGGER.exception(msg)
             return False
         setup_bridge(bridge, add_devices, add_groups)
     else:
-        _LOGGER.error('No host found in configuration')
+        _LOGGER.error("No host found in configuration")
         return False
 
 
@@ -161,14 +161,12 @@ class Luminary(Light):
 
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
-            _LOGGER.debug("turn_on requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+            _LOGGER.debug("turn_on requested transition time for light: "
+                          "%s is: %s", self._name, transition)
         else:
             transition = 0
-            _LOGGER.debug("turn_on requested transition time for light:"
-                          " %s is: %s ",
-                          self._name, transition)
+            _LOGGER.debug("turn_on requested transition time for light: "
+                          "%s is: %s", self._name, transition)
 
         if ATTR_RGB_COLOR in kwargs:
             red, green, blue = kwargs[ATTR_RGB_COLOR]
@@ -189,9 +187,9 @@ class Luminary(Light):
         if ATTR_COLOR_TEMP in kwargs:
             color_t = kwargs[ATTR_COLOR_TEMP]
             kelvin = int(color_temperature_mired_to_kelvin(color_t))
-            _LOGGER.debug("turn_on requested set_temperature for light:"
-                          " %s: %s ", self._name, kelvin)
-            self._luminary.set_temperature(kelvin, transition)
+            _LOGGER.debug("turn_on requested set_temperature for light: "
+                          "%s: %s", self._name, kelvin)
+            self._light.set_temperature(kelvin, transition)
 
         if ATTR_BRIGHTNESS in kwargs:
             self._brightness = kwargs[ATTR_BRIGHTNESS]
@@ -204,15 +202,13 @@ class Luminary(Light):
         if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
             if effect == EFFECT_RANDOM:
-                self._luminary.set_rgb(
-                    random.randrange(0, 255),
-                    random.randrange(0, 255),
-                    random.randrange(0, 255),
-                    transition
-                )
-                _LOGGER.debug("turn_on requested random effect for light:"
-                              " %s with transition %s ",
-                              self._name, transition)
+
+                self._light.set_rgb(random.randrange(0, 255),
+                                    random.randrange(0, 255),
+                                    random.randrange(0, 255),
+                                    transition)
+                _LOGGER.debug("turn_on requested random effect for light: "
+                              "%s with transition %s", self._name, transition)
 
         self.schedule_update_ha_state()
 

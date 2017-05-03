@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup S20 switches."""
+    """Set up S20 switches."""
     from orvibo.s20 import discover, S20, S20Exception
 
     switch_data = {}

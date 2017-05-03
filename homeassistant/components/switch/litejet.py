@@ -47,12 +47,12 @@ class LiteJetSwitch(SwitchDevice):
     def _on_switch_pressed(self):
         _LOGGER.debug("Updating pressed for %s", self._name)
         self._state = True
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.schedule_update_ha_state()
 
     def _on_switch_released(self):
         _LOGGER.debug("Updating released for %s", self._name)
         self._state = False
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.schedule_update_ha_state()
 
     @property
     def name(self):

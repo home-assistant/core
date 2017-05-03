@@ -25,8 +25,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_utc_time_change)
 from homeassistant.util import dt as dt_util
 
-
-REQUIREMENTS = ['xmltodict==0.10.2']
+REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Yr.no sensor."""
+    """Set up the Yr.no sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
@@ -82,9 +81,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     weather = YrData(hass, coordinates, dev)
     # Update weather on the hour, spread seconds
-    async_track_utc_time_change(hass, weather.async_update,
-                                minute=randrange(1, 10),
-                                second=randrange(0, 59))
+    async_track_utc_time_change(
+        hass, weather.async_update, minute=randrange(1, 10),
+        second=randrange(0, 59))
     yield from weather.async_update()
 
 
@@ -151,6 +150,8 @@ class YrData(object):
     @asyncio.coroutine
     def async_update(self, *_):
         """Get the latest data from yr.no."""
+        import xmltodict
+
         def try_again(err: str):
             """Retry in 15 minutes."""
             _LOGGER.warning('Retrying in 15 minutes: %s', err)
@@ -161,28 +162,21 @@ class YrData(object):
                                               nxt)
 
         if self._nextrun is None or dt_util.utcnow() >= self._nextrun:
-            resp = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
-                    resp = yield from websession.get(self._url,
-                                                     params=self._urlparams)
+                    resp = yield from websession.get(
+                        self._url, params=self._urlparams)
                 if resp.status != 200:
                     try_again('{} returned {}'.format(resp.url, resp.status))
                     return
                 text = yield from resp.text()
 
-            except (asyncio.TimeoutError, aiohttp.errors.ClientError,
-                    aiohttp.errors.ClientDisconnectedError) as err:
+            except (asyncio.TimeoutError, aiohttp.ClientError) as err:
                 try_again(err)
                 return
 
-            finally:
-                if resp is not None:
-                    yield from resp.release()
-
             try:
-                import xmltodict
                 self.data = xmltodict.parse(text)['weatherdata']
                 model = self.data['meta']['model']
                 if '@nextrun' not in model:

@@ -1,4 +1,9 @@
-"""Sensor to indicate whether the current day is a workday."""
+"""
+Sensor to indicate whether the current day is a workday.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.workday/
+"""
 import asyncio
 import logging
 import datetime
@@ -6,10 +11,9 @@ import datetime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
-                                 CONF_NAME, WEEKDAYS)
+from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,47 +52,40 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Workday sensor."""
+    """Set up the Workday sensor."""
     import holidays
 
-    # Get the Sensor name from the config
     sensor_name = config.get(CONF_NAME)
-
-    # Get the country code from the config
     country = config.get(CONF_COUNTRY)
-
-    # Get the province from the config
     province = config.get(CONF_PROVINCE)
-
-    # Get the list of workdays from the config
     workdays = config.get(CONF_WORKDAYS)
-
-    # Get the list of excludes from the config
     excludes = config.get(CONF_EXCLUDES)
 
-    # Instantiate the holidays module for the current year
     year = datetime.datetime.now().year
     obj_holidays = getattr(holidays, country)(years=year)
 
-    # Also apply the provience, if available for the configured country
     if province:
-        if province not in obj_holidays.PROVINCES:
-            _LOGGER.error('There is no province/state %s in country %s',
-                          province, country)
-            return False
-        else:
-            year = datetime.datetime.now().year
+        # 'state' and 'prov' are not interchangeable, so need to make
+        # sure we use the right one
+        if (hasattr(obj_holidays, "PROVINCES") and
+                province in obj_holidays.PROVINCES):
             obj_holidays = getattr(holidays, country)(prov=province,
                                                       years=year)
+        elif (hasattr(obj_holidays, "STATES") and
+              province in obj_holidays.STATES):
+            obj_holidays = getattr(holidays, country)(state=province,
+                                                      years=year)
+        else:
+            _LOGGER.error("There is no province/state %s in country %s",
+                          province, country)
+            return False
 
-    # Output found public holidays via the debug channel
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
         _LOGGER.debug("%s %s", date, name)
 
-    # Add ourselves as device
-    add_devices([IsWorkdaySensor(obj_holidays, workdays,
-                                 excludes, sensor_name)], True)
+    add_devices([IsWorkdaySensor(
+        obj_holidays, workdays, excludes, sensor_name)], True)
 
 
 def day_to_string(day):
@@ -99,7 +96,7 @@ def day_to_string(day):
         return None
 
 
-class IsWorkdaySensor(Entity):
+class IsWorkdaySensor(BinarySensorDevice):
     """Implementation of a Workday sensor."""
 
     def __init__(self, obj_holidays, workdays, excludes, name):
@@ -108,7 +105,7 @@ class IsWorkdaySensor(Entity):
         self._obj_holidays = obj_holidays
         self._workdays = workdays
         self._excludes = excludes
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def name(self):
@@ -116,13 +113,12 @@ class IsWorkdaySensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the device."""
         return self._state
 
     def is_include(self, day, now):
         """Check if given day is in the includes list."""
-        # Check includes
         if day in self._workdays:
             return True
         elif 'holiday' in self._workdays and now in self._obj_holidays:
@@ -132,7 +128,6 @@ class IsWorkdaySensor(Entity):
 
     def is_exclude(self, day, now):
         """Check if given day is in the excludes list."""
-        # Check excludes
         if day in self._excludes:
             return True
         elif 'holiday' in self._excludes and now in self._obj_holidays:
@@ -144,14 +139,14 @@ class IsWorkdaySensor(Entity):
     def async_update(self):
         """Get date and look whether it is a holiday."""
         # Default is no workday
-        self._state = STATE_OFF
+        self._state = False
 
         # Get iso day of the week (1 = Monday, 7 = Sunday)
         day = datetime.datetime.today().isoweekday() - 1
         day_of_week = day_to_string(day)
 
         if self.is_include(day_of_week, dt_util.now()):
-            self._state = STATE_ON
+            self._state = True
 
         if self.is_exclude(day_of_week, dt_util.now()):
-            self._state = STATE_OFF
+            self._state = False

@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Samsung TV platform."""
+    """Set up the Samsung TV platform."""
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
     if known_devices is None:
         known_devices = set()
@@ -58,14 +58,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         mac = config.get(CONF_MAC)
         timeout = config.get(CONF_TIMEOUT)
     elif discovery_info is not None:
-        tv_name, model, host = discovery_info
+        tv_name = discovery_info.get('name')
+        model = discovery_info.get('model_name')
+        host = discovery_info.get('host')
         name = "{} ({})".format(tv_name, model)
         port = DEFAULT_PORT
         timeout = DEFAULT_TIMEOUT
         mac = None
     else:
-        _LOGGER.warning(
-            'Internal error on samsungtv component. Cannot determine device')
+        _LOGGER.warning("Cannot determine device")
         return
 
     # Only add a device once, so discovered devices do not override manual

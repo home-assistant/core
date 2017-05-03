@@ -11,7 +11,7 @@ CONFIG_PATH = 'zwave_device_config.yaml'
 
 @asyncio.coroutine
 def async_setup(hass):
-    """Setup the Z-Wave config API."""
+    """Set up the Z-Wave config API."""
     hass.http.register_view(EditKeyBasedConfigView(
         'zwave', 'device_config', CONFIG_PATH, cv.entity_id,
         DEVICE_CONFIG_SCHEMA_ENTRY

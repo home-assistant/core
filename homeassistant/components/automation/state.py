@@ -2,7 +2,7 @@
 Offer state listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#state-trigger
+at https://home-assistant.io/docs/automation/trigger/#state-trigger
 """
 import asyncio
 import voluptuous as vol
@@ -14,11 +14,11 @@ from homeassistant.helpers.event import (
     async_track_state_change, async_track_point_in_utc_time)
 import homeassistant.helpers.config_validation as cv
 
-CONF_ENTITY_ID = "entity_id"
-CONF_FROM = "from"
-CONF_TO = "to"
-CONF_STATE = "state"
-CONF_FOR = "for"
+CONF_ENTITY_ID = 'entity_id'
+CONF_FROM = 'from'
+CONF_TO = 'to'
+CONF_STATE = 'state'
+CONF_FOR = 'for'
 
 TRIGGER_SCHEMA = vol.All(
     vol.Schema({
