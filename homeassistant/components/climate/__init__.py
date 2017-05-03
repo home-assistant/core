@@ -49,6 +49,7 @@ ATTR_MAX_TEMP = 'max_temp'
 ATTR_MIN_TEMP = 'min_temp'
 ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
 ATTR_TARGET_TEMP_LOW = 'target_temp_low'
+ATTR_TARGET_TEMP_STEP = 'target_temp_step'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_FAN_MODE = 'fan_mode'
@@ -419,6 +420,10 @@ class ClimateDevice(Entity):
             ATTR_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
         }
+
+        if self.target_temperature_step is not None:
+            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
         target_temp_high = self.target_temperature_high
         if target_temp_high is not None:
             data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
@@ -503,6 +508,11 @@ class ClimateDevice(Entity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
         return None
 
     @property
