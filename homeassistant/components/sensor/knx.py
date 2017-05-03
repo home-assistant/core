@@ -33,7 +33,6 @@ KNX_SPEED_MS_MAX = 670760
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the KNX Sensor platform."""
-    # Add KNX Temperature Sensors
     # KNX Datapoint 9.001 DPT_Value_Temp
     if config[CONF_TYPE] == TEMPERATURE:
         minimum_value, maximum_value = \
@@ -70,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def update_and_define_min_max(config, minimum_default, maximum_default):
-    """Determinate a min/max value defined in the configuration."""
+    """Determine a min/max value defined in the configuration."""
     minimum_value = minimum_default
     maximum_value = maximum_default
     if config.get(CONF_MINIMUM):

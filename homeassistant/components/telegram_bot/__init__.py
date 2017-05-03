@@ -78,7 +78,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
-        """Callback to load a platform."""
+        """Handle the loading of a platform."""
         yield from async_setup_platform(platform, discovery_info=info)
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
