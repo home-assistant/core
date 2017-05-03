@@ -31,12 +31,12 @@ ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
-ATTR_CURRRENT_POWER_W = "current_power_w"
+ATTR_CURRENT_POWER_W = "current_power_w"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PROP_TO_ATTR = {
-    'current_power_w': ATTR_CURRRENT_POWER_W,
+    'current_power_w': ATTR_CURRENT_POWER_W,
     'today_energy_kwh': ATTR_TODAY_ENERGY_KWH,
 }
 
