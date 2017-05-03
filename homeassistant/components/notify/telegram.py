@@ -9,27 +9,29 @@ import logging
 import urllib
 
 import requests
-from requests.auth import HTTPDigestAuth
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
 from homeassistant.const import (
-    CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
+    CONF_API_KEY, HTTP_DIGEST_AUTHENTICATION)
 
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
-ATTR_PHOTO = 'photo'
-ATTR_KEYBOARD = 'keyboard'
-ATTR_DOCUMENT = 'document'
+ATTR_AUTHENTICATION = 'authentication'
 ATTR_CAPTION = 'caption'
-ATTR_URL = 'url'
+ATTR_DOCUMENT = 'document'
 ATTR_FILE = 'file'
-ATTR_USERNAME = 'username'
+ATTR_KEYBOARD = 'keyboard'
 ATTR_PASSWORD = 'password'
+ATTR_PHOTO = 'photo'
+ATTR_URL = 'url'
+ATTR_USERNAME = 'username'
 
 CONF_CHAT_ID = 'chat_id'
 
@@ -56,18 +58,18 @@ def get_service(hass, config, discovery_info=None):
     return TelegramNotificationService(api_key, chat_id)
 
 
-def load_data(url=None, file=None, username=None, password=None):
+def load_data(url=None, file=None, username=None, password=None,
+              authentication=None):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
             # Load photo from URL
             if username is not None and password is not None:
-                req = requests.get(url, auth=(username, password), timeout=15)
-
-                # if 401, try digest authentication
-                if req.status_code == 401:
-                    digest = HTTPDigestAuth(username, password)
-                    req = requests.get(url, auth=digest, timeout=15)
+                if authentication == HTTP_DIGEST_AUTHENTICATION:
+                    auth = HTTPDigestAuth(username, password)
+                else:
+                    auth = HTTPBasicAuth(username, password)
+                req = requests.get(url, auth=auth, timeout=15)
             else:
                 req = requests.get(url, timeout=15)
             return io.BytesIO(req.content)
@@ -157,6 +159,7 @@ class TelegramNotificationService(BaseNotificationService):
                 file=data.get(ATTR_FILE),
                 username=data.get(ATTR_USERNAME),
                 password=data.get(ATTR_PASSWORD),
+                authentication=data.get(ATTR_AUTHENTICATION),
             )
             self.bot.sendPhoto(
                 chat_id=self._chat_id, photo=photo, caption=caption)
@@ -175,6 +178,7 @@ class TelegramNotificationService(BaseNotificationService):
                 file=data.get(ATTR_FILE),
                 username=data.get(ATTR_USERNAME),
                 password=data.get(ATTR_PASSWORD),
+                authentication=data.get(ATTR_AUTHENTICATION),
             )
             self.bot.sendDocument(
                 chat_id=self._chat_id, document=document, caption=caption)
