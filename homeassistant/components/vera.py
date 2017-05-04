@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.29']
+REQUIREMENTS = ['pyvera==0.2.30']
 
 _LOGGER = logging.getLogger(__name__)
 
