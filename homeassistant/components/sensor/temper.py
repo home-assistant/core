@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['temperusb==1.5.1']
+REQUIREMENTS = ['temperusb==1.5.3']
 
 CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'
@@ -35,7 +35,7 @@ def get_temper_devices():
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setu p the Temper sensors."""
+    """Set up the Temper sensors."""
     temp_unit = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
     scaling = {
