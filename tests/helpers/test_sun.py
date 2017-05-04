@@ -4,8 +4,6 @@ import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
 
-from homeassistant.setup import setup_component
-import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.helpers.sun as sun
 
@@ -151,14 +149,14 @@ class TestSun(unittest.TestCase):
         june = datetime(2016, 6, 1, tzinfo=dt_util.UTC)
 
         print(sun.get_astral_event_date(self.hass, 'sunrise',
-            datetime(2017, 7, 25)))
+                                        datetime(2017, 7, 25)))
         print(sun.get_astral_event_date(self.hass, 'sunset',
-            datetime(2017, 7, 25)))
+                                        datetime(2017, 7, 25)))
 
         print(sun.get_astral_event_date(self.hass, 'sunrise',
-            datetime(2017, 7, 26)))
+                                        datetime(2017, 7, 26)))
         print(sun.get_astral_event_date(self.hass, 'sunset',
-            datetime(2017, 7, 26)))
+                                        datetime(2017, 7, 26)))
 
         assert sun.get_astral_event_next(self.hass, 'sunrise', june) == \
             datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
