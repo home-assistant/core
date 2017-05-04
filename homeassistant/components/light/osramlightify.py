@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_bridge(bridge, add_devices_callback, add_groups):
-    """Setup the Lightify bridge."""
+    """Set up the Lightify bridge."""
     lights = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
