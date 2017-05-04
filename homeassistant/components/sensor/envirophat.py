@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(EnvirophatSensor(data, variable))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class EnvirophatSensor(Entity):
@@ -72,7 +72,6 @@ class EnvirophatSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_types][1]
         self.type = sensor_types
         self._state = None
-        self.update()
 
     @property
     def name(self):
