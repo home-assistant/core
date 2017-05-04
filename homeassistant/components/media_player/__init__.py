@@ -916,8 +916,9 @@ def _async_fetch_image(hass, url):
 
             if response.status == 200:
                 content = yield from response.read()
-                content_type = response.headers.get(CONTENT_TYPE_HEADER)\
-                                               .split(';')[0]
+                content_type = response.headers.get(CONTENT_TYPE_HEADER)
+                if content_type:
+                    content_type = content_type.split(';')[0]
 
     except asyncio.TimeoutError:
         pass

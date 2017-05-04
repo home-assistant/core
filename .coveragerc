@@ -237,6 +237,8 @@ omit =
     homeassistant/components/foursquare.py
     homeassistant/components/hdmi_cec.py
     homeassistant/components/ifttt.py
+    homeassistant/components/image_processing/dlib_face_detect.py
+    homeassistant/components/image_processing/dlib_face_identify.py
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/keyboard_remote.py
@@ -368,6 +370,7 @@ omit =
     homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
+    homeassistant/components/sensor/envirophat.py
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/fido.py
