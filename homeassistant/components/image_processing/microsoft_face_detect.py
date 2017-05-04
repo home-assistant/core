@@ -22,8 +22,6 @@ DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_IDENTIFY_FACE = 'detect_face'
-
 SUPPORTED_ATTRIBUTES = [
     ATTR_AGE,
     ATTR_GENDER,
