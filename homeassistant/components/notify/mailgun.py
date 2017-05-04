@@ -17,9 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/pschmitt/pymailgun/'
-                'archive/1.3.zip#'
-                'pymailgun==1.3']
+REQUIREMENTS = ['pymailgunner==1.4']
 
 # Images to attach to notification
 ATTR_IMAGES = 'images'
