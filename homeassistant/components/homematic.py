@@ -577,6 +577,8 @@ def _device_from_servicecall(hass, service):
     """Extract homematic device from service call."""
     address = service.data.get(ATTR_ADDRESS)
     proxy = service.data.get(ATTR_PROXY)
+    if address == 'BIDCOS-RF':
+        address = 'BidCoS-RF'
 
     if proxy:
         return hass.data[DATA_HOMEMATIC].devices[proxy].get(address)
