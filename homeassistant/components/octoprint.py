@@ -85,18 +85,16 @@ class OctoPrintAPI(object):
                 self.printer_last_reading[0] = response.json()
                 self.printer_last_reading[1] = time.time()
             return response.json()
-        except requests.exceptions.ConnectionError as conn_exc:
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as conn_exc:
             _LOGGER.error("Failed to update OctoPrint status.  Error: %s",
                           conn_exc)
-            raise
 
     def update(self, sensor_type, end_point, group, tool=None):
         """Return the value for sensor_type from the provided endpoint."""
-        try:
-            return get_value_from_json(
-                self.get(end_point), sensor_type, group, tool)
-        except requests.exceptions.ConnectionError:
-            raise
+        response = self.get(end_point)
+        if response is not None:
+            return get_value_from_json(response, sensor_type, group, tool)
 
 
 # pylint: disable=unused-variable
