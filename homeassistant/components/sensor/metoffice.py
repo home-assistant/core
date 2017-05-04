@@ -4,7 +4,6 @@ Support for UK Met Office weather service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.metoffice/
 """
-
 import logging
 from datetime import timedelta
 
@@ -25,17 +24,17 @@ REQUIREMENTS = ['datapoint==0.4.3']
 CONF_ATTRIBUTION = "Data provided by the Met Office"
 
 CONDITION_CLASSES = {
-    'cloudy': ["7", "8"],
-    'fog': ["5", "6"],
-    'hail': ["19", "20", "21"],
-    'lightning': ["30"],
-    'lightning-rainy': ["28", "29"],
-    'partlycloudy': ["2", "3"],
-    'pouring': ["13", "14", "15"],
-    'rainy': ["9", "10", "11", "12"],
-    'snowy': ["22", "23", "24", "25", "26", "27"],
-    'snowy-rainy': ["16", "17", "18"],
-    'sunny': ["0", "1"],
+    'cloudy': ['7', '8'],
+    'fog': ['5', '6'],
+    'hail': ['19', '20', '21'],
+    'lightning': ['30'],
+    'lightning-rainy': ['28', '29'],
+    'partlycloudy': ['2', '3'],
+    'pouring': ['13', '14', '15'],
+    'rainy': ['9', '10', '11', '12'],
+    'snowy': ['22', '23', '24', '25', '26', '27'],
+    'snowy-rainy': ['16', '17', '18'],
+    'sunny': ['0', '1'],
     'windy': [],
     'windy-variant': [],
     'exceptional': [],
@@ -67,7 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the Metoffice sensor platform."""
     import datapoint as dp
     datapoint = dp.connection(api_key=config.get(CONF_API_KEY))
 
@@ -167,8 +166,8 @@ class MetOfficeCurrentData(object):
         import datapoint as dp
 
         try:
-            forecast = self._datapoint.get_forecast_for_site(self._site.id,
-                                                             "3hourly")
+            forecast = self._datapoint.get_forecast_for_site(
+                self._site.id, "3hourly")
             self.data = forecast.now()
         except (ValueError, dp.exceptions.APIException) as err:
             _LOGGER.error("Check Met Office %s", err.args)

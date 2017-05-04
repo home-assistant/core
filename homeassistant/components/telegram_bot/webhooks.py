@@ -1,9 +1,8 @@
 """
 Allows utilizing telegram webhooks.
 
-See https://core.telegram.org/bots/webhooks for details
- about webhooks.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.webhooks/
 """
 import asyncio
 import logging
@@ -11,9 +10,8 @@ from ipaddress import ip_network
 
 import voluptuous as vol
 
-
 from homeassistant.const import (
-    HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
+    EVENT_HOMEASSISTANT_STOP, HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.telegram_bot import CONF_ALLOWED_CHAT_IDS, \
@@ -22,11 +20,12 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.components.http.util import get_real_ip
 
 DEPENDENCIES = ['http']
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
+REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 TELEGRAM_HANDLER_URL = '/api/telegram_webhooks'
+REMOVE_HANDLER_URL = ''
 
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 DEFAULT_TRUSTED_NETWORKS = [
@@ -45,33 +44,34 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the polling platform."""
+    """Set up the Telegram webhooks platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
 
     current_status = bot.getWebhookInfo()
-    handler_url = "{0}{1}".format(hass.config.api.base_url,
-                                  TELEGRAM_HANDLER_URL)
+    handler_url = '{0}{1}'.format(
+        hass.config.api.base_url, TELEGRAM_HANDLER_URL)
     if current_status and current_status['url'] != handler_url:
         if bot.setWebhook(handler_url):
-            _LOGGER.info("set new telegram webhook %s", handler_url)
-
-            hass.http.register_view(
-                BotPushReceiver(
-                    hass,
-                    config[CONF_ALLOWED_CHAT_IDS],
-                    config[CONF_TRUSTED_NETWORKS]))
-
+            _LOGGER.info("Set new telegram webhook %s", handler_url)
         else:
-            _LOGGER.error("set telegram webhook failed %s", handler_url)
+            _LOGGER.error("Set telegram webhook failed %s", handler_url)
+            return False
+
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_STOP,
+        lambda event: bot.setWebhook(REMOVE_HANDLER_URL))
+    hass.http.register_view(BotPushReceiver(
+        hass, config[CONF_ALLOWED_CHAT_IDS], config[CONF_TRUSTED_NETWORKS]))
+    return True
 
 
 class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
-    """Handle pushes from telegram."""
+    """Handle pushes from Telegram."""
 
     requires_auth = False
     url = TELEGRAM_HANDLER_URL
-    name = "telegram_webhooks"
+    name = 'telegram_webhooks'
 
     def __init__(self, hass, allowed_chat_ids, trusted_networks):
         """Initialize the class."""

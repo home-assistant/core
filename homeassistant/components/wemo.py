@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.18']
+REQUIREMENTS = ['pywemo==0.4.19']
 
 DOMAIN = 'wemo'
 
@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
-    """Common setup for WeMo devices."""
+    """Set up for WeMo devices."""
     import pywemo
 
     global SUBSCRIPTION_REGISTRY

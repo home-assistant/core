@@ -38,12 +38,27 @@ class TestWorkdaySetup(object):
             },
         }
 
+        self.config_state = {
+            'binary_sensor': {
+                'platform': 'workday',
+                'country': 'US',
+                'province': 'CA'
+            },
+        }
+
+        self.config_nostate = {
+            'binary_sensor': {
+                'platform': 'workday',
+                'country': 'US',
+            },
+        }
+
         self.config_includeholiday = {
             'binary_sensor': {
                 'platform': 'workday',
                 'country': 'DE',
                 'province': 'BW',
-                'workdays': ['holiday', 'mon', 'tue', 'wed', 'thu', 'fri'],
+                'workdays': ['holiday'],
                 'excludes': ['sat', 'sun']
             },
         }
@@ -114,6 +129,34 @@ class TestWorkdaySetup(object):
         """Test if public holidays are reported correctly."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor', self.config_noprovince)
+
+        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+
+        self.hass.start()
+
+        entity = self.hass.states.get('binary_sensor.workday_sensor')
+        assert entity.state == 'on'
+
+    # Freeze time to a public holiday in state CA
+    @freeze_time("Mar 31st, 2017")
+    def test_public_holiday_state(self):
+        """Test if public holidays are reported correctly."""
+        with assert_setup_component(1, 'binary_sensor'):
+            setup_component(self.hass, 'binary_sensor', self.config_state)
+
+        assert self.hass.states.get('binary_sensor.workday_sensor') is not None
+
+        self.hass.start()
+
+        entity = self.hass.states.get('binary_sensor.workday_sensor')
+        assert entity.state == 'off'
+
+    # Freeze time to a public holiday in state CA
+    @freeze_time("Mar 31st, 2017")
+    def test_public_holiday_nostate(self):
+        """Test if public holidays are reported correctly."""
+        with assert_setup_component(1, 'binary_sensor'):
+            setup_component(self.hass, 'binary_sensor', self.config_nostate)
 
         assert self.hass.states.get('binary_sensor.workday_sensor') is not None
 

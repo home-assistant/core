@@ -34,8 +34,10 @@ from homeassistant.util.yaml import dump
 
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
+    ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_MAC,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID)
+
+_LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'device_tracker'
 DEPENDENCIES = ['zone']
@@ -63,13 +65,14 @@ EVENT_NEW_DEVICE = 'device_tracker_new_device'
 
 SERVICE_SEE = 'see'
 
-ATTR_MAC = 'mac'
+ATTR_ATTRIBUTES = 'attributes'
+ATTR_BATTERY = 'battery'
 ATTR_DEV_ID = 'dev_id'
+ATTR_GPS = 'gps'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
-ATTR_GPS = 'gps'
-ATTR_BATTERY = 'battery'
-ATTR_ATTRIBUTES = 'attributes'
+ATTR_MAC = 'mac'
+ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
 
 SOURCE_TYPE_GPS = 'gps'
@@ -86,7 +89,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 DISCOVERY_PLATFORMS = {
     SERVICE_NETGEAR: 'netgear',
 }
-_LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass: HomeAssistantType, entity_id: str=None):
@@ -116,7 +118,7 @@ def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
 
 @asyncio.coroutine
 def async_setup(hass: HomeAssistantType, config: ConfigType):
-    """Setup device tracker."""
+    """Set up the device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
     try:
@@ -125,7 +127,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         async_log_exception(ex, DOMAIN, config, hass)
         return False
     else:
-        conf = conf[0] if len(conf) > 0 else {}
+        conf = conf[0] if conf else {}
         consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
         track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
@@ -134,7 +136,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
-        """Setup a device tracker platform."""
+        """Set up a device tracker platform."""
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
         if platform is None:
@@ -166,11 +168,11 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                 return
 
             if not setup:
-                _LOGGER.error('Error setting up platform %s', p_type)
+                _LOGGER.error("Error setting up platform %s", p_type)
                 return
 
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error setting up platform %s', p_type)
+            _LOGGER.exception("Error setting up platform %s", p_type)
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
                    in config_per_platform(config, DOMAIN)]
@@ -181,7 +183,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     @callback
     def async_device_tracker_discovered(service, info):
-        """Called when a device tracker platform is discovered."""
+        """Handle the discovery of device tracker platforms."""
         hass.async_add_job(
             async_setup_platform(DISCOVERY_PLATFORMS[service], {}, info))
 
@@ -190,7 +192,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
-        """Callback to load a platform."""
+        """Load a platform."""
         yield from async_setup_platform(platform, {}, disc_info=info)
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
@@ -271,9 +273,9 @@ class DeviceTracker(object):
             device = self.devices.get(dev_id)
 
         if device:
-            yield from device.async_seen(host_name, location_name, gps,
-                                         gps_accuracy, battery, attributes,
-                                         source_type)
+            yield from device.async_seen(
+                host_name, location_name, gps, gps_accuracy, battery,
+                attributes, source_type)
             if device.track:
                 yield from device.async_update_ha_state()
             return
@@ -287,9 +289,9 @@ class DeviceTracker(object):
         if mac is not None:
             self.mac_to_dev[mac] = device
 
-        yield from device.async_seen(host_name, location_name, gps,
-                                     gps_accuracy, battery, attributes,
-                                     source_type)
+        yield from device.async_seen(
+            host_name, location_name, gps, gps_accuracy, battery, attributes,
+            source_type)
 
         if device.track:
             yield from device.async_update_ha_state()
@@ -309,8 +311,8 @@ class DeviceTracker(object):
 
         # update known_devices.yaml
         self.hass.async_add_job(
-            self.async_update_config(self.hass.config.path(YAML_DEVICES),
-                                     dev_id, device)
+            self.async_update_config(
+                self.hass.config.path(YAML_DEVICES), dev_id, device)
         )
 
     @asyncio.coroutine
@@ -348,7 +350,7 @@ class DeviceTracker(object):
 
     @asyncio.coroutine
     def async_setup_tracked_device(self):
-        """Setup all not exists tracked devices.
+        """Set up all not exists tracked devices.
 
         This method is a coroutine.
         """
@@ -485,8 +487,8 @@ class Device(Entity):
             except (ValueError, TypeError, IndexError):
                 self.gps = None
                 self.gps_accuracy = 0
-                _LOGGER.warning('Could not parse gps value for %s: %s',
-                                self.dev_id, gps)
+                _LOGGER.warning(
+                    "Could not parse gps value for %s: %s", self.dev_id, gps)
 
         # pylint: disable=not-an-iterable
         yield from self.async_update()
@@ -534,7 +536,6 @@ class Device(Entity):
     @asyncio.coroutine
     def get_vendor_for_mac(self):
         """Try to find the vendor string for a given MAC address."""
-        # can't continue without a mac
         if not self.mac:
             return None
 
@@ -543,11 +544,10 @@ class Device(Entity):
         else:
             mac = self.mac
 
-        # prevent lookup of invalid macs
         if not len(mac.split(':')) == 6:
             return 'unknown'
 
-        # we only need the first 3 bytes of the mac for a lookup
+        # We only need the first 3 bytes of the MAC for a lookup
         # this improves somewhat on privacy
         oui_bytes = mac.split(':')[0:3]
         # bytes like 00 get truncates to 0, API needs full bytes
@@ -562,7 +562,7 @@ class Device(Entity):
             if resp.status == 200:
                 vendor_string = yield from resp.text()
                 return vendor_string
-            # if vendor is not known to the API (404) or there
+            # If vendor is not known to the API (404) or there
             # was a failure during the lookup (500); set vendor
             # to something other then None to prevent retry
             # as the value is only relevant when it is to be stored
@@ -570,12 +570,12 @@ class Device(Entity):
             # the first time the device is seen.
             return 'unknown'
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            # same as above
+            # Same as above
             return 'unknown'
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity about to be added to hass."""
+        """Add an entity."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
@@ -636,10 +636,10 @@ def async_load_config(path: str, hass: HomeAssistantType,
     This method is a coroutine.
     """
     dev_schema = vol.Schema({
-        vol.Required('name'): cv.string,
+        vol.Required(CONF_NAME): cv.string,
         vol.Optional('track', default=False): cv.boolean,
-        vol.Optional('mac', default=None): vol.Any(None, vol.All(cv.string,
-                                                                 vol.Upper)),
+        vol.Optional(CONF_MAC, default=None):
+            vol.Any(None, vol.All(cv.string, vol.Upper)),
         vol.Optional(CONF_AWAY_HIDE, default=DEFAULT_AWAY_HIDE): cv.boolean,
         vol.Optional('gravatar', default=None): vol.Any(None, cv.string),
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
@@ -653,7 +653,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
             devices = yield from hass.loop.run_in_executor(
                 None, load_yaml_config_file, path)
         except HomeAssistantError as err:
-            _LOGGER.error('Unable to load %s: %s', path, str(err))
+            _LOGGER.error("Unable to load %s: %s", path, str(err))
             return []
 
         for dev_id, device in devices.items():
@@ -674,7 +674,7 @@ def async_load_config(path: str, hass: HomeAssistantType,
 def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                                  scanner: Any, async_see_device: Callable,
                                  platform: str):
-    """Helper method to connect scanner-based platform to device tracker.
+    """Set up the connect scanner-based platform to device tracker.
 
     This method must be run in the event loop.
     """
@@ -687,7 +687,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
 
     @asyncio.coroutine
     def async_device_tracker_scan(now: dt_util.dt.datetime):
-        """Called when interval matches."""
+        """Handle interval matches."""
         if update_lock.locked():
             _LOGGER.warning(
                 "Updating device list from %s took longer than the scheduled "
@@ -726,8 +726,8 @@ def update_config(path: str, dev_id: str, device: Device):
     """Add device to YAML configuration file."""
     with open(path, 'a') as out:
         device = {device.dev_id: {
-            'name': device.name,
-            'mac': device.mac,
+            ATTR_NAME: device.name,
+            ATTR_MAC: device.mac,
             'picture': device.config_picture,
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide,

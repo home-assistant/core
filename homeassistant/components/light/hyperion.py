@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a Hyperion server remote."""
+    """Set up a Hyperion server remote."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     default_color = config.get(CONF_DEFAULT_COLOR)

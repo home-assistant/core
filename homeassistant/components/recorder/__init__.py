@@ -33,9 +33,11 @@ from . import purge, migration
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-DOMAIN = 'recorder'
-
 REQUIREMENTS = ['sqlalchemy==1.1.9']
+
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'recorder'
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
@@ -65,8 +67,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def wait_connection_ready(hass):
@@ -101,7 +101,7 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 
 @asyncio.coroutine
 def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup the recorder."""
+    """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     purge_days = conf.get(CONF_PURGE_DAYS)
 
@@ -175,7 +175,7 @@ class Recorder(threading.Thread):
         if not connected:
             @callback
             def connection_failed():
-                """Connection failed tasks."""
+                """Connect failed tasks."""
                 self.async_db_ready.set_result(False)
                 persistent_notification.async_create(
                     self.hass,
@@ -246,8 +246,8 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
-            if ATTR_ENTITY_ID in event.data:
-                entity_id = event.data[ATTR_ENTITY_ID]
+            entity_id = event.data.get(ATTR_ENTITY_ID)
+            if entity_id is not None:
                 domain = split_entity_id(entity_id)[0]
 
                 # Exclude entities OR

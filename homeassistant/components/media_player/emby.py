@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Emby platform."""
+    """Set up the Emby platform."""
     from pyemby import EmbyServer
 
     host = config.get(CONF_HOST)
@@ -64,7 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if port is None:
         port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
 
-    _LOGGER.debug('Setting up Emby server at: %s:%s', host, port)
+    _LOGGER.debug("Setting up Emby server at: %s:%s", host, port)
 
     emby = EmbyServer(host, key, port, ssl, hass.loop)
 
@@ -73,7 +73,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     @callback
     def device_update_callback(data):
-        """Callback for when devices are added to emby."""
+        """Handle devices which are added to Emby."""
         new_devices = []
         active_devices = []
         for dev_id in emby.devices:
@@ -93,12 +93,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     add.set_hidden(False)
 
         if new_devices:
-            _LOGGER.debug("Adding new devices to HASS: %s", new_devices)
+            _LOGGER.debug("Adding new devices: %s", new_devices)
             async_add_devices(new_devices, update_before_add=True)
 
     @callback
     def device_removal_callback(data):
-        """Callback for when devices are removed from emby."""
+        """Handle the removal of devices from Emby."""
         if data in active_emby_devices:
             rem = active_emby_devices.pop(data)
             inactive_emby_devices[data] = rem
@@ -109,12 +109,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     @callback
     def start_emby(event):
-        """Start emby connection."""
+        """Start Emby connection."""
         emby.start()
 
     @asyncio.coroutine
     def stop_emby(event):
-        """Stop emby connection."""
+        """Stop Emby connection."""
         yield from emby.stop()
 
     emby.add_new_devices_callback(device_update_callback)
@@ -129,7 +129,7 @@ class EmbyDevice(MediaPlayerDevice):
 
     def __init__(self, emby, device_id):
         """Initialize the Emby device."""
-        _LOGGER.debug('New Emby Device initialized with ID: %s', device_id)
+        _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
         self.emby = emby
         self.device_id = device_id
         self.device = self.emby.devices[self.device_id]
@@ -143,12 +143,12 @@ class EmbyDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callback."""
-        self.emby.add_update_callback(self.async_update_callback,
-                                      self.device_id)
+        self.emby.add_update_callback(
+            self.async_update_callback, self.device_id)
 
     @callback
     def async_update_callback(self, msg):
-        """Callback for device updates."""
+        """Handle device updates."""
         # Check if we should update progress
         if self.device.media_position:
             if self.device.media_position != self.media_status_last_position:
@@ -244,12 +244,12 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
+        """Return the duration of current playing media in seconds."""
         return self.device.media_runtime
 
     @property
     def media_position(self):
-        """Position of current playing media in seconds."""
+        """Return the position of current playing media in seconds."""
         return self.media_status_last_position
 
     @property
@@ -263,12 +263,12 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
-        """Image url of current playing media."""
+        """Return the image URL of current playing media."""
         return self.device.media_image_url
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         return self.device.media_title
 
     @property
@@ -278,27 +278,27 @@ class EmbyDevice(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Return the title of the series of current playing media (TV)."""
         return self.device.media_series_title
 
     @property
     def media_episode(self):
-        """Episode of current playing media (TV Show only)."""
+        """Return the episode of current playing media (TV only)."""
         return self.device.media_episode
 
     @property
     def media_album_name(self):
-        """Album name of current playing media (Music track only)."""
+        """Return the album name of current playing media (Music only)."""
         return self.device.media_album_name
 
     @property
     def media_artist(self):
-        """Artist of current playing media (Music track only)."""
+        """Return the artist of current playing media (Music track only)."""
         return self.device.media_artist
 
     @property
     def media_album_artist(self):
-        """Album artist of current playing media (Music track only)."""
+        """Return the album artist of current playing media (Music only)."""
         return self.device.media_album_artist
 
     @property

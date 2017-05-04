@@ -1,5 +1,5 @@
 """
-Zwave platform that handles simple door locks.
+Z-Wave platform that handles simple door locks.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.zwave/
@@ -122,7 +122,7 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Generic Z-Wave platform setup."""
+    """Set up the Z-Wave Lock platform."""
     yield from zwave.async_setup_platform(
         hass, config, async_add_devices, discovery_info)
 
@@ -142,8 +142,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             if value.index != code_slot:
                 continue
             if len(str(usercode)) > 4:
-                _LOGGER.error('Invalid code provided: (%s)'
-                              ' usercode must %s or less digits',
+                _LOGGER.error("Invalid code provided: (%s) "
+                              "usercode must %s or less digits",
                               usercode, len(value.data))
                 break
             value.data = str(usercode)
@@ -159,7 +159,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
             if value.index != code_slot:
                 continue
-            _LOGGER.info('Usercode at slot %s is: %s', value.index, value.data)
+            _LOGGER.info("Usercode at slot %s is: %s", value.index, value.data)
             break
 
     def clear_usercode(service):
@@ -178,28 +178,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 i += 1
             _LOGGER.debug('Data to clear lock: %s', data)
             value.data = data
-            _LOGGER.info('Usercode at slot %s is cleared', value.index)
+            _LOGGER.info("Usercode at slot %s is cleared", value.index)
             break
 
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_SET_USERCODE,
-                                 set_usercode,
-                                 descriptions.get(SERVICE_SET_USERCODE),
-                                 schema=SET_USERCODE_SCHEMA)
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_GET_USERCODE,
-                                 get_usercode,
-                                 descriptions.get(SERVICE_GET_USERCODE),
-                                 schema=GET_USERCODE_SCHEMA)
-    hass.services.async_register(DOMAIN,
-                                 SERVICE_CLEAR_USERCODE,
-                                 clear_usercode,
-                                 descriptions.get(SERVICE_CLEAR_USERCODE),
-                                 schema=CLEAR_USERCODE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_USERCODE, set_usercode,
+        descriptions.get(SERVICE_SET_USERCODE), schema=SET_USERCODE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_GET_USERCODE, get_usercode,
+        descriptions.get(SERVICE_GET_USERCODE), schema=GET_USERCODE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_CLEAR_USERCODE, clear_usercode,
+        descriptions.get(SERVICE_CLEAR_USERCODE), schema=CLEAR_USERCODE_SCHEMA)
 
 
 def get_device(node, values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     return ZwaveLock(values)
 
 
@@ -228,10 +222,9 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
-        _LOGGER.debug('Lock state set from Bool value and'
-                      ' is %s', self._state)
+        _LOGGER.debug("Lock state set from Bool value and is %s", self._state)
         if self.values.access_control:
             notification_data = self.values.access_control.data
             self._notification = LOCK_NOTIFICATION.get(str(notification_data))
@@ -240,21 +233,20 @@ class ZwaveLock(zwave.ZWaveDeviceEntity, LockDevice):
                 if self.values.v2btze_advanced and \
                         self.values.v2btze_advanced.data == CONFIG_ADVANCED:
                     self._state = LOCK_STATUS.get(str(notification_data))
-                    _LOGGER.debug('Lock state set from Access Control '
-                                  'value and is %s, get=%s',
-                                  str(notification_data),
-                                  self.state)
+                    _LOGGER.debug(
+                        "Lock state set from Access Control value and is %s, "
+                        "get=%s", str(notification_data), self.state)
 
         if not self.values.alarm_type:
             return
 
         alarm_type = self.values.alarm_type.data
-        _LOGGER.debug('Lock alarm_type is %s', str(alarm_type))
+        _LOGGER.debug("Lock alarm_type is %s", str(alarm_type))
         if self.values.alarm_level:
             alarm_level = self.values.alarm_level.data
         else:
             alarm_level = None
-        _LOGGER.debug('Lock alarm_level is %s', str(alarm_level))
+        _LOGGER.debug("Lock alarm_level is %s", str(alarm_level))
 
         if not alarm_type:
             return

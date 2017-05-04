@@ -31,7 +31,7 @@ ALLOWED_PLATFORMS = {
 
 @asyncio.coroutine
 def async_start(hass, discovery_topic, hass_config):
-    """Initialization of MQTT Discovery."""
+    """Initialize of MQTT Discovery."""
     # pylint: disable=unused-variable
     @asyncio.coroutine
     def async_device_message_received(topic, payload, qos):

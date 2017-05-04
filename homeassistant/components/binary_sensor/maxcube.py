@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if cube.is_windowshutter(device):
             devices.append(MaxCubeShutter(hass, name, device.rf_address))
 
-    if len(devices):
+    if devices:
         add_devices(devices)
 
 
@@ -43,7 +43,7 @@ class MaxCubeShutter(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """Polling is required."""
+        """Return the polling state."""
         return True
 
     @property

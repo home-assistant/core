@@ -17,11 +17,11 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+_LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pexpect==4.0.1']
-_LOGGER = logging.getLogger(__name__)
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _DEVICES_REGEX = re.compile(
     r'(?P<name>([^\s]+))\s+' +
@@ -102,22 +102,22 @@ class ArubaDeviceScanner(DeviceScanner):
                             'Connection refused',
                             'Connection timed out'], timeout=120)
         if query == 1:
-            _LOGGER.error('Timeout')
+            _LOGGER.error("Timeout")
             return
         elif query == 2:
-            _LOGGER.error('Unexpected response from router')
+            _LOGGER.error("Unexpected response from router")
             return
         elif query == 3:
             ssh.sendline('yes')
             ssh.expect('password:')
         elif query == 4:
-            _LOGGER.error('Host key Changed')
+            _LOGGER.error("Host key changed")
             return
         elif query == 5:
-            _LOGGER.error('Connection refused by server')
+            _LOGGER.error("Connection refused by server")
             return
         elif query == 6:
-            _LOGGER.error('Connection timed out')
+            _LOGGER.error("Connection timed out")
             return
         ssh.sendline(self.password)
         ssh.expect('#')
