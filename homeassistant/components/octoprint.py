@@ -85,7 +85,8 @@ class OctoPrintAPI(object):
                 self.printer_last_reading[0] = response.json()
                 self.printer_last_reading[1] = time.time()
             return response.json()
-        except (requests.exceptions.ConnectionError, requests.exceptions.HTTPError) as conn_exc:
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.HTTPError) as conn_exc:
             _LOGGER.error("Failed to update OctoPrint status.  Error: %s",
                           conn_exc)
 
