@@ -39,6 +39,8 @@ DEVICE_CLASSES = [
     'garage',        # Garage door control
 ]
 
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
+
 SUPPORT_OPEN = 1
 SUPPORT_CLOSE = 2
 SUPPORT_SET_POSITION = 4
@@ -346,3 +348,8 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(
             ft.partial(self.stop_cover_tilt, **kwargs))
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return None
