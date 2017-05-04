@@ -653,7 +653,7 @@ python-hpilo==3.9
 
 # homeassistant.components.joaoapps_join
 # homeassistant.components.notify.joaoapps_join
-python-join-api==0.0.1
+python-join-api==0.0.2
 
 # homeassistant.components.lirc
 # python-lirc==1.2.3
