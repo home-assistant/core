@@ -308,8 +308,8 @@ class TestEventHelpers(unittest.TestCase):
 
         mod = -1
         while True:
-            next_rising = (astral.sunrise_utc(utc_today +
-                           timedelta(days=mod), latitude, longitude))
+            next_rising = (astral.sunrise_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_rising > utc_now:
                 break
             mod += 1
@@ -367,8 +367,8 @@ class TestEventHelpers(unittest.TestCase):
 
         mod = -1
         while True:
-            next_setting = (astral.sunset_utc(utc_today +
-                            timedelta(days=mod), latitude, longitude))
+            next_setting = (astral.sunset_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_setting > utc_now:
                 break
             mod += 1

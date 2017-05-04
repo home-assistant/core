@@ -7,8 +7,7 @@ import sys
 from homeassistant.helpers.typing import ConfigType
 
 from homeassistant.core import HomeAssistant
-from homeassistant.components import (
-    zone as zone_cmp, sun as sun_cmp)
+from homeassistant.components import zone as zone_cmp
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
@@ -17,6 +16,7 @@ from homeassistant.const import (
     CONF_BELOW, CONF_ABOVE)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
 from homeassistant.util.async import run_callback_threadsafe
 
@@ -234,13 +234,23 @@ def state_from_config(config, config_validation=True):
 
 def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     """Test if current time matches sun requirements."""
-    now = dt_util.now()
-    utcnow = dt_util.as_utc(now)
+    utcnow = dt_util.utcnow()
+    now = dt_util.as_local(utcnow)
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
-    entity = hass.data[sun_cmp.ENTITY_ID]
-    sunrise = entity.location.sunrise(now.date(), local=False)
-    sunset = entity.location.sunset(now.date(), local=False)
+
+    sunrise = get_astral_event_date(hass, 'sunrise', now)
+    sunset = get_astral_event_date(hass, 'sunset', now)
+
+    if sunrise is None and (before == SUN_EVENT_SUNRISE or
+                            after == SUN_EVENT_SUNRISE):
+        # There is no sunrise today
+        return False
+
+    if sunset is None and (before == SUN_EVENT_SUNSET or
+                           after == SUN_EVENT_SUNSET):
+        # There is no sunset today
+        return False
 
     if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False

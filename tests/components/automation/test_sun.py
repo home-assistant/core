@@ -169,14 +169,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 10, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
@@ -201,14 +201,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 13, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 15, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
@@ -234,14 +234,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 14, 32, 44, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
@@ -267,14 +267,14 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 14, 32, 42, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 14, 32, 43, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
@@ -300,59 +300,21 @@ class TestAutomationSun(unittest.TestCase):
         })
 
         now = datetime(2015, 9, 16, 13, 8, 51, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 17, 2, 25, 18, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
             self.assertEqual(0, len(self.calls))
 
         now = datetime(2015, 9, 16, 16, tzinfo=dt_util.UTC)
-        with patch('homeassistant.util.dt.now',
-                   return_value=now):
-            self.hass.bus.fire('test_event')
-            self.hass.block_till_done()
-            self.assertEqual(1, len(self.calls))
-
-    def test_if_action_after_different_tz(self):
-        """Test if action was after in a different timezone."""
-        import pytz
-
-        setup_component(self.hass, automation.DOMAIN, {
-            automation.DOMAIN: {
-                'trigger': {
-                    'platform': 'event',
-                    'event_type': 'test_event',
-                },
-                'condition': {
-                    'condition': 'sun',
-                    'after': 'sunset',
-                },
-                'action': {
-                    'service': 'test.automation'
-                }
-            }
-        })
-
-        # Before
-        now = datetime(2015, 9, 16, 18, 55, 23,
-                       tzinfo=pytz.timezone('US/Mountain'))
-        with patch('homeassistant.util.dt.now',
-                   return_value=now):
-            self.hass.bus.fire('test_event')
-            self.hass.block_till_done()
-            self.assertEqual(0, len(self.calls))
-
-        # After
-        now = datetime(2015, 9, 16, 18, 55, 24,
-                       tzinfo=pytz.timezone('US/Mountain'))
-        with patch('homeassistant.util.dt.now',
+        with patch('homeassistant.util.dt.utcnow',
                    return_value=now):
             self.hass.bus.fire('test_event')
             self.hass.block_till_done()
