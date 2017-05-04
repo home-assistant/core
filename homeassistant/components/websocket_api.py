@@ -221,9 +221,12 @@ class ActiveConnection:
         _LOGGER.error("WS %s: %s %s", id(self.wsock), message1, message2)
 
     def send_message(self, message):
-        """Send messages."""
+        """Send messages.
+
+        Returns a coroutine object.
+        """
         self.debug("Sending", message)
-        self.wsock.send_json(message, dumps=JSON_DUMP)
+        return self.wsock.send_json(message, dumps=JSON_DUMP)
 
     @asyncio.coroutine
     def handle(self):
@@ -252,7 +255,7 @@ class ActiveConnection:
                 authenticated = True
 
             else:
-                self.send_message(auth_required_message())
+                yield from self.send_message(auth_required_message())
                 msg = yield from wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
@@ -261,13 +264,14 @@ class ActiveConnection:
 
                 else:
                     self.debug("Invalid password")
-                    self.send_message(auth_invalid_message('Invalid password'))
+                    yield from self.send_message(
+                        auth_invalid_message('Invalid password'))
 
             if not authenticated:
                 yield from process_wrong_login(self.request)
                 return wsock
 
-            self.send_message(auth_ok_message())
+            yield from self.send_message(auth_ok_message())
 
             msg = yield from wsock.receive_json()
 
@@ -279,7 +283,7 @@ class ActiveConnection:
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
-                    self.send_message(error_message(
+                    yield from self.send_message(error_message(
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
@@ -300,7 +304,7 @@ class ActiveConnection:
             self.log_error(error_msg)
 
             if not authenticated:
-                self.send_message(auth_invalid_message(error_msg))
+                yield from self.send_message(auth_invalid_message(error_msg))
 
             else:
                 if isinstance(msg, dict):
@@ -308,7 +312,7 @@ class ActiveConnection:
                 else:
                     iden = None
 
-                self.send_message(error_message(
+                yield from self.send_message(error_message(
                     iden, ERR_INVALID_FORMAT, error_msg))
 
         except TypeError as err:
