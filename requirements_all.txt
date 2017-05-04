@@ -165,6 +165,9 @@ eliqonline==1.0.13
 # homeassistant.components.enocean
 enocean==0.31
 
+# homeassistant.components.sensor.envirophat
+envirophat==0.0.6
+
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
 
