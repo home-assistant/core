@@ -8,6 +8,7 @@ import logging
 import io
 
 from homeassistant.core import split_entity_id
+# pylint: disable=unused-import
 from homeassistant.components.image_processing import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.image_processing import (
     CONF_SOURCE, CONF_ENTITY_ID, CONF_NAME)
