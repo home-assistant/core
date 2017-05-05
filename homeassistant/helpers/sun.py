@@ -1,12 +1,10 @@
 """Helpers for sun events."""
-from datetime import timedelta
+import datetime
 
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
-
-# Cache astral locations so they aren't recreated with the same args
-_LOCATION_CACHE = {}
+DATA_LOCATION_CACHE = 'astral_location_cache'
 
 
 @callback
@@ -20,10 +18,14 @@ def get_astral_location(hass):
     elevation = hass.config.elevation
     info = ('', '', latitude, longitude, timezone, elevation)
 
-    if info not in _LOCATION_CACHE:
-        _LOCATION_CACHE[info] = Location(info)
+    # Cache astral locations so they aren't recreated with the same args
+    if DATA_LOCATION_CACHE not in hass.data:
+        hass.data[DATA_LOCATION_CACHE] = {}
 
-    return _LOCATION_CACHE[info]
+    if info not in hass.data[DATA_LOCATION_CACHE]:
+        hass.data[DATA_LOCATION_CACHE][info] = Location(info)
+
+    return hass.data[DATA_LOCATION_CACHE][info]
 
 
 @callback
@@ -34,7 +36,7 @@ def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
     location = get_astral_location(hass)
 
     if offset is None:
-        offset = timedelta()
+        offset = datetime.timedelta()
 
     if utc_point_in_time is None:
         utc_point_in_time = dt_util.utcnow()
@@ -44,7 +46,7 @@ def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
         try:
             next_dt = getattr(location, event)(
                 dt_util.as_local(utc_point_in_time).date() +
-                timedelta(days=mod),
+                datetime.timedelta(days=mod),
                 local=False) + offset
             if next_dt > utc_point_in_time:
                 return next_dt
@@ -54,17 +56,20 @@ def get_astral_event_next(hass, event, utc_point_in_time=None, offset=None):
 
 
 @callback
-def get_astral_event_date(hass, event, now=None):
+def get_astral_event_date(hass, event, date=None):
     """Calculate the astral event time for the specified date."""
     import astral
 
     location = get_astral_location(hass)
 
-    if now is None:
-        now = dt_util.now()
+    if date is None:
+        date = dt_util.now().date()
+
+    if isinstance(date, datetime.datetime):
+        date = dt_util.as_local(date).date()
 
     try:
-        return getattr(location, event)(now.date(), local=False)
+        return getattr(location, event)(date, local=False)
     except astral.AstralError:
         # Event never occurs for specified date.
         return None

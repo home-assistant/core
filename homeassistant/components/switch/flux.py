@@ -159,7 +159,7 @@ class FluxSwitch(SwitchDevice):
         """Update all the lights using flux."""
         if now is None:
             now = dt_now()
-        sunset = get_astral_event_date(self.hass, 'sunset', now)
+        sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
         stop_time = now.replace(
             hour=self._stop_time.hour, minute=self._stop_time.minute,
@@ -220,5 +220,5 @@ class FluxSwitch(SwitchDevice):
                 hour=self._start_time.hour, minute=self._start_time.minute,
                 second=0)
         else:
-            sunrise = get_astral_event_date(self.hass, 'sunrise', now)
+            sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
         return sunrise

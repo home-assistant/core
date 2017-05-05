@@ -235,12 +235,12 @@ def state_from_config(config, config_validation=True):
 def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     """Test if current time matches sun requirements."""
     utcnow = dt_util.utcnow()
-    now = dt_util.as_local(utcnow)
+    today = dt_util.as_local(utcnow).date()
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    sunrise = get_astral_event_date(hass, 'sunrise', now)
-    sunset = get_astral_event_date(hass, 'sunset', now)
+    sunrise = get_astral_event_date(hass, 'sunrise', today)
+    sunset = get_astral_event_date(hass, 'sunset', today)
 
     if sunrise is None and (before == SUN_EVENT_SUNRISE or
                             after == SUN_EVENT_SUNRISE):
