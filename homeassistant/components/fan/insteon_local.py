@@ -13,7 +13,6 @@ from homeassistant.components.fan import (
     ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.loader import get_component
 import homeassistant.util as util
 
 _CONFIGURING = {}
@@ -61,17 +60,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
     for device_id in conf_fans:
-        add_devices_callback([InsteonLocalFanDevice(insteonhub.fan(device_id),
-                                                    name)])
+        add_devices(InsteonLocalFanDevice(insteonhub.fan(device_id)))
 
 
 class InsteonLocalFanDevice(FanEntity):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node, name):
+    def __init__(self, node):
         """Initialize the device."""
         self.node = node
-        self.node.deviceName = name
         self._speed = SPEED_OFF
 
     @property
