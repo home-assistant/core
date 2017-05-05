@@ -8,7 +8,6 @@ https://home-assistant.io/components/axis/
 import json
 import logging
 import os
-from datetime import timedelta
 
 import voluptuous as vol
 
@@ -19,9 +18,7 @@ from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.loader import get_component
-from homeassistant.util.dt import utcnow
 
 
 REQUIREMENTS = ['axis==7']
@@ -238,37 +235,12 @@ class AxisDeviceEvent(Entity):
                                        convert(self.axis_event.topic,
                                                'topic', 'type'),
                                        self.axis_event.id)
-        self._delay = self.axis_event.device_config(CONF_TRIGGER_TIME)
-        self._timer = None
         self.axis_event.callback = self._update_callback
 
     def _update_callback(self):
         """Update the sensor's state, if needed."""
         self.update()
-
-        if self._timer is not None:
-            self._timer()
-            self._timer = None
-
-        if self._delay > 0 and not self.is_on:
-            # Set timer to wait until updating the state
-            def _delay_update(now):
-                """Timer callback for sensor update."""
-                _LOGGER.debug("%s Called delayed (%s sec) update.",
-                              self._name, self._delay)
-                self.schedule_update_ha_state()
-                self._timer = None
-
-            self._timer = track_point_in_utc_time(
-                self.hass, _delay_update,
-                utcnow() + timedelta(seconds=self._delay))
-        else:
-            self.schedule_update_ha_state()
-
-    @property
-    def is_on(self):
-        """Implemented in binary sensor."""
-        raise NotImplementedError
+        self.schedule_update_ha_state()
 
     @property
     def name(self):
