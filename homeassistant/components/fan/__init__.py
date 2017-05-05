@@ -45,6 +45,7 @@ SERVICE_SET_DIRECTION = 'set_direction'
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
 SPEED_MEDIUM = 'medium'
+SPEED_MED = 'med'
 SPEED_HIGH = 'high'
 
 DIRECTION_FORWARD = 'forward'
