@@ -18,7 +18,7 @@ REQUIREMENTS = ['knxip==0.3.3']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = '0.0.0.0'
-DEFAULT_PORT = '3671'
+DEFAULT_PORT = 3671
 DOMAIN = 'knx'
 
 EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
