@@ -21,7 +21,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     import RFXtrx as rfxtrxmod
 
     # Add switch from config file
-    switches = rfxtrx.get_devices_from_config(config, RfxtrxSwitch)
+    switches = rfxtrx.get_devices_from_config(config, RfxtrxSwitch, hass)
     add_devices_callback(switches)
 
     def switch_update(event):
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 event.device.known_to_be_rollershutter:
             return
 
-        new_device = rfxtrx.get_new_device(event, config, RfxtrxSwitch)
+        new_device = rfxtrx.get_new_device(event, config, RfxtrxSwitch, hass)
         if new_device:
             add_devices_callback([new_device])
 
