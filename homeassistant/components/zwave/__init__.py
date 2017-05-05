@@ -35,7 +35,7 @@ from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import check_node_schema, check_value_schema, node_name
 
-REQUIREMENTS = ['pydispatcher==2.0.5']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.0.31']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,21 +221,11 @@ def setup(hass, config):
     descriptions = conf_util.load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
-    try:
-        import libopenzwave
-    except ImportError:
-        _LOGGER.error("You are missing required dependency Python Open "
-                      "Z-Wave. Please follow instructions at: "
-                      "https://home-assistant.io/components/zwave/")
-        return False
     from pydispatch import dispatcher
     # pylint: disable=import-error
     from openzwave.option import ZWaveOption
     from openzwave.network import ZWaveNetwork
     from openzwave.group import ZWaveGroup
-
-    default_zwave_config_path = os.path.join(os.path.dirname(
-        libopenzwave.__file__), 'config')
 
     # Load configuration
     use_debug = config[DOMAIN].get(CONF_DEBUG)
@@ -249,8 +239,7 @@ def setup(hass, config):
     options = ZWaveOption(
         config[DOMAIN].get(CONF_USB_STICK_PATH),
         user_path=hass.config.config_dir,
-        config_path=config[DOMAIN].get(
-            CONF_CONFIG_PATH, default_zwave_config_path))
+        config_path=config[DOMAIN].get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
     options.lock()
