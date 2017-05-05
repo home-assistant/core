@@ -172,6 +172,7 @@ EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 # #### STATES ####
 STATE_ON = 'on'

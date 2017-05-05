@@ -124,6 +124,9 @@ concord232==0.14
 # homeassistant.components.sensor.crimereports
 crimereports==1.0.0
 
+# homeassistant.components.datadog
+datadog==0.15.0
+
 # homeassistant.components.sensor.metoffice
 # homeassistant.components.weather.metoffice
 datapoint==0.4.3
