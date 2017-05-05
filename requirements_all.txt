@@ -691,6 +691,9 @@ python-vlc==1.1.2
 # homeassistant.components.wink
 python-wink==1.2.4
 
+# homeassistant.components.zwave
+python_openzwave==0.4.0.31
+
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
 
