@@ -677,9 +677,7 @@ python-pushover==0.2
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
-# homeassistant.components.notify.telegram
-# homeassistant.components.telegram_bot.polling
-# homeassistant.components.telegram_bot.webhooks
+# homeassistant.components.telegram_bot
 python-telegram-bot==5.3.1
 
 # homeassistant.components.sensor.twitch
