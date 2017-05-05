@@ -42,7 +42,7 @@ class TestRestSwitchSetup:
 
     def test_setup_failed_connect(self, aioclient_mock):
         """Test setup when connection error occurs."""
-        aioclient_mock.get('http://localhost', exc=aiohttp.errors.ClientError)
+        aioclient_mock.get('http://localhost', exc=aiohttp.ClientError)
         assert not run_coroutine_threadsafe(
             rest.async_setup_platform(self.hass, {
                 'platform': 'rest',

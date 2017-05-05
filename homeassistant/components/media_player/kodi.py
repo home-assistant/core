@@ -8,6 +8,7 @@ import asyncio
 from functools import wraps
 import logging
 import urllib
+import re
 
 import aiohttp
 import voluptuous as vol
@@ -17,7 +18,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
     PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
-    MEDIA_TYPE_PLAYLIST)
+    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -27,7 +28,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 
-REQUIREMENTS = ['jsonrpc-async==0.4', 'jsonrpc-websocket==0.3']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +47,17 @@ TURN_OFF_ACTION = [None, 'quit', 'hibernate', 'suspend', 'reboot', 'shutdown']
 
 # https://github.com/xbmc/xbmc/blob/master/xbmc/media/MediaType.h
 MEDIA_TYPES = {
-    "music": MEDIA_TYPE_MUSIC,
-    "artist": MEDIA_TYPE_MUSIC,
-    "album": MEDIA_TYPE_MUSIC,
-    "song": MEDIA_TYPE_MUSIC,
-    "video": MEDIA_TYPE_VIDEO,
-    "set": MEDIA_TYPE_PLAYLIST,
-    "musicvideo": MEDIA_TYPE_VIDEO,
-    "movie": MEDIA_TYPE_VIDEO,
-    "tvshow": MEDIA_TYPE_TVSHOW,
-    "season": MEDIA_TYPE_TVSHOW,
-    "episode": MEDIA_TYPE_TVSHOW,
+    'music': MEDIA_TYPE_MUSIC,
+    'artist': MEDIA_TYPE_MUSIC,
+    'album': MEDIA_TYPE_MUSIC,
+    'song': MEDIA_TYPE_MUSIC,
+    'video': MEDIA_TYPE_VIDEO,
+    'set': MEDIA_TYPE_PLAYLIST,
+    'musicvideo': MEDIA_TYPE_VIDEO,
+    'movie': MEDIA_TYPE_VIDEO,
+    'tvshow': MEDIA_TYPE_TVSHOW,
+    'season': MEDIA_TYPE_TVSHOW,
+    'episode': MEDIA_TYPE_TVSHOW,
 }
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
@@ -76,10 +77,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean,
 })
 
+SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
+SERVICE_SET_SHUFFLE = 'kodi_set_shuffle'
+
+ATTR_MEDIA_TYPE = 'media_type'
+ATTR_MEDIA_NAME = 'media_name'
+ATTR_MEDIA_ARTIST_NAME = 'artist_name'
+ATTR_MEDIA_ID = 'media_id'
+
+MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required('shuffle_on'): cv.boolean,
+})
+
+MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_TYPE): cv.string,
+    vol.Optional(ATTR_MEDIA_ID): cv.string,
+    vol.Optional(ATTR_MEDIA_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+})
+
+SERVICE_TO_METHOD = {
+    SERVICE_ADD_MEDIA: {
+        'method': 'async_add_media_to_playlist',
+        'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
+    SERVICE_SET_SHUFFLE: {
+        'method': 'async_set_shuffle',
+        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
+}
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Kodi platform."""
+    """Set up the Kodi platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     tcp_port = config.get(CONF_TCP_PORT)
@@ -103,13 +132,40 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     async_add_devices([entity], update_before_add=True)
 
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Map services to methods on MediaPlayerDevice."""
+        method = SERVICE_TO_METHOD.get(service.service)
+        if not method:
+            return
+
+        params = {key: value for key, value in service.data.items()
+                  if key != 'entity_id'}
+
+        yield from getattr(entity, method['method'])(**params)
+
+        update_tasks = []
+        if entity.should_poll:
+            update_coro = entity.async_update_ha_state(True)
+            update_tasks.append(update_coro)
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    for service in SERVICE_TO_METHOD:
+        schema = SERVICE_TO_METHOD[service].get(
+            'schema', MEDIA_PLAYER_SCHEMA)
+        hass.services.async_register(
+            DOMAIN, service, async_service_handler,
+            description=None, schema=schema)
+
 
 def cmd(func):
-    """Decorator to catch command exceptions."""
+    """Catch command exceptions."""
     @wraps(func)
     @asyncio.coroutine
     def wrapper(obj, *args, **kwargs):
-        """Wrapper for all command methods."""
+        """Wrap all command methods."""
         import jsonrpc_base
         try:
             yield from func(obj, *args, **kwargs)
@@ -189,7 +245,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_speed_event(self, sender, data):
-        """Called when player changes between playing and paused."""
+        """Handle player changes between playing and paused."""
         self._properties['speed'] = data['player']['speed']
 
         if not hasattr(data['item'], 'id'):
@@ -203,7 +259,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_stop(self, sender, data):
-        """Called when the player stops playback."""
+        """Handle the stop of the player playback."""
         # Prevent stop notifications which are sent after quit notification
         if self._players is None:
             return
@@ -215,14 +271,14 @@ class KodiDevice(MediaPlayerDevice):
 
     @callback
     def async_on_volume_changed(self, sender, data):
-        """Called when the volume is changed."""
+        """Handle the volume changes."""
         self._app_properties['volume'] = data['volume']
         self._app_properties['muted'] = data['muted']
         self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
     def async_on_quit(self, sender, data):
-        """Called when the volume is changed."""
+        """Handle the muted volume."""
         self._players = None
         self._properties = {}
         self._item = {}
@@ -237,8 +293,8 @@ class KodiDevice(MediaPlayerDevice):
             return (yield from self.server.Player.GetActivePlayers())
         except jsonrpc_base.jsonrpc.TransportError:
             if self._players is not None:
-                _LOGGER.info('Unable to fetch kodi data')
-                _LOGGER.debug('Unable to fetch kodi data', exc_info=True)
+                _LOGGER.info("Unable to fetch kodi data")
+                _LOGGER.debug("Unable to fetch kodi data", exc_info=True)
             return None
 
     @property
@@ -247,7 +303,7 @@ class KodiDevice(MediaPlayerDevice):
         if self._players is None:
             return STATE_OFF
 
-        if len(self._players) == 0:
+        if not self._players:
             return STATE_IDLE
 
         if self._properties['speed'] == 0 and not self._properties['live']:
@@ -300,7 +356,7 @@ class KodiDevice(MediaPlayerDevice):
                 ['volume', 'muted']
             )
 
-        if len(self._players) > 0:
+        if self._players:
             player_id = self._players[0]['playerid']
 
             assert isinstance(player_id, int)
@@ -419,7 +475,7 @@ class KodiDevice(MediaPlayerDevice):
     def media_artist(self):
         """Artist of current playing media, music track only."""
         artists = self._item.get('artist', [])
-        if len(artists) > 0:
+        if artists:
             return artists[0]
         else:
             return None
@@ -428,7 +484,7 @@ class KodiDevice(MediaPlayerDevice):
     def media_album_artist(self):
         """Album artist of current playing media, music track only."""
         artists = self._item.get('albumartist', [])
-        if len(artists) > 0:
+        if artists:
             return artists[0]
         else:
             return None
@@ -492,10 +548,10 @@ class KodiDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_set_play_state(self, state):
-        """Helper method for play/pause/toggle."""
+        """Handle play/pause/toggle."""
         players = yield from self._get_players()
 
-        if players is not None and len(players) != 0:
+        if players is not None and players:
             yield from self.server.Player.PlayPause(
                 players[0]['playerid'], state)
 
@@ -529,17 +585,17 @@ class KodiDevice(MediaPlayerDevice):
         """Stop the media player."""
         players = yield from self._get_players()
 
-        if len(players) != 0:
+        if players:
             yield from self.server.Player.Stop(players[0]['playerid'])
 
     @asyncio.coroutine
     def _goto(self, direction):
-        """Helper method used for previous/next track."""
+        """Handle for previous/next track."""
         players = yield from self._get_players()
 
-        if len(players) != 0:
+        if players:
             if direction == 'previous':
-                # first seek to position 0. Kodi goes to the beginning of the
+                # First seek to position 0. Kodi goes to the beginning of the
                 # current track if the current track is not at the beginning.
                 yield from self.server.Player.Seek(players[0]['playerid'], 0)
 
@@ -581,7 +637,7 @@ class KodiDevice(MediaPlayerDevice):
 
         time['hours'] = int(position)
 
-        if len(players) != 0:
+        if players:
             yield from self.server.Player.Seek(players[0]['playerid'], time)
 
     @cmd
@@ -593,6 +649,139 @@ class KodiDevice(MediaPlayerDevice):
         if media_type == "CHANNEL":
             return self.server.Player.Open(
                 {"item": {"channelid": int(media_id)}})
+        elif media_type == "PLAYLIST":
+            return self.server.Player.Open(
+                {"item": {"playlistid": int(media_id)}})
         else:
             return self.server.Player.Open(
                 {"item": {"file": str(media_id)}})
+
+    @asyncio.coroutine
+    def async_set_shuffle(self, shuffle_on):
+        """Set shuffle mode, for the first player."""
+        if len(self._players) < 1:
+            raise RuntimeError("Error: No active player.")
+        yield from self.server.Player.SetShuffle(
+            {"playerid": self._players[0]['playerid'], "shuffle": shuffle_on})
+
+    @asyncio.coroutine
+    def async_add_media_to_playlist(
+            self, media_type, media_id=None, media_name='', artist_name=''):
+        """Add a media to default playlist (i.e. playlistid=0).
+
+        First the media type must be selected, then
+        the media can be specified in terms of id or
+        name and optionally artist name.
+        All the albums of an artist can be added with
+        media_name="ALL"
+        """
+        if media_type == "SONG":
+            if media_id is None:
+                media_id = yield from self.async_find_song(
+                    media_name, artist_name)
+
+            yield from self.server.Playlist.Add(
+                {"playlistid": 0, "item": {"songid": int(media_id)}})
+
+        elif media_type == "ALBUM":
+            if media_id is None:
+                if media_name == "ALL":
+                    yield from self.async_add_all_albums(artist_name)
+                    return
+
+                media_id = yield from self.async_find_album(
+                    media_name, artist_name)
+
+            yield from self.server.Playlist.Add(
+                {"playlistid": 0, "item": {"albumid": int(media_id)}})
+        else:
+            raise RuntimeError("Unrecognized media type.")
+
+    @asyncio.coroutine
+    def async_add_all_albums(self, artist_name):
+        """Add all albums of an artist to default playlist (i.e. playlistid=0).
+
+        The artist is specified in terms of name.
+        """
+        artist_id = yield from self.async_find_artist(artist_name)
+
+        albums = yield from self.async_get_albums(artist_id)
+
+        for alb in albums['albums']:
+            yield from self.server.Playlist.Add(
+                {"playlistid": 0, "item": {"albumid": int(alb['albumid'])}})
+
+    @asyncio.coroutine
+    def async_clear_playlist(self):
+        """Clear default playlist (i.e. playlistid=0)."""
+        return self.server.Playlist.Clear({"playlistid": 0})
+
+    @asyncio.coroutine
+    def async_get_artists(self):
+        """Get artists list."""
+        return (yield from self.server.AudioLibrary.GetArtists())
+
+    @asyncio.coroutine
+    def async_get_albums(self, artist_id=None):
+        """Get albums list."""
+        if artist_id is None:
+            return (yield from self.server.AudioLibrary.GetAlbums())
+        else:
+            return (yield from self.server.AudioLibrary.GetAlbums(
+                {"filter": {"artistid": int(artist_id)}}))
+
+    @asyncio.coroutine
+    def async_find_artist(self, artist_name):
+        """Find artist by name."""
+        artists = yield from self.async_get_artists()
+        out = self._find(
+            artist_name, [a['artist'] for a in artists['artists']])
+        return artists['artists'][out[0][0]]['artistid']
+
+    @asyncio.coroutine
+    def async_get_songs(self, artist_id=None):
+        """Get songs list."""
+        if artist_id is None:
+            return (yield from self.server.AudioLibrary.GetSongs())
+        else:
+            return (yield from self.server.AudioLibrary.GetSongs(
+                {"filter": {"artistid": int(artist_id)}}))
+
+    @asyncio.coroutine
+    def async_find_song(self, song_name, artist_name=''):
+        """Find song by name and optionally artist name."""
+        artist_id = None
+        if artist_name != '':
+            artist_id = yield from self.async_find_artist(artist_name)
+
+        songs = yield from self.async_get_songs(artist_id)
+        if songs['limits']['total'] == 0:
+            return None
+
+        out = self._find(song_name, [a['label'] for a in songs['songs']])
+        return songs['songs'][out[0][0]]['songid']
+
+    @asyncio.coroutine
+    def async_find_album(self, album_name, artist_name=''):
+        """Find album by name and optionally artist name."""
+        artist_id = None
+        if artist_name != '':
+            artist_id = yield from self.async_find_artist(artist_name)
+
+        albums = yield from self.async_get_albums(artist_id)
+        out = self._find(album_name, [a['label'] for a in albums['albums']])
+        return albums['albums'][out[0][0]]['albumid']
+
+    @staticmethod
+    def _find(key_word, words):
+        key_word = key_word.split(' ')
+        patt = [re.compile(
+            '(^| )' + k + '( |$)', re.IGNORECASE) for k in key_word]
+
+        out = [[i, 0] for i in range(len(words))]
+        for i in range(len(words)):
+            mtc = [p.search(words[i]) for p in patt]
+            rate = [m is not None for m in mtc].count(True)
+            out[i][1] = rate
+
+        return sorted(out, key=lambda out: out[1], reverse=True)

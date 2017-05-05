@@ -20,7 +20,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_component
 
-
 DOMAIN = 'image_processing'
 DEPENDENCIES = ['camera']
 
@@ -67,7 +66,7 @@ def scan(hass, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup image processing."""
+    """Set up image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     yield from component.async_setup(config)

@@ -22,29 +22,30 @@ SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
 
 _LOGGER = logging.getLogger(__name__)
 
-# List of devices that have been registered
 DEVICES = []
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Openhome Platform."""
+    """Set up the Openhome platform."""
     from openhomedevice.Device import Device
 
-    if discovery_info:
-        _LOGGER.info('Openhome device found, (%s)', discovery_info[0])
-        device = Device(discovery_info[1])
-
-        # if device has already been discovered
-        if device.Uuid() in [x.unique_id for x in DEVICES]:
-            return True
-
-        device = OpenhomeDevice(hass, device)
-
-        add_devices([device], True)
-        DEVICES.append(device)
-
+    if not discovery_info:
         return True
+
+    name = discovery_info.get('name')
+    description = discovery_info.get('ssdp_description')
+    _LOGGER.info("Openhome device found: %s", name)
+    device = Device(description)
+
+    # if device has already been discovered
+    if device.Uuid() in [x.unique_id for x in DEVICES]:
+        return True
+
+    device = OpenhomeDevice(hass, device)
+
+    add_devices([device], True)
+    DEVICES.append(device)
 
     return True
 
@@ -151,7 +152,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     @property

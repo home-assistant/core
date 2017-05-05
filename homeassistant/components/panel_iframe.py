@@ -1,4 +1,9 @@
-"""Add an iframe panel to Home Assistant."""
+"""
+Register an iFrame front end panel.
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/panel_iframe/
+"""
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -22,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup iframe frontend panels."""
+    """Set up the iFrame frontend panels."""
     for url_path, info in config[DOMAIN].items():
         register_built_in_panel(
             hass, 'iframe', info.get(CONF_TITLE), info.get(CONF_ICON),

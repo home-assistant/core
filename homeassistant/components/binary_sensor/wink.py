@@ -16,23 +16,23 @@ DEPENDENCIES = ['wink']
 
 # These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
-    "opened": "opening",
-    "brightness": "light",
-    "vibration": "vibration",
-    "loudness": "sound",
-    "noise": "sound",
-    "capturing_audio": "sound",
-    "liquid_detected": "moisture",
-    "motion": "motion",
-    "presence": "occupancy",
-    "co_detected": "gas",
-    "smoke_detected": "smoke",
-    "capturing_video": None
+    'opened': 'opening',
+    'brightness': 'light',
+    'vibration': 'vibration',
+    'loudness': 'sound',
+    'noise': 'sound',
+    'capturing_audio': 'sound',
+    'liquid_detected': 'moisture',
+    'motion': 'motion',
+    'presence': 'occupancy',
+    'co_detected': 'gas',
+    'smoke_detected': 'smoke',
+    'capturing_video': None
 }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink binary sensor platform."""
+    """Set up the Wink binary sensor platform."""
     import pywink
 
     for sensor in pywink.get_sensors():
@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if camera_sensor.capability() in SENSOR_TYPES:
                     add_devices([WinkBinarySensorDevice(camera_sensor, hass)])
             except AttributeError:
-                _LOGGER.info("Device isn't a sensor, skipping.")
+                _LOGGER.info("Device isn't a sensor, skipping")
 
 
 class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):

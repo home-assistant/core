@@ -87,5 +87,5 @@ class APICount(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement."""
+        """Return the unit of measurement."""
         return "clients"

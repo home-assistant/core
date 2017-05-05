@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         CoinMarketCapData(currency).update()
     except HTTPError:
-        _LOGGER.warning("Currency '%s' is not available. Using 'bitcoin'",
+        _LOGGER.warning("Currency %s is not available. Using bitcoin",
                         currency)
         currency = DEFAULT_CURRENCY
 

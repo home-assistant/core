@@ -5,17 +5,21 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/wink/
 """
 import logging
+import time
+import json
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.helpers import discovery
+from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-wink==1.2.3', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.2.4', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +36,9 @@ CONF_APPSPOT = 'appspot'
 CONF_DEFINED_BOTH_MSG = 'Remove access token to use oath2.'
 CONF_MISSING_OATH_MSG = 'Missing oath2 credentials.'
 CONF_TOKEN_URL = "https://winkbearertoken.appspot.com/token"
+
+SERVICE_ADD_NEW_DEVICES = 'add_new_devices'
+SERVICE_REFRESH_STATES = 'refresh_state_from_wink'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -65,6 +72,10 @@ def setup(hass, config):
     import requests
     from pubnubsubhandler import PubNubSubscriptionHandler
 
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN]['entities'] = []
+    hass.data[DOMAIN]['unique_ids'] = []
+
     user_agent = config[DOMAIN].get(CONF_USER_AGENT)
 
     if user_agent:
@@ -73,18 +84,10 @@ def setup(hass, config):
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
     client_id = config[DOMAIN].get('client_id')
 
-    if access_token:
-        pywink.set_bearer_token(access_token)
-    elif client_id:
-        email = config[DOMAIN][CONF_EMAIL]
-        password = config[DOMAIN][CONF_PASSWORD]
-        client_id = config[DOMAIN]['client_id']
-        client_secret = config[DOMAIN]['client_secret']
-        pywink.set_wink_credentials(email, password, client_id,
-                                    client_secret)
-    else:
-        email = config[DOMAIN][CONF_EMAIL]
-        password = config[DOMAIN][CONF_PASSWORD]
+    def _get_wink_token_from_web():
+        email = hass.data[DOMAIN]["oath"]["email"]
+        password = hass.data[DOMAIN]["oath"]["password"]
+
         payload = {'username': email, 'password': password}
         token_response = requests.post(CONF_TOKEN_URL, data=payload)
         try:
@@ -94,12 +97,49 @@ def setup(hass, config):
             return False
         pywink.set_bearer_token(token)
 
-    hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['entities'] = []
-    hass.data[DOMAIN]['unique_ids'] = []
+    if access_token:
+        pywink.set_bearer_token(access_token)
+    elif client_id:
+        email = config[DOMAIN][CONF_EMAIL]
+        password = config[DOMAIN][CONF_PASSWORD]
+        client_id = config[DOMAIN]['client_id']
+        client_secret = config[DOMAIN]['client_secret']
+        pywink.set_wink_credentials(email, password, client_id, client_secret)
+        hass.data[DOMAIN]['oath'] = {"email": email,
+                                     "password": password,
+                                     "client_id": client_id,
+                                     "client_secret": client_secret}
+    else:
+        email = config[DOMAIN][CONF_EMAIL]
+        password = config[DOMAIN][CONF_PASSWORD]
+        hass.data[DOMAIN]['oath'] = {"email": email, "password": password}
+        _get_wink_token_from_web()
+
     hass.data[DOMAIN]['pubnub'] = PubNubSubscriptionHandler(
-        pywink.get_subscription_key(),
-        pywink.wink_api_fetch)
+        pywink.get_subscription_key())
+
+    def keep_alive_call(event_time):
+        """Call the Wink API endpoints to keep PubNub working."""
+        _LOGGER.info("Getting a new Wink token.")
+        if hass.data[DOMAIN]["oath"].get("client_id") is not None:
+            _email = hass.data[DOMAIN]["oath"]["email"]
+            _password = hass.data[DOMAIN]["oath"]["password"]
+            _client_id = hass.data[DOMAIN]["oath"]["client_id"]
+            _client_secret = hass.data[DOMAIN]["oath"]["client_secret"]
+            pywink.set_wink_credentials(_email, _password, _client_id,
+                                        _client_secret)
+        else:
+            _LOGGER.info("Getting a new Wink token.")
+            _get_wink_token_from_web()
+        time.sleep(1)
+        _LOGGER.info("Polling the Wink API to keep PubNub updates flowing.")
+        _LOGGER.debug(str(json.dumps(pywink.wink_api_fetch())))
+        time.sleep(1)
+        _LOGGER.debug(str(json.dumps(pywink.get_user())))
+
+    # Call the Wink API every hour to keep PubNub updates flowing
+    if access_token is None:
+        track_time_interval(hass, keep_alive_call, timedelta(minutes=120))
 
     def start_subscription(event):
         """Start the pubnub subscription."""
@@ -115,15 +155,17 @@ def setup(hass, config):
         """Force all devices to poll the Wink API."""
         _LOGGER.info("Refreshing Wink states from API")
         for entity in hass.data[DOMAIN]['entities']:
+            # Throttle the calls to Wink API
+            time.sleep(1)
             entity.schedule_update_ha_state(True)
-    hass.services.register(DOMAIN, 'Refresh state from Wink', force_update)
+    hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update)
 
     def pull_new_devices(call):
         """Pull new devices added to users Wink account since startup."""
-        _LOGGER.info("Getting new devices from Wink API.")
+        _LOGGER.info("Getting new devices from Wink API")
         for component in WINK_COMPONENTS:
             discovery.load_platform(hass, component, DOMAIN, {}, config)
-    hass.services.register(DOMAIN, 'Add new devices', pull_new_devices)
+    hass.services.register(DOMAIN, SERVICE_ADD_NEW_DEVICES, pull_new_devices)
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
@@ -166,7 +208,7 @@ class WinkDevice(Entity):
 
     @property
     def available(self):
-        """True if connection == True."""
+        """Return true if connection == True."""
         return self.wink.available()
 
     def update(self):

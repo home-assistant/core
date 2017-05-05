@@ -57,20 +57,21 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         body_off.hass = hass
     timeout = config.get(CONF_TIMEOUT)
 
-    req = None
     try:
         with async_timeout.timeout(timeout, loop=hass.loop):
             req = yield from websession.get(resource)
+
+        if req.status >= 400:
+            _LOGGER.error("Got non-ok response from resource: %s", req.status)
+            return False
+
     except (TypeError, ValueError):
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")
         return False
-    except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
         return False
-    finally:
-        if req is not None:
-            yield from req.release()
 
     async_add_devices(
         [RestSwitch(hass, name, resource, body_on, body_off,
@@ -94,7 +95,7 @@ class RestSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     @property
@@ -108,17 +109,13 @@ class RestSwitch(SwitchDevice):
         body_on_t = self._body_on.async_render()
         websession = async_get_clientsession(self.hass)
 
-        request = None
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.post(
                     self._resource, data=bytes(body_on_t, 'utf-8'))
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn on %s", self._resource)
             return
-        finally:
-            if request is not None:
-                yield from request.release()
 
         if request.status == 200:
             self._state = True
@@ -132,17 +129,13 @@ class RestSwitch(SwitchDevice):
         body_off_t = self._body_off.async_render()
         websession = async_get_clientsession(self.hass)
 
-        request = None
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.post(
                     self._resource, data=bytes(body_off_t, 'utf-8'))
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error while turn off %s", self._resource)
             return
-        finally:
-            if request is not None:
-                yield from request.release()
 
         if request.status == 200:
             self._state = False
@@ -155,17 +148,13 @@ class RestSwitch(SwitchDevice):
         """Get the latest data from REST API and update the state."""
         websession = async_get_clientsession(self.hass)
 
-        request = None
         try:
             with async_timeout.timeout(self._timeout, loop=self.hass.loop):
                 request = yield from websession.get(self._resource)
                 text = yield from request.text()
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.exception("Error while fetch data.")
             return
-        finally:
-            if request is not None:
-                yield from request.release()
 
         if self._is_on_template is not None:
             text = self._is_on_template.async_render_with_possible_json_value(

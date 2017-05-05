@@ -1,4 +1,4 @@
-"""Starts home assistant."""
+"""Start Home Assistant."""
 from __future__ import print_function
 
 import argparse
@@ -18,6 +18,17 @@ from homeassistant.const import (
     RESTART_EXIT_CODE,
 )
 from homeassistant.util.async import run_callback_threadsafe
+
+
+def attempt_use_uvloop():
+    """Attempt to use uvloop."""
+    import asyncio
+
+    try:
+        import uvloop
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+    except ImportError:
+        pass
 
 
 def monkey_patch_asyncio():
@@ -266,7 +277,7 @@ def cmdline() -> List[str]:
 
 def setup_and_run_hass(config_dir: str,
                        args: argparse.Namespace) -> Optional[int]:
-    """Setup HASS and run."""
+    """Set up HASS and run."""
     from homeassistant import bootstrap
 
     # Run a simple daemon runner process on Windows to handle restarts
@@ -311,8 +322,7 @@ def setup_and_run_hass(config_dir: str,
             EVENT_HOMEASSISTANT_START, open_browser
         )
 
-    hass.start()
-    return hass.exit_code
+    return hass.start()
 
 
 def try_to_restart() -> None:
@@ -359,10 +369,12 @@ def try_to_restart() -> None:
 
 def main() -> int:
     """Start Home Assistant."""
+    validate_python()
+
+    attempt_use_uvloop()
+
     if sys.version_info[:3] < (3, 5, 3):
         monkey_patch_asyncio()
-
-    validate_python()
 
     args = get_arguments()
 

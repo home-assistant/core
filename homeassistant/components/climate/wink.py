@@ -30,7 +30,7 @@ ATTR_OCCUPIED = "occupied"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink thermostat."""
+    """Set up the Wink thermostat."""
     import pywink
     temp_unit = hass.config.units.temperature_unit
     for climate in pywink.get_thermostats():
@@ -449,7 +449,7 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return a list of available fan modes."""
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def set_fan_mode(self, mode):

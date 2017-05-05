@@ -29,8 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_PORT = 9000
 TIMEOUT = 10
 
-KNOWN_DEVICES = []
-
 SUPPORT_SQUEEZEBOX = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_SEEK | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
@@ -46,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the squeezebox platform."""
+    """Set up the squeezebox platform."""
     import socket
 
     username = config.get(CONF_USERNAME)
@@ -67,22 +65,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     try:
         ipaddr = socket.gethostbyname(host)
     except (OSError) as error:
-        _LOGGER.error("Could not communicate with %s:%d: %s",
-                      host, port, error)
+        _LOGGER.error(
+            "Could not communicate with %s:%d: %s", host, port, error)
         return False
-
-    # Combine it with port to allow multiple servers at the same host
-    key = "{}:{}".format(ipaddr, port)
-
-    # Only add a media server once
-    if key in KNOWN_DEVICES:
-        return False
-    KNOWN_DEVICES.append(key)
 
     _LOGGER.debug("Creating LMS object for %s", ipaddr)
     lms = LogitechMediaServer(hass, host, port, username, password)
-    if lms is False:
-        return False
 
     players = yield from lms.create_players()
     async_add_devices(players)
@@ -117,7 +105,6 @@ class LogitechMediaServer(object):
     @asyncio.coroutine
     def async_query(self, *command, player=""):
         """Abstract out the JSON-RPC connection."""
-        response = None
         auth = None if self._username is None else aiohttp.BasicAuth(
             self._username, self._password)
         url = "http://{}:{}/jsonrpc.js".format(
@@ -138,22 +125,17 @@ class LogitechMediaServer(object):
                     data=data,
                     auth=auth)
 
-                if response.status == 200:
-                    data = yield from response.json()
-                else:
+                if response.status != 200:
                     _LOGGER.error(
                         "Query failed, response code: %s Full message: %s",
                         response.status, response)
                     return False
 
-        except (asyncio.TimeoutError,
-                aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError) as error:
+                data = yield from response.json()
+
+        except (asyncio.TimeoutError, aiohttp.ClientError) as error:
             _LOGGER.error("Failed communicating with LMS: %s", type(error))
             return False
-        finally:
-            if response is not None:
-                yield from response.release()
 
         try:
             return data['result']
@@ -178,6 +160,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._id
 
     @property
     def state(self):

@@ -26,7 +26,6 @@ DEFAULT_PORT = 443
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-# Each sensor is defined as follows: 'Descriptive name', 'python-ilo function'
 SENSOR_TYPES = {
     'server_name': ['Server Name', 'get_server_name'],
     'server_fqdn': ['Server FQDN', 'get_server_fqdn'],
@@ -74,9 +73,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # Initialize and add all of the sensors.
     devices = []
     for ilo_type in monitored_variables:
-        new_device = HpIloSensor(hp_ilo_data=hp_ilo_data,
-                                 sensor_type=SENSOR_TYPES.get(ilo_type),
-                                 client_name=name)
+        new_device = HpIloSensor(
+            hp_ilo_data=hp_ilo_data, sensor_type=SENSOR_TYPES.get(ilo_type),
+            client_name=name)
         devices.append(new_device)
 
     add_devices(devices)
@@ -161,10 +160,9 @@ class HpIloData(object):
         import hpilo
 
         try:
-            self.data = hpilo.Ilo(hostname=self._host,
-                                  login=self._login,
-                                  password=self._password,
-                                  port=self._port)
+            self.data = hpilo.Ilo(
+                hostname=self._host, login=self._login,
+                password=self._password, port=self._port)
         except (hpilo.IloError, hpilo.IloCommunicationError,
                 hpilo.IloLoginFailed) as error:
             raise ValueError("Unable to init HP ILO, %s", error)

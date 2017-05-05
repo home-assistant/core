@@ -3,6 +3,7 @@
 import os
 import unittest
 import unittest.mock as mock
+from collections import OrderedDict
 
 import pytest
 from voluptuous import MultipleInvalid
@@ -204,6 +205,12 @@ class TestConfig(unittest.TestCase):
                 },
             },
         })
+
+    def test_customize_glob_is_ordered(self):
+        """Test that customize_glob preserves order."""
+        conf = config_util.CORE_CONFIG_SCHEMA(
+            {'customize_glob': OrderedDict()})
+        self.assertIsInstance(conf['customize_glob'], OrderedDict)
 
     def _compute_state(self, config):
         run_coroutine_threadsafe(
@@ -502,7 +509,7 @@ def test_merge_once_only(merge_log_err):
         'mqtt': {}, 'api': {}
     }
     config_util.merge_packages_config(config, packages)
-    assert merge_log_err.call_count == 2
+    assert merge_log_err.call_count == 1
     assert len(config) == 3
 
 
@@ -514,7 +521,7 @@ def test_merge_id_schema(hass):
         'script': 'dict',
         'input_boolean': 'dict',
         'shell_command': 'dict',
-        'qwikswitch': '',
+        'qwikswitch': 'dict',
     }
     for name, expected_type in types.items():
         module = config_util.get_component(name)

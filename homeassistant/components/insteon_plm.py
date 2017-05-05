@@ -40,7 +40,7 @@ PLM_PLATFORMS = {
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up our connection to the PLM."""
+    """Set up the connection to the PLM."""
     import insteonplm
 
     conf = config[DOMAIN]
@@ -49,12 +49,12 @@ def async_setup(hass, config):
 
     @callback
     def async_plm_new_device(device):
-        """New device detected from transport to be delegated to platform."""
+        """Detect device from transport to be delegated to platform."""
         name = device.get('address')
         address = device.get('address_hex')
         capabilities = device.get('capabilities', [])
 
-        _LOGGER.info('New INSTEON PLM device: %s (%s) %r',
+        _LOGGER.info("New INSTEON PLM device: %s (%s) %r",
                      name, address, capabilities)
 
         loadlist = []
@@ -72,7 +72,7 @@ def async_setup(hass, config):
                     hass, loadplatform, DOMAIN, discovered=[device],
                     hass_config=config))
 
-    _LOGGER.info('Looking for PLM on %s', port)
+    _LOGGER.info("Looking for PLM on %s", port)
     plm = yield from insteonplm.Connection.create(device=port, loop=hass.loop)
 
     for device in overrides:

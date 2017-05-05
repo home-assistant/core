@@ -59,7 +59,7 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
 
     @callback
     def state_change_listener(event):
-        """The listener that listens for specific state changes."""
+        """Handle specific state changes."""
         if entity_ids != MATCH_ALL and \
            event.data.get('entity_id') not in entity_ids:
             return
@@ -175,7 +175,7 @@ def async_track_time_interval(hass, action, interval):
 
     @callback
     def interval_listener(now):
-        """Called when when the interval has elapsed."""
+        """Handle elaspsed intervals."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, interval_listener, next_interval())
@@ -212,7 +212,7 @@ def async_track_sunrise(hass, action, offset=None):
 
     @callback
     def sunrise_automation_listener(now):
-        """Called when it's time for action."""
+        """Handle points in time to execute actions."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, sunrise_automation_listener, next_rise())
@@ -249,7 +249,7 @@ def async_track_sunset(hass, action, offset=None):
 
     @callback
     def sunset_automation_listener(now):
-        """Called when it's time for action."""
+        """Handle points in time to execute actions."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, sunset_automation_listener, next_set())

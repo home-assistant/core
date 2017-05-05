@@ -30,13 +30,11 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
-DEFAULT_CONFIG = {CONF_INITIAL: DEFAULT_INITIAL}
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.Any({
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_INITIAL, default=DEFAULT_INITIAL): cv.boolean,
+            vol.Optional(CONF_INITIAL): cv.boolean,
             vol.Optional(CONF_ICON): cv.icon,
         }, None)
     })
@@ -65,20 +63,20 @@ def toggle(hass, entity_id):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up input boolean."""
+    """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
 
     for object_id, cfg in config[DOMAIN].items():
         if not cfg:
-            cfg = DEFAULT_CONFIG
+            cfg = {}
 
         name = cfg.get(CONF_NAME)
-        state = cfg.get(CONF_INITIAL)
+        initial = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
 
-        entities.append(InputBoolean(object_id, name, state, icon))
+        entities.append(InputBoolean(object_id, name, initial, icon))
 
     if not entities:
         return False
@@ -113,11 +111,11 @@ def async_setup(hass, config):
 class InputBoolean(ToggleEntity):
     """Representation of a boolean input."""
 
-    def __init__(self, object_id, name, state, icon):
+    def __init__(self, object_id, name, initial, icon):
         """Initialize a boolean input."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
-        self._state = state
+        self._state = initial
         self._icon = icon
 
     @property
@@ -142,11 +140,13 @@ class InputBoolean(ToggleEntity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity about to be added to hass."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if not state:
+        """Call when entity about to be added to hass."""
+        # If not None, we got an initial value.
+        if self._state is not None:
             return
-        self._state = state.state == STATE_ON
+
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        self._state = state and state.state == STATE_ON
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):

@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _threaded_factory(async_factory):
-    """Helper method to create threaded versions of async factories."""
+    """Create threaded versions of async factories."""
     @ft.wraps(async_factory)
     def factory(config, config_validation=True):
         """Threaded factory."""
@@ -90,7 +90,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
                 if not check(hass, variables):
                     return False
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning('Error during and-condition: %s', ex)
+            _LOGGER.warning("Error during and-condition: %s", ex)
             return False
 
         return True
@@ -121,7 +121,7 @@ def async_or_from_config(config: ConfigType, config_validation: bool=True):
                 if check(hass, variables):
                     return True
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning('Error during or-condition: %s', ex)
+            _LOGGER.warning("Error during or-condition: %s", ex)
 
         return False
 
@@ -285,7 +285,7 @@ def async_template(hass, value_template, variables=None):
     try:
         value = value_template.async_render(variables)
     except TemplateError as ex:
-        _LOGGER.error('Error during template condition: %s', ex)
+        _LOGGER.error("Error during template condition: %s", ex)
         return False
 
     return value.lower() == 'true'
