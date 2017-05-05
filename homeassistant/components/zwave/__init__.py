@@ -697,7 +697,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         """Retrieve usercodes of node."""
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        node = network.nodes.get[int(node_id)]
+        node = network.nodes.get(int(node_id))
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         usercodes = {}
