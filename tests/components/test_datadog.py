@@ -38,16 +38,17 @@ class TestDatadog(unittest.TestCase):
     @mock.patch('datadog.initialize')
     def test_datadog_setup_full(self, mock_connection):
         """Test setup with all data."""
-        config = {
-            'datadog': {
+        self.hass.bus.listen = mock.MagicMock()
+
+        assert setup_component(self.hass, datadog.DOMAIN, {
+            datadog.DOMAIN: {
                 'host': 'host',
                 'port': 123,
                 'rate': 1,
                 'prefix': 'foo',
             }
-        }
-        self.hass.bus.listen = mock.MagicMock()
-        self.assertTrue(setup_component(self.hass, datadog.DOMAIN, config))
+        })
+
         self.assertEqual(mock_connection.call_count, 1)
         self.assertEqual(
             mock_connection.call_args,
@@ -63,17 +64,16 @@ class TestDatadog(unittest.TestCase):
     @mock.patch('datadog.initialize')
     def test_datadog_setup_defaults(self, mock_connection):
         """Test setup with defaults."""
-        config = {
-            'datadog': {
-                'host': 'host',
-            }
-        }
-
-        config['datadog'][datadog.CONF_PORT] = datadog.DEFAULT_PORT
-        config['datadog'][datadog.CONF_PREFIX] = datadog.DEFAULT_PREFIX
-
         self.hass.bus.listen = mock.MagicMock()
-        self.assertTrue(setup_component(self.hass, datadog.DOMAIN, config))
+
+        assert setup_component(self.hass, datadog.DOMAIN, {
+            datadog.DOMAIN: {
+                'host': 'host',
+                'port': datadog.DEFAULT_PORT,
+                'prefix': datadog.DEFAULT_PREFIX,
+            }
+        })
+
         self.assertEqual(mock_connection.call_count, 1)
         self.assertEqual(
             mock_connection.call_args,
@@ -84,16 +84,15 @@ class TestDatadog(unittest.TestCase):
     @mock.patch('datadog.statsd')
     def test_logbook_entry(self, mock_client):
         """Test event listener."""
-        config = {
-            'datadog': {
-                'host': 'host'
-            }
-        }
-
-        config['datadog'][datadog.CONF_RATE] = datadog.DEFAULT_RATE
-
         self.hass.bus.listen = mock.MagicMock()
-        setup_component(self.hass, datadog.DOMAIN, config)
+
+        assert setup_component(self.hass, datadog.DOMAIN, {
+            datadog.DOMAIN: {
+                'host': 'host',
+                'rate': datadog.DEFAULT_RATE,
+            }
+        })
+
         self.assertTrue(self.hass.bus.listen.called)
         handler_method = self.hass.bus.listen.call_args_list[0][0][1]
 
@@ -123,17 +122,16 @@ class TestDatadog(unittest.TestCase):
     @mock.patch('datadog.statsd')
     def test_state_changed(self, mock_client):
         """Test event listener."""
-        config = {
-            'datadog': {
-                'host': 'host',
-                'prefix': 'ha'
-            }
-        }
-
-        config['datadog'][datadog.CONF_RATE] = datadog.DEFAULT_RATE
-
         self.hass.bus.listen = mock.MagicMock()
-        setup_component(self.hass, datadog.DOMAIN, config)
+
+        assert setup_component(self.hass, datadog.DOMAIN, {
+            datadog.DOMAIN: {
+                'host': 'host',
+                'prefix': 'ha',
+                'rate': datadog.DEFAULT_RATE,
+            }
+        })
+
         self.assertTrue(self.hass.bus.listen.called)
         handler_method = self.hass.bus.listen.call_args_list[1][0][1]
 
