@@ -1,4 +1,8 @@
 sudo: false
+addons:
+  apt:
+    packages:
+      - libudev-dev
 matrix:
   fast_finish: true
   include:
