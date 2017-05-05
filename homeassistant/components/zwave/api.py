@@ -20,6 +20,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
     @ha.callback
     def get(self, request, node_id):
         """Retrieve groups of node."""
+        # pylint: disable=import-error
         from openzwave.group import ZWaveGroup
 
         hass = request.app['hass']
