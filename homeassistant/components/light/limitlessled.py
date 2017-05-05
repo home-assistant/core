@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional(CONF_VERSION,
                          default=DEFAULT_VERSION): cv.positive_int,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Required(CONF_GROUPS):  vol.All(cv.ensure_list, [
+            vol.Required(CONF_GROUPS): vol.All(cv.ensure_list, [
                 {
                     vol.Required(CONF_NAME): cv.string,
                     vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
@@ -81,8 +81,8 @@ def rewrite_legacy(config):
                 if name_key in bridge_conf:
                     groups.append({
                         'number': i,
-                        'type':  bridge_conf.get('group_%d_type' % i,
-                                                 DEFAULT_LED_TYPE),
+                        'type': bridge_conf.get('group_%d_type' % i,
+                                                DEFAULT_LED_TYPE),
                         'name': bridge_conf.get(name_key)
                     })
         new_bridges.append({

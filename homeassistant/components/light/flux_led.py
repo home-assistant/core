@@ -89,7 +89,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
-    vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(CONF_AUTOMATIC_ADD, default=False): cv.boolean,
 })
 
 

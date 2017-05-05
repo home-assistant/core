@@ -140,9 +140,9 @@ class AuroraData(object):
         ]
 
         # convert lat and long for data points in table
-        converted_latitude = round((self.latitude / 180)
-                                   * self.number_of_latitude_intervals)
-        converted_longitude = round((self.longitude / 360)
-                                    * self.number_of_longitude_intervals)
+        converted_latitude = round((self.latitude / 180) *
+                                   self.number_of_latitude_intervals)
+        converted_longitude = round((self.longitude / 360) *
+                                    self.number_of_longitude_intervals)
 
         return forecast_table[converted_latitude][converted_longitude]

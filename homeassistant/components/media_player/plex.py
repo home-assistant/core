@@ -165,8 +165,8 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         # add devices with a session and no client (ex. PlexConnect Apple TV's)
         if config.get(CONF_INCLUDE_NON_CLIENTS):
             for machine_identifier, session in plex_sessions.items():
-                if (machine_identifier not in plex_clients
-                        and machine_identifier is not None):
+                if (machine_identifier not in plex_clients and
+                        machine_identifier is not None):
                     new_client = PlexClient(config, None, session,
                                             plex_sessions, update_devices,
                                             update_sessions)
@@ -440,8 +440,8 @@ class PlexClient(MediaPlayerDevice):
             self._media_artist = None
 
         # set app name to library name
-        if (self._session is not None
-                and self._session.librarySectionID is not None):
+        if (self._session is not None and
+                self._session.librarySectionID is not None):
             self._app_name = self._convert_na_to_none(
                 self._session.server.library.sectionByID(
                     self._session.librarySectionID).title)
@@ -451,8 +451,8 @@ class PlexClient(MediaPlayerDevice):
         # media image url
         if self._session is not None:
             thumb_url = self._get_thumbnail_url(self._session.thumb)
-            if (self.media_content_type is MEDIA_TYPE_TVSHOW
-                    and not self.config.get(CONF_USE_EPISODE_ART)):
+            if (self.media_content_type is MEDIA_TYPE_TVSHOW and
+                    not self.config.get(CONF_USE_EPISODE_ART)):
                 thumb_url = self._get_thumbnail_url(
                     self._session.grandparentThumb)
 

@@ -261,8 +261,8 @@ class Recorder(threading.Thread):
                 # Included domains only (excluded entities above) OR
                 # Include entities only, but only if no excludes
                 if (self.include_d and domain not in self.include_d) or \
-                        (self.include_e and entity_id not in self.include_e
-                         and not self.exclude):
+                        (self.include_e and entity_id not in self.include_e and
+                         not self.exclude):
                     self.queue.task_done()
                     continue
 

@@ -323,9 +323,9 @@ class YeelightLight(Light):
             return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
-                                                 or colortemp
-                                                 or rgb):
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness or
+                                                 colortemp or
+                                                 rgb):
             try:
                 self.set_default()
             except yeelight.BulbException as ex:

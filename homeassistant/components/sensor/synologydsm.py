@@ -147,7 +147,7 @@ class SynoApi():
                                     port,
                                     username,
                                     password)
-        except:
+        except BaseException:
             _LOGGER.error("Error setting up Synology DSM")
 
         # Will be updated when `update` gets called.

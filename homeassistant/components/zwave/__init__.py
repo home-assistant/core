@@ -186,8 +186,8 @@ def get_config_value(node, value_index, tries=5):
     """Return the current configuration value for a specific index."""
     try:
         for value in node.values.values():
-            if (value.command_class == const.COMMAND_CLASS_CONFIGURATION
-                    and value.index == value_index):
+            if (value.command_class == const.COMMAND_CLASS_CONFIGURATION and
+                    value.index == value_index):
                 return value.data
     except RuntimeError:
         # If we get an runtime error the dict has changed while

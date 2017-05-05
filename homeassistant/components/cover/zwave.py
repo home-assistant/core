@@ -24,8 +24,8 @@ def get_device(hass, values, node_config, **kwargs):
     """Create Z-Wave entity device."""
     invert_buttons = node_config.get(zwave.CONF_INVERT_OPENCLOSE_BUTTONS)
     if (values.primary.command_class ==
-            zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL
-            and values.primary.index == 0):
+            zwave.const.COMMAND_CLASS_SWITCH_MULTILEVEL and
+            values.primary.index == 0):
         return ZwaveRollershutter(hass, values, invert_buttons)
     elif (values.primary.command_class in [
             zwave.const.COMMAND_CLASS_SWITCH_BINARY,
