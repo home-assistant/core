@@ -116,7 +116,7 @@ class BroadlinkData(object):
             vol.Optional('light'): vol.Any(0, 1, 2, 3),
             vol.Optional('air_quality'): vol.Any(0, 1, 2, 3),
             vol.Optional('noise'): vol.Any(0, 1, 2),
-            })
+        })
         self.update = Throttle(interval)(self._update)
         if not self._auth():
             _LOGGER.warning("Failed to connect to device")
@@ -134,7 +134,7 @@ class BroadlinkData(object):
         except vol.Invalid:
             pass  # Continue quietly if device returned malformed data
         if retry > 0 and self._auth():
-            self._update(retry-1)
+            self._update(retry - 1)
 
     def _auth(self, retry=3):
         try:
@@ -142,5 +142,5 @@ class BroadlinkData(object):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(retry-1)
+            return self._auth(retry - 1)
         return auth

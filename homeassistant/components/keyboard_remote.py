@@ -106,7 +106,7 @@ class KeyboardRemote(threading.Thread):
                 device_names,
                 id_folder,
                 os.listdir(id_folder)
-                )
+            )
 
         threading.Thread.__init__(self)
         self.stopped = threading.Event()

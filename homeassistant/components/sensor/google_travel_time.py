@@ -159,9 +159,9 @@ class GoogleTravelTimeSensor(Entity):
 
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
-            return round(_data['duration_in_traffic']['value']/60)
+            return round(_data['duration_in_traffic']['value'] / 60)
         if 'duration' in _data:
-            return round(_data['duration']['value']/60)
+            return round(_data['duration']['value'] / 60)
         return None
 
     @property

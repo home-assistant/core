@@ -404,7 +404,7 @@ class FitbitSensor(Entity):
         self._state = response[container][-1].get('value')
         if self.resource_type == 'activities/heart':
             self._state = response[container][-1]. \
-                    get('value').get('restingHeartRate')
+                get('value').get('restingHeartRate')
         config_contents = {
             ATTR_ACCESS_TOKEN: self.client.client.token['access_token'],
             ATTR_REFRESH_TOKEN: self.client.client.token['refresh_token'],

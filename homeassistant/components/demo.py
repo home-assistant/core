@@ -155,7 +155,7 @@ def async_setup(hass, config):
                  switches[0]: True,
                  switches[1]: False,
              }},
-            ]}))
+        ]}))
 
     tasks2.append(group.Group.async_create_group(hass, 'living room', [
         lights[1], switches[0], 'input_select.living_room_preset',

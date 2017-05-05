@@ -201,7 +201,7 @@ class SonarrSensor(Entity):
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
                     show['episode']['seasonNumber'],
                     show['episode']['episodeNumber']
-                )] = '{:.2f}%'.format(100*(1-(show['sizeleft']/show['size'])))
+                )] = '{:.2f}%'.format(100 * (1 - (show['sizeleft'] / show['size'])))
         elif self.type == 'wanted':
             for show in self.data:
                 attributes[show['series']['title'] + ' S{:02d}E{:02d}'.format(
@@ -238,7 +238,7 @@ def get_date(zone, offset=0):
     """Get date based on timezone and offset of days."""
     day = 60 * 60 * 24
     return datetime.date(
-        datetime.fromtimestamp(time.time() + day*offset, tz=zone)
+        datetime.fromtimestamp(time.time() + day * offset, tz=zone)
     )
 
 

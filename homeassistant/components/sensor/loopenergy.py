@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         gas_config.get(CONF_GAS_SECRET),
         gas_config.get(CONF_GAS_TYPE),
         gas_config.get(CONF_GAS_CALORIFIC)
-        )
+    )
 
     def stop_loopenergy(event):
         """Shutdown loopenergy thread on exit."""

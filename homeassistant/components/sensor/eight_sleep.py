@@ -179,7 +179,7 @@ class EightUserSensor(EightSleepUserEntity):
             if self._units == 'si':
                 self._state = round(temp, 2)
             else:
-                self._state = round((temp*1.8)+32, 2)
+                self._state = round((temp * 1.8) + 32, 2)
         elif 'sleep_stage' in self._sensor:
             self._state = self._usrobj.current_values['stage']
 
@@ -206,8 +206,8 @@ class EightUserSensor(EightSleepUserEntity):
             room_temp = round(self._attr['room_temp'], 2)
             bed_temp = round(self._attr['bed_temp'], 2)
         else:
-            room_temp = round((self._attr['room_temp']*1.8)+32, 2)
-            bed_temp = round((self._attr['bed_temp']*1.8)+32, 2)
+            room_temp = round((self._attr['room_temp'] * 1.8) + 32, 2)
+            bed_temp = round((self._attr['bed_temp'] * 1.8) + 32, 2)
 
         if 'current' in self._sensor_root:
             state_attr[ATTR_RESP_RATE] = round(self._attr['resp_rate'], 2)
@@ -257,7 +257,7 @@ class EightRoomSensor(EightSleepUserEntity):
         if self._units == 'si':
             self._state = round(temp, 2)
         else:
-            self._state = round((temp*1.8)+32, 2)
+            self._state = round((temp * 1.8) + 32, 2)
 
     @property
     def unit_of_measurement(self):

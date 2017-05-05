@@ -125,5 +125,5 @@ class ActiontecDeviceScanner(DeviceScanner):
                     'ip': match.group('ip'),
                     'mac': match.group('mac').upper(),
                     'timevalid': int(match.group('timevalid'))
-                    }
+                }
         return devices

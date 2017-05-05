@@ -95,7 +95,7 @@ def calc_mean(sensor_values, round_digits):
             count += 1
     if count == 0:
         return STATE_UNKNOWN
-    return round(val/count, round_digits)
+    return round(val / count, round_digits)
 
 
 class MinMaxSensor(Entity):

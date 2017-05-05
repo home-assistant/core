@@ -154,7 +154,7 @@ class StoredData(object):
                     self._data = pickle.load(myfile) or {}
                     self._cache_outdated = False
             # pylint: disable=bare-except
-            except:
+            except BaseException:
                 _LOGGER.error("Error loading data from pickled file %s",
                               self._data_file)
 
@@ -173,7 +173,7 @@ class StoredData(object):
             try:
                 pickle.dump(self._data, myfile)
             # pylint: disable=bare-except
-            except:
+            except BaseException:
                 _LOGGER.error(
                     "Error saving pickled data to %s", self._data_file)
         self._cache_outdated = True

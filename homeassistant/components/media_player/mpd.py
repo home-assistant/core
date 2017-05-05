@@ -178,7 +178,7 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume level."""
-        return int(self.status['volume'])/100
+        return int(self.status['volume']) / 100
 
     @property
     def supported_features(self):

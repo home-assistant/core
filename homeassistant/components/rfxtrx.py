@@ -111,7 +111,7 @@ DEVICE_SCHEMA_SENSOR = vol.Schema({
 DEFAULT_SCHEMA = vol.Schema({
     vol.Required("platform"): DOMAIN,
     vol.Optional(CONF_DEVICES, default={}): vol.All(dict, _valid_light_switch),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(ATTR_AUTOMATIC_ADD, default=False): cv.boolean,
     vol.Optional(CONF_SIGNAL_REPETITIONS, default=DEFAULT_SIGNAL_REPETITIONS):
         vol.Coerce(int),
 })

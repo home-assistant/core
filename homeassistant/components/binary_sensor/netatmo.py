@@ -173,15 +173,15 @@ class NetatmoBinarySensor(BinarySensorDevice):
             if self._sensor_name == "Someone known":
                 self._state =\
                     self._data.camera_data.someoneKnownSeen(
-                        self._home, self._camera_name, self._timeout*60)
+                        self._home, self._camera_name, self._timeout * 60)
             elif self._sensor_name == "Someone unknown":
                 self._state =\
                     self._data.camera_data.someoneUnknownSeen(
-                        self._home, self._camera_name, self._timeout*60)
+                        self._home, self._camera_name, self._timeout * 60)
             elif self._sensor_name == "Motion":
                 self._state =\
                     self._data.camera_data.motionDetected(
-                        self._home, self._camera_name, self._timeout*60)
+                        self._home, self._camera_name, self._timeout * 60)
         elif self._cameratype == 'NOC':
             if self._sensor_name == "Outdoor motion":
                 self._state =\
@@ -203,7 +203,7 @@ class NetatmoBinarySensor(BinarySensorDevice):
             self._state =\
                 self._data.camera_data.moduleMotionDetected(
                     self._home, self._module_name, self._camera_name,
-                    self._timeout*60)
+                    self._timeout * 60)
         elif self._sensor_name == "Tag Open":
             self._state =\
                 self._data.camera_data.moduleOpened(

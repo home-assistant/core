@@ -7,7 +7,7 @@ DEFAULT_VALUES_SCHEMA = {
                                    const.COMMAND_CLASS_METER],
         const.DISC_LABEL: ['Power'],
         const.DISC_OPTIONAL: True,
-        },
+    },
 }
 
 DISCOVERY_SCHEMAS = [

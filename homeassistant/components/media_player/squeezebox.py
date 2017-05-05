@@ -113,7 +113,7 @@ class LogitechMediaServer(object):
             "id": "1",
             "method": "slim.request",
             "params": [player, command]
-            })
+        })
 
         _LOGGER.debug("URL: %s Data: %s", url, data)
 
@@ -319,7 +319,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        volume_percent = str(int(volume*100))
+        volume_percent = str(int(volume * 100))
         return self.async_query('mixer', 'volume', volume_percent)
 
     def async_mute_volume(self, mute):

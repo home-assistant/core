@@ -134,7 +134,7 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool=True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     """Ensure a config file exists in given configuration directory.
 
     Creating a default one if needed.

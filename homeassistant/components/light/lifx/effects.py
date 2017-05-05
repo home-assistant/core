@@ -239,7 +239,7 @@ class LIFXEffectBreathe(LIFXEffect):
 
         # Default color is to fully (de)saturate with full brightness
         if not color_changed:
-            if hsbk[1] > 65536/2:
+            if hsbk[1] > 65536 / 2:
                 hsbk = [hsbk[0], 0, 65535, 4000]
             else:
                 hsbk = [hsbk[0], 65535, 65535, hsbk[3]]
@@ -248,7 +248,7 @@ class LIFXEffectBreathe(LIFXEffect):
         args = {
             'transient': 1,
             'color': hsbk,
-            'period': int(period*1000),
+            'period': int(period * 1000),
             'cycles': cycles,
             'duty_cycle': 0,
             'waveform': self.waveform,
@@ -256,7 +256,7 @@ class LIFXEffectBreathe(LIFXEffect):
         light.device.set_waveform(args)
 
         # Wait for completion and restore the initial state
-        yield from asyncio.sleep(period*cycles)
+        yield from asyncio.sleep(period * cycles)
         yield from self.async_restore(light)
 
     def from_poweroff_hsbk(self, light, **kwargs):
@@ -295,25 +295,25 @@ class LIFXEffectColorloop(LIFXEffect):
         hue = random.randint(0, 359)
 
         while self.lights:
-            hue = (hue + direction*change) % 360
+            hue = (hue + direction * change) % 360
 
             random.shuffle(self.lights)
             lhue = hue
 
             for light in self.lights:
                 if ATTR_TRANSITION in kwargs:
-                    transition = int(1000*kwargs[ATTR_TRANSITION])
+                    transition = int(1000 * kwargs[ATTR_TRANSITION])
                 elif light == self.lights[0] or spread > 0:
-                    transition = int(1000 * random.uniform(period/2, period))
+                    transition = int(1000 * random.uniform(period / 2, period))
 
                 if ATTR_BRIGHTNESS in kwargs:
-                    brightness = int(65535/255*kwargs[ATTR_BRIGHTNESS])
+                    brightness = int(65535 / 255 * kwargs[ATTR_BRIGHTNESS])
                 else:
                     brightness = light.effect_data.color[2]
 
                 hsbk = [
-                    int(65535/359*lhue),
-                    int(random.uniform(0.8, 1.0)*65535),
+                    int(65535 / 359 * lhue),
+                    int(random.uniform(0.8, 1.0) * 65535),
                     brightness,
                     NEUTRAL_WHITE,
                 ]
@@ -321,7 +321,7 @@ class LIFXEffectColorloop(LIFXEffect):
 
                 # Adjust the next light so the full spread is used
                 if len(self.lights) > 1:
-                    lhue = (lhue + spread/(len(self.lights)-1)) % 360
+                    lhue = (lhue + spread / (len(self.lights) - 1)) % 360
 
             yield from asyncio.sleep(period)
 

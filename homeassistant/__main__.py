@@ -69,7 +69,7 @@ def monkey_patch_asyncio():
     asyncio.tasks.Task._all_tasks = IgnoreCalls()
     try:
         del asyncio.tasks.Task.__del__
-    except:
+    except BaseException:
         pass
 
 
@@ -271,8 +271,7 @@ def cmdline() -> List[str]:
         os.environ['PYTHONPATH'] = os.path.dirname(modulepath)
         return [sys.executable] + [arg for arg in sys.argv if
                                    arg != '--daemon']
-    else:
-        return [arg for arg in sys.argv if arg != '--daemon']
+    return [arg for arg in sys.argv if arg != '--daemon']
 
 
 def setup_and_run_hass(config_dir: str,

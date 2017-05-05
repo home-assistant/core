@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         yield from hass.loop.run_in_executor(
                             None, broadlink_device.auth)
                     except socket.timeout:
-                        if retry == DEFAULT_RETRY-1:
+                        if retry == DEFAULT_RETRY - 1:
                             _LOGGER.error("Failed to send packet to device")
 
     if switch_type in RM_TYPES:
@@ -207,7 +207,7 @@ class BroadlinkRMSwitch(SwitchDevice):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, retry-1)
+            return self._sendpacket(packet, retry - 1)
         return True
 
     def _auth(self, retry=2):
@@ -216,7 +216,7 @@ class BroadlinkRMSwitch(SwitchDevice):
         except socket.timeout:
             auth = False
         if not auth and retry > 0:
-            return self._auth(retry-1)
+            return self._auth(retry - 1)
         return auth
 
 
@@ -239,7 +239,7 @@ class BroadlinkSP1Switch(BroadlinkRMSwitch):
                 return False
             if not self._auth():
                 return False
-            return self._sendpacket(packet, retry-1)
+            return self._sendpacket(packet, retry - 1)
         return True
 
 
@@ -273,7 +273,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
                 return
             if not self._auth():
                 return
-            return self._update(retry-1)
+            return self._update(retry - 1)
         if state is None and retry > 0:
-            return self._update(retry-1)
+            return self._update(retry - 1)
         self._state = state

@@ -95,7 +95,7 @@ class VasttrafikDepartureSensor(Entity):
             'Track': departure.get('track', None),
             'Direction': departure.get('direction', None),
             'Accessibility': departure.get('accessibility', None)
-            }
+        }
         return {k: v for k, v in params.items() if v}
 
     @property
@@ -118,7 +118,7 @@ class VasttrafikDepartureSensor(Entity):
             self._departureboard = self._planner.departureboard(
                 self._departure['id'],
                 direction=self._heading['id'] if self._heading else None,
-                date=datetime.now()+self._delay)
+                date=datetime.now() + self._delay)
         except self._vasttrafik.Error:
             _LOGGER.warning("Unable to read departure board, updating token")
             self._planner.update_token()

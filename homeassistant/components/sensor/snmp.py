@@ -123,7 +123,7 @@ class SnmpData(object):
                    UdpTransportTarget((self._host, self._port)),
                    ContextData(),
                    ObjectType(ObjectIdentity(self._baseoid)))
-            )
+        )
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)

@@ -263,7 +263,7 @@ class ItunesDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
-        return self.current_volume/100.0
+        return self.current_volume / 100.0
 
     @property
     def media_content_id(self):
@@ -417,7 +417,7 @@ class AirPlayDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume."""
-        return float(self.volume)/100.0
+        return float(self.volume) / 100.0
 
     @property
     def media_content_type(self):

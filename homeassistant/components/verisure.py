@@ -210,12 +210,12 @@ class VerisureHub(object):
         except self._verisure.LoginError as ex:
             _LOGGER.error("Wrong user name or password for Verisure MyPages")
             if self._disable_wrong_password_error:
-                self._reconnect_timeout = time.time() + 60*60
+                self._reconnect_timeout = time.time() + 60 * 60
             else:
                 self._password_retries = self._password_retries - 1
         except self._verisure.MaintenanceError:
             self._disable_wrong_password_error = True
-            self._reconnect_timeout = time.time() + 60*60
+            self._reconnect_timeout = time.time() + 60 * 60
             _LOGGER.error("Verisure MyPages down for maintenance")
         except self._verisure.Error as ex:
             _LOGGER.error("Could not login to Verisure MyPages, %s", ex)

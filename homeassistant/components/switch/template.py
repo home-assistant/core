@@ -61,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             SwitchTemplate(
                 hass, device, friendly_name, state_template, on_action,
                 off_action, entity_ids)
-            )
+        )
     if not switches:
         _LOGGER.error("No switches added")
         return False

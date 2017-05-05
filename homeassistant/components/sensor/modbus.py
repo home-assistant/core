@@ -129,6 +129,6 @@ class ModbusRegisterSensor(Entity):
             val = struct.unpack(">f", byte_string)[0]
         elif self._data_type == DATA_TYPE_INT:
             for i, res in enumerate(result.registers):
-                val += res * (2**(i*16))
+                val += res * (2**(i * 16))
         self._value = format(
             self._scale * val + self._offset, '.{}f'.format(self._precision))

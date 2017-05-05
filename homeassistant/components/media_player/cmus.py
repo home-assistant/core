@@ -146,7 +146,7 @@ class CmusDevice(MediaPlayerDevice):
             volume = float(left + right) / 2
         else:
             volume = left
-        return int(volume)/100
+        return int(volume) / 100
 
     @property
     def supported_features(self):

@@ -77,7 +77,7 @@ SERVICE_EIGHT_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_TARGET_HEAT: VALID_TARGET_HEAT,
     ATTR_HEAT_DURATION: VALID_DURATION,
-    })
+})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

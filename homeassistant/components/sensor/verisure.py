@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             VerisureThermometer(value.id)
             for value in hub.climate_status.values()
             if hasattr(value, 'temperature') and value.temperature
-            ])
+        ])
 
     if int(hub.config.get(CONF_HYDROMETERS, 1)):
         hub.update_climate()
@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             VerisureHygrometer(value.id)
             for value in hub.climate_status.values()
             if hasattr(value, 'humidity') and value.humidity
-            ])
+        ])
 
     if int(hub.config.get(CONF_MOUSE, 1)):
         hub.update_mousedetection()
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for value in hub.mouse_status.values()
             # is this if needed?
             if hasattr(value, 'amountText') and value.amountText
-            ])
+        ])
 
     add_devices(sensors)
 

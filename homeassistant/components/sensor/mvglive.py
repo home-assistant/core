@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
-    )
+)
 
 REQUIREMENTS = ['PyMVGLive==1.1.3']
 

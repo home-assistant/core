@@ -28,7 +28,7 @@ from homeassistant.components.http.ban import process_wrong_login
 DOMAIN = 'websocket_api'
 
 URL = '/api/websocket'
-DEPENDENCIES = 'http',
+DEPENDENCIES = 'http'
 
 ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
@@ -382,10 +382,9 @@ class ActiveConnection:
         if subscription in self.event_listeners:
             self.event_listeners.pop(subscription)()
             return self.send_message(result_message(msg['id']))
-        else:
-            return self.send_message(error_message(
-                msg['id'], ERR_NOT_FOUND,
-                'Subscription not found.'))
+
+        return self.send_message(error_message(msg['id'], ERR_NOT_FOUND,
+                                               'Subscription not found.'))
 
     @asyncio.coroutine
     def handle_call_service(self, msg):

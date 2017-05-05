@@ -311,7 +311,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                             'status': '',
                             'ip': arp_match.group('ip'),
                             'mac': match.group('mac').upper(),
-                            }
+                        }
 
                 # match mac addresses to IP addresses in NVRAM table
                 for nvr in result.nvram:
@@ -330,7 +330,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                             'status': 'IN_NVRAM',
                             'ip': nvram_match.group('ip'),
                             'mac': match.group('mac').upper(),
-                            }
+                        }
 
         else:
             for lease in result.leases:
@@ -353,7 +353,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                     'status': '',
                     'ip': match.group('ip'),
                     'mac': match.group('mac').upper(),
-                    }
+                }
 
         for neighbor in result.neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))

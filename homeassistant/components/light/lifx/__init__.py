@@ -293,7 +293,7 @@ class LIFXLight(Light):
         if when > BULB_LATENCY:
             self.postponed_update = async_track_point_in_utc_time(
                 self.hass, self.update_after_transition,
-                util.dt.utcnow() + timedelta(milliseconds=when+BULB_LATENCY))
+                util.dt.utcnow() + timedelta(milliseconds=when + BULB_LATENCY))
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):

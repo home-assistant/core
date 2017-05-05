@@ -65,7 +65,7 @@ class VlcDevice(MediaPlayerDevice):
             self._state = STATE_PAUSED
         else:
             self._state = STATE_IDLE
-        self._media_duration = self._vlc.get_length()/1000
+        self._media_duration = self._vlc.get_length() / 1000
         position = self._vlc.get_position() * self._media_duration
         if position != self._media_position:
             self._media_position_updated_at = dt_util.utcnow()
@@ -123,8 +123,8 @@ class VlcDevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
-        track_length = self._vlc.get_length()/1000
-        self._vlc.set_position(position/track_length)
+        track_length = self._vlc.get_length() / 1000
+        self._vlc.set_position(position / track_length)
 
     def mute_volume(self, mute):
         """Mute the volume."""

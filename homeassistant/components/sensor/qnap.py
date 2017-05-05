@@ -81,11 +81,11 @@ _VOLUME_MON_COND = {
 }
 
 _MONITORED_CONDITIONS = list(_SYSTEM_MON_COND.keys()) + \
-                        list(_CPU_MON_COND.keys()) + \
-                        list(_MEMORY_MON_COND.keys()) + \
-                        list(_NETWORK_MON_COND.keys()) + \
-                        list(_DRIVE_MON_COND.keys()) + \
-                        list(_VOLUME_MON_COND.keys())
+    list(_CPU_MON_COND.keys()) + \
+    list(_MEMORY_MON_COND.keys()) + \
+    list(_NETWORK_MON_COND.keys()) + \
+    list(_DRIVE_MON_COND.keys()) + \
+    list(_VOLUME_MON_COND.keys())
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,

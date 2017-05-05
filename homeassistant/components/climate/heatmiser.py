@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices([
             HeatmiserV3Thermostat(
                 heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
-            ])
+        ])
     return
 
 

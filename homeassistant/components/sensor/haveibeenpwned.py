@@ -83,7 +83,7 @@ class HaveIBeenPwnedSensor(Entity):
             return val
 
         for idx, value in enumerate(self._data.data[self._email]):
-            tmpname = "breach {}".format(idx+1)
+            tmpname = "breach {}".format(idx + 1)
             tmpvalue = "{} {}".format(
                 value["Title"],
                 dt_util.as_local(dt_util.parse_datetime(
@@ -144,7 +144,7 @@ class HaveIBeenPwnedData(object):
         """Get the latest data for current email from REST service."""
         try:
             url = "https://haveibeenpwned.com/api/v2/breachedaccount/{}". \
-                   format(self._email)
+                format(self._email)
 
             _LOGGER.info("Checking for breaches for email %s", self._email)
 

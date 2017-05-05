@@ -30,10 +30,10 @@ CONFIG_SCHEMA = vol.Schema({
                     vol.Optional('title'): cv.template,
                     vol.Optional('description'): cv.template,
                 }]
-                )
-            })
+            )
         })
-    }, extra=vol.ALLOW_EXTRA)
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
