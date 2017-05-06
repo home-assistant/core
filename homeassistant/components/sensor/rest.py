@@ -133,18 +133,6 @@ class RestSensor(Entity):
             value = self._value_template.render_with_possible_json_value(
                 value, STATE_UNKNOWN)
 
-        if self._json_attrs:
-            self._attributes = None
-            try:
-                attrs = json.loads(value)
-                if isinstance(attrs, dict):
-                    self._attributes = json.loads(value)
-                else:
-                    _LOGGER.warning('JSON result was not a dictionary')
-            except ValueError:
-                _LOGGER.warning('REST result could not be parsed as JSON')
-                _LOGGER.debug('Erroneous JSON: %s', value)
-
         self._state = value
 
     @property
