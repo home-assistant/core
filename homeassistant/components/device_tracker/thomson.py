@@ -127,5 +127,5 @@ class ThomsonDeviceScanner(DeviceScanner):
                     'mac': match.group('mac').upper(),
                     'host': match.group('host'),
                     'status': match.group('status')
-                    }
+                }
         return devices

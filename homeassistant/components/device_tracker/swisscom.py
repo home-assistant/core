@@ -102,7 +102,7 @@ class SwisscomDeviceScanner(DeviceScanner):
                     'mac': device['PhysAddress'],
                     'host': device['Name'],
                     'status': device['Active']
-                    }
+                }
             except (KeyError, requests.exceptions.RequestException):
                 pass
         return devices

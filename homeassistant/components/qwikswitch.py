@@ -97,7 +97,7 @@ class QSToggleEntity(object):
         newvalue = 255
         if ATTR_BRIGHTNESS in kwargs:
             newvalue = kwargs[ATTR_BRIGHTNESS]
-        if self._qsusb.set(self._id, round(min(newvalue, 255)/2.55)) >= 0:
+        if self._qsusb.set(self._id, round(min(newvalue, 255) / 2.55)) >= 0:
             self.update_value(newvalue)
 
     # pylint: disable=unused-argument

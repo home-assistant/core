@@ -65,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 state_template,
                 icon_template,
                 entity_ids)
-            )
+        )
     if not sensors:
         _LOGGER.error("No sensors added")
         return False

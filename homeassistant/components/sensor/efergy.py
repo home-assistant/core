@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         if variable[CONF_SENSOR_TYPE] == CONF_CURRENT_VALUES:
             url_string = _RESOURCE + 'getCurrentValuesSummary?token=' \
-                         + app_token
+                + app_token
             response = get(url_string, timeout=10)
             for sensor in response.json():
                 sid = sensor['sid']

@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_PENDING_TIME, DEFAULT_PENDING_TIME),
         config.get(CONF_TRIGGER_TIME, DEFAULT_TRIGGER_TIME),
         config.get(CONF_DISARM_AFTER_TRIGGER, DEFAULT_DISARM_AFTER_TRIGGER)
-        )])
+    )])
 
 
 class ManualAlarm(alarm.AlarmControlPanel):

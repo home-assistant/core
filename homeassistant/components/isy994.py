@@ -67,7 +67,7 @@ SUPPORTED_DOMAINS = ['binary_sensor', 'cover', 'fan', 'light', 'lock',
 WeatherNode = namedtuple('WeatherNode', ('status', 'name', 'uom'))
 
 
-def filter_nodes(nodes: list, units: list=None, states: list=None) -> list:
+def filter_nodes(nodes: list, units: list = None, states: list = None) -> list:
     """Filter a list of ISY nodes based on the units and states provided."""
     filtered_nodes = []
     units = units if units else []

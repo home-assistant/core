@@ -66,14 +66,14 @@ KEYS_SCHEMA = vol.All(dict,
                       vol.Schema({
                           vol.Required(ATTR_AUTH): cv.string,
                           vol.Required(ATTR_P256DH): cv.string
-                          }))
+                      }))
 
 SUBSCRIPTION_SCHEMA = vol.All(dict,
                               vol.Schema({
                                   # pylint: disable=no-value-for-parameter
                                   vol.Required(ATTR_ENDPOINT): vol.Url(),
                                   vol.Required(ATTR_KEYS): KEYS_SCHEMA
-                                  }))
+                              }))
 
 REGISTER_SCHEMA = vol.Schema({
     vol.Required(ATTR_SUBSCRIPTION): SUBSCRIPTION_SCHEMA,
@@ -355,7 +355,7 @@ class HTML5NotificationService(BaseNotificationService):
             ATTR_DATA: {},
             'icon': '/static/icons/favicon-192x192.png',
             ATTR_TAG: tag,
-            'timestamp': (timestamp*1000),  # Javascript ms since epoch
+            'timestamp': (timestamp * 1000),  # Javascript ms since epoch
             ATTR_TITLE: kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         }
 

@@ -120,7 +120,7 @@ class OneWire(Entity):
                 lines = self._read_temp_raw()
             equals_pos = lines[1].find('t=')
             if equals_pos != -1:
-                temp_string = lines[1][equals_pos+2:]
+                temp_string = lines[1][equals_pos + 2:]
                 temp = round(float(temp_string) / 1000.0, 1)
         else:
             try:

@@ -106,7 +106,7 @@ def get_next_departure(sched, start_station_id, end_station_id):
     arrival_time = datetime.datetime.strptime(arrival_time_string,
                                               TIME_FORMAT)
 
-    seconds_until = (departure_time-datetime.datetime.now()).total_seconds()
+    seconds_until = (departure_time - datetime.datetime.now()).total_seconds()
     minutes_until = int(seconds_until / 60)
 
     route = sched.routes_by_id(item[1])[0]

@@ -326,7 +326,7 @@ class GPMDP(MediaPlayerDevice):
             return
         websocket.send(json.dumps({'namespace': 'playback',
                                    'method': 'setCurrentTime',
-                                   'arguments': [position*1000]}))
+                                   'arguments': [position * 1000]}))
         self.schedule_update_ha_state()
 
     def volume_up(self):
@@ -352,5 +352,5 @@ class GPMDP(MediaPlayerDevice):
             return
         websocket.send(json.dumps({'namespace': 'volume',
                                    'method': 'setVolume',
-                                   'arguments': [volume*100]}))
+                                   'arguments': [volume * 100]}))
         self.schedule_update_ha_state()

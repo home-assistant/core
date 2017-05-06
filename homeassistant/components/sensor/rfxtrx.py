@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): rfxtrx.DOMAIN,
     vol.Optional(CONF_DEVICES, default={}): vol.All(dict, rfxtrx.valid_sensor),
-    vol.Optional(ATTR_AUTOMATIC_ADD, default=False):  cv.boolean,
+    vol.Optional(ATTR_AUTOMATIC_ADD, default=False): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 

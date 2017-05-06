@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    })
+})
 
 
 @asyncio.coroutine
@@ -172,5 +172,5 @@ class AnthemAVR(MediaPlayerDevice):
         """Return state of avr object for debugging forensics."""
         attrs = vars(self)
         return(
-            'dump_avrdata: '
-            + ', '.join('%s: %s' % item for item in attrs.items()))
+            'dump_avrdata: ' +
+            ', '.join('%s: %s' % item for item in attrs.items()))

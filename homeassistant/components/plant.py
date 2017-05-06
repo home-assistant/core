@@ -105,7 +105,7 @@ class Plant(Entity):
 
     READINGS = {
         READING_BATTERY: {
-            ATTR_UNIT_OF_MEASUREMENT:  '%',
+            ATTR_UNIT_OF_MEASUREMENT: '%',
             'min': CONF_MIN_BATTERY_LEVEL,
             'icon': 'mdi:battery-outline'
         },

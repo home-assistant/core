@@ -70,7 +70,7 @@ class NetatmoCamera(Camera):
             self._name, camera_id)
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
-            )
+        )
         self._cameratype = camera_type
 
     def camera_image(self):

@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             SensorTrend(
                 hass, device, friendly_name, entity_id, attribute,
                 device_class, invert)
-            )
+        )
     if not sensors:
         _LOGGER.error("No sensors added")
         return False

@@ -251,14 +251,14 @@ class ZwaveColorLight(ZwaveDimmer):
 
         # Warm white
         if self._color_channels & COLOR_CHANNEL_WARM_WHITE:
-            warm_white = int(data[index:index+2], 16)
+            warm_white = int(data[index:index + 2], 16)
             index += 2
         else:
             warm_white = 0
 
         # Cold white
         if self._color_channels & COLOR_CHANNEL_COLD_WHITE:
-            cold_white = int(data[index:index+2], 16)
+            cold_white = int(data[index:index + 2], 16)
             index += 2
         else:
             cold_white = 0

@@ -70,8 +70,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensors = []
     for sensor in easyfire.get_sensors():
-        if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW)
-                or (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
+        if ((sensor.sensor_type != kwb.PROP_SENSOR_RAW) or
+                (sensor.sensor_type == kwb.PROP_SENSOR_RAW and raw)):
             sensors.append(KWBSensor(easyfire, sensor, client_name))
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,

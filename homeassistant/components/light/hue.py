@@ -59,7 +59,7 @@ SUPPORT_HUE = {
     'Dimmable light': SUPPORT_HUE_DIMMABLE,
     'On/Off plug-in unit': SUPPORT_HUE_ON_OFF,
     'Color temperature light': SUPPORT_HUE_COLOR_TEMP
-    }
+}
 
 CONF_ALLOW_IN_EMULATED_HUE = "allow_in_emulated_hue"
 DEFAULT_ALLOW_IN_EMULATED_HUE = True

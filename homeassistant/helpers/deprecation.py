@@ -13,6 +13,7 @@ def deprecated_substitute(substitute_name):
     """
     def decorator(func):
         """Decorate function as deprecated."""
+
         def func_wrapper(self):
             """Wrap for the original function."""
             if hasattr(self, substitute_name):

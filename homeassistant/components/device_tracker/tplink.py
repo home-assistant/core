@@ -145,7 +145,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
                 self.last_results = {
                     device['mac_addr'].replace('-', ':'): device['name']
                     for device in result
-                    }
+                }
                 return True
 
             return False
@@ -247,7 +247,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                 self.last_results = {
                     device['mac'].replace('-', ':'): device['mac']
                     for device in result
-                    }
+                }
                 return True
 
             return False

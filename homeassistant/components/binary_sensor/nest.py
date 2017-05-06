@@ -77,8 +77,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     if variable in BINARY_TYPES]
         sensors += [NestBinarySensor(structure, device, variable)
                     for variable in conditions
-                    if variable in CLIMATE_BINARY_TYPES
-                    and device.is_thermostat]
+                    if variable in CLIMATE_BINARY_TYPES and
+                    device.is_thermostat]
 
         if device.is_camera:
             sensors += [NestBinarySensor(structure, device, variable)

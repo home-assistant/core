@@ -31,9 +31,9 @@ DEFAULT_NAME = 'Clementine Remote'
 DEFAULT_PORT = 5500
 
 SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
-                     SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_SET | \
-                     SUPPORT_NEXT_TRACK | \
-                     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_SET | \
+    SUPPORT_NEXT_TRACK | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -97,7 +97,7 @@ class ClementineDevice(MediaPlayerDevice):
                 self._track_artist = client.current_track['track_artist']
                 self._track_album_name = client.current_track['track_album']
 
-        except:
+        except BaseException:
             self._state = STATE_OFF
             raise
 

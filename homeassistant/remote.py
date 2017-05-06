@@ -49,8 +49,9 @@ class APIStatus(enum.Enum):
 class API(object):
     """Object to pass around Home Assistant API location and credentials."""
 
-    def __init__(self, host: str, api_password: Optional[str]=None,
-                 port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
+    def __init__(self, host: str, api_password: Optional[str] = None,
+                 port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False) -> None:
         """Init the API."""
         self.host = host
         self.port = port
@@ -74,7 +75,7 @@ class API(object):
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
 
-    def validate_api(self, force_validate: bool=False) -> bool:
+    def validate_api(self, force_validate: bool = False) -> bool:
         """Test if we can communicate with the API."""
         if self.status is None or force_validate:
             self.status = validate_api(self)
@@ -92,10 +93,9 @@ class API(object):
             if method == METHOD_GET:
                 return requests.get(
                     url, params=data, timeout=timeout, headers=self._headers)
-            else:
-                return requests.request(
-                    method, url, data=data, timeout=timeout,
-                    headers=self._headers)
+            return requests.request(
+                method, url, data=data, timeout=timeout,
+                headers=self._headers)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.exception("Error connecting to server")
@@ -152,8 +152,7 @@ def validate_api(api):
         elif req.status_code == 401:
             return APIStatus.INVALID_PASSWORD
 
-        else:
-            return APIStatus.UNKNOWN
+        return APIStatus.UNKNOWN
 
     except HomeAssistantError:
         return APIStatus.CANNOT_CONNECT
@@ -259,8 +258,7 @@ def set_state(api, entity_id, new_state, attributes=None, force_update=False):
             _LOGGER.error("Error changing state: %d - %s",
                           req.status_code, req.text)
             return False
-        else:
-            return True
+        return True
 
     except HomeAssistantError:
         _LOGGER.exception("Error setting state")

@@ -55,6 +55,7 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
 
 def _cmd(func):
     """Define a wrapper to catch exceptions from the bulb."""
+
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -322,9 +323,9 @@ class YeelightLight(Light):
             return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
-                                                 or colortemp
-                                                 or rgb):
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness or
+                                                 colortemp or
+                                                 rgb):
             try:
                 self.set_default()
             except yeelight.BulbException as ex:

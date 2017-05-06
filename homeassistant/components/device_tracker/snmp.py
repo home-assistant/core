@@ -130,6 +130,6 @@ class SnmpScanner(DeviceScanner):
                 except AttributeError:
                     continue
                 _LOGGER.debug("Found MAC %s", mac)
-                mac = ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)])
+                mac = ':'.join([mac[i:i + 2] for i in range(0, len(mac), 2)])
                 devices.append({'mac': mac})
         return devices
