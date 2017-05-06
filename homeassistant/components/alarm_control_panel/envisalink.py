@@ -104,7 +104,7 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
 
     @callback
     def _update_callback(self, partition):
-        """Update HA state, if needed."""
+        """Update Home Assistant state, if needed."""
         if partition is None or int(partition) == self._partition_number:
             self.hass.async_add_job(self.async_update_ha_state())
 

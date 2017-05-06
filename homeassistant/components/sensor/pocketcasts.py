@@ -32,7 +32,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the pocketcasts platform for sensors."""
+    """Set up the pocketcasts platform for sensors."""
     import pocketcasts
     try:
         api = pocketcasts.Api(
@@ -61,9 +61,9 @@ class PocketCastsSensor(Entity):
         """Update sensor values."""
         try:
             self._state = len(self._api.new_episodes_released())
-            _LOGGER.debug('Found %d new episodes', self._state)
+            _LOGGER.debug("Found %d new episodes", self._state)
         except OSError as err:
-            _LOGGER.warning('Failed to contact server: %s', err)
+            _LOGGER.warning("Failed to contact server: %s", err)
 
     @property
     def name(self):

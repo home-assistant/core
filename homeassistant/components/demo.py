@@ -1,5 +1,5 @@
 """
-Sets up a demo environment that mimics interaction with devices.
+Set up the demo environment that mimics interaction with devices.
 
 For more details about this component, please refer to the documentation
 https://home-assistant.io/components/demo/
@@ -37,7 +37,7 @@ COMPONENTS_WITH_DEMO_PLATFORM = [
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup a demo environment."""
+    """Set up the demo environment."""
     group = loader.get_component('group')
     configurator = loader.get_component('configurator')
     persistent_notification = loader.get_component('persistent_notification')
@@ -59,7 +59,7 @@ def async_setup(hass, config):
         bootstrap.async_setup_component(hass, 'sun')
     ]
 
-    # Setup demo platforms
+    # Set up demo platforms
     demo_config = config.copy()
     for component in COMPONENTS_WITH_DEMO_PLATFORM:
         demo_config[component] = {CONF_PLATFORM: 'demo'}
@@ -106,19 +106,19 @@ def async_setup(hass, config):
     if any(not result for result in results):
         return False
 
-    # Setup example persistent notification
+    # Set up example persistent notification
     persistent_notification.async_create(
         hass, 'This is an example of a persistent notification.',
         title='Example Notification')
 
-    # Setup room groups
+    # Set up room groups
     lights = sorted(hass.states.async_entity_ids('light'))
     switches = sorted(hass.states.async_entity_ids('switch'))
     media_players = sorted(hass.states.async_entity_ids('media_player'))
 
     tasks2 = []
 
-    # Setup scripts
+    # Set up scripts
     tasks2.append(bootstrap.async_setup_component(
         hass, 'script',
         {'script': {
@@ -140,7 +140,7 @@ def async_setup(hass, config):
                 }]
             }}}))
 
-    # Setup scenes
+    # Set up scenes
     tasks2.append(bootstrap.async_setup_component(
         hass, 'scene',
         {'scene': [
@@ -186,7 +186,7 @@ def async_setup(hass, config):
     if any(not result for result in results):
         return False
 
-    # Setup configurator
+    # Set up configurator
     configurator_ids = []
 
     def hue_configuration_callback(data):
@@ -204,7 +204,7 @@ def async_setup(hass, config):
             configurator.request_done(configurator_ids[0])
 
     def setup_configurator():
-        """Setup configurator."""
+        """Set up a configurator."""
         request_id = configurator.request_config(
             hass, "Philips Hue", hue_configuration_callback,
             description=("Press the button on the bridge to register Philips "

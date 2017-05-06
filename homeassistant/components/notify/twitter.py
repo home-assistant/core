@@ -64,5 +64,4 @@ class TwitterNotificationService(BaseNotificationService):
             error_message = obj['errors'][0]['message']
             error_code = obj['errors'][0]['code']
             _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
-                          error_message,
-                          error_code)
+                          error_message, error_code)

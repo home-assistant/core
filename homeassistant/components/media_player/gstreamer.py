@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Gstreamer platform."""
+    """Set up the Gstreamer platform."""
     from gsp import GstreamerPlayer
     name = config.get(CONF_NAME)
     pipeline = config.get(CONF_PIPELINE)

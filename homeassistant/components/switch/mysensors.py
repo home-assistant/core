@@ -28,7 +28,7 @@ SEND_IR_CODE_SERVICE_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for switches."""
+    """Set up the mysensors platform for switches."""
     # Only act if loaded via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if discovery_info is None:
@@ -158,7 +158,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
     """IR switch child class to MySensorsSwitch."""
 
     def __init__(self, *args):
-        """Setup instance attributes."""
+        """Set up instance attributes."""
         MySensorsSwitch.__init__(self, *args)
         self._ir_code = None
 

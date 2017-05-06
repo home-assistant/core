@@ -22,18 +22,20 @@ import homeassistant.helpers.config_validation as cv
 
 from homeassistant.helpers.script import Script
 
-DOMAIN = "script"
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
-GROUP_NAME_ALL_SCRIPTS = 'all scripts'
+_LOGGER = logging.getLogger(__name__)
 
-CONF_SEQUENCE = "sequence"
-
-ATTR_VARIABLES = 'variables'
+ATTR_CAN_CANCEL = 'can_cancel'
 ATTR_LAST_ACTION = 'last_action'
 ATTR_LAST_TRIGGERED = 'last_triggered'
-ATTR_CAN_CANCEL = 'can_cancel'
+ATTR_VARIABLES = 'variables'
 
-_LOGGER = logging.getLogger(__name__)
+CONF_SEQUENCE = 'sequence'
+
+DOMAIN = 'script'
+
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+GROUP_NAME_ALL_SCRIPTS = 'all scripts'
 
 _SCRIPT_ENTRY_SCHEMA = vol.Schema({
     CONF_ALIAS: cv.string,

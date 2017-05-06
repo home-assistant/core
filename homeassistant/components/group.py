@@ -1,5 +1,5 @@
 """
-Provides functionality to group entities.
+Provide the functionality to group entities.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/group/
@@ -64,7 +64,7 @@ GROUP_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: cv.ordered_dict(vol.All(_conf_preprocess, GROUP_SCHEMA))
+    DOMAIN: vol.Schema({cv.match_all: vol.All(_conf_preprocess, GROUP_SCHEMA)})
 }, extra=vol.ALLOW_EXTRA)
 
 # List of ON/OFF state tuples for groupable states
@@ -168,7 +168,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup all groups found definded in the configuration."""
+    """Set up all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from _async_process_config(hass, config, component)
@@ -420,7 +420,7 @@ class Group(Entity):
 
     @property
     def _tracking_states(self):
-        """The states that the group is tracking."""
+        """Return the states that the group is tracking."""
         states = []
 
         for entity_id in self.tracking:

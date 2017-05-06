@@ -1,5 +1,5 @@
 """
-Component that will help set the openalpr local for alpr processing.
+Component that will help set the OpenALPR local for ALPR processing.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.openalpr_local/
@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the openalpr local platform."""
+    """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], '-c', config[CONF_REGION], '-']
     confidence = config[CONF_CONFIDENCE]
 
@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):
-    """Base entity class for alpr image processing."""
+    """Base entity class for ALPR image processing."""
 
     def __init__(self):
         """Initialize base alpr entity."""
@@ -144,10 +144,10 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
 
 class OpenAlprLocalEntity(ImageProcessingAlprEntity):
-    """OpenAlpr local api entity."""
+    """OpenALPR local api entity."""
 
     def __init__(self, camera_entity, command, confidence, name=None):
-        """Initialize openalpr local api."""
+        """Initialize OpenALPR local API."""
         super().__init__()
 
         self._cmd = command

@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if var_conf is not None:
         for variable, var_data in var_conf.items():
             if variable not in response['variables']:
-                _LOGGER.error("Variable: '%s' does not exist", variable)
+                _LOGGER.error("Variable: %s does not exist", variable)
                 continue
 
             renderer = make_renderer(var_data.get(CONF_VALUE_TEMPLATE))

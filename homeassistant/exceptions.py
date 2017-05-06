@@ -1,4 +1,4 @@
-"""Exceptions used by Home Assistant."""
+"""The exceptions used by Home Assistant."""
 
 
 class HomeAssistantError(Exception):
@@ -23,6 +23,6 @@ class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
     def __init__(self, exception):
-        """Initalize the error."""
+        """Init the error."""
         super().__init__('{}: {}'.format(exception.__class__.__name__,
                                          exception))

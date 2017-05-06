@@ -26,11 +26,11 @@ REQUIREMENTS = ['yeelight==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TRANSITION = "transition"
+CONF_TRANSITION = 'transition'
 DEFAULT_TRANSITION = 350
 
-CONF_SAVE_ON_CHANGE = "save_on_change"
-CONF_MODE_MUSIC = "use_music_mode"
+CONF_SAVE_ON_CHANGE = 'save_on_change'
+CONF_MODE_MUSIC = 'use_music_mode'
 
 DOMAIN = 'yeelight'
 
@@ -54,7 +54,7 @@ SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
 
 
 def _cmd(func):
-    """A wrapper to catch exceptions from the bulb."""
+    """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -67,14 +67,14 @@ def _cmd(func):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yeelight bulbs."""
+    """Set up the Yeelight bulbs."""
     lights = []
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
-        # not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (discovery_info["device_type"],
-                                   discovery_info["properties"]["mac"])
+        # Not using hostname, as it seems to vary.
+        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+                                   discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
         lights.append(YeelightLight(device, DEVICE_SCHEMA({})))
@@ -85,14 +85,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
             lights.append(YeelightLight(device, device_config))
 
-    add_devices(lights, True)  # true to request an update before adding.
+    add_devices(lights, True)
 
 
 class YeelightLight(Light):
     """Representation of a Yeelight light."""
 
     def __init__(self, device, config):
-        """Initialize the light."""
+        """Initialize the Yeelight light."""
         self.config = config
         self._name = device['name']
         self._ipaddr = device['ipaddr']
@@ -142,8 +142,8 @@ class YeelightLight(Light):
         return self._brightness
 
     def _get_rgb_from_properties(self):
-        rgb = self._properties.get("rgb", None)
-        color_mode = self._properties.get("color_mode", None)
+        rgb = self._properties.get('rgb', None)
+        color_mode = self._properties.get('color_mode', None)
         if not rgb or not color_mode:
             return rgb
 
@@ -151,9 +151,9 @@ class YeelightLight(Light):
         if color_mode == 2:  # color temperature
             return color_temperature_to_rgb(self.color_temp)
         if color_mode == 3:  # hsv
-            hue = self._properties.get("hue")
-            sat = self._properties.get("sat")
-            val = self._properties.get("bright")
+            hue = self._properties.get('hue')
+            sat = self._properties.get('sat')
+            val = self._properties.get('bright')
             return colorsys.hsv_to_rgb(hue, sat, val)
 
         rgb = int(rgb)
@@ -204,13 +204,13 @@ class YeelightLight(Light):
             if self._bulb_device.bulb_type == yeelight.BulbType.Color:
                 self._supported_features = SUPPORT_YEELIGHT_RGB
 
-            self._is_on = self._properties.get("power") == "on"
+            self._is_on = self._properties.get('power') == 'on'
 
-            bright = self._properties.get("bright", None)
+            bright = self._properties.get('bright', None)
             if bright:
                 self._brightness = 255 * (int(bright) / 100)
 
-            temp_in_k = self._properties.get("ct", None)
+            temp_in_k = self._properties.get('ct', None)
             if temp_in_k:
                 self._color_temp = kelvin_to_mired(int(temp_in_k))
 

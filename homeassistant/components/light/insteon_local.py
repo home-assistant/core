@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     insteonhub = hass.data['insteon_local']
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
-    if len(conf_lights):
+    if conf_lights:
         for device_id in conf_lights:
             setup_light(device_id, conf_lights[device_id], insteonhub, hass,
                         add_devices)
@@ -64,7 +64,7 @@ def request_configuration(device_id, insteonhub, model, hass,
         return
 
     def insteon_light_config_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Set up actions to do when our configuration callback is called."""
         setup_light(device_id, data.get('name'), insteonhub, hass,
                     add_devices_callback)
 
