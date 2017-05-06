@@ -115,12 +115,6 @@ class RestSensor(Entity):
         self.rest.update()
         value = self.rest.data
 
-        if value is None:
-            value = STATE_UNKNOWN
-        elif self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(
-                value, STATE_UNKNOWN)
-
         if self._json_attrs:
             self._attributes = None
             try:
@@ -132,6 +126,12 @@ class RestSensor(Entity):
             except ValueError:
                 _LOGGER.warning('REST result could not be parsed as JSON')
                 _LOGGER.debug('Erroneous JSON: %s', value)
+
+        if value is None:
+            value = STATE_UNKNOWN
+        elif self._value_template is not None:
+            value = self._value_template.render_with_possible_json_value(
+                value, STATE_UNKNOWN)
 
         self._state = value
 
