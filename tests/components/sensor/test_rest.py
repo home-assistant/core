@@ -135,7 +135,7 @@ class TestRestSensor(unittest.TestCase):
 
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
-                                      self.value_template)
+                                      self.value_template, False)
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -179,9 +179,20 @@ class TestRestSensor(unittest.TestCase):
                                 side_effect=self.update_side_effect(
                                     'plain_state'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
-                                      self.unit_of_measurement, None)
+                                      self.unit_of_measurement, None, False)
         self.sensor.update()
         self.assertEqual('plain_state', self.sensor.state)
+
+    def test_update_with_josn_attrs(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "updated_state" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, True)
+        self.sensor.update()
+        self.assertEqual('updated_state',
+                         self.sensor.device_state_attributes.key)
 
 
 class TestRestData(unittest.TestCase):
