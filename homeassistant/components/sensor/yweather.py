@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yahoo! weather sensor."""
+    """Setnup the Yahoo! weather sensor."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
     unit = hass.config.units.temperature_unit
@@ -60,15 +60,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     forecast = config.get(CONF_FORECAST)
     name = config.get(CONF_NAME)
 
-    # convert unit
     yunit = UNIT_C if unit == TEMP_CELSIUS else UNIT_F
 
-    # for print HA style temp
     SENSOR_TYPES["temperature"][1] = unit
     SENSOR_TYPES["temp_min"][1] = unit
     SENSOR_TYPES["temp_max"][1] = unit
 
-    # if not exists a customer woeid / calc from HA
+    # If not exists a customer woeid / calc from HA
     if woeid is None:
         woeid = get_woeid(hass.config.latitude, hass.config.longitude)
         # receive a error?
@@ -76,15 +74,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.critical("Can't retrieve WOEID from yahoo!")
             return False
 
-    # create api object
     yahoo_api = YahooWeatherData(woeid, yunit)
 
-    # if update is false, it will never work...
     if not yahoo_api.update():
         _LOGGER.critical("Can't retrieve weather data from yahoo!")
         return False
 
-    # check if forecast support by API
     if forecast >= len(yahoo_api.yahoo.Forecast):
         _LOGGER.error("Yahoo! only support %d days forcast!",
                       len(yahoo_api.yahoo.Forecast))
@@ -152,30 +147,30 @@ class YahooWeatherSensor(Entity):
             return
 
         # default code for weather image
-        self._code = self._data.yahoo.Now["code"]
+        self._code = self._data.yahoo.Now['code']
 
         # read data
-        if self._type == "weather_current":
-            self._state = self._data.yahoo.Now["text"]
-        elif self._type == "weather":
-            self._code = self._data.yahoo.Forecast[self._forecast]["code"]
-            self._state = self._data.yahoo.Forecast[self._forecast]["text"]
-        elif self._type == "temperature":
-            self._state = self._data.yahoo.Now["temp"]
-        elif self._type == "temp_min":
-            self._code = self._data.yahoo.Forecast[self._forecast]["code"]
-            self._state = self._data.yahoo.Forecast[self._forecast]["low"]
-        elif self._type == "temp_max":
-            self._code = self._data.yahoo.Forecast[self._forecast]["code"]
-            self._state = self._data.yahoo.Forecast[self._forecast]["high"]
-        elif self._type == "wind_speed":
-            self._state = self._data.yahoo.Wind["speed"]
-        elif self._type == "humidity":
-            self._state = self._data.yahoo.Atmosphere["humidity"]
-        elif self._type == "pressure":
-            self._state = self._data.yahoo.Atmosphere["pressure"]
-        elif self._type == "visibility":
-            self._state = self._data.yahoo.Atmosphere["visibility"]
+        if self._type == 'weather_current':
+            self._state = self._data.yahoo.Now['text']
+        elif self._type == 'weather':
+            self._code = self._data.yahoo.Forecast[self._forecast]['code']
+            self._state = self._data.yahoo.Forecast[self._forecast]['text']
+        elif self._type == 'temperature':
+            self._state = self._data.yahoo.Now['temp']
+        elif self._type == 'temp_min':
+            self._code = self._data.yahoo.Forecast[self._forecast]['code']
+            self._state = self._data.yahoo.Forecast[self._forecast]['low']
+        elif self._type == 'temp_max':
+            self._code = self._data.yahoo.Forecast[self._forecast]['code']
+            self._state = self._data.yahoo.Forecast[self._forecast]['high']
+        elif self._type == 'wind_speed':
+            self._state = self._data.yahoo.Wind['speed']
+        elif self._type == 'humidity':
+            self._state = self._data.yahoo.Atmosphere['humidity']
+        elif self._type == 'pressure':
+            self._state = self._data.yahoo.Atmosphere['pressure']
+        elif self._type == 'visibility':
+            self._state = self._data.yahoo.Atmosphere['visibility']
 
 
 class YahooWeatherData(object):

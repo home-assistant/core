@@ -8,7 +8,7 @@ from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
 
-from tests.common import mock_coro, fire_time_changed
+from tests.common import mock_coro, async_fire_time_changed
 
 # One might consider to "mock" services, but it's easy enough to just use
 # what is already available.
@@ -47,7 +47,7 @@ def mock_discovery(hass, discoveries, config=BASE_CONFIG):
                   return_value=mock_coro()) as mock_discover, \
             patch('homeassistant.components.discovery.async_load_platform',
                   return_value=mock_coro()) as mock_platform:
-        fire_time_changed(hass, utcnow())
+        async_fire_time_changed(hass, utcnow())
         # Work around an issue where our loop.call_soon not get caught
         yield from hass.async_block_till_done()
         yield from hass.async_block_till_done()

@@ -19,10 +19,9 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-CONF_HTTP_ID = "http_id"
+CONF_HTTP_ID = 'http_id'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,12 +46,10 @@ class TomatoDeviceScanner(DeviceScanner):
         host, http_id = config[CONF_HOST], config[CONF_HTTP_ID]
         username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
 
-        self.req = requests.Request('POST',
-                                    'http://{}/update.cgi'.format(host),
-                                    data={'_http_id': http_id,
-                                          'exec': 'devlist'},
-                                    auth=requests.auth.HTTPBasicAuth(
-                                        username, password)).prepare()
+        self.req = requests.Request(
+            'POST', 'http://{}/update.cgi'.format(host),
+            data={'_http_id': http_id, 'exec': 'devlist'},
+            auth=requests.auth.HTTPBasicAuth(username, password)).prepare()
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
 
@@ -112,20 +109,17 @@ class TomatoDeviceScanner(DeviceScanner):
             except requests.exceptions.ConnectionError:
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied.
-                self.logger.exception((
-                    "Failed to connect to the router"
-                    " or invalid http_id supplied"))
+                self.logger.exception("Failed to connect to the router or "
+                                      "invalid http_id supplied")
                 return False
 
             except requests.exceptions.Timeout:
                 # We get this if we could not connect to the router or
                 # an invalid http_id was supplied.
-                self.logger.exception(
-                    "Connection to the router timed out")
+                self.logger.exception("Connection to the router timed out")
                 return False
 
             except ValueError:
                 # If JSON decoder could not parse the response.
-                self.logger.exception(
-                    "Failed to parse response from router")
+                self.logger.exception("Failed to parse response from router")
                 return False

@@ -124,7 +124,7 @@ class Itunes(object):
             [playlist for playlist in playlists if
              (playlist_id_or_name in [playlist["name"], playlist["id"]])]
 
-        if len(found_playlists) > 0:
+        if found_playlists:
             playlist = found_playlists[0]
             path = '/playlists/' + playlist['id'] + '/play'
             return self._request('PUT', path)
@@ -154,7 +154,7 @@ class Itunes(object):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the iTunes platform."""
+    """Set up the iTunes platform."""
     add_devices([
         ItunesDevice(
             config.get(CONF_NAME),

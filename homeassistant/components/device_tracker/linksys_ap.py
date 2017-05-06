@@ -99,9 +99,8 @@ class LinksysAPDeviceScanner(object):
         # No, the '&&' is not a typo - this is expected by the web interface.
         login = base64.b64encode(bytes(self.username, 'utf8')).decode('ascii')
         pwd = base64.b64encode(bytes(self.password, 'utf8')).decode('ascii')
+        url = 'https://{}/StatusClients.htm&&unit={}&vap=0'.format(
+            self.host, unit)
         return requests.get(
-            'https://%s/StatusClients.htm&&unit=%s&vap=0' % (self.host, unit),
-            timeout=DEFAULT_TIMEOUT,
-            verify=self.verify_ssl,
-            cookies={'LoginName': login,
-                     'LoginPWD': pwd})
+            url, timeout=DEFAULT_TIMEOUT, verify=self.verify_ssl,
+            cookies={'LoginName': login, 'LoginPWD': pwd})

@@ -1,15 +1,15 @@
 """
-Support for ISY994 binary sensors.
+Support for ISY994 sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.isy994/
+https://home-assistant.io/components/sensor.isy994/
 """
 import logging
 from typing import Callable  # noqa
 
 import homeassistant.components.isy994 as isy
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF,
-                                 STATE_ON)
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF, STATE_ON)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -238,17 +238,17 @@ BINARY_UOM = ['2', '78']
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 sensor platform."""
+    """Set up the ISY994 sensor platform."""
     if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error("A connection has not been made to the ISY controller")
         return False
 
     devices = []
 
     for node in isy.SENSOR_NODES:
-        if (len(node.uom) == 0 or node.uom[0] not in BINARY_UOM) and \
+        if (not node.uom or node.uom[0] not in BINARY_UOM) and \
                 STATE_OFF not in node.uom and STATE_ON not in node.uom:
-            _LOGGER.debug('LOADING %s', node.name)
+            _LOGGER.debug("Loading %s", node.name)
             devices.append(ISYSensorDevice(node))
 
     for node in isy.WEATHER_NODES:

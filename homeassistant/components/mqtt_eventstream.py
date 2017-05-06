@@ -20,7 +20,7 @@ from homeassistant.core import EventOrigin, State
 import homeassistant.helpers.config_validation as cv
 from homeassistant.remote import JSONEncoder
 
-DOMAIN = "mqtt_eventstream"
+DOMAIN = 'mqtt_eventstream'
 DEPENDENCIES = ['mqtt']
 
 CONF_PUBLISH_TOPIC = 'publish_topic'
@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the MQTT eventstream component."""
+    """Set up the MQTT eventstream component."""
     mqtt = loader.get_component('mqtt')
     conf = config.get(DOMAIN, {})
     pub_topic = conf.get(CONF_PUBLISH_TOPIC)

@@ -21,61 +21,44 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["pyfido==1.0.1"]
+REQUIREMENTS = ['pyfido==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOBITS = "Kb"  # type: str
-PRICE = "CAD"  # type: str
-MESSAGES = "messages"  # type: str
-MINUTES = "minutes"  # type: str
+KILOBITS = 'Kb'  # type: str
+PRICE = 'CAD'  # type: str
+MESSAGES = 'messages'  # type: str
+MINUTES = 'minutes'  # type: str
 
-DEFAULT_NAME = "Fido"
+DEFAULT_NAME = 'Fido'
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 SENSOR_TYPES = {
-    'fido_dollar': ['Fido dollar',
-                    PRICE, 'mdi:square-inc-cash'],
-    'balance': ['Balance',
-                PRICE, 'mdi:square-inc-cash'],
-    'data_used': ['Data used',
-                  KILOBITS, 'mdi:download'],
-    'data_limit': ['Data limit',
-                   KILOBITS, 'mdi:download'],
-    'data_remaining': ['Data remaining',
-                       KILOBITS, 'mdi:download'],
-    'text_used': ['Text used',
-                  MESSAGES, 'mdi:message-text'],
-    'text_limit': ['Text limit',
-                   MESSAGES, 'mdi:message-text'],
-    'text_remaining': ['Text remaining',
-                       MESSAGES, 'mdi:message-text'],
-    'mms_used': ['MMS used',
-                 MESSAGES, 'mdi:message-image'],
-    'mms_limit': ['MMS limit',
-                  MESSAGES, 'mdi:message-image'],
-    'mms_remaining': ['MMS remaining',
-                      MESSAGES, 'mdi:message-image'],
+    'fido_dollar': ['Fido dollar', PRICE, 'mdi:square-inc-cash'],
+    'balance': ['Balance', PRICE, 'mdi:square-inc-cash'],
+    'data_used': ['Data used', KILOBITS, 'mdi:download'],
+    'data_limit': ['Data limit', KILOBITS, 'mdi:download'],
+    'data_remaining': ['Data remaining', KILOBITS, 'mdi:download'],
+    'text_used': ['Text used', MESSAGES, 'mdi:message-text'],
+    'text_limit': ['Text limit', MESSAGES, 'mdi:message-text'],
+    'text_remaining': ['Text remaining', MESSAGES, 'mdi:message-text'],
+    'mms_used': ['MMS used', MESSAGES, 'mdi:message-image'],
+    'mms_limit': ['MMS limit', MESSAGES, 'mdi:message-image'],
+    'mms_remaining': ['MMS remaining', MESSAGES, 'mdi:message-image'],
     'text_int_used': ['International text used',
                       MESSAGES, 'mdi:message-alert'],
     'text_int_limit': ['International text limit',
                        MESSAGES, 'mdi:message-alart'],
     'text_int_remaining': ['Internaltional remaining',
                            MESSAGES, 'mdi:message-alert'],
-    'talk_used': ['Talk used',
-                  MINUTES, 'mdi:cellphone'],
-    'talk_limit': ['Talk limit',
-                   MINUTES, 'mdi:cellphone'],
-    'talt_remaining': ['Talk remaining',
-                       MINUTES, 'mdi:cellphone'],
-    'other_talk_used': ['Other Talk used',
-                        MINUTES, 'mdi:cellphone'],
-    'other_talk_limit': ['Other Talk limit',
-                         MINUTES, 'mdi:cellphone'],
-    'other_talk_remaining': ['Other Talk remaining',
-                             MINUTES, 'mdi:cellphone'],
+    'talk_used': ['Talk used', MINUTES, 'mdi:cellphone'],
+    'talk_limit': ['Talk limit', MINUTES, 'mdi:cellphone'],
+    'talt_remaining': ['Talk remaining', MINUTES, 'mdi:cellphone'],
+    'other_talk_used': ['Other Talk used', MINUTES, 'mdi:cellphone'],
+    'other_talk_limit': ['Other Talk limit', MINUTES, 'mdi:cellphone'],
+    'other_talk_remaining': ['Other Talk remaining', MINUTES, 'mdi:cellphone'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

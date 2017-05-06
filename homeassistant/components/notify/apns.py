@@ -6,6 +6,7 @@ https://home-assistant.io/components/notify.apns/
 """
 import logging
 import os
+
 import voluptuous as vol
 
 from homeassistant.helpers.event import track_state_change
@@ -16,15 +17,17 @@ from homeassistant.const import CONF_NAME, CONF_PLATFORM
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
-APNS_DEVICES = "apns.yaml"
-CONF_CERTFILE = "cert_file"
-CONF_TOPIC = "topic"
-CONF_SANDBOX = "sandbox"
-DEVICE_TRACKER_DOMAIN = "device_tracker"
-SERVICE_REGISTER = "apns_register"
+REQUIREMENTS = ['apns2==0.1.1']
 
-ATTR_PUSH_ID = "push_id"
-ATTR_NAME = "name"
+APNS_DEVICES = 'apns.yaml'
+CONF_CERTFILE = 'cert_file'
+CONF_TOPIC = 'topic'
+CONF_SANDBOX = 'sandbox'
+DEVICE_TRACKER_DOMAIN = 'device_tracker'
+SERVICE_REGISTER = 'apns_register'
+
+ATTR_PUSH_ID = 'push_id'
+ATTR_NAME = 'name'
 
 PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'apns',
@@ -39,8 +42,6 @@ REGISTER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
 })
 
-REQUIREMENTS = ["apns2==0.1.1"]
-
 
 def get_service(hass, config, discovery_info=None):
     """Return push service."""
@@ -53,20 +54,18 @@ def get_service(hass, config, discovery_info=None):
     sandbox = config.get(CONF_SANDBOX)
 
     service = ApnsNotificationService(hass, name, topic, sandbox, cert_file)
-    hass.services.register(DOMAIN,
-                           'apns_{}'.format(name),
-                           service.register,
-                           descriptions.get(SERVICE_REGISTER),
-                           schema=REGISTER_SERVICE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'apns_{}'.format(name), service.register,
+        descriptions.get(SERVICE_REGISTER), schema=REGISTER_SERVICE_SCHEMA)
     return service
 
 
 class ApnsDevice(object):
     """
-    Apns Device class.
+    The APNS Device class.
 
-    Stores information about a device that is
-    registered for push notifications.
+    Stores information about a device that is registered for push
+    notifications.
     """
 
     def __init__(self, push_id, name, tracking_device_id=None, disabled=False):
@@ -78,18 +77,18 @@ class ApnsDevice(object):
 
     @property
     def push_id(self):
-        """The apns id for the device."""
+        """Return the  APNS id for the device."""
         return self.device_push_id
 
     @property
     def name(self):
-        """The friendly name for the device."""
+        """Return the friendly name for the device."""
         return self.device_name
 
     @property
     def tracking_device_id(self):
         """
-        Device Id.
+        Return the device Id.
 
         The id of a device that is tracked by the device
         tracking component.
@@ -99,16 +98,16 @@ class ApnsDevice(object):
     @property
     def full_tracking_device_id(self):
         """
-        Fully qualified device id.
+        Return the fully qualified device id.
 
         The full id of a device that is tracked by the device
         tracking component.
         """
-        return DEVICE_TRACKER_DOMAIN + '.' + self.tracking_id
+        return '{}.{}'.format(DEVICE_TRACKER_DOMAIN, self.tracking_id)
 
     @property
     def disabled(self):
-        """Should receive notifications."""
+        """Return the ."""
         return self.device_disabled
 
     def disable(self):
@@ -140,7 +139,7 @@ def _write_device(out, device):
 
     out.write(device.push_id)
     out.write(": {")
-    if len(attributes) > 0:
+    if attributes:
         separator = ", "
         out.write(separator.join(attributes))
 
@@ -178,16 +177,13 @@ class ApnsNotificationService(BaseNotificationService):
             if device.tracking_device_id is not None
         ]
         track_state_change(
-            hass,
-            tracking_ids,
-            self.device_state_changed_listener)
+            hass, tracking_ids, self.device_state_changed_listener)
 
     def device_state_changed_listener(self, entity_id, from_s, to_s):
         """
-        Listener for sate change.
+        Listen for sate change.
 
-        Track device state change if a device
-        has a tracking id specified.
+        Track device state change if a device has a tracking id specified.
         """
         self.device_states[entity_id] = str(to_s.state)
 
@@ -206,10 +202,7 @@ class ApnsNotificationService(BaseNotificationService):
         current_tracking_id = None if current_device is None \
             else current_device.tracking_device_id
 
-        device = ApnsDevice(
-            push_id,
-            device_name,
-            current_tracking_id)
+        device = ApnsDevice(push_id, device_name, current_tracking_id)
 
         if current_device is None:
             self.devices[push_id] = device
@@ -245,15 +238,15 @@ class ApnsNotificationService(BaseNotificationService):
         elif isinstance(message, template_helper.Template):
             rendered_message = message.render()
         else:
-            rendered_message = ""
+            rendered_message = ''
 
         payload = Payload(
             alert=rendered_message,
-            badge=message_data.get("badge"),
-            sound=message_data.get("sound"),
-            category=message_data.get("category"),
-            custom=message_data.get("custom", {}),
-            content_available=message_data.get("content_available", False))
+            badge=message_data.get('badge'),
+            sound=message_data.get('sound'),
+            category=message_data.get('category'),
+            custom=message_data.get('custom', {}),
+            content_available=message_data.get('content_available', False))
 
         device_update = False
 
@@ -267,13 +260,9 @@ class ApnsNotificationService(BaseNotificationService):
                 if device_state is None or state == str(device_state):
                     try:
                         apns.send_notification(
-                            push_id,
-                            payload,
-                            topic=self.topic)
+                            push_id, payload, topic=self.topic)
                     except Unregistered:
-                        logging.error(
-                            "Device %s has unregistered.",
-                            push_id)
+                        logging.error("Device %s has unregistered", push_id)
                         device_update = True
                         device.disable()
 

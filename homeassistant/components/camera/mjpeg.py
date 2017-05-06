@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a MJPEG IP Camera."""
+    """Set up a MJPEG IP Camera."""
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
     async_add_devices([MjpegCamera(hass, config)])
@@ -102,10 +102,10 @@ class MjpegCamera(Camera):
                 return image
 
         except asyncio.TimeoutError:
-            _LOGGER.error('Timeout getting camera image')
+            _LOGGER.error("Timeout getting camera image")
 
         except aiohttp.ClientError as err:
-            _LOGGER.error('Error getting new camera image: %s', err)
+            _LOGGER.error("Error getting new camera image: %s", err)
 
     def camera_image(self):
         """Return a still image response from the camera."""

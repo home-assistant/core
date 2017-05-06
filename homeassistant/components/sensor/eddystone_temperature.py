@@ -1,13 +1,11 @@
-"""Read temperature information from Eddystone beacons.
+"""
+Read temperature information from Eddystone beacons.
 
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.eddystone_temperature/
-
-Original version of this code (for Skybeacons) by anpetrov.
-https://github.com/anpetrov/skybeacon
 """
 import logging
 
@@ -24,7 +22,6 @@ REQUIREMENTS = ['beacontools[scan]==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-# constants
 CONF_BEACONS = 'beacons'
 CONF_BT_DEVICE_ID = 'bt_device_id'
 CONF_INSTANCE = 'instance'
@@ -45,8 +42,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
-    _LOGGER.debug("Setting up...")
-
     bt_device_id = config.get("bt_device_id")
 
     beacons = config.get("beacons")
@@ -63,17 +58,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             devices.append(EddystoneTemp(name, namespace, instance))
 
-    if len(devices) > 0:
+    if devices:
         mon = Monitor(hass, devices, bt_device_id)
 
         def monitor_stop(_service_or_event):
             """Stop the monitor thread."""
-            _LOGGER.info("Stopping scanner for eddystone beacons")
+            _LOGGER.info("Stopping scanner for Eddystone beacons")
             mon.stop()
 
         def monitor_start(_service_or_event):
             """Start the monitor thread."""
-            _LOGGER.info("Starting scanner for eddystone beacons")
+            _LOGGER.info("Starting scanner for Eddystone beacons")
             mon.start()
 
         add_devices(devices)
@@ -88,9 +83,8 @@ def get_from_conf(config, config_key, length):
     """Retrieve value from config and validate length."""
     string = config.get(config_key)
     if len(string) != length:
-        _LOGGER.error("Error in config parameter \"%s\": Must be exactly %d "
-                      "bytes. Device will not be added.",
-                      config_key, length/2)
+        _LOGGER.error("Error in config parameter %s: Must be exactly %d "
+                      "bytes. Device will not be added", config_key, length/2)
         return None
     else:
         return string
@@ -124,7 +118,7 @@ class EddystoneTemp(Entity):
 
     @property
     def should_poll(self):
-        """Hass should not poll for state."""
+        """Return the polling state."""
         return False
 
 
@@ -135,26 +129,25 @@ class Monitor(object):
         """Construct interface object."""
         self.hass = hass
 
-        # list of beacons to monitor
+        # List of beacons to monitor
         self.devices = devices
-        # number of the bt device (hciX)
+        # Number of the bt device (hciX)
         self.bt_device_id = bt_device_id
 
         def callback(bt_addr, _, packet, additional_info):
-            """Callback for new packets."""
-            self.process_packet(additional_info['namespace'],
-                                additional_info['instance'],
-                                packet.temperature)
+            """Handle new packets."""
+            self.process_packet(
+                additional_info['namespace'], additional_info['instance'],
+                packet.temperature)
 
         # pylint: disable=import-error
-        from beacontools import (BeaconScanner, EddystoneFilter,
-                                 EddystoneTLMFrame)
-        # Create a device filter for each device
+        from beacontools import (
+            BeaconScanner, EddystoneFilter, EddystoneTLMFrame)
         device_filters = [EddystoneFilter(d.namespace, d.instance)
                           for d in devices]
 
-        self.scanner = BeaconScanner(callback, bt_device_id, device_filters,
-                                     EddystoneTLMFrame)
+        self.scanner = BeaconScanner(
+            callback, bt_device_id, device_filters, EddystoneTLMFrame)
         self.scanning = False
 
     def start(self):
@@ -163,11 +156,11 @@ class Monitor(object):
             self.scanner.start()
             self.scanning = True
         else:
-            _LOGGER.debug("Warning: start() called, but scanner is already"
-                          " running")
+            _LOGGER.debug(
+                "start() called, but scanner is already running")
 
     def process_packet(self, namespace, instance, temperature):
-        """Assign temperature to hass device."""
+        """Assign temperature to device."""
         _LOGGER.debug("Received temperature for <%s,%s>: %d",
                       namespace, instance, temperature)
 
@@ -185,5 +178,5 @@ class Monitor(object):
             _LOGGER.debug("Stopped")
             self.scanning = False
         else:
-            _LOGGER.debug("Warning: stop() called but scanner was not"
-                          " running.")
+            _LOGGER.debug(
+                "stop() called but scanner was not running")

@@ -15,6 +15,7 @@ COMMENT_REQUIREMENTS = (
     'pybluez',
     'beacontools',
     'bluepy',
+    'opencv-python',
     'python-lirc',
     'gattlib',
     'pyuserinput',
@@ -22,7 +23,8 @@ COMMENT_REQUIREMENTS = (
     'pycups',
     'python-eq3bt',
     'avion',
-    'decora'
+    'decora',
+    'face_recognition'
 )
 
 IGNORE_PACKAGES = (

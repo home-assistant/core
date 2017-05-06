@@ -25,15 +25,15 @@ from homeassistant.const import (
     HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON)
 from homeassistant.exceptions import HomeAssistantError
 
-METHOD_GET = "get"
-METHOD_POST = "post"
-METHOD_DELETE = "delete"
-
 _LOGGER = logging.getLogger(__name__)
+
+METHOD_GET = 'get'
+METHOD_POST = 'post'
+METHOD_DELETE = 'delete'
 
 
 class APIStatus(enum.Enum):
-    """Represent API status."""
+    """Representation of an API status."""
 
     # pylint: disable=no-init, invalid-name
     OK = "ok"
@@ -51,7 +51,7 @@ class API(object):
 
     def __init__(self, host: str, api_password: Optional[str]=None,
                  port: Optional[int]=SERVER_PORT, use_ssl: bool=False) -> None:
-        """Initalize the API."""
+        """Init the API."""
         self.host = host
         self.port = port
         self.api_password = api_password

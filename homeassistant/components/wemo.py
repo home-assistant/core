@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
-    """Common setup for WeMo devices."""
+    """Set up for WeMo devices."""
     import pywemo
 
     global SUBSCRIPTION_REGISTRY

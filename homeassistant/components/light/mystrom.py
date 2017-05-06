@@ -72,7 +72,7 @@ class MyStromLight(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light."""
+        """Return the brightness of the light."""
         return self._brightness
 
     @property

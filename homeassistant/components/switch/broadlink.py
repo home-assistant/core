@@ -10,33 +10,33 @@ import asyncio
 import binascii
 import logging
 import socket
+
 import voluptuous as vol
 
 import homeassistant.loader as loader
 from homeassistant.util.dt import utcnow
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_FRIENDLY_NAME, CONF_SWITCHES,
-                                 CONF_COMMAND_OFF, CONF_COMMAND_ON,
-                                 CONF_TIMEOUT, CONF_HOST, CONF_MAC,
-                                 CONF_TYPE)
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME, CONF_SWITCHES, CONF_COMMAND_OFF, CONF_COMMAND_ON,
+    CONF_TIMEOUT, CONF_HOST, CONF_MAC, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['broadlink==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "broadlink"
+DOMAIN = 'broadlink'
 DEFAULT_NAME = 'Broadlink switch'
 DEFAULT_TIMEOUT = 10
 DEFAULT_RETRY = 3
-SERVICE_LEARN = "learn_command"
-SERVICE_SEND = "send_packet"
+SERVICE_LEARN = 'learn_command'
+SERVICE_SEND = 'send_packet'
 
-RM_TYPES = ["rm", "rm2", "rm_mini", "rm_pro_phicomm", "rm2_home_plus",
-            "rm2_home_plus_gdt", "rm2_pro_plus", "rm2_pro_plus2",
-            "rm2_pro_plus_bl", "rm_mini_shate"]
-SP1_TYPES = ["sp1"]
-SP2_TYPES = ["sp2", "honeywell_sp2", "sp3", "spmini2", "spminiplus"]
+RM_TYPES = ['rm', 'rm2', 'rm_mini', 'rm_pro_phicomm', 'rm2_home_plus',
+            'rm2_home_plus_gdt', 'rm2_pro_plus', 'rm2_pro_plus2',
+            'rm2_pro_plus_bl', 'rm_mini_shate']
+SP1_TYPES = ['sp1']
+SP2_TYPES = ['sp2', 'honeywell_sp2', 'sp3', 'spmini2', 'spminiplus']
 
 SWITCH_TYPES = RM_TYPES + SP1_TYPES + SP2_TYPES
 
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Broadlink switches."""
+    """Set up Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES, {})
     ip_addr = config.get(CONF_HOST)
@@ -75,33 +75,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             auth = yield from hass.loop.run_in_executor(None,
                                                         broadlink_device.auth)
         except socket.timeout:
-            _LOGGER.error("Failed to connect to device, timeout.")
+            _LOGGER.error("Failed to connect to device, timeout")
             return
         if not auth:
-            _LOGGER.error("Failed to connect to device.")
+            _LOGGER.error("Failed to connect to device")
             return
 
-        yield from hass.loop.run_in_executor(None,
-                                             broadlink_device.enter_learning)
+        yield from hass.loop.run_in_executor(
+            None, broadlink_device.enter_learning)
 
         _LOGGER.info("Press the key you want HASS to learn")
         start_time = utcnow()
         while (utcnow() - start_time) < timedelta(seconds=20):
-            packet = yield from hass.loop.run_in_executor(None,
-                                                          broadlink_device.
-                                                          check_data)
+            packet = yield from hass.loop.run_in_executor(
+                None, broadlink_device.check_data)
             if packet:
-                log_msg = 'Recieved packet is: {}'.\
+                log_msg = "Recieved packet is: {}".\
                           format(b64encode(packet).decode('utf8'))
                 _LOGGER.info(log_msg)
-                persistent_notification.async_create(hass, log_msg,
-                                                     title='Broadlink switch')
+                persistent_notification.async_create(
+                    hass, log_msg, title='Broadlink switch')
                 return
             yield from asyncio.sleep(1, loop=hass.loop)
-        _LOGGER.error('Did not received any signal.')
-        persistent_notification.async_create(hass,
-                                             "Did not received any signal",
-                                             title='Broadlink switch')
+        _LOGGER.error("Did not received any signal")
+        persistent_notification.async_create(
+            hass, "Did not received any signal", title='Broadlink switch')
 
     @asyncio.coroutine
     def _send_packet(call):
@@ -119,7 +117,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                             None, broadlink_device.auth)
                     except socket.timeout:
                         if retry == DEFAULT_RETRY-1:
-                            _LOGGER.error("Failed to send packet to device.")
+                            _LOGGER.error("Failed to send packet to device")
 
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr)
@@ -148,7 +146,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         broadlink_device.auth()
     except socket.timeout:
-        _LOGGER.error("Failed to connect to device.")
+        _LOGGER.error("Failed to connect to device")
 
     add_devices(switches)
 
@@ -176,7 +174,7 @@ class BroadlinkRMSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
@@ -199,7 +197,7 @@ class BroadlinkRMSwitch(SwitchDevice):
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
         if packet is None:
-            _LOGGER.debug("Empty packet.")
+            _LOGGER.debug("Empty packet")
             return True
         try:
             self._device.send_data(packet)
@@ -259,7 +257,7 @@ class BroadlinkSP2Switch(BroadlinkSP1Switch):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     def update(self):
