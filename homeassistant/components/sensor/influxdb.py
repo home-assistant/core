@@ -65,7 +65,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the InfluxDB component."""
+    """Set up the InfluxDB component."""
     influx_conf = {'host': config[CONF_HOST],
                    'port': config.get(CONF_PORT),
                    'username': config.get(CONF_USERNAME),
@@ -105,13 +105,11 @@ class InfluxSensor(Entity):
                     query.get(CONF_FIELD),
                     query.get(CONF_MEASUREMENT_NAME),
                     query.get(CONF_WHERE))
-        influx = InfluxDBClient(host=influx_conf['host'],
-                                port=influx_conf['port'],
-                                username=influx_conf['username'],
-                                password=influx_conf['password'],
-                                database=database,
-                                ssl=influx_conf['ssl'],
-                                verify_ssl=influx_conf['verify_ssl'])
+        influx = InfluxDBClient(
+            host=influx_conf['host'], port=influx_conf['port'],
+            username=influx_conf['username'], password=influx_conf['password'],
+            database=database, ssl=influx_conf['ssl'],
+            verify_ssl=influx_conf['verify_ssl'])
         try:
             influx.query("select * from /.*/ LIMIT 1;")
             self.connected = True
@@ -135,12 +133,12 @@ class InfluxSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     def update(self):
@@ -168,15 +166,15 @@ class InfluxSensorData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data with a shell command."""
-        _LOGGER.info('Running query: %s', self.query)
+        _LOGGER.info("Running query: %s", self.query)
 
         points = list(self.influx.query(self.query).get_points())
-        if len(points) == 0:
-            _LOGGER.warning('Query returned no points, sensor state set'
-                            ' to UNKNOWN : %s', self.query)
+        if not points:
+            _LOGGER.warning("Query returned no points, sensor state set "
+                            "to UNKNOWN: %s", self.query)
             self.value = None
         else:
-            if len(points) > 1:
-                _LOGGER.warning('Query returned multiple points, only first'
-                                ' one shown : %s', self.query)
+            if points:
+                _LOGGER.warning("Query returned multiple points, only first "
+                                "one shown: %s", self.query)
             self.value = points[0].get('value')

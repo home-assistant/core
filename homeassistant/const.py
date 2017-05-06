@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 43
-PATCH_VERSION = '2'
+MINOR_VERSION = 44
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -324,6 +324,7 @@ SERVICE_MEDIA_STOP = 'media_stop'
 SERVICE_MEDIA_NEXT_TRACK = 'media_next_track'
 SERVICE_MEDIA_PREVIOUS_TRACK = 'media_previous_track'
 SERVICE_MEDIA_SEEK = 'media_seek'
+SERVICE_SHUFFLE_SET = 'shuffle_set'
 
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'

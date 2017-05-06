@@ -11,20 +11,18 @@ from collections import namedtuple
 import asyncio
 import aiohttp
 import async_timeout
-
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-# Configuration constant specific for tado
-CONF_HOME_ID = 'home_id'
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_HOME_ID = 'home_id'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
@@ -71,7 +69,7 @@ class TadoDeviceScanner(DeviceScanner):
             hass, cookie_jar=aiohttp.CookieJar(unsafe=True, loop=hass.loop))
 
         self.success_init = self._update_info()
-        _LOGGER.info("Tado scanner initialized")
+        _LOGGER.info("Scanner initialized")
 
     @asyncio.coroutine
     def async_scan_devices(self):
@@ -110,14 +108,12 @@ class TadoDeviceScanner(DeviceScanner):
             with async_timeout.timeout(10, loop=self.hass.loop):
                 # Format the URL here, so we can log the template URL if
                 # anything goes wrong without exposing username and password.
-                url = self.tadoapiurl.format(home_id=self.home_id,
-                                             username=self.username,
-                                             password=self.password)
+                url = self.tadoapiurl.format(
+                    home_id=self.home_id, username=self.username,
+                    password=self.password)
 
-                # Go get 'em!
                 response = yield from self.websession.get(url)
 
-                # error on Tado webservice
                 if response.status != 200:
                     _LOGGER.warning(
                         "Error %d on %s.", response.status, self.tadoapiurl)

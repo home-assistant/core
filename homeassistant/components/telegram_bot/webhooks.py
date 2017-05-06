@@ -1,9 +1,8 @@
 """
 Allows utilizing telegram webhooks.
 
-See https://core.telegram.org/bots/webhooks for details
- about webhooks.
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.webhooks/
 """
 import asyncio
 import logging
@@ -45,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the polling platform."""
+    """Set up the Telegram webhooks platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
 
@@ -54,9 +53,9 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
         hass.config.api.base_url, TELEGRAM_HANDLER_URL)
     if current_status and current_status['url'] != handler_url:
         if bot.setWebhook(handler_url):
-            _LOGGER.info("set new telegram webhook %s", handler_url)
+            _LOGGER.info("Set new telegram webhook %s", handler_url)
         else:
-            _LOGGER.error("set telegram webhook failed %s", handler_url)
+            _LOGGER.error("Set telegram webhook failed %s", handler_url)
             return False
 
     hass.bus.listen_once(
@@ -68,7 +67,7 @@ def setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
-    """Handle pushes from telegram."""
+    """Handle pushes from Telegram."""
 
     requires_auth = False
     url = TELEGRAM_HANDLER_URL

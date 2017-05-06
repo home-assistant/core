@@ -4,7 +4,6 @@ Support for Wink Covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.wink/
 """
-
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
@@ -12,7 +11,7 @@ DEPENDENCIES = ['wink']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink cover platform."""
+    """Set up the Wink cover platform."""
     import pywink
 
     for shade in pywink.get_shades():

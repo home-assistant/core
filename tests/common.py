@@ -1,9 +1,10 @@
 """Test the helper method for writing tests."""
 import asyncio
+import functools as ft
 import os
 import sys
 from datetime import timedelta
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, Mock
 from io import StringIO
 import logging
 import threading
@@ -36,6 +37,21 @@ _LOGGER = logging.getLogger(__name__)
 INST_COUNT = 0
 
 
+def threadsafe_callback_factory(func):
+    """Create threadsafe functions out of callbacks.
+
+    Callback needs to have `hass` as first argument.
+    """
+    @ft.wraps(func)
+    def threadsafe(*args, **kwargs):
+        """Call func threadsafe."""
+        hass = args[0]
+        run_callback_threadsafe(
+            hass.loop, ft.partial(func, *args, **kwargs)).result()
+
+    return threadsafe
+
+
 def get_test_config_dir(*add_path):
     """Return a path to a test config dir."""
     return os.path.join(os.path.dirname(__file__), 'testing_config', *add_path)
@@ -62,7 +78,7 @@ def get_test_home_assistant():
     orig_stop = hass.stop
 
     def start_hass(*mocks):
-        """Helper to start hass."""
+        """Start hass."""
         run_coroutine_threadsafe(hass.async_start(), loop=hass.loop).result()
 
     def stop_hass():
@@ -93,8 +109,8 @@ def async_test_home_assistant(loop):
 
     def async_add_job(target, *args):
         """Add a magic mock."""
-        if isinstance(target, MagicMock):
-            return
+        if isinstance(target, Mock):
+            return mock_coro(target())
         return orig_async_add_job(target, *args)
 
     hass.async_add_job = async_add_job
@@ -151,12 +167,12 @@ def get_test_instance_port():
 
 
 def mock_service(hass, domain, service):
-    """Setup a fake service & return a list that logs calls to this service."""
+    """Set up a fake service & return a calls log list to this service."""
     calls = []
 
     @asyncio.coroutine
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
-        """"Mocked service call."""
+        """Mock service call."""
         calls.append(call)
 
     if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
@@ -177,15 +193,16 @@ def async_fire_mqtt_message(hass, topic, payload, qos=0):
         payload, qos)
 
 
-def fire_mqtt_message(hass, topic, payload, qos=0):
-    """Fire the MQTT message."""
-    run_callback_threadsafe(
-        hass.loop, async_fire_mqtt_message, hass, topic, payload, qos).result()
+fire_mqtt_message = threadsafe_callback_factory(async_fire_mqtt_message)
 
 
-def fire_time_changed(hass, time):
+@ha.callback
+def async_fire_time_changed(hass, time):
     """Fire a time changes event."""
-    hass.bus.fire(EVENT_TIME_CHANGED, {'now': time})
+    hass.bus.async_fire(EVENT_TIME_CHANGED, {'now': time})
+
+
+fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
 def fire_service_discovered(hass, service, info):
@@ -211,7 +228,7 @@ def ensure_sun_set(hass):
 
 
 def load_fixture(filename):
-    """Helper to load a fixture."""
+    """Load a fixture."""
     path = os.path.join(os.path.dirname(__file__), 'fixtures', filename)
     with open(path) as fptr:
         return fptr.read()
@@ -271,6 +288,7 @@ def mock_mqtt_component(hass):
         return mock_mqtt
 
 
+@ha.callback
 def mock_component(hass, component):
     """Mock a component is setup."""
     if component in hass.config.components:
@@ -302,7 +320,7 @@ class MockModule(object):
             self.async_setup = async_setup
 
     def setup(self, hass, config):
-        """Setup the component.
+        """Set up the component.
 
         We always define this mock because MagicMock setups will be seen by the
         executor as a coroutine, raising an exception.
@@ -326,7 +344,7 @@ class MockPlatform(object):
             self.PLATFORM_SCHEMA = platform_schema
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
-        """Setup the platform."""
+        """Set up the platform."""
         if self._setup_platform is not None:
             self._setup_platform(hass, config, add_devices, discovery_info)
 
@@ -391,7 +409,7 @@ def patch_yaml_files(files_dict, endswith=True):
         """Mock open() in the yaml module, used by load_yaml."""
         # Return the mocked file on full match
         if fname in files_dict:
-            _LOGGER.debug('patch_yaml_files match %s', fname)
+            _LOGGER.debug("patch_yaml_files match %s", fname)
             res = StringIO(files_dict[fname])
             setattr(res, 'name', fname)
             return res
@@ -399,34 +417,29 @@ def patch_yaml_files(files_dict, endswith=True):
         # Match using endswith
         for ends in matchlist:
             if fname.endswith(ends):
-                _LOGGER.debug('patch_yaml_files end match %s: %s', ends, fname)
+                _LOGGER.debug("patch_yaml_files end match %s: %s", ends, fname)
                 res = StringIO(files_dict[ends])
                 setattr(res, 'name', fname)
                 return res
 
         # Fallback for hass.components (i.e. services.yaml)
         if 'homeassistant/components' in fname:
-            _LOGGER.debug('patch_yaml_files using real file: %s', fname)
+            _LOGGER.debug("patch_yaml_files using real file: %s", fname)
             return open(fname, encoding='utf-8')
 
         # Not found
-        raise FileNotFoundError('File not found: {}'.format(fname))
+        raise FileNotFoundError("File not found: {}".format(fname))
 
     return patch.object(yaml, 'open', mock_open_f, create=True)
 
 
 def mock_coro(return_value=None):
-    """Helper method to return a coro that returns a value."""
-    @asyncio.coroutine
-    def coro():
-        """Fake coroutine."""
-        return return_value
-
-    return coro()
+    """Return a coro that returns a value."""
+    return mock_coro_func(return_value)()
 
 
 def mock_coro_func(return_value=None):
-    """Helper method to return a coro that returns a value."""
+    """Return a method to create a coro function that returns a value."""
     @asyncio.coroutine
     def coro(*args, **kwargs):
         """Fake coroutine."""
@@ -456,7 +469,7 @@ def assert_setup_component(count, domain=None):
         res = async_process_component_config(
             hass, config_input, domain)
         config[domain] = None if res is None else res.get(domain)
-        _LOGGER.debug('Configuration for %s, Validated: %s, Original %s',
+        _LOGGER.debug("Configuration for %s, Validated: %s, Original %s",
                       domain, config[domain], config_input.get(domain))
         return res
 

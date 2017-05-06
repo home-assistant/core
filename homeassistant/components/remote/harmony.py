@@ -81,7 +81,7 @@ def register_services(hass):
 
 
 def _apply_service(service, service_func, *service_func_args):
-    """Internal func for applying a service."""
+    """Handle services to apply."""
     entity_ids = service.data.get('entity_id')
 
     if entity_ids:

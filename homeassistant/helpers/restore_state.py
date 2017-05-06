@@ -50,7 +50,7 @@ def _load_restore_cache(hass: HomeAssistant):
 
 @asyncio.coroutine
 def async_get_last_state(hass, entity_id: str):
-    """Helper to restore state."""
+    """Restore state."""
     if DATA_RESTORE_CACHE in hass.data:
         return hass.data[DATA_RESTORE_CACHE].get(entity_id)
 
@@ -84,7 +84,7 @@ def async_get_last_state(hass, entity_id: str):
 
 @asyncio.coroutine
 def async_restore_state(entity, extract_info):
-    """Helper to call entity.async_restore_state with cached info."""
+    """Call entity.async_restore_state with cached info."""
     if entity.hass.state not in (CoreState.starting, CoreState.not_running):
         _LOGGER.debug("Not restoring state for %s: Hass is not starting: %s",
                       entity.entity_id, entity.hass.state)

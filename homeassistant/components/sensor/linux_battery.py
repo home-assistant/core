@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Linux Battery sensor."""
+    """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
 

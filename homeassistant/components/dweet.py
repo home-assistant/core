@@ -33,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Dweet.io component."""
+    """Set up the Dweet.io component."""
     conf = config[DOMAIN]
     name = conf.get(CONF_NAME)
     whitelist = conf.get(CONF_WHITELIST)

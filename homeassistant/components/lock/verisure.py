@@ -16,13 +16,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Verisure platform."""
+    """Set up the Verisure platform."""
     locks = []
     if int(hub.config.get(CONF_LOCKS, 1)):
         hub.update_locks()
         locks.extend([
             VerisureDoorlock(device_id)
-            for device_id in hub.lock_status.keys()
+            for device_id in hub.lock_status
         ])
     add_devices(locks)
 
@@ -31,7 +31,7 @@ class VerisureDoorlock(LockDevice):
     """Representation of a Verisure doorlock."""
 
     def __init__(self, device_id):
-        """Initialize the lock."""
+        """Initialize the Verisure lock."""
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = hub.config.get(CONF_CODE_DIGITS)
@@ -72,8 +72,7 @@ class VerisureDoorlock(LockDevice):
             self._state = STATE_LOCKED
         elif hub.lock_status[self._id].status != 'pending':
             _LOGGER.error(
-                'Unknown lock state %s',
-                hub.lock_status[self._id].status)
+                "Unknown lock state %s", hub.lock_status[self._id].status)
         self._changed_by = hub.lock_status[self._id].name
 
     @property
@@ -84,13 +83,13 @@ class VerisureDoorlock(LockDevice):
     def unlock(self, **kwargs):
         """Send unlock command."""
         hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'UNLOCKED')
-        _LOGGER.info('verisure doorlock unlocking')
+        _LOGGER.debug("Verisure doorlock unlocking")
         hub.my_pages.lock.wait_while_pending()
         self.update()
 
     def lock(self, **kwargs):
         """Send lock command."""
         hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'LOCKED')
-        _LOGGER.info('verisure doorlock locking')
+        _LOGGER.debug("Verisure doorlock locking")
         hub.my_pages.lock.wait_while_pending()
         self.update()

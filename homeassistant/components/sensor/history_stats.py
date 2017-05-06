@@ -4,7 +4,6 @@ Component to make instant statistics about your history.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.history_stats/
 """
-
 import datetime
 import logging
 import math
@@ -152,7 +151,7 @@ class HistoryStatsSensor(Entity):
 
     @property
     def should_poll(self):
-        """Polling required."""
+        """Return the polling state."""
         return True
 
     @property
@@ -239,8 +238,8 @@ class HistoryStatsSensor(Entity):
                     start = dt_util.as_local(dt_util.utc_from_timestamp(
                         math.floor(float(start_rendered))))
                 except ValueError:
-                    _LOGGER.error('PARSING ERROR: start must be a datetime'
-                                  ' or a timestamp.')
+                    _LOGGER.error("Parsing error: start must be a datetime"
+                                  "or a timestamp")
                     return
 
         # Parse end
@@ -256,8 +255,8 @@ class HistoryStatsSensor(Entity):
                     end = dt_util.as_local(dt_util.utc_from_timestamp(
                         math.floor(float(end_rendered))))
                 except ValueError:
-                    _LOGGER.error('PARSING ERROR: end must be a datetime'
-                                  ' or a timestamp.')
+                    _LOGGER.error("Parsing error: end must be a datetime "
+                                  "or a timestamp")
                     return
 
         # Calculate start or end using the duration
@@ -305,5 +304,5 @@ class HistoryStatsHelper:
             # Common during HA startup - so just a warning
             _LOGGER.warning(ex)
             return
-        _LOGGER.error('Error parsing template for [' + field + ']')
+        _LOGGER.error("Error parsing template for field %s", field)
         _LOGGER.error(ex)
