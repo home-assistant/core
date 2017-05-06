@@ -187,11 +187,24 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(
-                                    '{ "key": "updated_state" }'))
+                                    '{ "key": "some_json_value" }'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement, None, True)
         self.sensor.update()
-        self.assertEqual('updated_state',
+        self.assertEqual('some_json_value',
+                         self.sensor.device_state_attributes.key)
+
+    def test_update_with_josn_attrs_and_template(self):
+        """Test attributes get extracted from a JSON result."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '{ "key": "json_state_value" }'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement,
+                                      self.value_template, True)
+        self.sensor.update()
+        self.assertEqual('json_state_value', self.sensor.state)
+        self.assertEqual('json_state_value',
                          self.sensor.device_state_attributes.key)
 
 
