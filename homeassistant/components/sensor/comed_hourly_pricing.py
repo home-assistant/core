@@ -20,13 +20,13 @@ _RESOURCE = 'https://hourlypricing.comed.com/api'
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
-CONF_MONITORED_FEEDS = 'monitored_feeds'
-CONF_SENSOR_TYPE = 'type'
-CONF_OFFSET = 'offset'
-CONF_NAME = 'name'
-
-CONF_FIVE_MINUTE = 'five_minute'
+CONF_ATTRIBUTION = "Data provided by ComEd Hourly Pricing service"
 CONF_CURRENT_HOUR_AVERAGE = 'current_hour_average'
+CONF_FIVE_MINUTE = 'five_minute'
+CONF_MONITORED_FEEDS = 'monitored_feeds'
+CONF_NAME = 'name'
+CONF_OFFSET = 'offset'
+CONF_SENSOR_TYPE = 'type'
 
 SENSOR_TYPES = {
     CONF_FIVE_MINUTE: ['ComEd 5 Minute Price', 'c'],
@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ComEd Hourly Pricing sensor."""
+    """Set up the ComEd Hourly Pricing sensor."""
     dev = []
     for variable in config[CONF_MONITORED_FEEDS]:
         dev.append(ComedHourlyPricingSensor(
@@ -89,8 +89,7 @@ class ComedHourlyPricingSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attrs = {ATTR_ATTRIBUTION: 'Data provided by ComEd Hourly '
-                                   'Pricing service'}
+        attrs = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         return attrs
 
     def update(self):
@@ -109,4 +108,4 @@ class ComedHourlyPricingSensor(Entity):
             else:
                 self._state = STATE_UNKNOWN
         except (RequestException, ValueError, KeyError):
-            _LOGGER.warning('Could not update status for %s', self.name)
+            _LOGGER.warning("Could not update status for %s", self.name)

@@ -14,8 +14,9 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-_LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['pushbullet.py==0.10.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_URL = 'url'
 
@@ -33,9 +34,7 @@ def get_service(hass, config, discovery_info=None):
     try:
         pushbullet = PushBullet(config[CONF_API_KEY])
     except InvalidKeyError:
-        _LOGGER.error(
-            "Wrong API key supplied. "
-            "Get it at https://www.pushbullet.com/account")
+        _LOGGER.error("Wrong API key supplied")
         return None
 
     return PushBulletNotificationService(pushbullet)

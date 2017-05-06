@@ -125,7 +125,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
-            cv.ordered_dict(DEVICE_CONFIG_SCHEMA_ENTRY, cv.string),
+            vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_DOMAIN, default={}):
             vol.Schema({cv.string: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
@@ -199,7 +199,7 @@ def get_config_value(node, value_index, tries=5):
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Generic Z-Wave platform setup."""
+    """Set up the Z-Wave platform (generic part)."""
     if discovery_info is None or ZWAVE_NETWORK not in hass.data:
         return False
 
@@ -214,7 +214,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 # pylint: disable=R0914
 def setup(hass, config):
-    """Setup Z-Wave.
+    """Set up Z-Wave.
 
     Will automatically load components to support devices found on the network.
     """
@@ -278,7 +278,7 @@ def setup(hass, config):
     discovered_values = []
 
     def value_added(node, value):
-        """Called when a value is added to a node on the network."""
+        """Handle new added value to a node on the network."""
         # Check if this value should be tracked by an existing entity
         for values in discovered_values:
             values.check_value(value)
@@ -298,18 +298,18 @@ def setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     def node_added(node):
-        """Called when a node is added on the network."""
+        """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
         node_config = device_config.get(entity.entity_id)
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
-                "Ignoring node entity %s due to device settings.",
+                "Ignoring node entity %s due to device settings",
                 entity.entity_id)
             return
         component.add_entities([entity])
 
     def scene_activated(node, scene_id):
-        """Called when a scene is activated on any node in the network."""
+        """Handle an activated scene on any node in the network."""
         hass.bus.fire(const.EVENT_SCENE_ACTIVATED, {
             ATTR_ENTITY_ID: _node_object_id(node),
             const.ATTR_OBJECT_ID: _node_object_id(node),
@@ -317,23 +317,23 @@ def setup(hass, config):
         })
 
     def node_event_activated(node, value):
-        """Called when a nodeevent is activated on any node in the network."""
+        """Handle a nodeevent on any node in the network."""
         hass.bus.fire(const.EVENT_NODE_EVENT, {
             const.ATTR_OBJECT_ID: _node_object_id(node),
             const.ATTR_BASIC_LEVEL: value
         })
 
     def network_ready():
-        """Called when all awake nodes have been queried."""
-        _LOGGER.info("Zwave network is ready for use. All awake nodes"
-                     " have been queried. Sleeping nodes will be"
-                     " queried when they awake.")
+        """Handle the query of all awake nodes."""
+        _LOGGER.info("Zwave network is ready for use. All awake nodes "
+                     "have been queried. Sleeping nodes will be "
+                     "queried when they awake.")
         hass.bus.fire(const.EVENT_NETWORK_READY)
 
     def network_complete():
-        """Called when all nodes on network have been queried."""
-        _LOGGER.info("Zwave network is complete. All nodes on the network"
-                     " have been queried")
+        """Handle the querying of all nodes on network."""
+        _LOGGER.info("Z-Wave network is complete. All nodes on the network "
+                     "have been queried")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
     dispatcher.connect(
@@ -351,42 +351,42 @@ def setup(hass, config):
 
     def add_node(service):
         """Switch into inclusion mode."""
-        _LOGGER.info("Zwave add_node have been initialized.")
+        _LOGGER.info("Z-Wave add_node have been initialized")
         network.controller.add_node()
 
     def add_node_secure(service):
         """Switch into secure inclusion mode."""
-        _LOGGER.info("Zwave add_node_secure have been initialized.")
+        _LOGGER.info("Z-Wave add_node_secure have been initialized")
         network.controller.add_node(True)
 
     def remove_node(service):
         """Switch into exclusion mode."""
-        _LOGGER.info("Zwave remove_node have been initialized.")
+        _LOGGER.info("Z-Wwave remove_node have been initialized")
         network.controller.remove_node()
 
     def cancel_command(service):
         """Cancel a running controller command."""
-        _LOGGER.info("Cancel running ZWave command.")
+        _LOGGER.info("Cancel running Z-Wave command")
         network.controller.cancel_command()
 
     def heal_network(service):
         """Heal the network."""
-        _LOGGER.info("ZWave heal running.")
+        _LOGGER.info("Z-Wave heal running")
         network.heal()
 
     def soft_reset(service):
         """Soft reset the controller."""
-        _LOGGER.info("Zwave soft_reset have been initialized.")
+        _LOGGER.info("Z-Wave soft_reset have been initialized")
         network.controller.soft_reset()
 
     def test_network(service):
         """Test the network by sending commands to all the nodes."""
-        _LOGGER.info("Zwave test_network have been initialized.")
+        _LOGGER.info("Z-Wave test_network have been initialized")
         network.test()
 
     def stop_network(_service_or_event):
         """Stop Z-Wave network."""
-        _LOGGER.info("Stopping ZWave network.")
+        _LOGGER.info("Stopping Z-Wave network")
         network.stop()
         if hass.state == CoreState.running:
             hass.bus.fire(const.EVENT_NETWORK_STOP)
@@ -398,18 +398,18 @@ def setup(hass, config):
         name = service.data.get(const.ATTR_NAME)
         node.name = name
         _LOGGER.info(
-            "Renamed ZWave node %d to %s", node_id, name)
+            "Renamed Z-Wave node %d to %s", node_id, name)
 
     def remove_failed_node(service):
         """Remove failed node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        _LOGGER.info('Trying to remove zwave node %d', node_id)
+        _LOGGER.info("Trying to remove zwave node %d", node_id)
         network.controller.remove_failed_node(node_id)
 
     def replace_failed_node(service):
         """Replace failed node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        _LOGGER.info('Trying to replace zwave node %d', node_id)
+        _LOGGER.info("Trying to replace zwave node %d", node_id)
         network.controller.replace_failed_node(node_id)
 
     def set_config_parameter(service):
@@ -424,21 +424,21 @@ def setup(hass, config):
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
                 .values()):
             if value.index == param and value.type == const.TYPE_LIST:
-                _LOGGER.debug('Values for parameter %s: %s', param,
+                _LOGGER.debug("Values for parameter %s: %s", param,
                               value.data_items)
                 i = len(value.data_items) - 1
         if i == 0:
             node.set_config_param(param, selection, size)
         else:
             if selection > i:
-                _LOGGER.info('Config parameter selection does not exist!'
-                             ' Please check zwcfg_[home_id].xml in'
-                             ' your homeassistant config directory. '
-                             ' Available selections are 0 to %s', i)
+                _LOGGER.info("Config parameter selection does not exist! "
+                             "Please check zwcfg_[home_id].xml in "
+                             "your homeassistant config directory. "
+                             "Available selections are 0 to %s", i)
                 return
             node.set_config_param(param, selection, size)
-            _LOGGER.info('Setting config parameter %s on Node %s '
-                         'with selection %s and size=%s', param, node_id,
+            _LOGGER.info("Setting config parameter %s on Node %s "
+                         "with selection %s and size=%s", param, node_id,
                          selection, size)
 
     def print_config_parameter(service):
@@ -446,7 +446,7 @@ def setup(hass, config):
         node_id = service.data.get(const.ATTR_NODE_ID)
         node = network.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
-        _LOGGER.info("Config parameter %s on Node %s : %s",
+        _LOGGER.info("Config parameter %s on Node %s: %s",
                      param, node_id, get_config_value(node, param))
 
     def print_node(service):
@@ -503,7 +503,7 @@ def setup(hass, config):
 
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
-        _LOGGER.info("Starting ZWave network.")
+        _LOGGER.info("Starting Z-Wave network...")
         network.start()
         hass.bus.fire(const.EVENT_NETWORK_START)
 
@@ -515,7 +515,7 @@ def setup(hass, config):
                 "network state: %d %s", hass.data[ZWAVE_NETWORK].state,
                 network.state_str)
             if network.state >= network.STATE_AWAKED:
-                _LOGGER.info("zwave ready after %d seconds", i)
+                _LOGGER.info("Z-Wave ready after %d seconds", i)
                 break
             time.sleep(1)
         else:
@@ -532,7 +532,7 @@ def setup(hass, config):
             network.set_poll_interval(polling_interval, False)
 
         poll_interval = network.get_poll_interval()
-        _LOGGER.info("zwave polling interval set to %d ms", poll_interval)
+        _LOGGER.info("Z-Wave polling interval set to %d ms", poll_interval)
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_network)
 
@@ -611,7 +611,7 @@ def setup(hass, config):
 
     # Setup autoheal
     if autoheal:
-        _LOGGER.info("ZWave network autoheal is enabled.")
+        _LOGGER.info("Z-Wave network autoheal is enabled")
         track_time_change(hass, heal_network, hour=0, minute=0, second=0)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_zwave)
@@ -722,7 +722,7 @@ class ZWaveDeviceEntityValues():
 
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
-                "Ignoring entity %s due to device settings.", name)
+                "Ignoring entity %s due to device settings", name)
             # No entity will be created for this value
             self._workaround_ignore = True
             return
@@ -780,16 +780,16 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             self.network_value_changed, ZWaveNetwork.SIGNAL_VALUE_CHANGED)
 
     def network_value_changed(self, value):
-        """Called when a value has changed on the network."""
+        """Handle a value change on the network."""
         if value.value_id in [v.value_id for v in self.values if v]:
             return self.value_changed()
 
     def value_added(self):
-        """Called when a new value is added to this entity."""
+        """Handle a new value of this entity."""
         pass
 
     def value_changed(self):
-        """Called when a value for this entity's node has changed."""
+        """Handle a changed value for this entity's node."""
         self._update_attributes()
         self.update_properties()
         self.maybe_schedule_update()
@@ -813,7 +813,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             self.power_consumption = None
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Update on data changes for node values."""
         pass
 
     @property

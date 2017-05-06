@@ -154,6 +154,17 @@ clear_playlist:
       description: Name(s) of entites to change source on
       example: 'media_player.living_room_chromecast'
 
+shuffle_set:
+  description: Set shuffling state
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to set
+      example: 'media_player.spotify'
+    shuffle:
+      description: True/false for enabling/disabling shuffle
+      example: true
+
 sonos_join:
   description: Group player together.
 

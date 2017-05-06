@@ -10,7 +10,7 @@ from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo lock platform."""
+    """Set up the Demo lock platform."""
     add_devices([
         DemoLock('Front Door', STATE_LOCKED),
         DemoLock('Kitchen Door', STATE_UNLOCKED)

@@ -33,7 +33,7 @@ DEVICE_MAPPINGS = {
 
 
 def get_device(hass, values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     temp_unit = hass.config.units.temperature_unit
     return ZWaveClimate(values, temp_unit)
 
@@ -65,13 +65,13 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                 int(self.node.product_id, 16))
             if specific_sensor_key in DEVICE_MAPPINGS:
                 if DEVICE_MAPPINGS[specific_sensor_key] == WORKAROUND_ZXT_120:
-                    _LOGGER.debug("Remotec ZXT-120 Zwave Thermostat"
-                                  " workaround")
+                    _LOGGER.debug(
+                        "Remotec ZXT-120 Zwave Thermostat workaround")
                     self._zxt_120 = 1
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle the data changes for node values."""
         # Operation Mode
         if self.values.mode:
             self._current_operation = self.values.mode.data
@@ -134,7 +134,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return a list of available fan modes."""
         return self._fan_list
 
     @property
@@ -144,7 +144,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def swing_list(self):
-        """List of available swing modes."""
+        """Return a list of available swing modes."""
         return self._swing_list
 
     @property
@@ -169,7 +169,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return a list of available operation modes."""
         return self._operation_list
 
     @property
@@ -189,19 +189,18 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
         if self.values.fan_mode:
-            self.values.fan_mode.data = bytes(fan, 'utf-8')
+            self.values.fan_mode.data = fan
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         if self.values.mode:
-            self.values.mode.data = bytes(operation_mode, 'utf-8')
+            self.values.mode.data = operation_mode
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""
         if self._zxt_120 == 1:
             if self.values.zxt_120_swing_mode:
-                self.values.zxt_120_swing_mode.data = bytes(
-                    swing_mode, 'utf-8')
+                self.values.zxt_120_swing_mode.data = swing_mode
 
     @property
     def device_state_attributes(self):

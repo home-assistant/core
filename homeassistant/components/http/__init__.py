@@ -34,7 +34,7 @@ from .static import (
     staticresource_middleware, CachingFileResponse, CachingStaticResource)
 from .util import get_real_ip
 
-REQUIREMENTS = ['aiohttp_cors==0.5.2']
+REQUIREMENTS = ['aiohttp_cors==0.5.3']
 
 DOMAIN = 'http'
 
@@ -81,14 +81,13 @@ DEFAULT_LOGIN_ATTEMPT_THRESHOLD = -1
 HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_API_PASSWORD, default=None): cv.string,
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
-    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT):
-        vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+    vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_DEVELOPMENT, default=DEFAULT_DEVELOPMENT): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE, default=None): cv.isfile,
     vol.Optional(CONF_SSL_KEY, default=None): cv.isfile,
-    vol.Optional(CONF_CORS_ORIGINS, default=[]): vol.All(cv.ensure_list,
-                                                         [cv.string]),
+    vol.Optional(CONF_CORS_ORIGINS, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
@@ -143,12 +142,12 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def stop_server(event):
-        """Callback to stop the server."""
+        """Stop the server."""
         yield from server.stop()
 
     @asyncio.coroutine
     def start_server(event):
-        """Callback to start the server."""
+        """Start the server."""
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
         yield from server.start()
 
@@ -294,7 +293,7 @@ class HomeAssistantWSGI(object):
 
     @asyncio.coroutine
     def start(self):
-        """Start the wsgi server."""
+        """Start the WSGI server."""
         cors_added = set()
         if self.cors is not None:
             for route in list(self.app.router.routes()):
@@ -400,7 +399,7 @@ class HomeAssistantView(object):
 
 
 def request_handler_factory(view, handler):
-    """Factory to wrap our handler classes."""
+    """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(handler), \
         "Handler should be a coroutine or a callback."
 

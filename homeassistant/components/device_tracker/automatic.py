@@ -11,13 +11,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, ATTR_ATTRIBUTES)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+    PLATFORM_SCHEMA, ATTR_ATTRIBUTES, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_MAC,
+    ATTR_GPS, ATTR_GPS_ACCURACY)
+from homeassistant.const import (
+    CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP,
+    EVENT_HOMEASSISTANT_START)
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.2.1']
+REQUIREMENTS = ['aioautomatic==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +32,10 @@ CONF_DEVICES = 'devices'
 DEFAULT_TIMEOUT = 5
 
 SCOPE = ['location', 'vehicle:profile', 'trip']
+
+ATTR_FUEL_LEVEL = 'fuel_level'
+
+EVENT_AUTOMATIC_UPDATE = 'automatic_update'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
@@ -52,64 +60,172 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
     try:
         session = yield from client.create_session_from_password(
             SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
-        data = AutomaticData(hass, session, config[CONF_DEVICES], async_see)
+        data = AutomaticData(
+            hass, client, session, config[CONF_DEVICES], async_see)
+
+        # Load the initial vehicle data
+        vehicles = yield from session.get_vehicles()
+        for vehicle in vehicles:
+            hass.async_add_job(data.load_vehicle(vehicle))
     except aioautomatic.exceptions.AutomaticError as err:
         _LOGGER.error(str(err))
         return False
 
-    yield from data.update()
+    @callback
+    def ws_connect(event):
+        """Open the websocket connection."""
+        hass.async_add_job(data.ws_connect())
+
+    @callback
+    def ws_close(event):
+        """Close the websocket connection."""
+        hass.async_add_job(data.ws_close())
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, ws_connect)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, ws_close)
+
     return True
 
 
 class AutomaticData(object):
     """A class representing an Automatic cloud service connection."""
 
-    def __init__(self, hass, session, devices, async_see):
+    def __init__(self, hass, client, session, devices, async_see):
         """Initialize the automatic device scanner."""
         self.hass = hass
         self.devices = devices
+        self.vehicle_info = {}
+        self.client = client
         self.session = session
         self.async_see = async_see
+        self.ws_reconnect_handle = None
+        self.ws_close_requested = False
 
-        async_track_time_interval(hass, self.update, timedelta(seconds=30))
+        self.client.on_app_event(
+            lambda name, event: self.hass.async_add_job(
+                self.handle_event(name, event)))
 
     @asyncio.coroutine
-    def update(self, now=None):
-        """Update the device info."""
+    def handle_event(self, name, event):
+        """Coroutine to update state for a realtime event."""
         import aioautomatic
 
-        _LOGGER.debug('Updating devices %s', now)
+        # Fire a hass event
+        self.hass.bus.async_fire(EVENT_AUTOMATIC_UPDATE, event.data)
+
+        if event.vehicle.id not in self.vehicle_info:
+            # If vehicle hasn't been seen yet, request the detailed
+            # info for this vehicle.
+            _LOGGER.info("New vehicle found.")
+            try:
+                vehicle = yield from event.get_vehicle()
+            except aioautomatic.exceptions.AutomaticError as err:
+                _LOGGER.error(str(err))
+                return
+            yield from self.get_vehicle_info(vehicle)
+
+        kwargs = self.vehicle_info[event.vehicle.id]
+        if kwargs is None:
+            # Ignored device
+            return
+
+        # If this is a vehicle status report, update the fuel level
+        if name == "vehicle:status_report":
+            fuel_level = event.vehicle.fuel_level_percent
+            if fuel_level is not None:
+                kwargs[ATTR_ATTRIBUTES][ATTR_FUEL_LEVEL] = fuel_level
+
+        # Send the device seen notification
+        if event.location is not None:
+            kwargs[ATTR_GPS] = (event.location.lat, event.location.lon)
+            kwargs[ATTR_GPS_ACCURACY] = event.location.accuracy_m
+
+        yield from self.async_see(**kwargs)
+
+    @asyncio.coroutine
+    def ws_connect(self, now=None):
+        """Open the websocket connection."""
+        import aioautomatic
+        self.ws_close_requested = False
+
+        if self.ws_reconnect_handle is not None:
+            _LOGGER.debug("Retrying websocket connection.")
+        try:
+            ws_loop_future = yield from self.client.ws_connect()
+        except aioautomatic.exceptions.UnauthorizedClientError:
+            _LOGGER.error("Client unauthorized for websocket connection. "
+                          "Ensure Websocket is selected in the Automatic "
+                          "developer application event delivery preferences.")
+            return
+        except aioautomatic.exceptions.AutomaticError as err:
+            if self.ws_reconnect_handle is None:
+                # Show log error and retry connection every 5 minutes
+                _LOGGER.error("Error opening websocket connection: %s", err)
+                self.ws_reconnect_handle = async_track_time_interval(
+                    self.hass, self.ws_connect, timedelta(minutes=5))
+            return
+
+        if self.ws_reconnect_handle is not None:
+            self.ws_reconnect_handle()
+            self.ws_reconnect_handle = None
+
+        _LOGGER.info("Websocket connected.")
 
         try:
-            vehicles = yield from self.session.get_vehicles()
+            yield from ws_loop_future
         except aioautomatic.exceptions.AutomaticError as err:
             _LOGGER.error(str(err))
-            return False
 
-        for vehicle in vehicles:
-            name = vehicle.display_name
-            if name is None:
-                name = ' '.join(filter(None, (
-                    str(vehicle.year), vehicle.make, vehicle.model)))
+        _LOGGER.info("Websocket closed.")
 
-            if self.devices is not None and name not in self.devices:
-                continue
-
-            self.hass.async_add_job(self.update_vehicle(vehicle, name))
+        # If websocket was close was not requested, attempt to reconnect
+        if not self.ws_close_requested:
+            self.hass.loop.create_task(self.ws_connect())
 
     @asyncio.coroutine
-    def update_vehicle(self, vehicle, name):
-        """Updated the specified vehicle's data."""
+    def ws_close(self):
+        """Close the websocket connection."""
+        self.ws_close_requested = True
+        if self.ws_reconnect_handle is not None:
+            self.ws_reconnect_handle()
+            self.ws_reconnect_handle = None
+
+        yield from self.client.ws_close()
+
+    @asyncio.coroutine
+    def load_vehicle(self, vehicle):
+        """Load the vehicle's initial state and update hass."""
+        kwargs = yield from self.get_vehicle_info(vehicle)
+        yield from self.async_see(**kwargs)
+
+    @asyncio.coroutine
+    def get_vehicle_info(self, vehicle):
+        """Fetch the latest vehicle info from automatic."""
         import aioautomatic
 
-        kwargs = {
-            'dev_id': vehicle.id,
-            'host_name': name,
-            'mac': vehicle.id,
-            ATTR_ATTRIBUTES: {
-                'fuel_level': vehicle.fuel_level_percent,
+        name = vehicle.display_name
+        if name is None:
+            name = ' '.join(filter(None, (
+                str(vehicle.year), vehicle.make, vehicle.model)))
+
+        if self.devices is not None and name not in self.devices:
+            self.vehicle_info[vehicle.id] = None
+            return
+        else:
+            self.vehicle_info[vehicle.id] = kwargs = {
+                ATTR_DEV_ID: vehicle.id,
+                ATTR_HOST_NAME: name,
+                ATTR_MAC: vehicle.id,
+                ATTR_ATTRIBUTES: {
+                    ATTR_FUEL_LEVEL: vehicle.fuel_level_percent,
                 }
-        }
+            }
+
+        if vehicle.latest_location is not None:
+            location = vehicle.latest_location
+            kwargs[ATTR_GPS] = (location.lat, location.lon)
+            kwargs[ATTR_GPS_ACCURACY] = location.accuracy_m
+            return kwargs
 
         trips = []
         try:
@@ -120,8 +236,8 @@ class AutomaticData(object):
             _LOGGER.error(str(err))
 
         if trips:
-            end_location = trips[0].end_location
-            kwargs['gps'] = (end_location.lat, end_location.lon)
-            kwargs['gps_accuracy'] = end_location.accuracy_m
+            location = trips[0].end_location
+            kwargs[ATTR_GPS] = (location.lat, location.lon)
+            kwargs[ATTR_GPS_ACCURACY] = location.accuracy_m
 
-        yield from self.async_see(**kwargs)
+        return kwargs

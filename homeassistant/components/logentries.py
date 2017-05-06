@@ -10,9 +10,9 @@ import requests
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,7 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Logentries component."""
+    """Set up the Logentries component."""
     conf = config[DOMAIN]
     token = conf.get(CONF_TOKEN)
     le_wh = '{}{}'.format(DEFAULT_HOST, token)
@@ -52,11 +52,13 @@ def setup(hass, config):
             }
         ]
         try:
-            payload = {"host": le_wh,
-                       "event": json_body}
+            payload = {
+                "host": le_wh,
+                "event": json_body
+            }
             requests.post(le_wh, data=json.dumps(payload), timeout=10)
         except requests.exceptions.RequestException as error:
-            _LOGGER.exception('Error sending to Logentries: %s', error)
+            _LOGGER.exception("Error sending to Logentries: %s", error)
 
     hass.bus.listen(EVENT_STATE_CHANGED, logentries_event_listener)
 

@@ -7,7 +7,8 @@ from os import path
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT)
+    DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT,
+    ATTR_TRANSITION)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID)
 from homeassistant.helpers.service import extract_entity_ids
@@ -30,6 +31,8 @@ ATTR_CHANGE = 'change'
 WAVEFORM_SINE = 1
 WAVEFORM_PULSE = 4
 
+NEUTRAL_WHITE = 3500
+
 LIFX_EFFECT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
@@ -40,22 +43,23 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
-    vol.Optional(ATTR_PERIOD, default=1.0): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=0.05)),
-    vol.Optional(ATTR_CYCLES, default=1.0): vol.All(vol.Coerce(float),
-                                                    vol.Range(min=1)),
+    vol.Optional(ATTR_PERIOD, default=1.0):
+        vol.All(vol.Coerce(float), vol.Range(min=0.05)),
+    vol.Optional(ATTR_CYCLES, default=1.0):
+        vol.All(vol.Coerce(float), vol.Range(min=1)),
 })
 
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
-    vol.Optional(ATTR_PERIOD, default=60): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=1)),
-    vol.Optional(ATTR_CHANGE, default=20): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=0, max=360)),
-    vol.Optional(ATTR_SPREAD, default=30): vol.All(vol.Coerce(float),
-                                                   vol.Clamp(min=0, max=360)),
+    vol.Optional(ATTR_PERIOD, default=60):
+        vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
+    vol.Optional(ATTR_CHANGE, default=20):
+        vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+    vol.Optional(ATTR_SPREAD, default=30):
+        vol.All(vol.Coerce(float), vol.Clamp(min=0, max=360)),
+    ATTR_TRANSITION: vol.All(vol.Coerce(float), vol.Range(min=0)),
 })
 
 LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
@@ -68,7 +72,7 @@ def setup(hass, lifx_manager):
     """Register the LIFX effects as hass service calls."""
     @asyncio.coroutine
     def async_service_handle(service):
-        """Internal func for applying a service."""
+        """Apply a service."""
         entity_ids = extract_entity_ids(hass, service)
         if entity_ids:
             devices = [entity for entity in lifx_manager.entities.values()
@@ -131,13 +135,6 @@ def default_effect(light, **kwargs):
     data = {
         ATTR_ENTITY_ID: light.entity_id,
     }
-    if service in (SERVICE_EFFECT_BREATHE, SERVICE_EFFECT_PULSE):
-        data[ATTR_RGB_COLOR] = [
-            random.randint(1, 127),
-            random.randint(1, 127),
-            random.randint(1, 127),
-        ]
-        data[ATTR_BRIGHTNESS] = 255
     yield from light.hass.services.async_call(DOMAIN, service, data)
 
 
@@ -179,18 +176,16 @@ class LIFXEffect(object):
     def async_setup(self, **kwargs):
         """Prepare all lights for the effect."""
         for light in self.lights:
+            # Remember the current state (as far as we know it)
             yield from light.refresh_state()
-            if not light.device:
-                self.lights.remove(light)
-            else:
-                light.effect_data = LIFXEffectData(
-                    self, light.is_on, light.device.color)
+            light.effect_data = LIFXEffectData(
+                self, light.is_on, light.device.color)
 
-                # Temporarily turn on power for the effect to be visible
-                if kwargs[ATTR_POWER_ON] and not light.is_on:
-                    hsbk = self.from_poweroff_hsbk(light, **kwargs)
-                    light.device.set_color(hsbk)
-                    light.device.set_power(True)
+            # Temporarily turn on power for the effect to be visible
+            if kwargs[ATTR_POWER_ON] and not light.is_on:
+                hsbk = self.from_poweroff_hsbk(light, **kwargs)
+                light.device.set_color(hsbk)
+                light.device.set_power(True)
 
     # pylint: disable=no-self-use
     @asyncio.coroutine
@@ -201,20 +196,23 @@ class LIFXEffect(object):
     @asyncio.coroutine
     def async_restore(self, light):
         """Restore to the original state (if we are still running)."""
-        if light.effect_data:
-            if light.effect_data.effect == self:
-                if light.device and not light.effect_data.power:
-                    light.device.set_power(False)
-                    yield from asyncio.sleep(0.5)
-                if light.device:
-                    light.device.set_color(light.effect_data.color)
-                    yield from asyncio.sleep(0.5)
-                light.effect_data = None
+        if light in self.lights:
             self.lights.remove(light)
 
+        if light.effect_data and light.effect_data.effect == self:
+            if not light.effect_data.power:
+                light.device.set_power(False)
+                yield from asyncio.sleep(0.5)
+
+            light.device.set_color(light.effect_data.color)
+            yield from asyncio.sleep(0.5)
+
+            light.effect_data = None
+            yield from light.refresh_state()
+
     def from_poweroff_hsbk(self, light, **kwargs):
-        """The initial color when starting from a powered off state."""
-        return None
+        """Return the color when starting from a powered off state."""
+        return [random.randint(0, 65535), 65535, 0, NEUTRAL_WHITE]
 
 
 class LIFXEffectBreathe(LIFXEffect):
@@ -237,7 +235,14 @@ class LIFXEffectBreathe(LIFXEffect):
         """Play a light effect on the bulb."""
         period = kwargs[ATTR_PERIOD]
         cycles = kwargs[ATTR_CYCLES]
-        hsbk, _ = light.find_hsbk(**kwargs)
+        hsbk, color_changed = light.find_hsbk(**kwargs)
+
+        # Default color is to fully (de)saturate with full brightness
+        if not color_changed:
+            if hsbk[1] > 65536/2:
+                hsbk = [hsbk[0], 0, 65535, 4000]
+            else:
+                hsbk = [hsbk[0], 65535, 65535, hsbk[3]]
 
         # Start the effect
         args = {
@@ -255,7 +260,7 @@ class LIFXEffectBreathe(LIFXEffect):
         yield from self.async_restore(light)
 
     def from_poweroff_hsbk(self, light, **kwargs):
-        """Initial color is the target color, but no brightness."""
+        """Return the color is the target color, but no brightness."""
         hsbk, _ = light.find_hsbk(**kwargs)
         return [hsbk[0], hsbk[1], 0, hsbk[2]]
 
@@ -295,9 +300,10 @@ class LIFXEffectColorloop(LIFXEffect):
             random.shuffle(self.lights)
             lhue = hue
 
-            transition = int(1000 * random.uniform(period/2, period))
             for light in self.lights:
-                if spread > 0:
+                if ATTR_TRANSITION in kwargs:
+                    transition = int(1000*kwargs[ATTR_TRANSITION])
+                elif light == self.lights[0] or spread > 0:
                     transition = int(1000 * random.uniform(period/2, period))
 
                 if ATTR_BRIGHTNESS in kwargs:
@@ -309,7 +315,7 @@ class LIFXEffectColorloop(LIFXEffect):
                     int(65535/359*lhue),
                     int(random.uniform(0.8, 1.0)*65535),
                     brightness,
-                    4000,
+                    NEUTRAL_WHITE,
                 ]
                 light.device.set_color(hsbk, None, transition)
 
@@ -318,10 +324,6 @@ class LIFXEffectColorloop(LIFXEffect):
                     lhue = (lhue + spread/(len(self.lights)-1)) % 360
 
             yield from asyncio.sleep(period)
-
-    def from_poweroff_hsbk(self, light, **kwargs):
-        """Start from a random hue."""
-        return [random.randint(0, 65535), 65535, 0, 4000]
 
 
 class LIFXEffectStop(LIFXEffect):

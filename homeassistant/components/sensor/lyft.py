@@ -79,8 +79,8 @@ class LyftSensor(Entity):
         self._product_id = product_id
         self._product = product
         self._sensortype = sensorType
-        self._name = '{} {}'.format(self._product['display_name'],
-                                    self._sensortype)
+        self._name = '{} {}'.format(
+            self._product['display_name'], self._sensortype)
         if 'lyft' not in self._name.lower():
             self._name = 'Lyft{}'.format(self._name)
         if self._sensortype == 'time':
@@ -137,10 +137,8 @@ class LyftSensor(Entity):
             params['Trip duration (in seconds)'] = estimate.get(
                 'estimated_duration_seconds')
 
-            # Ignore the Prime Time percentage -- the Lyft API always
-            # returns 0 unless a user is logged in.
-            # params['Prime Time percentage'] = estimate.get(
-            #    'primetime_percentage')
+            params['Prime Time percentage'] = estimate.get(
+                'primetime_percentage')
 
         if self._product.get("eta") is not None:
             eta = self._product['eta']
@@ -161,13 +159,14 @@ class LyftSensor(Entity):
             self._product = self.data.products[self._product_id]
         except KeyError:
             return
+        self._state = None
         if self._sensortype == 'time':
             eta = self._product['eta']
             if (eta is not None) and (eta.get('is_valid_estimate')):
-                time_estimate = eta.get('eta_seconds', 0)
+                time_estimate = eta.get('eta_seconds')
+                if time_estimate is None:
+                    return
                 self._state = int(time_estimate / 60)
-            else:
-                self._state = 0
         elif self._sensortype == 'price':
             estimate = self._product['estimate']
             if (estimate is not None) and \
@@ -175,8 +174,6 @@ class LyftSensor(Entity):
                 self._state = (int(
                     (estimate.get('estimated_cost_cents_min', 0) +
                      estimate.get('estimated_cost_cents_max', 0)) / 2) / 100)
-            else:
-                self._state = 0
 
 
 class LyftEstimate(object):

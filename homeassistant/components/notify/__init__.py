@@ -68,7 +68,7 @@ def send_message(hass, message, title=None, data=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the notify services."""
+    """Set up the notify services."""
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -166,7 +166,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_platform_discovered(platform, info):
-        """Callback to load a platform."""
+        """Handle for discovered platform."""
         yield from async_setup_platform(platform, discovery_info=info)
 
     discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)

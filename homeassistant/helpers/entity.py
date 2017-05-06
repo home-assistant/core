@@ -206,13 +206,13 @@ class Entity(object):
         # update entity data
         if force_refresh:
             if self._update_warn:
-                _LOGGER.warning('Update for %s is already in progress',
+                _LOGGER.warning("Update for %s is already in progress",
                                 self.entity_id)
                 return
 
             self._update_warn = self.hass.loop.call_later(
                 SLOW_UPDATE_WARNING, _LOGGER.warning,
-                'Update of %s is taking over %s seconds.', self.entity_id,
+                "Update of %s is taking over %s seconds", self.entity_id,
                 SLOW_UPDATE_WARNING
             )
 
@@ -224,7 +224,7 @@ class Entity(object):
                     yield from self.hass.loop.run_in_executor(
                         None, self.update)
             except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception('Update for %s fails', self.entity_id)
+                _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
             finally:
                 self._update_warn.cancel()
@@ -264,9 +264,9 @@ class Entity(object):
 
         if not self._slow_reported and end - start > 0.4:
             self._slow_reported = True
-            _LOGGER.warning('Updating state for %s took %.3f seconds. '
-                            'Please report platform to the developers at '
-                            'https://goo.gl/Nvioub', self.entity_id,
+            _LOGGER.warning("Updating state for %s took %.3f seconds. "
+                            "Please report platform to the developers at "
+                            "https://goo.gl/Nvioub", self.entity_id,
                             end - start)
 
         # Overwrite properties that have been set in the config file.
@@ -316,7 +316,7 @@ class Entity(object):
         self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
-        """Helper method to populate attributes based on properties."""
+        """Populate attributes based on properties."""
         if attr in attrs:
             return
 

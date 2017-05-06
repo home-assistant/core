@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Fixer.io sensor."""
+    """Set up the Fixer.io sensor."""
     from fixerio import (Fixerio, exceptions)
 
     name = config.get(CONF_NAME)
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         Fixerio(base=base, symbols=[target], secure=True).latest()
     except exceptions.FixerioException:
-        _LOGGER.error('One of the given currencies is not supported')
+        _LOGGER.error("One of the given currencies is not supported")
         return False
 
     data = ExchangeData(base, target)
@@ -116,9 +116,9 @@ class ExchangeData(object):
         self.rate = None
         self.base_currency = base_currency
         self.target_currency = target_currency
-        self.exchange = Fixerio(base=self.base_currency,
-                                symbols=[self.target_currency],
-                                secure=True)
+        self.exchange = Fixerio(
+            base=self.base_currency, symbols=[self.target_currency],
+            secure=True)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

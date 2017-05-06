@@ -141,7 +141,7 @@ def reload(hass):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the automation."""
+    """Set up the automation."""
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
@@ -400,7 +400,7 @@ def _async_get_action(hass, config, name):
 
     @asyncio.coroutine
     def action(entity_id, variables):
-        """Action to be executed."""
+        """Execute an action."""
         _LOGGER.info('Executing %s', name)
         logbook.async_log_entry(
             hass, name, 'has been triggered', DOMAIN, entity_id)
@@ -430,7 +430,7 @@ def _async_process_if(hass, config, p_config):
 
 @asyncio.coroutine
 def _async_process_trigger(hass, config, trigger_configs, name, action):
-    """Setup the triggers.
+    """Set up the triggers.
 
     This method is a coroutine.
     """

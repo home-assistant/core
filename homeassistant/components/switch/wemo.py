@@ -17,13 +17,13 @@ DEPENDENCIES = ['wemo']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SENSOR_STATE = "sensor_state"
-ATTR_SWITCH_MODE = "switch_mode"
+ATTR_SENSOR_STATE = 'sensor_state'
+ATTR_SWITCH_MODE = 'switch_mode'
 ATTR_CURRENT_STATE_DETAIL = 'state_detail'
-ATTR_COFFEMAKER_MODE = "coffeemaker_mode"
+ATTR_COFFEMAKER_MODE = 'coffeemaker_mode'
 
-MAKER_SWITCH_MOMENTARY = "momentary"
-MAKER_SWITCH_TOGGLE = "toggle"
+MAKER_SWITCH_MOMENTARY = 'momentary'
+MAKER_SWITCH_TOGGLE = 'toggle'
 
 WEMO_ON = 1
 WEMO_OFF = 0
@@ -32,7 +32,7 @@ WEMO_STANDBY = 8
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup discovered WeMo switches."""
+    """Set up discovered WeMo switches."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
@@ -62,10 +62,8 @@ class WemoSwitch(SwitchDevice):
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
     def _update_callback(self, _device, _type, _params):
-        """Called by the Wemo device callback to update state."""
-        _LOGGER.info(
-            'Subscription update for  %s',
-            _device)
+        """Update the state by the Wemo device."""
+        _LOGGER.info("Subscription update for  %s", _device)
         updated = self.wemo.subscription_update(_type, _params)
         self._update(force_update=(not updated))
 
@@ -133,14 +131,12 @@ class WemoSwitch(SwitchDevice):
     def as_uptime(_seconds):
         """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
         uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
-        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(uptime.day-1,
-                                                            uptime.hour,
-                                                            uptime.minute,
-                                                            uptime.second)
+        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
+            uptime.day-1, uptime.hour, uptime.minute, uptime.second)
 
     @property
     def current_power_w(self):
-        """Current power usage in W."""
+        """Return the current power usage in W."""
         if self.insight_params:
             return convert(
                 self.insight_params['currentpower'], float, 0.0
@@ -148,7 +144,7 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def today_energy_kwh(self):
-        """Today total energy usage in kWh."""
+        """Return the today total energy usage in kWh."""
         if self.insight_params:
             miliwatts = convert(self.insight_params['todaymw'], float, 0.0)
             return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
@@ -176,7 +172,7 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def available(self):
-        """True if switch is available."""
+        """Return true if switch is available."""
         if self._model_name == 'Insight' and self.insight_params is None:
             return False
         if self._model_name == 'Maker' and self.maker_params is None:
@@ -187,7 +183,7 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def icon(self):
-        """Icon of device based on its type."""
+        """Return the icon of device based on its type."""
         if self._model_name == 'CoffeeMaker':
             return 'mdi:coffee'
         else:
@@ -210,6 +206,7 @@ class WemoSwitch(SwitchDevice):
         self._update(force_update=True)
 
     def _update(self, force_update=True):
+        """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
             if self._model_name == 'Insight':
@@ -221,5 +218,5 @@ class WemoSwitch(SwitchDevice):
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
         except AttributeError as err:
-            _LOGGER.warning('Could not update status for %s (%s)',
+            _LOGGER.warning("Could not update status for %s (%s)",
                             self.name, err)

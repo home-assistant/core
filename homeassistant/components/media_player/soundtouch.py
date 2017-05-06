@@ -1,4 +1,9 @@
-"""Support for interface with a Bose Soundtouch."""
+"""
+Support for interface with a Bose Soundtouch.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.soundtouch/
+"""
 import logging
 
 from os import path
@@ -69,14 +74,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Bose Soundtouch platform."""
+    """Set up the Bose Soundtouch platform."""
     if DATA_SOUNDTOUCH not in hass.data:
         hass.data[DATA_SOUNDTOUCH] = []
 
     if discovery_info:
-        # Discovery
-        host = discovery_info["host"]
-        port = int(discovery_info["port"])
+        host = discovery_info['host']
+        port = int(discovery_info['port'])
 
         # if device already exists by config
         if host in [device.config['host'] for device in
@@ -92,7 +96,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
         add_devices([soundtouch_device])
     else:
-        # Config
         name = config.get(CONF_NAME)
         remote_config = {
             'id': 'ha.component.soundtouch',
@@ -107,7 +110,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         path.join(path.dirname(__file__), 'services.yaml'))
 
     def service_handle(service):
-        """Internal func for applying a service."""
+        """Handle the applying of a service."""
         master_device_id = service.data.get('master')
         slaves_ids = service.data.get('slaves')
         slaves = []
@@ -119,8 +122,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                        device.entity_id == master_device_id].__iter__(), None)
 
         if master is None:
-            _LOGGER.warning("Unable to find master with entity_id:" + str(
-                master_device_id))
+            _LOGGER.warning("Unable to find master with entity_id: %s",
+                            str(master_device_id))
             return
 
         if service.service == SERVICE_PLAY_EVERYWHERE:

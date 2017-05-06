@@ -20,7 +20,7 @@ ALLOWED_TEMPERATURES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the IKEA Tradfri Light platform."""
+    """Set up the IKEA Tradfri Light platform."""
     if discovery_info is None:
         return
 
@@ -30,9 +30,56 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(Tradfri(light) for light in lights)
 
+    groups = gateway.get_groups()
+    add_devices(TradfriGroup(group) for group in groups)
+
+
+class TradfriGroup(Light):
+    """The platform class required by hass."""
+
+    def __init__(self, light):
+        """Initialize a Group."""
+        self._group = light
+        self._name = light.name
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_BRIGHTNESS
+
+    @property
+    def name(self):
+        """Return the display name of this group."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """Return true if group lights are on."""
+        return self._group.state
+
+    @property
+    def brightness(self):
+        """Return the brightness of the group lights."""
+        return self._group.dimmer
+
+    def turn_off(self, **kwargs):
+        """Instruct the group lights to turn off."""
+        return self._group.set_state(0)
+
+    def turn_on(self, **kwargs):
+        """Instruct the group lights to turn on, or dim."""
+        if ATTR_BRIGHTNESS in kwargs:
+            self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])
+        else:
+            self._group.set_state(1)
+
+    def update(self):
+        """Fetch new state data for this group."""
+        self._group.update()
+
 
 class Tradfri(Light):
-    """The platform class required by hass."""
+    """The platform class required by Home Asisstant."""
 
     def __init__(self, light):
         """Initialize a Light."""
@@ -71,7 +118,7 @@ class Tradfri(Light):
 
     @property
     def brightness(self):
-        """Brightness of the light (an integer in the range 1-255)."""
+        """Return the brightness of the light."""
         return self._light_data.dimmer
 
     @property
@@ -87,7 +134,7 @@ class Tradfri(Light):
             if hex_color == self._light_data.hex_color), None)
         if kelvin is None:
             _LOGGER.error(
-                'unexpected color temperature found for %s: %s',
+                "Unexpected color temperature found for %s: %s",
                 self.name, self._light_data.hex_color)
             return
         return color_util.color_temperature_kelvin_to_mired(kelvin)

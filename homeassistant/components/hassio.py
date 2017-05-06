@@ -1,5 +1,5 @@
 """
-Exposes regular rest commands as services.
+Exposes regular REST commands as services.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/hassio/
@@ -11,8 +11,7 @@ import re
 
 import aiohttp
 from aiohttp import web
-from aiohttp.web_exceptions import (
-    HTTPBadGateway, HTTPNotFound, HTTPMethodNotAllowed)
+from aiohttp.web_exceptions import HTTPBadGateway
 from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 
@@ -21,29 +20,12 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.frontend import register_built_in_panel
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
 
-_LOGGER = logging.getLogger(__name__)
-
 TIMEOUT = 10
-
-HASSIO_REST_COMMANDS = {
-    'host/shutdown': ['POST'],
-    'host/reboot': ['POST'],
-    'host/update': ['GET'],
-    'host/info': ['GET'],
-    'supervisor/info': ['GET'],
-    'supervisor/update': ['POST'],
-    'supervisor/options': ['POST'],
-    'supervisor/reload': ['POST'],
-    'supervisor/logs': ['GET'],
-    'homeassistant/info': ['GET'],
-    'homeassistant/update': ['POST'],
-    'homeassistant/logs': ['GET'],
-    'network/info': ['GET'],
-    'network/options': ['GET'],
-}
 
 ADDON_REST_COMMANDS = {
     'install': ['POST'],
@@ -59,7 +41,7 @@ ADDON_REST_COMMANDS = {
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the hassio component."""
+    """Set up the HASSio component."""
     try:
         host = os.environ['HASSIO']
     except KeyError:
@@ -166,21 +148,6 @@ class HassIOView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, request, path):
         """Route data to hassio."""
-        if path.startswith('addons/'):
-            parts = path.split('/')
-
-            if len(parts) != 3:
-                raise HTTPNotFound()
-
-            allowed_methods = ADDON_REST_COMMANDS.get(parts[-1])
-        else:
-            allowed_methods = HASSIO_REST_COMMANDS.get(path)
-
-        if allowed_methods is None:
-            raise HTTPNotFound()
-        if request.method not in allowed_methods:
-            raise HTTPMethodNotAllowed(request.method, allowed_methods)
-
         client = yield from self.hassio.command_proxy(path, request)
 
         data = yield from client.read()

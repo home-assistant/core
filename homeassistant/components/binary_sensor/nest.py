@@ -16,15 +16,18 @@ DEPENDENCIES = ['nest']
 
 BINARY_TYPES = ['online']
 
-CLIMATE_BINARY_TYPES = ['fan',
-                        'is_using_emergency_heat',
-                        'is_locked',
-                        'has_leaf']
+CLIMATE_BINARY_TYPES = [
+    'fan',
+    'is_using_emergency_heat',
+    'is_locked',
+    'has_leaf',
+]
 
 CAMERA_BINARY_TYPES = [
     'motion_detected',
     'sound_detected',
-    'person_detected']
+    'person_detected',
+]
 
 _BINARY_TYPES_DEPRECATED = [
     'hvac_ac_state',
@@ -34,7 +37,8 @@ _BINARY_TYPES_DEPRECATED = [
     'hvac_heat_x3_state',
     'hvac_alt_heat_state',
     'hvac_alt_heat_x2_state',
-    'hvac_emer_heat_state']
+    'hvac_emer_heat_state',
+]
 
 _VALID_BINARY_SENSOR_TYPES = BINARY_TYPES + CLIMATE_BINARY_TYPES \
     + CAMERA_BINARY_TYPES
@@ -43,7 +47,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Nest binary sensors."""
+    """Set up the Nest binary sensors."""
     if discovery_info is None:
         return
 
@@ -93,7 +97,7 @@ class NestBinarySensor(NestSensor, BinarySensorDevice):
 
     @property
     def is_on(self):
-        """True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state
 
     def update(self):

@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Splunk component."""
+    """Set up the Splunk component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
@@ -73,12 +73,14 @@ def setup(hass, config):
         ]
 
         try:
-            payload = {"host": event_collector,
-                       "event": json_body}
+            payload = {
+                "host": event_collector,
+                "event": json_body,
+            }
             requests.post(event_collector, data=json.dumps(payload),
-                          headers=headers)
+                          headers=headers, timeout=10)
         except requests.exceptions.RequestException as error:
-            _LOGGER.exception('Error saving event to Splunk: %s', error)
+            _LOGGER.exception("Error saving event to Splunk: %s", error)
 
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
 

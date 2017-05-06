@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """The triggers to turn lights on or off based on device presence."""
+    """Set up the triggers to control lights based on device presence."""
     logger = logging.getLogger(__name__)
     device_tracker = get_component('device_tracker')
     group = get_component('group')
@@ -55,10 +55,10 @@ def async_setup(hass, config):
     disable_turn_off = conf.get(CONF_DISABLE_TURN_OFF)
     light_group = conf.get(CONF_LIGHT_GROUP, light.ENTITY_ID_ALL_LIGHTS)
     light_profile = conf.get(CONF_LIGHT_PROFILE)
-    device_group = conf.get(CONF_DEVICE_GROUP,
-                            device_tracker.ENTITY_ID_ALL_DEVICES)
-    device_entity_ids = group.get_entity_ids(hass, device_group,
-                                             device_tracker.DOMAIN)
+    device_group = conf.get(
+        CONF_DEVICE_GROUP, device_tracker.ENTITY_ID_ALL_DEVICES)
+    device_entity_ids = group.get_entity_ids(
+        hass, device_group, device_tracker.DOMAIN)
 
     if not device_entity_ids:
         logger.error("No devices found to track")
@@ -84,7 +84,7 @@ def async_setup(hass, config):
         return next_setting - LIGHT_TRANSITION_TIME * len(light_ids)
 
     def async_turn_on_before_sunset(light_id):
-        """Helper function to turn on lights."""
+        """Turn on lights."""
         if not device_tracker.is_on(hass) or light.is_on(hass, light_id):
             return
         light.async_turn_on(hass, light_id,
@@ -92,7 +92,7 @@ def async_setup(hass, config):
                             profile=light_profile)
 
     def async_turn_on_factory(light_id):
-        """Factory to generate turn on callbacks."""
+        """Generate turn on callbacks as factory."""
         @callback
         def async_turn_on_light(now):
             """Turn on specific light."""
@@ -104,7 +104,7 @@ def async_setup(hass, config):
     # pre-sun set event
     @callback
     def schedule_light_turn_on(entity, old_state, new_state):
-        """The moment sun sets we want to have all the lights on.
+        """Turn on all the lights at the moment sun sets.
 
         We will schedule to have each light start after one another
         and slowly transition in.

@@ -164,7 +164,7 @@ class HomeAssistant(object):
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
-            # only block for EVENT_HOMEASSISTANT_START listener
+            # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
             with timeout(TIMEOUT_EVENT_START, loop=self.loop):
                 yield from self.async_block_till_done()
@@ -208,7 +208,7 @@ class HomeAssistant(object):
         else:
             task = self.loop.run_in_executor(None, target, *args)
 
-        # if a task is sheduled
+        # If a task is sheduled
         if self._track_task and task is not None:
             self._pending_tasks.append(task)
 
@@ -253,7 +253,7 @@ class HomeAssistant(object):
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
-            if len(pending) > 0:
+            if pending:
                 yield from asyncio.wait(pending, loop=self.loop)
             else:
                 yield from asyncio.sleep(0, loop=self.loop)
@@ -296,7 +296,7 @@ class EventOrigin(enum.Enum):
 
 
 class Event(object):
-    """Represents an event within the Bus."""
+    """Representation of an event within the bus."""
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
 
@@ -341,7 +341,7 @@ class Event(object):
 
 
 class EventBus(object):
-    """Allows firing of and listening for events."""
+    """Allow the firing of and listening for events."""
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a new event bus."""
@@ -350,7 +350,7 @@ class EventBus(object):
 
     @callback
     def async_listeners(self):
-        """Dict with events and the number of listeners.
+        """Return dictionary with events and the number of listeners.
 
         This method must be run in the event loop.
         """
@@ -359,7 +359,7 @@ class EventBus(object):
 
     @property
     def listeners(self):
-        """Dict with events and the number of listeners."""
+        """Return dictionary with events and the number of listeners."""
         return run_callback_threadsafe(
             self._hass.loop, self.async_listeners
         ).result()
@@ -736,7 +736,7 @@ class StateMachine(object):
 
 
 class Service(object):
-    """Represents a callable service."""
+    """Representation of a callable service."""
 
     __slots__ = ['func', 'description', 'fields', 'schema',
                  'is_callback', 'is_coroutinefunction']
@@ -759,7 +759,7 @@ class Service(object):
 
 
 class ServiceCall(object):
-    """Represents a call to a service."""
+    """Representation of a call to a service."""
 
     __slots__ = ['domain', 'service', 'data', 'call_id']
 
@@ -780,7 +780,7 @@ class ServiceCall(object):
 
 
 class ServiceRegistry(object):
-    """Offers services over the eventbus."""
+    """Offer the services over the eventbus."""
 
     def __init__(self, hass):
         """Initialize a service registry."""
@@ -799,14 +799,14 @@ class ServiceRegistry(object):
 
     @property
     def services(self):
-        """Dict with per domain a list of available services."""
+        """Return dictionary with per domain a list of available services."""
         return run_callback_threadsafe(
             self._hass.loop, self.async_services,
         ).result()
 
     @callback
     def async_services(self):
-        """Dict with per domain a list of available services.
+        """Return dictionary with per domain a list of available services.
 
         This method must be run in the event loop.
         """
@@ -952,7 +952,7 @@ class ServiceRegistry(object):
 
             @callback
             def service_executed(event):
-                """Callback method that is called when service is executed."""
+                """Handle an executed service."""
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
 
@@ -970,7 +970,7 @@ class ServiceRegistry(object):
 
     @asyncio.coroutine
     def _event_to_service_call(self, event):
-        """Callback for SERVICE_CALLED events from the event bus."""
+        """Handle the SERVICE_CALLED events from the EventBus."""
         service_data = event.data.get(ATTR_SERVICE_DATA) or {}
         domain = event.data.get(ATTR_DOMAIN).lower()
         service = event.data.get(ATTR_SERVICE).lower()
@@ -1056,7 +1056,7 @@ class Config(object):
             location.distance(self.latitude, self.longitude, lat, lon), 'm')
 
     def path(self, *path):
-        """Generate path to the file within the config dir.
+        """Generate path to the file within the configuration directory.
 
         Async friendly.
         """
@@ -1065,7 +1065,7 @@ class Config(object):
         return os.path.join(self.config_dir, *path)
 
     def as_dict(self):
-        """Create a dict representation of this dict.
+        """Create a dictionary representation of this dict.
 
         Async friendly.
         """

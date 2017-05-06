@@ -1,5 +1,9 @@
-"""Telegram bot polling implementation."""
+"""
+Telegram bot polling implementation.
 
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot.polling/
+"""
 import asyncio
 from asyncio.futures import CancelledError
 import logging
@@ -23,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the polling platform."""
+    """Set up the Telegram polling platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
     pol = TelegramPoll(bot, hass, config[CONF_ALLOWED_CHAT_IDS])
@@ -101,7 +105,7 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     @asyncio.coroutine
     def handle(self):
-        """" Receiving and processing incoming messages."""
+        """Receiving and processing incoming messages."""
         _updates = yield from self.get_updates(self.update_id)
         for update in _updates['result']:
             self.update_id = update['update_id'] + 1
@@ -109,7 +113,7 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     @asyncio.coroutine
     def check_incoming(self):
-        """"Loop which continuously checks for incoming telegram messages."""
+        """Loop which continuously checks for incoming telegram messages."""
         try:
             while True:
                 # Each handle call sends a long polling post request
@@ -118,4 +122,4 @@ class TelegramPoll(BaseTelegramBotEntity):
                 # timeout will for this reason not really stress the processor.
                 yield from self.handle()
         except CancelledError:
-            _LOGGER.debug("Stopping telegram polling bot")
+            _LOGGER.debug("Stopping Telegram polling bot")
