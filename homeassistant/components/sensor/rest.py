@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
 import logging
+import json
 
 import voluptuous as vol
 import requests
@@ -25,6 +26,8 @@ DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'REST Sensor'
 DEFAULT_VERIFY_SSL = True
 
+CONF_JSON_ATTRS = "json_attributes"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
     vol.Optional(CONF_AUTHENTICATION):
@@ -38,6 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
+    vol.Optional(CONF_JSON_ATTRS): cv.boolean,
 })
 
 
@@ -53,6 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     headers = config.get(CONF_HEADERS)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    json_attrs = config.get(CONF_JSON_ATTRS)
     if value_template is not None:
         value_template.hass = hass
 
@@ -70,13 +75,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch REST data")
         return False
 
-    add_devices([RestSensor(hass, rest, name, unit, value_template)])
+    add_devices([RestSensor(hass, rest, name, unit,
+                            value_template, json_attrs)])
 
 
 class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
-    def __init__(self, hass, rest, name, unit_of_measurement, value_template):
+    def __init__(self, hass, rest, name,
+                 unit_of_measurement, value_template, json_attrs):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
@@ -84,6 +91,8 @@ class RestSensor(Entity):
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
+        self._json_attrs = json_attrs
+        self._attributes = None
         self.update()
 
     @property
@@ -112,7 +121,20 @@ class RestSensor(Entity):
             value = self._value_template.render_with_possible_json_value(
                 value, STATE_UNKNOWN)
 
+        if self._json_attrs:
+            self._attributes = None
+            try:
+                self._attributes = json.loads(value)
+            except ValueError:
+                _LOGGER.warning('REST result could not be parsed as JSON')
+                _LOGGER.debug('Erroneous JSON: %s', value)
+
         self._state = value
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
 
 
 class RestData(object):
