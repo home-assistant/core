@@ -198,22 +198,13 @@ class TestRestSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock('rest.RestData.update',
                                 side_effect=self.update_side_effect(
-<<<<<<< 3a99f4eb2a8133627d2b608947ae9c86f02bd922
-                                    '{ "key": "json_state_updatedvalue" }'))
-=======
-                                    '{ "key": "json_state_value" }'))
->>>>>>> Expanded test coverage to test REFTful JSON attributes with and
+                                    '{ "key": "json_state_updated_value" }'))
         self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
                                       self.unit_of_measurement,
                                       self.value_template, True)
         self.sensor.update()
-<<<<<<< 3a99f4eb2a8133627d2b608947ae9c86f02bd922
         self.assertEqual('json_state_updated_value', self.sensor.state)
         self.assertEqual('json_state_updated_value',
-=======
-        self.assertEqual('json_state_value', self.sensor.state)
-        self.assertEqual('json_state_value',
->>>>>>> Expanded test coverage to test REFTful JSON attributes with and
                          self.sensor.device_state_attributes.key)
 
 
