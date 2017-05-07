@@ -291,14 +291,8 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 # homeassistant.components.media_player.nad
 https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 
-# homeassistant.components.media_player.russound_rnet
-https://github.com/laf/russound/archive/0.1.7.zip#russound==0.1.7
-
 # homeassistant.components.media_player.onkyo
 https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea0ec5c1b7c.zip#onkyo-eiscp==1.0
-
-# homeassistant.components.sensor.pocketcasts
-https://github.com/molobrakos/python-pocketcasts/archive/9f61ff00c77c7c98ffa0af9dd3540df3dce4a836.zip#python-pocketcasts==0.0.1
 
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
@@ -320,9 +314,6 @@ https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e23
 
 # homeassistant.components.lutron
 https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
-
-# homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1
 
 # homeassistant.components.sensor.modem_callerid
 https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
@@ -461,6 +452,9 @@ plexapi==2.0.2
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.4
 
+# homeassistant.components.sensor.pocketcasts
+pocketcasts==0.1
+
 # homeassistant.components.climate.proliphix
 proliphix==0.4.1
 
@@ -595,6 +589,9 @@ pymailgunner==1.4
 
 # homeassistant.components.mochad
 pymochad==0.1.1
+
+# homeassistant.components.mysensors
+pymysensors==0.9.1
 
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
@@ -738,6 +735,9 @@ ring_doorbell==0.1.4
 
 # homeassistant.components.switch.rpi_rf
 # rpi-rf==0.9.6
+
+# homeassistant.components.media_player.russound_rnet
+russound==0.1.7
 
 # homeassistant.components.media_player.yamaha
 rxv==0.4.0
