@@ -565,6 +565,9 @@ pyiss==1.0.1
 # homeassistant.components.remote.itach
 pyitachip2ir==0.0.6
 
+# homeassistant.components.kira
+pykira==0.1.1
+
 # homeassistant.components.sensor.kwb
 pykwb==0.0.8
 
