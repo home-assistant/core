@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 
-REQUIREMENTS = ['pyunifi==2.0']
+REQUIREMENTS = ['pyunifi==2.12']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
