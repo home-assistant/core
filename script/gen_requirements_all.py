@@ -180,7 +180,7 @@ def generate_requirements_list(reqs):
 
 
 def requirements_all_output(reqs):
-    """Generate output for requirements_all"""
+    """Generate output for requirements_all."""
     output = []
     output.append('# Home Assistant core')
     output.append('\n')
