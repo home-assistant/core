@@ -28,6 +28,53 @@ COMMENT_REQUIREMENTS = (
     'face_recognition'
 )
 
+TEST_REQUIREMENTS = (
+    'pydispatch',
+    'influxdb',
+    'nx584',
+    'uvcclient',
+    'somecomfort',
+    'aioautomatic',
+    'pyunifi',
+    'SoCo',
+    'libsoundtouch',
+    'rxv',
+    'apns2',
+    'sqlalchemy',
+    'forecastio',
+    'astral',
+    'aiohttp_cors',
+    'pilight',
+    'fuzzywuzzy',
+    'datadog',
+    'netdisco',
+    'rflink',
+    'ring_doorbell',
+    'sleepyq',
+    'statsd',
+    'pylitejet',
+    'holidays',
+    'evohomeclient',
+    'pexpect',
+    'hbmqtt',
+    'pychromecast',
+    'pycmus',
+    'fsapi',
+    'paho',
+    'jwt',
+    'dsmr_parser',
+    'mficlient',
+    'pmsensor',
+    'yahoo-finance',
+    'pymochad',
+    'mutagen',
+    'ha-ffmpeg',
+    'gTTS-token',
+    'pywebpush',
+    'pyelliptic',
+    'PyJWT',
+)
+
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
 )
@@ -78,11 +125,10 @@ def comment_requirement(req):
 
 
 def gather_modules():
-    """Collect the information and construct the output."""
+    """Collect the information."""
     reqs = {}
 
     errors = []
-    output = []
 
     for package in sorted(explore_module('homeassistant.components', True) +
                           explore_module('homeassistant.scripts', True)):
@@ -115,10 +161,12 @@ def gather_modules():
         print("Make sure you import 3rd party libraries inside methods.")
         return None
 
-    output.append('# Home Assistant core')
-    output.append('\n')
-    output.append('\n'.join(core_requirements()))
-    output.append('\n')
+    return reqs
+
+
+def generate_requirements_list(reqs):
+    """Generate a pip file based on requirements."""
+    output = []
     for pkg, requirements in sorted(reqs.items(), key=lambda item: item[0]):
         for req in sorted(requirements,
                           key=lambda name: (len(name.split('.')), name)):
@@ -128,6 +176,32 @@ def gather_modules():
             output.append('\n# {}\n'.format(pkg))
         else:
             output.append('\n{}\n'.format(pkg))
+    return ''.join(output)
+
+
+def requirements_all_output(reqs):
+    """Generate output for requirements_all"""
+    output = []
+    output.append('# Home Assistant core')
+    output.append('\n')
+    output.append('\n'.join(core_requirements()))
+    output.append('\n')
+    output.append(generate_requirements_list(reqs))
+
+    return ''.join(output)
+
+
+def requirements_test_output(reqs):
+    """Generate output for test_requirements."""
+    output = []
+    output.append('# Home Assistant test')
+    output.append('\n')
+    with open('requirements_test.txt') as fp:
+        output.append(fp.read())
+    output.append('\n')
+    filtered = {key: value for key, value in reqs.items()
+                if any(ign in key for ign in TEST_REQUIREMENTS)}
+    output.append(generate_requirements_list(filtered))
 
     return ''.join(output)
 
@@ -140,6 +214,12 @@ def gather_constraints():
 def write_requirements_file(data):
     """Write the modules to the requirements_all.txt."""
     with open('requirements_all.txt', 'w+', newline="\n") as req_file:
+        req_file.write(data)
+
+
+def write_test_requirements_file(data):
+    """Write the modules to the requirements_all.txt."""
+    with open('requirements_test_all.txt', 'w+', newline="\n") as req_file:
         req_file.write(data)
 
 
@@ -189,7 +269,8 @@ def main():
 
         sys.exit(0)
 
-    write_requirements_file(data)
+    write_requirements_file(requirements_all_output(data))
+    write_test_requirements_file(requirements_test_output(data))
     write_constraints_file(constraints)
 
 
