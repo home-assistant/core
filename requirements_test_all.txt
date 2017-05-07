@@ -110,6 +110,9 @@ pycmus==0.1.0
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
+# homeassistant.components.notify.html5
+pyelliptic==1.5.7
+
 # homeassistant.components.litejet
 pylitejet==0.1
 

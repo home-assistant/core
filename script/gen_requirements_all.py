@@ -235,6 +235,12 @@ def validate_requirements_file(data):
         return data == ''.join(req_file)
 
 
+def validate_requirements_test_file(data):
+    """Validate if requirements_all.txt is up to date."""
+    with open('requirements_test_all.txt', 'r') as req_file:
+        return data == ''.join(req_file)
+
+
 def validate_constraints_file(data):
     """Validate if constraints is up to date."""
     with open(CONSTRAINT_PATH, 'r') as req_file:
@@ -254,23 +260,31 @@ def main():
 
     constraints = gather_constraints()
 
+    reqs_file = requirements_all_output(data)
+    reqs_test_file = requirements_test_output(data)
+
     if sys.argv[-1] == 'validate':
-        if not validate_requirements_file(data):
-            print("******* ERROR")
-            print("requirements_all.txt is not up to date")
-            print("Please run script/gen_requirements_all.py")
-            sys.exit(1)
+        errors = []
+        if not validate_requirements_file(reqs_file):
+            errors.append("requirements_all.txt is not up to date")
+
+        if not validate_requirements_test_file(reqs_test_file):
+            errors.append("requirements_test_all.txt is not up to date")
 
         if not validate_constraints_file(constraints):
+            errors.append(
+                "home-assistant/package_constraints.txt is not up to date")
+
+        if errors:
             print("******* ERROR")
-            print("home-assistant/package_constraints.txt is not up to date")
+            print('\n'.join(errors))
             print("Please run script/gen_requirements_all.py")
             sys.exit(1)
 
         sys.exit(0)
 
-    write_requirements_file(requirements_all_output(data))
-    write_test_requirements_file(requirements_test_output(data))
+    write_requirements_file(reqs_file)
+    write_test_requirements_file(reqs_test_file)
     write_constraints_file(constraints)
 
 
