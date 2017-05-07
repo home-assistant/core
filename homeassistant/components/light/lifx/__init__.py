@@ -32,7 +32,7 @@ from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.5']
+REQUIREMENTS = ['aiolifx==0.4.6']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -93,6 +93,7 @@ class LIFXManager(object):
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             entity.device = device
+            entity.registered = True
             _LOGGER.debug("%s register AGAIN", entity.who)
             self.hass.async_add_job(entity.async_update_ha_state())
         else:
@@ -118,7 +119,7 @@ class LIFXManager(object):
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
-            entity.device = None
+            entity.registered = False
             self.hass.async_add_job(entity.async_update_ha_state())
 
 
@@ -172,6 +173,7 @@ class LIFXLight(Light):
     def __init__(self, device):
         """Initialize the light."""
         self.device = device
+        self.registered = True
         self.product = device.product
         self.blocker = None
         self.effect_data = None
@@ -183,7 +185,7 @@ class LIFXLight(Light):
     @property
     def available(self):
         """Return the availability of the device."""
-        return self.device is not None
+        return self.registered
 
     @property
     def name(self):
@@ -263,17 +265,19 @@ class LIFXLight(Light):
         """Return the list of supported effects."""
         return lifx_effects.effect_list()
 
-    @callback
+    @asyncio.coroutine
     def update_after_transition(self, now):
         """Request new status after completion of the last transition."""
         self.postponed_update = None
-        self.hass.async_add_job(self.async_update_ha_state(force_refresh=True))
+        yield from self.refresh_state()
+        yield from self.async_update_ha_state()
 
-    @callback
+    @asyncio.coroutine
     def unblock_updates(self, now):
         """Allow async_update after the new state has settled on the bulb."""
         self.blocker = None
-        self.hass.async_add_job(self.async_update_ha_state(force_refresh=True))
+        yield from self.refresh_state()
+        yield from self.async_update_ha_state()
 
     def update_later(self, when):
         """Block immediate update requests and schedule one for later."""
@@ -343,7 +347,7 @@ class LIFXLight(Light):
     def async_update(self):
         """Update bulb status (if it is available)."""
         _LOGGER.debug("%s async_update", self.who)
-        if self.available and self.blocker is None:
+        if self.blocker is None:
             yield from self.refresh_state()
 
     @asyncio.coroutine
@@ -355,11 +359,12 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def refresh_state(self):
         """Ask the device about its current state and update our copy."""
-        msg = yield from AwaitAioLIFX(self).wait(self.device.get_color)
-        if msg is not None:
-            self.set_power(self.device.power_level)
-            self.set_color(*self.device.color)
-            self._name = self.device.label
+        if self.available:
+            msg = yield from AwaitAioLIFX(self).wait(self.device.get_color)
+            if msg is not None:
+                self.set_power(self.device.power_level)
+                self.set_color(*self.device.color)
+                self._name = self.device.label
 
     def find_hsbk(self, **kwargs):
         """Find the desired color from a number of possible inputs."""

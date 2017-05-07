@@ -221,9 +221,12 @@ class ActiveConnection:
         _LOGGER.error("WS %s: %s %s", id(self.wsock), message1, message2)
 
     def send_message(self, message):
-        """Send messages."""
+        """Send messages.
+
+        Returns a coroutine object.
+        """
         self.debug("Sending", message)
-        self.wsock.send_json(message, dumps=JSON_DUMP)
+        return self.wsock.send_json(message, dumps=JSON_DUMP)
 
     @asyncio.coroutine
     def handle(self):
@@ -252,7 +255,7 @@ class ActiveConnection:
                 authenticated = True
 
             else:
-                self.send_message(auth_required_message())
+                yield from self.send_message(auth_required_message())
                 msg = yield from wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
@@ -261,13 +264,14 @@ class ActiveConnection:
 
                 else:
                     self.debug("Invalid password")
-                    self.send_message(auth_invalid_message('Invalid password'))
+                    yield from self.send_message(
+                        auth_invalid_message('Invalid password'))
 
             if not authenticated:
                 yield from process_wrong_login(self.request)
                 return wsock
 
-            self.send_message(auth_ok_message())
+            yield from self.send_message(auth_ok_message())
 
             msg = yield from wsock.receive_json()
 
@@ -279,13 +283,13 @@ class ActiveConnection:
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
-                    self.send_message(error_message(
+                    yield from self.send_message(error_message(
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
                 else:
                     handler_name = 'handle_{}'.format(msg['type'])
-                    getattr(self, handler_name)(msg)
+                    yield from getattr(self, handler_name)(msg)
 
                 last_id = cur_id
                 msg = yield from wsock.receive_json()
@@ -300,7 +304,7 @@ class ActiveConnection:
             self.log_error(error_msg)
 
             if not authenticated:
-                self.send_message(auth_invalid_message(error_msg))
+                yield from self.send_message(auth_invalid_message(error_msg))
 
             else:
                 if isinstance(msg, dict):
@@ -308,7 +312,7 @@ class ActiveConnection:
                 else:
                     iden = None
 
-                self.send_message(error_message(
+                yield from self.send_message(error_message(
                     iden, ERR_INVALID_FORMAT, error_msg))
 
         except TypeError as err:
@@ -344,18 +348,19 @@ class ActiveConnection:
 
         return wsock
 
+    @asyncio.coroutine
     def handle_subscribe_events(self, msg):
         """Handle subscribe events command."""
         msg = SUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
-        @callback
+        @asyncio.coroutine
         def forward_events(event):
             """Forward events to websocket."""
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
             try:
-                self.send_message(event_message(msg['id'], event))
+                yield from self.send_message(event_message(msg['id'], event))
             except RuntimeError:
                 # Socket has been closed.
                 pass
@@ -363,24 +368,31 @@ class ActiveConnection:
         self.event_listeners[msg['id']] = self.hass.bus.async_listen(
             msg['event_type'], forward_events)
 
-        self.send_message(result_message(msg['id']))
+        return self.send_message(result_message(msg['id']))
 
     def handle_unsubscribe_events(self, msg):
-        """Handle unsubscribe events command."""
+        """Handle unsubscribe events command.
+
+        Returns a coroutine object.
+        """
         msg = UNSUBSCRIBE_EVENTS_MESSAGE_SCHEMA(msg)
 
         subscription = msg['subscription']
 
-        if subscription not in self.event_listeners:
-            self.send_message(error_message(
+        if subscription in self.event_listeners:
+            self.event_listeners.pop(subscription)()
+            return self.send_message(result_message(msg['id']))
+        else:
+            return self.send_message(error_message(
                 msg['id'], ERR_NOT_FOUND,
                 'Subscription not found.'))
-        else:
-            self.event_listeners.pop(subscription)()
-            self.send_message(result_message(msg['id']))
 
+    @asyncio.coroutine
     def handle_call_service(self, msg):
-        """Handle call service command."""
+        """Handle call service command.
+
+        This is a coroutine.
+        """
         msg = CALL_SERVICE_MESSAGE_SCHEMA(msg)
 
         @asyncio.coroutine
@@ -389,7 +401,7 @@ class ActiveConnection:
             yield from self.hass.services.async_call(
                 msg['domain'], msg['service'], msg['service_data'], True)
             try:
-                self.send_message(result_message(msg['id']))
+                yield from self.send_message(result_message(msg['id']))
             except RuntimeError:
                 # Socket has been closed.
                 pass
@@ -397,33 +409,48 @@ class ActiveConnection:
         self.hass.async_add_job(call_service_helper(msg))
 
     def handle_get_states(self, msg):
-        """Handle get states command."""
+        """Handle get states command.
+
+        Returns a coroutine object.
+        """
         msg = GET_STATES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        return self.send_message(result_message(
             msg['id'], self.hass.states.async_all()))
 
     def handle_get_services(self, msg):
-        """Handle get services command."""
+        """Handle get services command.
+
+        Returns a coroutine object.
+        """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        return self.send_message(result_message(
             msg['id'], self.hass.services.async_services()))
 
     def handle_get_config(self, msg):
-        """Handle get config command."""
+        """Handle get config command.
+
+        Returns a coroutine object.
+        """
         msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        return self.send_message(result_message(
             msg['id'], self.hass.config.as_dict()))
 
     def handle_get_panels(self, msg):
-        """Handle get panels command."""
+        """Handle get panels command.
+
+        Returns a coroutine object.
+        """
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        return self.send_message(result_message(
             msg['id'], self.hass.data[frontend.DATA_PANELS]))
 
     def handle_ping(self, msg):
-        """Handle ping command."""
-        self.send_message(pong_message(msg['id']))
+        """Handle ping command.
+
+        Returns a coroutine object.
+        """
+        return self.send_message(pong_message(msg['id']))

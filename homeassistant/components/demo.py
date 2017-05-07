@@ -157,28 +157,28 @@ def async_setup(hass, config):
              }},
             ]}))
 
-    tasks2.append(group.Group.async_create_group(hass, 'living room', [
+    tasks2.append(group.Group.async_create_group(hass, 'Living Room', [
         lights[1], switches[0], 'input_select.living_room_preset',
         'cover.living_room_window', media_players[1],
         'scene.romantic_lights']))
-    tasks2.append(group.Group.async_create_group(hass, 'bedroom', [
+    tasks2.append(group.Group.async_create_group(hass, 'Bedroom', [
         lights[0], switches[1], media_players[0],
         'input_slider.noise_allowance']))
-    tasks2.append(group.Group.async_create_group(hass, 'kitchen', [
+    tasks2.append(group.Group.async_create_group(hass, 'Kitchen', [
         lights[2], 'cover.kitchen_window', 'lock.kitchen_door']))
-    tasks2.append(group.Group.async_create_group(hass, 'doors', [
+    tasks2.append(group.Group.async_create_group(hass, 'Doors', [
         'lock.front_door', 'lock.kitchen_door',
         'garage_door.right_garage_door', 'garage_door.left_garage_door']))
-    tasks2.append(group.Group.async_create_group(hass, 'automations', [
+    tasks2.append(group.Group.async_create_group(hass, 'Automations', [
         'input_select.who_cooks', 'input_boolean.notify', ]))
-    tasks2.append(group.Group.async_create_group(hass, 'people', [
+    tasks2.append(group.Group.async_create_group(hass, 'People', [
         'device_tracker.demo_anne_therese', 'device_tracker.demo_home_boy',
         'device_tracker.demo_paulus']))
-    tasks2.append(group.Group.async_create_group(hass, 'downstairs', [
+    tasks2.append(group.Group.async_create_group(hass, 'Downstairs', [
         'group.living_room', 'group.kitchen',
         'scene.romantic_lights', 'cover.kitchen_window',
         'cover.living_room_window', 'group.doors',
-        'thermostat.ecobee',
+        'climate.ecobee',
     ], view=True))
 
     results = yield from asyncio.gather(*tasks2, loop=hass.loop)

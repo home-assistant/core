@@ -163,6 +163,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
+        self._log_out()
         return self.last_results.keys()
 
     # pylint: disable=no-self-use
@@ -195,8 +196,9 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
             self.sysauth = regex_result.group(1)
             _LOGGER.info(self.sysauth)
             return True
-        except ValueError:
-            _LOGGER.error("Couldn't fetch auth tokens!")
+        except (ValueError, KeyError) as _:
+            _LOGGER.error("Couldn't fetch auth tokens! Response was: %s",
+                          response.text)
             return False
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -249,6 +251,21 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                 return True
 
             return False
+
+    def _log_out(self):
+        with self.lock:
+            _LOGGER.info("Logging out of router admin interface...")
+
+            url = ('http://{}/cgi-bin/luci/;stok={}/admin/system?'
+                   'form=logout').format(self.host, self.stok)
+            referer = 'http://{}/webpages/index.html'.format(self.host)
+
+            requests.post(url,
+                          params={'operation': 'write'},
+                          headers={'referer': referer},
+                          cookies={'sysauth': self.sysauth})
+            self.stok = ''
+            self.sysauth = ''
 
 
 class Tplink4DeviceScanner(TplinkDeviceScanner):
