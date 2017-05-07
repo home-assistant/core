@@ -14,7 +14,7 @@ ZWAVE_NETWORK = 'zwave_network'
 class ZWaveNodeGroupView(HomeAssistantView):
     """View to return the nodes group configuration."""
 
-    url = "/api/zwave/groups/{node_id}"
+    url = r"/api/zwave/groups/{node_id:\d+}"
     name = "api:zwave:groups"
 
     @ha.callback
@@ -23,40 +23,38 @@ class ZWaveNodeGroupView(HomeAssistantView):
         # pylint: disable=import-error
         from openzwave.group import ZWaveGroup
 
+        nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        _LOGGER.info(network.nodes.get(int(node_id)))
-        node = network.nodes.get(int(node_id))
+        _LOGGER.info(network.nodes.get(nodeid))
+        node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         groupdata = node.groups_to_dict()
         groups = {}
-        for key in groupdata.keys():
-            groupnode = ZWaveGroup(key, network, int(node_id))
+        for key in groupdata:
+            groupnode = ZWaveGroup(key, network, nodeid)
             groups[key] = {'associations': groupnode.associations,
                            'association_instances':
                            groupnode.associations_instances,
                            'label': groupnode.label,
                            'max_associations': groupnode.max_associations}
-        _LOGGER.info('Groups: %s', groups)
-        if groups:
-            return self.json(groups)
-        else:
-            return self.json_message('Node not found', HTTP_NOT_FOUND)
+        return self.json(groups)
 
 
 class ZWaveNodeConfigView(HomeAssistantView):
     """View to return the nodes configuration options."""
 
-    url = "/api/zwave/config/{node_id}"
+    url = r"/api/zwave/config/{node_id:\d+}"
     name = "api:zwave:config"
 
     @ha.callback
     def get(self, request, node_id):
         """Retrieve configurations of node."""
+        nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        node = network.nodes.get(int(node_id))
+        node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         config = {}
@@ -70,43 +68,33 @@ class ZWaveNodeConfigView(HomeAssistantView):
                                    'data': value.data,
                                    'max': value.max,
                                    'min': value.min}
-        _LOGGER.info('Config: %s', config)
-        if config:
-            return self.json(config)
-        else:
-            return self.json_message('Node not found', HTTP_NOT_FOUND)
+        return self.json(config)
 
 
 class ZWaveUserCodeView(HomeAssistantView):
     """View to return the nodes usercode configuration."""
 
-    url = "/api/zwave/usercodes/{node_id}"
+    url = r"/api/zwave/usercodes/{node_id:\d+}"
     name = "api:zwave:usercodes"
 
     @ha.callback
     def get(self, request, node_id):
         """Retrieve usercodes of node."""
+        nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        node = network.nodes.get(int(node_id))
+        node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         usercodes = {}
-        if node.has_command_class(const.COMMAND_CLASS_USER_CODE):
-            for value in (
-                    node.get_values(class_id=const.COMMAND_CLASS_USER_CODE)
-                    .values()):
-                if value.genre != const.GENRE_USER:
-                    continue
-                usercodes[value.index] = {'code': value.data,
-                                          'label': value.label,
-                                          'length': len(value.data)}
-            _LOGGER.info('Usercodes: %s', usercodes)
-            if usercodes:
-                return self.json(usercodes)
-            else:
-                return self.json_message('Node does not have usercodes',
-                                         HTTP_NOT_FOUND)
-        else:
-            return self.json_message('Node does not have usercodes',
-                                     HTTP_NOT_FOUND)
+        if not node.has_command_class(const.COMMAND_CLASS_USER_CODE):
+            return self.json(usercodes, HTTP_NOT_FOUND)
+        for value in (
+                node.get_values(class_id=const.COMMAND_CLASS_USER_CODE)
+                .values()):
+            if value.genre != const.GENRE_USER:
+                continue
+            usercodes[value.index] = {'code': value.data,
+                                      'label': value.label,
+                                      'length': len(value.data)}
+        return self.json(usercodes)
