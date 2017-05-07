@@ -178,7 +178,7 @@ def async_setup(hass, config):
         'group.living_room', 'group.kitchen',
         'scene.romantic_lights', 'cover.kitchen_window',
         'cover.living_room_window', 'group.doors',
-        'thermostat.ecobee',
+        'climate.ecobee',
     ], view=True))
 
     results = yield from asyncio.gather(*tasks2, loop=hass.loop)
