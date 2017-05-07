@@ -318,9 +318,6 @@ https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e23
 # homeassistant.components.lutron
 https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
 
-# homeassistant.components.mysensors
-https://github.com/theolind/pymysensors/archive/c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1
-
 # homeassistant.components.sensor.modem_callerid
 https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
 
@@ -593,6 +590,9 @@ pymailgunner==1.4
 # homeassistant.components.mochad
 pymochad==0.1.1
 
+# homeassistant.components.mysensors
+pymysensors==0.10.0
+
 # homeassistant.components.device_tracker.netgear
 pynetgear==0.3.3
 
@@ -698,7 +698,7 @@ pytrackr==0.0.5
 pytradfri==1.1
 
 # homeassistant.components.device_tracker.unifi
-pyunifi==2.0
+pyunifi==2.12
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11
