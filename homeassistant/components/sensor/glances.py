@@ -61,15 +61,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = 'http://{}:{}/{}'.format(host, port, _RESOURCE)
     var_conf = config.get(CONF_RESOURCES)
 
-    try:
-        response = requests.get(url, timeout=10)
-        if not response.ok:
-            _LOGGER.error("Response status is '%s'", response.status_code)
-            return False
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: %s", url)
-        return False
-
     rest = GlancesData(url)
 
     dev = []
