@@ -21,9 +21,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
 
-REQUIREMENTS = [
-    'https://github.com/theolind/pymysensors/archive/'
-    'c6990eaaa741444a638608e6e00488195e2ca74c.zip#pymysensors==0.9.1']
+REQUIREMENTS = ['pymysensors==0.10.0']
 
 _LOGGER = logging.getLogger(__name__)
 
