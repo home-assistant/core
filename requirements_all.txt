@@ -728,7 +728,7 @@ radiotherm==1.2
 # raspihats==2.2.1
 
 # homeassistant.components.rflink
-rflink==0.0.31
+rflink==0.0.34
 
 # homeassistant.components.ring
 ring_doorbell==0.1.4
