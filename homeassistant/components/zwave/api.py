@@ -26,7 +26,6 @@ class ZWaveNodeGroupView(HomeAssistantView):
         nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
-        _LOGGER.info(network.nodes.get(nodeid))
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
