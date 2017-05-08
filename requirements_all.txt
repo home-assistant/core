@@ -273,9 +273,6 @@ https://github.com/bah2830/python-roku/archive/3.1.3.zip#roku==3.1.3
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
 
-# homeassistant.components.lutron_caseta
-https://github.com/gurumitts/pylutron-caseta/archive/v0.2.6.zip#pylutron-caseta==v0.2.6
-
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
 
@@ -583,6 +580,9 @@ pylitejet==0.1
 
 # homeassistant.components.sensor.loopenergy
 pyloopenergy==0.0.17
+
+# homeassistant.components.lutron_caseta
+pylutron-caseta==0.2.6
 
 # homeassistant.components.notify.mailgun
 pymailgunner==1.4
