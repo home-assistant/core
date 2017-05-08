@@ -22,7 +22,7 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
-REQUIREMENTS = ['beautifulsoup4==4.5.3']
+REQUIREMENTS = ['beautifulsoup4==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
