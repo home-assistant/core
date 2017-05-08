@@ -163,9 +163,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif service.service == SERVICE_RESTORE:
                 device.restore(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_SET_TIMER:
-                device.set_timer(service.data[ATTR_SLEEP_TIME])
+                device.set_sleep_timer(service.data[ATTR_SLEEP_TIME])
             elif service.service == SERVICE_CLEAR_TIMER:
-                device.clear_timer()
+                device.clear_sleep_timer()
 
             device.schedule_update_ha_state(True)
 
