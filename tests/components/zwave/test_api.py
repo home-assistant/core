@@ -61,7 +61,6 @@ def test_get_groups_nogroups(hass, test_client):
     assert result == {}
 
 
-
 @asyncio.coroutine
 def test_get_groups_nonode(hass, test_client):
     """Test getting groupdata on nonexisting node."""
@@ -219,6 +218,35 @@ def test_get_usercode_nousercode_node(hass, test_client):
     network = hass.data[ZWAVE_NETWORK] = MagicMock()
     node = MockNode(node_id=18)
 
+    network.nodes = {18: node}
+    node.get_values.return_value = node.values
+
+    client = yield from test_client(app)
+
+    resp = yield from client.get('/api/zwave/usercodes/18')
+
+    assert resp.status == 200
+    result = yield from resp.json()
+
+    assert result == {}
+
+
+@asyncio.coroutine
+def test_get_usercodes_no_genreuser(hass, test_client):
+    """Test getting usercodes on node missing genre user."""
+    app = mock_http_component_app(hass)
+    ZWaveUserCodeView().register(app.router)
+
+    network = hass.data[ZWAVE_NETWORK] = MagicMock()
+    node = MockNode(node_id=18,
+                    command_classes=[const.COMMAND_CLASS_USER_CODE])
+    value = MockValue(
+         index=0,
+         command_class=const.COMMAND_CLASS_USER_CODE)
+    value.genre = const.GENRE_SYSTEM
+    value.label = 'label'
+    value.data = '1234'
+    node.values = {0: value}
     network.nodes = {18: node}
     node.get_values.return_value = node.values
 
