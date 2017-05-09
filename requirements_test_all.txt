@@ -37,10 +37,6 @@ aiohttp_cors==0.5.3
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
-# homeassistant.components.sun
-# homeassistant.components.sensor.moon
-astral==1.4
-
 # homeassistant.components.datadog
 datadog==0.15.0
 
