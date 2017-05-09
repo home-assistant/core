@@ -15,7 +15,7 @@ DOWNLOAD_URL = ('{}/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'requests>=2,<3',
+    'requests==2.13.0',  # Pin it for now instead of 'requests>=2,<3'
     'pyyaml>=3.11,<4',
     'pytz>=2017.02',
     'pip>=7.1.0',
