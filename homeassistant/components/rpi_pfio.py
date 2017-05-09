@@ -16,17 +16,15 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'rpi_pfio'
 
-LISTENER = None
+DATA_PFIO_LISTENER = 'pfio_listener'
 
 
-# pylint: disable=no-member
 def setup(hass, config):
     """Set up the Raspberry PI PFIO component."""
     import pifacedigitalio as PFIO
 
-    global LISTENER
     pifacedigital = PFIO.PiFaceDigital()
-    LISTENER = PFIO.InputEventListener(chip=pifacedigital)
+    hass.data[DATA_PFIO_LISTENER] = PFIO.InputEventListener(chip=pifacedigital)
 
     def cleanup_pfio(event):
         """Stuff to do before stopping."""
@@ -54,17 +52,13 @@ def read_input(port):
     return PFIO.digital_read(port)
 
 
-def edge_detect(port, event_callback, settle):
+def edge_detect(hass, port, event_callback, settle):
     """Add detection for RISING and FALLING events."""
     import pifacedigitalio as PFIO
-    # pylint: disable=global-variable-not-assigned
-    global LISTENER
-    LISTENER.register(
+    hass.data[DATA_PFIO_LISTENER].register(
         port, PFIO.IODIR_BOTH, event_callback, settle_time=settle)
 
 
-def activate_listener():
+def activate_listener(hass):
     """Activate the registered listener events."""
-    # pylint: disable=global-variable-not-assigned
-    global LISTENER
-    LISTENER.activate()
+    hass.data[DATA_PFIO_LISTENER].activate()

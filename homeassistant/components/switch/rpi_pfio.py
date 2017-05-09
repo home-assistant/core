@@ -36,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the PiFace Digital Output devices."""
     switches = []
@@ -58,7 +57,6 @@ class RPiPFIOSwitch(ToggleEntity):
         self._name = name or DEVICE_DEFAULT_NAME
         self._invert_logic = invert_logic
         self._state = False
-        # rpi_pfio.setup_output(self._port)
         rpi_pfio.write_output(self._port, 1 if self._invert_logic else 0)
 
     @property

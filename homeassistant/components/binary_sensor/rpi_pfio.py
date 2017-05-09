@@ -19,18 +19,15 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_NAME = 'name'
 ATTR_INVERT_LOGIC = 'invert_logic'
 ATTR_SETTLE_TIME = 'settle_time'
-ATTR_PULL_MODE = 'pull_mode'
 CONF_PORTS = 'ports'
 
 DEFAULT_INVERT_LOGIC = False
-DEFAULT_PULL_MODE = 'UP'
 DEFAULT_SETTLE_TIME = 20
 
 DEPENDENCIES = ['rpi_pfio']
 
 PORT_SCHEMA = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(ATTR_PULL_MODE, default=DEFAULT_PULL_MODE): cv.string,
     vol.Optional(ATTR_SETTLE_TIME, default=DEFAULT_SETTLE_TIME):
         cv.positive_int,
     vol.Optional(ATTR_INVERT_LOGIC, default=DEFAULT_INVERT_LOGIC): cv.boolean
@@ -43,34 +40,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the PiFace Digital Input devices."""
     binary_sensors = []
     ports = config.get('ports')
     for port, port_entity in ports.items():
         name = port_entity[ATTR_NAME]
-        pull_mode = port_entity[ATTR_PULL_MODE]
         settle_time = port_entity[ATTR_SETTLE_TIME] / 1000
         invert_logic = port_entity[ATTR_INVERT_LOGIC]
 
         binary_sensors.append(RPiPFIOBinarySensor(
-            port, name, pull_mode, settle_time, invert_logic))
+            hass, port, name, settle_time, invert_logic))
     add_devices(binary_sensors, True)
 
-    rpi_pfio.activate_listener()
+    rpi_pfio.activate_listener(hass)
 
 
 class RPiPFIOBinarySensor(BinarySensorDevice):
     """Represent a binary sensor that a PiFace Digital Input."""
 
-    def __init__(self, port, name, pull_mode, settle_time, invert_logic):
+    def __init__(self, hass, port, name, settle_time, invert_logic):
         """Initialize the RPi binary sensor."""
-        # pylint: disable=no-member
         self._port = port
         self._name = name or DEVICE_DEFAULT_NAME
-        self._pull_mode = pull_mode
-        self._settle_time = settle_time
         self._invert_logic = invert_logic
         self._state = None
 
@@ -79,7 +71,7 @@ class RPiPFIOBinarySensor(BinarySensorDevice):
             self._state = rpi_pfio.read_input(self._port)
             self.schedule_update_ha_state()
 
-        rpi_pfio.edge_detect(self._port, read_pfio, self._settle_time)
+        rpi_pfio.edge_detect(hass, self._port, read_pfio, settle_time)
 
     @property
     def should_poll(self):
