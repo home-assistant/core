@@ -85,7 +85,7 @@ def test_get_groups_nonode(hass, test_client, mock_openzwave):
 
 
 @asyncio.coroutine
-def test_get_config_noconfig_node(hass, test_client):
+def test_get_config(hass, test_client):
     """Test getting config on node without config."""
     app = mock_http_component_app(hass)
     ZWaveNodeConfigView().register(app.router)
@@ -102,8 +102,9 @@ def test_get_config_noconfig_node(hass, test_client):
     value.data_items = ['item1', 'item2']
     value.max = 'max'
     value.min = 'min'
-    network.nodes = node
-    node.get_values.return_value = node.value
+    node.values = {12: value}
+    network.nodes = {2: node}
+    node.get_values.return_value = node.values
 
     client = yield from test_client(app)
 
@@ -112,7 +113,35 @@ def test_get_config_noconfig_node(hass, test_client):
     assert resp.status == 200
     result = yield from resp.json()
 
-    assert result == {'label': 'label'}
+    assert result == {'12': {'data': 'data',
+                             'data_items': ['item1', 'item2'],
+                             'help': 'help',
+                             'label': 'label',
+                             'max': 'max',
+                             'min': 'min',
+                             'type': 'type'}}
+
+
+@asyncio.coroutine
+def test_get_config_noconfig_node(hass, test_client):
+    """Test getting config on node without config."""
+    app = mock_http_component_app(hass)
+    ZWaveNodeConfigView().register(app.router)
+
+    network = hass.data[ZWAVE_NETWORK] = MagicMock()
+    node = MockNode(node_id=2)
+
+    network.nodes = {2: node}
+    node.get_values.return_value = node.values
+
+    client = yield from test_client(app)
+
+    resp = yield from client.get('/api/zwave/config/2')
+
+    assert resp.status == 200
+    result = yield from resp.json()
+
+    assert result == {}
 
 
 @asyncio.coroutine
@@ -135,24 +164,6 @@ def test_get_config_nonode(hass, test_client):
 
 
 @asyncio.coroutine
-def test_get_usercodes_nousercode_node(hass, test_client):
-    """Test getting usercodes on node without usercodes."""
-    hass.data[ZWAVE_NETWORK] = MagicMock()
-    app = mock_http_component_app(hass)
-
-    ZWaveUserCodeView().register(app.router)
-
-    client = yield from test_client(app)
-
-    resp = yield from client.get('/api/zwave/usercodes/18')
-
-    assert resp.status == 200
-    result = yield from resp.json()
-
-    assert result == {}
-
-
-@asyncio.coroutine
 def test_get_usercodes_nonode(hass, test_client):
     """Test getting groupdata on nonexisting node."""
     app = mock_http_component_app(hass)
@@ -169,3 +180,56 @@ def test_get_usercodes_nonode(hass, test_client):
     result = yield from resp.json()
 
     assert result == {'message': 'Node not found'}
+
+
+@asyncio.coroutine
+def test_get_usercodes(hass, test_client):
+    """Test getting config on node without config."""
+    app = mock_http_component_app(hass)
+    ZWaveUserCodeView().register(app.router)
+
+    network = hass.data[ZWAVE_NETWORK] = MagicMock()
+    node = MockNode(node_id=18,
+                    command_classes=[const.COMMAND_CLASS_USER_CODE])
+    value = MockValue(
+         index=0,
+         command_class=const.COMMAND_CLASS_USER_CODE)
+    value.genre = const.GENRE_USER
+    value.label = 'label'
+    value.data = '1234'
+    node.values = {0: value}
+    network.nodes = {18: node}
+    node.get_values.return_value = node.values
+
+    client = yield from test_client(app)
+
+    resp = yield from client.get('/api/zwave/usercodes/18')
+
+    assert resp.status == 200
+    result = yield from resp.json()
+
+    assert result == {'0': {'code': '1234',
+                            'label': 'label',
+                            'length': 4}}
+
+
+@asyncio.coroutine
+def test_get_usercode_nousercode_node(hass, test_client):
+    """Test getting usercodes on node without usercodes."""
+    app = mock_http_component_app(hass)
+    ZWaveUserCodeView().register(app.router)
+
+    network = hass.data[ZWAVE_NETWORK] = MagicMock()
+    node = MockNode(node_id=18)
+
+    network.nodes = {18: node}
+    node.get_values.return_value = node.values
+
+    client = yield from test_client(app)
+
+    resp = yield from client.get('/api/zwave/usercodes/18')
+
+    assert resp.status == 200
+    result = yield from resp.json()
+
+    assert result == {}
