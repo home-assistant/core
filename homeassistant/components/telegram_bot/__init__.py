@@ -170,8 +170,7 @@ def load_data(url=None, file=None, username=None, password=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the telegram bot component."""
-
+    """Set up the Telegram Bot component."""
     conf = config[DOMAIN]
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file,
@@ -179,7 +178,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a telegram bot platform."""
+        """Set up a Telegram Bot platform."""
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
 
@@ -210,7 +209,6 @@ def async_setup(hass, config):
         @asyncio.coroutine
         def async_send_telegram_message(service):
             """Handle sending Telegram Bot message service calls."""
-
             def _render_template_attr(data, attribute):
                 attribute_templ = data.get(attribute)
                 if attribute_templ:
@@ -316,7 +314,6 @@ class TelegramNotificationService:
 
     def _get_msg_kwargs(self, data):
         """Get parameters in message data kwargs."""
-
         def _make_row_of_kb(row_keyboard):
             """Make a list of InlineKeyboardButtons from a list of tuples.
 
@@ -473,10 +470,10 @@ class TelegramNotificationService:
 
 
 class BaseTelegramBotEntity:
-    """The base class for the telegram bot."""
+    """The base class for the Telegram Bot."""
 
     def __init__(self, hass, allowed_chat_ids):
-        """Initialize the bot base class."""
+        """Initialize the Telegram Bot base class."""
         self.allowed_chat_ids = allowed_chat_ids
         self.hass = hass
 
