@@ -42,7 +42,7 @@ def test_get_groups(hass, test_client):
 
 @asyncio.coroutine
 def test_get_groups_nogroups(hass, test_client):
-    """Test getting groupdata on node."""
+    """Test getting groupdata on node with no groups."""
     app = mock_http_component_app(hass)
     ZWaveNodeGroupView().register(app.router)
 
@@ -83,7 +83,7 @@ def test_get_groups_nonode(hass, test_client):
 
 @asyncio.coroutine
 def test_get_config(hass, test_client):
-    """Test getting config on node without config."""
+    """Test getting config on node."""
     app = mock_http_component_app(hass)
     ZWaveNodeConfigView().register(app.router)
 
@@ -143,7 +143,7 @@ def test_get_config_noconfig_node(hass, test_client):
 
 @asyncio.coroutine
 def test_get_config_nonode(hass, test_client):
-    """Test getting groupdata on nonexisting node."""
+    """Test getting config on nonexisting node."""
     app = mock_http_component_app(hass)
     ZWaveNodeConfigView().register(app.router)
 
@@ -162,7 +162,7 @@ def test_get_config_nonode(hass, test_client):
 
 @asyncio.coroutine
 def test_get_usercodes_nonode(hass, test_client):
-    """Test getting groupdata on nonexisting node."""
+    """Test getting usercodes on nonexisting node."""
     app = mock_http_component_app(hass)
     ZWaveUserCodeView().register(app.router)
 
@@ -181,7 +181,7 @@ def test_get_usercodes_nonode(hass, test_client):
 
 @asyncio.coroutine
 def test_get_usercodes(hass, test_client):
-    """Test getting config on node without config."""
+    """Test getting usercodes on node."""
     app = mock_http_component_app(hass)
     ZWaveUserCodeView().register(app.router)
 
