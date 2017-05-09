@@ -48,10 +48,6 @@ class SoCoMock():
         self.is_visible = True
         self.avTransport = AvTransportMock()
 
-    def clear_sleep_timer(self):
-        """Clear the sleep timer."""
-        return
-
     def get_sonos_favorites(self):
         """Get favorites list from sonos."""
         return {'favorites': []}
