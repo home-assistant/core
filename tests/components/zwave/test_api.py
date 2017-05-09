@@ -10,12 +10,17 @@ from tests.common import mock_http_component_app
 @asyncio.coroutine
 def test_get_groups_nogroups_node(hass, test_client, mock_openzwave):
     """Test getting groupdata on node without groups."""
-    hass.data[ZWAVE_NETWORK] = MagicMock()
     app = mock_http_component_app(hass)
-    ZWaveGroup = mock_openzwave.group.ZWaveGroup
-    group = MagicMock()
-    ZWaveGroup.return_value = group
     ZWaveNodeGroupView().register(app.router)
+
+    network = hass.data[ZWAVE_NETWORK] = MagicMock()
+    network.nodes.get().groups_to_dict.return_value = {'1': None}
+    group = MagicMock()
+    group.associations = 'assoc'
+    group.associations_instances = 'inst'
+    group.label = 'the label'
+    group.max_associations = 'max'
+    mock_openzwave.group.ZWaveGroup.return_value = group
 
     client = yield from test_client(app)
 
@@ -24,7 +29,14 @@ def test_get_groups_nogroups_node(hass, test_client, mock_openzwave):
     assert resp.status == 200
     result = yield from resp.json()
 
-    assert result == {}
+    assert result == {
+        '1': {
+            'association_instances': 'inst',
+            'associations': 'assoc',
+            'label': 'the label',
+            'max_associations': 'max'
+        }
+    }
 
 
 @asyncio.coroutine
