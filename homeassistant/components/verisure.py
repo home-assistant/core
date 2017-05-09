@@ -99,6 +99,7 @@ class VerisureHub(object):
     def __init__(self, domain_config, verisure):
         """Initialize the Verisure hub."""
         self.overview = {}
+        self.imageseries = {}
 
         self.config = domain_config
         self._verisure = verisure
@@ -132,8 +133,13 @@ class VerisureHub(object):
 
     @Throttle(timedelta(seconds=60))
     def update_overview(self):
-        """Update the status."""
+        """Update the overview."""
         self.overview = self.session.get_overview()
+
+    @Throttle(timedelta(seconds=60))
+    def update_smartcam_imageseries(self):
+        """Update the image series."""
+        self.imageseries = self.session.get_smartcam_imageseries()
 
     @Throttle(timedelta(seconds=30))
     def smartcam_capture(self, device_id):
@@ -148,3 +154,7 @@ class VerisureHub(object):
         """Get first value from the overview that matches the jsonpath."""
         res = self.get(jpath, *args)
         return res[0] if res else None
+
+    def get_image_info(self, jpath, *args):
+        """Get values from the imageseries that matches the jsonpath."""
+        return self.jsonpath(self.imageseries, jpath % args)

@@ -24,11 +24,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not os.access(directory_path, os.R_OK):
         _LOGGER.error("file path %s is not readable", directory_path)
         return False
-    hub.update_smartcam()
+    hub.update_overview()
     smartcams = []
     smartcams.extend([
-        VerisureSmartcam(hass, value.deviceLabel, directory_path)
-        for value in hub.smartcam_status.values()])
+        VerisureSmartcam(hass, device_label, directory_path)
+        for device_label in hub.get(
+            "$.smartCam.smartcamDevice[*].deviceLabel")])
     add_devices(smartcams)
 
 
@@ -58,11 +59,10 @@ class VerisureSmartcam(Camera):
 
     def check_imagelist(self):
         """Check the contents of the image list."""
-        hub.update_smartcam_imagelist()
-        if (self._device_id not in hub.smartcam_dict or
-                not hub.smartcam_dict[self._device_id]):
+        hub.update_smartcam_imageseries()
+        if not hub.get("$.smartcam.smartcamDevice[%s]", self._device_id):
             return
-        images = hub.smartcam_dict[self._device_id]
+        images = hub.get_image_info['$.???']
         new_image_id = images[0]
         _LOGGER.debug("self._device_id=%s, self._images=%s, "
                       "self._new_image_id=%s", self._device_id,
@@ -72,7 +72,7 @@ class VerisureSmartcam(Camera):
             _LOGGER.debug("The image is the same, or loading image_id")
             return
         _LOGGER.debug("Download new image %s", new_image_id)
-        hub.my_pages.smartcam.download_image(
+        hub.session.download_image(
             self._device_id, new_image_id, self._directory_path)
         _LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
@@ -95,4 +95,6 @@ class VerisureSmartcam(Camera):
     @property
     def name(self):
         """Return the name of this camera."""
-        return hub.smartcam_status[self._device_id].location
+        return hub.get_first(
+            "$.smartcam.smartcamDevice[%s].deviceLabel",
+            self._device_id)

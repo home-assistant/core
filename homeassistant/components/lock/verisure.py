@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/verisure/
 """
 import logging
-
+from time import sleep
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import (CONF_LOCKS, CONF_CODE_DIGITS)
 from homeassistant.components.lock import LockDevice
@@ -19,20 +19,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Verisure platform."""
     locks = []
     if int(hub.config.get(CONF_LOCKS, 1)):
-        hub.update_locks()
+        hub.update_overview()
         locks.extend([
-            VerisureDoorlock(device_id)
-            for device_id in hub.lock_status
-        ])
-    add_devices(locks)
+            VerisureDoorlock(device_label)
+            for device_label in hub.get(
+                "$.lock.lockDevice[*].deviceLabel")])
 
 
 class VerisureDoorlock(LockDevice):
     """Representation of a Verisure doorlock."""
 
-    def __init__(self, device_id):
+    def __init__(self, device_label):
         """Initialize the Verisure lock."""
-        self._id = device_id
+        self._device_label = device_label
         self._state = STATE_UNKNOWN
         self._digits = hub.config.get(CONF_CODE_DIGITS)
         self._changed_by = None
@@ -40,7 +39,8 @@ class VerisureDoorlock(LockDevice):
     @property
     def name(self):
         """Return the name of the lock."""
-        return '{}'.format(hub.lock_status[self._id].location)
+        return hub.get("$.lock.lockDeviec[%s].deviceLabel",
+                       self._device_label)
 
     @property
     def state(self):
@@ -50,7 +50,9 @@ class VerisureDoorlock(LockDevice):
     @property
     def available(self):
         """Return True if entity is available."""
-        return hub.available
+        return hub.get_first(
+            "$.lock.lockDevice[%s]",
+            self._device_label) is not None
 
     @property
     def changed_by(self):
@@ -64,32 +66,41 @@ class VerisureDoorlock(LockDevice):
 
     def update(self):
         """Update lock status."""
-        hub.update_locks()
-
-        if hub.lock_status[self._id].status == 'unlocked':
+        hub.update_overview()
+        status = hub.get_first("$.lock.lockDevice[%s].status",
+                               self._device_label)
+        if status == 'unlocked':
             self._state = STATE_UNLOCKED
-        elif hub.lock_status[self._id].status == 'locked':
+        elif status == 'locked':
             self._state = STATE_LOCKED
-        elif hub.lock_status[self._id].status != 'pending':
-            _LOGGER.error(
-                "Unknown lock state %s", hub.lock_status[self._id].status)
-        self._changed_by = hub.lock_status[self._id].name
+        elif status != 'pending':
+            _LOGGER.error('Unknown lock state %s', status)
+        self._changed_by = hub.get_first("$.lock.lockDevice[%s].name",
+                                         self._device_label)
 
     @property
     def is_locked(self):
         """Return true if lock is locked."""
-        return hub.lock_status[self._id].status
+        return self._state == STATE_LOCKED
 
     def unlock(self, **kwargs):
         """Send unlock command."""
-        hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'UNLOCKED')
-        _LOGGER.debug("Verisure doorlock unlocking")
-        hub.my_pages.lock.wait_while_pending()
-        self.update()
+        self.set_lock_state(kwargs[ATTR_CODE], 'unlock')
 
     def lock(self, **kwargs):
         """Send lock command."""
-        hub.my_pages.lock.set(kwargs[ATTR_CODE], self._id, 'LOCKED')
-        _LOGGER.debug("Verisure doorlock locking")
-        hub.my_pages.lock.wait_while_pending()
-        self.update()
+        self.set_lock_state(kwargs[ATTR_CODE], 'lock')
+
+    def set_lock_state(self, code, state):
+        """Send set lock state command."""
+        transaction_id = hub.session.set_lock_state(
+            code,
+            self._device_label,
+            state)['lockStateTransactionId']
+        _LOGGER.debug("Verisure doorlock %s", state)
+        transaction = hub.session.get_lock_state_transaction(transaction_id)
+        while 'result' not in transaction:
+            sleep(0.5)
+            transaction = hub.session.get_lock_state_transaction(
+                transaction_id)
+        hub.update_overview(no_throttle=True)
