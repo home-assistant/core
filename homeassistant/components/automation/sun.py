@@ -16,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['sun']
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({

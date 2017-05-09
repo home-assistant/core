@@ -9,6 +9,7 @@ typing>=3,<4
 aiohttp==2.0.7
 async_timeout==1.2.1
 chardet==3.0.2
+astral==1.4
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
@@ -65,10 +66,6 @@ apcaccess==0.0.4
 
 # homeassistant.components.notify.apns
 apns2==0.1.1
-
-# homeassistant.components.sun
-# homeassistant.components.sensor.moon
-astral==1.4
 
 # homeassistant.components.light.avion
 # avion==0.6
