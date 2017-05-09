@@ -288,9 +288,6 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 # homeassistant.components.media_player.nad
 https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 
-# homeassistant.components.media_player.onkyo
-https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea0ec5c1b7c.zip#onkyo-eiscp==1.0
-
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
@@ -404,6 +401,9 @@ oauth2client==4.0.0
 
 # homeassistant.components.climate.oem
 oemthermostat==1.1
+
+# homeassistant.components.media_player.onkyo
+onkyo-eiscp==1.1
 
 # homeassistant.components.opencv
 # opencv-python==3.2.0.6
