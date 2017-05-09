@@ -87,7 +87,7 @@ class ZWaveUserCodeView(HomeAssistantView):
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         usercodes = {}
         if not node.has_command_class(const.COMMAND_CLASS_USER_CODE):
-            return self.json(usercodes, HTTP_NOT_FOUND)
+            return self.json(usercodes)
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_USER_CODE)
                 .values()):
