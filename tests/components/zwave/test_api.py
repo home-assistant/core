@@ -1,10 +1,11 @@
 """Test Z-Wave config panel."""
 import asyncio
 from unittest.mock import MagicMock
-from homeassistant.components.zwave import ZWAVE_NETWORK
+from homeassistant.components.zwave import ZWAVE_NETWORK, const
 from homeassistant.components.zwave.api import (
     ZWaveNodeGroupView, ZWaveNodeConfigView, ZWaveUserCodeView)
 from tests.common import mock_http_component_app
+from tests.mock.zwave import MockNode, MockValue
 
 
 @asyncio.coroutine
@@ -38,6 +39,7 @@ def test_get_groups(hass, test_client, mock_openzwave):
         }
     }
 
+
 @asyncio.coroutine
 def test_get_groups_nogroups(hass, test_client, mock_openzwave):
     """Test getting groupdata on node without groups."""
@@ -62,6 +64,7 @@ def test_get_groups_nogroups(hass, test_client, mock_openzwave):
 
     assert result == {}
 
+
 @asyncio.coroutine
 def test_get_groups_nonode(hass, test_client, mock_openzwave):
     """Test getting groupdata on nonexisting node."""
@@ -84,10 +87,23 @@ def test_get_groups_nonode(hass, test_client, mock_openzwave):
 @asyncio.coroutine
 def test_get_config_noconfig_node(hass, test_client):
     """Test getting config on node without config."""
-    hass.data[ZWAVE_NETWORK] = MagicMock()
     app = mock_http_component_app(hass)
-
     ZWaveNodeConfigView().register(app.router)
+
+    network = hass.data[ZWAVE_NETWORK] = MagicMock()
+    node = MockNode(node_id=2)
+    value = MockValue(
+         index=12,
+         command_class=const.COMMAND_CLASS_CONFIGURATION)
+    value.label = 'label'
+    value.help = 'help'
+    value.type = 'type'
+    value.data = 'data'
+    value.data_items = ['item1', 'item2']
+    value.max = 'max'
+    value.min = 'min'
+    network.nodes = node
+    node.get_values.return_value = node.value
 
     client = yield from test_client(app)
 
@@ -96,11 +112,11 @@ def test_get_config_noconfig_node(hass, test_client):
     assert resp.status == 200
     result = yield from resp.json()
 
-    assert result == {}
+    assert result == {'label': 'label'}
 
 
 @asyncio.coroutine
-def test_get_config_nonode(hass, test_client, mock_openzwave):
+def test_get_config_nonode(hass, test_client):
     """Test getting groupdata on nonexisting node."""
     app = mock_http_component_app(hass)
     ZWaveNodeConfigView().register(app.router)
@@ -137,7 +153,7 @@ def test_get_usercodes_nousercode_node(hass, test_client):
 
 
 @asyncio.coroutine
-def test_get_usercodes_nonode(hass, test_client, mock_openzwave):
+def test_get_usercodes_nonode(hass, test_client):
     """Test getting groupdata on nonexisting node."""
     app = mock_http_component_app(hass)
     ZWaveUserCodeView().register(app.router)
@@ -153,4 +169,3 @@ def test_get_usercodes_nonode(hass, test_client, mock_openzwave):
     result = yield from resp.json()
 
     assert result == {'message': 'Node not found'}
-
