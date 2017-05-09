@@ -213,7 +213,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select playback device."""
-        self._player.transfer_playback(self._devices[source])
+        self._player.transfer_playback(self._devices[source],
+                                       self._state == STATE_PLAYING)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
