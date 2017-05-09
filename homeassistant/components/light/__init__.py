@@ -42,6 +42,7 @@ SUPPORT_RGB_COLOR = 16
 SUPPORT_TRANSITION = 32
 SUPPORT_XY_COLOR = 64
 SUPPORT_WHITE_VALUE = 128
+SUPPORT_OFF_STATE = 256
 
 # Integer that represents transition time in seconds to make change.
 ATTR_TRANSITION = "transition"
@@ -77,6 +78,8 @@ EFFECT_WHITE = "white"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
+ATTR_POWER_ON = "power_on"
+
 PROP_TO_ATTR = {
     'brightness': ATTR_BRIGHTNESS,
     'color_temp': ATTR_COLOR_TEMP,
@@ -107,6 +110,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
+    vol.Optional(ATTR_POWER_ON, default=True): cv.boolean,
 })
 
 LIGHT_TURN_OFF_SCHEMA = vol.Schema({
@@ -143,19 +147,20 @@ def is_on(hass, entity_id=None):
 
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
             rgb_color=None, xy_color=None, color_temp=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+            profile=None, flash=None, effect=None, color_name=None,
+            power_on=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness,
         rgb_color, xy_color, color_temp, white_value,
-        profile, flash, effect, color_name)
+        profile, flash, effect, color_name, power_on)
 
 
 @callback
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
                   rgb_color=None, xy_color=None, color_temp=None,
                   white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
+                  color_name=None, power_on=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -170,6 +175,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
             (ATTR_COLOR_NAME, color_name),
+            (ATTR_POWER_ON, power_on),
         ] if value is not None
     }
 
