@@ -9,19 +9,19 @@ from tests.mock.zwave import MockNode, MockValue
 
 
 @asyncio.coroutine
-def test_get_groups(hass, test_client, mock_openzwave):
+def test_get_groups(hass, test_client):
     """Test getting groupdata on node."""
     app = mock_http_component_app(hass)
     ZWaveNodeGroupView().register(app.router)
 
     network = hass.data[ZWAVE_NETWORK] = MagicMock()
-    network.nodes.get().groups_to_dict.return_value = {'1': None}
-    group = MagicMock()
-    group.associations = 'assoc'
-    group.associations_instances = 'inst'
-    group.label = 'the label'
-    group.max_associations = 'max'
-    mock_openzwave.group.ZWaveGroup.return_value = group
+    node = MockNode(node_id=2)
+    node.groups.associations = 'assoc'
+    node.groups.associations_instances = 'inst'
+    node.groups.label = 'the label'
+    node.groups.max_associations = 'max'
+    node.groups = {1: node.groups}
+    network.nodes = {2: node}
 
     client = yield from test_client(app)
 
@@ -41,19 +41,15 @@ def test_get_groups(hass, test_client, mock_openzwave):
 
 
 @asyncio.coroutine
-def test_get_groups_nogroups(hass, test_client, mock_openzwave):
-    """Test getting groupdata on node without groups."""
+def test_get_groups_nogroups(hass, test_client):
+    """Test getting groupdata on node."""
     app = mock_http_component_app(hass)
     ZWaveNodeGroupView().register(app.router)
 
     network = hass.data[ZWAVE_NETWORK] = MagicMock()
-    network.nodes.get().groups_to_dict.return_value = {}
-    group = MagicMock()
-    group.associations = None
-    group.associations_instances = None
-    group.label = None
-    group.max_associations = None
-    mock_openzwave.group.ZWaveGroup.return_value = group
+    node = MockNode(node_id=2)
+
+    network.nodes = {2: node}
 
     client = yield from test_client(app)
 
@@ -65,8 +61,9 @@ def test_get_groups_nogroups(hass, test_client, mock_openzwave):
     assert result == {}
 
 
+
 @asyncio.coroutine
-def test_get_groups_nonode(hass, test_client, mock_openzwave):
+def test_get_groups_nonode(hass, test_client):
     """Test getting groupdata on nonexisting node."""
     app = mock_http_component_app(hass)
     ZWaveNodeGroupView().register(app.router)

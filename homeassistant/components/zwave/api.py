@@ -20,24 +20,20 @@ class ZWaveNodeGroupView(HomeAssistantView):
     @ha.callback
     def get(self, request, node_id):
         """Retrieve groups of node."""
-        # pylint: disable=import-error
-        from openzwave.group import ZWaveGroup
-
         nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(ZWAVE_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
-        groupdata = node.groups_to_dict()
+        groupdata = node.groups
         groups = {}
-        for key in groupdata:
-            groupnode = ZWaveGroup(key, network, nodeid)
-            groups[key] = {'associations': groupnode.associations,
+        for key, value in groupdata.items():
+            groups[key] = {'associations': value.associations,
                            'association_instances':
-                           groupnode.associations_instances,
-                           'label': groupnode.label,
-                           'max_associations': groupnode.max_associations}
+                           value.associations_instances,
+                           'label': value.label,
+                           'max_associations': value.max_associations}
         return self.json(groups)
 
 
