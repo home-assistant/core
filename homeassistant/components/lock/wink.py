@@ -187,9 +187,7 @@ class WinkLockDevice(WinkDevice, LockDevice):
 
 
 def dict_value_to_key(dict_map, comp_value):
-    """
-    Return the key that has the provided value.
-    """
+    """Return the key that has the provided value."""
     for key, value in dict_map.items():
         if value == comp_value:
             return key
