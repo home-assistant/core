@@ -73,6 +73,10 @@ class BaseEditConfigView(HomeAssistantView):
         self.data_schema = data_schema
         self.post_write_hook = post_write_hook
 
+    def _empty_config(self):
+        """Empty config if file not found."""
+        raise NotImplementedError
+
     def _get_value(self, data, config_key):
         """Get value."""
         raise NotImplementedError
