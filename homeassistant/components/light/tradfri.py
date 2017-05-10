@@ -1,4 +1,9 @@
-"""Support for the IKEA Tradfri platform."""
+"""
+Support for the IKEA Tradfri platform.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.tradfri/
+"""
 import logging
 
 from homeassistant.components.light import (
