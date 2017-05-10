@@ -86,7 +86,6 @@ def async_setup(hass, config):
 @callback
 def _async_get_instance(hass):
     """Get an instance per hass object."""
-
     instance = hass.data.get(_KEY_INSTANCE)
 
     if instance is None:
