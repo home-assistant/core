@@ -8,7 +8,6 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
-import jsonpath_rw
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
@@ -136,6 +135,8 @@ class HpIloSensor(Entity):
 
     def update(self):
         """Get the latest data from HP ILO and updates the states."""
+        import jsonpath_rw
+
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for
         # a short period of time to prevent hitting API limits.
