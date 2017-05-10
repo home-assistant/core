@@ -40,7 +40,7 @@ def setup(hass, config):
         gas = config['toon']['gas']
     else:
         gas = True
-    
+
     if CONF_SOLAR in config['toon']:
         solar = config['toon']['solar']
     else:
@@ -68,7 +68,8 @@ def setup(hass, config):
 class ToonDataStore:
     """An object to store the toon data."""
 
-    def __init__(self, username, password, gas=DEFAULT_GAS, solar=DEFAULT_SOLAR):
+    def __init__(self, username, password, gas=DEFAULT_GAS,
+                 solar=DEFAULT_SOLAR):
         """Initialize toon."""
         from toonlib import Toon
 
@@ -122,7 +123,8 @@ class ToonDataStore:
             self.data[value] = {'smoke_detector': sd.battery_level,
                                 'device_type': sd.device_type,
                                 'is_connected': sd.is_connected,
-                                'last_connected_change': sd.last_connected_change}
+                                'last_connected_change': 
+                                        sd.last_connected_change}
 
     def set_state(self, state):
         self.toon.thermostat_state = state
