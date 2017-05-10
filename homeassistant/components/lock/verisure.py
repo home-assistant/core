@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         locks.extend([
             VerisureDoorlock(device_label)
             for device_label in hub.get(
-                "$.lock.lockDevice[*].deviceLabel")])
+                "$.doorLockStatusList[*].deviceLabel")])
 
 
 class VerisureDoorlock(LockDevice):
@@ -39,7 +39,7 @@ class VerisureDoorlock(LockDevice):
     @property
     def name(self):
         """Return the name of the lock."""
-        return hub.get("$.lock.lockDeviec[%s].deviceLabel",
+        return hub.get("$.doorLockStatusList[%s].area",
                        self._device_label)
 
     @property
@@ -51,7 +51,7 @@ class VerisureDoorlock(LockDevice):
     def available(self):
         """Return True if entity is available."""
         return hub.get_first(
-            "$.lock.lockDevice[%s]",
+            "$.doorLockStatusList[%s]",
             self._device_label) is not None
 
     @property
@@ -67,15 +67,15 @@ class VerisureDoorlock(LockDevice):
     def update(self):
         """Update lock status."""
         hub.update_overview()
-        status = hub.get_first("$.lock.lockDevice[%s].status",
+        status = hub.get_first("$.doorLockStatusList[%s].lockedState",
                                self._device_label)
-        if status == 'unlocked':
+        if status == 'UNLOCKED':
             self._state = STATE_UNLOCKED
-        elif status == 'locked':
+        elif status == 'LOCKED':
             self._state = STATE_LOCKED
-        elif status != 'pending':
+        elif status != 'PENDING':
             _LOGGER.error('Unknown lock state %s', status)
-        self._changed_by = hub.get_first("$.lock.lockDevice[%s].name",
+        self._changed_by = hub.get_first("$.doorLockStatusList[%s].userString",
                                          self._device_label)
 
     @property
