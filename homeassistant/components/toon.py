@@ -123,8 +123,8 @@ class ToonDataStore:
             self.data[value] = {'smoke_detector': sd.battery_level,
                                 'device_type': sd.device_type,
                                 'is_connected': sd.is_connected,
-                                'last_connected_change': 
-                                        sd.last_connected_change}
+                                'last_connected_change':
+                                sd.last_connected_change}
 
     def set_state(self, state):
         self.toon.thermostat_state = state
