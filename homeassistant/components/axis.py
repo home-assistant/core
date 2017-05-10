@@ -96,8 +96,8 @@ def request_configuration(hass, name, host, serialnumber):
         hass, title, configuration_callback,
         description='Functionality: ' + str(AXIS_INCLUDE),
         entity_picture="/static/images/logo_axis.png",
-        link_name='device live view',
-        link_url='http://' + host,
+        link_name='Axis platform documentation',
+        link_url='https://home-assistant.io/components/axis/',
         submit_caption="Confirm",
         fields=[
             {'id': CONF_NAME,
