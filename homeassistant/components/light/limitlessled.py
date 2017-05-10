@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-
 import logging
 
 import voluptuous as vol
