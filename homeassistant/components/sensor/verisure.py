@@ -53,7 +53,7 @@ class VerisureThermometer(Entity):
         """Return the name of the device."""
         return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
-            self._device_label)
+            self._device_label) + "_temperature"
 
     @property
     def state(self):
@@ -91,7 +91,7 @@ class VerisureHygrometer(Entity):
         """Return the name of the device."""
         return hub.get_first(
             "$.climateValues[?(@.deviceLabel=='%s')].deviceArea",
-            self._device_label)
+            self._device_label) + "_humidity"
 
     @property
     def state(self):
