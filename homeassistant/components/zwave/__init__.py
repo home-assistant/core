@@ -28,6 +28,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.components.frontend import register_built_in_panel
 
+from . import api
 from . import const
 from .const import DOMAIN
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
@@ -66,6 +67,8 @@ DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
 DATA_ZWAVE_DICT = 'zwave_devices'
+OZW_LOG_FILENAME = 'OZW_Log.txt'
+URL_API_OZW_LOG = '/api/zwave/ozwlog'
 ZWAVE_NETWORK = 'zwave_network'
 
 RENAME_NODE_SCHEMA = vol.Schema({
@@ -383,7 +386,7 @@ def setup(hass, config):
     def rename_node(service):
         """Rename a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
-        node = hass.data[ZWAVE_NETWORK].nodes[node_id]
+        node = network.nodes[node_id]
         name = service.data.get(const.ATTR_NAME)
         node.name = name
         _LOGGER.info(
@@ -501,7 +504,7 @@ def setup(hass, config):
         # to be ready.
         for i in range(const.NETWORK_READY_WAIT_SECS):
             _LOGGER.debug(
-                "network state: %d %s", hass.data[ZWAVE_NETWORK].state,
+                "network state: %d %s", network.state,
                 network.state_str)
             if network.state >= network.STATE_AWAKED:
                 _LOGGER.info("Z-Wave ready after %d seconds", i)
@@ -607,6 +610,11 @@ def setup(hass, config):
 
     if 'frontend' in hass.config.components:
         register_built_in_panel(hass, 'zwave', 'Z-Wave', 'mdi:nfc')
+        hass.http.register_view(api.ZWaveNodeGroupView)
+        hass.http.register_view(api.ZWaveNodeConfigView)
+        hass.http.register_view(api.ZWaveUserCodeView)
+        hass.http.register_static_path(
+            URL_API_OZW_LOG, hass.config.path(OZW_LOG_FILENAME), False)
 
     return True
 
