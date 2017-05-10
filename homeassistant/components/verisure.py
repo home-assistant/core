@@ -148,7 +148,8 @@ class VerisureHub(object):
 
     def get(self, jpath, *args):
         """Get values from the overview that matches the jsonpath."""
-        return self.jsonpath(self.overview, jpath % args)
+        res = self.jsonpath(self.overview, jpath % args)
+        return res if res else []
 
     def get_first(self, jpath, *args):
         """Get first value from the overview that matches the jsonpath."""
@@ -157,4 +158,5 @@ class VerisureHub(object):
 
     def get_image_info(self, jpath, *args):
         """Get values from the imageseries that matches the jsonpath."""
-        return self.jsonpath(self.imageseries, jpath % args)
+        res = self.jsonpath(self.imageseries, jpath % args)
+        return res if res else []
