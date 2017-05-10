@@ -25,6 +25,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for device_label in hub.get(
                 "$.doorLockStatusList[*].deviceLabel")])
 
+    add_devices(locks)
+
 
 class VerisureDoorlock(LockDevice):
     """Representation of a Verisure doorlock."""

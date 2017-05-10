@@ -139,7 +139,7 @@ class VerisureHub(object):
     @Throttle(timedelta(seconds=60))
     def update_smartcam_imageseries(self):
         """Update the image series."""
-        self.imageseries = self.session.get_smartcam_imageseries()
+        self.imageseries = self.session.get_camera_imageseries()
 
     @Throttle(timedelta(seconds=30))
     def smartcam_capture(self, device_id):
