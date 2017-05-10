@@ -8,21 +8,25 @@ import logging
 from datetime import timedelta
 
 import voluptuous as vol
+import jsonpath_rw
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
-    CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF)
+    CONF_MONITORED_VARIABLES, CONF_PATH, CONF_SENSOR_TYPE,
+    CONF_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-hpilo==3.9']
+REQUIREMENTS = ['python-hpilo==3.9', 'jsonpath_rw==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'HP ILO'
 DEFAULT_PORT = 443
+DEFAULT_SENSOR_PATH = '$'
+DEFAULT_UNIT_OF_MEASUREMENT = None
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
@@ -45,8 +49,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['server_name']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_SENSOR_TYPE):
+                vol.All(cv.string, vol.In(SENSOR_TYPES)),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT,
+                         default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
+            vol.Optional(CONF_PATH, default=DEFAULT_SENSOR_PATH): cv.string
+        })]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -60,7 +71,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     login = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_variables = config.get(CONF_MONITORED_VARIABLES)
-    name = config.get(CONF_NAME)
 
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data and confirm we can connect.
@@ -72,10 +82,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Initialize and add all of the sensors.
     devices = []
-    for ilo_type in monitored_variables:
+    for monitored_variable in monitored_variables:
         new_device = HpIloSensor(
-            hp_ilo_data=hp_ilo_data, sensor_type=SENSOR_TYPES.get(ilo_type),
-            client_name=name)
+            hp_ilo_data=hp_ilo_data,
+            sensor_name='{} {}'.format(
+                config.get(CONF_NAME), monitored_variable[CONF_NAME]),
+            sensor_type=monitored_variable[CONF_SENSOR_TYPE],
+            sensor_path=monitored_variable[CONF_PATH],
+            unit_of_measurement=monitored_variable[CONF_UNIT_OF_MEASUREMENT])
         devices.append(new_device)
 
     add_devices(devices)
@@ -84,11 +98,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HpIloSensor(Entity):
     """Representation of a HP ILO sensor."""
 
-    def __init__(self, hp_ilo_data, sensor_type, client_name):
+    def __init__(self, hp_ilo_data, sensor_type, sensor_name, sensor_path,
+                 unit_of_measurement):
         """Initialize the sensor."""
-        self._name = '{} {}'.format(client_name, sensor_type[0])
-        self._ilo_function = sensor_type[1]
-        self.client_name = client_name
+        self._name = sensor_name
+        self._unit_of_measurement = unit_of_measurement
+        self._ilo_function = SENSOR_TYPES[sensor_type][1]
+        self.sensor_path = sensor_path
         self.hp_ilo_data = hp_ilo_data
 
         self._state = None
@@ -102,6 +118,11 @@ class HpIloSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of the sensor."""
+        return self._unit_of_measurement
 
     @property
     def state(self):
@@ -121,14 +142,17 @@ class HpIloSensor(Entity):
         self.hp_ilo_data.update()
         ilo_data = getattr(self.hp_ilo_data.data, self._ilo_function)()
 
-        # Store the data received from the ILO API
-        if isinstance(ilo_data, dict):
-            self._data = ilo_data
-        else:
-            self._data = {'value': ilo_data}
+        if self.sensor_path is not DEFAULT_SENSOR_PATH:
+            try:
+                ilo_data = jsonpath_rw.parse(self.sensor_path).find(
+                    ilo_data)[0].value
+            except IndexError:
+                _LOGGER.warning(
+                    "No result found in ILO data for jsonpath '%s'",
+                    self.sensor_path)
 
         # If the data received is an integer or string, store it as
-        # the sensor state
+        # the sensor state, otherwise store the data in the sensor attributes
         if isinstance(ilo_data, (str, bytes)):
             states = [STATE_ON, STATE_OFF]
             try:
@@ -138,6 +162,8 @@ class HpIloSensor(Entity):
                 self._state = ilo_data
         elif isinstance(ilo_data, (int, float)):
             self._state = ilo_data
+        else:
+            self._data = {'ilo_data': ilo_data}
 
 
 class HpIloData(object):
