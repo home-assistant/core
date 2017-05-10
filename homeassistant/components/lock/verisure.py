@@ -39,7 +39,7 @@ class VerisureDoorlock(LockDevice):
     @property
     def name(self):
         """Return the name of the lock."""
-        return hub.get("$.doorLockStatusList[%s].area",
+        return hub.get("$.doorLockStatusList[?(@.deviceLabel=='%s')].area",
                        self._device_label)
 
     @property
@@ -67,16 +67,18 @@ class VerisureDoorlock(LockDevice):
     def update(self):
         """Update lock status."""
         hub.update_overview()
-        status = hub.get_first("$.doorLockStatusList[%s].lockedState",
-                               self._device_label)
+        status = hub.get_first(
+            "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
+            self._device_label)
         if status == 'UNLOCKED':
             self._state = STATE_UNLOCKED
         elif status == 'LOCKED':
             self._state = STATE_LOCKED
         elif status != 'PENDING':
             _LOGGER.error('Unknown lock state %s', status)
-        self._changed_by = hub.get_first("$.doorLockStatusList[%s].userString",
-                                         self._device_label)
+        self._changed_by = hub.get_first(
+            "$.doorLockStatusList[?(@.deviceLabel=='%s')].userString",
+            self._device_label)
 
     @property
     def is_locked(self):
