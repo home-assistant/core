@@ -7,8 +7,9 @@ jinja2>=2.9.5
 voluptuous==0.10.5
 typing>=3,<4
 aiohttp==2.0.7
-async_timeout==1.2.0
+async_timeout==1.2.1
 chardet==3.0.2
+astral==1.4
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
@@ -66,12 +67,11 @@ apcaccess==0.0.4
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
-# homeassistant.components.sun
-# homeassistant.components.sensor.moon
-astral==1.4
-
 # homeassistant.components.light.avion
 # avion==0.6
+
+# homeassistant.components.sensor.modem_callerid
+basicmodem==0.7
 
 # homeassistant.components.sensor.linux_battery
 batinfo==0.4.2
@@ -81,7 +81,7 @@ batinfo==0.4.2
 
 # homeassistant.components.device_tracker.linksys_ap
 # homeassistant.components.sensor.scrape
-beautifulsoup4==4.5.3
+beautifulsoup4==4.6.0
 
 # homeassistant.components.zha
 bellows==0.2.7
@@ -135,7 +135,7 @@ datapoint==0.4.3
 # decora==0.4
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.4.0
+denonavr==0.4.1
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -267,14 +267,8 @@ https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 # homeassistant.components.cover.myq
 https://github.com/arraylabs/pymyq/archive/v0.0.8.zip#pymyq==0.0.8
 
-# homeassistant.components.media_player.roku
-https://github.com/bah2830/python-roku/archive/3.1.3.zip#roku==3.1.3
-
 # homeassistant.components.modbus
 https://github.com/bashwork/pymodbus/archive/d7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0
-
-# homeassistant.components.lutron_caseta
-https://github.com/gurumitts/pylutron-caseta/archive/v0.2.6.zip#pylutron-caseta==v0.2.6
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
@@ -290,9 +284,6 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 
 # homeassistant.components.media_player.nad
 https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
-
-# homeassistant.components.media_player.onkyo
-https://github.com/miracle2k/onkyo-eiscp/archive/066023aec04770518d494c32fb72eea0ec5c1b7c.zip#onkyo-eiscp==1.0
 
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
@@ -314,9 +305,6 @@ https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e23
 
 # homeassistant.components.lutron
 https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
-
-# homeassistant.components.sensor.modem_callerid
-https://github.com/vroomfonde1/basicmodem/archive/0.7.zip#basicmodem==0.7
 
 # homeassistant.components.tado
 https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
@@ -408,6 +396,9 @@ oauth2client==4.0.0
 # homeassistant.components.climate.oem
 oemthermostat==1.1
 
+# homeassistant.components.media_player.onkyo
+onkyo-eiscp==1.1
+
 # homeassistant.components.opencv
 # opencv-python==3.2.0.6
 
@@ -437,6 +428,12 @@ pexpect==4.0.1
 
 # homeassistant.components.light.hue
 phue==0.9
+
+# homeassistant.components.rpi_pfio
+pifacecommon==4.1.2
+
+# homeassistant.components.rpi_pfio
+pifacedigitalio==3.0.5
 
 # homeassistant.components.light.piglow
 piglow==1.2.4
@@ -584,6 +581,9 @@ pylitejet==0.1
 # homeassistant.components.sensor.loopenergy
 pyloopenergy==0.0.17
 
+# homeassistant.components.lutron_caseta
+pylutron-caseta==0.2.6
+
 # homeassistant.components.notify.mailgun
 pymailgunner==1.4
 
@@ -674,12 +674,13 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.media_player.roku
+python-roku==3.1.3
+
 # homeassistant.components.sensor.synologydsm
 python-synology==0.1.0
 
-# homeassistant.components.notify.telegram
-# homeassistant.components.telegram_bot.polling
-# homeassistant.components.telegram_bot.webhooks
+# homeassistant.components.telegram_bot
 python-telegram-bot==5.3.1
 
 # homeassistant.components.sensor.twitch
@@ -728,7 +729,7 @@ radiotherm==1.2
 # raspihats==2.2.1
 
 # homeassistant.components.rflink
-rflink==0.0.31
+rflink==0.0.34
 
 # homeassistant.components.ring
 ring_doorbell==0.1.4

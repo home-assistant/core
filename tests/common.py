@@ -3,7 +3,6 @@ import asyncio
 import functools as ft
 import os
 import sys
-from datetime import timedelta
 from unittest.mock import patch, MagicMock, Mock
 from io import StringIO
 import logging
@@ -25,7 +24,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
-from homeassistant.components import sun, mqtt, recorder
+from homeassistant.components import mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
@@ -211,20 +210,6 @@ def fire_service_discovered(hass, service, info):
         ATTR_SERVICE: service,
         ATTR_DISCOVERED: info
     })
-
-
-def ensure_sun_risen(hass):
-    """Trigger sun to rise if below horizon."""
-    if sun.is_on(hass):
-        return
-    fire_time_changed(hass, sun.next_rising_utc(hass) + timedelta(seconds=10))
-
-
-def ensure_sun_set(hass):
-    """Trigger sun to set if above horizon."""
-    if not sun.is_on(hass):
-        return
-    fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
 
 
 def load_fixture(filename):

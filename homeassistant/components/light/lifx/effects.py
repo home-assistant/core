@@ -292,7 +292,7 @@ class LIFXEffectColorloop(LIFXEffect):
         direction = 1 if random.randint(0, 1) else -1
 
         # Random start
-        hue = random.randint(0, 359)
+        hue = random.uniform(0, 360) % 360
 
         while self.lights:
             hue = (hue + direction*change) % 360
@@ -312,7 +312,7 @@ class LIFXEffectColorloop(LIFXEffect):
                     brightness = light.effect_data.color[2]
 
                 hsbk = [
-                    int(65535/359*lhue),
+                    int(65535/360*lhue),
                     int(random.uniform(0.8, 1.0)*65535),
                     brightness,
                     NEUTRAL_WHITE,

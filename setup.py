@@ -23,8 +23,9 @@ REQUIRES = [
     'voluptuous==0.10.5',
     'typing>=3,<4',
     'aiohttp==2.0.7',
-    'async_timeout==1.2.0',
-    'chardet==3.0.2'
+    'async_timeout==1.2.1',
+    'chardet==3.0.2',
+    'astral==1.4',
 ]
 
 setup(
