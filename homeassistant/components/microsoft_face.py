@@ -14,7 +14,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT
+from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT, CONF_SERVER_LOC
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'microsoft_face'
 DEPENDENCIES = ['camera']
 
-FACE_API_URL = "https://westus.api.cognitive.microsoft.com/face/v1.0/{0}"
+FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
 
 DATA_MICROSOFT_FACE = 'microsoft_face'
 
@@ -49,6 +49,7 @@ DEFAULT_TIMEOUT = 10
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_SERVER_LOC, default="westus"): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -115,6 +116,7 @@ def async_setup(hass, config):
     entities = {}
     face = MicrosoftFace(
         hass,
+        config[DOMAIN].get(CONF_SERVER_LOC),
         config[DOMAIN].get(CONF_API_KEY),
         config[DOMAIN].get(CONF_TIMEOUT),
         entities
@@ -304,12 +306,13 @@ class MicrosoftFaceGroupEntity(Entity):
 class MicrosoftFace(object):
     """Microsoft Face api for HomeAssistant."""
 
-    def __init__(self, hass, api_key, timeout, entities):
+    def __init__(self, hass, server_loc, api_key, timeout, entities):
         """Initialize Microsoft Face api."""
         self.hass = hass
         self.websession = async_get_clientsession(hass)
         self.timeout = timeout
         self._api_key = api_key
+        self._server_url = "https://{0}.{1}".format(server_loc, FACE_API_URL)
         self._store = {}
         self._entities = entities
 
@@ -346,7 +349,7 @@ class MicrosoftFace(object):
                  params=None):
         """Make a api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
-        url = FACE_API_URL.format(function)
+        url = self._server_url.format(function)
 
         payload = None
         if binary:
