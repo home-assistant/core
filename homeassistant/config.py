@@ -98,6 +98,7 @@ tts:
   platform: google
 
 group: !include groups.yaml
+automation: !include automations.yaml
 """
 
 
@@ -158,10 +159,13 @@ def create_default_config(config_dir, detect_location=True):
     """
     from homeassistant.components.config.group import (
         CONFIG_PATH as GROUP_CONFIG_PATH)
+    from homeassistant.components.config.automation import (
+        CONFIG_PATH as AUTOMATION_CONFIG_PATH)
 
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
+    automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -202,6 +206,9 @@ def create_default_config(config_dir, detect_location=True):
 
         with open(group_yaml_path, 'w'):
             pass
+
+        with open(automation_yaml_path, 'wt') as fil:
+            fil.write('[]')
 
         return config_path
 
