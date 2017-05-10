@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ToonSensor(hass, 'Gas_current', 'CM3'),
             ToonSensor(hass, 'Gas_today', 'M3')
         ])
-    
+
     for plug in _toon_main.toon.smartplugs:
         add_devices([
             FibaroSensor(hass,
@@ -166,6 +166,7 @@ class SolarSensor(Entity):
         """Get the latest data from the sensor."""
         self.toon.update()
 
+
 class FibaroSmokeDetector(Entity):
     """Representation of a smoke detector."""
 
@@ -195,8 +196,9 @@ class FibaroSmokeDetector(Entity):
                 ).strftime('%Y-%m-%d %H:%M:%S')
 
         return {
-            STATE_ATTR_DEVICE_TYPE: self.toon.get_data('device_type', self.name),
-            STATE_ATTR_LAST_CONNECTED_CHANGE: value   
+            STATE_ATTR_DEVICE_TYPE: self.toon.get_data('device_type',
+                                                       self.name),
+            STATE_ATTR_LAST_CONNECTED_CHANGE: value
         }
 
     @property
