@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.extend([
             VerisureMouseDetection(device_label)
             for device_label in hub.get(
-                '$.mouse[*].deviceLabel')])
+                "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel")])
 
     add_devices(sensors)
 
@@ -127,21 +127,21 @@ class VerisureMouseDetection(Entity):
     def name(self):
         """Return the name of the device."""
         return hub.get_first(
-            "$.mouse[?(@.deviceLabel=='%s')].deviceArea",
+            "$.eventCounts[?(@.deviceLabel=='%s')].area",
             self._device_label)
 
     @property
     def state(self):
         """Return the state of the device."""
         return hub.get_first(
-            "$.mouse[?(@.deviceLabel=='%s')].count",
+            "$.eventCounts[?(@.deviceLabel=='%s')].detections",
             self._device_label)
 
     @property
     def available(self):
         """Return True if entity is available."""
         return hub.get_first(
-            "$.mouse[?(@.deviceLabel=='%s')]",
+            "$.eventCounts[?(@.deviceLabel=='%s')]",
             self._device_label) is not None
 
     @property
