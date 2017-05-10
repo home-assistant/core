@@ -65,7 +65,7 @@ class VerisureSmartcam(Camera):
             self._device_label)
         if not imageinfo:
             return
-        new_image_id = images[0]["imageId"]
+        new_image_id = imageinfo[0]["imageId"]
         _LOGGER.debug("self._device_label=%s, self._images=%s, "
                       "self._new_image_id=%s", self._device_label,
                       imageinfo, new_image_id)
