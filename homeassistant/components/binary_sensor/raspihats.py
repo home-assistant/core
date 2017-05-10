@@ -34,7 +34,7 @@ _CHANNELS_SCHEMA = vol.Schema([{
 
 _I2C_HATS_SCHEMA = vol.Schema([{
     vol.Required(CONF_BOARD): vol.In(I2C_HAT_NAMES),
-    vol.Required(CONF_ADDRESS): cv.string,
+    vol.Required(CONF_ADDRESS): vol.Coerce(int),
     vol.Required(CONF_CHANNELS): _CHANNELS_SCHEMA
 }])
 
@@ -50,14 +50,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     binary_sensors = []
     i2c_hat_configs = config.get(CONF_I2C_HATS)
     for i2c_hat_config in i2c_hat_configs:
-        address = int(i2c_hat_config[CONF_ADDRESS])
+        address = i2c_hat_config[CONF_ADDRESS]
         board = i2c_hat_config[CONF_BOARD]
         try:
             I2CHatBinarySensor.I2C_HATS_MANAGER.register_board(board, address)
             for channel_config in i2c_hat_config[CONF_CHANNELS]:
                 binary_sensors.append(
                     I2CHatBinarySensor(
-                        int(i2c_hat_config[CONF_ADDRESS]),
+                        address,
                         channel_config[CONF_INDEX],
                         channel_config[CONF_NAME],
                         channel_config[CONF_INVERT_LOGIC],
