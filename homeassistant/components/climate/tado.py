@@ -87,7 +87,7 @@ class TadoClimate(ClimateDevice):
     def __init__(self, store, zone_name, zone_id, data_id,
                  min_temp, max_temp, ac_mode,
                  tolerance=0.3):
-        """Initialization of Tado climate device."""
+        """Initialize of Tado climate device."""
         self._store = store
         self._data_id = data_id
 
@@ -113,7 +113,7 @@ class TadoClimate(ClimateDevice):
 
     @property
     def name(self):
-        """Return the name of the sensor."""
+        """Return the name of the device."""
         return self.zone_name
 
     @property
@@ -133,12 +133,12 @@ class TadoClimate(ClimateDevice):
 
     @property
     def operation_list(self):
-        """List of available operation modes (readable)."""
+        """Return the list of available operation modes (readable)."""
         return list(OPERATION_LIST.values())
 
     @property
     def temperature_unit(self):
-        """The unit of measurement used by the platform."""
+        """Return the unit of measurement used by the platform."""
         return self._unit
 
     @property

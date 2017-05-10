@@ -31,7 +31,7 @@ def async_trigger(hass, config, action):
     if event == EVENT_SHUTDOWN:
         @callback
         def hass_shutdown(event):
-            """Called when Home Assistant is shutting down."""
+            """Execute when Home Assistant is shutting down."""
             hass.async_run_job(action, {
                 'trigger': {
                     'platform': 'homeassistant',

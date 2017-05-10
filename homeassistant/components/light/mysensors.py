@@ -4,15 +4,12 @@ Support for MySensors lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mysensors/
 """
-
 import logging
 
 from homeassistant.components import mysensors
-from homeassistant.components.light import (ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-                                            ATTR_WHITE_VALUE,
-                                            SUPPORT_BRIGHTNESS,
-                                            SUPPORT_RGB_COLOR,
-                                            SUPPORT_WHITE_VALUE, Light)
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_WHITE_VALUE,
+    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.util.color import rgb_hex_to_rgb_list
 
@@ -25,9 +22,7 @@ SUPPORT_MYSENSORS = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR |
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for sensors."""
-    # Only act if loaded via mysensors by discovery event.
-    # Otherwise gateway is not setup.
+    """Set up the MySensors platform for lights."""
     if discovery_info is None:
         return
 
@@ -62,10 +57,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
-    """Represent the value of a MySensors Light child node."""
+    """Representation of a MySensors Light child node."""
 
     def __init__(self, *args):
-        """Setup instance attributes."""
+        """Initialize a MySensors Light."""
         mysensors.MySensorsDeviceEntity.__init__(self, *args)
         self._state = None
         self._brightness = None
@@ -157,7 +152,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
             elif white is not None:
                 rgb.append(white)
             else:
-                _LOGGER.error('White value is not updated for RGBW light')
+                _LOGGER.error("White value is not updated for RGBW light")
                 return
         hex_color = hex_template % tuple(rgb)
         if len(rgb) > 3:
@@ -206,9 +201,8 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         set_req = self.gateway.const.SetReq
         if value_type is None or value is None:
             _LOGGER.warning(
-                '%s: value_type %s, value = %s, '
-                'None is not valid argument when setting child value'
-                '', self._name, value_type, value)
+                "%s: value_type %s, value = %s, None is not valid argument "
+                "when setting child value", self._name, value_type, value)
             return
         self.gateway.set_child_value(
             self.node_id, self.child_id, value_type, value)
@@ -244,7 +238,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         value = self._values[self.value_type]
         if len(value) != 6 and len(value) != 8:
             _LOGGER.error(
-                'Wrong value %s for %s', value, set_req(self.value_type).name)
+                "Wrong value %s for %s", value, set_req(self.value_type).name)
             return
         color_list = rgb_hex_to_rgb_list(value)
         if set_req.V_LIGHT not in self._values and \
@@ -253,7 +247,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         if len(color_list) > 3:
             if set_req.V_RGBW != self.value_type:
                 _LOGGER.error(
-                    'Wrong value %s for %s',
+                    "Wrong value %s for %s",
                     value, set_req(self.value_type).name)
                 return
             self._white = color_list.pop()
@@ -265,7 +259,7 @@ class MySensorsLight(mysensors.MySensorsDeviceEntity, Light):
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
             _LOGGER.debug(
-                '%s: value_type %s, value = %s', self._name, value_type, value)
+                "%s: value_type %s, value = %s", self._name, value_type, value)
             self._values[value_type] = value
 
 

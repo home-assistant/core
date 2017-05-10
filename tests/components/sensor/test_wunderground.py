@@ -2,7 +2,7 @@
 import unittest
 
 from homeassistant.components.sensor import wunderground
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, LENGTH_INCHES
 
 from tests.common import get_test_home_assistant
 
@@ -19,7 +19,8 @@ VALID_CONFIG = {
     'platform': 'wunderground',
     'api_key': 'foo',
     'monitored_conditions': [
-        'weather', 'feelslike_c', 'alerts', 'elevation', 'location'
+        'weather', 'feelslike_c', 'alerts', 'elevation', 'location',
+        'weather_1d_metric', 'precip_1d_in'
     ]
 }
 
@@ -37,6 +38,8 @@ FEELS_LIKE = '40'
 WEATHER = 'Clear'
 HTTPS_ICON_URL = 'https://icons.wxug.com/i/c/k/clear.gif'
 ALERT_MESSAGE = 'This is a test alert message'
+FORECAST_TEXT = 'Mostly Cloudy. Fog overnight.'
+PRECIP_IN = 0.03
 
 
 def mocked_requests_get(*args, **kwargs):
@@ -60,7 +63,9 @@ def mocked_requests_get(*args, **kwargs):
                 "termsofService":
                     "http://www.wunderground.com/weather/api/d/terms.html",
                 "features": {
-                    "conditions": 1
+                    "conditions": 1,
+                    "alerts": 1,
+                    "forecast": 1,
                 }
             }, "current_observation": {
                 "image": {
@@ -90,7 +95,58 @@ def mocked_requests_get(*args, **kwargs):
                     "message": ALERT_MESSAGE,
                 },
 
-            ],
+            ], "forecast": {
+                "txt_forecast": {
+                    "date": "22:35 CEST",
+                    "forecastday": [
+                        {
+                            "period": 0,
+                            "icon_url":
+                                "http://icons.wxug.com/i/c/k/clear.gif",
+                            "title": "Tuesday",
+                            "fcttext": FORECAST_TEXT,
+                            "fcttext_metric": FORECAST_TEXT,
+                            "pop": "0"
+                        },
+                    ],
+                }, "simpleforecast": {
+                    "forecastday": [
+                        {
+                            "date": {
+                                "pretty": "19:00 CEST 4. Duben 2017",
+                            },
+                            "period": 1,
+                            "high": {
+                                "fahrenheit": "56",
+                                "celsius": "13",
+                            },
+                            "low": {
+                                "fahrenheit": "43",
+                                "celsius": "6",
+                            },
+                            "conditions": "Možnost deště",
+                            "icon_url":
+                                "http://icons.wxug.com/i/c/k/chancerain.gif",
+                            "qpf_allday": {
+                                "in": PRECIP_IN,
+                                "mm": 1,
+                            },
+                            "maxwind": {
+                                "mph": 0,
+                                "kph": 0,
+                                "dir": "",
+                                "degrees": 0,
+                            },
+                            "avewind": {
+                                "mph": 0,
+                                "kph": 0,
+                                "dir": "severní",
+                                "degrees": 0
+                            }
+                        },
+                    ],
+                },
+            },
         }, 200)
     else:
         return MockResponse({
@@ -168,7 +224,13 @@ class TestWundergroundSetup(unittest.TestCase):
                 self.assertEqual('Holly Springs, NC', device.state)
             elif device.name == 'PWS_elevation':
                 self.assertEqual('413', device.state)
-            else:
+            elif device.name == 'PWS_feelslike_c':
                 self.assertIsNone(device.entity_picture)
                 self.assertEqual(FEELS_LIKE, device.state)
                 self.assertEqual(TEMP_CELSIUS, device.unit_of_measurement)
+            elif device.name == 'PWS_weather_1d_metric':
+                self.assertEqual(FORECAST_TEXT, device.state)
+            else:
+                self.assertEqual(device.name, 'PWS_precip_1d_in')
+                self.assertEqual(PRECIP_IN, device.state)
+                self.assertEqual(LENGTH_INCHES, device.unit_of_measurement)

@@ -17,13 +17,13 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-                                 STATE_NOT_HOME, STATE_OFF, STATE_ON,
-                                 ATTR_HIDDEN, HTTP_BAD_REQUEST)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, ATTR_HIDDEN, HTTP_BAD_REQUEST,
+    EVENT_LOGBOOK_ENTRY)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 
-DOMAIN = "logbook"
+DOMAIN = 'logbook'
 DEPENDENCIES = ['recorder', 'frontend']
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,8 +47,6 @@ CONFIG_SCHEMA = vol.Schema({
         })
     }),
 }, extra=vol.ALLOW_EXTRA)
-
-EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 GROUP_BY_MINUTES = 15
 
@@ -100,11 +98,11 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    register_built_in_panel(hass, 'logbook', 'Logbook',
-                            'mdi:format-list-bulleted-type')
+    register_built_in_panel(
+        hass, 'logbook', 'Logbook', 'mdi:format-list-bulleted-type')
 
-    hass.services.register(DOMAIN, 'log', log_message,
-                           schema=LOG_MESSAGE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
     return True
 
 
@@ -164,11 +162,11 @@ class Entry(object):
 
 
 def humanify(events):
-    """Generator that converts a list of events into Entry objects.
+    """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
-     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
-     - if home assistant stop and start happen in same minute call it restarted
+    - if 2+ sensor updates in GROUP_BY_MINUTES, show last
+    - if home assistant stop and start happen in same minute call it restarted
     """
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(

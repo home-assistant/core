@@ -10,19 +10,17 @@ import logging
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-
 from homeassistant.components.alarmdecoder import (SIGNAL_PANEL_MESSAGE)
-
 from homeassistant.const import (STATE_UNKNOWN)
 
-DEPENDENCIES = ['alarmdecoder']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['alarmdecoder']
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Perform the setup for AlarmDecoder sensor devices."""
+    """Set up for AlarmDecoder sensor devices."""
     _LOGGER.debug("AlarmDecoderSensor: async_setup_platform")
 
     device = AlarmDecoderSensor(hass)
@@ -40,7 +38,7 @@ class AlarmDecoderSensor(Entity):
         self._icon = 'mdi:alarm-check'
         self._name = 'Alarm Panel Display'
 
-        _LOGGER.debug("AlarmDecoderSensor: Setting up panel")
+        _LOGGER.debug("Setting up panel")
 
     @asyncio.coroutine
     def async_added_to_hass(self):

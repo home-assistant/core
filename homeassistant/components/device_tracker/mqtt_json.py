@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
 
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Setup the MQTT tracker."""
+    """Set up the MQTT JSON tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
@@ -45,18 +45,18 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     @callback
     def async_tracker_message_received(topic, payload, qos):
-        """MQTT message received."""
+        """Handle received MQTT message."""
         dev_id = dev_id_lookup[topic]
 
         try:
             data = GPS_JSON_PAYLOAD_SCHEMA(json.loads(payload))
         except vol.MultipleInvalid:
-            _LOGGER.error('Skipping update for following data '
-                          'because of missing or malformatted data: %s',
+            _LOGGER.error("Skipping update for following data "
+                          "because of missing or malformatted data: %s",
                           payload)
             return
         except ValueError:
-            _LOGGER.error('Error parsing JSON payload: %s', payload)
+            _LOGGER.error("Error parsing JSON payload: %s", payload)
             return
 
         kwargs = _parse_see_args(dev_id, data)

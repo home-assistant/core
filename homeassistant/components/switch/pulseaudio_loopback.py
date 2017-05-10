@@ -82,7 +82,7 @@ class PAServer():
     _current_module_state = ""
 
     def __init__(self, host, port, buff_sz, tcp_timeout):
-        """Simple constructor for reading in our configuration."""
+        """Initialize PulseAudio server."""
         self._pa_host = host
         self._pa_port = int(port)
         self._buffer_size = int(buff_sz)
@@ -106,7 +106,7 @@ class PAServer():
         return return_data
 
     def _get_full_response(self, sock):
-        """Helper method to get the full response back from pulseaudio."""
+        """Get the full response back from pulseaudio."""
         result = ""
         rcv_buffer = sock.recv(self._buffer_size)
         result += rcv_buffer.decode('utf-8')
@@ -160,7 +160,7 @@ class PALoopbackSwitch(SwitchDevice):
 
     @property
     def is_on(self):
-        """Tell the core logic if device is on."""
+        """Return true if device is on."""
         return self._module_idx > 0
 
     def turn_on(self, **kwargs):

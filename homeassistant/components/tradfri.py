@@ -45,7 +45,7 @@ def request_configuration(hass, config, host):
 
     @asyncio.coroutine
     def configuration_callback(callback_data):
-        """Called when config is submitted."""
+        """Handle the submitted configuration."""
         res = yield from _setup_gateway(hass, config, host,
                                         callback_data.get('key'))
         if not res:
@@ -73,14 +73,14 @@ def request_configuration(hass, config, host):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup Tradfri."""
+    """Set up the Tradfri component."""
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
     key = conf.get(CONF_API_KEY)
 
     @asyncio.coroutine
     def gateway_discovered(service, info):
-        """Called when a gateway is discovered."""
+        """Run when a gateway is discovered."""
         keys = yield from hass.async_add_job(_read_config, hass)
         host = info['host']
 

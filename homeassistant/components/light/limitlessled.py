@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-
 import logging
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.5']
+REQUIREMENTS = ['limitlessled==1.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +94,7 @@ def rewrite_legacy(config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LimitlessLED lights."""
+    """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
     # Two legacy configuration formats are supported to maintain backwards
@@ -123,7 +122,7 @@ def state(new_state):
     Specify True (turn on) or False (turn off).
     """
     def decorator(function):
-        """Decorator function."""
+        """Set up the decorator function."""
         # pylint: disable=no-member,protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
@@ -376,12 +375,12 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
 
 def _from_hass_temperature(temperature):
     """Convert Home Assistant color temperature units to percentage."""
-    return (temperature - 154) / 346
+    return 1 - (temperature - 154) / 346
 
 
 def _to_hass_temperature(temperature):
     """Convert percentage to Home Assistant color temperature units."""
-    return int(temperature * 346) + 154
+    return 500 - int(temperature * 346)
 
 
 def _from_hass_brightness(brightness):

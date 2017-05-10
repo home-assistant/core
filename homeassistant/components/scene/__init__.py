@@ -68,7 +68,7 @@ def activate(hass, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup scenes."""
+    """Set up the scenes."""
     logger = logging.getLogger(__name__)
     component = EntityComponent(logger, DOMAIN, hass)
 

@@ -5,7 +5,6 @@ from unittest.mock import patch, Mock, MagicMock
 
 import pytest
 
-import homeassistant.components.hassio as ho
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro, mock_http_component_app
@@ -48,32 +47,13 @@ def test_fail_setup_cannot_connect(hass):
 
 
 @asyncio.coroutine
-def test_invalid_path(hassio_client):
-    """Test requesting invalid path."""
-    with patch.dict(ho.HASSIO_REST_COMMANDS, {}, clear=True):
-        resp = yield from hassio_client.post('/api/hassio/beer')
-
-    assert resp.status == 404
-
-
-@asyncio.coroutine
-def test_invalid_method(hassio_client):
-    """Test requesting path with invalid method."""
-    with patch.dict(ho.HASSIO_REST_COMMANDS, {'beer': ['POST']}):
-        resp = yield from hassio_client.get('/api/hassio/beer')
-
-    assert resp.status == 405
-
-
-@asyncio.coroutine
-def test_forward_normal_path(hassio_client):
+def test_forward_request(hassio_client):
     """Test fetching normal path."""
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
-    with patch.dict(ho.HASSIO_REST_COMMANDS, {'beer': ['POST']}), \
-            patch('homeassistant.components.hassio.HassIO.command_proxy',
-                  Mock(return_value=mock_coro(response))), \
+    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+               Mock(return_value=mock_coro(response))), \
             patch('homeassistant.components.hassio._create_response') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.post('/api/hassio/beer')
@@ -89,14 +69,13 @@ def test_forward_normal_path(hassio_client):
 
 
 @asyncio.coroutine
-def test_forward_normal_log_path(hassio_client):
+def test_forward_log_request(hassio_client):
     """Test fetching normal log path."""
     response = MagicMock()
     response.read.return_value = mock_coro('data')
 
-    with patch.dict(ho.HASSIO_REST_COMMANDS, {'beer/logs': ['GET']}), \
-            patch('homeassistant.components.hassio.HassIO.command_proxy',
-                  Mock(return_value=mock_coro(response))), \
+    with patch('homeassistant.components.hassio.HassIO.command_proxy',
+               Mock(return_value=mock_coro(response))), \
             patch('homeassistant.components.hassio.'
                   '_create_response_log') as mresp:
         mresp.return_value = 'response'
@@ -110,69 +89,6 @@ def test_forward_normal_log_path(hassio_client):
     # Check we forwarded command
     assert len(mresp.mock_calls) == 1
     assert mresp.mock_calls[0][1] == (response, 'data')
-
-
-@asyncio.coroutine
-def test_forward_addon_path(hassio_client):
-    """Test fetching addon path."""
-    response = MagicMock()
-    response.read.return_value = mock_coro('data')
-
-    with patch.dict(ho.ADDON_REST_COMMANDS, {'install': ['POST']}), \
-            patch('homeassistant.components.hassio.'
-                  'HassIO.command_proxy') as proxy_command, \
-            patch('homeassistant.components.hassio._create_response') as mresp:
-        proxy_command.return_value = mock_coro(response)
-        mresp.return_value = 'response'
-        resp = yield from hassio_client.post('/api/hassio/addons/beer/install')
-
-    # Check we got right response
-    assert resp.status == 200
-    body = yield from resp.text()
-    assert body == 'response'
-
-    assert proxy_command.mock_calls[0][1][0] == 'addons/beer/install'
-
-    # Check we forwarded command
-    assert len(mresp.mock_calls) == 1
-    assert mresp.mock_calls[0][1] == (response, 'data')
-
-
-@asyncio.coroutine
-def test_forward_addon_log_path(hassio_client):
-    """Test fetching addon log path."""
-    response = MagicMock()
-    response.read.return_value = mock_coro('data')
-
-    with patch.dict(ho.ADDON_REST_COMMANDS, {'logs': ['GET']}), \
-            patch('homeassistant.components.hassio.'
-                  'HassIO.command_proxy') as proxy_command, \
-            patch('homeassistant.components.hassio.'
-                  '_create_response_log') as mresp:
-        proxy_command.return_value = mock_coro(response)
-        mresp.return_value = 'response'
-        resp = yield from hassio_client.get('/api/hassio/addons/beer/logs')
-
-    # Check we got right response
-    assert resp.status == 200
-    body = yield from resp.text()
-    assert body == 'response'
-
-    assert proxy_command.mock_calls[0][1][0] == 'addons/beer/logs'
-
-    # Check we forwarded command
-    assert len(mresp.mock_calls) == 1
-    assert mresp.mock_calls[0][1] == (response, 'data')
-
-
-@asyncio.coroutine
-def test_bad_request_when_wrong_addon_url(hassio_client):
-    """Test we cannot mess with addon url."""
-    resp = yield from hassio_client.get('/api/hassio/addons/../../info')
-    assert resp.status == 404
-
-    resp = yield from hassio_client.get('/api/hassio/addons/info')
-    assert resp.status == 404
 
 
 @asyncio.coroutine

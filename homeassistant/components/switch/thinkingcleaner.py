@@ -15,9 +15,7 @@ from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/TheRealLink/pythinkingcleaner'
-                '/archive/v0.0.2.zip'
-                '#pythinkingcleaner==0.0.2']
+REQUIREMENTS = ['pythinkingcleaner==0.0.3']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -33,7 +31,7 @@ SWITCH_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ThinkingCleaner platform."""
+    """Set up the ThinkingCleaner platform."""
     from pythinkingcleaner import Discovery
 
     discovery = Discovery()

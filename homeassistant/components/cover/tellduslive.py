@@ -5,7 +5,6 @@ This platform uses the Telldus Live online service.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tellduslive/
-
 """
 import logging
 
@@ -16,9 +15,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup covers."""
+    """Set up the Telldus Live covers."""
     if discovery_info is None:
         return
+
     add_devices(TelldusLiveCover(hass, cover) for cover in discovery_info)
 
 

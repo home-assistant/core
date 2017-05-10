@@ -106,7 +106,8 @@ class TestSplunk(unittest.TestCase):
                 self.mock_post.call_args,
                 mock.call(
                     payload['host'], data=payload,
-                    headers={'Authorization': 'Splunk secret'}
+                    headers={'Authorization': 'Splunk secret'},
+                    timeout=10
                 )
             )
             self.mock_post.reset_mock()

@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ELIQ Online sensor."""
+    """Set up the ELIQ Online sensor."""
     import eliqonline
 
     access_token = config.get(CONF_ACCESS_TOKEN)

@@ -4,7 +4,7 @@ from homeassistant.components.image_processing import ImageProcessingEntity
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the test image_processing platform."""
+    """Set up the test image_processing platform."""
     add_devices([TestImageProcessing('camera.demo_camera', "Test")])
 
 

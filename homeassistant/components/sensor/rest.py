@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the RESTful sensor."""
+    """Set up the RESTful sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     if rest.data is None:
-        _LOGGER.error('Unable to fetch REST data')
+        _LOGGER.error("Unable to fetch REST data")
         return False
 
     add_devices([RestSensor(hass, rest, name, unit, value_template)])
