@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['dweepy==0.2.0']
+REQUIREMENTS = ['dweepy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +44,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device = config.get(CONF_DEVICE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template.hass = hass
+    if value_template is not None:
+        value_template.hass = hass
+
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
@@ -57,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     dweet = DweetData(device)
 
-    add_devices([DweetSensor(hass, dweet, name, value_template, unit)])
+    add_devices([DweetSensor(hass, dweet, name, value_template, unit)], True)
 
 
 class DweetSensor(Entity):
@@ -71,7 +73,6 @@ class DweetSensor(Entity):
         self._value_template = value_template
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
-        self.update()
 
     @property
     def name(self):
@@ -86,17 +87,18 @@ class DweetSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        if self.dweet.data is None:
-            return STATE_UNKNOWN
-        else:
-            values = json.dumps(self.dweet.data[0]['content'])
-            value = self._value_template.render_with_possible_json_value(
-                values)
-            return value
+        return self._state
 
     def update(self):
         """Get the latest data from REST API."""
         self.dweet.update()
+
+        if self.dweet.data is None:
+            self._state = STATE_UNKNOWN
+        else:
+            values = json.dumps(self.dweet.data[0]['content'])
+            self._state = self._value_template.render_with_possible_json_value(
+                values, STATE_UNKNOWN)
 
 
 class DweetData(object):
@@ -115,5 +117,5 @@ class DweetData(object):
         try:
             self.data = dweepy.get_latest_dweet_for(self._device)
         except dweepy.DweepyError:
-            _LOGGER.error("Device %s could not be found", self._device)
+            _LOGGER.warning("Device %s doesn't contain any data", self._device)
             self.data = None
