@@ -83,5 +83,5 @@ class ThermostatDevice(ClimateDevice):
         self.thermos.set_state(operation_mode)
 
     def update(self):
-        """Update local state"""
+        """Update local state."""
         self.thermos.update()
