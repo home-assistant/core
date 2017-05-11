@@ -17,7 +17,8 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
+    Light, DOMAIN, PLATFORM_SCHEMA, LIGHT_TURN_ON_SCHEMA,
+    ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
     ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT)
@@ -44,7 +45,10 @@ BULB_LATENCY = 500
 
 CONF_SERVER = 'server'
 
+SERVICE_LIFX_SET_COLOR = 'lifx_set_color'
+
 ATTR_HSBK = 'hsbk'
+ATTR_POWER_ON = 'power_on'
 
 BYTE_MAX = 255
 SHORT_MAX = 65535
@@ -54,6 +58,10 @@ SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+})
+
+LIFX_SET_COLOR_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
+    vol.Optional(ATTR_POWER_ON, default=False): cv.boolean,
 })
 
 
@@ -89,6 +97,24 @@ class LIFXManager(object):
         self.entities = {}
         self.hass = hass
         self.async_add_devices = async_add_devices
+
+        @asyncio.coroutine
+        def async_service_handle(service):
+            """Apply a service."""
+            tasks = []
+            for light in self.service_to_entities(service):
+                if service.service == SERVICE_LIFX_SET_COLOR:
+                    task = light.async_set_color(**service.data)
+                tasks.append(hass.async_add_job(task))
+            if tasks:
+                yield from asyncio.wait(tasks, loop=hass.loop)
+
+        descriptions = self.get_descriptions()
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_LIFX_SET_COLOR, async_service_handle,
+            descriptions.get(SERVICE_LIFX_SET_COLOR),
+            schema=LIFX_SET_COLOR_SCHEMA)
 
     @staticmethod
     def get_descriptions():
@@ -318,6 +344,12 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
+        kwargs[ATTR_POWER_ON] = True
+        yield from self.async_set_color(**kwargs)
+
+    @asyncio.coroutine
+    def async_set_color(self, **kwargs):
+        """Set a color on the light."""
         yield from self.stop_effect()
 
         if ATTR_EFFECT in kwargs:
@@ -329,6 +361,8 @@ class LIFXLight(Light):
         else:
             fade = 0
 
+        power_on = kwargs[ATTR_POWER_ON]
+
         hsbk, changed_color = self.find_hsbk(**kwargs)
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
                       self.who, self._power, fade, *hsbk)
@@ -336,15 +370,19 @@ class LIFXLight(Light):
         if self._power == 0:
             if changed_color:
                 self.device.set_color(hsbk, None, 0)
-            self.device.set_power(True, None, fade)
+            if power_on:
+                self.device.set_power(True, None, fade)
         else:
-            self.device.set_power(True, None, 0)     # racing for power status
+            # power on anyway, we might have stale state
+            if power_on:
+                self.device.set_power(True, None, 0)
             if changed_color:
                 self.device.set_color(hsbk, None, fade)
 
         self.update_later(0)
         if fade < BULB_LATENCY:
-            self.set_power(1)
+            if power_on:
+                self.set_power(1)
             self.set_color(*hsbk)
 
     @asyncio.coroutine

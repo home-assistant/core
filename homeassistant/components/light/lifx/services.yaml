@@ -1,3 +1,23 @@
+lifx_set_color:
+  description: Set a color just like light.turn_on, but only turn on if power_on is True
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to set a color on
+      example: 'light.garage'
+
+    '...':
+      description: All turn_on parameters can be used to specify a color
+
+    transition:
+      description: Duration in seconds it takes to get to final state
+      example: 10
+
+    power_on:
+      description: Turn on the light if it is currently off (default False)
+      example: True
+
+
 lifx_effect_breathe:
   description: Run a breathe effect by fading to a color and back.
 
