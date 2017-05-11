@@ -36,11 +36,9 @@ def alexa_client(loop, hass, test_client):
             "flash_briefings": {
                 "weather": [
                     {"title": "Weekly forecast",
-                     "text": "This week it will be sunny."
-                    },
+                     "text": "This week it will be sunny."},
                     {"title": "Current conditions",
-                     "text": "Currently it is 80 degrees fahrenheit."
-                    }
+                     "text": "Currently it is 80 degrees fahrenheit."}
                 ],
                 "news_audio": {
                     "title": "NPR",
