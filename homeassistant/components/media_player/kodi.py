@@ -805,7 +805,8 @@ class KodiDevice(MediaPlayerDevice):
 
         albums = yield from self.async_get_albums(artist_id)
         try:
-            out = self._find(album_name, [a['label'] for a in albums['albums']])
+            out = self._find(
+                album_name, [a['label'] for a in albums['albums']])
             return albums['albums'][out[0][0]]['albumid']
         except KeyError:
             _LOGGER.warning('No albums were found with artist: %s, album: %s',
