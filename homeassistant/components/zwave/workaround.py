@@ -3,11 +3,13 @@ from . import const
 
 # Manufacturers
 FIBARO = 0x010f
+GE = 0x0063
 PHILIO = 0x013c
+SOMFY = 0x0047
 WENZHOU = 0x0118
-SOMFY = 0x47
 
 # Product IDs
+GE_FAN_CONTROLLER_45743 = 0x3034
 PHILIO_SLIM_SENSOR = 0x0002
 PHILIO_3_IN_1_SENSOR_GEN_4 = 0x000d
 PHILIO_PAN07 = 0x0005
@@ -16,6 +18,7 @@ PHILIO_PAN07 = 0x0005
 FGFS101_FLOOD_SENSOR_TYPE = 0x0b00
 FGRM222_SHUTTER2 = 0x0301
 FGR222_SHUTTER2 = 0x0302
+GE_DIMMER = 0x4944
 PHILIO_SWITCH = 0x0001
 PHILIO_SENSOR = 0x0002
 SOMFY_ZRTSI = 0x5a52
@@ -61,6 +64,9 @@ FIBARO_FGRM222_BINARY = (
     FIBARO, FGRM222_SHUTTER2, const.COMMAND_CLASS_SWITCH_BINARY)
 FIBARO_FGR222_BINARY = (
     FIBARO, FGR222_SHUTTER2, const.COMMAND_CLASS_SWITCH_BINARY)
+GE_FAN_CONTROLLER_45743_MULTILEVEL = (
+    GE, GE_DIMMER, GE_FAN_CONTROLLER_45743,
+    const.COMMAND_CLASS_SWITCH_MULTILEVEL)
 
 # List of component workarounds by
 # (manufacturer_id, product_type, command_class)
@@ -70,6 +76,12 @@ DEVICE_COMPONENT_MAPPING = {
     FIBARO_FGR222_BINARY: WORKAROUND_IGNORE,
 }
 
+# List of component workarounds by
+# (manufacturer_id, product_type, product_id, command_class)
+DEVICE_COMPONENT_MAPPING_MTI = {
+    GE_FAN_CONTROLLER_45743_MULTILEVEL: 'fan',
+}
+
 
 def get_device_component_mapping(value):
     """Get mapping of value to another component."""
@@ -77,8 +89,16 @@ def get_device_component_mapping(value):
             value.node.product_type.strip()):
         manufacturer_id = int(value.node.manufacturer_id, 16)
         product_type = int(value.node.product_type, 16)
-        return DEVICE_COMPONENT_MAPPING.get(
+        product_id = int(value.node.product_id, 16)
+        result = DEVICE_COMPONENT_MAPPING.get(
             (manufacturer_id, product_type, value.command_class))
+        if result:
+            return result
+
+        result = DEVICE_COMPONENT_MAPPING_MTI.get(
+            (manufacturer_id, product_type, product_id, value.command_class))
+        if result:
+            return result
 
     return None
 
