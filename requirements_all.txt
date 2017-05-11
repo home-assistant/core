@@ -160,7 +160,7 @@ dsmr_parser==0.8
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
-dweepy==0.2.0
+dweepy==0.3.0
 
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.13
