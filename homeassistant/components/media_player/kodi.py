@@ -81,7 +81,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
-SERVICE_SET_SHUFFLE = 'kodi_set_shuffle'  # this is the same as mp.shuffle_set
 
 DATA_KODI = 'kodi'
 
@@ -90,25 +89,17 @@ ATTR_MEDIA_NAME = 'media_name'
 ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_ID = 'media_id'
 
-MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Exclusive('shuffle_on', 'shuffle'): cv.boolean,
-    vol.Exclusive('shuffle', 'shuffle'): cv.boolean,
-})
-
 MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_TYPE): cv.string,
     vol.Optional(ATTR_MEDIA_ID): cv.string,
-    vol.Inclusive(ATTR_MEDIA_NAME, 'media_search'): cv.string,
-    vol.Inclusive(ATTR_MEDIA_ARTIST_NAME, 'media_search'): cv.string,
+    vol.Optional(ATTR_MEDIA_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 
 SERVICE_TO_METHOD = {
     SERVICE_ADD_MEDIA: {
         'method': 'async_add_media_to_playlist',
         'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
-    SERVICE_SET_SHUFFLE: {
-        'method': 'async_set_shuffle',
-        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
 }
 
 
@@ -140,9 +131,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.data[DATA_KODI].append(entity)
     async_add_devices([entity], update_before_add=True)
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -172,8 +160,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
+    if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
+        return
+
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
     for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get('schema')
+        schema = SERVICE_TO_METHOD[service]['schema']
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
             description=descriptions.get(service), schema=schema)
@@ -676,9 +671,8 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
-    def async_set_shuffle(self, shuffle_on=None, shuffle=None):
+    def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
-        shuffle = shuffle if shuffle is not None else shuffle_on
         if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
@@ -686,7 +680,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_add_media_to_playlist(
-            self, media_type, media_id=None, media_name='', artist_name=''):
+            self, media_type, media_id=None, media_name='ALL', artist_name=''):
         """Add a media to default playlist (i.e. playlistid=0).
 
         First the media type must be selected, then
@@ -721,8 +715,8 @@ class KodiDevice(MediaPlayerDevice):
         if media_id is not None:
             try:
                 yield from self.server.Playlist.Add(params)
-            except jsonrpc_base.jsonrpc.ProtocolError as e:
-                result = e.args[2]['error']
+            except jsonrpc_base.jsonrpc.ProtocolError as exc:
+                result = exc.args[2]['error']
                 _LOGGER.error('Run API method %s.Playlist.Add(%s) error: %s',
                               self.entity_id, media_type, result)
         else:
