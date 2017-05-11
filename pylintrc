@@ -22,7 +22,7 @@ disable=
   duplicate-code,
   global-statement,
   locally-disabled,
-  not-context-manager
+  not-context-manager,
   redefined-variable-type,
   too-few-public-methods,
   too-many-arguments,
