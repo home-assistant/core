@@ -1,8 +1,8 @@
 """
-Support for Lutron Caseta lights.
+Support for Lutron Caseta SerenaRollerShade.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/light.lutron_caseta/
+https://home-assistant.io/components/cover.lutron_caseta/
 """
 import logging
 
@@ -24,8 +24,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
     cover_devices = bridge.get_devices_by_types(["SerenaRollerShade"])
-    for light_device in cover_devices:
-        dev = LutronCasetaCover(light_device, bridge)
+    for cover_device in cover_devices:
+        dev = LutronCasetaCover(cover_device, bridge)
         devs.append(dev)
 
     add_devices(devs, True)
