@@ -9,7 +9,7 @@ the user has submitted configuration information.
 import asyncio
 import logging
 
-from homeassistant.core import callback
+from homeassistant.core import callback as async_callback
 from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
     ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import generate_entity_id
@@ -83,7 +83,7 @@ def async_setup(hass, config):
     return True
 
 
-@callback
+@async_callback
 def _async_get_instance(hass):
     """Get an instance per hass object."""
     instance = hass.data.get(_KEY_INSTANCE)
