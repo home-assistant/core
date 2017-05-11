@@ -118,7 +118,7 @@ class FibaroSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = '_'.join(self.name.lower().split('_')[1:])
+        value = self.name.lower().split('_', 1)[1]
         return self.toon.get_data(value, self._plug_name)
 
     @property
