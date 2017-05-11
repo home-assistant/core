@@ -14,7 +14,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT, CONF_SERVER_LOC
+from homeassistant.const import CONF_API_KEY, CONF_TIMEOUT
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -31,6 +31,8 @@ DEPENDENCIES = ['camera']
 FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
 
 DATA_MICROSOFT_FACE = 'microsoft_face'
+
+CONF_AZURE_REGION = 'azure_region'
 
 SERVICE_CREATE_GROUP = 'create_group'
 SERVICE_DELETE_GROUP = 'delete_group'
@@ -49,7 +51,7 @@ DEFAULT_TIMEOUT = 10
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_SERVER_LOC, default="westus"): cv.string,
+        vol.Optional(CONF_AZURE_REGION, default="westus"): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -116,7 +118,7 @@ def async_setup(hass, config):
     entities = {}
     face = MicrosoftFace(
         hass,
-        config[DOMAIN].get(CONF_SERVER_LOC),
+        config[DOMAIN].get(CONF_AZURE_REGION),
         config[DOMAIN].get(CONF_API_KEY),
         config[DOMAIN].get(CONF_TIMEOUT),
         entities
