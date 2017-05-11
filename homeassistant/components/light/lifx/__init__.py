@@ -9,6 +9,7 @@ import logging
 import asyncio
 import sys
 import math
+from os import path
 from functools import partial
 from datetime import timedelta
 import async_timeout
@@ -20,11 +21,13 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
     SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -86,6 +89,23 @@ class LIFXManager(object):
         self.entities = {}
         self.hass = hass
         self.async_add_devices = async_add_devices
+
+    @staticmethod
+    def get_descriptions():
+        """Load and return descriptions for our own service calls."""
+        return load_yaml_config_file(
+            path.join(path.dirname(__file__), 'services.yaml'))
+
+    def service_to_entities(self, service):
+        """Return the known devices that a service call mentions."""
+        entity_ids = extract_entity_ids(self.hass, service)
+        if entity_ids:
+            entities = [entity for entity in self.entities.values()
+                        if entity.entity_id in entity_ids]
+        else:
+            entities = list(self.entities.values())
+
+        return entities
 
     @callback
     def register(self, device):
