@@ -124,7 +124,6 @@ def request_configuration(hass, name, host, serialnumber):
 
 def setup(hass, base_config):
     """Common setup for Axis devices."""
-
     def _shutdown(call):  # pylint: disable=unused-argument
         """Stop the metadatastream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
