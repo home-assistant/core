@@ -13,8 +13,11 @@ _LOGGER = logging.getLogger(__name__)
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Setup discovered Smart Plugs."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
+    switch_items = []
     for plug in _toon_main.toon.smartplugs:
-        add_devices_callback([EnecoSmartPlug(hass, plug)])
+        switch_items.append(EnecoSmartPlug(hass, plug))
+
+    add_devices_callback(switch_items)
 
 
 class EnecoSmartPlug(SwitchDevice):

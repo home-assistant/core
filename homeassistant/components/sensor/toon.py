@@ -19,19 +19,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup sensors."""
     _toon_main = hass.data[toon_main.TOON_HANDLE]
 
-    add_devices([
-        ToonSensor(hass, 'Power_current', 'Watt'),
-        ToonSensor(hass, 'Power_today', 'kWh')
-    ])
+    sensor_items = []
+    sensor_items.extend([ToonSensor(hass, 'Power_current', 'Watt'),
+                        ToonSensor(hass, 'Power_today', 'kWh')])
 
     if _toon_main.gas:
-        add_devices([
-            ToonSensor(hass, 'Gas_current', 'CM3'),
-            ToonSensor(hass, 'Gas_today', 'M3')
-        ])
+        sensor_items.extend([ToonSensor(hass, 'Gas_current', 'CM3'),
+                            ToonSensor(hass, 'Gas_today', 'M3')])
 
     for plug in _toon_main.toon.smartplugs:
-        add_devices([
+        sensor_items.extend([
             FibaroSensor(hass,
                          '{}_current_power'.format(plug.name),
                          plug.name,
@@ -42,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          'kWh')])
 
     if _toon_main.toon.solar.produced or _toon_main.solar:
-        add_devices([
+        sensor_items.extend([
             SolarSensor(hass, 'Solar_maximum', 'kWh'),
             SolarSensor(hass, 'Solar_produced', 'kWh'),
             SolarSensor(hass, 'Solar_value', 'Watt'),
@@ -53,11 +50,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ])
 
     for smokedetector in _toon_main.toon.smokedetectors:
-        add_devices([
+        sensor_items.append(
             FibaroSmokeDetector(hass,
                                 '{}_smoke_detector'.format(smokedetector.name),
                                 smokedetector.device_uuid,
-                                '%')])
+                                '%'))
+
+    add_devices(sensor_items)
 
 
 class ToonSensor(Entity):
@@ -204,7 +203,7 @@ class FibaroSmokeDetector(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        value = '_'.join(self.name.lower().split('_')[1:])
+        value = self.name.lower().split('_', 1)[1]
         return self.toon.get_data(value, self.name)
 
     @property

@@ -36,29 +36,26 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Setup toon."""
-    if CONF_GAS in config['toon']:
-        gas = config['toon']['gas']
-    else:
-        gas = True
+    from toonlib import InvalidCredentials
+    gas = config['toon']['gas']
+    solar = config['toon']['solar']
 
-    if CONF_SOLAR in config['toon']:
-        solar = config['toon']['solar']
-    else:
-        solar = True
+    try:
+        hass.data[TOON_HANDLE] = ToonDataStore(config['toon']['username'],
+                                               config['toon']['password'],
+                                               gas,
+                                               solar)
+    except InvalidCredentials:
+        return False
 
-    hass.data[TOON_HANDLE] = ToonDataStore(config['toon']['username'],
-                                           config['toon']['password'],
-                                           gas,
-                                           solar)
+    if hass.data[TOON_HANDLE]:
+        # Load climate (for Thermostat)
+        load_platform(hass, 'climate', DOMAIN)
 
-    # Load climate (for Thermostat)
-    load_platform(hass, 'climate', DOMAIN)
+        # Load sensor (for Gas and Power, Solar and Smoke Detectors)
+        load_platform(hass, 'sensor', DOMAIN)
 
-    # Load sensor (for Gas and Power, Solar and Smoke Detectors)
-    load_platform(hass, 'sensor', DOMAIN)
-
-    # Load switch (for Slimme Stekkers)
-    for plug in hass.data[TOON_HANDLE].toon.smartplugs:
+        # Load switch (for Slimme Stekkers)
         load_platform(hass, 'switch', DOMAIN)
 
     # Initialization successfull
@@ -74,6 +71,7 @@ class ToonDataStore:
         from toonlib import Toon
 
         # Creating the class
+
         toon = Toon(username, password)
 
         self.toon = toon
