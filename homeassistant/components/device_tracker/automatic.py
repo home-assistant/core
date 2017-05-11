@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.3.1']
+REQUIREMENTS = ['aioautomatic==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
