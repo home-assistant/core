@@ -174,7 +174,7 @@ class InfluxSensorData(object):
                             "to UNKNOWN: %s", self.query)
             self.value = None
         else:
-            if points:
+            if len(points) > 1:
                 _LOGGER.warning("Query returned multiple points, only first "
                                 "one shown: %s", self.query)
             self.value = points[0].get('value')
