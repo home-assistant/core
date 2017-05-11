@@ -60,15 +60,12 @@ class VerisureSmartcam(Camera):
     def check_imagelist(self):
         """Check the contents of the image list."""
         hub.update_smartcam_imageseries()
-        imageinfo = hub.get_image_info(
-            "$.imageSeries[?(@.deviceLabel=='%s')].image[*]",
+        image_ids = hub.get_image_info(
+            "$.imageSeries[?(@.deviceLabel=='%s')].image[0].imageId",
             self._device_label)
-        if not imageinfo:
+        if not image_ids:
             return
-        new_image_id = imageinfo[0]["imageId"]
-        _LOGGER.debug("self._device_label=%s, self._images=%s, "
-                      "self._new_image_id=%s", self._device_label,
-                      imageinfo, new_image_id)
+        new_image_id = image_ids[0]
         if (new_image_id == '-1' or
                 self._image_id == new_image_id):
             _LOGGER.debug("The image is the same, or loading image_id")
