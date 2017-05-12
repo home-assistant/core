@@ -27,6 +27,8 @@ COMMENT_REQUIREMENTS = (
     'decora',
     'face_recognition',
     'blinkt',
+    'smbus-cffi',
+    'envirophat'
 )
 
 TEST_REQUIREMENTS = (
