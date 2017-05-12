@@ -78,9 +78,6 @@ mficlient==0.3.0
 # homeassistant.components.tts
 mutagen==1.37.0
 
-# homeassistant.components.discovery
-netdisco==1.0.0rc3
-
 # homeassistant.components.mqtt
 paho-mqtt==1.2.3
 

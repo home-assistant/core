@@ -48,7 +48,6 @@ TEST_REQUIREMENTS = (
     'pilight',
     'fuzzywuzzy',
     'datadog',
-    'netdisco',
     'rflink',
     'ring_doorbell',
     'sleepyq',
