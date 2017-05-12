@@ -20,6 +20,9 @@ omit =
     homeassistant/components/android_ip_webcam.py
     homeassistant/components/*/android_ip_webcam.py
 
+    homeassistant/components/axis.py
+    homeassistant/components/*/axis.py
+
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
 
