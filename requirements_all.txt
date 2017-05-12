@@ -529,9 +529,6 @@ pyebox==0.1.0
 # homeassistant.components.eight_sleep
 pyeight==0.0.4
 
-# homeassistant.components.notify.html5
-pyelliptic==1.5.7
-
 # homeassistant.components.media_player.emby
 pyemby==1.2
 
@@ -714,7 +711,7 @@ pyunifi==2.12
 pyvera==0.2.30
 
 # homeassistant.components.notify.html5
-pywebpush==0.6.1
+pywebpush==1.0.0
 
 # homeassistant.components.wemo
 pywemo==0.4.19
