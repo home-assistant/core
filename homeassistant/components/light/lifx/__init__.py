@@ -45,7 +45,7 @@ BULB_LATENCY = 500
 
 CONF_SERVER = 'server'
 
-SERVICE_LIFX_SET_COLOR = 'lifx_set_color'
+SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_HSBK = 'hsbk'
 ATTR_POWER_ON = 'power_on'
@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
 })
 
-LIFX_SET_COLOR_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
+LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
     vol.Optional(ATTR_POWER_ON, default=False): cv.boolean,
 })
 
@@ -103,8 +103,8 @@ class LIFXManager(object):
             """Apply a service."""
             tasks = []
             for light in self.service_to_entities(service):
-                if service.service == SERVICE_LIFX_SET_COLOR:
-                    task = light.async_set_color(**service.data)
+                if service.service == SERVICE_LIFX_SET_STATE:
+                    task = light.async_set_state(**service.data)
                 tasks.append(hass.async_add_job(task))
             if tasks:
                 yield from asyncio.wait(tasks, loop=hass.loop)
@@ -112,9 +112,9 @@ class LIFXManager(object):
         descriptions = self.get_descriptions()
 
         hass.services.async_register(
-            DOMAIN, SERVICE_LIFX_SET_COLOR, async_service_handle,
-            descriptions.get(SERVICE_LIFX_SET_COLOR),
-            schema=LIFX_SET_COLOR_SCHEMA)
+            DOMAIN, SERVICE_LIFX_SET_STATE, async_service_handle,
+            descriptions.get(SERVICE_LIFX_SET_STATE),
+            schema=LIFX_SET_STATE_SCHEMA)
 
     @staticmethod
     def get_descriptions():
@@ -345,10 +345,10 @@ class LIFXLight(Light):
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
         kwargs[ATTR_POWER_ON] = True
-        yield from self.async_set_color(**kwargs)
+        yield from self.async_set_state(**kwargs)
 
     @asyncio.coroutine
-    def async_set_color(self, **kwargs):
+    def async_set_state(self, **kwargs):
         """Set a color on the light."""
         yield from self.stop_effect()
 
