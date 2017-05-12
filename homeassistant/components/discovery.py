@@ -39,7 +39,7 @@ SERVICE_HANDLERS = {
     SERVICE_WEMO: ('wemo', None),
     SERVICE_IKEA_TRADFRI: ('tradfri', None),
     SERVICE_HASSIO: ('hassio', None),
-    'axis_mdns': ('axis', None),
+    SERVICE_AXIS: ('axis', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),

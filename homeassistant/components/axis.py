@@ -15,6 +15,7 @@ from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_HOST, CONF_INCLUDE, CONF_NAME,
                                  CONF_PASSWORD, CONF_TRIGGER_TIME,
                                  CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
@@ -151,7 +152,7 @@ def setup(hass, base_config):
             else:
                 request_configuration(hass, name, host, serialnumber)
 
-    discovery.listen(hass, 'axis_mdns', axis_device_discovered)
+    discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
 
     if DOMAIN in base_config:
         for device in base_config[DOMAIN]:
