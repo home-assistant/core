@@ -124,6 +124,8 @@ class Sun(Entity):
     @callback
     def point_in_time_listener(self, now):
         """Run when the state of the sun has changed."""
+        if self.solar_elevation == STATE_UNKNOWN:
+            self.update_sun_position(dt_util.utcnow())
         self.update_as_of(now)
         self.hass.async_add_job(self.async_update_ha_state())
 
