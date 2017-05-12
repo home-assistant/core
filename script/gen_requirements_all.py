@@ -25,7 +25,8 @@ COMMENT_REQUIREMENTS = (
     'python-eq3bt',
     'avion',
     'decora',
-    'face_recognition'
+    'face_recognition',
+    'blinkt',
 )
 
 TEST_REQUIREMENTS = (
