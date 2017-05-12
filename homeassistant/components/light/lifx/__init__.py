@@ -48,7 +48,7 @@ CONF_SERVER = 'server'
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_HSBK = 'hsbk'
-ATTR_POWER_ON = 'power_on'
+ATTR_POWER = 'power'
 
 BYTE_MAX = 255
 SHORT_MAX = 65535
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
-    vol.Optional(ATTR_POWER_ON, default=False): cv.boolean,
+    ATTR_POWER: cv.boolean,
 })
 
 
@@ -344,12 +344,18 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        kwargs[ATTR_POWER_ON] = True
+        kwargs[ATTR_POWER] = True
+        yield from self.async_set_state(**kwargs)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the device off."""
+        kwargs[ATTR_POWER] = False
         yield from self.async_set_state(**kwargs)
 
     @asyncio.coroutine
     def async_set_state(self, **kwargs):
-        """Set a color on the light."""
+        """Set a color on the light and turn it on/off."""
         yield from self.stop_effect()
 
         if ATTR_EFFECT in kwargs:
@@ -361,45 +367,41 @@ class LIFXLight(Light):
         else:
             fade = 0
 
-        power_on = kwargs[ATTR_POWER_ON]
+        # These are both False if ATTR_POWER is not set
+        power_on = kwargs.get(ATTR_POWER, False)
+        power_off = not kwargs.get(ATTR_POWER, True)
 
         hsbk, changed_color = self.find_hsbk(**kwargs)
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
                       self.who, self._power, fade, *hsbk)
 
         if self._power == 0:
+            if power_off:
+                self.device.set_power(False, None, 0)
             if changed_color:
                 self.device.set_color(hsbk, None, 0)
             if power_on:
                 self.device.set_power(True, None, fade)
         else:
-            # power on anyway, we might have stale state
             if power_on:
                 self.device.set_power(True, None, 0)
             if changed_color:
                 self.device.set_color(hsbk, None, fade)
+            if power_off:
+                self.device.set_power(False, None, fade)
 
-        self.update_later(0)
-        if fade < BULB_LATENCY:
+        if power_on:
+            self.update_later(0)
+        else:
+            self.update_later(fade)
+
+        if fade <= BULB_LATENCY:
             if power_on:
                 self.set_power(1)
-            self.set_color(*hsbk)
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn the device off."""
-        yield from self.stop_effect()
-
-        if ATTR_TRANSITION in kwargs:
-            fade = int(kwargs[ATTR_TRANSITION] * 1000)
-        else:
-            fade = 0
-
-        self.device.set_power(False, None, fade)
-
-        self.update_later(fade)
-        if fade < BULB_LATENCY:
-            self.set_power(0)
+            if power_off:
+                self.set_power(0)
+            if changed_color:
+                self.set_color(*hsbk)
 
     @asyncio.coroutine
     def async_update(self):

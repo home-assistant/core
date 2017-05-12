@@ -1,5 +1,5 @@
 lifx_set_state:
-  description: Set a color/brightness just like light.turn_on, but only turn on if power_on is True
+  description: Set a color/brightness and possibliy turn the light on/off
 
   fields:
     entity_id:
@@ -13,8 +13,8 @@ lifx_set_state:
       description: Duration in seconds it takes to get to the final state
       example: 10
 
-    power_on:
-      description: Turn on the light if it is currently off (default False)
+    power:
+      description: Turn the light on (True) or off (False). Leave out to keep the power as it is.
       example: True
 
 
