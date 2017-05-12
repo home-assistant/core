@@ -2,16 +2,13 @@
 import logging
 import asyncio
 import random
-from os import path
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
     DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT,
     ATTR_TRANSITION)
-from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_ENTITY_ID)
-from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,19 +70,12 @@ def setup(hass, lifx_manager):
     @asyncio.coroutine
     def async_service_handle(service):
         """Apply a service."""
-        entity_ids = extract_entity_ids(hass, service)
-        if entity_ids:
-            devices = [entity for entity in lifx_manager.entities.values()
-                       if entity.entity_id in entity_ids]
-        else:
-            devices = list(lifx_manager.entities.values())
-
-        if devices:
-            yield from start_effect(hass, devices,
+        entities = lifx_manager.service_to_entities(service)
+        if entities:
+            yield from start_effect(hass, entities,
                                     service.service, **service.data)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
+    descriptions = lifx_manager.get_descriptions()
 
     hass.services.async_register(
         DOMAIN, SERVICE_EFFECT_BREATHE, async_service_handle,
