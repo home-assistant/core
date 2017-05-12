@@ -402,6 +402,7 @@ omit =
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lastfm.py
     homeassistant/components/sensor/linux_battery.py
+    homeassistant/components/sensor/llap.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/lyft.py
     homeassistant/components/sensor/metoffice.py
