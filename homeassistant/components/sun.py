@@ -8,7 +8,7 @@ import asyncio
 import logging
 from datetime import timedelta
 
-from homeassistant.const import CONF_ELEVATION
+from homeassistant.const import CONF_ELEVATION, STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
@@ -59,10 +59,10 @@ class Sun(Entity):
         """Initialize the sun."""
         self.hass = hass
         self.location = location
-        self._state = self.next_rising = self.next_setting = None
-        self.next_dawn = self.next_dusk = None
-        self.next_midnight = self.next_noon = None
-        self.solar_elevation = self.solar_azimuth = 0
+        self._state = self.next_rising = self.next_setting = STATE_UNKNOWN
+        self.next_dawn = self.next_dusk = STATE_UNKNOWN
+        self.next_midnight = self.next_noon = STATE_UNKNOWN
+        self.solar_elevation = self.solar_azimuth = STATE_UNKNOWN
 
         async_track_utc_time_change(hass, self.timer_update, second=30)
 
