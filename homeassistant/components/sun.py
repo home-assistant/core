@@ -62,7 +62,7 @@ class Sun(Entity):
         self._state = self.next_rising = self.next_setting = None
         self.next_dawn = self.next_dusk = None
         self.next_midnight = self.next_noon = None
-        self.solar_elevation = self.solar_azimuth = 0
+        self.solar_elevation = self.solar_azimuth = None
 
         async_track_utc_time_change(hass, self.timer_update, second=30)
 
@@ -124,6 +124,7 @@ class Sun(Entity):
     @callback
     def point_in_time_listener(self, now):
         """Run when the state of the sun has changed."""
+        self.update_sun_position(now)
         self.update_as_of(now)
         self.hass.async_add_job(self.async_update_ha_state())
 
