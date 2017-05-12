@@ -160,6 +160,31 @@ def test_node_discovery(hass, mock_openzwave):
 
 
 @asyncio.coroutine
+def test_node_ignored(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_NODE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        yield from async_setup_component(hass, 'zwave', {'zwave': {
+            'device_config': {
+                'zwave.mock_node_14': {
+                    'ignored': True,
+                    }}}})
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(node_id=14)
+    hass.async_add_job(mock_receivers[0], node)
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('zwave.mock_node_14') is None
+
+
+@asyncio.coroutine
 def test_value_discovery(hass, mock_openzwave):
     """Test discovery of a node."""
     mock_receivers = []
