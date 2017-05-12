@@ -58,7 +58,7 @@ class KankunSwitch(SwitchDevice):
     """Representation of a Kankun Wifi switch."""
 
     def __init__(self, hass, name, host, port, path, user, passwd):
-        """Initialise the device."""
+        """Initialize the device."""
         self._hass = hass
         self._name = name
         self._state = False
@@ -92,17 +92,17 @@ class KankunSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Switch should always be polled."""
+        """Return the polling state."""
         return True
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self._state
 
     def update(self):

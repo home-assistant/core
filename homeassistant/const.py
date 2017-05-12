@@ -1,18 +1,19 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 37
+MINOR_VERSION = 45
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
 REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
+CONSTRAINT_FILE = 'package_constraints.txt'
 
 PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
-PROJECT_LICENSE = 'MIT License'
+PROJECT_LICENSE = 'Apache License 2.0'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2016, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2013, {}'.format(PROJECT_AUTHOR)
 PROJECT_URL = 'https://home-assistant.io/'
 PROJECT_EMAIL = 'hello@home-assistant.io'
 PROJECT_DESCRIPTION = ('Open-source home automation platform '
@@ -25,7 +26,7 @@ PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
 PROJECT_CLASSIFIERS = [
     'Intended Audience :: End Users/Desktop',
     'Intended Audience :: Developers',
-    'License :: OSI Approved :: MIT License',
+    'License :: OSI Approved :: Apache Software License',
     'Operating System :: OS Independent',
     'Programming Language :: Python :: 3.4',
     'Topic :: Home Automation'
@@ -77,12 +78,17 @@ CONF_COMMAND_STOP = 'command_stop'
 CONF_CONDITION = 'condition'
 CONF_COVERS = 'covers'
 CONF_CUSTOMIZE = 'customize'
+CONF_CUSTOMIZE_DOMAIN = 'customize_domain'
+CONF_CUSTOMIZE_GLOB = 'customize_glob'
 CONF_DEVICE = 'device'
+CONF_DEVICE_CLASS = 'device_class'
 CONF_DEVICES = 'devices'
 CONF_DISARM_AFTER_TRIGGER = 'disarm_after_trigger'
 CONF_DISCOVERY = 'discovery'
 CONF_DISPLAY_OPTIONS = 'display_options'
+CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
+CONF_EFFECT = 'effect'
 CONF_ELEVATION = 'elevation'
 CONF_EMAIL = 'email'
 CONF_ENTITIES = 'entities'
@@ -122,6 +128,7 @@ CONF_PLATFORM = 'platform'
 CONF_PORT = 'port'
 CONF_PREFIX = 'prefix'
 CONF_PROTOCOL = 'protocol'
+CONF_PROXY_SSL = 'proxy_ssl'
 CONF_QUOTE = 'quote'
 CONF_RECIPIENT = 'recipient'
 CONF_RESOURCE = 'resource'
@@ -149,11 +156,14 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITE_VALUE = 'white_value'
+CONF_XY = 'xy'
 CONF_ZONE = 'zone'
 
 # #### EVENTS ####
 EVENT_HOMEASSISTANT_START = 'homeassistant_start'
 EVENT_HOMEASSISTANT_STOP = 'homeassistant_stop'
+EVENT_HOMEASSISTANT_CLOSE = 'homeassistant_close'
 EVENT_STATE_CHANGED = 'state_changed'
 EVENT_TIME_CHANGED = 'time_changed'
 EVENT_CALL_SERVICE = 'call_service'
@@ -161,6 +171,8 @@ EVENT_SERVICE_EXECUTED = 'service_executed'
 EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
+EVENT_SERVICE_REMOVED = 'service_removed'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -252,6 +264,7 @@ ATTR_DISCOVERED = 'discovered'
 ATTR_LOCATION = 'location'
 
 ATTR_BATTERY_LEVEL = 'battery_level'
+ATTR_WAKEUP = 'wake_up_interval'
 
 # For devices which support a code attribute
 ATTR_CODE = 'code'
@@ -286,6 +299,12 @@ ATTR_STATE = 'state'
 
 ATTR_OPTION = 'option'
 
+# Bitfield of supported component features for the entity
+ATTR_SUPPORTED_FEATURES = 'supported_features'
+
+# Class of device within its domain
+ATTR_DEVICE_CLASS = 'device_class'
+
 # #### SERVICES ####
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
@@ -293,6 +312,7 @@ SERVICE_HOMEASSISTANT_RESTART = 'restart'
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 SERVICE_TOGGLE = 'toggle'
+SERVICE_RELOAD = 'reload'
 
 SERVICE_VOLUME_UP = 'volume_up'
 SERVICE_VOLUME_DOWN = 'volume_down'
@@ -305,6 +325,7 @@ SERVICE_MEDIA_STOP = 'media_stop'
 SERVICE_MEDIA_NEXT_TRACK = 'media_next_track'
 SERVICE_MEDIA_PREVIOUS_TRACK = 'media_previous_track'
 SERVICE_MEDIA_SEEK = 'media_seek'
+SERVICE_SHUFFLE_SET = 'shuffle_set'
 
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
@@ -342,7 +363,6 @@ URL_API_EVENTS = '/api/events'
 URL_API_EVENTS_EVENT = '/api/events/{}'
 URL_API_SERVICES = '/api/services'
 URL_API_SERVICES_SERVICE = '/api/services/{}/{}'
-URL_API_EVENT_FORWARD = '/api/event_forwarding'
 URL_API_COMPONENTS = '/api/components'
 URL_API_ERROR_LOG = '/api/error_log'
 URL_API_LOG_OUT = '/api/log_out'

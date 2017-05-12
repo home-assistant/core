@@ -16,11 +16,11 @@ from homeassistant.components.sun import (
 from homeassistant.components.switch.mysensors import (
     ATTR_IR_CODE, SERVICE_SEND_IR_CODE)
 from homeassistant.components.climate import (
-    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HUMIDITY,
-    ATTR_OPERATION_MODE, ATTR_SWING_MODE,
-    SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE, SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE, SERVICE_SET_SWING_MODE,
-    SERVICE_SET_TEMPERATURE)
+    ATTR_AUX_HEAT, ATTR_AWAY_MODE, ATTR_FAN_MODE, ATTR_HOLD_MODE,
+    ATTR_HUMIDITY, ATTR_OPERATION_MODE, ATTR_SWING_MODE,
+    SERVICE_SET_AUX_HEAT, SERVICE_SET_AWAY_MODE, SERVICE_SET_HOLD_MODE,
+    SERVICE_SET_FAN_MODE, SERVICE_SET_HUMIDITY, SERVICE_SET_OPERATION_MODE,
+    SERVICE_SET_SWING_MODE, SERVICE_SET_TEMPERATURE)
 from homeassistant.components.climate.ecobee import (
     ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
     ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
@@ -57,6 +57,7 @@ SERVICE_ATTRIBUTES = {
     SERVICE_SET_TEMPERATURE: [ATTR_TEMPERATURE],
     SERVICE_SET_HUMIDITY: [ATTR_HUMIDITY],
     SERVICE_SET_SWING_MODE: [ATTR_SWING_MODE],
+    SERVICE_SET_HOLD_MODE: [ATTR_HOLD_MODE],
     SERVICE_SET_OPERATION_MODE: [ATTR_OPERATION_MODE],
     SERVICE_SET_AUX_HEAT: [ATTR_AUX_HEAT],
     SERVICE_SELECT_SOURCE: [ATTR_INPUT_SOURCE],
@@ -132,7 +133,7 @@ def async_reproduce_state(hass, states, blocking=False):
     for state in states:
 
         if hass.states.get(state.entity_id) is None:
-            _LOGGER.warning('reproduce_state: Unable to find entity %s',
+            _LOGGER.warning("reproduce_state: Unable to find entity %s",
                             state.entity_id)
             continue
 
@@ -141,7 +142,12 @@ def async_reproduce_state(hass, states, blocking=False):
         else:
             service_domain = state.domain
 
-        domain_services = hass.services.async_services()[service_domain]
+        domain_services = hass.services.async_services().get(service_domain)
+
+        if not domain_services:
+            _LOGGER.warning(
+                "reproduce_state: Unable to reproduce state %s (1)", state)
+            continue
 
         service = None
         for _service in domain_services.keys():
@@ -156,8 +162,8 @@ def async_reproduce_state(hass, states, blocking=False):
                 break
 
         if not service:
-            _LOGGER.warning("reproduce_state: Unable to reproduce state %s",
-                            state)
+            _LOGGER.warning(
+                "reproduce_state: Unable to reproduce state %s (2)", state)
             continue
 
         # We group service calls for entities by service call

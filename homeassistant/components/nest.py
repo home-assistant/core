@@ -11,18 +11,15 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import (CONF_STRUCTURE, CONF_FILENAME,
-                                 CONF_BINARY_SENSORS, CONF_SENSORS,
-                                 CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
+    CONF_MONITORED_CONDITIONS)
 from homeassistant.loader import get_component
+
+REQUIREMENTS = ['python-nest==3.1.0']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = [
-    'http://github.com/technicalpickles/python-nest'
-    '/archive/e6c9d56a8df455d4d7746389811f2c1387e8cb33.zip'  # nest-cam branch
-    '#python-nest==3.0.2']
 
 DOMAIN = 'nest'
 
@@ -57,7 +54,7 @@ def request_configuration(nest, hass, config):
         return
 
     def nest_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Run when the configuration callback is called."""
         _LOGGER.debug("configurator callback")
         pin = data.get('pin')
         setup_nest(hass, nest, config, pin=pin)
@@ -75,7 +72,7 @@ def request_configuration(nest, hass, config):
 
 
 def setup_nest(hass, nest, config, pin=None):
-    """Setup Nest Devices."""
+    """Set up the Nest devices."""
     if pin is not None:
         _LOGGER.debug("pin acquired, requesting access token")
         nest.request_token(pin)
@@ -111,7 +108,7 @@ def setup_nest(hass, nest, config, pin=None):
 
 
 def setup(hass, config):
-    """Setup the Nest thermostat component."""
+    """Set up the Nest thermostat component."""
     import nest
 
     if 'nest' in _CONFIGURING:
@@ -147,7 +144,7 @@ class NestDevice(object):
         _LOGGER.debug("Structures to include: %s", self._structure)
 
     def thermostats(self):
-        """Generator returning list of thermostats and their location."""
+        """Generate a list of thermostats and their location."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
@@ -161,7 +158,7 @@ class NestDevice(object):
                 "Connection error logging into the nest web service.")
 
     def smoke_co_alarms(self):
-        """Generator returning list of smoke co alarams."""
+        """Generate a list of smoke co alarams."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:
@@ -175,7 +172,7 @@ class NestDevice(object):
                 "Connection error logging into the nest web service.")
 
     def cameras(self):
-        """Generator returning list of cameras."""
+        """Generate a list of cameras."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self._structure:

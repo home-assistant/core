@@ -4,7 +4,7 @@ import asyncio
 from collections import OrderedDict
 import logging
 import unittest
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, MagicMock
 from datetime import timedelta
 
 import homeassistant.core as ha
@@ -12,7 +12,7 @@ import homeassistant.loader as loader
 from homeassistant.components import group
 from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import (
-    EntityComponent, DEFAULT_SCAN_INTERVAL)
+    EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
 
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
@@ -49,6 +49,11 @@ class EntityTest(Entity):
     def unique_id(self):
         """Return the unique ID of the entity."""
         return self._handle('unique_id')
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._handle('available')
 
     def _handle(self, attr):
         """Helper for the attributes."""
@@ -115,6 +120,43 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         assert not no_poll_ent.async_update.called
         assert poll_ent.async_update.called
+
+    def test_polling_updates_entities_with_exception(self):
+        """Test the updated entities that not brake with a exception."""
+        component = EntityComponent(
+            _LOGGER, DOMAIN, self.hass, timedelta(seconds=20))
+
+        update_ok = []
+        update_err = []
+
+        def update_mock():
+            """Mock normal update."""
+            update_ok.append(None)
+
+        def update_mock_err():
+            """Mock error update."""
+            update_err.append(None)
+            raise AssertionError("Fake error update")
+
+        ent1 = EntityTest(should_poll=True)
+        ent1.update = update_mock_err
+        ent2 = EntityTest(should_poll=True)
+        ent2.update = update_mock
+        ent3 = EntityTest(should_poll=True)
+        ent3.update = update_mock
+        ent4 = EntityTest(should_poll=True)
+        ent4.update = update_mock
+
+        component.add_entities([ent1, ent2, ent3, ent4])
+
+        update_ok.clear()
+        update_err.clear()
+
+        fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=20))
+        self.hass.block_till_done()
+
+        assert len(update_ok) == 3
+        assert len(update_err) == 1
 
     def test_update_state_adds_entities(self):
         """Test if updating poll entities cause an entity to be added works."""
@@ -272,6 +314,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert component_setup.called
         assert platform_setup.called
 
@@ -294,13 +337,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
             ("{} 3".format(DOMAIN), {'platform': 'mod2'}),
         ]))
 
+        self.hass.block_till_done()
         assert platform1_setup.called
         assert platform2_setup.called
 
     @patch('homeassistant.helpers.entity_component.EntityComponent'
-           '._async_setup_platform', return_value=mock_coro()())
-    @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+           '._async_setup_platform', return_value=mock_coro())
+    @patch('homeassistant.setup.async_setup_component',
+           return_value=mock_coro(True))
     def test_setup_does_discovery(self, mock_setup_component, mock_setup):
         """Test setup for discovery."""
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
@@ -336,6 +380,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert mock_track.called
         assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
@@ -360,6 +405,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
         assert mock_track.called
         assert timedelta(seconds=30) == mock_track.call_args[0][2]
 
@@ -385,6 +431,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
             }
         })
 
+        self.hass.block_till_done()
+
         assert sorted(self.hass.states.entity_ids()) == \
             ['test_domain.yummy_beer', 'test_domain.yummy_unnamed_device']
 
@@ -404,3 +452,56 @@ class TestHelpersEntityComponent(unittest.TestCase):
             return entity
 
         component.add_entities(create_entity(i) for i in range(2))
+
+
+@asyncio.coroutine
+def test_platform_warn_slow_setup(hass):
+    """Warn we log when platform setup takes a long time."""
+    platform = MockPlatform()
+
+    loader.set_component('test_domain.platform', platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    with patch.object(hass.loop, 'call_later', MagicMock()) \
+            as mock_call:
+        yield from component.async_setup({
+            DOMAIN: {
+                'platform': 'platform',
+            }
+        })
+        assert mock_call.called
+        assert len(mock_call.mock_calls) == 2
+
+        timeout, logger_method = mock_call.mock_calls[0][1][:2]
+
+        assert timeout == SLOW_SETUP_WARNING
+        assert logger_method == _LOGGER.warning
+
+        assert mock_call().cancel.called
+
+
+@asyncio.coroutine
+def test_extract_from_service_available_device(hass):
+    """Test the extraction of entity from service and device is available."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    yield from component.async_add_entities([
+        EntityTest(name='test_1'),
+        EntityTest(name='test_2', available=False),
+        EntityTest(name='test_3'),
+        EntityTest(name='test_4', available=False),
+    ])
+
+    call_1 = ha.ServiceCall('test', 'service')
+
+    assert ['test_domain.test_1', 'test_domain.test_3'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call_1))
+
+    call_2 = ha.ServiceCall('test', 'service', data={
+        'entity_id': ['test_domain.test_3', 'test_domain.test_4'],
+    })
+
+    assert ['test_domain.test_3'] == \
+        sorted(ent.entity_id for ent in
+               component.async_extract_from_service(call_2))

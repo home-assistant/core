@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the NetAtmo Thermostat."""
+    """Set up the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
 
@@ -111,7 +111,6 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
-        self.update_ha_state()
 
     def turn_away_mode_off(self):
         """Turn away off."""
@@ -119,7 +118,6 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
-        self.update_ha_state()
 
     def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
         """Set new target temperature for 2 hours."""
@@ -131,7 +129,6 @@ class NetatmoThermostat(ClimateDevice):
             mode, temperature, endTimeOffset)
         self._target_temperature = temperature
         self._away = False
-        self.update_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -153,7 +150,6 @@ class ThermostatData(object):
         self.current_temperature = None
         self.target_temperature = None
         self.setpoint_mode = None
-        # self.operation =
 
     def get_module_names(self):
         """Return all module available on the API as a list."""

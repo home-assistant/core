@@ -12,6 +12,7 @@ from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.util import slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_scanner(hass, config: dict, see):
+def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Validate the configuration and return a TrackR scanner."""
     TrackRDeviceScanner(hass, config, see)
     return True
@@ -36,18 +37,18 @@ class TrackRDeviceScanner(object):
         """Initialize the TrackR device scanner."""
         from pytrackr.api import trackrApiInterface
         self.hass = hass
-        self.api = trackrApiInterface(config.get(CONF_USERNAME),
-                                      config.get(CONF_PASSWORD))
+        self.api = trackrApiInterface(
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD))
         self.see = see
         self.devices = self.api.get_trackrs()
         self._update_info()
 
-        track_utc_time_change(self.hass, self._update_info,
-                              second=range(0, 60, 30))
+        track_utc_time_change(
+            self.hass, self._update_info, second=range(0, 60, 30))
 
     def _update_info(self, now=None) -> None:
         """Update the device info."""
-        _LOGGER.debug('Updating devices %s', now)
+        _LOGGER.debug("Updating devices %s", now)
 
         # Update self.devices to collect new devices added
         # to the users account.
@@ -58,7 +59,7 @@ class TrackRDeviceScanner(object):
             trackr_id = trackr.tracker_id()
             trackr_device_id = trackr.id()
             lost = trackr.lost()
-            dev_id = trackr.name().replace(" ", "_")
+            dev_id = slugify(trackr.name())
             if dev_id is None:
                 dev_id = trackr_id
             location = trackr.last_known_location()

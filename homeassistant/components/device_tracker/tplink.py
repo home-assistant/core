@@ -20,7 +20,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -69,7 +68,7 @@ class TplinkDeviceScanner(DeviceScanner):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get firmware doesn't save the name of the wireless device."""
         return None
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -83,8 +82,9 @@ class TplinkDeviceScanner(DeviceScanner):
 
             url = 'http://{}/userRpm/WlanStationRpm.htm'.format(self.host)
             referer = 'http://{}'.format(self.host)
-            page = requests.get(url, auth=(self.username, self.password),
-                                headers={'referer': referer})
+            page = requests.get(
+                url, auth=(self.username, self.password),
+                headers={'referer': referer}, timeout=4)
 
             result = self.parse_macs.findall(page.text)
 
@@ -105,7 +105,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get firmware doesn't save the name of the wireless device."""
         return self.last_results.get(device)
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -130,8 +130,9 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
             cookie = 'Authorization=Basic {}' \
                 .format(b64_encoded_username_password)
 
-            response = requests.post(url, headers={'referer': referer,
-                                                   'cookie': cookie})
+            response = requests.post(
+                url, headers={'referer': referer, 'cookie': cookie},
+                timeout=4)
 
             try:
                 result = response.json().get('data')
@@ -162,11 +163,12 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_info()
+        self._log_out()
         return self.last_results.keys()
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device.
+        """Get the firmware doesn't save the name of the wireless device.
 
         We are forced to use the MAC address as name here.
         """
@@ -181,22 +183,22 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
         referer = 'http://{}/webpages/login.html'.format(self.host)
 
         # If possible implement rsa encryption of password here.
-        response = requests.post(url,
-                                 params={'operation': 'login',
-                                         'username': self.username,
-                                         'password': self.password},
-                                 headers={'referer': referer})
+        response = requests.post(
+            url, params={'operation': 'login', 'username': self.username,
+                         'password': self.password},
+            headers={'referer': referer}, timeout=4)
 
         try:
             self.stok = response.json().get('data').get('stok')
             _LOGGER.info(self.stok)
-            regex_result = re.search('sysauth=(.*);',
-                                     response.headers['set-cookie'])
+            regex_result = re.search(
+                'sysauth=(.*);', response.headers['set-cookie'])
             self.sysauth = regex_result.group(1)
             _LOGGER.info(self.sysauth)
             return True
-        except ValueError:
-            _LOGGER.error("Couldn't fetch auth tokens!")
+        except (ValueError, KeyError) as _:
+            _LOGGER.error("Couldn't fetch auth tokens! Response was: %s",
+                          response.text)
             return False
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
@@ -218,7 +220,8 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
             response = requests.post(url,
                                      params={'operation': 'load'},
                                      headers={'referer': referer},
-                                     cookies={'sysauth': self.sysauth})
+                                     cookies={'sysauth': self.sysauth},
+                                     timeout=5)
 
             try:
                 json_response = response.json()
@@ -227,18 +230,17 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                     result = response.json().get('data')
                 else:
                     if json_response.get('errorcode') == 'timeout':
-                        _LOGGER.info("Token timed out. "
-                                     "Relogging on next scan.")
+                        _LOGGER.info("Token timed out. Relogging on next scan")
                         self.stok = ''
                         self.sysauth = ''
                         return False
                     else:
-                        _LOGGER.error("An unknown error happened "
-                                      "while fetching data.")
+                        _LOGGER.error(
+                            "An unknown error happened while fetching data")
                         return False
             except ValueError:
                 _LOGGER.error("Router didn't respond with JSON. "
-                              "Check if credentials are correct.")
+                              "Check if credentials are correct")
                 return False
 
             if result:
@@ -249,6 +251,21 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
                 return True
 
             return False
+
+    def _log_out(self):
+        with self.lock:
+            _LOGGER.info("Logging out of router admin interface...")
+
+            url = ('http://{}/cgi-bin/luci/;stok={}/admin/system?'
+                   'form=logout').format(self.host, self.stok)
+            referer = 'http://{}/webpages/index.html'.format(self.host)
+
+            requests.post(url,
+                          params={'operation': 'write'},
+                          headers={'referer': referer},
+                          cookies={'sysauth': self.sysauth})
+            self.stok = ''
+            self.sysauth = ''
 
 
 class Tplink4DeviceScanner(TplinkDeviceScanner):
@@ -267,7 +284,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get the name of the wireless device."""
         return None
 
     def _get_auth_tokens(self):
@@ -298,7 +315,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
             self.token = result.group(1)
             return True
         except ValueError:
-            _LOGGER.error("Couldn't fetch auth tokens!")
+            _LOGGER.error("Couldn't fetch auth tokens")
             return False
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)

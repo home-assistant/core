@@ -38,18 +38,19 @@ class PicoProvider(Provider):
     def __init__(self, lang):
         """Initialize Pico TTS provider."""
         self._lang = lang
+        self.name = 'PicoTTS'
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return self._lang
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
-    def get_tts_audio(self, message, language):
+    def get_tts_audio(self, message, language, options=None):
         """Load TTS using pico2wave."""
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmpf:
             fname = tmpf.name

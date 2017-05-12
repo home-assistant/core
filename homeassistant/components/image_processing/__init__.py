@@ -20,13 +20,17 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import get_component
 
-
 DOMAIN = 'image_processing'
 DEPENDENCIES = ['camera']
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=10)
+
+DEVICE_CLASSES = [
+    'alpr',        # automatic license plate recognition
+    'face',        # face
+]
 
 SERVICE_SCAN = 'scan'
 
@@ -36,6 +40,7 @@ CONF_SOURCE = 'source'
 CONF_CONFIDENCE = 'confidence'
 
 DEFAULT_TIMEOUT = 10
+DEFAULT_CONFIDENCE = 80
 
 SOURCE_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
@@ -44,6 +49,8 @@ SOURCE_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
+    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -59,7 +66,7 @@ def scan(hass, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup image processing."""
+    """Set up image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     yield from component.async_setup(config)
@@ -93,6 +100,11 @@ class ImageProcessingEntity(Entity):
     @property
     def camera_entity(self):
         """Return camera entity id from process pictures."""
+        return None
+
+    @property
+    def confidence(self):
+        """Return minimum confidence for do some things."""
         return None
 
     def process_image(self, image):

@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS): vol.Coerce(float),
     vol.Optional(CONF_PASSIVE, default=DEFAULT_PASSIVE): cv.boolean,
     vol.Optional(CONF_ICON): cv.icon,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def active_zone(hass, latitude, longitude, radius=0):
@@ -104,7 +104,7 @@ def in_zone(zone, latitude, longitude, radius=0):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup zone."""
+    """Set up the zone."""
     entities = set()
     tasks = []
     for _, entry in config_per_platform(config, DOMAIN):
@@ -112,8 +112,8 @@ def async_setup(hass, config):
         zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
                     entry.get(CONF_RADIUS), entry.get(CONF_ICON),
                     entry.get(CONF_PASSIVE))
-        zone.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, name,
-                                                  entities)
+        zone.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, name, entities)
         tasks.append(zone.async_update_ha_state())
         entities.add(zone.entity_id)
 

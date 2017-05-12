@@ -6,9 +6,10 @@ from unittest import mock
 # https://bugs.python.org/issue23004
 from mock_open import MockOpen
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
-from tests.common import assert_setup_component, mock_http_component
+from tests.common import mock_http_component
+import logging
 
 
 @asyncio.coroutine
@@ -42,19 +43,25 @@ def test_loading_file(hass, test_client):
 
 
 @asyncio.coroutine
-def test_file_not_readable(hass):
-    """Test local file will not setup when file is not readable."""
+def test_file_not_readable(hass, caplog):
+    """Test a warning is shown setup when file is not readable."""
     mock_http_component(hass)
 
+    @mock.patch('os.path.isfile', mock.Mock(return_value=True))
+    @mock.patch('os.access', mock.Mock(return_value=False))
     def run_test():
-        with mock.patch('os.path.isfile', mock.Mock(return_value=True)), \
-                mock.patch('os.access', return_value=False), \
-                assert_setup_component(0, 'camera'):
-            assert setup_component(hass, 'camera', {
-                'camera': {
-                    'name': 'config_test',
-                    'platform': 'local_file',
-                    'file_path': 'mock.file',
-                }})
+
+        caplog.set_level(
+            logging.WARNING, logger='requests.packages.urllib3.connectionpool')
+
+        assert setup_component(hass, 'camera', {
+            'camera': {
+                'name': 'config_test',
+                'platform': 'local_file',
+                'file_path': 'mock.file',
+            }})
+        assert 'Could not read' in caplog.text
+        assert 'config_test' in caplog.text
+        assert 'mock.file' in caplog.text
 
     yield from hass.loop.run_in_executor(None, run_test)

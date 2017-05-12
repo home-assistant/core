@@ -2,8 +2,9 @@
 Offer zone automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#zone-trigger
+at https://home-assistant.io/docs/automation/trigger/#zone-trigger
 """
+import asyncio
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -13,8 +14,8 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
 
-EVENT_ENTER = "enter"
-EVENT_LEAVE = "leave"
+EVENT_ENTER = 'enter'
+EVENT_LEAVE = 'leave'
 DEFAULT_EVENT = EVENT_ENTER
 
 TRIGGER_SCHEMA = vol.Schema({
@@ -26,6 +27,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)

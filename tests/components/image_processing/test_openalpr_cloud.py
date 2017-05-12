@@ -4,7 +4,7 @@ from unittest.mock import patch, PropertyMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 from homeassistant.components.image_processing.openalpr_cloud import (
     OPENALPR_API_URL)
@@ -143,7 +143,7 @@ class TestOpenAlprCloud(object):
             """Mock event."""
             self.alpr_events.append(event)
 
-        self.hass.bus.listen('found_plate', mock_alpr_event)
+        self.hass.bus.listen('image_processing.found_plate', mock_alpr_event)
 
         self.params = {
             'secret_key': "sk_abcxyz123456",

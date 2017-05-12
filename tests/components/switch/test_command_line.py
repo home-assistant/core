@@ -4,7 +4,7 @@ import os
 import tempfile
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import STATE_ON, STATE_OFF
 import homeassistant.components.switch as switch
 import homeassistant.components.switch.command_line as command_line
@@ -159,7 +159,7 @@ class TestCommandSwitch(unittest.TestCase):
             state = self.hass.states.get('switch.test')
             self.assertEqual(STATE_ON, state.state)
 
-    def test_assumed_state_should_be_true_if_command_state_is_false(self):
+    def test_assumed_state_should_be_true_if_command_state_is_none(self):
         """Test with state value."""
         # args: hass, device_name, friendly_name, command_on, command_off,
         #       command_state, value_template
@@ -169,7 +169,7 @@ class TestCommandSwitch(unittest.TestCase):
             "Test friendly name!",
             "echo 'on command'",
             "echo 'off command'",
-            False,
+            None,
             None,
         ]
 

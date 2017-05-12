@@ -37,14 +37,14 @@ def setup(hass, config):
 # noqa: F821
 
 def setup_output(pin):
-    """Setup a GPIO as output."""
+    """Set up a GPIO as output."""
     # pylint: disable=import-error,undefined-variable
     import Adafruit_BBIO.GPIO as GPIO
     GPIO.setup(pin, GPIO.OUT)
 
 
 def setup_input(pin, pull_mode):
-    """Setup a GPIO as input."""
+    """Set up a GPIO as input."""
     # pylint: disable=import-error,undefined-variable
     import Adafruit_BBIO.GPIO as GPIO
     GPIO.setup(pin, GPIO.IN,                            # noqa: F821
@@ -63,7 +63,7 @@ def read_input(pin):
     """Read a value from a GPIO."""
     # pylint: disable=import-error,undefined-variable
     import Adafruit_BBIO.GPIO as GPIO
-    return GPIO.input(pin)
+    return GPIO.input(pin) is GPIO.HIGH
 
 
 def edge_detect(pin, event_callback, bounce):

@@ -4,7 +4,7 @@ from unittest import mock
 
 import influxdb as influx_client
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.influxdb as influxdb
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_OFF, STATE_ON
 
@@ -96,7 +96,10 @@ class TestInfluxDB(unittest.TestCase):
                 'host': 'host',
                 'username': 'user',
                 'password': 'pass',
-                'blacklist': ['fake.blacklisted']
+                'exclude': {
+                    'entities': ['fake.blacklisted'],
+                    'domains': ['another_fake']
+                }
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)
@@ -273,6 +276,129 @@ class TestInfluxDB(unittest.TestCase):
                 self.assertFalse(mock_client.return_value.write_points.called)
             mock_client.return_value.write_points.reset_mock()
 
+    def test_event_listener_blacklist_domain(self, mock_client):
+        """Test the event listener against a blacklist."""
+        self._setup()
+
+        for domain in ('ok', 'another_fake'):
+            state = mock.MagicMock(
+                state=1, domain=domain,
+                entity_id='{}.something'.format(domain),
+                object_id='something', attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': '{}.something'.format(domain),
+                'tags': {
+                    'domain': domain,
+                    'entity_id': 'something',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if domain == 'ok':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_whitelist(self, mock_client):
+        """Test the event listener against a whitelist."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'include': {
+                    'entities': ['fake.included'],
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        for entity_id in ('included', 'default'):
+            state = mock.MagicMock(
+                state=1, domain='fake', entity_id='fake.{}'.format(entity_id),
+                object_id=entity_id, attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': 'fake.{}'.format(entity_id),
+                'tags': {
+                    'domain': 'fake',
+                    'entity_id': entity_id,
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if entity_id == 'included':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
+    def test_event_listener_whitelist_domain(self, mock_client):
+        """Test the event listener against a whitelist."""
+        config = {
+            'influxdb': {
+                'host': 'host',
+                'username': 'user',
+                'password': 'pass',
+                'include': {
+                    'domains': ['fake'],
+                }
+            }
+        }
+        assert setup_component(self.hass, influxdb.DOMAIN, config)
+        self.handler_method = self.hass.bus.listen.call_args_list[0][0][1]
+
+        for domain in ('fake', 'another_fake'):
+            state = mock.MagicMock(
+                state=1, domain=domain,
+                entity_id='{}.something'.format(domain),
+                object_id='something', attributes={})
+            event = mock.MagicMock(data={'new_state': state}, time_fired=12345)
+            body = [{
+                'measurement': '{}.something'.format(domain),
+                'tags': {
+                    'domain': domain,
+                    'entity_id': 'something',
+                },
+                'time': 12345,
+                'fields': {
+                    'value': 1,
+                },
+            }]
+            self.handler_method(event)
+            if domain == 'fake':
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_count, 1
+                )
+                self.assertEqual(
+                    mock_client.return_value.write_points.call_args,
+                    mock.call(body)
+                )
+            else:
+                self.assertFalse(mock_client.return_value.write_points.called)
+            mock_client.return_value.write_points.reset_mock()
+
     def test_event_listener_invalid_type(self, mock_client):
         """Test the event listener when an attirbute has an invalid type."""
         self._setup()
@@ -343,7 +469,9 @@ class TestInfluxDB(unittest.TestCase):
                 'username': 'user',
                 'password': 'pass',
                 'default_measurement': 'state',
-                'blacklist': ['fake.blacklisted']
+                'exclude': {
+                    'entities': ['fake.blacklisted']
+                }
             }
         }
         assert setup_component(self.hass, influxdb.DOMAIN, config)

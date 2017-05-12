@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discover_info=None):
-    """Setup the CMUS platform."""
+    """Set up the CMUS platform."""
     from pycmus import exceptions
 
     host = config.get(CONF_HOST)
@@ -90,11 +90,9 @@ class CmusDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the media state."""
-        if 'status' not in self.status:
-            self.update()
-        if self.status['status'] == 'playing':
+        if self.status.get('status') == 'playing':
             return STATE_PLAYING
-        elif self.status['status'] == 'paused':
+        elif self.status.get('status') == 'paused':
             return STATE_PAUSED
         else:
             return STATE_OFF
@@ -151,8 +149,8 @@ class CmusDevice(MediaPlayerDevice):
         return int(volume)/100
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CMUS
 
     def turn_off(self):
@@ -168,7 +166,7 @@ class CmusDevice(MediaPlayerDevice):
         self.cmus.set_volume(int(volume * 100))
 
     def volume_up(self):
-        """Function to send CMUS the command for volume up."""
+        """Set the volume up."""
         left = self.status['set'].get('vol_left')
         right = self.status['set'].get('vol_right')
         if left != right:
@@ -180,7 +178,7 @@ class CmusDevice(MediaPlayerDevice):
             self.cmus.set_volume(int(current_volume) + 5)
 
     def volume_down(self):
-        """Function to send CMUS the command for volume down."""
+        """Set the volume down."""
         left = self.status['set'].get('vol_left')
         right = self.status['set'].get('vol_right')
         if left != right:

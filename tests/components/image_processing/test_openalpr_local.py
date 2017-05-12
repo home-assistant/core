@@ -4,7 +4,7 @@ from unittest.mock import patch, PropertyMock, MagicMock
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.image_processing as ip
 
 from tests.common import (
@@ -134,7 +134,7 @@ class TestOpenAlprLocal(object):
             """Mock event."""
             self.alpr_events.append(event)
 
-        self.hass.bus.listen('found_plate', mock_alpr_event)
+        self.hass.bus.listen('image_processing.found_plate', mock_alpr_event)
 
     def teardown_method(self):
         """Stop everything that was started."""

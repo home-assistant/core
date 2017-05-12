@@ -11,13 +11,13 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_ZONE, CONF_DEVICES, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.util.distance import convert
 from homeassistant.util.location import distance
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,14 +56,14 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup_proximity_component(hass, name, config):
-    """Set up individual proximity component."""
+    """Set up the individual proximity component."""
     ignored_zones = config.get(CONF_IGNORED_ZONES)
     proximity_devices = config.get(CONF_DEVICES)
     tolerance = config.get(CONF_TOLERANCE)
     proximity_zone = name
     unit_of_measurement = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit)
-    zone_id = 'zone.{}'.format(proximity_zone)
+    zone_id = 'zone.{}'.format(config.get(CONF_ZONE))
 
     proximity = Proximity(hass, proximity_zone, DEFAULT_DIST_TO_ZONE,
                           DEFAULT_DIR_OF_TRAVEL, DEFAULT_NEAREST,
@@ -71,7 +71,7 @@ def setup_proximity_component(hass, name, config):
                           zone_id, unit_of_measurement)
     proximity.entity_id = '{}.{}'.format(DOMAIN, proximity_zone)
 
-    proximity.update_ha_state()
+    proximity.schedule_update_ha_state()
 
     track_state_change(
         hass, proximity_devices, proximity.check_proximity_state_change)
@@ -129,7 +129,7 @@ class Proximity(Entity):
         }
 
     def check_proximity_state_change(self, entity, old_state, new_state):
-        """Function to perform the proximity checking."""
+        """Perform the proximity checking."""
         entity_name = new_state.name
         devices_to_calculate = False
         devices_in_zone = ''
@@ -161,7 +161,7 @@ class Proximity(Entity):
             self.dist_to = 'not set'
             self.dir_of_travel = 'not set'
             self.nearest = 'not set'
-            self.update_ha_state()
+            self.schedule_update_ha_state()
             return
 
         # At least one device is in the monitored zone so update the entity.
@@ -169,7 +169,7 @@ class Proximity(Entity):
             self.dist_to = 0
             self.dir_of_travel = 'arrived'
             self.nearest = devices_in_zone
-            self.update_ha_state()
+            self.schedule_update_ha_state()
             return
 
         # We can't check proximity because latitude and longitude don't exist.
@@ -214,7 +214,7 @@ class Proximity(Entity):
             self.dir_of_travel = 'unknown'
             device_state = self.hass.states.get(closest_device)
             self.nearest = device_state.name
-            self.update_ha_state()
+            self.schedule_update_ha_state()
             return
 
         # Stop if we cannot calculate the direction of travel (i.e. we don't
@@ -223,7 +223,7 @@ class Proximity(Entity):
             self.dist_to = round(distances_to_zone[entity])
             self.dir_of_travel = 'unknown'
             self.nearest = entity_name
-            self.update_ha_state()
+            self.schedule_update_ha_state()
             return
 
         # Reset the variables
@@ -250,7 +250,7 @@ class Proximity(Entity):
         self.dist_to = round(dist_to_zone)
         self.dir_of_travel = direction_of_travel
         self.nearest = entity_name
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         _LOGGER.debug('proximity.%s update entity: distance=%s: direction=%s: '
                       'device=%s', self.friendly_name, round(dist_to_zone),
                       direction_of_travel, entity_name)

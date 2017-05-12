@@ -20,18 +20,20 @@ _SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict
 
 
+class NodeListClass(list):
+    """Wrapper class to be able to add attributes on a list."""
+
+    pass
+
+
+class NodeStrClass(str):
+    """Wrapper class to be able to add attributes on a string."""
+
+    pass
+
+
 def _add_reference(obj, loader, node):
     """Add file reference information to an object."""
-    class NodeListClass(list):
-        """Wrapper class to be able to add attributes on a list."""
-
-        pass
-
-    class NodeStrClass(str):
-        """Wrapper class to be able to add attributes on a string."""
-
-        pass
-
     if isinstance(obj, list):
         obj = NodeListClass(obj)
     if isinstance(obj, str):
@@ -65,12 +67,12 @@ def load_yaml(fname: str) -> Union[List, Dict]:
         _LOGGER.error(exc)
         raise HomeAssistantError(exc)
     except UnicodeDecodeError as exc:
-        _LOGGER.error('Unable to read file %s: %s', fname, exc)
+        _LOGGER.error("Unable to read file %s: %s", fname, exc)
         raise HomeAssistantError(exc)
 
 
 def dump(_dict: dict) -> str:
-    """Dump yaml to a string and remove null."""
+    """Dump YAML to a string and remove null."""
     return yaml.safe_dump(_dict, default_flow_style=False) \
         .replace(': null\n', ':\n')
 
@@ -237,8 +239,8 @@ def _secret_yaml(loader: SafeLineLoader,
         secrets = _load_secret_yaml(secret_path)
 
         if node.value in secrets:
-            _LOGGER.debug('Secret %s retrieved from secrets.yaml in '
-                          'folder %s', node.value, secret_path)
+            _LOGGER.debug("Secret %s retrieved from secrets.yaml in "
+                          "folder %s", node.value, secret_path)
             return secrets[node.value]
 
         if secret_path == os.path.dirname(sys.path[0]):
@@ -252,10 +254,10 @@ def _secret_yaml(loader: SafeLineLoader,
         # do some keyring stuff
         pwd = keyring.get_password(_SECRET_NAMESPACE, node.value)
         if pwd:
-            _LOGGER.debug('Secret %s retrieved from keyring.', node.value)
+            _LOGGER.debug("Secret %s retrieved from keyring", node.value)
             return pwd
 
-    _LOGGER.error('Secret %s not defined.', node.value)
+    _LOGGER.error("Secret %s not defined", node.value)
     raise HomeAssistantError(node.value)
 
 
@@ -272,3 +274,42 @@ yaml.SafeLoader.add_constructor('!include_dir_merge_list',
 yaml.SafeLoader.add_constructor('!include_dir_named', _include_dir_named_yaml)
 yaml.SafeLoader.add_constructor('!include_dir_merge_named',
                                 _include_dir_merge_named_yaml)
+
+
+# From: https://gist.github.com/miracle2k/3184458
+# pylint: disable=redefined-outer-name
+def represent_odict(dump, tag, mapping, flow_style=None):
+    """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
+    value = []
+    node = yaml.MappingNode(tag, value, flow_style=flow_style)
+    if dump.alias_key is not None:
+        dump.represented_objects[dump.alias_key] = node
+    best_style = True
+    if hasattr(mapping, 'items'):
+        mapping = mapping.items()
+    for item_key, item_value in mapping:
+        node_key = dump.represent_data(item_key)
+        node_value = dump.represent_data(item_value)
+        if not (isinstance(node_key, yaml.ScalarNode) and not node_key.style):
+            best_style = False
+        if not (isinstance(node_value, yaml.ScalarNode) and
+                not node_value.style):
+            best_style = False
+        value.append((node_key, node_value))
+    if flow_style is None:
+        if dump.default_flow_style is not None:
+            node.flow_style = dump.default_flow_style
+        else:
+            node.flow_style = best_style
+    return node
+
+
+yaml.SafeDumper.add_representer(
+    OrderedDict,
+    lambda dumper, value:
+    represent_odict(dumper, 'tag:yaml.org,2002:map', value))
+
+yaml.SafeDumper.add_representer(
+    NodeListClass,
+    lambda dumper, value:
+    dumper.represent_sequence('tag:yaml.org,2002:seq', value))

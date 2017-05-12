@@ -1,77 +1,49 @@
 """The tests for the Alexa component."""
 # pylint: disable=protected-access
+import asyncio
 import json
 import datetime
-import unittest
 
-import requests
+import pytest
 
 from homeassistant.core import callback
-from homeassistant import bootstrap, const
-from homeassistant.components import alexa, http
-
-from tests.common import get_test_instance_port, get_test_home_assistant
-
-API_PASSWORD = "test1234"
-SERVER_PORT = get_test_instance_port()
-BASE_API_URL = "http://127.0.0.1:{}".format(SERVER_PORT)
-INTENTS_API_URL = "{}{}".format(BASE_API_URL, alexa.INTENTS_API_ENDPOINT)
-
-HA_HEADERS = {
-    const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
-}
+from homeassistant.setup import async_setup_component
+from homeassistant.components import alexa
 
 SESSION_ID = "amzn1.echo-api.session.0000000-0000-0000-0000-00000000000"
 APPLICATION_ID = "amzn1.echo-sdk-ams.app.000000-d0ed-0000-ad00-000000d00ebe"
 REQUEST_ID = "amzn1.echo-api.request.0000000-0000-0000-0000-00000000000"
 
 # pylint: disable=invalid-name
-hass = None
 calls = []
 
 NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
-# 2016-10-10T19:51:42+00:00
-STATIC_TIME = datetime.datetime.utcfromtimestamp(1476129102)
 
-
-# pylint: disable=invalid-name
-def setUpModule():
+@pytest.fixture
+def alexa_client(loop, hass, test_client):
     """Initialize a Home Assistant server for testing this module."""
-    global hass
-
-    hass = get_test_home_assistant()
-
-    bootstrap.setup_component(
-        hass, http.DOMAIN,
-        {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
-                       http.CONF_SERVER_PORT: SERVER_PORT}})
-
     @callback
     def mock_service(call):
         calls.append(call)
 
-    hass.services.register("test", "alexa", mock_service)
+    hass.services.async_register("test", "alexa", mock_service)
 
-    bootstrap.setup_component(hass, alexa.DOMAIN, {
+    assert loop.run_until_complete(async_setup_component(hass, alexa.DOMAIN, {
         # Key is here to verify we allow other keys in config too
         "homeassistant": {},
         "alexa": {
             "flash_briefings": {
                 "weather": [
                     {"title": "Weekly forecast",
-                     "text": "This week it will be sunny.",
-                     "date": "2016-10-09T19:51:42.0Z"},
+                     "text": "This week it will be sunny."},
                     {"title": "Current conditions",
-                     "text": "Currently it is 80 degrees fahrenheit.",
-                     "date": STATIC_TIME}
+                     "text": "Currently it is 80 degrees fahrenheit."}
                 ],
                 "news_audio": {
                     "title": "NPR",
                     "audio": NPR_NEWS_MP3_URL,
                     "display_url": "https://npr.org",
-                    "date": STATIC_TIME,
                     "uid": "uuid"
                 }
             },
@@ -122,357 +94,363 @@ def setUpModule():
                 }
             }
         }
-    })
-
-    hass.start()
-
-
-# pylint: disable=invalid-name
-def tearDownModule():
-    """Stop the Home Assistant server."""
-    hass.stop()
+    }))
+    return loop.run_until_complete(test_client(hass.http.app))
 
 
-def _intent_req(data={}):
-    return requests.post(INTENTS_API_URL, data=json.dumps(data), timeout=5,
-                         headers=HA_HEADERS)
+def _intent_req(client, data={}):
+    return client.post(alexa.INTENTS_API_ENDPOINT, data=json.dumps(data),
+                       headers={'content-type': 'application/json'})
 
 
-def _flash_briefing_req(briefing_id=None):
-    url_format = "{}/api/alexa/flash_briefings/{}"
-    FLASH_BRIEFING_API_URL = url_format.format(BASE_API_URL,
-                                               briefing_id)
-    return requests.get(FLASH_BRIEFING_API_URL, timeout=5,
-                        headers=HA_HEADERS)
+def _flash_briefing_req(client, briefing_id):
+    return client.get(
+        "/api/alexa/flash_briefings/{}".format(briefing_id))
 
 
-class TestAlexa(unittest.TestCase):
-    """Test Alexa."""
-
-    def tearDown(self):
-        """Stop everything that was started."""
-        hass.block_till_done()
-
-    def test_intent_launch_request(self):
-        """Test the launch of a request."""
-        data = {
-            "version": "1.0",
-            "session": {
-                "new": True,
-                "sessionId": SESSION_ID,
-                "application": {
-                    "applicationId": APPLICATION_ID
-                },
-                "attributes": {},
-                "user": {
-                    "userId": "amzn1.account.AM3B00000000000000000000000"
-                }
+@asyncio.coroutine
+def test_intent_launch_request(alexa_client):
+    """Test the launch of a request."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": True,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
             },
-            "request": {
-                "type": "LaunchRequest",
-                "requestId": REQUEST_ID,
-                "timestamp": "2015-05-13T12:34:56Z"
+            "attributes": {},
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
             }
+        },
+        "request": {
+            "type": "LaunchRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z"
         }
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        resp = req.json()
-        self.assertIn("outputSpeech", resp["response"])
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    resp = yield from req.json()
+    assert "outputSpeech" in resp["response"]
 
-    def test_intent_request_with_slots(self):
-        """Test a request with slots."""
-        data = {
-            "version": "1.0",
-            "session": {
-                "new": False,
-                "sessionId": SESSION_ID,
-                "application": {
-                    "applicationId": APPLICATION_ID
-                },
-                "attributes": {
-                    "supportedHoroscopePeriods": {
-                        "daily": True,
-                        "weekly": False,
-                        "monthly": False
-                    }
-                },
-                "user": {
-                    "userId": "amzn1.account.AM3B00000000000000000000000"
+
+@asyncio.coroutine
+def test_intent_request_with_slots(alexa_client):
+    """Test a request with slots."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False
                 }
             },
-            "request": {
-                "type": "IntentRequest",
-                "requestId": REQUEST_ID,
-                "timestamp": "2015-05-13T12:34:56Z",
-                "intent": {
-                    "name": "GetZodiacHoroscopeIntent",
-                    "slots": {
-                        "ZodiacSign": {
-                            "name": "ZodiacSign",
-                            "value": "virgo"
-                        }
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "GetZodiacHoroscopeIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
+                        "value": "virgo"
                     }
                 }
             }
         }
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        text = req.json().get("response", {}).get("outputSpeech",
-                                                  {}).get("text")
-        self.assertEqual("You told us your sign is virgo.", text)
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "You told us your sign is virgo."
 
-    def test_intent_request_with_slots_but_no_value(self):
-        """Test a request with slots but no value."""
-        data = {
-            "version": "1.0",
-            "session": {
-                "new": False,
-                "sessionId": SESSION_ID,
-                "application": {
-                    "applicationId": APPLICATION_ID
-                },
-                "attributes": {
-                    "supportedHoroscopePeriods": {
-                        "daily": True,
-                        "weekly": False,
-                        "monthly": False
-                    }
-                },
-                "user": {
-                    "userId": "amzn1.account.AM3B00000000000000000000000"
+
+@asyncio.coroutine
+def test_intent_request_with_slots_but_no_value(alexa_client):
+    """Test a request with slots but no value."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False
                 }
             },
-            "request": {
-                "type": "IntentRequest",
-                "requestId": REQUEST_ID,
-                "timestamp": "2015-05-13T12:34:56Z",
-                "intent": {
-                    "name": "GetZodiacHoroscopeIntent",
-                    "slots": {
-                        "ZodiacSign": {
-                            "name": "ZodiacSign",
-                        }
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "GetZodiacHoroscopeIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
                     }
                 }
             }
         }
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        text = req.json().get("response", {}).get("outputSpeech",
-                                                  {}).get("text")
-        self.assertEqual("You told us your sign is .", text)
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "You told us your sign is ."
 
-    def test_intent_request_without_slots(self):
-        """Test a request without slots."""
-        data = {
-            "version": "1.0",
-            "session": {
-                "new": False,
-                "sessionId": SESSION_ID,
-                "application": {
-                    "applicationId": APPLICATION_ID
-                },
-                "attributes": {
-                    "supportedHoroscopePeriods": {
-                        "daily": True,
-                        "weekly": False,
-                        "monthly": False
-                    }
-                },
-                "user": {
-                    "userId": "amzn1.account.AM3B00000000000000000000000"
+
+@asyncio.coroutine
+def test_intent_request_without_slots(hass, alexa_client):
+    """Test a request without slots."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False
                 }
             },
-            "request": {
-                "type": "IntentRequest",
-                "requestId": REQUEST_ID,
-                "timestamp": "2015-05-13T12:34:56Z",
-                "intent": {
-                    "name": "WhereAreWeIntent",
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "WhereAreWeIntent",
+            }
+        }
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    json = yield from req.json()
+    text = json.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+
+    assert text == "Anne Therese is at unknown and Paulus is at unknown"
+
+    hass.states.async_set("device_tracker.paulus", "home")
+    hass.states.async_set("device_tracker.anne_therese", "home")
+
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    json = yield from req.json()
+    text = json.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "You are both home, you silly"
+
+
+@asyncio.coroutine
+def test_intent_request_calling_service(alexa_client):
+    """Test a request for calling a service."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {},
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
+            }
+        },
+        "request": {
+            "type": "IntentRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "intent": {
+                "name": "CallServiceIntent",
+                "slots": {
+                    "ZodiacSign": {
+                        "name": "ZodiacSign",
+                        "value": "virgo",
+                    }
                 }
             }
         }
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        text = req.json().get("response", {}).get("outputSpeech",
-                                                  {}).get("text")
+    }
+    call_count = len(calls)
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    assert call_count + 1 == len(calls)
+    call = calls[-1]
+    assert call.domain == "test"
+    assert call.service == "alexa"
+    assert call.data.get("entity_id") == ["switch.test"]
+    assert call.data.get("hello") == "virgo"
 
-        self.assertEqual("Anne Therese is at unknown and Paulus is at unknown",
-                         text)
 
-        hass.states.set("device_tracker.paulus", "home")
-        hass.states.set("device_tracker.anne_therese", "home")
-
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        text = req.json().get("response", {}).get("outputSpeech",
-                                                  {}).get("text")
-        self.assertEqual("You are both home, you silly", text)
-
-    def test_intent_request_calling_service(self):
-        """Test a request for calling a service."""
-        data = {
-            "version": "1.0",
-            "session": {
-                "new": False,
-                "sessionId": SESSION_ID,
-                "application": {
-                    "applicationId": APPLICATION_ID
-                },
-                "attributes": {},
-                "user": {
-                    "userId": "amzn1.account.AM3B00000000000000000000000"
+@asyncio.coroutine
+def test_intent_session_ended_request(alexa_client):
+    """Test the request for ending the session."""
+    data = {
+        "version": "1.0",
+        "session": {
+            "new": False,
+            "sessionId": SESSION_ID,
+            "application": {
+                "applicationId": APPLICATION_ID
+            },
+            "attributes": {
+                "supportedHoroscopePeriods": {
+                    "daily": True,
+                    "weekly": False,
+                    "monthly": False
                 }
             },
-            "request": {
-                "type": "IntentRequest",
-                "requestId": REQUEST_ID,
-                "timestamp": "2015-05-13T12:34:56Z",
-                "intent": {
-                    "name": "CallServiceIntent",
-                    "slots": {
-                        "ZodiacSign": {
-                            "name": "ZodiacSign",
-                            "value": "virgo",
-                        }
-                    }
-                }
+            "user": {
+                "userId": "amzn1.account.AM3B00000000000000000000000"
             }
+        },
+        "request": {
+            "type": "SessionEndedRequest",
+            "requestId": REQUEST_ID,
+            "timestamp": "2015-05-13T12:34:56Z",
+            "reason": "USER_INITIATED"
         }
-        call_count = len(calls)
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        self.assertEqual(call_count + 1, len(calls))
-        call = calls[-1]
-        self.assertEqual("test", call.domain)
-        self.assertEqual("alexa", call.service)
-        self.assertEqual(["switch.test"], call.data.get("entity_id"))
-        self.assertEqual("virgo", call.data.get("hello"))
+    }
 
-    def test_intent_session_ended_request(self):
-        """Test the request for ending the session."""
-        data = {
-            "version": "1.0",
-            "session": {
-                "new": False,
-                "sessionId": SESSION_ID,
-                "application": {
-                    "applicationId": APPLICATION_ID
-                },
-                "attributes": {
-                    "supportedHoroscopePeriods": {
-                        "daily": True,
-                        "weekly": False,
-                        "monthly": False
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    text = yield from req.text()
+    assert text == ''
+
+
+@asyncio.coroutine
+def test_intent_from_built_in_intent_library(alexa_client):
+    """Test intents from the Built-in Intent Library."""
+    data = {
+        'request': {
+            'intent': {
+                'name': 'AMAZON.PlaybackAction<object@MusicCreativeWork>',
+                'slots': {
+                    'object.byArtist.name': {
+                        'name': 'object.byArtist.name',
+                        'value': 'the shins'
+                    },
+                    'object.composer.name': {
+                        'name': 'object.composer.name'
+                    },
+                    'object.contentSource': {
+                        'name': 'object.contentSource'
+                    },
+                    'object.era': {
+                        'name': 'object.era'
+                    },
+                    'object.genre': {
+                        'name': 'object.genre'
+                    },
+                    'object.name': {
+                        'name': 'object.name'
+                    },
+                    'object.owner.name': {
+                        'name': 'object.owner.name'
+                    },
+                    'object.select': {
+                        'name': 'object.select'
+                    },
+                    'object.sort': {
+                        'name': 'object.sort'
+                    },
+                    'object.type': {
+                        'name': 'object.type',
+                        'value': 'music'
                     }
-                },
-                "user": {
-                    "userId": "amzn1.account.AM3B00000000000000000000000"
                 }
             },
-            "request": {
-                "type": "SessionEndedRequest",
-                "requestId": REQUEST_ID,
-                "timestamp": "2015-05-13T12:34:56Z",
-                "reason": "USER_INITIATED"
+            'timestamp': '2016-12-14T23:23:37Z',
+            'type': 'IntentRequest',
+            'requestId': REQUEST_ID,
+
+        },
+        'session': {
+            'sessionId': SESSION_ID,
+            'application': {
+                'applicationId': APPLICATION_ID
             }
         }
+    }
+    req = yield from _intent_req(alexa_client, data)
+    assert req.status == 200
+    data = yield from req.json()
+    text = data.get("response", {}).get("outputSpeech",
+                                        {}).get("text")
+    assert text == "Playing the shins."
 
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        self.assertEqual("", req.text)
 
-    def test_intent_from_built_in_intent_library(self):
-        """Test intents from the Built-in Intent Library."""
-        data = {
-            'request': {
-                'intent': {
-                    'name': 'AMAZON.PlaybackAction<object@MusicCreativeWork>',
-                    'slots': {
-                        'object.byArtist.name': {
-                            'name': 'object.byArtist.name',
-                            'value': 'the shins'
-                        },
-                        'object.composer.name': {
-                            'name': 'object.composer.name'
-                        },
-                        'object.contentSource': {
-                            'name': 'object.contentSource'
-                        },
-                        'object.era': {
-                            'name': 'object.era'
-                        },
-                        'object.genre': {
-                            'name': 'object.genre'
-                        },
-                        'object.name': {
-                            'name': 'object.name'
-                        },
-                        'object.owner.name': {
-                            'name': 'object.owner.name'
-                        },
-                        'object.select': {
-                            'name': 'object.select'
-                        },
-                        'object.sort': {
-                            'name': 'object.sort'
-                        },
-                        'object.type': {
-                            'name': 'object.type',
-                            'value': 'music'
-                        }
-                    }
-                },
-                'timestamp': '2016-12-14T23:23:37Z',
-                'type': 'IntentRequest',
-                'requestId': REQUEST_ID,
+@asyncio.coroutine
+def test_flash_briefing_invalid_id(alexa_client):
+    """Test an invalid Flash Briefing ID."""
+    req = yield from _flash_briefing_req(alexa_client, 10000)
+    assert req.status == 404
+    text = yield from req.text()
+    assert text == ''
 
-            },
-            'session': {
-                'sessionId': SESSION_ID,
-                'application': {
-                    'applicationId': APPLICATION_ID
-                }
-            }
-        }
-        req = _intent_req(data)
-        self.assertEqual(200, req.status_code)
-        text = req.json().get("response", {}).get("outputSpeech",
-                                                  {}).get("text")
-        self.assertEqual("Playing the shins.", text)
 
-    def test_flash_briefing_invalid_id(self):
-        """Test an invalid Flash Briefing ID."""
-        req = _flash_briefing_req()
-        self.assertEqual(404, req.status_code)
-        self.assertEqual("", req.text)
+@asyncio.coroutine
+def test_flash_briefing_date_from_str(alexa_client):
+    """Test the response has a valid date parsed from string."""
+    req = yield from _flash_briefing_req(alexa_client, "weather")
+    assert req.status == 200
+    data = yield from req.json()
+    assert isinstance(datetime.datetime.strptime(data[0].get(
+        alexa.ATTR_UPDATE_DATE), alexa.DATE_FORMAT), datetime.datetime)
 
-    def test_flash_briefing_date_from_str(self):
-        """Test the response has a valid date parsed from string."""
-        req = _flash_briefing_req("weather")
-        self.assertEqual(200, req.status_code)
-        self.assertEqual(req.json()[0].get(alexa.ATTR_UPDATE_DATE),
-                         "2016-10-09T19:51:42.0Z")
 
-    def test_flash_briefing_date_from_datetime(self):
-        """Test the response has a valid date from a datetime object."""
-        req = _flash_briefing_req("weather")
-        self.assertEqual(200, req.status_code)
-        self.assertEqual(req.json()[1].get(alexa.ATTR_UPDATE_DATE),
-                         '2016-10-10T19:51:42.0Z')
+@asyncio.coroutine
+def test_flash_briefing_valid(alexa_client):
+    """Test the response is valid."""
+    data = [{
+        "titleText": "NPR",
+        "redirectionURL": "https://npr.org",
+        "streamUrl": NPR_NEWS_MP3_URL,
+        "mainText": "",
+        "uid": "uuid",
+        "updateDate": '2016-10-10T19:51:42.0Z'
+    }]
 
-    def test_flash_briefing_valid(self):
-        """Test the response is valid."""
-        data = [{
-            "titleText": "NPR",
-            "redirectionURL": "https://npr.org",
-            "streamUrl": NPR_NEWS_MP3_URL,
-            "mainText": "",
-            "uid": "uuid",
-            "updateDate": '2016-10-10T19:51:42.0Z'
-        }]
-
-        req = _flash_briefing_req("news_audio")
-        self.assertEqual(200, req.status_code)
-        response = req.json()
-        self.assertEqual(response, data)
+    req = yield from _flash_briefing_req(alexa_client, "news_audio")
+    assert req.status == 200
+    json = yield from req.json()
+    assert isinstance(datetime.datetime.strptime(json[0].get(
+        alexa.ATTR_UPDATE_DATE), alexa.DATE_FORMAT), datetime.datetime)
+    json[0].pop(alexa.ATTR_UPDATE_DATE)
+    data[0].pop(alexa.ATTR_UPDATE_DATE)
+    assert json == data

@@ -9,8 +9,9 @@ from datetime import datetime, timedelta
 import os
 
 from homeassistant.components import zone
-from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.core import callback, State
+from homeassistant.setup import setup_component
+from homeassistant.helpers import discovery
 from homeassistant.loader import get_component
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -23,7 +24,7 @@ from homeassistant.remote import JSONEncoder
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed, fire_service_discovered,
-    patch_yaml_files, assert_setup_component)
+    patch_yaml_files, assert_setup_component, mock_restore_cache, mock_coro)
 
 from ...test_util.aiohttp import mock_aiohttp_client
 
@@ -47,10 +48,8 @@ class TestComponentsDeviceTracker(unittest.TestCase):
     # pylint: disable=invalid-name
     def tearDown(self):
         """Stop everything that was started."""
-        try:
+        if os.path.isfile(self.yaml_devices):
             os.remove(self.yaml_devices)
-        except FileNotFoundError:
-            pass
 
         self.hass.stop()
 
@@ -324,6 +323,23 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                 fire_service_discovered(self.hass, 'test', {})
                 self.assertTrue(mock_scan.called)
 
+    @patch(
+        'homeassistant.components.device_tracker.DeviceTracker.see')
+    @patch(
+        'homeassistant.components.device_tracker.demo.setup_scanner',
+        autospec=True)
+    def test_discover_platform(self, mock_demo_setup_scanner, mock_see):
+        """Test discovery of device_tracker demo platform."""
+        assert device_tracker.DOMAIN not in self.hass.config.components
+        discovery.load_platform(
+            self.hass, device_tracker.DOMAIN, 'demo', {'test_key': 'test_val'},
+            {})
+        self.hass.block_till_done()
+        assert device_tracker.DOMAIN in self.hass.config.components
+        assert mock_demo_setup_scanner.called
+        assert mock_demo_setup_scanner.call_args[0] == (
+            self.hass, {}, mock_see, {'test_key': 'test_val'})
+
     def test_update_stale(self):
         """Test stalled update."""
         scanner = get_component('device_tracker.test').SCANNER
@@ -505,7 +521,9 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                             timedelta(seconds=0))
         assert len(config) == 0
 
-    def test_see_state(self):
+    @patch('homeassistant.components.device_tracker.Device'
+           '.set_vendor_for_mac', return_value=mock_coro())
+    def test_see_state(self, mock_set_vendor):
         """Test device tracker see records state correctly."""
         self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN,
                                         TEST_PLATFORM))
@@ -640,3 +658,33 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             setup_component(self.hass, device_tracker.DOMAIN,
                             {device_tracker.DOMAIN: {
                                 device_tracker.CONF_CONSIDER_HOME: -1}})
+
+
+@asyncio.coroutine
+def test_async_added_to_hass(hass):
+    """Test resoring state."""
+    attr = {
+        device_tracker.ATTR_LONGITUDE: 18,
+        device_tracker.ATTR_LATITUDE: -33,
+        device_tracker.ATTR_LATITUDE: -33,
+        device_tracker.ATTR_SOURCE_TYPE: 'gps',
+        device_tracker.ATTR_GPS_ACCURACY: 2,
+        device_tracker.ATTR_BATTERY: 100
+    }
+    mock_restore_cache(hass, [State('device_tracker.jk', 'home', attr)])
+
+    path = hass.config.path(device_tracker.YAML_DEVICES)
+
+    files = {
+        path: 'jk:\n  name: JK Phone\n  track: True',
+    }
+    with patch_yaml_files(files):
+        yield from device_tracker.async_setup(hass, {})
+
+    state = hass.states.get('device_tracker.jk')
+    assert state
+    assert state.state == 'home'
+
+    for key, val in attr.items():
+        atr = state.attributes.get(key)
+        assert atr == val, "{}={} expected: {}".format(key, atr, val)

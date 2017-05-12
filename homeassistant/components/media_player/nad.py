@@ -18,7 +18,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['https://github.com/joopert/nad_receiver/archive/'
-                '0.0.2.zip#nad_receiver==0.0.2']
+                '0.0.3.zip#nad_receiver==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NAD platform."""
+    """Set up the NAD platform."""
     from nad_receiver import NADReceiver
     add_devices([NAD(
         config.get(CONF_NAME),
@@ -136,8 +136,8 @@ class NAD(MediaPlayerDevice):
         return self._mute
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_NAD
 
     def turn_off(self):

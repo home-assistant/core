@@ -124,7 +124,7 @@ class CommandSwitch(SwitchDevice):
     @property
     def assumed_state(self):
         """Return true if we do optimistic updates."""
-        return self._command_state is False
+        return self._command_state is None
 
     def _query_state(self):
         """Query for state."""

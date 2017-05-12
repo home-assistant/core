@@ -2,7 +2,7 @@
 import unittest
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.splunk as splunk
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
@@ -106,7 +106,8 @@ class TestSplunk(unittest.TestCase):
                 self.mock_post.call_args,
                 mock.call(
                     payload['host'], data=payload,
-                    headers={'Authorization': 'Splunk secret'}
+                    headers={'Authorization': 'Splunk secret'},
+                    timeout=10
                 )
             )
             self.mock_post.reset_mock()

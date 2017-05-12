@@ -1,5 +1,4 @@
 """Helpers for config validation using voluptuous."""
-from collections import OrderedDict
 from datetime import timedelta, datetime as datetime_sys
 import os
 import re
@@ -14,7 +13,7 @@ from homeassistant.loader import get_platform
 from homeassistant.const import (
     CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
-    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, SUN_EVENT_SUNSET,
+    CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
 from homeassistant.core import valid_entity_id
 from homeassistant.exceptions import TemplateError
@@ -44,7 +43,7 @@ T = TypeVar('T')
 # Adapted from:
 # https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
 def has_at_least_one_key(*keys: str) -> Callable:
-    """Validator that at least one key exists."""
+    """Validate that at least one key exists."""
     def validate(obj: Dict) -> Dict:
         """Test keys exist in dict."""
         if not isinstance(obj, dict):
@@ -68,6 +67,15 @@ def boolean(value: Any) -> bool:
             return False
         raise vol.Invalid('invalid boolean value {}'.format(value))
     return bool(value)
+
+
+def isdevice(value):
+    """Validate that value is a real device."""
+    try:
+        os.stat(value)
+        return str(value)
+    except OSError:
+        raise vol.Invalid('No device at {} found'.format(value))
 
 
 def isfile(value: Any) -> str:
@@ -184,7 +192,7 @@ time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
 
 
 def match_all(value):
-    """Validator that matches all values."""
+    """Validate that matches all values."""
     return value
 
 
@@ -233,7 +241,7 @@ def slugify(value):
     if value is None:
         raise vol.Invalid('Slug should not be None')
     slg = util_slugify(str(value))
-    if len(slg) > 0:
+    if slg:
         return slg
     raise vol.Invalid('Unable to slugify {}'.format(value))
 
@@ -364,25 +372,11 @@ def x10_address(value):
     return str(value).lower()
 
 
-def ordered_dict(value_validator, key_validator=match_all):
-    """Validate an ordered dict validator that maintains ordering.
-
-    value_validator will be applied to each value of the dictionary.
-    key_validator (optional) will be applied to each key of the dictionary.
-    """
-    item_validator = vol.Schema({key_validator: value_validator})
-
-    def validator(value):
-        """Validate ordered dict."""
-        config = OrderedDict()
-
-        for key, val in value.items():
-            v_res = item_validator({key: val})
-            config.update(v_res)
-
-        return config
-
-    return validator
+def ensure_list_csv(value: Any) -> Sequence:
+    """Ensure that input is a list or make one from comma-separated string."""
+    if isinstance(value, str):
+        return [member.strip() for member in value.split(',')]
+    return ensure_list(value)
 
 
 # Validator helpers
@@ -506,8 +500,14 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
         template)
 })
 
+_SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("wait_template"): template,
+    vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+})
+
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
-    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA, EVENT_SCHEMA,
-             CONDITION_SCHEMA)],
+    [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
+             _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
 )

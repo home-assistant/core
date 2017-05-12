@@ -6,9 +6,9 @@ https://home-assistant.io/components/cover.vera/
 """
 import logging
 
-from homeassistant.components.cover import CoverDevice
+from homeassistant.components.cover import CoverDevice, ENTITY_ID_FORMAT
 from homeassistant.components.vera import (
-    VeraDevice, VERA_DEVICES, VERA_CONTROLLER)
+    VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
 DEPENDENCIES = ['vera']
 
@@ -16,18 +16,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Vera covers."""
+    """Set up the Vera covers."""
     add_devices(
         VeraCover(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['cover'])
 
 
 class VeraCover(VeraDevice, CoverDevice):
-    """Represents a Vera Cover in Home Assistant."""
+    """Representation a Vera Cover."""
 
     def __init__(self, vera_device, controller):
         """Initialize the Vera device."""
         VeraDevice.__init__(self, vera_device, controller)
+        self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def current_cover_position(self):
@@ -46,6 +47,7 @@ class VeraCover(VeraDevice, CoverDevice):
     def set_cover_position(self, position, **kwargs):
         """Move the cover to a specific position."""
         self.vera_device.set_level(position)
+        self.schedule_update_ha_state()
 
     @property
     def is_closed(self):
@@ -59,11 +61,14 @@ class VeraCover(VeraDevice, CoverDevice):
     def open_cover(self, **kwargs):
         """Open the cover."""
         self.vera_device.open()
+        self.schedule_update_ha_state()
 
     def close_cover(self, **kwargs):
         """Close the cover."""
         self.vera_device.close()
+        self.schedule_update_ha_state()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self.vera_device.stop()
+        self.schedule_update_ha_state()

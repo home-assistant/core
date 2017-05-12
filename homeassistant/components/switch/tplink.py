@@ -14,7 +14,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyHS100==0.2.3']
+REQUIREMENTS = ['pyHS100==0.2.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the TPLink switch platform."""
+    """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -66,7 +66,7 @@ class SmartPlugSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.smartplug.is_on
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -83,8 +83,10 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
+        from pyHS100 import SmartPlugException
         try:
-            self._state = self.smartplug.state
+            self._state = self.smartplug.state == \
+                self.smartplug.SWITCH_STATE_ON
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
@@ -106,5 +108,5 @@ class SmartPlugSwitch(SwitchDevice):
                     # device returned no daily history
                     pass
 
-        except OSError:
-            _LOGGER.warning('Could not update status for %s', self.name)
+        except (SmartPlugException, OSError) as ex:
+            _LOGGER.warning('Could not read state for %s: %s', self.name, ex)

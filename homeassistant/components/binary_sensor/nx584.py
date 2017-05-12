@@ -12,7 +12,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    SENSOR_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
+    DEVICE_CLASSES, BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -28,7 +28,7 @@ DEFAULT_PORT = '5007'
 DEFAULT_SSL = False
 
 ZONE_TYPES_SCHEMA = vol.Schema({
-    cv.positive_int: vol.In(SENSOR_CLASSES),
+    cv.positive_int: vol.In(DEVICE_CLASSES),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NX584 binary sensor platform."""
+    """Set up the NX584 binary sensor platform."""
     from nx584 import client as nx584_client
 
     host = config.get(CONF_HOST)
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         client = nx584_client.Client('http://{}:{}'.format(host, port))
         zones = client.list_zones()
     except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error('Unable to connect to NX584: %s', str(ex))
+        _LOGGER.error("Unable to connect to NX584: %s", str(ex))
         return False
 
     version = [int(v) for v in client.get_version().split('.')]
@@ -85,8 +85,8 @@ class NX584ZoneSensor(BinarySensorDevice):
         self._zone_type = zone_type
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._zone_type
 
     @property

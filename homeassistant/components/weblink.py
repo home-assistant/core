@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup weblink component."""
+    """Set up the weblink component."""
     links = config.get(DOMAIN)
 
     for link in links.get(CONF_ENTITIES):
@@ -54,7 +54,7 @@ class Link(Entity):
         self._url = url
         self._icon = icon
         self.entity_id = DOMAIN + '.%s' % slugify(name)
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def icon(self):

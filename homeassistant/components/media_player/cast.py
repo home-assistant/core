@@ -20,7 +20,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==0.7.6']
+REQUIREMENTS = ['pychromecast==0.8.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,28 +37,27 @@ KNOWN_HOSTS = []
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_IGNORE_CEC): [cv.string],
 })
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the cast platform."""
+    """Set up the cast platform."""
     import pychromecast
 
-    # import CEC IGNORE attributes
-    ignore_cec = config.get(CONF_IGNORE_CEC, [])
-    if isinstance(ignore_cec, list):
-        pychromecast.IGNORE_CEC += ignore_cec
-    else:
-        _LOGGER.error('CEC config "%s" must be a list.', CONF_IGNORE_CEC)
+    # Import CEC IGNORE attributes
+    pychromecast.IGNORE_CEC += config.get(CONF_IGNORE_CEC, [])
 
     hosts = []
 
-    if discovery_info and discovery_info in KNOWN_HOSTS:
-        return
+    if discovery_info:
+        host = (discovery_info.get('host'), discovery_info.get('port'))
 
-    elif discovery_info:
-        hosts = [discovery_info]
+        if host in KNOWN_HOSTS:
+            return
+
+        hosts = [host]
 
     elif CONF_HOST in config:
         hosts = [(config.get(CONF_HOST), DEFAULT_PORT)]
@@ -69,8 +68,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     casts = []
 
-    # get_chromecasts() returns Chromecast objects
-    # with the correct friendly name for grouped devices
+    # get_chromecasts() returns Chromecast objects with the correct friendly
+    # name for grouped devices
     all_chromecasts = pychromecast.get_chromecasts()
 
     for host in hosts:
@@ -205,7 +204,7 @@ class CastDevice(MediaPlayerDevice):
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Return the title of the series of current playing media."""
         return self.media_status.series_title if self.media_status else None
 
     @property
@@ -229,8 +228,8 @@ class CastDevice(MediaPlayerDevice):
         return self.cast.app_display_name
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_CAST
 
     @property
@@ -311,12 +310,12 @@ class CastDevice(MediaPlayerDevice):
 
     # Implementation of chromecast status_listener methods
     def new_cast_status(self, status):
-        """Called when a new cast status is received."""
+        """Handle updates of the cast status."""
         self.cast_status = status
         self.schedule_update_ha_state()
 
     def new_media_status(self, status):
-        """Called when a new media status is received."""
+        """Handle updates of the media status."""
         self.media_status = status
         self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()

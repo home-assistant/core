@@ -17,27 +17,30 @@ from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
+
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
-STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static')
+
+STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
+
 MANIFEST_JSON = {
-    "background_color": "#FFFFFF",
-    "description": "Open-source home automation platform running on Python 3.",
-    "dir": "ltr",
-    "display": "standalone",
-    "icons": [],
-    "lang": "en-US",
-    "name": "Home Assistant",
-    "short_name": "Assistant",
-    "start_url": "/",
-    "theme_color": "#03A9F4"
+    'background_color': '#FFFFFF',
+    'description': 'Open-source home automation platform running on Python 3.',
+    'dir': 'ltr',
+    'display': 'standalone',
+    'icons': [],
+    'lang': 'en-US',
+    'name': 'Home Assistant',
+    'short_name': 'Assistant',
+    'start_url': '/',
+    'theme_color': '#03A9F4'
 }
 
 for size in (192, 384, 512, 1024):
     MANIFEST_JSON['icons'].append({
-        "src": "/static/icons/favicon-{}x{}.png".format(size, size),
-        "sizes": "{}x{}".format(size, size),
-        "type": "image/png"
+        'src': '/static/icons/favicon-{}x{}.png'.format(size, size),
+        'sizes': '{}x{}'.format(size, size),
+        'type': 'image/png'
     })
 
 DATA_PANELS = 'frontend_panels'
@@ -51,17 +54,22 @@ _LOGGER = logging.getLogger(__name__)
 def register_built_in_panel(hass, component_name, sidebar_title=None,
                             sidebar_icon=None, url_path=None, config=None):
     """Register a built-in panel."""
-    path = 'panels/ha-panel-{}.html'.format(component_name)
+    nondev_path = 'panels/ha-panel-{}.html'.format(component_name)
 
     if hass.http.development:
         url = ('/static/home-assistant-polymer/panels/'
                '{0}/ha-panel-{0}.html'.format(component_name))
+        path = os.path.join(
+            STATIC_PATH, 'home-assistant-polymer/panels/',
+            '{0}/ha-panel-{0}.html'.format(component_name))
     else:
         url = None  # use default url generate mechanism
+        path = os.path.join(STATIC_PATH, nondev_path)
 
-    register_panel(hass, component_name, os.path.join(STATIC_PATH, path),
-                   FINGERPRINTS[path], sidebar_title, sidebar_icon, url_path,
-                   url, config)
+    # Fingerprint doesn't exist when adding new built-in panel
+    register_panel(hass, component_name, path,
+                   FINGERPRINTS.get(nondev_path, 'dev'), sidebar_title,
+                   sidebar_icon, url_path, url, config)
 
 
 def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
@@ -87,10 +95,10 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
         url_path = component_name
 
     if url_path in panels:
-        _LOGGER.warning('Overwriting component %s', url_path)
+        _LOGGER.warning("Overwriting component %s", url_path)
     if not os.path.isfile(path):
-        _LOGGER.error('Panel %s component does not exist: %s',
-                      component_name, path)
+        _LOGGER.error(
+            "Panel %s component does not exist: %s", component_name, path)
         return
 
     if md5 is None:
@@ -128,8 +136,8 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
     index_view = hass.data.get(DATA_INDEX_VIEW)
 
     if index_view:
-        hass.http.app.router.add_route('get', '/{}'.format(url_path),
-                                       index_view.get)
+        hass.http.app.router.add_route(
+            'get', '/{}'.format(url_path), index_view.get)
 
 
 def add_manifest_json_key(key, val):
@@ -138,7 +146,7 @@ def add_manifest_json_key(key, val):
 
 
 def setup(hass, config):
-    """Setup serving the frontend."""
+    """Set up the serving of the frontend."""
     hass.http.register_view(BootstrapView)
     hass.http.register_view(ManifestJSONView)
 
@@ -148,7 +156,7 @@ def setup(hass, config):
         sw_path = "service_worker.js"
 
     hass.http.register_static_path("/service_worker.js",
-                                   os.path.join(STATIC_PATH, sw_path), 0)
+                                   os.path.join(STATIC_PATH, sw_path), False)
     hass.http.register_static_path("/robots.txt",
                                    os.path.join(STATIC_PATH, "robots.txt"))
     hass.http.register_static_path("/static", STATIC_PATH)
@@ -181,8 +189,8 @@ def setup(hass, config):
 class BootstrapView(HomeAssistantView):
     """View to bootstrap frontend with all needed data."""
 
-    url = "/api/bootstrap"
-    name = "api:bootstrap"
+    url = '/api/bootstrap'
+    name = 'api:bootstrap'
 
     @callback
     def get(self, request):
@@ -202,7 +210,7 @@ class IndexView(HomeAssistantView):
     """Serve the frontend."""
 
     url = '/'
-    name = "frontend:index"
+    name = 'frontend:index'
     requires_auth = False
     extra_urls = ['/states', '/states/{entity_id}']
 
@@ -230,10 +238,14 @@ class IndexView(HomeAssistantView):
 
         if request.app[KEY_DEVELOPMENT]:
             core_url = '/static/home-assistant-polymer/build/core.js'
+            compatibility_url = \
+                '/static/home-assistant-polymer/build/compatibility.js'
             ui_url = '/static/home-assistant-polymer/src/home-assistant.html'
         else:
             core_url = '/static/core-{}.js'.format(
                 FINGERPRINTS['core.js'])
+            compatibility_url = '/static/compatibility-{}.js'.format(
+                FINGERPRINTS['compatibility.js'])
             ui_url = '/static/frontend-{}.html'.format(
                 FINGERPRINTS['frontend.html'])
 
@@ -263,7 +275,8 @@ class IndexView(HomeAssistantView):
         # pylint: disable=no-member
         # This is a jinja2 template, not a HA template so we call 'render'.
         resp = template.render(
-            core_url=core_url, ui_url=ui_url, no_auth=no_auth,
+            core_url=core_url, ui_url=ui_url,
+            compatibility_url=compatibility_url, no_auth=no_auth,
             icons_url=icons_url, icons=FINGERPRINTS['mdi.html'],
             panel_url=panel_url, panels=hass.data[DATA_PANELS])
 
@@ -274,8 +287,8 @@ class ManifestJSONView(HomeAssistantView):
     """View to return a manifest.json."""
 
     requires_auth = False
-    url = "/manifest.json"
-    name = "manifestjson"
+    url = '/manifest.json'
+    name = 'manifestjson'
 
     @asyncio.coroutine
     def get(self, request):    # pylint: disable=no-self-use

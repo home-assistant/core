@@ -16,17 +16,24 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-# Return cached results if last scan was less then this time ago.
+REQUIREMENTS = ['pexpect==4.0.1']
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_MODE = 'mode'
+CONF_PROTOCOL = 'protocol'
+CONF_PUB_KEY = 'pub_key'
+CONF_SSH_KEY = 'ssh_key'
+
+DEFAULT_SSH_PORT = 22
+
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
-CONF_PROTOCOL = 'protocol'
-CONF_MODE = 'mode'
-CONF_SSH_KEY = 'ssh_key'
-CONF_PUB_KEY = 'pub_key'
 SECRET_GROUP = 'Password or SSH Key'
 
 PLATFORM_SCHEMA = vol.All(
@@ -38,14 +45,12 @@ PLATFORM_SCHEMA = vol.All(
             vol.In(['ssh', 'telnet']),
         vol.Optional(CONF_MODE, default='router'):
             vol.In(['router', 'ap']),
+        vol.Optional(CONF_PORT, default=DEFAULT_SSH_PORT): cv.port,
         vol.Exclusive(CONF_PASSWORD, SECRET_GROUP): cv.string,
         vol.Exclusive(CONF_SSH_KEY, SECRET_GROUP): cv.isfile,
         vol.Exclusive(CONF_PUB_KEY, SECRET_GROUP): cv.isfile
     }))
 
-
-_LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pexpect==4.0.1']
 
 _LEASES_CMD = 'cat /var/lib/misc/dnsmasq.leases'
 _LEASES_REGEX = re.compile(
@@ -54,7 +59,7 @@ _LEASES_REGEX = re.compile(
     r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
     r'(?P<host>([^\s]+))')
 
-# command to get both 5GHz and 2.4GHz clients
+# Command to get both 5GHz and 2.4GHz clients
 _WL_CMD = '{ wl -i eth2 assoclist & wl -i eth1 assoclist ; }'
 _WL_REGEX = re.compile(
     r'\w+\s' +
@@ -71,10 +76,12 @@ _ARP_REGEX = re.compile(
 
 _IP_NEIGH_CMD = 'ip neigh'
 _IP_NEIGH_REGEX = re.compile(
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
-    r'\w+\s' +
-    r'\w+\s' +
-    r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s' +
+    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3}|'
+    r'([0-9a-fA-F]{1,4}:){1,7}[0-9a-fA-F]{0,4}(:[0-9a-fA-F]{1,4}){1,7})\s'
+    r'\w+\s'
+    r'\w+\s'
+    r'(\w+\s(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2}))))?\s'
+    r'\s?(router)?'
     r'(?P<status>(\w+))')
 
 _NVRAM_CMD = 'nvram get client_info_tmp'
@@ -110,19 +117,23 @@ class AsusWrtDeviceScanner(DeviceScanner):
         self.ssh_key = config.get('ssh_key', config.get('pub_key', ''))
         self.protocol = config[CONF_PROTOCOL]
         self.mode = config[CONF_MODE]
+        self.port = config[CONF_PORT]
+        self.ssh_args = {}
 
         if self.protocol == 'ssh':
+
+            self.ssh_args['port'] = self.port
             if self.ssh_key:
-                self.ssh_secret = {'ssh_key': self.ssh_key}
+                self.ssh_args['ssh_key'] = self.ssh_key
             elif self.password:
-                self.ssh_secret = {'password': self.password}
+                self.ssh_args['password'] = self.password
             else:
-                _LOGGER.error('No password or private key specified')
+                _LOGGER.error("No password or private key specified")
                 self.success_init = False
                 return
         else:
             if not self.password:
-                _LOGGER.error('No password specified')
+                _LOGGER.error("No password specified")
                 self.success_init = False
                 return
 
@@ -177,12 +188,12 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         ssh = pxssh.pxssh()
         try:
-            ssh.login(self.host, self.username, **self.ssh_secret)
+            ssh.login(self.host, self.username, **self.ssh_args)
         except exceptions.EOF as err:
-            _LOGGER.error('Connection refused. Is SSH enabled?')
+            _LOGGER.error("Connection refused. SSH enabled?")
             return None
         except pxssh.ExceptionPxssh as err:
-            _LOGGER.error('Unable to connect via SSH: %s', str(err))
+            _LOGGER.error("Unable to connect via SSH: %s", str(err))
             return None
 
         try:
@@ -209,7 +220,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
             return AsusWrtResult(neighbors, leases_result, arp_result,
                                  nvram_result)
         except pxssh.ExceptionPxssh as exc:
-            _LOGGER.error('Unexpected response from router: %s', exc)
+            _LOGGER.error("Unexpected response from router: %s", exc)
             return None
 
     def telnet_connection(self):
@@ -243,16 +254,16 @@ class AsusWrtDeviceScanner(DeviceScanner):
             return AsusWrtResult(neighbors, leases_result, arp_result,
                                  nvram_result)
         except EOFError:
-            _LOGGER.error('Unexpected response from router')
+            _LOGGER.error("Unexpected response from router")
             return None
         except ConnectionRefusedError:
-            _LOGGER.error('Connection refused by router, is telnet enabled?')
+            _LOGGER.error("Connection refused by router. Telnet enabled?")
             return None
         except socket.gaierror as exc:
-            _LOGGER.error('Socket exception: %s', exc)
+            _LOGGER.error("Socket exception: %s", exc)
             return None
         except OSError as exc:
-            _LOGGER.error('OSError: %s', exc)
+            _LOGGER.error("OSError: %s", exc)
             return None
 
     def get_asuswrt_data(self):
@@ -280,7 +291,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 match = _WL_REGEX.search(lease.decode('utf-8'))
 
                 if not match:
-                    _LOGGER.warning('Could not parse wl row: %s', lease)
+                    _LOGGER.warning("Could not parse wl row: %s", lease)
                     continue
 
                 host = ''
@@ -292,7 +303,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                         arp_match = _ARP_REGEX.search(
                             arp.decode('utf-8').lower())
                         if not arp_match:
-                            _LOGGER.warning('Could not parse arp row: %s', arp)
+                            _LOGGER.warning("Could not parse arp row: %s", arp)
                             continue
 
                         devices[arp_match.group('ip')] = {
@@ -307,7 +318,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
                     if match.group('mac').upper() in nvr.decode('utf-8'):
                         nvram_match = _NVRAM_REGEX.search(nvr.decode('utf-8'))
                         if not nvram_match:
-                            _LOGGER.warning('Could not parse nvr row: %s', nvr)
+                            _LOGGER.warning("Could not parse nvr row: %s", nvr)
                             continue
 
                         # skip current check if already in ARP table
@@ -323,10 +334,12 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
         else:
             for lease in result.leases:
+                if lease.startswith(b'duid '):
+                    continue
                 match = _LEASES_REGEX.search(lease.decode('utf-8'))
 
                 if not match:
-                    _LOGGER.warning('Could not parse lease row: %s', lease)
+                    _LOGGER.warning("Could not parse lease row: %s", lease)
                     continue
 
                 # For leases where the client doesn't set a hostname, ensure it
@@ -345,7 +358,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         for neighbor in result.neighbors:
             match = _IP_NEIGH_REGEX.search(neighbor.decode('utf-8'))
             if not match:
-                _LOGGER.warning('Could not parse neighbor row: %s', neighbor)
+                _LOGGER.warning("Could not parse neighbor row: %s", neighbor)
                 continue
             if match.group('ip') in devices:
                 devices[match.group('ip')]['status'] = match.group('status')

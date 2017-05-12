@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-
 import logging
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.2']
+REQUIREMENTS = ['limitlessled==1.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,11 +26,11 @@ CONF_NUMBER = 'number'
 CONF_VERSION = 'version'
 
 DEFAULT_LED_TYPE = 'rgbw'
-DEFAULT_PORT = 8899
+DEFAULT_PORT = 5987
 DEFAULT_TRANSITION = 0
-DEFAULT_VERSION = 5
+DEFAULT_VERSION = 6
 
-LED_TYPE = ['rgbw', 'white']
+LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
 
 RGB_BOUNDARY = 40
 
@@ -42,6 +41,9 @@ SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                             SUPPORT_FLASH | SUPPORT_RGB_COLOR |
                             SUPPORT_TRANSITION)
+SUPPORT_LIMITLESSLED_RGBWW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
+                              SUPPORT_EFFECT | SUPPORT_FLASH |
+                              SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BRIDGES): vol.All(cv.ensure_list, [
@@ -84,13 +86,15 @@ def rewrite_legacy(config):
                     })
         new_bridges.append({
             'host': bridge_conf.get(CONF_HOST),
+            'version': bridge_conf.get(CONF_VERSION),
+            'port': bridge_conf.get(CONF_PORT),
             'groups': groups
         })
     return {'bridges': new_bridges}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LimitlessLED lights."""
+    """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
     # Two legacy configuration formats are supported to maintain backwards
@@ -118,7 +122,7 @@ def state(new_state):
     Specify True (turn on) or False (turn off).
     """
     def decorator(function):
-        """Decorator function."""
+        """Set up the decorator function."""
         # pylint: disable=no-member,protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
@@ -134,7 +138,7 @@ def state(new_state):
                 pipeline.on()
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
-                transition_time = kwargs[ATTR_TRANSITION]
+                transition_time = int(kwargs[ATTR_TRANSITION])
             # Do group type-specific work.
             function(self, transition_time, pipeline, **kwargs)
             # Update state.
@@ -160,10 +164,13 @@ class LimitlessLEDGroup(Light):
         """Produce LimitlessLEDGroup objects."""
         from limitlessled.group.rgbw import RgbwGroup
         from limitlessled.group.white import WhiteGroup
+        from limitlessled.group.rgbww import RgbwwGroup
         if isinstance(group, WhiteGroup):
             return LimitlessLEDWhiteGroup(group)
         elif isinstance(group, RgbwGroup):
             return LimitlessLEDRGBWGroup(group)
+        elif isinstance(group, RgbwwGroup):
+            return LimitlessLEDRGBWWGroup(group)
 
     @property
     def should_poll(self):
@@ -291,14 +298,89 @@ class LimitlessLEDRGBWGroup(LimitlessLEDGroup):
                 self._color = WHITE
 
 
+class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
+    """Representation of a LimitlessLED RGBWW group."""
+
+    def __init__(self, group):
+        """Initialize RGBWW group."""
+        super().__init__(group)
+        # Initialize group with known values.
+        self.group.on = True
+        self.group.white()
+        self.group.temperature = 0.0
+        self._color = WHITE
+        self.group.brightness = 0.0
+        self._brightness = _to_hass_brightness(1.0)
+        self._temperature = _to_hass_temperature(self.group.temperature)
+        self.group.on = False
+
+    @property
+    def rgb_color(self):
+        """Return the color property."""
+        return self._color
+
+    @property
+    def color_temp(self):
+        """Return the temperature property."""
+        return self._temperature
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return SUPPORT_LIMITLESSLED_RGBWW
+
+    @state(True)
+    def turn_on(self, transition_time, pipeline, **kwargs):
+        """Turn on (or adjust property of) a group."""
+        from limitlessled.presets import COLORLOOP
+        # Check arguments.
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+        if ATTR_RGB_COLOR in kwargs:
+            self._color = kwargs[ATTR_RGB_COLOR]
+        elif ATTR_COLOR_TEMP in kwargs:
+            self._temperature = kwargs[ATTR_COLOR_TEMP]
+        # White is a special case.
+        if min(self._color) > 256 - RGB_BOUNDARY:
+            pipeline.white()
+            self._color = WHITE
+        # Set up transition.
+        if self._color == WHITE:
+            pipeline.transition(
+                transition_time,
+                brightness=_from_hass_brightness(self._brightness),
+                temperature=_from_hass_temperature(self._temperature)
+            )
+        else:
+            pipeline.transition(
+                transition_time,
+                brightness=_from_hass_brightness(self._brightness),
+                color=_from_hass_color(self._color)
+            )
+        # Flash.
+        if ATTR_FLASH in kwargs:
+            duration = 0
+            if kwargs[ATTR_FLASH] == FLASH_LONG:
+                duration = 1
+            pipeline.flash(duration=duration)
+        # Add effects.
+        if ATTR_EFFECT in kwargs:
+            if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
+                self.repeating = True
+                pipeline.append(COLORLOOP)
+            if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
+                pipeline.white()
+                self._color = WHITE
+
+
 def _from_hass_temperature(temperature):
     """Convert Home Assistant color temperature units to percentage."""
-    return (temperature - 154) / 346
+    return 1 - (temperature - 154) / 346
 
 
 def _to_hass_temperature(temperature):
     """Convert percentage to Home Assistant color temperature units."""
-    return int(temperature * 346) + 154
+    return 500 - int(temperature * 346)
 
 
 def _from_hass_brightness(brightness):

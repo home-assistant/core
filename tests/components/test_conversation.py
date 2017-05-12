@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components as core_components
 from homeassistant.components import conversation
 from homeassistant.const import ATTR_ENTITY_ID

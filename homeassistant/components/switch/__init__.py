@@ -11,6 +11,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity import ToggleEntity
@@ -29,14 +30,14 @@ ENTITY_ID_ALL_SWITCHES = group.ENTITY_ID_FORMAT.format('all_switches')
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-ATTR_TODAY_MWH = "today_mwh"
-ATTR_CURRENT_POWER_MWH = "current_power_mwh"
+ATTR_TODAY_ENERGY_KWH = "today_energy_kwh"
+ATTR_CURRENT_POWER_W = "current_power_w"
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PROP_TO_ATTR = {
-    'current_power_mwh': ATTR_CURRENT_POWER_MWH,
-    'today_power_mw': ATTR_TODAY_MWH,
+    'current_power_w': ATTR_CURRENT_POWER_W,
+    'today_energy_kwh': ATTR_TODAY_ENERGY_KWH,
 }
 
 SWITCH_SERVICE_SCHEMA = vol.Schema({
@@ -47,21 +48,37 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def is_on(hass, entity_id=None):
-    """Return if the switch is on based on the statemachine."""
+    """Return if the switch is on based on the statemachine.
+
+    Async friendly.
+    """
     entity_id = entity_id or ENTITY_ID_ALL_SWITCHES
     return hass.states.is_state(entity_id, STATE_ON)
 
 
 def turn_on(hass, entity_id=None):
     """Turn all or specified switch on."""
+    hass.add_job(async_turn_on, hass, entity_id)
+
+
+@callback
+def async_turn_on(hass, entity_id=None):
+    """Turn all or specified switch on."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
 def turn_off(hass, entity_id=None):
     """Turn all or specified switch off."""
+    hass.add_job(async_turn_off, hass, entity_id)
+
+
+@callback
+def async_turn_off(hass, entity_id=None):
+    """Turn all or specified switch off."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
 def toggle(hass, entity_id=None):
@@ -95,7 +112,7 @@ def async_setup(hass, config):
             if not switch.should_poll:
                 continue
 
-            update_coro = hass.loop.create_task(
+            update_coro = hass.async_add_job(
                 switch.async_update_ha_state(True))
             if hasattr(switch, 'async_update'):
                 update_tasks.append(update_coro)
@@ -127,13 +144,13 @@ class SwitchDevice(ToggleEntity):
 
     # pylint: disable=no-self-use
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
+    def current_power_w(self):
+        """Return the current power usage in W."""
         return None
 
     @property
-    def today_power_mw(self):
-        """Return the today total power usage in mW."""
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
         return None
 
     @property

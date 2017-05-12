@@ -7,32 +7,35 @@ https://home-assistant.io/components/isy994/
 from collections import namedtuple
 import logging
 from urllib.parse import urlparse
+
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant  # noqa
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import discovery, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType, Dict  # noqa
 
-
-DOMAIN = "isy994"
 REQUIREMENTS = ['PyISY==1.0.7']
 
-ISY = None
-DEFAULT_SENSOR_STRING = 'sensor'
-DEFAULT_HIDDEN_STRING = '{HIDE ME}'
-CONF_TLS_VER = 'tls'
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'isy994'
+
 CONF_HIDDEN_STRING = 'hidden_string'
 CONF_SENSOR_STRING = 'sensor_string'
-KEY_MY_PROGRAMS = 'My Programs'
-KEY_FOLDER = 'folder'
-KEY_ACTIONS = 'actions'
-KEY_STATUS = 'status'
+CONF_TLS_VER = 'tls'
 
-_LOGGER = logging.getLogger(__name__)
+DEFAULT_HIDDEN_STRING = '{HIDE ME}'
+DEFAULT_SENSOR_STRING = 'sensor'
+
+ISY = None
+
+KEY_ACTIONS = 'actions'
+KEY_FOLDER = 'folder'
+KEY_MY_PROGRAMS = 'My Programs'
+KEY_STATUS = 'status'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -158,10 +161,10 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     host = urlparse(isy_config.get(CONF_HOST))
     port = host.port
     addr = host.geturl()
-    hidden_identifier = isy_config.get(CONF_HIDDEN_STRING,
-                                       DEFAULT_HIDDEN_STRING)
-    sensor_identifier = isy_config.get(CONF_SENSOR_STRING,
-                                       DEFAULT_SENSOR_STRING)
+    hidden_identifier = isy_config.get(
+        CONF_HIDDEN_STRING, DEFAULT_HIDDEN_STRING)
+    sensor_identifier = isy_config.get(
+        CONF_SENSOR_STRING, DEFAULT_SENSOR_STRING)
 
     global HIDDEN_STRING
     HIDDEN_STRING = hidden_identifier
@@ -173,7 +176,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         addr = addr.replace('https://', '')
         https = True
     else:
-        _LOGGER.error('isy994 host value in configuration is invalid.')
+        _LOGGER.error("isy994 host value in configuration is invalid")
         return False
 
     addr = addr.replace(':{}'.format(port), '')
@@ -225,13 +228,13 @@ class ISYDevice(Entity):
         """Initialize the insteon device."""
         self._node = node
 
-        self._change_handler = self._node.status.subscribe('changed',
-                                                           self.on_update)
+        self._change_handler = self._node.status.subscribe(
+            'changed', self.on_update)
 
     # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def domain(self) -> str:

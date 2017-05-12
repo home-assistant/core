@@ -1,7 +1,7 @@
 """The test for the min/max sensor platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_UNKNOWN, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from tests.common import get_test_home_assistant
@@ -30,7 +30,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_min',
                 'type': 'min',
                 'entity_ids': [
                     'sensor.test_1',
@@ -59,7 +59,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_max',
                 'type': 'max',
                 'entity_ids': [
                     'sensor.test_1',
@@ -88,7 +88,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_mean',
                 'type': 'mean',
                 'entity_ids': [
                     'sensor.test_1',
@@ -117,7 +117,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_mean',
                 'type': 'mean',
                 'round_digits': 1,
                 'entity_ids': [
@@ -147,7 +147,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_mean',
                 'type': 'mean',
                 'round_digits': 4,
                 'entity_ids': [
@@ -177,7 +177,7 @@ class TestMinMaxSensor(unittest.TestCase):
         config = {
             'sensor': {
                 'platform': 'min_max',
-                'name': 'test',
+                'name': 'test_max',
                 'type': 'max',
                 'entity_ids': [
                     'sensor.test_1',
@@ -191,7 +191,7 @@ class TestMinMaxSensor(unittest.TestCase):
 
         entity_ids = config['sensor']['entity_ids']
 
-        self.hass.states.set(entity_ids[0], self.values[0])
+        self.hass.states.set(entity_ids[0], STATE_UNKNOWN)
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
@@ -201,13 +201,19 @@ class TestMinMaxSensor(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertNotEqual(STATE_UNKNOWN, state.state)
 
-        self.hass.states.set(entity_ids[2], self.values[2])
+        self.hass.states.set(entity_ids[2], STATE_UNKNOWN)
         self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.test_max')
         self.assertNotEqual(STATE_UNKNOWN, state.state)
+
+        self.hass.states.set(entity_ids[1], STATE_UNKNOWN)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_max')
+        self.assertEqual(STATE_UNKNOWN, state.state)
 
     def test_different_unit_of_measurement(self):
         """Test for different unit of measurement."""
@@ -232,21 +238,25 @@ class TestMinMaxSensor(unittest.TestCase):
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
         self.hass.block_till_done()
 
-        state = self.hass.states.get('sensor.test_mean')
+        state = self.hass.states.get('sensor.test')
 
-        self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertEqual(str(float(self.values[0])), state.state)
         self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
 
         self.hass.states.set(entity_ids[1], self.values[1],
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
         self.hass.block_till_done()
 
+        state = self.hass.states.get('sensor.test')
+
         self.assertEqual(STATE_UNKNOWN, state.state)
-        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
+        self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))
 
         self.hass.states.set(entity_ids[2], self.values[2],
                              {ATTR_UNIT_OF_MEASUREMENT: '%'})
         self.hass.block_till_done()
 
+        state = self.hass.states.get('sensor.test')
+
         self.assertEqual(STATE_UNKNOWN, state.state)
-        self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
+        self.assertEqual('ERR', state.attributes.get('unit_of_measurement'))

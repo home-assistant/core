@@ -1,11 +1,13 @@
 """Test discovery helpers."""
-from collections import OrderedDict
+import asyncio
 from unittest.mock import patch
 
-from homeassistant import loader, bootstrap
+import pytest
+
+from homeassistant import loader, setup
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery
-from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, MockModule, MockPlatform, mock_coro)
@@ -22,7 +24,7 @@ class TestHelpersDiscovery:
         """Stop everything that was started."""
         self.hass.stop()
 
-    @patch('homeassistant.bootstrap.async_setup_component')
+    @patch('homeassistant.setup.async_setup_component')
     def test_listen(self, mock_setup_component):
         """Test discovery listen/discover combo."""
         calls_single = []
@@ -61,8 +63,8 @@ class TestHelpersDiscovery:
         assert ['test service', 'another service'] == [info[0] for info
                                                        in calls_multi]
 
-    @patch('homeassistant.bootstrap.async_setup_component',
-           return_value=mock_coro(True)())
+    @patch('homeassistant.setup.async_setup_component',
+           return_value=mock_coro(True))
     def test_platform(self, mock_setup_component):
         """Test discover platform method."""
         calls = []
@@ -134,16 +136,12 @@ class TestHelpersDiscovery:
             MockPlatform(setup_platform,
                          dependencies=['test_component']))
 
-        bootstrap.setup_component(self.hass, 'test_component', {
+        setup.setup_component(self.hass, 'test_component', {
             'test_component': None,
             'switch': [{
                 'platform': 'test_circular',
             }],
         })
-
-        # We wait for the setup_lock to finish
-        run_coroutine_threadsafe(
-            self.hass.data['setup_lock'].acquire(), self.hass.loop).result()
 
         self.hass.block_till_done()
 
@@ -155,7 +153,8 @@ class TestHelpersDiscovery:
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
 
-    def test_1st_discovers_2nd_component(self):
+    @patch('homeassistant.bootstrap.async_register_signal_handling')
+    def test_1st_discovers_2nd_component(self, mock_signal):
         """Test that we don't break if one component discovers the other.
 
         If the first component fires a discovery event to setup the
@@ -166,6 +165,7 @@ class TestHelpersDiscovery:
 
         def component1_setup(hass, config):
             """Setup mock component."""
+            print('component1 setup')
             discovery.discover(hass, 'test_component2',
                                component='test_component2')
             return True
@@ -183,16 +183,30 @@ class TestHelpersDiscovery:
             'test_component2',
             MockModule('test_component2', setup=component2_setup))
 
-        config = OrderedDict()
-        config['test_component1'] = {}
-        config['test_component2'] = {}
+        @callback
+        def do_setup():
+            """Setup 2 components."""
+            self.hass.async_add_job(setup.async_setup_component(
+                self.hass, 'test_component1', {}))
+            self.hass.async_add_job(setup.async_setup_component(
+                self.hass, 'test_component2', {}))
 
-        self.hass.loop.run_until_complete = \
-            lambda _: self.hass.block_till_done()
-
-        bootstrap.from_config_dict(config, self.hass)
-
+        self.hass.add_job(do_setup)
         self.hass.block_till_done()
 
         # test_component will only be setup once
         assert len(component_calls) == 1
+
+
+@asyncio.coroutine
+def test_load_platform_forbids_config():
+    """Test you cannot setup config component with load_platform."""
+    with pytest.raises(HomeAssistantError):
+        yield from discovery.async_load_platform(None, 'config', 'zwave')
+
+
+@asyncio.coroutine
+def test_discover_forbids_config():
+    """Test you cannot setup config component with load_platform."""
+    with pytest.raises(HomeAssistantError):
+        yield from discovery.async_discover(None, None, None, 'config')

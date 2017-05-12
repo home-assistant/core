@@ -18,8 +18,8 @@ from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
 # Update this requirement to upstream as soon as it supports Python 3.
-REQUIREMENTS = ['http://github.com/adafruit/Adafruit_Python_DHT/archive/'
-                '310c59b0293354d07d94375f1365f7b9b9110c7d.zip'
+REQUIREMENTS = ['https://github.com/adafruit/Adafruit_Python_DHT/archive/'
+                'da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip'
                 '#Adafruit_DHT==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the DHT sensor."""
+    """Set up the DHT sensor."""
     # pylint: disable=import-error
     import Adafruit_DHT
 
@@ -139,8 +139,8 @@ class DHTClient(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data the DHT sensor."""
-        humidity, temperature = self.adafruit_dht.read_retry(self.sensor,
-                                                             self.pin)
+        humidity, temperature = self.adafruit_dht.read_retry(
+            self.sensor, self.pin)
         if temperature:
             self.data[SENSOR_TEMPERATURE] = temperature
         if humidity:

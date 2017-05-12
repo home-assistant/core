@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 from datetime import timedelta, datetime
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.core as ha
 import homeassistant.util.dt as dt_util
 import homeassistant.components.sun as sun
@@ -24,74 +24,111 @@ class TestSun(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_is_on(self):
-        """Test is_on method."""
-        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON)
-        self.assertTrue(sun.is_on(self.hass))
-        self.hass.states.set(sun.ENTITY_ID, sun.STATE_BELOW_HORIZON)
-        self.assertFalse(sun.is_on(self.hass))
-
     def test_setting_rising(self):
         """Test retrieving sun setting and rising."""
-        setup_component(self.hass, sun.DOMAIN, {
-            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=utc_now):
+            setup_component(self.hass, sun.DOMAIN, {
+                sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+
+        self.hass.block_till_done()
+        state = self.hass.states.get(sun.ENTITY_ID)
 
         from astral import Astral
 
         astral = Astral()
-        utc_now = dt_util.utcnow()
+        utc_today = utc_now.date()
 
         latitude = self.hass.config.latitude
         longitude = self.hass.config.longitude
 
         mod = -1
         while True:
-            next_rising = (astral.sunrise_utc(utc_now +
-                           timedelta(days=mod), latitude, longitude))
+            next_dawn = (astral.dawn_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
+            if next_dawn > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_dusk = (astral.dusk_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
+            if next_dusk > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_midnight = (astral.solar_midnight_utc(
+                utc_today + timedelta(days=mod), longitude))
+            if next_midnight > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_noon = (astral.solar_noon_utc(
+                utc_today + timedelta(days=mod), longitude))
+            if next_noon > utc_now:
+                break
+            mod += 1
+
+        mod = -1
+        while True:
+            next_rising = (astral.sunrise_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_rising > utc_now:
                 break
             mod += 1
 
         mod = -1
         while True:
-            next_setting = (astral.sunset_utc(utc_now +
-                            timedelta(days=mod), latitude, longitude))
+            next_setting = (astral.sunset_utc(
+                utc_today + timedelta(days=mod), latitude, longitude))
             if next_setting > utc_now:
                 break
             mod += 1
 
-        self.assertEqual(next_rising, sun.next_rising_utc(self.hass))
-        self.assertEqual(next_setting, sun.next_setting_utc(self.hass))
-
-        # Point it at a state without the proper attributes
-        self.hass.states.set(sun.ENTITY_ID, sun.STATE_ABOVE_HORIZON)
-        self.assertIsNone(sun.next_rising(self.hass))
-        self.assertIsNone(sun.next_setting(self.hass))
-
-        # Point it at a non-existing state
-        self.assertIsNone(sun.next_rising(self.hass, 'non.existing'))
-        self.assertIsNone(sun.next_setting(self.hass, 'non.existing'))
+        self.assertEqual(next_dawn, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_DAWN]))
+        self.assertEqual(next_dusk, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_DUSK]))
+        self.assertEqual(next_midnight, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_MIDNIGHT]))
+        self.assertEqual(next_noon, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_NOON]))
+        self.assertEqual(next_rising, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_RISING]))
+        self.assertEqual(next_setting, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_SETTING]))
 
     def test_state_change(self):
         """Test if the state changes at next setting/rising."""
-        setup_component(self.hass, sun.DOMAIN, {
-            sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
+        now = datetime(2016, 6, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=now):
+            setup_component(self.hass, sun.DOMAIN, {
+                sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
-        if sun.is_on(self.hass):
-            test_state = sun.STATE_BELOW_HORIZON
-            test_time = sun.next_setting(self.hass)
-        else:
-            test_state = sun.STATE_ABOVE_HORIZON
-            test_time = sun.next_rising(self.hass)
+        self.hass.block_till_done()
 
+        test_time = dt_util.parse_datetime(
+            self.hass.states.get(sun.ENTITY_ID)
+            .attributes[sun.STATE_ATTR_NEXT_RISING])
         self.assertIsNotNone(test_time)
+
+        self.assertEqual(sun.STATE_BELOW_HORIZON,
+                         self.hass.states.get(sun.ENTITY_ID).state)
 
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED,
                            {ha.ATTR_NOW: test_time + timedelta(seconds=5)})
 
         self.hass.block_till_done()
 
-        self.assertEqual(test_state, self.hass.states.get(sun.ENTITY_ID).state)
+        self.assertEqual(sun.STATE_ABOVE_HORIZON,
+                         self.hass.states.get(sun.ENTITY_ID).state)
 
     def test_norway_in_june(self):
         """Test location in Norway where the sun doesn't set in summer."""
@@ -106,9 +143,11 @@ class TestSun(unittest.TestCase):
                 sun.DOMAIN: {sun.CONF_ELEVATION: 0}})
 
         state = self.hass.states.get(sun.ENTITY_ID)
-
         assert state is not None
-        assert sun.next_rising_utc(self.hass) == \
-            datetime(2016, 7, 25, 23, 38, 21, tzinfo=dt_util.UTC)
-        assert sun.next_setting_utc(self.hass) == \
-            datetime(2016, 7, 26, 22, 4, 18, tzinfo=dt_util.UTC)
+
+        assert dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_RISING]) == \
+            datetime(2016, 7, 25, 23, 23, 39, tzinfo=dt_util.UTC)
+        assert dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_NEXT_SETTING]) == \
+            datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)

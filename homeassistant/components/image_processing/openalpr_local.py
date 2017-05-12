@@ -1,5 +1,5 @@
 """
-Component that will help set the openalpr local for alpr processing.
+Component that will help set the OpenALPR local for ALPR processing.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/image_processing.openalpr_local/
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 RE_ALPR_PLATE = re.compile(r"^plate\d*:")
 RE_ALPR_RESULT = re.compile(r"- (\w*)\s*confidence: (\d*.\d*)")
 
-EVENT_FOUND_PLATE = 'found_plate'
+EVENT_FOUND_PLATE = 'image_processing.found_plate'
 
 ATTR_PLATE = 'plate'
 ATTR_PLATES = 'plates'
@@ -50,20 +50,17 @@ CONF_REGION = 'region'
 CONF_ALPR_BIN = 'alp_bin'
 
 DEFAULT_BINARY = 'alpr'
-DEFAULT_CONFIDENCE = 80
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_REGION):
         vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
     vol.Optional(CONF_ALPR_BIN, default=DEFAULT_BINARY): cv.string,
-    vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the openalpr local platform."""
+    """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], '-c', config[CONF_REGION], '-']
     confidence = config[CONF_CONFIDENCE]
 
@@ -73,21 +70,16 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], command, confidence, camera.get(CONF_NAME)
         ))
 
-    yield from async_add_devices(entities)
+    async_add_devices(entities)
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):
-    """Base entity class for alpr image processing."""
+    """Base entity class for ALPR image processing."""
 
     def __init__(self):
         """Initialize base alpr entity."""
         self.plates = {}  # last scan data
         self.vehicles = 0  # vehicles count
-
-    @property
-    def confidence(self):
-        """Return minimum confidence for send events."""
-        return None
 
     @property
     def state(self):
@@ -101,6 +93,11 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
                 confidence = i_co
                 plate = i_pl
         return plate
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'alpr'
 
     @property
     def state_attributes(self):
@@ -147,10 +144,10 @@ class ImageProcessingAlprEntity(ImageProcessingEntity):
 
 
 class OpenAlprLocalEntity(ImageProcessingAlprEntity):
-    """OpenAlpr local api entity."""
+    """OpenALPR local api entity."""
 
     def __init__(self, camera_entity, command, confidence, name=None):
-        """Initialize openalpr local api."""
+        """Initialize OpenALPR local API."""
         super().__init__()
 
         self._cmd = command

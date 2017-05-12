@@ -7,39 +7,39 @@ https://home-assistant.io/components/binary_sensor.homematic/
 import logging
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematic import HMDevice
-from homeassistant.loader import get_component
+from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
 
 SENSOR_TYPES_CLASS = {
-    "Remote": None,
-    "ShutterContact": "opening",
-    "IPShutterContact": "opening",
-    "Smoke": "smoke",
-    "SmokeV2": "smoke",
-    "Motion": "motion",
-    "MotionV2": "motion",
-    "RemoteMotion": None,
-    "WeatherSensor": None,
-    "TiltSensor": None,
+    'Remote': None,
+    'ShutterContact': 'opening',
+    'MaxShutterContact': 'opening',
+    'IPShutterContact': 'opening',
+    'Smoke': 'smoke',
+    'SmokeV2': 'smoke',
+    'Motion': 'motion',
+    'MotionV2': 'motion',
+    'RemoteMotion': None,
+    'WeatherSensor': None,
+    'TiltSensor': None,
 }
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the Homematic binary sensor platform."""
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Homematic binary sensor platform."""
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
-    return homematic.setup_hmdevice_discovery_helper(
-        hass,
-        HMBinarySensor,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for config in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMBinarySensor(hass, config)
+        new_device.link_homematic()
+        devices.append(new_device)
+
+    add_devices(devices)
 
 
 class HMBinarySensor(HMDevice, BinarySensorDevice):
@@ -53,14 +53,11 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         return bool(self._hm_get_state())
 
     @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
-        if not self.available:
-            return None
-
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
         # If state is MOTION (RemoteMotion works only)
-        if self._state == "MOTION":
-            return "motion"
+        if self._state == 'MOTION':
+            return 'motion'
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _init_data_struct(self):

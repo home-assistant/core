@@ -17,7 +17,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pyloopenergy==0.0.16']
+REQUIREMENTS = ['pyloopenergy==0.0.17']
 
 CONF_ELEC = 'electricity'
 CONF_GAS = 'gas'
@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Loop Energy sensors."""
+    """Set up the Loop Energy sensors."""
     import pyloopenergy
 
     elec_config = config.get(CONF_ELEC)
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     def stop_loopenergy(event):
         """Shutdown loopenergy thread on exit."""
-        _LOGGER.info("Shutting down loopenergy.")
+        _LOGGER.info("Shutting down loopenergy")
         controller.terminate()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_loopenergy)
@@ -121,7 +121,7 @@ class LoopEnergyDevice(Entity):
         return self._unit_of_measurement
 
     def _callback(self):
-        self.update_ha_state(True)
+        self.schedule_update_ha_state(True)
 
 
 class LoopEnergyElec(LoopEnergyDevice):

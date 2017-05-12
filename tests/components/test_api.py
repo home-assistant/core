@@ -1,15 +1,12 @@
 """The tests for the Home Assistant API component."""
 # pylint: disable=protected-access
-import asyncio
 from contextlib import closing
 import json
 import unittest
-from unittest.mock import Mock, patch
 
-from aiohttp import web
 import requests
 
-from homeassistant import bootstrap, const
+from homeassistant import setup, const
 import homeassistant.core as ha
 import homeassistant.components.http as http
 
@@ -41,12 +38,12 @@ def setUpModule():
     hass.bus.listen('test_event', lambda _: _)
     hass.states.set('test.test', 'a_state')
 
-    bootstrap.setup_component(
+    setup.setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_API_PASSWORD: API_PASSWORD,
          http.CONF_SERVER_PORT: SERVER_PORT}})
 
-    bootstrap.setup_component(hass, 'api')
+    setup.setup_component(hass, 'api')
 
     hass.start()
 
@@ -235,29 +232,17 @@ class TestAPI(unittest.TestCase):
         """Test the return of the configuration."""
         req = requests.get(_url(const.URL_API_CONFIG),
                            headers=HA_HEADERS)
-        self.assertEqual(hass.config.as_dict(), req.json())
+        result = req.json()
+        if 'components' in result:
+            result['components'] = set(result['components'])
+
+        self.assertEqual(hass.config.as_dict(), result)
 
     def test_api_get_components(self):
         """Test the return of the components."""
         req = requests.get(_url(const.URL_API_COMPONENTS),
                            headers=HA_HEADERS)
-        self.assertEqual(hass.config.components, req.json())
-
-    def test_api_get_error_log(self):
-        """Test the return of the error log."""
-        test_string = 'Test String°'
-
-        @asyncio.coroutine
-        def mock_send():
-            """Mock file send."""
-            return web.Response(text=test_string)
-
-        with patch('homeassistant.components.http.HomeAssistantView.file',
-                   Mock(return_value=mock_send())):
-            req = requests.get(_url(const.URL_API_ERROR_LOG),
-                               headers=HA_HEADERS)
-            self.assertEqual(test_string, req.text)
-            self.assertIsNone(req.headers.get('expires'))
+        self.assertEqual(hass.config.components, set(req.json()))
 
     def test_api_get_event_listeners(self):
         """Test if we can get the list of events being listened for."""
@@ -351,81 +336,6 @@ class TestAPI(unittest.TestCase):
             headers=HA_HEADERS)
 
         self.assertEqual(400, req.status_code)
-
-    def test_api_event_forward(self):
-        """Test setting up event forwarding."""
-        req = requests.post(
-            _url(const.URL_API_EVENT_FORWARD),
-            headers=HA_HEADERS)
-        self.assertEqual(400, req.status_code)
-
-        req = requests.post(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({'host': '127.0.0.1'}),
-            headers=HA_HEADERS)
-        self.assertEqual(400, req.status_code)
-
-        req = requests.post(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({'api_password': 'bla-di-bla'}),
-            headers=HA_HEADERS)
-        self.assertEqual(400, req.status_code)
-
-        req = requests.post(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({
-                'api_password': 'bla-di-bla',
-                'host': '127.0.0.1',
-                'port': 'abcd'
-                }),
-            headers=HA_HEADERS)
-        self.assertEqual(422, req.status_code)
-
-        req = requests.post(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({
-                'api_password': 'bla-di-bla',
-                'host': '127.0.0.1',
-                'port': get_test_instance_port()
-                }),
-            headers=HA_HEADERS)
-        self.assertEqual(422, req.status_code)
-
-        # Setup a real one
-        req = requests.post(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({
-                'api_password': API_PASSWORD,
-                'host': '127.0.0.1',
-                'port': SERVER_PORT
-                }),
-            headers=HA_HEADERS)
-        self.assertEqual(200, req.status_code)
-
-        # Delete it again..
-        req = requests.delete(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({}),
-            headers=HA_HEADERS)
-        self.assertEqual(400, req.status_code)
-
-        req = requests.delete(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({
-                'host': '127.0.0.1',
-                'port': 'abcd'
-                }),
-            headers=HA_HEADERS)
-        self.assertEqual(422, req.status_code)
-
-        req = requests.delete(
-            _url(const.URL_API_EVENT_FORWARD),
-            data=json.dumps({
-                'host': '127.0.0.1',
-                'port': SERVER_PORT
-                }),
-            headers=HA_HEADERS)
-        self.assertEqual(200, req.status_code)
 
     def test_stream(self):
         """Test the stream."""

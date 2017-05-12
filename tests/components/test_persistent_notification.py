@@ -1,5 +1,5 @@
 """The tests for the persistent notification component."""
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.persistent_notification as pn
 
 from tests.common import get_test_home_assistant

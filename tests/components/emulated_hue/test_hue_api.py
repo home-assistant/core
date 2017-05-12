@@ -5,10 +5,10 @@ import json
 from unittest.mock import patch
 import pytest
 
-from homeassistant import bootstrap, const, core
+from homeassistant import setup, const, core
 import homeassistant.components as core_components
 from homeassistant.components import (
-    emulated_hue, http, light, script, media_player
+    emulated_hue, http, light, script, media_player, fan
 )
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue.hue_api import (
@@ -33,14 +33,14 @@ def hass_hue(loop, hass):
     loop.run_until_complete(
         core_components.async_setup(hass, {core.DOMAIN: {}}))
 
-    loop.run_until_complete(bootstrap.async_setup_component(
+    loop.run_until_complete(setup.async_setup_component(
         hass, http.DOMAIN,
         {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}))
 
     with patch('homeassistant.components'
                '.emulated_hue.UPNPResponderThread'):
         loop.run_until_complete(
-            bootstrap.async_setup_component(hass, emulated_hue.DOMAIN, {
+            setup.async_setup_component(hass, emulated_hue.DOMAIN, {
                 emulated_hue.DOMAIN: {
                     emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
                     emulated_hue.CONF_EXPOSE_BY_DEFAULT: True
@@ -48,7 +48,7 @@ def hass_hue(loop, hass):
             }))
 
     loop.run_until_complete(
-        bootstrap.async_setup_component(hass, light.DOMAIN, {
+        setup.async_setup_component(hass, light.DOMAIN, {
             'light': [
                 {
                     'platform': 'demo',
@@ -57,7 +57,7 @@ def hass_hue(loop, hass):
         }))
 
     loop.run_until_complete(
-        bootstrap.async_setup_component(hass, script.DOMAIN, {
+        setup.async_setup_component(hass, script.DOMAIN, {
             'script': {
                 'set_kitchen_light': {
                     'sequence': [
@@ -75,8 +75,17 @@ def hass_hue(loop, hass):
         }))
 
     loop.run_until_complete(
-        bootstrap.async_setup_component(hass, media_player.DOMAIN, {
+        setup.async_setup_component(hass, media_player.DOMAIN, {
             'media_player': [
+                {
+                    'platform': 'demo',
+                }
+            ]
+        }))
+
+    loop.run_until_complete(
+        setup.async_setup_component(hass, fan.DOMAIN, {
+            'fan': [
                 {
                     'platform': 'demo',
                 }
@@ -137,6 +146,7 @@ def test_discover_lights(hue_client):
     assert 'media_player.bedroom' in devices
     assert 'media_player.walkman' in devices
     assert 'media_player.lounge_room' in devices
+    assert 'fan.living_room_fan' in devices
 
 
 @asyncio.coroutine
@@ -279,6 +289,33 @@ def test_put_light_state_media_player(hass_hue, hue_client):
     walkman = hass_hue.states.get('media_player.walkman')
     assert walkman.state == 'playing'
     assert walkman.attributes[media_player.ATTR_MEDIA_VOLUME_LEVEL] == level
+
+
+@asyncio.coroutine
+def test_put_light_state_fan(hass_hue, hue_client):
+    """Test turning on fan and setting speed."""
+    # Turn the fan off first
+    yield from hass_hue.services.async_call(
+        fan.DOMAIN, const.SERVICE_TURN_OFF,
+        {const.ATTR_ENTITY_ID: 'fan.living_room_fan'},
+        blocking=True)
+
+    # Emulated hue converts 0-100% to 0-255.
+    level = 43
+    brightness = round(level * 255 / 100)
+
+    fan_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'fan.living_room_fan', True, brightness)
+
+    fan_result_json = yield from fan_result.json()
+
+    assert fan_result.status == 200
+    assert len(fan_result_json) == 2
+
+    living_room_fan = hass_hue.states.get('fan.living_room_fan')
+    assert living_room_fan.state == 'on'
+    assert living_room_fan.attributes[fan.ATTR_SPEED] == fan.SPEED_MEDIUM
 
 
 # pylint: disable=invalid-name

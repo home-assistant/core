@@ -50,7 +50,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
 
-    yield from async_add_devices(
+    async_add_devices(
         [StatisticsSensor(hass, entity_id, name, sampling_size)], True)
     return True
 
@@ -80,7 +80,7 @@ class StatisticsSensor(Entity):
         @callback
         # pylint: disable=invalid-name
         def async_stats_sensor_state_listener(entity, old_state, new_state):
-            """Called when the sensor changes state."""
+            """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
@@ -116,7 +116,7 @@ class StatisticsSensor(Entity):
         return False
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
             return {

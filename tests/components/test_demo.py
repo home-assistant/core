@@ -3,7 +3,7 @@ import json
 import os
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import demo, device_tracker
 from homeassistant.remote import JSONEncoder
 

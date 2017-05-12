@@ -61,7 +61,7 @@ class KNXThermostat(KNXMultiAddressDevice, ClimateDevice):
 
     @property
     def should_poll(self):
-        """Polling is needed for the KNX thermostat."""
+        """Return the polling state, is needed for the KNX thermostat."""
         return True
 
     @property

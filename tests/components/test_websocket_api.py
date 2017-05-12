@@ -9,7 +9,7 @@ import pytest
 from homeassistant.core import callback
 from homeassistant.components import websocket_api as wapi, frontend
 
-from tests.common import mock_http_component_app
+from tests.common import mock_http_component_app, mock_coro
 
 API_PASSWORD = 'test1234'
 
@@ -66,13 +66,16 @@ def test_auth_via_msg(no_auth_websocket_client):
 @asyncio.coroutine
 def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
     """Test authenticating."""
-    no_auth_websocket_client.send_json({
-        'type': wapi.TYPE_AUTH,
-        'api_password': API_PASSWORD + 'wrong'
-    })
+    with patch('homeassistant.components.websocket_api.process_wrong_login',
+               return_value=mock_coro()) as mock_process_wrong_login:
+        no_auth_websocket_client.send_json({
+            'type': wapi.TYPE_AUTH,
+            'api_password': API_PASSWORD + 'wrong'
+        })
 
-    msg = yield from no_auth_websocket_client.receive_json()
+        msg = yield from no_auth_websocket_client.receive_json()
 
+    assert mock_process_wrong_login.called
     assert msg['type'] == wapi.TYPE_AUTH_INVALID
     assert msg['message'] == 'Invalid password'
 
@@ -265,6 +268,10 @@ def test_get_config(hass, websocket_client):
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
+
+    if 'components' in msg['result']:
+        msg['result']['components'] = set(msg['result']['components'])
+
     assert msg['result'] == hass.config.as_dict()
 
 

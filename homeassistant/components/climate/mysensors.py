@@ -1,8 +1,8 @@
 """
-mysensors platform that offers a Climate(MySensors-HVAC) component.
+MySensors platform that offers a Climate (MySensors-HVAC) component.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.mysensors
+https://home-assistant.io/components/climate.mysensors/
 """
 import logging
 
@@ -14,14 +14,22 @@ from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
 
 _LOGGER = logging.getLogger(__name__)
 
-DICT_HA_TO_MYS = {STATE_COOL: "CoolOn", STATE_HEAT: "HeatOn",
-                  STATE_AUTO: "AutoChangeOver", STATE_OFF: "Off"}
-DICT_MYS_TO_HA = {"CoolOn": STATE_COOL, "HeatOn": STATE_HEAT,
-                  "AutoChangeOver": STATE_AUTO, "Off": STATE_OFF}
+DICT_HA_TO_MYS = {
+    STATE_AUTO: 'AutoChangeOver',
+    STATE_COOL: 'CoolOn',
+    STATE_HEAT: 'HeatOn',
+    STATE_OFF: 'Off',
+}
+DICT_MYS_TO_HA = {
+    'AutoChangeOver': STATE_AUTO,
+    'CoolOn': STATE_COOL,
+    'HeatOn': STATE_HEAT,
+    'Off': STATE_OFF,
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors climate."""
+    """Set up the mysensors climate."""
     if discovery_info is None:
         return
 
@@ -43,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
-    """Representation of a MySensorsHVAC hvac."""
+    """Representation of a MySensors HVAC."""
 
     @property
     def assumed_state(self):
@@ -105,7 +113,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return ["Auto", "Min", "Normal", "Max"]
+        return ['Auto', 'Min', 'Normal', 'Max']
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -135,28 +143,28 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # optimistically assume that switch has changed state
                 self._values[value_type] = value
-                self.update_ha_state()
+                self.schedule_update_ha_state()
 
     def set_fan_mode(self, fan):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id,
-                                     set_req.V_HVAC_SPEED, fan)
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_HVAC_SPEED, fan)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_SPEED] = fan
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
-        self.gateway.set_child_value(self.node_id, self.child_id,
-                                     set_req.V_HVAC_FLOW_STATE,
-                                     DICT_HA_TO_MYS[operation_mode])
+        self.gateway.set_child_value(
+            self.node_id, self.child_id, set_req.V_HVAC_FLOW_STATE,
+            DICT_HA_TO_MYS[operation_mode])
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_HVAC_FLOW_STATE] = operation_mode
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def update(self):
         """Update the controller with the latest value from a sensor."""
@@ -165,7 +173,7 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
         child = node.children[self.child_id]
         for value_type, value in child.values.items():
             _LOGGER.debug(
-                '%s: value_type %s, value = %s', self._name, value_type, value)
+                "%s: value_type %s, value = %s", self._name, value_type, value)
             if value_type == set_req.V_HVAC_FLOW_STATE:
                 self._values[value_type] = DICT_MYS_TO_HA[value]
             else:

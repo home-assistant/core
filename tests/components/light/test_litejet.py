@@ -3,7 +3,7 @@ import logging
 import unittest
 from unittest import mock
 
-from homeassistant import bootstrap
+from homeassistant import setup
 from homeassistant.components import litejet
 from tests.common import get_test_home_assistant
 import homeassistant.components.light as light
@@ -47,7 +47,7 @@ class TestLiteJetLight(unittest.TestCase):
         self.mock_lj.on_load_activated.side_effect = on_load_activated
         self.mock_lj.on_load_deactivated.side_effect = on_load_deactivated
 
-        assert bootstrap.setup_component(
+        assert setup.setup_component(
             self.hass,
             litejet.DOMAIN,
             {

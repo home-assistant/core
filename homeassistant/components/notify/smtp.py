@@ -10,6 +10,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import email.utils
+from email.mime.application import MIMEApplication
 
 import voluptuous as vol
 
@@ -17,7 +18,8 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT)
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_TIMEOUT,
+    CONF_SENDER, CONF_RECIPIENT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -31,14 +33,16 @@ CONF_SERVER = 'server'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 25
+DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
 DEFAULT_STARTTLS = False
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RECIPIENT): vol.Email(),
+    vol.Required(CONF_RECIPIENT): vol.All(cv.ensure_list, [vol.Email()]),
     vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_SENDER): vol.Email(),
     vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
     vol.Optional(CONF_USERNAME): cv.string,
@@ -52,6 +56,7 @@ def get_service(hass, config, discovery_info=None):
     mail_service = MailNotificationService(
         config.get(CONF_SERVER),
         config.get(CONF_PORT),
+        config.get(CONF_TIMEOUT),
         config.get(CONF_SENDER),
         config.get(CONF_STARTTLS),
         config.get(CONF_USERNAME),
@@ -68,22 +73,23 @@ def get_service(hass, config, discovery_info=None):
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
-    def __init__(self, server, port, sender, starttls, username,
-                 password, recipient, debug):
+    def __init__(self, server, port, timeout, sender, starttls, username,
+                 password, recipients, debug):
         """Initialize the service."""
         self._server = server
         self._port = port
+        self._timeout = timeout
         self._sender = sender
         self.starttls = starttls
         self.username = username
         self.password = password
-        self.recipient = recipient
+        self.recipients = recipients
         self.debug = debug
         self.tries = 2
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        mail = smtplib.SMTP(self._server, self._port, timeout=5)
+        mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.starttls:
@@ -133,7 +139,7 @@ class MailNotificationService(BaseNotificationService):
             msg = _build_text_msg(message)
 
         msg['Subject'] = subject
-        msg['To'] = self.recipient
+        msg['To'] = ','.join(self.recipients)
         msg['From'] = self._sender
         msg['X-Mailer'] = 'HomeAssistant'
         msg['Date'] = email.utils.format_datetime(dt_util.now())
@@ -146,12 +152,12 @@ class MailNotificationService(BaseNotificationService):
         mail = self.connect()
         for _ in range(self.tries):
             try:
-                mail.sendmail(self._sender, self.recipient,
+                mail.sendmail(self._sender, self.recipients,
                               msg.as_string())
                 break
             except smtplib.SMTPException:
-                _LOGGER.warning('SMTPException sending mail: '
-                                'retrying connection')
+                _LOGGER.warning(
+                    "SMTPException sending mail: retrying connection")
                 mail.quit()
                 mail = self.connect()
 
@@ -160,13 +166,13 @@ class MailNotificationService(BaseNotificationService):
 
 def _build_text_msg(message):
     """Build plaintext email."""
-    _LOGGER.debug('Building plain text email')
+    _LOGGER.debug("Building plain text email")
     return MIMEText(message)
 
 
 def _build_multipart_msg(message, images):
     """Build Multipart message with in-line images."""
-    _LOGGER.debug('Building multipart email with embedded attachment(s)')
+    _LOGGER.debug("Building multipart email with embedded attachment(s)")
     msg = MIMEMultipart('related')
     msg_alt = MIMEMultipart('alternative')
     msg.attach(msg_alt)
@@ -179,12 +185,21 @@ def _build_multipart_msg(message, images):
         body_text.append('<img src="cid:{}"><br>'.format(cid))
         try:
             with open(atch_name, 'rb') as attachment_file:
-                attachment = MIMEImage(attachment_file.read())
-                msg.attach(attachment)
-                attachment.add_header('Content-ID', '<{}>'.format(cid))
+                file_bytes = attachment_file.read()
+                try:
+                    attachment = MIMEImage(file_bytes)
+                    msg.attach(attachment)
+                    attachment.add_header('Content-ID', '<{}>'.format(cid))
+                except TypeError:
+                    _LOGGER.warning("Attachment %s has an unkown MIME type. "
+                                    "Falling back to file", atch_name)
+                    attachment = MIMEApplication(file_bytes, Name=atch_name)
+                    attachment['Content-Disposition'] = ('attachment; '
+                                                         'filename="%s"' %
+                                                         atch_name)
+                    msg.attach(attachment)
         except FileNotFoundError:
-            _LOGGER.warning('Attachment %s not found. Skipping',
-                            atch_name)
+            _LOGGER.warning("Attachment %s not found. Skipping", atch_name)
 
     body_html = MIMEText(''.join(body_text), 'html')
     msg_alt.attach(body_html)

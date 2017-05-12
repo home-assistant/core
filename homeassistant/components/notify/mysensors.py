@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/notify.mysensors/
 """
 from homeassistant.components import mysensors
-from homeassistant.components.notify import (ATTR_TARGET,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    ATTR_TARGET, BaseNotificationService)
 
 
 def get_service(hass, config, discovery_info=None):
@@ -19,6 +19,8 @@ def get_service(hass, config, discovery_info=None):
         return
 
     for gateway in gateways:
+        if float(gateway.protocol_version) < 2.0:
+            continue
         pres = gateway.const.Presentation
         set_req = gateway.const.SetReq
         map_sv_types = {

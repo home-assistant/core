@@ -6,18 +6,19 @@ from unittest import mock
 
 import voluptuous as vol
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME, CONF_TRACK_NEW)
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN,
-    PLATFORM_SCHEMA)
+    CONF_PORT, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
 from tests.common import (
-    get_test_home_assistant, get_test_config_dir, assert_setup_component)
+    get_test_home_assistant, get_test_config_dir, assert_setup_component,
+    mock_component)
 
 FAKEFILE = None
 
@@ -43,7 +44,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     def setup_method(self, _):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['zone']
+        mock_component(self.hass, 'zone')
 
     def teardown_method(self, _):
         """Stop everything that was started."""
@@ -86,6 +87,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
+        conf_dict[DOMAIN][CONF_PORT] = 22
         self.assertEqual(asuswrt_mock.call_count, 1)
         self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
@@ -111,6 +113,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
         conf_dict[DOMAIN][CONF_PROTOCOL] = 'ssh'
+        conf_dict[DOMAIN][CONF_PORT] = 22
         self.assertEqual(asuswrt_mock.call_count, 1)
         self.assertEqual(asuswrt_mock.call_args, mock.call(conf_dict[DOMAIN]))
 
@@ -136,7 +139,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user', ssh_key=FAKEFILE)
+            mock.call('fake_host', 'fake_user', port=22, ssh_key=FAKEFILE)
         )
 
     def test_ssh_login_with_password(self):
@@ -161,7 +164,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user', password='fake_pass')
+            mock.call('fake_host', 'fake_user', password='fake_pass', port=22)
         )
 
     def test_ssh_login_without_password_or_pubkey(self):  \

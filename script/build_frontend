@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.."
 
 # Clean up
 rm -rf homeassistant/components/frontend/www_static/core.js* \
+       homeassistant/components/frontend/www_static/compatibility.js* \
        homeassistant/components/frontend/www_static/frontend.html* \
        homeassistant/components/frontend/www_static/webcomponents-lite.min.js* \
        homeassistant/components/frontend/www_static/panels

@@ -17,7 +17,7 @@ from homeassistant.components.notify import (
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ["boto3==1.3.1"]
+REQUIREMENTS = ["boto3==1.4.3"]
 
 CONF_REGION = 'region_name'
 CONF_ACCESS_KEY_ID = 'aws_access_key_id'
@@ -26,7 +26,7 @@ CONF_PROFILE_NAME = 'profile_name'
 ATTR_CREDENTIALS = 'credentials'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_REGION, default="us-east-1"): cv.string,
+    vol.Optional(CONF_REGION, default='us-east-1'): cv.string,
     vol.Inclusive(CONF_ACCESS_KEY_ID, ATTR_CREDENTIALS): cv.string,
     vol.Inclusive(CONF_SECRET_ACCESS_KEY, ATTR_CREDENTIALS): cv.string,
     vol.Exclusive(CONF_PROFILE_NAME, ATTR_CREDENTIALS): cv.string,
