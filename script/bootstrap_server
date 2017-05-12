@@ -6,10 +6,12 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-echo "Installing Home Assistant in development mode..."
-python3 setup.py develop
-
-REQ_STATUS=$?
+# parameter --only-binary doesn't work with pip < 7.0.0. Causing
+# python3 -m pip install -r requirements_all.txt to fail unless pip upgraded.
+if ! python3 -c 'import pkg_resources ; pkg_resources.require(["pip>=7.0.0"])' 2>/dev/null ; then
+  echo "Upgrading pip..."
+  python3 -m pip install -U pip
+fi
 
 echo "Installing test dependencies..."
 python3 -m pip install -r requirements_test_all.txt
