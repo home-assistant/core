@@ -138,6 +138,101 @@ def test_device_entity(hass, mock_openzwave):
     assert device.device_state_attributes[zwave.ATTR_POWER] == 50.123
 
 
+@asyncio.coroutine
+def test_node_discovery(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_NODE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher') as mock_dispatcher:
+        mock_dispatcher.connect.side_effect = mock_connect
+        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(node_id=14)
+    hass.async_add_job(mock_receivers[0], node)
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('zwave.mock_node_14').state is 'unknown'
+
+
+@asyncio.coroutine
+def test_value_discovery(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher') as mock_dispatcher:
+        mock_dispatcher.connect.side_effect = mock_connect
+        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(node_id=11, generic=const.GENERIC_TYPE_SENSOR_BINARY)
+    value = MockValue(data=False, node=node, index=12, instance=13,
+                      command_class=const.COMMAND_CLASS_SENSOR_BINARY,
+                      type=const.TYPE_BOOL, genre=const.GENRE_USER)
+    hass.async_add_job(mock_receivers[0], node, value)
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get(
+        'binary_sensor.mock_node_mock_value_11_12_13').state is 'off'
+
+
+@asyncio.coroutine
+def test_value_discovery_existing_entity(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_VALUE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher') as mock_dispatcher:
+        mock_dispatcher.connect.side_effect = mock_connect
+        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(node_id=11, generic=const.GENERIC_TYPE_THERMOSTAT)
+    setpoint = MockValue(
+        data=22.0, node=node, index=12, instance=13,
+        command_class=const.COMMAND_CLASS_THERMOSTAT_SETPOINT,
+        genre=const.GENRE_USER, units='C')
+    hass.async_add_job(mock_receivers[0], node, setpoint)
+    yield from hass.async_block_till_done()
+
+    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+        'temperature'] == 22.0
+    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+        'current_temperature'] is None
+
+    with patch.object(hass.loop, 'call_later') as mock_call_later:
+        def mock_call(delay, callback, *args):
+            callback()
+
+        mock_call_later.side_effect = mock_call
+
+        temperature = MockValue(
+            data=23.5, node=node, index=12, instance=13,
+            command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
+            label='Temperature', genre=const.GENRE_USER, units='C')
+        hass.async_add_job(mock_receivers[0], node, temperature)
+        yield from hass.async_block_till_done()
+
+    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+        'temperature'] == 22.0
+    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+        'current_temperature'] == 23.5
+
+
 class TestZWaveDeviceEntityValues(unittest.TestCase):
     """Tests for the ZWaveDeviceEntityValues helper."""
 
