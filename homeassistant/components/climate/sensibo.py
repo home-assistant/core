@@ -149,22 +149,22 @@ class SensiboClimate(ClimateDevice):
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
-        return self._ac_states['fanLevel']
+        return self._ac_states.get('fanLevel')
 
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return self._current_capabilities['fanLevels']
+        return self._current_capabilities.get('fanLevels')
 
     @property
     def current_swing_mode(self):
         """Return the fan setting."""
-        return self._ac_states['swing']
+        return self._ac_states.get('swing')
 
     @property
     def swing_list(self):
         """List of available swing modes."""
-        return self._current_capabilities['swing']
+        return self._current_capabilities.get('swing')
 
     @property
     def name(self):
