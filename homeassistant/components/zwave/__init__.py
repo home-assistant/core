@@ -18,7 +18,8 @@ from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
-    ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    ATTR_ENTITY_ID, CONF_ENTITY_ID, EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
 from homeassistant.util import convert, slugify
@@ -56,6 +57,7 @@ CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 
 ATTR_POWER = 'power_consumption'
+ATTR_DISCOVERY_ENTITY_ID = 'discovery_entity_id'
 
 DEFAULT_CONF_AUTOHEAL = True
 DEFAULT_CONF_USB_STICK_PATH = '/zwaveusbstick'
@@ -113,6 +115,7 @@ DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema({
     vol.Optional(CONF_IGNORED, default=DEFAULT_CONF_IGNORED): cv.boolean,
     vol.Optional(CONF_INVERT_OPENCLOSE_BUTTONS,
                  default=DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS): cv.boolean,
+    vol.Optional(CONF_ENTITY_ID): cv.slug,
     vol.Optional(CONF_REFRESH_VALUE, default=DEFAULT_CONF_REFRESH_VALUE):
         cv.boolean,
     vol.Optional(CONF_REFRESH_DELAY, default=DEFAULT_CONF_REFRESH_DELAY):
@@ -740,6 +743,11 @@ class ZWaveDeviceEntityValues():
             self._workaround_ignore = True
             return
 
+        user_entity_name = node_config.get(CONF_ENTITY_ID)
+        if user_entity_name:
+            device.discovery_entity_id = device.entity_id
+            device.entity_id = "{}.{}".format(component, user_entity_name)
+
         self._entity = device
 
         dict_id = id(self)
@@ -767,6 +775,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.node = values.primary.node
         self.values.primary.set_change_verified(False)
         self.entity_id = "{}.{}".format(domain, object_id(values.primary))
+        self.discovery_entity_id = None
 
         self._name = _value_name(self.values.primary)
         self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,
@@ -837,6 +846,8 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
 
         if self.power_consumption is not None:
             attrs[ATTR_POWER] = self.power_consumption
+        if self.discovery_entity_id:
+            attrs[ATTR_DISCOVERY_ENTITY_ID] = self.discovery_entity_id
 
         return attrs
 
