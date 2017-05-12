@@ -147,8 +147,7 @@ def test_node_discovery(hass, mock_openzwave):
         if signal == MockNetwork.SIGNAL_NODE_ADDED:
             mock_receivers.append(receiver)
 
-    with patch('pydispatch.dispatcher') as mock_dispatcher:
-        mock_dispatcher.connect.side_effect = mock_connect
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
 
     assert len(mock_receivers) == 1
@@ -169,8 +168,7 @@ def test_value_discovery(hass, mock_openzwave):
         if signal == MockNetwork.SIGNAL_VALUE_ADDED:
             mock_receivers.append(receiver)
 
-    with patch('pydispatch.dispatcher') as mock_dispatcher:
-        mock_dispatcher.connect.side_effect = mock_connect
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
 
     assert len(mock_receivers) == 1
@@ -195,8 +193,7 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
         if signal == MockNetwork.SIGNAL_VALUE_ADDED:
             mock_receivers.append(receiver)
 
-    with patch('pydispatch.dispatcher') as mock_dispatcher:
-        mock_dispatcher.connect.side_effect = mock_connect
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {}})
 
     assert len(mock_receivers) == 1
@@ -214,12 +211,11 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
     assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
         'current_temperature'] is None
 
-    with patch.object(hass.loop, 'call_later') as mock_call_later:
-        def mock_call(delay, callback, *args):
-            callback()
+    def mock_update(self):
+        self.hass.async_add_job(self.async_update_ha_state)
 
-        mock_call_later.side_effect = mock_call
-
+    with patch.object(zwave.node_entity.ZWaveBaseEntity,
+                      'maybe_schedule_update', new=mock_update):
         temperature = MockValue(
             data=23.5, node=node, index=12, instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
