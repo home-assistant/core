@@ -164,7 +164,7 @@ class HarmonyRemote(remote.RemoteDevice):
         else:
             _LOGGER.error("No activity specified with turn_on service")
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Start the PowerOff activity."""
         import pyharmony
         pyharmony.ha_power_off(self._token, self._ip, self._port)
