@@ -39,7 +39,7 @@ SoCo==0.12
 TwitterAPI==2.4.5
 
 # homeassistant.components.device_tracker.automatic
-aioautomatic==0.3.1
+aioautomatic==0.4.0
 
 # homeassistant.components.sensor.dnsip
 aiodns==1.1.1
@@ -70,6 +70,9 @@ apns2==0.1.1
 # homeassistant.components.light.avion
 # avion==0.6
 
+# homeassistant.components.axis
+axis==7
+
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
 
@@ -93,7 +96,7 @@ blinkpy==0.5.2
 blinkstick==1.1.8
 
 # homeassistant.components.light.blinkt
-blinkt==0.1.0
+# blinkt==0.1.0
 
 # homeassistant.components.sensor.bitcoin
 blockchain==1.3.3
@@ -160,7 +163,7 @@ dsmr_parser==0.8
 
 # homeassistant.components.dweet
 # homeassistant.components.sensor.dweet
-dweepy==0.2.0
+dweepy==0.3.0
 
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.13
@@ -526,9 +529,6 @@ pyebox==0.1.0
 # homeassistant.components.eight_sleep
 pyeight==0.0.4
 
-# homeassistant.components.notify.html5
-pyelliptic==1.5.7
-
 # homeassistant.components.media_player.emby
 pyemby==1.2
 
@@ -711,7 +711,7 @@ pyunifi==2.12
 pyvera==0.2.30
 
 # homeassistant.components.notify.html5
-pywebpush==0.6.1
+pywebpush==1.0.0
 
 # homeassistant.components.wemo
 pywemo==0.4.19
@@ -753,7 +753,7 @@ schiene==0.18
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==4.0.0
+sendgrid==4.1.0
 
 # homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat

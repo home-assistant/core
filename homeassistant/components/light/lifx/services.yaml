@@ -1,3 +1,23 @@
+lifx_set_state:
+  description: Set a color/brightness and possibliy turn the light on/off
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to set a state on
+      example: 'light.garage'
+
+    '...':
+      description: All turn_on parameters can be used to specify a color
+
+    transition:
+      description: Duration in seconds it takes to get to the final state
+      example: 10
+
+    power:
+      description: Turn the light on (True) or off (False). Leave out to keep the power as it is.
+      example: True
+
+
 lifx_effect_breathe:
   description: Run a breathe effect by fading to a color and back.
 

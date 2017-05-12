@@ -20,6 +20,9 @@ omit =
     homeassistant/components/android_ip_webcam.py
     homeassistant/components/*/android_ip_webcam.py
 
+    homeassistant/components/axis.py
+    homeassistant/components/*/axis.py
+
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
 
@@ -84,6 +87,7 @@ omit =
     homeassistant/components/*/qwikswitch.py
 
     homeassistant/components/raspihats.py
+    homeassistant/components/*/raspihats.py
 
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
@@ -180,6 +184,7 @@ omit =
     homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/hikvision.py
     homeassistant/components/binary_sensor/iss.py
+    homeassistant/components/binary_sensor/mystrom.py
     homeassistant/components/binary_sensor/pilight.py
     homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
