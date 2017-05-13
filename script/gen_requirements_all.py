@@ -66,7 +66,6 @@ TEST_REQUIREMENTS = (
     'mficlient',
     'pmsensor',
     'yahoo-finance',
-    'pymochad',
     'mutagen',
     'ha-ffmpeg',
     'gTTS-token',
