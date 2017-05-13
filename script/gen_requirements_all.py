@@ -44,7 +44,6 @@ TEST_REQUIREMENTS = (
     'apns2',
     'sqlalchemy',
     'forecastio',
-    'astral',
     'aiohttp_cors',
     'pilight',
     'fuzzywuzzy',
