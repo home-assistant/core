@@ -31,8 +31,8 @@ DEFAULT_PORT = '161'
 DEFAULT_VERSION = '1'
 
 SNMP_VERSIONS = {
-    '1'  : 0,
-    '2c' : 1
+    '1': 0,
+    '2c': 1
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VERSION, default=DEFAULT_VERSION):
-      vol.In(SNMP_VERSIONS),
+        vol.In(SNMP_VERSIONS),
 })
 
 
