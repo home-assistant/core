@@ -31,14 +31,13 @@ ATTR_HTML = 'html'
 CONF_STARTTLS = 'starttls'
 CONF_DEBUG = 'debug'
 CONF_SERVER = 'server'
-CONF_PRODUCT_NAME = 'product_name'
+CONF_SENDER_NAME = 'sender_name'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 25
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
 DEFAULT_STARTTLS = False
-DEFAULT_PRODUCT_NAME = 'HomeAssistant'
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_PRODUCT_NAME, default=DEFAULT_PRODUCT_NAME): cv.string,
+    vol.Optional(CONF_SENDER_NAME): cv.string,
     vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): cv.boolean,
 })
 
@@ -66,7 +65,7 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         config.get(CONF_RECIPIENT),
-        config.get(CONF_PRODUCT_NAME),
+        config.get(CONF_SENDER_NAME),
         config.get(CONF_DEBUG))
 
     if mail_service.connection_is_valid():
@@ -79,7 +78,7 @@ class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
     def __init__(self, server, port, timeout, sender, starttls, username,
-                 password, recipients, product_name, debug):
+                 password, recipients, sender_name, debug):
         """Initialize the service."""
         self._server = server
         self._port = port
@@ -89,7 +88,7 @@ class MailNotificationService(BaseNotificationService):
         self.username = username
         self.password = password
         self.recipients = recipients
-        self._product_name = product_name
+        self._sender_name = sender_name
         self._timeout = timeout
         self.debug = debug
         self.tries = 2
@@ -153,8 +152,11 @@ class MailNotificationService(BaseNotificationService):
 
         msg['Subject'] = subject
         msg['To'] = ','.join(self.recipients)
-        msg['From'] = '{} <{}>'.format(self._product_name, self._sender)
-        msg['X-Mailer'] = self._product_name
+        if self._sender_name:
+            msg['From'] = '{} <{}>'.format(self._sender_name, self._sender)
+        else:
+            msg['From'] = self._sender
+        msg['X-Mailer'] = 'HomeAssistant'
         msg['Date'] = email.utils.format_datetime(dt_util.now())
         msg['Message-Id'] = email.utils.make_msgid()
 
