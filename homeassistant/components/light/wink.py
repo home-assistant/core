@@ -4,6 +4,7 @@ Support for Wink lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.wink/
 """
+import asyncio
 import colorsys
 
 from homeassistant.components.light import (
@@ -37,6 +38,11 @@ class WinkLight(WinkDevice, Light):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['light'].append(self)
 
     @property
     def is_on(self):
