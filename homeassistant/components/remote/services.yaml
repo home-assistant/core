@@ -1,7 +1,7 @@
 # Describes the format for available remote services
 
 turn_on:
-  description: Semds the Power On Command
+  description: Sends the Power On Command
 
   fields:
     entity_id:
@@ -20,7 +20,7 @@ turn_off:
       example: 'remote.family_room'
 
 send_command:
-  description: Semds a single command to a single device
+  description: Sends a single command to a single device
 
   fields:
     entity_id:
