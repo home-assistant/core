@@ -223,13 +223,6 @@ class ActiveConnection:
         """Print an error message."""
         _LOGGER.error("WS %s: %s %s", id(self.wsock), message1, message2)
 
-    def send_message(self, message):
-        """Send messages.
-
-        Async friendly.
-        """
-        self.to_write.put_nowait(message)
-
     @asyncio.coroutine
     def _writer(self):
         """Write outgoing messages."""
@@ -300,7 +293,7 @@ class ActiveConnection:
                 cur_id = msg['id']
 
                 if cur_id <= last_id:
-                    self.send_message(error_message(
+                    self.to_write.put_nowait(error_message(
                         cur_id, ERR_ID_REUSE,
                         'Identifier values have to increase.'))
 
@@ -392,12 +385,12 @@ class ActiveConnection:
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
-            self.send_message(event_message(msg['id'], event))
+            self.to_write.put_nowait(event_message(msg['id'], event))
 
         self.event_listeners[msg['id']] = self.hass.bus.async_listen(
             msg['event_type'], forward_events)
 
-        self.send_message(result_message(msg['id']))
+        self.to_write.put_nowait(result_message(msg['id']))
 
     def handle_unsubscribe_events(self, msg):
         """Handle unsubscribe events command.
@@ -410,9 +403,9 @@ class ActiveConnection:
 
         if subscription in self.event_listeners:
             self.event_listeners.pop(subscription)()
-            self.send_message(result_message(msg['id']))
+            self.to_write.put_nowait(result_message(msg['id']))
         else:
-            self.send_message(error_message(
+            self.to_write.put_nowait(error_message(
                 msg['id'], ERR_NOT_FOUND,
                 'Subscription not found.'))
 
@@ -428,7 +421,7 @@ class ActiveConnection:
             """Call a service and fire complete message."""
             yield from self.hass.services.async_call(
                 msg['domain'], msg['service'], msg['service_data'], True)
-            self.send_message(result_message(msg['id']))
+            self.to_write.put_nowait(result_message(msg['id']))
 
         self.hass.async_add_job(call_service_helper(msg))
 
@@ -439,7 +432,7 @@ class ActiveConnection:
         """
         msg = GET_STATES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        self.to_write.put_nowait(result_message(
             msg['id'], self.hass.states.async_all()))
 
     def handle_get_services(self, msg):
@@ -449,7 +442,7 @@ class ActiveConnection:
         """
         msg = GET_SERVICES_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        self.to_write.put_nowait(result_message(
             msg['id'], self.hass.services.async_services()))
 
     def handle_get_config(self, msg):
@@ -459,7 +452,7 @@ class ActiveConnection:
         """
         msg = GET_CONFIG_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        self.to_write.put_nowait(result_message(
             msg['id'], self.hass.config.as_dict()))
 
     def handle_get_panels(self, msg):
@@ -469,7 +462,7 @@ class ActiveConnection:
         """
         msg = GET_PANELS_MESSAGE_SCHEMA(msg)
 
-        self.send_message(result_message(
+        self.to_write.put_nowait(result_message(
             msg['id'], self.hass.data[frontend.DATA_PANELS]))
 
     def handle_ping(self, msg):
@@ -477,4 +470,4 @@ class ActiveConnection:
 
         Async friendly.
         """
-        self.send_message(pong_message(msg['id']))
+        self.to_write.put_nowait(pong_message(msg['id']))
