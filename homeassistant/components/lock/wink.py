@@ -4,6 +4,7 @@ Support for Wink locks.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.wink/
 """
+import asyncio
 import logging
 from os import path
 
@@ -121,7 +122,11 @@ class WinkLockDevice(WinkDevice, LockDevice):
     def __init__(self, wink, hass):
         """Initialize the lock."""
         super().__init__(wink, hass)
-        hass.data[DOMAIN]['entities']['lock'].append(self)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['lock'].append(self)
 
     @property
     def is_locked(self):

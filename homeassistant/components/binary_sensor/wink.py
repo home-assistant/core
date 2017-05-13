@@ -4,6 +4,7 @@ Support for Wink binary sensors.
 For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/binary_sensor.wink/
 """
+import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -92,7 +93,6 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
     def __init__(self, wink, hass):
         """Initialize the Wink binary sensor."""
         super().__init__(wink, hass)
-        hass.data[DOMAIN]['entities']['binary_sensor'].append(self)
         if hasattr(self.wink, 'unit'):
             self._unit_of_measurement = self.wink.unit()
         else:
@@ -101,6 +101,11 @@ class WinkBinarySensorDevice(WinkDevice, BinarySensorDevice, Entity):
             self.capability = self.wink.capability()
         else:
             self.capability = None
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['binary_sensor'].append(self)
 
     @property
     def is_on(self):
