@@ -1,8 +1,9 @@
 """The tests for the discovery component."""
 import asyncio
 import os
+from unittest.mock import patch, MagicMock
 
-from unittest.mock import patch
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
@@ -32,6 +33,15 @@ IGNORE_CONFIG = {
         'ignore': [SERVICE_NO_PLATFORM]
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def netdisco_mock():
+    """Mock netdisco."""
+    with patch.dict('sys.modules', {
+        'netdisco.discovery': MagicMock(),
+    }):
+        yield
 
 
 @asyncio.coroutine
