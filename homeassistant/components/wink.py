@@ -75,6 +75,7 @@ def setup(hass, config):
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['entities'] = []
     hass.data[DOMAIN]['unique_ids'] = []
+    hass.data[DOMAIN]['entities'] = {}
 
     user_agent = config[DOMAIN].get(CONF_USER_AGENT)
 
@@ -154,10 +155,11 @@ def setup(hass, config):
     def force_update(call):
         """Force all devices to poll the Wink API."""
         _LOGGER.info("Refreshing Wink states from API")
-        for entity in hass.data[DOMAIN]['entities']:
+        for entity_list in hass.data[DOMAIN]['entities'].values():
             # Throttle the calls to Wink API
-            time.sleep(1)
-            entity.schedule_update_ha_state(True)
+            for entity in entity_list:
+                time.sleep(1)
+                entity.schedule_update_ha_state(True)
     hass.services.register(DOMAIN, SERVICE_REFRESH_STATES, force_update)
 
     def pull_new_devices(call):
@@ -169,6 +171,7 @@ def setup(hass, config):
 
     # Load components for the devices in Wink that we support
     for component in WINK_COMPONENTS:
+        hass.data[DOMAIN]['entities'][component] = []
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -183,7 +186,6 @@ class WinkDevice(Entity):
         self.wink = wink
         hass.data[DOMAIN]['pubnub'].add_subscription(
             self.wink.pubnub_channel, self._pubnub_update)
-        hass.data[DOMAIN]['entities'].append(self)
         hass.data[DOMAIN]['unique_ids'].append(self.wink.object_id() +
                                                self.wink.name())
 

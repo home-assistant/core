@@ -4,6 +4,8 @@ Support for Wink Covers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.wink/
 """
+import asyncio
+
 from homeassistant.components.cover import CoverDevice
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
@@ -30,6 +32,11 @@ class WinkCoverDevice(WinkDevice, CoverDevice):
     def __init__(self, wink, hass):
         """Initialize the cover."""
         super().__init__(wink, hass)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['cover'].append(self)
 
     def close_cover(self):
         """Close the shade."""
