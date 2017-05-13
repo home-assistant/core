@@ -62,6 +62,9 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
+    homeassistant/components/kira.py
+    homeassistant/components/*/kira.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
