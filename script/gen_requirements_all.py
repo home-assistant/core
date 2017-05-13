@@ -71,7 +71,6 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'gTTS-token',
     'pywebpush',
-    'pyelliptic',
     'PyJWT',
 )
 
