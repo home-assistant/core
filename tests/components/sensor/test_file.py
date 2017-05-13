@@ -1,5 +1,4 @@
 """The tests for local file sensor platform."""
-import json
 import unittest
 from unittest.mock import Mock, patch
 
@@ -11,12 +10,6 @@ from homeassistant.setup import setup_component
 from homeassistant.const import STATE_UNKNOWN
 
 from tests.common import get_test_home_assistant
-
-
-def create_file(path, data):
-    """Create a sensor file."""
-    with open(path, 'w') as test_file:
-        test_file.write(data)
 
 
 class TestFileSensor(unittest.TestCase):
@@ -42,17 +35,11 @@ class TestFileSensor(unittest.TestCase):
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
-
-        create_file('mock.file1', '43\n45\n21')
-
-        m_open = MockOpen()
+        m_open = MockOpen(read_data='43\n45\n21')
         with patch('homeassistant.components.sensor.file.open', m_open,
                    create=True):
-            content = open('mock.file1')
-            result = content.readlines()[-1].strip()
-
-        self.assertEqual(result, '21')
+            assert setup_component(self.hass, 'sensor', config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file1')
         self.assertEqual(state.state, '21')
@@ -70,22 +57,17 @@ class TestFileSensor(unittest.TestCase):
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
+        data = '{"temperature": 29, "humidity": 31}\n' \
+               '{"temperature": 26, "humidity": 36}'
 
-        create_file('mock.file2',
-                    '{"temperature": 29, "humidity": 31}\n'
-                    '{"temperature": 26, "humidity": 36}')
-
-        m_open = MockOpen()
+        m_open = MockOpen(read_data=data)
         with patch('homeassistant.components.sensor.file.open', m_open,
                    create=True):
-            content = open('mock.file2')
-            result = content.readlines()[-1].strip()
-
-        self.assertEqual(result, '{"temperature": 26, "humidity": 36}')
+            assert setup_component(self.hass, 'sensor', config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file2')
-        self.assertEqual(state.state, str(json.loads(result)['temperature']))
+        self.assertEqual(state.state, '26')
 
     @patch('os.path.isfile', Mock(return_value=True))
     @patch('os.access', Mock(return_value=True))
@@ -99,17 +81,11 @@ class TestFileSensor(unittest.TestCase):
             }
         }
 
-        assert setup_component(self.hass, 'sensor', config)
-
-        create_file('mock.file', '')
-
-        m_open = MockOpen()
+        m_open = MockOpen(read_data='')
         with patch('homeassistant.components.sensor.file.open', m_open,
                    create=True):
-            content = open('mock.file')
-            result = content.read()
-
-        self.assertEqual(result, '')
+            assert setup_component(self.hass, 'sensor', config)
+            self.hass.block_till_done()
 
         state = self.hass.states.get('sensor.file3')
         self.assertEqual(state.state, STATE_UNKNOWN)
