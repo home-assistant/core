@@ -47,7 +47,6 @@ TEST_REQUIREMENTS = (
     'aiohttp_cors',
     'pilight',
     'fuzzywuzzy',
-    'datadog',
     'rflink',
     'ring_doorbell',
     'sleepyq',
