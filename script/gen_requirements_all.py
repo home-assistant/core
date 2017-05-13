@@ -58,7 +58,6 @@ TEST_REQUIREMENTS = (
     'evohomeclient',
     'pexpect',
     'hbmqtt',
-    'pychromecast',
     'pycmus',
     'fsapi',
     'paho',
