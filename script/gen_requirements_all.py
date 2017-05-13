@@ -57,7 +57,6 @@ TEST_REQUIREMENTS = (
     'pexpect',
     'hbmqtt',
     'paho',
-    'jwt',
     'dsmr_parser',
     'mficlient',
     'pmsensor',
