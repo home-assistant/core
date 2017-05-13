@@ -3,7 +3,6 @@ from unittest import mock
 import urllib
 
 import pytest
-# from pyunifi import controller
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import DOMAIN, unifi as unifi
