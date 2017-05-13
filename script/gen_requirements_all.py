@@ -38,7 +38,6 @@ TEST_REQUIREMENTS = (
     'uvcclient',
     'somecomfort',
     'aioautomatic',
-    'pyunifi',
     'SoCo',
     'libsoundtouch',
     'rxv',
