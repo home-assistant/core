@@ -56,7 +56,6 @@ TEST_REQUIREMENTS = (
     'evohomeclient',
     'pexpect',
     'hbmqtt',
-    'fsapi',
     'paho',
     'jwt',
     'dsmr_parser',
