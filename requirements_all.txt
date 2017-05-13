@@ -90,7 +90,7 @@ beautifulsoup4==4.6.0
 bellows==0.2.7
 
 # homeassistant.components.blink
-blinkpy==0.5.2
+blinkpy==0.6.0
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
