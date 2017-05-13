@@ -1,6 +1,7 @@
 """Tests for the Z-Wave init."""
 import asyncio
 from collections import OrderedDict
+from datetime import datetime
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
@@ -14,7 +15,8 @@ import pytest
 import unittest
 from unittest.mock import patch, MagicMock
 
-from tests.common import get_test_home_assistant
+from tests.common import (
+    get_test_home_assistant, async_fire_time_changed, mock_http_component)
 from tests.mock.zwave import MockNetwork, MockNode, MockValue, MockEntityValues
 
 
@@ -67,6 +69,70 @@ def test_config_access_error():
     node.values.values.side_effect = side_effect
     result = zwave.get_config_value(node, 1)
     assert result is None
+
+
+@asyncio.coroutine
+def test_network_options(hass, mock_openzwave):
+    """Test network options."""
+    result = yield from async_setup_component(hass, 'zwave', {
+        'zwave': {
+            'usb_path': 'mock_usb_path',
+            'config_path': 'mock_config_path',
+        }})
+
+    assert result
+
+    network = hass.data[zwave.ZWAVE_NETWORK]
+    assert network.options.device == 'mock_usb_path'
+    assert network.options.config_path == 'mock_config_path'
+
+
+@asyncio.coroutine
+def test_auto_heal_midnight(hass, mock_openzwave):
+    """Test network auto-heal at midnight."""
+    assert (yield from async_setup_component(hass, 'zwave', {
+        'zwave': {
+            'autoheal': True,
+        }}))
+    network = hass.data[zwave.ZWAVE_NETWORK]
+    assert not network.heal.called
+
+    time = datetime(2017, 5, 6, 0, 0, 0)
+    async_fire_time_changed(hass, time)
+    yield from hass.async_block_till_done()
+    assert network.heal.called
+    assert len(network.heal.mock_calls) == 1
+
+
+@asyncio.coroutine
+def test_auto_heal_disabled(hass, mock_openzwave):
+    """Test network auto-heal disabled."""
+    assert (yield from async_setup_component(hass, 'zwave', {
+        'zwave': {
+            'autoheal': False,
+        }}))
+    network = hass.data[zwave.ZWAVE_NETWORK]
+    assert not network.heal.called
+
+    time = datetime(2017, 5, 6, 0, 0, 0)
+    async_fire_time_changed(hass, time)
+    yield from hass.async_block_till_done()
+    assert not network.heal.called
+
+
+@asyncio.coroutine
+def test_frontend_panel_register(hass, mock_openzwave):
+    """Test network auto-heal disabled."""
+    mock_http_component(hass)
+    hass.config.components |= set(['frontend'])
+    with patch('homeassistant.components.zwave.'
+               'register_built_in_panel') as mock_register:
+        assert (yield from async_setup_component(hass, 'zwave', {
+            'zwave': {
+                'autoheal': False,
+            }}))
+    assert mock_register.called
+    assert len(mock_register.mock_calls) == 1
 
 
 @asyncio.coroutine
