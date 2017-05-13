@@ -13,7 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_VALUE_TEMPLATE, CONF_NAME, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN)
+    CONF_VALUE_TEMPLATE, CONF_NAME, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,19 +78,18 @@ class FileSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Get the latest entry from a file and updates the state."""
         try:
             with open(self._file_path, 'r', encoding='utf-8') as file_data:
                 data = file_data.readlines()[-1].strip()
         except (IndexError, FileNotFoundError, IsADirectoryError):
-            data = STATE_UNKNOWN
             _LOGGER.warning("File or data not present at the moment: %s",
                             os.path.basename(self._file_path))
+            return
 
         if self._val_tpl is not None:
             self._state = self._val_tpl.async_render_with_possible_json_value(
-                data, STATE_UNKNOWN)
+                data, None)
         else:
             self._state = data
