@@ -1,9 +1,20 @@
 """The tests for the Cast Media player platform."""
 # pylint: disable=protected-access
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
+
+import pytest
 
 from homeassistant.components.media_player import cast
+
+
+@pytest.fixture(autouse=True)
+def cast_mock():
+    """Mock pychromecast."""
+    with patch.dict('sys.modules', {
+        'pychromecast': MagicMock(),
+    }):
+        yield
 
 
 class FakeChromeCast(object):

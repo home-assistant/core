@@ -495,3 +495,38 @@ def mock_restore_cache(hass, states):
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
     mock_component(hass, recorder.DOMAIN)
+
+
+class MockDependency:
+    """Decorator to mock install a dependency."""
+
+    def __init__(self, root, *args):
+        """Initialize decorator."""
+        self.root = root
+        self.submodules = args
+
+    def __call__(self, func):
+        """Apply decorator."""
+        from unittest.mock import MagicMock, patch
+
+        def resolve(mock, path):
+            """Resolve a mock."""
+            if not path:
+                return mock
+
+            return resolve(getattr(mock, path[0]), path[1:])
+
+        def run_mocked(*args, **kwargs):
+            """Run with mocked dependencies."""
+            base = MagicMock()
+            to_mock = {
+                "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
+                for tom in self.submodules
+            }
+            to_mock[self.root] = base
+
+            with patch.dict('sys.modules', to_mock):
+                args = list(args) + [base]
+                func(*args, **kwargs)
+
+        return run_mocked
