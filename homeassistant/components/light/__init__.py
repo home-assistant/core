@@ -50,6 +50,7 @@ ATTR_TRANSITION = "transition"
 ATTR_RGB_COLOR = "rgb_color"
 ATTR_XY_COLOR = "xy_color"
 ATTR_COLOR_TEMP = "color_temp"
+ATTR_KELVIN = "kelvin"
 ATTR_MIN_MIREDS = "min_mireds"
 ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
@@ -104,6 +105,7 @@ LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
                            vol.Coerce(tuple)),
     ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
+    ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
@@ -142,18 +144,19 @@ def is_on(hass, entity_id=None):
 
 
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, white_value=None,
-            profile=None, flash=None, effect=None, color_name=None):
+            rgb_color=None, xy_color=None, color_temp=None, kelvin=None,
+            white_value=None, profile=None, flash=None, effect=None,
+            color_name=None):
     """Turn all or specified light on."""
     hass.add_job(
         async_turn_on, hass, entity_id, transition, brightness,
-        rgb_color, xy_color, color_temp, white_value,
+        rgb_color, xy_color, color_temp, kelvin, white_value,
         profile, flash, effect, color_name)
 
 
 @callback
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
-                  rgb_color=None, xy_color=None, color_temp=None,
+                  rgb_color=None, xy_color=None, color_temp=None, kelvin=None,
                   white_value=None, profile=None, flash=None, effect=None,
                   color_name=None):
     """Turn all or specified light on."""
@@ -166,6 +169,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_COLOR_TEMP, color_temp),
+            (ATTR_KELVIN, kelvin),
             (ATTR_WHITE_VALUE, white_value),
             (ATTR_FLASH, flash),
             (ATTR_EFFECT, effect),
@@ -217,6 +221,11 @@ def preprocess_turn_on_alternatives(params):
     color_name = params.pop(ATTR_COLOR_NAME, None)
     if color_name is not None:
         params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
+    kelvin = params.pop(ATTR_KELVIN, None)
+    if kelvin is not None:
+        mired = color_util.color_temperature_kelvin_to_mired(kelvin)
+        params[ATTR_COLOR_TEMP] = mired
 
 
 @asyncio.coroutine
