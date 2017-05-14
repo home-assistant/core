@@ -297,6 +297,7 @@ class SonosDevice(MediaPlayerDevice):
         self._media_next_title = None
         self._support_previous_track = False
         self._support_next_track = False
+        self._support_play = False
         self._support_stop = False
         self._support_pause = False
         self._current_track_uri = None
@@ -411,6 +412,7 @@ class SonosDevice(MediaPlayerDevice):
             self._current_track_is_radio_stream = False
             self._support_previous_track = False
             self._support_next_track = False
+            self._support_play = False
             self._support_stop = False
             self._support_pause = False
             self._is_playing_tv = False
@@ -494,6 +496,7 @@ class SonosDevice(MediaPlayerDevice):
 
             support_previous_track = False
             support_next_track = False
+            support_play = False
             support_stop = False
             support_pause = False
 
@@ -515,7 +518,8 @@ class SonosDevice(MediaPlayerDevice):
             )
             support_previous_track = False
             support_next_track = False
-            support_stop = False
+            support_play = True
+            support_stop = True
             support_pause = False
 
             source_name = 'Radio'
@@ -578,6 +582,7 @@ class SonosDevice(MediaPlayerDevice):
             )
             support_previous_track = True
             support_next_track = True
+            support_play = True
             support_stop = True
             support_pause = True
 
@@ -629,6 +634,13 @@ class SonosDevice(MediaPlayerDevice):
             else:
                 playlist_size = int(playlist_size)
 
+            if playlist_size is None or playlist_size == 0:
+                support_play = False
+                support_pause = False
+                support_stop = False
+                support_previous_track = False
+                support_next_track = False
+
             if playlist_position is not None and playlist_size is not None:
 
                 if playlist_position == 1:
@@ -651,6 +663,7 @@ class SonosDevice(MediaPlayerDevice):
         self._current_track_is_radio_stream = is_radio_stream
         self._support_previous_track = support_previous_track
         self._support_next_track = support_next_track
+        self._support_play = support_play
         self._support_stop = support_stop
         self._support_pause = support_pause
         self._is_playing_tv = is_playing_tv
@@ -813,6 +826,9 @@ class SonosDevice(MediaPlayerDevice):
         if not self._support_next_track:
             supported = supported ^ SUPPORT_NEXT_TRACK
 
+        if not self._support_play:
+            supported = supported ^ SUPPORT_PLAY
+
         if not self._support_stop:
             supported = supported ^ SUPPORT_STOP
 
@@ -889,7 +905,8 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def turn_off(self):
         """Turn off media player."""
-        self.media_pause()
+        if self._support_pause:
+            self.media_pause()
 
     @soco_error
     @soco_coordinator
@@ -936,7 +953,8 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def turn_on(self):
         """Turn the media player on."""
-        self.media_play()
+        if self.support_play:
+            self.media_play()
 
     @soco_error
     @soco_coordinator
