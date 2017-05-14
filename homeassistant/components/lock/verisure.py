@@ -54,7 +54,7 @@ class VerisureDoorlock(LockDevice):
     def available(self):
         """Return True if entity is available."""
         return hub.get_first(
-            "$.doorLockStatusList[%s]",
+            "$.doorLockStatusList[?(@.deviceLabel=='%s')]",
             self._device_label) is not None
 
     @property
