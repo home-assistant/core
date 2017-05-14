@@ -43,7 +43,7 @@ class VerisureDoorlock(LockDevice):
         """Return the name of the lock."""
         return hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].area",
-            self._device_label)
+            self._device_label) + " lock"
 
     @property
     def state(self):
