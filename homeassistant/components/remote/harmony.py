@@ -16,11 +16,11 @@ from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, ATTR_ENTITY_ID)
 from homeassistant.components.remote import (
     PLATFORM_SCHEMA, DOMAIN, ATTR_DEVICE, ATTR_COMMAND,
-    ATTR_COMMANDS, ATTR_ACTIVITY, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
+    ATTR_ACTIVITY, ATTR_NUM_REPEATS, ATTR_DELAY_SECS)
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['pyharmony==1.0.14']
+REQUIREMENTS = ['pyharmony==1.0.16']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -171,19 +171,12 @@ class HarmonyRemote(remote.RemoteDevice):
         pyharmony.ha_power_off(self._token, self._ip, self._port)
 
     def send_command(self, **kwargs):
-        """Send a command to one device."""
-        import pyharmony
-        pyharmony.ha_send_command(
-            self._token, self._ip, self._port, kwargs[ATTR_DEVICE],
-            kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]),
-            float(kwargs[ATTR_DELAY_SECS]))
-
-    def send_commands(self, **kwargs):
         """Send a set of commands to one device."""
         import pyharmony
         pyharmony.ha_send_commands(
             self._token, self._ip, self._port, kwargs[ATTR_DEVICE],
-            kwargs[ATTR_COMMANDS], float(kwargs[ATTR_DELAY_SECS]))
+            kwargs[ATTR_COMMAND], int(kwargs[ATTR_NUM_REPEATS]),
+            float(kwargs[ATTR_DELAY_SECS]))
 
     def sync(self):
         """Sync the Harmony device with the web service."""

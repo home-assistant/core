@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_ACTIVITY = 'activity'
 ATTR_COMMAND = 'command'
-ATTR_COMMANDS = 'commands'
 ATTR_DEVICE = 'device'
 ATTR_NUM_REPEATS = 'num_repeats'
 ATTR_DELAY_SECS = 'delay_secs'
@@ -41,7 +40,6 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 SERVICE_SEND_COMMAND = 'send_command'
-SERVICE_SEND_COMMANDS = 'send_commands'
 SERVICE_SYNC = 'sync'
 
 DEFAULT_NUM_REPEATS = '1'
@@ -57,14 +55,8 @@ REMOTE_SERVICE_TURN_ON_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
 
 REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_DEVICE): cv.string,
-    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.string,
-    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): cv.string
-})
-
-REMOTE_SERVICE_SEND_COMMANDS_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_DEVICE): cv.string,
-    vol.Required(ATTR_COMMANDS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): cv.string
 })
 
@@ -105,18 +97,6 @@ def send_command(hass, device, command, entity_id=None,
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
-def send_commands(hass, device, commands, entity_id=None, delay_secs=None):
-    """Send a command to a device."""
-    data = {ATTR_DEVICE: str(device), ATTR_COMMANDS: commands}
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    if delay_secs:
-        data[ATTR_DELAY_SECS] = delay_secs
-
-    hass.services.call(DOMAIN, SERVICE_SEND_COMMANDS, data)
-
-
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for remotes."""
@@ -132,7 +112,6 @@ def async_setup(hass, config):
         activity_id = service.data.get(ATTR_ACTIVITY)
         device = service.data.get(ATTR_DEVICE)
         command = service.data.get(ATTR_COMMAND)
-        commands = service.data.get(ATTR_COMMANDS)
         num_repeats = service.data.get(ATTR_NUM_REPEATS)
         delay_secs = service.data.get(ATTR_DELAY_SECS)
 
@@ -143,9 +122,6 @@ def async_setup(hass, config):
                 yield from remote.async_send_command(
                     device=device, command=command,
                     num_repeats=num_repeats, delay_secs=delay_secs)
-            elif service.service == SERVICE_SEND_COMMANDS:
-                yield from remote.async_send_commands(
-                    device=device, commands=commands, delay_secs=delay_secs)
             else:
                 yield from remote.async_turn_off()
 
@@ -179,10 +155,6 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
         descriptions.get(SERVICE_SEND_COMMAND),
         schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEND_COMMANDS, async_handle_remote_service,
-        descriptions.get(SERVICE_SEND_COMMANDS),
-        schema=REMOTE_SERVICE_SEND_COMMANDS_SCHEMA)
 
     return True
 
@@ -194,10 +166,6 @@ class RemoteDevice(ToggleEntity):
         """Send a command to a device."""
         raise NotImplementedError()
 
-    def send_commands(self, **kwargs):
-        """Send a set of commands to a device."""
-        raise NotImplementedError()
-
     def async_send_command(self, **kwargs):
         """Send a command to a device.
 
@@ -205,11 +173,3 @@ class RemoteDevice(ToggleEntity):
         """
         return self.hass.loop.run_in_executor(
             None, ft.partial(self.send_command, **kwargs))
-
-    def async_send_commands(self, **kwargs):
-        """Send a set of commands to a device.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.send_commands, **kwargs))
