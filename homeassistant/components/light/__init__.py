@@ -215,10 +215,8 @@ def async_setup(hass, config):
     yield from component.async_setup(config)
 
     # load profiles from files
-    profiles = yield from hass.loop.run_in_executor(
-        None, _load_profile_data, hass)
-
-    if profiles is None:
+    profiles_valid = yield from Profiles.load_profiles(hass)
+    if not profiles_valid:
         return False
 
     @asyncio.coroutine
@@ -232,7 +230,7 @@ def async_setup(hass, config):
         params.pop(ATTR_ENTITY_ID, None)
 
         # Processing extra data for turn light on request.
-        profile = profiles.get(params.pop(ATTR_PROFILE, None))
+        profile = Profiles.get(params.pop(ATTR_PROFILE, None))
 
         if profile:
             params.setdefault(ATTR_XY_COLOR, profile[:2])
@@ -287,31 +285,51 @@ def async_setup(hass, config):
     return True
 
 
-def _load_profile_data(hass):
-    """Load built-in profiles and custom profiles."""
-    profile_paths = [os.path.join(os.path.dirname(__file__),
-                                  LIGHT_PROFILES_FILE),
-                     hass.config.path(LIGHT_PROFILES_FILE)]
-    profiles = {}
+class Profiles:
+    """Representation of available color profiles."""
 
-    for profile_path in profile_paths:
-        if not os.path.isfile(profile_path):
-            continue
-        with open(profile_path) as inp:
-            reader = csv.reader(inp)
+    _all = None
 
-            # Skip the header
-            next(reader, None)
+    @classmethod
+    @asyncio.coroutine
+    def load_profiles(cls, hass):
+        """Load and cache profiles."""
+        def load_profile_data(hass):
+            """Load built-in profiles and custom profiles."""
+            profile_paths = [os.path.join(os.path.dirname(__file__),
+                                          LIGHT_PROFILES_FILE),
+                             hass.config.path(LIGHT_PROFILES_FILE)]
+            profiles = {}
 
-            try:
-                for rec in reader:
-                    profile, color_x, color_y, brightness = PROFILE_SCHEMA(rec)
-                    profiles[profile] = (color_x, color_y, brightness)
-            except vol.MultipleInvalid as ex:
-                _LOGGER.error("Error parsing light profile from %s: %s",
-                              profile_path, ex)
-                return None
-    return profiles
+            for profile_path in profile_paths:
+                if not os.path.isfile(profile_path):
+                    continue
+                with open(profile_path) as inp:
+                    reader = csv.reader(inp)
+
+                    # Skip the header
+                    next(reader, None)
+
+                    try:
+                        for rec in reader:
+                            profile, color_x, color_y, brightness = \
+                                PROFILE_SCHEMA(rec)
+                            profiles[profile] = (color_x, color_y, brightness)
+                    except vol.MultipleInvalid as ex:
+                        _LOGGER.error(
+                            "Error parsing light profile from %s: %s",
+                            profile_path, ex)
+                        return None
+            return profiles
+
+        cls._all = yield from hass.loop.run_in_executor(
+            None, load_profile_data, hass)
+        return cls._all is not None
+
+    @classmethod
+    def get(cls, name):
+        """Return a named profile."""
+        return cls._all.get(name)
 
 
 class Light(ToggleEntity):
