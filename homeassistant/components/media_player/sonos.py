@@ -211,7 +211,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(
         DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
         descriptions.get(SERVICE_UPDATE_ALARM),
-                         schema=SONOS_UPDATE_ALARM_SCHEMA)
+        schema=SONOS_UPDATE_ALARM_SCHEMA)
 
 
 def _parse_timespan(timespan):

@@ -319,13 +319,12 @@ class TestSonosMediaPlayer(unittest.TestCase):
         })
         device = self.hass.data[sonos.DATA_SONOS][-1]
         device.hass = self.hass
-        spec = ['time', 'enabled', 'include_linked_zones', 'volume']
         alarm1 = alarms.Alarm(soco_mock)
         alarm1.configure_mock(_alarm_id="1", start_time=None, enabled=False,
                               include_linked_zones=False, volume=100)
         with mock.patch('soco.alarms.get_alarms', return_value=[alarm1]):
             attrs = {
-                'time': datetime.time(12,00),
+                'time': datetime.time(12, 00),
                 'enabled': True,
                 'include_linked_zones': True,
                 'volume': 0.30,
