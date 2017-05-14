@@ -40,6 +40,10 @@ turn_on:
       description: Number between 0..255 indicating brightness
       example: 120
 
+    brightness_pct:
+      description: Number between 0..100 indicating percentage of full brightness
+      example: 47
+
     profile:
       description: Name of a light profile to use
       example: relax

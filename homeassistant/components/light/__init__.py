@@ -56,8 +56,9 @@ ATTR_MAX_MIREDS = "max_mireds"
 ATTR_COLOR_NAME = "color_name"
 ATTR_WHITE_VALUE = "white_value"
 
-# int with value 0 .. 255 representing brightness of the light.
+# Brightness of the light, 0..255 or percentage
 ATTR_BRIGHTNESS = "brightness"
+ATTR_BRIGHTNESS_PCT = "brightness_pct"
 
 # String representing a profile (built-in ones or external defined).
 ATTR_PROFILE = "profile"
@@ -93,12 +94,14 @@ PROP_TO_ATTR = {
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
+VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
     ATTR_PROFILE: cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
@@ -144,21 +147,21 @@ def is_on(hass, entity_id=None):
 
 
 def turn_on(hass, entity_id=None, transition=None, brightness=None,
-            rgb_color=None, xy_color=None, color_temp=None, kelvin=None,
-            white_value=None, profile=None, flash=None, effect=None,
-            color_name=None):
+            brightness_pct=None, rgb_color=None, xy_color=None,
+            color_temp=None, kelvin=None, white_value=None,
+            profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     hass.add_job(
-        async_turn_on, hass, entity_id, transition, brightness,
+        async_turn_on, hass, entity_id, transition, brightness, brightness_pct,
         rgb_color, xy_color, color_temp, kelvin, white_value,
         profile, flash, effect, color_name)
 
 
 @callback
 def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
-                  rgb_color=None, xy_color=None, color_temp=None, kelvin=None,
-                  white_value=None, profile=None, flash=None, effect=None,
-                  color_name=None):
+                  brightness_pct=None, rgb_color=None, xy_color=None,
+                  color_temp=None, kelvin=None, white_value=None,
+                  profile=None, flash=None, effect=None, color_name=None):
     """Turn all or specified light on."""
     data = {
         key: value for key, value in [
@@ -166,6 +169,7 @@ def async_turn_on(hass, entity_id=None, transition=None, brightness=None,
             (ATTR_PROFILE, profile),
             (ATTR_TRANSITION, transition),
             (ATTR_BRIGHTNESS, brightness),
+            (ATTR_BRIGHTNESS_PCT, brightness_pct),
             (ATTR_RGB_COLOR, rgb_color),
             (ATTR_XY_COLOR, xy_color),
             (ATTR_COLOR_TEMP, color_temp),
@@ -226,6 +230,10 @@ def preprocess_turn_on_alternatives(params):
     if kelvin is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
         params[ATTR_COLOR_TEMP] = mired
+
+    brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
+    if brightness_pct is not None:
+        params[ATTR_BRIGHTNESS] = int(255 * brightness_pct/100)
 
 
 @asyncio.coroutine
