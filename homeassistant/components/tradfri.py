@@ -32,7 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
         vol.Inclusive(CONF_API_KEY, 'gateway'): cv.string,
         vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
-                 default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
+                     default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -92,7 +92,8 @@ def async_setup(hass, config):
         host = info['host']
 
         if host in keys:
-            yield from _setup_gateway(hass, config, host, keys[host]['key'], allow_tradfri_groups)
+            yield from _setup_gateway(hass, config, host, keys[host]['key'],
+                                      allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass, config, host)
 
@@ -101,7 +102,8 @@ def async_setup(hass, config):
     if host is None:
         return True
 
-    return (yield from _setup_gateway(hass, config, host, key, allow_tradfri_groups))
+    return (yield from _setup_gateway(hass, config, host, key,
+                                      allow_tradfri_groups))
 
 
 @asyncio.coroutine
