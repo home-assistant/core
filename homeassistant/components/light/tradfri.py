@@ -23,6 +23,7 @@ ALLOWED_TEMPERATURES = {
     IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
 }
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IKEA Tradfri Light platform."""
     if discovery_info is None:
