@@ -53,7 +53,8 @@ def request_configuration(hass, config, host):
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
         res = yield from _setup_gateway(hass, config, host,
-                                        callback_data.get('key'))
+                                        callback_data.get('key'),
+                                        DEFAULT_ALLOW_TRADFRI_GROUPS)
         if not res:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Unable to connect.")
