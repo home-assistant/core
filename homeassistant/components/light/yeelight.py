@@ -7,7 +7,6 @@ https://home-assistant.io/components/light.yeelight/
 import logging
 import colorsys
 
-
 import voluptuous as vol
 
 from homeassistant.util.color import (
