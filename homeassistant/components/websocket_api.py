@@ -237,6 +237,21 @@ class ActiveConnection:
             # Socket disconnected or cancelled by connection handler
             pass
 
+    @callback
+    def send_message_outside(self, message):
+        """Send a message to the client outside of the main task.
+
+        Closes connection if the client is not reading the messages.
+
+        Async friendly.
+        """
+        try:
+            self.to_write.put_nowait(message)
+        except asyncio.QueueFull:
+            self.log_error("Client exceeded max pending messages [2]:",
+                           MAX_PENDING_MSG)
+            self.hass.async_add_job(self.wsock.close())
+
     @asyncio.coroutine
     def handle(self):
         """Handle the websocket connection."""
@@ -342,7 +357,7 @@ class ActiveConnection:
             self.debug("Connection cancelled by server")
 
         except asyncio.QueueFull:
-            self.log_error("Client exceeded max pending messages:",
+            self.log_error("Client exceeded max pending messages [1]:",
                            MAX_PENDING_MSG)
             writer_task.cancel()
 
@@ -385,7 +400,7 @@ class ActiveConnection:
             if event.event_type == EVENT_TIME_CHANGED:
                 return
 
-            self.to_write.put_nowait(event_message(msg['id'], event))
+            self.send_message_outside(event_message(msg['id'], event))
 
         self.event_listeners[msg['id']] = self.hass.bus.async_listen(
             msg['event_type'], forward_events)
@@ -421,7 +436,7 @@ class ActiveConnection:
             """Call a service and fire complete message."""
             yield from self.hass.services.async_call(
                 msg['domain'], msg['service'], msg['service_data'], True)
-            self.to_write.put_nowait(result_message(msg['id']))
+            self.send_message_outside(result_message(msg['id']))
 
         self.hass.async_add_job(call_service_helper(msg))
 
