@@ -134,7 +134,15 @@ class VerisureHub(object):
     @Throttle(timedelta(seconds=60))
     def update_overview(self):
         """Update the overview."""
-        self.overview = self.session.get_overview()
+        try:
+            self.overview = self.session.get_overview()
+        except self._verisure.ResponseError as ex:
+            _LOGGER.error('Could not read overview, %s', ex)
+            if ex.status_code == 503:  # Service unavailable
+                _LOGGER.info('Trying to log in again')
+                self.login()
+            else:
+                raise
 
     @Throttle(timedelta(seconds=60))
     def update_smartcam_imageseries(self):
