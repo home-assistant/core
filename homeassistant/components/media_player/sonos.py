@@ -104,6 +104,7 @@ SONOS_UPDATE_ALARM_SCHEMA = SONOS_SCHEMA.extend({
     vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sonos platform."""
     import soco
@@ -1061,10 +1062,10 @@ class SonosDevice(MediaPlayerDevice):
         from soco import alarms
         a = None
         for alarm in alarms.get_alarms(self.soco):
-            if alarm._alarm_id == str(data[ATTR_ALARM_ID]):
-                _LOGGER.warning("found alarm %s" % alarm)
+            if alarm._alarm_id == str(data[ATTR_ALARM_ID]):  # pylint: disable=W0212
                 a = alarm
         if a is None:
+            _LOGGER.warning("did not find alarm with id %s", data[ATTR_ALARM_ID])
             return
         if ATTR_TIME in data:
             a.start_time = data[ATTR_TIME]
