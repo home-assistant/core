@@ -207,6 +207,18 @@ def toggle(hass, entity_id=None, transition=None):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
+def preprocess_turn_on_alternatives(params):
+    """Processing extra data for turn light on request."""
+    profile = Profiles.get(params.pop(ATTR_PROFILE, None))
+    if profile is not None:
+        params.setdefault(ATTR_XY_COLOR, profile[:2])
+        params.setdefault(ATTR_BRIGHTNESS, profile[2])
+
+    color_name = params.pop(ATTR_COLOR_NAME, None)
+    if color_name is not None:
+        params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Expose light control via statemachine and services."""
@@ -229,17 +241,7 @@ def async_setup(hass, config):
         target_lights = component.async_extract_from_service(service)
         params.pop(ATTR_ENTITY_ID, None)
 
-        # Processing extra data for turn light on request.
-        profile = Profiles.get(params.pop(ATTR_PROFILE, None))
-
-        if profile:
-            params.setdefault(ATTR_XY_COLOR, profile[:2])
-            params.setdefault(ATTR_BRIGHTNESS, profile[2])
-
-        color_name = params.pop(ATTR_COLOR_NAME, None)
-
-        if color_name is not None:
-            params[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        preprocess_turn_on_alternatives(params)
 
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
