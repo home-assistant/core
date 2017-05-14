@@ -37,17 +37,11 @@ aiohttp_cors==0.5.3
 # homeassistant.components.notify.apns
 apns2==0.1.1
 
-# homeassistant.components.datadog
-datadog==0.15.0
-
 # homeassistant.components.sensor.dsmr
 dsmr_parser==0.8
 
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.5
-
-# homeassistant.components.media_player.frontier_silicon
-fsapi==0.0.7
 
 # homeassistant.components.conversation
 fuzzywuzzy==0.15.0
@@ -75,9 +69,6 @@ libsoundtouch==0.3.0
 # homeassistant.components.switch.mfi
 mficlient==0.3.0
 
-# homeassistant.components.tts
-mutagen==1.37.0
-
 # homeassistant.components.mqtt
 paho-mqtt==1.2.3
 
@@ -94,20 +85,11 @@ pilight==0.1.1
 # homeassistant.components.sensor.serial_pm
 pmsensor==0.4
 
-# homeassistant.components.media_player.cast
-pychromecast==0.8.1
-
-# homeassistant.components.media_player.cmus
-pycmus==0.1.0
-
 # homeassistant.components.zwave
 pydispatcher==2.0.5
 
 # homeassistant.components.litejet
 pylitejet==0.1
-
-# homeassistant.components.mochad
-pymochad==0.1.1
 
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
@@ -115,9 +97,6 @@ pynx584==0.4
 
 # homeassistant.components.sensor.darksky
 python-forecastio==1.3.5
-
-# homeassistant.components.device_tracker.unifi
-pyunifi==2.12
 
 # homeassistant.components.notify.html5
 pywebpush==1.0.0
