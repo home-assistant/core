@@ -39,7 +39,7 @@ class VerisureSmartplug(SwitchDevice):
         """Return the name or location of the smartplug."""
         return hub.get_first(
             "$.smartPlugs[?(@.deviceLabel == '%s')].area",
-            self._device_label)
+            self._device_label) + " switch"
 
     @property
     def is_on(self):

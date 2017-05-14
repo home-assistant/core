@@ -96,4 +96,4 @@ class VerisureSmartcam(Camera):
         """Return the name of this camera."""
         return hub.get_first(
             "$.customerImageCameras[?(@.deviceLabel=='%s')].area",
-            self._device_label)
+            self._device_label) + " camera"

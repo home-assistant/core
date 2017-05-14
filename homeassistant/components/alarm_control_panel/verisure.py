@@ -38,7 +38,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     @property
     def name(self):
         """Return the name of the device."""
-        return 'Alarm {}'.format(hub.session.installations[0]['alias'])
+        return '{} alarm'.format(hub.session.installations[0]['alias'])
 
     @property
     def state(self):
