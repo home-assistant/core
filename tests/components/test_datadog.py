@@ -12,7 +12,8 @@ from homeassistant.setup import setup_component
 import homeassistant.components.datadog as datadog
 import homeassistant.core as ha
 
-from tests.common import (assert_setup_component, get_test_home_assistant)
+from tests.common import (assert_setup_component, get_test_home_assistant,
+                          MockDependency)
 
 
 class TestDatadog(unittest.TestCase):
@@ -35,10 +36,11 @@ class TestDatadog(unittest.TestCase):
                 }
             })
 
-    @mock.patch('datadog.initialize')
-    def test_datadog_setup_full(self, mock_connection):
+    @MockDependency('datadog', 'beer')
+    def test_datadog_setup_full(self, mock_datadog):
         """Test setup with all data."""
         self.hass.bus.listen = mock.MagicMock()
+        mock_connection = mock_datadog.initialize
 
         assert setup_component(self.hass, datadog.DOMAIN, {
             datadog.DOMAIN: {
@@ -61,10 +63,11 @@ class TestDatadog(unittest.TestCase):
         self.assertEqual(EVENT_STATE_CHANGED,
                          self.hass.bus.listen.call_args_list[1][0][0])
 
-    @mock.patch('datadog.initialize')
-    def test_datadog_setup_defaults(self, mock_connection):
+    @MockDependency('datadog')
+    def test_datadog_setup_defaults(self, mock_datadog):
         """Test setup with defaults."""
         self.hass.bus.listen = mock.MagicMock()
+        mock_connection = mock_datadog.initialize
 
         assert setup_component(self.hass, datadog.DOMAIN, {
             datadog.DOMAIN: {
@@ -81,10 +84,11 @@ class TestDatadog(unittest.TestCase):
         )
         self.assertTrue(self.hass.bus.listen.called)
 
-    @mock.patch('datadog.statsd')
-    def test_logbook_entry(self, mock_client):
+    @MockDependency('datadog')
+    def test_logbook_entry(self, mock_datadog):
         """Test event listener."""
         self.hass.bus.listen = mock.MagicMock()
+        mock_client = mock_datadog.statsd
 
         assert setup_component(self.hass, datadog.DOMAIN, {
             datadog.DOMAIN: {
@@ -119,10 +123,11 @@ class TestDatadog(unittest.TestCase):
 
         mock_client.event.reset_mock()
 
-    @mock.patch('datadog.statsd')
-    def test_state_changed(self, mock_client):
+    @MockDependency('datadog')
+    def test_state_changed(self, mock_datadog):
         """Test event listener."""
         self.hass.bus.listen = mock.MagicMock()
+        mock_client = mock_datadog.statsd
 
         assert setup_component(self.hass, datadog.DOMAIN, {
             datadog.DOMAIN: {
