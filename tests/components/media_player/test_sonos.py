@@ -337,7 +337,7 @@ class TestSonosMediaPlayer(unittest.TestCase):
             self.assertEqual(alarm1.include_linked_zones,
                              attrs['include_linked_zones'])
             self.assertEqual(alarm1.volume, 30)
-            alarm1.save.assert_called_once()
+            alarm1.save.assert_called_once_with()
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())
