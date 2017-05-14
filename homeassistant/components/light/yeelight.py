@@ -70,7 +70,7 @@ EFFECT_FACEBOOK = "Facebook"
 EFFECT_TWITTER = "Twitter"
 EFFECT_STOP = "Stop"
 
-YEE_EFFECT_LIST = [
+YEELIGHT_EFFECT_LIST = [
     EFFECT_DISCO,
     EFFECT_TEMP,
     EFFECT_STROBE,
@@ -155,7 +155,7 @@ class YeelightLight(Light):
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return YEE_EFFECT_LIST
+        return YEELIGHT_EFFECT_LIST
 
     @property
     def unique_id(self) -> str:
@@ -336,7 +336,9 @@ class YeelightLight(Light):
                                               strobe_color, alarm, police,
                                               police2, christmas, rgb,
                                               randomloop, slowdown)
-            # transition = int(self.config[CONF_TRANSITION])
+            if effect == EFFECT_STOP:
+                self._bulb.stop_flow()
+                return
             if effect == EFFECT_DISCO:
                 flow = Flow(count=0, transitions=disco(),)
             if effect == EFFECT_TEMP:
@@ -368,9 +370,6 @@ class YeelightLight(Light):
             if effect == EFFECT_TWITTER:
                 flow = Flow(count=2, transitions=pulse(0, 172, 237),)
 
-            if effect == EFFECT_STOP:
-                self._bulb.stop_flow()
-                return
             try:
                 self._bulb.start_flow(flow)
             except BulbException as ex:
