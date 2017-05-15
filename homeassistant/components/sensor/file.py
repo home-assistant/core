@@ -82,7 +82,9 @@ class FileSensor(Entity):
         """Get the latest entry from a file and updates the state."""
         try:
             with open(self._file_path, 'r', encoding='utf-8') as file_data:
-                data = file_data.readlines()[-1].strip()
+                for line in file_data:
+                    data = line
+                data = data.strip()
         except (IndexError, FileNotFoundError, IsADirectoryError):
             _LOGGER.warning("File or data not present at the moment: %s",
                             os.path.basename(self._file_path))
