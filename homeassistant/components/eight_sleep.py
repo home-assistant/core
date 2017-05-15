@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pyeight==0.0.4']
+REQUIREMENTS = ['pyeight==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -145,6 +145,9 @@ def async_setup(hass, config):
                 sensors.append('{}_{}'.format(obj.side, sensor))
             binary_sensors.append('{}_presence'.format(obj.side))
         sensors.append('room_temp')
+    else:
+        # No users, cannot continue
+        return False
 
     hass.async_add_job(discovery.async_load_platform(
         hass, 'sensor', DOMAIN, {
