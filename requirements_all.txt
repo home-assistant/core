@@ -258,6 +258,9 @@ hikvision==0.4
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
 
+# homeassistant.components.switch.rachio
+https://github.com/Klikini/rachiopy/archive/edf666de8ef3f9596ddc8d3a989e8c4b829a4319.zip#rachiopy==0.1.1
+
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
