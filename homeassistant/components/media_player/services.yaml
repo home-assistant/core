@@ -290,8 +290,8 @@ kodi_add_to_playlist:
       description: Optional artist name for filtering media.
       example: 'AC/DC'
 
-kodi_run_method:
-  description: 'Run a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_run_method_result`.'
+kodi_call_method:
+  description: 'Call a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`.'
 
   fields:
     entity_id:

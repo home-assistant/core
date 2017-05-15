@@ -34,7 +34,7 @@ REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_KODI_RUN_METHOD_RESULT = 'kodi_run_method_result'
+EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 
 CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
@@ -84,7 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
-SERVICE_RUN_METHOD = 'kodi_run_method'
+SERVICE_CALL_METHOD = 'kodi_call_method'
 
 DATA_KODI = 'kodi'
 
@@ -100,7 +100,7 @@ MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_NAME): cv.string,
     vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
-MEDIA_PLAYER_RUN_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+MEDIA_PLAYER_CALL_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_METHOD): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
@@ -108,9 +108,9 @@ SERVICE_TO_METHOD = {
     SERVICE_ADD_MEDIA: {
         'method': 'async_add_media_to_playlist',
         'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
-    SERVICE_RUN_METHOD: {
-        'method': 'async_run_method',
-        'schema': MEDIA_PLAYER_RUN_METHOD_SCHEMA},
+    SERVICE_CALL_METHOD: {
+        'method': 'async_call_method',
+        'schema': MEDIA_PLAYER_CALL_METHOD_SCHEMA},
 }
 
 
@@ -691,16 +691,13 @@ class KodiDevice(MediaPlayerDevice):
             {"playerid": self._players[0]['playerid'], "shuffle": shuffle})
 
     @asyncio.coroutine
-    def async_run_method(self, method, **kwargs):
+    def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
         import jsonrpc_base
         _LOGGER.debug('Run API method "%s", kwargs=%s', method, kwargs)
         result_ok = False
         try:
-            if kwargs:
-                result = yield from getattr(self.server, method)(kwargs)
-            else:
-                result = yield from getattr(self.server, method)()
+            result = yield from getattr(self.server, method)(**kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]['error']
@@ -712,8 +709,8 @@ class KodiDevice(MediaPlayerDevice):
                           'result': result,
                           'result_ok': result_ok,
                           'input': {'method': method, 'params': kwargs}}
-            _LOGGER.debug('EVENT kodi_run_method_result: %s', event_data)
-            self.hass.bus.async_fire(EVENT_KODI_RUN_METHOD_RESULT,
+            _LOGGER.debug('EVENT kodi_call_method_result: %s', event_data)
+            self.hass.bus.async_fire(EVENT_KODI_CALL_METHOD_RESULT,
                                      event_data=event_data)
         return result
 
