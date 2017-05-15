@@ -316,11 +316,10 @@ def test_ping(websocket_client):
 @asyncio.coroutine
 def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
     """Test get_panels command."""
-    for idx in range(6):
+    for idx in range(10):
         websocket_client.send_json({
-            'id': idx,
+            'id': idx + 1,
             'type': wapi.TYPE_PING,
         })
-
     msg = yield from websocket_client.receive()
     assert msg.type == WSMsgType.close
