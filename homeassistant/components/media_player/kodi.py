@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
-from collections import OrderedDict
 from functools import wraps
 import logging
 import urllib
