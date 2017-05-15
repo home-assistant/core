@@ -50,6 +50,13 @@ def no_auth_websocket_client(hass, loop, test_client):
         loop.run_until_complete(ws.close())
 
 
+@pytest.fixture
+def mock_low_queue():
+    """Mock a low queue."""
+    with patch.object(wapi, 'MAX_PENDING_MSG', 5):
+        yield
+
+
 @asyncio.coroutine
 def test_auth_via_msg(no_auth_websocket_client):
     """Test authenticating."""
@@ -304,3 +311,16 @@ def test_ping(websocket_client):
     msg = yield from websocket_client.receive_json()
     assert msg['id'] == 5
     assert msg['type'] == wapi.TYPE_PONG
+
+
+@asyncio.coroutine
+def test_pending_msg_overflow(hass, mock_low_queue, websocket_client):
+    """Test get_panels command."""
+    for idx in range(6):
+        websocket_client.send_json({
+            'id': idx,
+            'type': wapi.TYPE_PING,
+        })
+
+    msg = yield from websocket_client.receive()
+    assert msg.type == WSMsgType.close
