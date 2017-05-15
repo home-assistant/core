@@ -44,7 +44,7 @@ def setup(hass, base_config):
 
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
-    for component in ('light', 'switch'):
+    for component in ('light', 'switch', 'cover'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True

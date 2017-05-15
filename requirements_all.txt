@@ -90,7 +90,7 @@ beautifulsoup4==4.6.0
 bellows==0.2.7
 
 # homeassistant.components.blink
-blinkpy==0.5.2
+blinkpy==0.6.0
 
 # homeassistant.components.light.blinksticklight
 blinkstick==1.1.8
@@ -172,7 +172,7 @@ eliqonline==1.0.13
 enocean==0.31
 
 # homeassistant.components.sensor.envirophat
-envirophat==0.0.6
+# envirophat==0.0.6
 
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
@@ -385,7 +385,7 @@ mutagen==1.37.0
 myusps==1.0.5
 
 # homeassistant.components.discovery
-netdisco==1.0.0rc3
+netdisco==1.0.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -527,7 +527,7 @@ pydroid-ipcam==0.8
 pyebox==0.1.0
 
 # homeassistant.components.eight_sleep
-pyeight==0.0.4
+pyeight==0.0.5
 
 # homeassistant.components.media_player.emby
 pyemby==1.2
@@ -564,6 +564,9 @@ pyiss==1.0.1
 
 # homeassistant.components.remote.itach
 pyitachip2ir==0.0.6
+
+# homeassistant.components.kira
+pykira==0.1.1
 
 # homeassistant.components.sensor.kwb
 pykwb==0.0.8
@@ -775,7 +778,7 @@ sleekxmpp==1.3.2
 sleepyq==0.6
 
 # homeassistant.components.sensor.envirophat
-smbus-cffi==0.5.1
+# smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast
 snapcast==1.2.2
