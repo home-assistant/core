@@ -65,7 +65,7 @@ class KiraRemote(Entity):
     def send_command(self, **kwargs):
         """Send a command to one device."""
         for command in kwargs.get(remote.ATTR_COMMAND):
-            code_tuple = (commands,
+            code_tuple = (command,
                           kwargs.get(remote.ATTR_DEVICE))
             _LOGGER.info("Sending Command: %s to %s", *code_tuple)
             self._kira.sendCode(code_tuple)
