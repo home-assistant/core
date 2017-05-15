@@ -290,17 +290,6 @@ kodi_add_to_playlist:
       description: Optional artist name for filtering media.
       example: 'AC/DC'
 
-kodi_execute_addon:
-  description: 'Execute a Kodi addon with optional parameters. Results of the Kodi API call, if any, will be redirected in a Home Assistant event: `kodi_execute_addon_result`.'
-
-  fields:
-    entity_id:
-      description: Name(s) of the Kodi entities where to execute the (pre-installed) Kodi Addon.
-      example: 'media_player.living_room_kodi'
-    addonid:
-      description: Name of the Kodi addon.
-      example: 'script.json-cec'
-
 kodi_run_method:
   description: 'Run a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_run_method_result`.'
 
