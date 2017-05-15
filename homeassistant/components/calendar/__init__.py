@@ -26,6 +26,8 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
+CONF_DEFAULT_OFFSET = "default_offset"
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -39,6 +41,17 @@ def async_setup(hass, config):
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
+DEFAULT_CONF_DEFAULT_OFFSET = '0'
+
+
+def offset_to_datetime(time):
+    """Convert a string in MM or HH:MM to a datetime object."""
+    if ':' not in time:
+        if time[0] == '+' or time[0] == '-':
+            time = '{}0:{}'.format(time[0], time[1:])
+        else:
+            time = '0:{}'.format(time)
+    return time_period_str(time)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -55,6 +68,10 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
+        default_offset = data.get(CONF_DEFAULT_OFFSET,
+                                  DEFAULT_CONF_DEFAULT_OFFSET)
+        self._default_offset = offset_to_datetime(default_offset)
+
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self.dev_id, hass=hass)
 
@@ -71,7 +88,7 @@ class CalendarEventDevice(Entity):
         self.update()
 
     def offset_reached(self):
-        """Have we reached the offset time specified in the event title."""
+        """Have we reached the offset time specified for this event."""
         if self._cal_data['start'] is None or \
            self._cal_data['offset_time'] == dt.dt.timedelta():
             return False
@@ -162,18 +179,13 @@ class CalendarEventDevice(Entity):
         search = re.search(reg, summary)
         if search and search.group(1):
             time = search.group(1)
-            if ':' not in time:
-                if time[0] == '+' or time[0] == '-':
-                    time = '{}0:{}'.format(time[0], time[1:])
-                else:
-                    time = '0:{}'.format(time)
-
-            offset_time = time_period_str(time)
+            offset_time = offset_to_datetime(time)
             summary = (summary[:search.start()] + summary[search.end():]) \
                 .strip()
         else:
             offset_time = dt.dt.timedelta()  # default it
 
+        offset_time += self._default_offset
         # cleanup the string so we don't have a bunch of double+ spaces
         self._cal_data['message'] = re.sub('  +', '', summary).strip()
 

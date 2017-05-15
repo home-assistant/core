@@ -288,6 +288,64 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': ''
         })
 
+    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    def test_default_offset_in_progress_event(self, mock_next_event):
+        """Test that we can create an event trigger on device."""
+        middle_of_event = dt_util.now() \
+            + dt_util.dt.timedelta(minutes=45)
+        event_summary = 'Test Event in Progress'
+        event = {
+            'start': {
+                'dateTime': middle_of_event.isoformat()
+            },
+            'end': {
+                'dateTime': (middle_of_event + dt_util.dt
+                             .timedelta(minutes=60))
+                .isoformat()
+            },
+            'summary': '{} !!-30'.format(event_summary),
+            'reminders': {'useDefault': True},
+            'id': 'aioehgni435lihje',
+            'status': 'confirmed',
+            'updated': '2016-11-05T15:52:07.329Z',
+            'organizer': {
+                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
+                'displayName': 'Organizer Name',
+                'self': True,
+            },
+            'created': '2016-11-05T15:52:07.000Z',
+            'iCalUID': 'dsfohuygtfvgbhnuju@google.com',
+            'sequence': 0,
+            'creator': {
+                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
+                'displayName': 'Organizer Name',
+            },
+            'etag': '"2956722254658000"',
+            'kind': 'calendar#event',
+            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
+        }
+
+        mock_next_event.return_value.event = event
+
+        device_name = 'Test Event in Progress'
+        device_id = 'test_event_in_progress'
+
+        # Combined effect of default offset and event offset is 60 minutes
+        # early, so "offset_reached" should be True
+        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
+                                                 {'name': device_name,
+                                                  'default_offset': '-30'})
+
+        self.assertTrue(cal.offset_reached())
+
+        # Combined effect of default offset and event offset is 40 minutes
+        # early, so "offset_reached" should be False
+        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
+                                                 {'name': device_name,
+                                                  'default_offset': '-10'})
+
+        self.assertFalse(cal.offset_reached())
+
     @pytest.mark.skip
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_offset_in_progress_event(self, mock_next_event):
