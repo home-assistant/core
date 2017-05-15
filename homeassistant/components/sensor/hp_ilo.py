@@ -12,10 +12,9 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
     CONF_MONITORED_VARIABLES, CONF_VALUE_TEMPLATE, CONF_SENSOR_TYPE,
-    CONF_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF)
+    CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import Template
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
@@ -106,16 +105,7 @@ class HpIloSensor(Entity):
         self.hp_ilo_data = hp_ilo_data
 
         if sensor_value_template is not None:
-            # Make sure the template always returns valid json
-            if not sensor_value_template.template.endswith('| tojson() }}'):
-                sensor_value_template = Template(
-                    '{}{}'.format(
-                        sensor_value_template.template[:-len('}}')],
-                        '| tojson() }}')
-                )
-
             sensor_value_template.hass = hass
-
         self._sensor_value_template = sensor_value_template
 
         self._state = None
@@ -147,8 +137,6 @@ class HpIloSensor(Entity):
 
     def update(self):
         """Get the latest data from HP ILO and updates the states."""
-        import json
-
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for
         # a short period of time to prevent hitting API limits.
@@ -156,25 +144,14 @@ class HpIloSensor(Entity):
         ilo_data = getattr(self.hp_ilo_data.data, self._ilo_function)()
 
         if self._sensor_value_template is not None:
-            # Get the template result and convert back to a Python object
-            ilo_data = json.loads(self._sensor_value_template.render(ilo_data))
-
-        self._state_attributes = {'ilo_data': json.dumps(ilo_data)}
+            ilo_data = self._sensor_value_template.render(ilo_data=ilo_data)
 
         # If the data received is an integer or string, store it as
         # the sensor state, otherwise store the data in the sensor attributes
-        if isinstance(ilo_data, (str, bytes)):
-            states = [STATE_ON, STATE_OFF]
-            try:
-                index_element = states.index(str(ilo_data).lower())
-                self._state = states[index_element]
-            except ValueError:
-                self._state = ilo_data
-
-            self._state_attributes = None
-        elif isinstance(ilo_data, (int, float)):
+        if isinstance(ilo_data, (str, bytes, int, float)):
             self._state = ilo_data
-            self._state_attributes = None
+        else:
+            self._state_attributes = {'ilo_data': ilo_data}
 
 
 class HpIloData(object):
