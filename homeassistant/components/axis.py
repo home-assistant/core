@@ -11,6 +11,7 @@ import os
 
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
                                  CONF_HOST, CONF_INCLUDE, CONF_NAME,
                                  CONF_PASSWORD, CONF_TRIGGER_TIME,
@@ -58,6 +59,18 @@ CONFIG_SCHEMA = vol.Schema({
         cv.slug: DEVICE_SCHEMA,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+SERVICE_VAPIX_CALL = 'vapix_call'
+SERVICE_CGI = 'cgi'
+SERVICE_ACTION = 'action'
+SERVICE_PARAM = 'param'
+
+SERVICE_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(SERVICE_PARAM): cv.string,
+    vol.Optional(SERVICE_CGI, default='param.cgi'): cv.string,
+    vol.Optional(SERVICE_ACTION, default='update'): cv.string,
+})
 
 
 def request_configuration(hass, name, host, serialnumber):
@@ -148,10 +161,11 @@ def setup(hass, base_config):
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
                 if not setup_device(hass, config):
-                    _LOGGER.error("Couldn\'t set up %s", config['name'])
+                    _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
             else:
                 request_configuration(hass, name, host, serialnumber)
 
+    # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
 
     if DOMAIN in base_config:
@@ -160,7 +174,31 @@ def setup(hass, base_config):
             if CONF_NAME not in config:
                 config[CONF_NAME] = device
             if not setup_device(hass, config):
-                _LOGGER.error("Couldn\'t set up %s", config['name'])
+                _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
+
+    descriptions = load_yaml_config_file(
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+
+    # Service to communicate with device.
+    def vapix_service(call):
+        """Service to send a message."""
+        # {"name":"3","cgi":"param.cgi","action":"list","param":"Properties.Firmware.Version"}
+        for serial_number, device in AXIS_DEVICES.items():
+            if device.name == call.data[CONF_NAME]:
+                response = device.do_request(call.data[SERVICE_CGI],
+                                             call.data[SERVICE_ACTION],
+                                             call.data[SERVICE_PARAM])
+                _LOGGER.info("Service call response: %s", response)
+                return True
+        _LOGGER.info("Couldn\'t find device %s", call.data[CONF_NAME])
+        return False
+
+    # Register service with Home Assistant.
+    hass.services.register(DOMAIN,
+                           SERVICE_VAPIX_CALL,
+                           vapix_service,
+                           descriptions[DOMAIN][SERVICE_VAPIX_CALL],
+                           schema=SERVICE_SCHEMA)
 
     return True
 
@@ -191,7 +229,9 @@ def setup_device(hass, config):
     if enable_metadatastream:
         device.initialize_new_event = event_initialized
         device.initiate_metadatastream()
+
     AXIS_DEVICES[device.serial_number] = device
+
     return True
 
 
