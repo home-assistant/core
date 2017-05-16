@@ -82,7 +82,8 @@ _TRIGGER_SCHEMA = vol.All(
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.Schema({
-    CONF_ID: cv.string,
+    # str on purpose
+    CONF_ID: str,
     CONF_ALIAS: cv.string,
     vol.Optional(CONF_INITIAL_STATE): cv.boolean,
     vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
