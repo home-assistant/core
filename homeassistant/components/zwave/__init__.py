@@ -78,8 +78,8 @@ RENAME_NODE_SCHEMA = vol.Schema({
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
-    vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
+    vol.Required(const.ATTR_CONFIG_VALUE): cv.string,
+    vol.Optional(const.ATTR_CONFIG_SIZE): vol.Any(vol.Coerce(int), cv.string),
 })
 PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -410,28 +410,23 @@ def setup(hass, config):
         node = network.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         selection = service.data.get(const.ATTR_CONFIG_VALUE)
-        size = service.data.get(const.ATTR_CONFIG_SIZE, 2)
-        i = 0
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
                 .values()):
-            if value.index == param and value.type == const.TYPE_LIST:
-                _LOGGER.debug("Values for parameter %s: %s", param,
-                              value.data_items)
-                i = len(value.data_items) - 1
-        if i == 0:
-            node.set_config_param(param, selection, size)
-        else:
-            if selection > i:
-                _LOGGER.error("Config parameter selection does not exist! "
-                              "Please check zwcfg_[home_id].xml in "
-                              "your homeassistant config directory. "
-                              "Available selections are 0 to %s", i)
-                return
-            node.set_config_param(param, selection, size)
-            _LOGGER.info("Setting config parameter %s on Node %s "
-                         "with selection %s and size=%s", param, node_id,
-                         selection, size)
+            if value.index != param:
+                continue
+            if value.type in str([const.TYPE_LIST, const.TYPE_BOOL]):
+                value.data = selection
+                _LOGGER.info("Setting config list parameter %s on Node %s "
+                             "with selection %s", param, node_id,
+                              selection)
+                break
+            else:
+                value.data = int(selection)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with selection %s", param, node_id,
+                             selection)
+                break
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
