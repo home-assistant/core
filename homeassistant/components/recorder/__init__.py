@@ -42,6 +42,7 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
+CONF_EVENT_TYPES = 'event_types'
 
 CONNECT_RETRY_WAIT = 3
 
@@ -49,6 +50,8 @@ FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
         vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EVENT_TYPES, default=[]):
             vol.All(cv.ensure_list, [cv.string])
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
@@ -142,6 +145,7 @@ class Recorder(threading.Thread):
         self.include_d = include.get(CONF_DOMAINS, [])
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
+        self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
 
@@ -267,10 +271,12 @@ class Recorder(threading.Thread):
                     continue
 
             with session_scope(session=self.get_session()) as session:
-                dbevent = Events.from_event(event)
-                session.add(dbevent)
+                dbevent = None
+                if event.event_type not in self.exclude_t:
+                    dbevent = Events.from_event(event)
+                    session.add(dbevent)
 
-                if event.event_type == EVENT_STATE_CHANGED:
+                if event.event_type == EVENT_STATE_CHANGED and EVENT_STATE_CHANGED not in self.exclude_t:
                     dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
                     session.add(dbstate)
