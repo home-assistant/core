@@ -354,7 +354,7 @@ libsoundtouch==0.3.0
 liffylights==0.9.4
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.7
+limitlessled==1.0.8
 
 # homeassistant.components.media_player.liveboxplaytv
 liveboxplaytv==1.4.9
