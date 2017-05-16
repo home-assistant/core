@@ -13,33 +13,27 @@ REQUIREMENTS = ['https://github.com/Klikini/rachiopy'
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'switch'
-
 DATA_RACHIO = 'rachio'
 
-CONF_manual_run_mins = 'manual_run_mins'
+CONF_MANUAL_RUN_MINS = 'manual_run_mins'
 manual_run_mins = 60
-
-STATUS_ONLINE = 'ONLINE'
 
 MIN_UPDATE_INTERVAL = timedelta(minutes=5)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ACCESS_TOKEN): cv.string
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_MANUAL_RUN_MINS): cv.positive_int
 })
-
-_IRO = None
 
 
 # Set up the component
 # noinspection PyUnusedLocal
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    global _IRO
     global manual_run_mins
 
     # Get options
-    manual_run_mins = config.get(CONF_manual_run_mins) or manual_run_mins
+    manual_run_mins = config.get(CONF_MANUAL_RUN_MINS) or manual_run_mins
     _LOGGER.debug("Rachio run time is " + str(manual_run_mins) + " min")
 
     # Get access token
@@ -54,7 +48,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _LOGGER.debug("Configuring Rachio API...")
     from rachiopy import Rachio
     r = Rachio(access_token)
-    person = _get_person(r)
+    person = None
+    try:
+        person = _get_person(r)
+    except:
+        _LOGGER.error("Could not reach the Rachio API. "
+                      "Is your access token valid?")
+        return False
 
     # Get and persist devices
     devices = _list_devices(r)
@@ -63,16 +63,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       person['username'])
         return False
     else:
-        _IRO = devices[0]
+        hass.data[DATA_RACHIO] = devices[0]
 
         if len(devices) > 1:
             _LOGGER.warning("Multiple Rachio devices found in account, "
-                            "using " + _IRO.device_id)
+                            "using " + hass.data[DATA_RACHIO].device_id)
         else:
             _LOGGER.info("Found Rachio device")
 
-    _IRO.update()
-    add_devices(_IRO.list_zones())
+    hass.data[DATA_RACHIO].update()
+    add_devices(hass.data[DATA_RACHIO].list_zones())
     return True
 
 
@@ -186,15 +186,9 @@ class RachioZone(SwitchDevice):
     def is_on(self):
         self._device.update(propagate=False)
         schedule = self._device.current_schedule
-        if 'zoneId' in schedule:
-            # Something is running, is it this zone?
-            return self.zone_id == schedule['zoneId']
-        else:
-            # Nothing is running
-            return False
+        return self.zone_id == schedule.get('zoneId')
 
     # Pull updated zone info from the Rachio API
-    @util.Throttle(MIN_UPDATE_INTERVAL, MIN_FORCED_UPDATE_INTERVAL)
     def update(self, propagate=True):
         self._zone = self.r.zone.get(self._zone_id)[1]
 
@@ -212,14 +206,9 @@ class RachioZone(SwitchDevice):
         self.turn_off()
 
         _LOGGER.info("Watering {} for {} sec".format(self.name, seconds))
-        headers = self.r.zone.start(self.zone_id, seconds)[0]
-        self.update(no_throttle=True)
-        return headers
+        self.r.zone.start(self.zone_id, seconds)
 
     # Stop all zones and return the response headers
     def turn_off(self):
         _LOGGER.info("Stopping watering of all zones")
-        headers = self.r.device.stopWater(self._device.device_id)[0]
-        self.update(no_throttle=True)
-        return headers
-
+        self.r.device.stopWater(self._device.device_id)
