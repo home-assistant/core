@@ -269,10 +269,7 @@ class CameraImageView(CameraView):
                 image = yield from camera.async_camera_image()
 
             if image:
-                response = web.Response(body=image)
-                response.content_type = ('image/jpeg')
-
-                return response
+                return web.Response(body=image, content_type='image/jpeg')
 
         return web.Response(status=500)
 
