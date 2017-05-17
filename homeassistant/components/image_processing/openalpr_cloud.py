@@ -1,17 +1,18 @@
 """
 Component that will help set the OpenALPR cloud for ALPR processing.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.openalpr_cloud/
 """
 import asyncio
-from base64 import b64encode
 import logging
+from base64 import b64encode
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.core import split_entity_id
 from homeassistant.const import CONF_API_KEY
 from homeassistant.components.image_processing import (
@@ -19,7 +20,6 @@ from homeassistant.components.image_processing import (
 from homeassistant.components.image_processing.openalpr_local import (
     ImageProcessingAlprEntity)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,8 +44,7 @@ CONF_REGION = 'region'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_REGION):
-        vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
+    vol.Required(CONF_REGION): vol.All(vol.Lower, vol.In(OPENALPR_REGIONS)),
 })
 
 
@@ -70,7 +69,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class OpenAlprCloudEntity(ImageProcessingAlprEntity):
-    """OpenALPR cloud entity."""
+    """Representation of an OpenALPR cloud entity."""
 
     def __init__(self, camera_entity, params, confidence, name=None):
         """Initialize OpenALPR cloud API."""
@@ -129,7 +128,7 @@ class OpenAlprCloudEntity(ImageProcessingAlprEntity):
             _LOGGER.error("Timeout for OpenALPR API")
             return
 
-        # processing api data
+        # Processing API data
         vehicles = 0
         result = {}
 
