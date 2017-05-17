@@ -42,6 +42,7 @@ DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
+CONF_PURGE_INTERVAL = 'purge_interval'
 
 CONNECT_RETRY_WAIT = 3
 
@@ -61,6 +62,8 @@ FILTER_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: FILTER_SCHEMA.extend({
         vol.Optional(CONF_PURGE_DAYS):
+            vol.All(vol.Coerce(int), vol.Range(min=1)),
+        vol.Optional(CONF_PURGE_INTERVAL, default=2):
             vol.All(vol.Coerce(int), vol.Range(min=1)),
         vol.Optional(CONF_DB_URL): cv.string,
     })
@@ -104,6 +107,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Setup the recorder."""
     conf = config.get(DOMAIN, {})
     purge_days = conf.get(CONF_PURGE_DAYS)
+    purge_interval = conf.get(CONF_PURGE_INTERVAL)
 
     db_url = conf.get(CONF_DB_URL, None)
     if not db_url:
@@ -113,7 +117,7 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
-        hass, purge_days=purge_days, uri=db_url, include=include,
+        hass, purge_days=purge_days, purge_interval=purge_interval, uri=db_url, include=include,
         exclude=exclude)
     instance.async_initialize()
     instance.start()
@@ -124,13 +128,14 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    def __init__(self, hass: HomeAssistant, purge_days: int, uri: str,
+    def __init__(self, hass: HomeAssistant, purge_days: int, purge_interval: int, uri: str,
                  include: Dict, exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='Recorder')
 
         self.hass = hass
         self.purge_days = purge_days
+        self.purge_interval = purge_interval
         self.queue = queue.Queue()  # type: Any
         self.recording_start = dt_util.utcnow()
         self.db_url = uri
@@ -222,7 +227,8 @@ class Recorder(threading.Thread):
                     self.queue.put(purge_task)
 
                 async_track_time_interval(self.hass, do_purge,
-                                          timedelta(days=2))
+                                          timedelta(days=self.purge_interval))
+                do_purge(dt_util.utcnow())
 
         self.hass.add_job(register)
         result = hass_started.result()
