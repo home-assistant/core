@@ -276,7 +276,8 @@ class Recorder(threading.Thread):
                     dbevent = Events.from_event(event)
                     session.add(dbevent)
 
-                if event.event_type == EVENT_STATE_CHANGED and EVENT_STATE_CHANGED not in self.exclude_t:
+                if event.event_type == EVENT_STATE_CHANGED and \
+                        EVENT_STATE_CHANGED not in self.exclude_t:
                     dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
                     session.add(dbstate)
