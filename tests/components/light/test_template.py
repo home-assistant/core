@@ -1,15 +1,18 @@
 """The tests for the  Template light platform."""
+import logging
 import asyncio
 
 from homeassistant.core import callback, State, CoreState
 from homeassistant import setup
 import homeassistant.components as core
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_TRANSITION)
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_component)
-
+_LOGGER = logging.getLogger(__name__)
 
 class TestTemplateLight:
     """Test the Template light."""
@@ -151,7 +154,7 @@ class TestTemplateLight:
 
     def test_template_syntax_error(self):
         """Test templating syntax error."""
-        with assert_setup_component(1):
+        with assert_setup_component(0):
             assert setup.setup_component(self.hass, 'light', {
                 'light': {
                     'platform': 'template',
@@ -186,21 +189,27 @@ class TestTemplateLight:
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
         with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
                     'platform': 'template',
-                    'switches': {
-                        'test INVALID switch': {
-                            'value_template':
-                                "{{ rubbish }",
+                    'lights': {
+                        'bad name here': {
+                            'value_template': "{{ 1== 1}}",
                             'turn_on': {
-                                'service': 'switch.turn_on',
-                                'entity_id': 'switch.test_state'
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
                             },
                             'turn_off': {
-                                'service': 'switch.turn_off',
-                                'entity_id': 'switch.test_state'
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
                             },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                  'entity_id': 'light.test_state',
+                                  'brightness': '{{brightness}}'
+                                }
+                            }
                         }
                     }
                 }
@@ -211,14 +220,14 @@ class TestTemplateLight:
 
         assert self.hass.states.all() == []
 
-    def test_invalid_switch_does_not_create(self):
-        """Test invalid switch."""
+    def test_invalid_light_does_not_create(self):
+        """Test invalid light."""
         with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
                     'platform': 'template',
                     'switches': {
-                        'test_template_switch': 'Invalid'
+                        'test_template_light': 'Invalid'
                     }
                 }
             })
@@ -228,11 +237,11 @@ class TestTemplateLight:
 
         assert self.hass.states.all() == []
 
-    def test_no_switches_does_not_create(self):
-        """Test if there are no switches no creation."""
+    def test_no_lights_does_not_create(self):
+        """Test if there are no lights no creation."""
         with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
                     'platform': 'template'
                 }
             })
@@ -242,24 +251,29 @@ class TestTemplateLight:
 
         assert self.hass.states.all() == []
 
-    def test_missing_template_does_not_create(self):
+    def test_missing_template_does_create(self):
         """Test missing template."""
-        with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
                     'platform': 'template',
-                    'switches': {
-                        'test_template_switch': {
-                            'not_value_template':
-                                "{{ states.switch.test_state.state }}",
+                    'lights': {
+                        'light_one': {
                             'turn_on': {
-                                'service': 'switch.turn_on',
-                                'entity_id': 'switch.test_state'
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
                             },
                             'turn_off': {
-                                'service': 'switch.turn_off',
-                                'entity_id': 'switch.test_state'
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
                             },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                  'entity_id': 'light.test_state',
+                                  'brightness': '{{brightness}}'
+                                }
+                            }
                         }
                     }
                 }
@@ -268,26 +282,28 @@ class TestTemplateLight:
         self.hass.start()
         self.hass.block_till_done()
 
-        assert self.hass.states.all() == []
+        assert self.hass.states.all() != []
 
     def test_missing_on_does_not_create(self):
         """Test missing on."""
         with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
                     'platform': 'template',
-                    'switches': {
-                        'test_template_switch': {
-                            'value_template':
-                                "{{ states.switch.test_state.state }}",
-                            'not_on': {
-                                'service': 'switch.turn_on',
-                                'entity_id': 'switch.test_state'
-                            },
+                    'lights': {
+                        'bad name here': {
+                            'value_template': "{{ 1== 1}}",
                             'turn_off': {
-                                'service': 'switch.turn_off',
-                                'entity_id': 'switch.test_state'
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
                             },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                  'entity_id': 'light.test_state',
+                                  'brightness': '{{brightness}}'
+                                }
+                            }
                         }
                     }
                 }
@@ -301,21 +317,23 @@ class TestTemplateLight:
     def test_missing_off_does_not_create(self):
         """Test missing off."""
         with assert_setup_component(0):
-            assert setup.setup_component(self.hass, 'switch', {
-                'switch': {
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
                     'platform': 'template',
-                    'switches': {
-                        'test_template_switch': {
-                            'value_template':
-                                "{{ states.switch.test_state.state }}",
+                    'lights': {
+                        'bad name here': {
+                            'value_template': "{{ 1== 1}}",
                             'turn_on': {
-                                'service': 'switch.turn_on',
-                                'entity_id': 'switch.test_state'
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
                             },
-                            'not_off': {
-                                'service': 'switch.turn_off',
-                                'entity_id': 'switch.test_state'
-                            },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                  'entity_id': 'light.test_state',
+                                  'brightness': '{{brightness}}'
+                                }
+                            }
                         }
                     }
                 }
@@ -328,20 +346,26 @@ class TestTemplateLight:
 
     def test_on_action(self):
         """Test on action."""
-        assert setup.setup_component(self.hass, 'switch', {
-            'switch': {
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
                 'platform': 'template',
-                'switches': {
-                    'test_template_switch': {
-                        'value_template':
-                            "{{ states.switch.test_state.state }}",
+                'lights': {
+                    'test_template_light': {
+                        'value_template': "{{states.light.test_state.state}}",
                         'turn_on': {
-                            'service': 'test.automation'
+                            'service': 'test.automation',
                         },
                         'turn_off': {
-                            'service': 'switch.turn_off',
-                            'entity_id': 'switch.test_state'
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
                         },
+                        'set_level': {
+                            'service': 'light.turn_on',
+                            'data_template': {
+                                'entity_id': 'light.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        }
                     }
                 }
             }
@@ -350,34 +374,39 @@ class TestTemplateLight:
         self.hass.start()
         self.hass.block_till_done()
 
-        self.hass.states.set('switch.test_state', STATE_OFF)
+        self.hass.states.set('light.test_state', STATE_OFF)
         self.hass.block_till_done()
 
-        state = self.hass.states.get('switch.test_template_switch')
+        state = self.hass.states.get('light.test_template_light')
         assert state.state == STATE_OFF
 
-        core.switch.turn_on(self.hass, 'switch.test_template_switch')
+        core.light.turn_on(self.hass, 'light.test_template_light')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
 
     def test_off_action(self):
         """Test off action."""
-        assert setup.setup_component(self.hass, 'switch', {
-            'switch': {
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
                 'platform': 'template',
-                'switches': {
-                    'test_template_switch': {
-                        'value_template':
-                            "{{ states.switch.test_state.state }}",
+                'lights': {
+                    'test_template_light': {
+                        'value_template': "{{states.light.test_state.state}}",
                         'turn_on': {
-                            'service': 'switch.turn_on',
-                            'entity_id': 'switch.test_state'
-
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
                         },
                         'turn_off': {
-                            'service': 'test.automation'
+                            'service': 'test.automation',
                         },
+                        'set_level': {
+                            'service': 'light.turn_on',
+                            'data_template': {
+                                'entity_id': 'light.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        }
                     }
                 }
             }
@@ -386,54 +415,102 @@ class TestTemplateLight:
         self.hass.start()
         self.hass.block_till_done()
 
-        self.hass.states.set('switch.test_state', STATE_ON)
+        self.hass.states.set('light.test_state', STATE_ON)
         self.hass.block_till_done()
 
-        state = self.hass.states.get('switch.test_template_switch')
+        state = self.hass.states.get('light.test_template_light')
         assert state.state == STATE_ON
 
-        core.switch.turn_off(self.hass, 'switch.test_template_switch')
+        core.light.turn_off(self.hass, 'light.test_template_light')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
 
+    def test_level_action_no_template(self):
+        """Test setting brightness"""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'turn_on': {
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
+                        },
+                        'set_level': {
+                            'service': 'test.automation',
+                            'data_template': {
+                                'entity_id': 'light.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        },
+                        'level_template': '{{states.light.test_state.attributes.brightness}}'
+                    }
+                }
+            }
+        })
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.attributes.get('brightness') == None
+        
+        core.light.turn_on(
+            self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 124})
+        self.hass.block_till_done()
+        state = self.hass.states.get('light.test_template_light')
+        
+        assert len(self.calls) == 1
+        assert self.calls[0].data['brightness'] == '124'
+
+        # need to add assertions about optimistic state
+        # assert state.attributes.get('brightness') == 124
 
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
     hass.data[DATA_RESTORE_CACHE] = {
-        'switch.test_template_switch':
-            State('switch.test_template_switch', 'on'),
+        'light.test_template_light':
+            State('light.test_template_light', 'on'),
     }
 
     hass.state = CoreState.starting
     mock_component(hass, 'recorder')
-
-    yield from setup.async_setup_component(hass, 'switch', {
-        'switch': {
+    yield from setup.async_setup_component(hass, 'light', {
+        'light': {
             'platform': 'template',
-            'switches': {
-                'test_template_switch': {
-                    'value_template':
-                        "{{ states.switch.test_state.state }}",
+            'lights': {
+                'test_template_light': {
+                    'value_template': 
+                        "{{states.light.test_state.state}}",
                     'turn_on': {
-                        'service': 'switch.turn_on',
-                        'entity_id': 'switch.test_state'
+                        'service': 'test.automation',
                     },
                     'turn_off': {
-                        'service': 'switch.turn_off',
-                        'entity_id': 'switch.test_state'
+                        'service': 'light.turn_off',
+                        'entity_id': 'light.test_state'
                     },
+                    'set_level': {
+                        'service': 'test.automation',
+                        'data_template': {
+                            'entity_id': 'light.test_state',
+                            'brightness': '{{brightness}}'
+                        }
+                    }
                 }
             }
         }
     })
 
-    state = hass.states.get('switch.test_template_switch')
+    state = hass.states.get('light.test_template_light')
     assert state.state == 'on'
 
     yield from hass.async_start()
     yield from hass.async_block_till_done()
 
-    state = hass.states.get('switch.test_template_switch')
-    assert state.state == 'unavailable'
+    state = hass.states.get('light.test_template_light')
+    assert state.state == 'off'

@@ -62,6 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         level_action = device_config[LEVEL_ACTION]
         level_template = device_config[LEVEL_TEMPLATE]
         entity_ids = []
+        
         if state_template is not None:
             entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                           state_template.extract_entities())
@@ -98,6 +99,7 @@ class LightTemplate(Light):
         self._off_script = Script(hass, off_action)
         self._level_script = Script(hass, level_action)
         self._level_template = level_template
+        
         self._state = False
         self._brightness = 0
         self._entities = entity_ids
@@ -106,29 +108,6 @@ class LightTemplate(Light):
             self._template.hass = self.hass
         if self._level_template is not None:
             self._level_template.hass = self.hass
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Register callbacks."""
-        state = yield from async_get_last_state(self.hass, self.entity_id)
-        if state:
-            self._state = state.state == STATE_ON
-
-        @callback
-        def template_light_state_listener(entity, old_state, new_state):
-            """Handle target device state changes."""
-            self.hass.async_add_job(self.async_update_ha_state(True))
-
-        @callback
-        def template_light_startup(event):
-            """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_light_state_listener)
-
-            self.hass.async_add_job(self.async_update_ha_state(True))
-
-        self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_light_startup)
 
     @property
     def brightness(self):
@@ -145,29 +124,56 @@ class LightTemplate(Light):
 
         return 0
 
+    @property
+    def is_on(self):
+        """Return true if device is on."""
+        return self._state
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        _LOGGER.error("Previous state thawed " + str(state))
+        if state:
+            self._state = state.state == STATE_ON
+
+        @callback
+        def template_light_state_listener(entity, old_state, new_state):
+            """Handle target device state changes."""
+            _LOGGER.error("state listener callback")
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        @callback
+        def template_light_startup(event):
+            """Update template on startup."""
+            _LOGGER.error("startup callback")
+            async_track_state_change(
+                self.hass, self._entities, template_light_state_listener)
+
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        self.hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, template_light_startup)
+
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the light on."""
+        _LOGGER.error(str(kwargs))
+        _LOGGER.error(str(self._level_script))
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
             self.hass.async_add_job(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             self.hass.async_add_job(self._on_script.async_run())
 
         self._state = True
-        self.schedule_update_ha_state(True)
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the light off."""
         self.hass.async_add_job(self._off_script.async_run())
         self._state = False
-        self.schedule_update_ha_state()
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
 
     @asyncio.coroutine
     def async_update(self):
@@ -191,3 +197,4 @@ class LightTemplate(Light):
         except TemplateError as ex:
             _LOGGER.error(ex)
             self._state = None
+
