@@ -28,6 +28,7 @@ ALLOWED_PLATFORMS = {
     'switch': ['mqtt'],
 }
 
+already_discovered = set()
 
 @asyncio.coroutine
 def async_start(hass, discovery_topic, hass_config):
@@ -64,6 +65,15 @@ def async_start(hass, discovery_topic, hass_config):
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
+
+        discovery_hash = json.dumps([component, object_id], sort_keys=True)
+        if discovery_hash in already_discovered:
+            _LOGGER.info("Component is already discovered: %s %s", component, object_id)
+            return
+
+        already_discovered.add(discovery_hash)
+
+        _LOGGER.info("Found new component: %s %s", component, object_id)
 
         yield from async_load_platform(
             hass, component, platform, payload, hass_config)
