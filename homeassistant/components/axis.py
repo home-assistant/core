@@ -61,6 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_VAPIX_CALL = 'vapix_call'
+SERVICE_VAPIX_CALL_RESPONSE = 'vapix_call_response'
 SERVICE_CGI = 'cgi'
 SERVICE_ACTION = 'action'
 SERVICE_PARAM = 'param'
@@ -176,19 +177,19 @@ def setup(hass, base_config):
             if not setup_device(hass, config):
                 _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
 
+    # Services to communicate with device.
+
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
-    # Service to communicate with device.
+# {"name":"3","cgi":"param.cgi","action":"list","param":"Properties.Firmware.Version"}
     def vapix_service(call):
         """Service to send a message."""
-        # {"name":"3","cgi":"param.cgi","action":"list","param":"Properties.Firmware.Version"}
         for serial_number, device in AXIS_DEVICES.items():
             if device.name == call.data[CONF_NAME]:
                 response = device.do_request(call.data[SERVICE_CGI],
                                              call.data[SERVICE_ACTION],
                                              call.data[SERVICE_PARAM])
-                _LOGGER.info("Service call response: %s", response)
+                hass.bus.async_fire(SERVICE_VAPIX_CALL_RESPONSE, response)
                 return True
         _LOGGER.info("Couldn\'t find device %s", call.data[CONF_NAME])
         return False
@@ -228,7 +229,13 @@ def setup_device(hass, config):
 
     if enable_metadatastream:
         device.initialize_new_event = event_initialized
-        device.initiate_metadatastream()
+        if not device.initiate_metadatastream():
+            notification = get_component('persistent_notification')
+            notification.create(hass,
+                                'Dependency missing for sensors,'
+                                'please check documentation',
+                                title=DOMAIN,
+                                notification_id='axis_notification')
 
     AXIS_DEVICES[device.serial_number] = device
 
