@@ -117,7 +117,8 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     include = conf.get(CONF_INCLUDE, {})
     exclude = conf.get(CONF_EXCLUDE, {})
     instance = hass.data[DATA_INSTANCE] = Recorder(
-        hass, purge_days=purge_days, purge_interval=purge_interval, uri=db_url, include=include,
+        hass, purge_days=purge_days, purge_interval=purge_interval,
+        uri=db_url, include=include,
         exclude=exclude)
     instance.async_initialize()
     instance.start()
@@ -128,8 +129,9 @@ def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 class Recorder(threading.Thread):
     """A threaded recorder class."""
 
-    def __init__(self, hass: HomeAssistant, purge_days: int, purge_interval: int, uri: str,
-                 include: Dict, exclude: Dict) -> None:
+    def __init__(self, hass: HomeAssistant, purge_days: int,
+                 purge_interval: int, uri: str, include: Dict,
+                 exclude: Dict) -> None:
         """Initialize the recorder."""
         threading.Thread.__init__(self, name='Recorder')
 
