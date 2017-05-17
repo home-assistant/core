@@ -340,35 +340,35 @@ class YeelightLight(Light):
                 self._bulb.stop_flow()
                 return
             if effect == EFFECT_DISCO:
-                flow = Flow(count=0, transitions=disco(),)
+                flow = Flow(count=0, transitions=disco())
             if effect == EFFECT_TEMP:
-                flow = Flow(count=0, transitions=temp(),)
+                flow = Flow(count=0, transitions=temp())
             if effect == EFFECT_STROBE:
-                flow = Flow(count=0, transitions=strobe(),)
+                flow = Flow(count=0, transitions=strobe())
             if effect == EFFECT_STROBE_COLOR:
-                flow = Flow(count=0, transitions=strobe_color(),)
+                flow = Flow(count=0, transitions=strobe_color())
             if effect == EFFECT_ALARM:
-                flow = Flow(count=0, transitions=alarm(),)
+                flow = Flow(count=0, transitions=alarm())
             if effect == EFFECT_POLICE:
-                flow = Flow(count=0, transitions=police(),)
+                flow = Flow(count=0, transitions=police())
             if effect == EFFECT_POLICE2:
-                flow = Flow(count=0, transitions=police2(),)
+                flow = Flow(count=0, transitions=police2())
             if effect == EFFECT_CHRISTMAS:
-                flow = Flow(count=0, transitions=christmas(),)
+                flow = Flow(count=0, transitions=christmas())
             if effect == EFFECT_RGB:
-                flow = Flow(count=0, transitions=rgb(),)
+                flow = Flow(count=0, transitions=rgb())
             if effect == EFFECT_RANDOM_LOOP:
-                flow = Flow(count=0, transitions=randomloop(),)
+                flow = Flow(count=0, transitions=randomloop())
             if effect == EFFECT_FAST_RANDOM_LOOP:
-                flow = Flow(count=0, transitions=randomloop(duration=250),)
+                flow = Flow(count=0, transitions=randomloop(duration=250))
             if effect == EFFECT_SLOWDOWN:
-                flow = Flow(count=0, transitions=slowdown(),)
+                flow = Flow(count=0, transitions=slowdown())
             if effect == EFFECT_WHATSAPP:
-                flow = Flow(count=2, transitions=pulse(37, 211, 102),)
+                flow = Flow(count=2, transitions=pulse(37, 211, 102))
             if effect == EFFECT_FACEBOOK:
-                flow = Flow(count=2, transitions=pulse(59, 89, 152),)
+                flow = Flow(count=2, transitions=pulse(59, 89, 152))
             if effect == EFFECT_TWITTER:
-                flow = Flow(count=2, transitions=pulse(0, 172, 237),)
+                flow = Flow(count=2, transitions=pulse(0, 172, 237))
 
             try:
                 self._bulb.start_flow(flow)
