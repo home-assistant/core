@@ -146,12 +146,7 @@ class HpIloSensor(Entity):
         if self._sensor_value_template is not None:
             ilo_data = self._sensor_value_template.render(ilo_data=ilo_data)
 
-        # If the data received is an integer or string, store it as
-        # the sensor state, otherwise store the data in the sensor attributes
-        if isinstance(ilo_data, (str, bytes, int, float)):
-            self._state = ilo_data
-        else:
-            self._state_attributes = {'ilo_data': ilo_data}
+        self._state = ilo_data
 
 
 class HpIloData(object):
