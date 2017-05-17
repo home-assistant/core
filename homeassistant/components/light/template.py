@@ -11,8 +11,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_ON,
     STATE_OFF, EVENT_HOMEASSISTANT_START
@@ -49,11 +48,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Template Lights."""
     lights = []
-    
+
     for device, device_config in config[CONF_LIGHTS].items():
         friendly_name = device_config.get(ATTR_FRIENDLY_NAME, device)
         state_template = device_config[CONF_VALUE_TEMPLATE]
@@ -75,9 +75,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         )
 
     if not lights:
-        _LOGGER.error("No lights added");
+        _LOGGER.error("No lights added")
         return False
-    
+
     async_add_devices(lights, True)
     return True
 
@@ -103,9 +103,9 @@ class LightTemplate(Light):
         self._entities = entity_ids
 
         if self._template is not None:
-          self._template.hass = self.hass
+            self._template.hass = self.hass
         if self._level_template is not None:
-          self._level_template.hass = self.hass
+            self._level_template.hass = self.hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -140,7 +140,7 @@ class LightTemplate(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._level_script is not None: 
+        if self._level_script is not None:
             return SUPPORT_BRIGHTNESS
 
         return 0
@@ -180,7 +180,8 @@ class LightTemplate(Light):
                     self._state = state in ('true', STATE_ON)
                 else:
                     _LOGGER.error(
-                        'Received invalid switch is_on state: %s. Expected: %s',
+                        'Received invalid switch is_on state: %s. ' +
+                        'Expected: %s',
                         state, ', '.join(_VALID_STATES))
                     self._state = None
 
