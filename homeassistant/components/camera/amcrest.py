@@ -16,9 +16,9 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_web)
+    async_get_clientsession, async_aiohttp_proxy_web, async_aiohttp_proxy_stream)
 
-REQUIREMENTS = ['amcrest==1.1.9']
+REQUIREMENTS = ['amcrest==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,8 @@ RESOLUTION_LIST = {
 
 STREAM_SOURCE_LIST = {
     'mjpeg': 0,
-    'snapshot': 1
+    'snapshot': 1,
+    'rtsp': 2,
 }
 
 CONTENT_TYPE_HEADER = 'Content-Type'
@@ -117,15 +118,29 @@ class AmcrestCam(Camera):
             yield from super().handle_async_mjpeg_stream(request)
             return
 
-        # Otherwise, stream an MJPEG image stream directly from the camera
-        websession = async_get_clientsession(self.hass)
-        streaming_url = '{0}mjpg/video.cgi?channel=0&subtype={1}'.format(
-            self._base_url, self._resolution)
+        elif self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
+            # stream an MJPEG image stream directly from the camera
+            websession = async_get_clientsession(self.hass)
+            streaming_url = self._camera.mjpeg_url(typeno=self._resolution)
+            stream_coro = websession.get(
+                streaming_url, auth=self._token, timeout=TIMEOUT)
 
-        stream_coro = websession.get(
-            streaming_url, auth=self._token, timeout=TIMEOUT)
+            yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
-        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
+        else:
+            # streaming via fmpeg
+            from haffmpeg import CameraMjpeg
+
+            streaming_url = self._camera.rtsp_url(typeno=self._resolution)
+            stream =  CameraMjpeg('ffmpeg', loop=self.hass.loop)
+            yield from stream.open_camera(
+                streaming_url, extra_cmd='')
+
+            yield from async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+            yield from stream.close()
+
 
     @property
     def name(self):
