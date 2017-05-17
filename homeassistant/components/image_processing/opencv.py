@@ -1,7 +1,7 @@
 """
 Component that performs OpenCV classification on images.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.opencv/
 """
 from datetime import timedelta
