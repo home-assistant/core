@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 # speaker every 10 seconds. Quiet it down a bit to just actual problems.
 _SOCO_LOGGER = logging.getLogger('soco')
 _SOCO_LOGGER.setLevel(logging.ERROR)
+_SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
 _REQUESTS_LOGGER = logging.getLogger('requests')
 _REQUESTS_LOGGER.setLevel(logging.ERROR)
 
@@ -72,6 +73,8 @@ ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 
 ATTR_IS_COORDINATOR = 'is_coordinator'
+
+UPNP_ERRORS_TO_IGNORE = ['701']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -255,8 +258,35 @@ def soco_error(funct):
             return funct(*args, **kwargs)
         except SoCoException as err:
             _LOGGER.error("Error on %s with %s", funct.__name__, err)
-
     return wrapper
+
+
+def soco_filter_upnperror(errorcodes=None):
+    """Filter out specified UPnP errors from logs."""
+    def decorator(funct):
+        """Decorator function."""
+        @ft.wraps(funct)
+        def wrapper(*args, **kwargs):
+            """Wrap for all soco UPnP exception."""
+            from soco.exceptions import SoCoUPnPException
+
+            # Temporarily disable SoCo logging because it will log the
+            # UPnP exception otherwise
+            _SOCO_SERVICES_LOGGER.disabled = True
+
+            returnval = None
+            try:
+                returnval = funct(*args, **kwargs)
+            except SoCoUPnPException as err:
+                if errorcodes is not None and err.error_code in errorcodes:
+                    pass
+                else:
+                    raise
+
+            _SOCO_SERVICES_LOGGER.disabled = False
+            return returnval
+        return wrapper
+    return decorator
 
 
 def soco_coordinator(funct):
@@ -634,13 +664,6 @@ class SonosDevice(MediaPlayerDevice):
             else:
                 playlist_size = int(playlist_size)
 
-            if playlist_size is None or playlist_size == 0:
-                support_play = False
-                support_pause = False
-                support_stop = False
-                support_previous_track = False
-                support_next_track = False
-
             if playlist_position is not None and playlist_size is not None:
 
                 if playlist_position == 1:
@@ -909,18 +932,21 @@ class SonosDevice(MediaPlayerDevice):
             self.media_pause()
 
     @soco_error
+    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_play(self):
         """Send play command."""
         self._player.play()
 
     @soco_error
+    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_stop(self):
         """Send stop command."""
         self._player.stop()
 
     @soco_error
+    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_pause(self):
         """Send pause command."""
