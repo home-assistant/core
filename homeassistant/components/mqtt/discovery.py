@@ -68,7 +68,8 @@ def async_start(hass, discovery_topic, hass_config):
 
         discovery_hash = json.dumps([component, object_id], sort_keys=True)
         if discovery_hash in already_discovered:
-            _LOGGER.info("Component is already discovered: %s %s", component, object_id)
+            _LOGGER.info("Component is already discovered: %s %s",
+                         component, object_id)
             return
 
         already_discovered.add(discovery_hash)
