@@ -33,7 +33,7 @@ from homeassistant.util.async import (
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
-INST_COUNT = 0
+INSTANCES = []
 
 
 def threadsafe_callback_factory(func):
@@ -98,11 +98,10 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    global INST_COUNT
-    INST_COUNT += 1
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
+    INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
 
@@ -134,8 +133,7 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        # 1. We only mock time during tests
-        # 2. We want block_till_done that is called inside stop_track_tasks
+        # We only mock time during tests and we want to track tasks
         with patch('homeassistant.core._async_create_timer'), \
                 patch.object(hass, 'async_stop_track_tasks'):
             yield from orig_start()
@@ -145,8 +143,7 @@ def async_test_home_assistant(loop):
     @ha.callback
     def clear_instance(event):
         """Clear global instance."""
-        global INST_COUNT
-        INST_COUNT -= 1
+        INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
