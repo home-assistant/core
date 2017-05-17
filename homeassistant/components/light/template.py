@@ -115,20 +115,20 @@ class LightTemplate(Light):
             self._state = state.state == STATE_ON
 
         @callback
-        def template_switch_state_listener(entity, old_state, new_state):
+        def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
-        def template_switch_startup(event):
+        def template_light_startup(event):
             """Update template on startup."""
             async_track_state_change(
-                self.hass, self._entities, template_switch_state_listener)
+                self.hass, self._entities, template_light_state_listener)
 
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         self.hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, template_switch_startup)
+            EVENT_HOMEASSISTANT_START, template_light_startup)
 
     @property
     def brightness(self):
@@ -180,7 +180,7 @@ class LightTemplate(Light):
                     self._state = state in ('true', STATE_ON)
                 else:
                     _LOGGER.error(
-                        'Received invalid switch is_on state: %s. ' +
+                        'Received invalid light is_on state: %s. ' +
                         'Expected: %s',
                         state, ', '.join(_VALID_STATES))
                     self._state = None
