@@ -18,10 +18,11 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     Light, DOMAIN, PLATFORM_SCHEMA, LIGHT_TURN_ON_SCHEMA,
-    ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
     ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT)
+    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
+    preprocess_turn_on_alternatives)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
@@ -434,9 +435,7 @@ class LIFXLight(Light):
         if hsbk is not None:
             return [hsbk, True]
 
-        color_name = kwargs.pop(ATTR_COLOR_NAME, None)
-        if color_name is not None:
-            kwargs[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        preprocess_turn_on_alternatives(kwargs)
 
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \
