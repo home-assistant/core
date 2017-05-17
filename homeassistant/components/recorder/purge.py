@@ -13,6 +13,8 @@ def purge_old_data(instance, purge_days):
     """Purge events and states older than purge_days ago."""
     from .models import States, Events
     purge_before = dt_util.utcnow() - timedelta(days=purge_days)
+    purge_before = purge_before.replace(hour=0, minute=0, second=0,
+                                        microsecond=0)
 
     with session_scope(session=instance.get_session()) as session:
         deleted_rows = session.query(States) \
