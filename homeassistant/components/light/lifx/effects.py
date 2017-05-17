@@ -6,8 +6,9 @@ import random
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT,
-    ATTR_TRANSITION)
+    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME,
+    ATTR_RGB_COLOR, ATTR_EFFECT, ATTR_TRANSITION,
+    VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT)
 from homeassistant.const import (ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
 
@@ -36,7 +37,8 @@ LIFX_EFFECT_SCHEMA = vol.Schema({
 })
 
 LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
@@ -49,7 +51,8 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     vol.Optional(ATTR_PERIOD, default=60):
         vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
     vol.Optional(ATTR_CHANGE, default=20):
