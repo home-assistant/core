@@ -229,7 +229,7 @@ def preprocess_turn_on_alternatives(params):
     kelvin = params.pop(ATTR_KELVIN, None)
     if kelvin is not None:
         mired = color_util.color_temperature_kelvin_to_mired(kelvin)
-        params[ATTR_COLOR_TEMP] = mired
+        params[ATTR_COLOR_TEMP] = int(mired)
 
     brightness_pct = params.pop(ATTR_BRIGHTNESS_PCT, None)
     if brightness_pct is not None:
