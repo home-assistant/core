@@ -427,12 +427,13 @@ class TestTemplateLight:
         assert len(self.calls) == 1
 
     def test_level_action_no_template(self):
-        """Test setting brightness"""
+        """Test setting brightness with optimistic template."""
         assert setup.setup_component(self.hass, 'light', {
             'light': {
                 'platform': 'template',
                 'lights': {
                     'test_template_light': {
+                        'value_template': '{{1 == 1}}',
                         'turn_on': {
                             'service': 'light.turn_on',
                             'entity_id': 'light.test_state'
@@ -444,11 +445,10 @@ class TestTemplateLight:
                         'set_level': {
                             'service': 'test.automation',
                             'data_template': {
-                                'entity_id': 'light.test_state',
+                                'entity_id': 'test.test_state',
                                 'brightness': '{{brightness}}'
                             }
                         },
-                        'level_template': '{{states.light.test_state.attributes.brightness}}'
                     }
                 }
             }
@@ -462,23 +462,24 @@ class TestTemplateLight:
         core.light.turn_on(
             self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 124})
         self.hass.block_till_done()
-        state = self.hass.states.get('light.test_template_light')
-        
         assert len(self.calls) == 1
+        state = self.hass.states.get('light.test_template_light')
         assert self.calls[0].data['brightness'] == '124'
 
         # need to add assertions about optimistic state
-        # assert state.attributes.get('brightness') == 124
+        state = self.hass.states.get('light.test_template_light')
+        assert state != None
+        assert state.attributes.get('brightness') == 124
 
     def test_level_template(self):
-        """Test the setting of the state with off."""
+        """Test the template for the level."""
         with assert_setup_component(1):
             assert setup.setup_component(self.hass, 'light', {
                 'light': {
                     'platform': 'template',
                     'lights': {
                         'test_template_light': {
-                            'value_template': "{{ 1 == 2 }}",
+                            'value_template': "{{ 1 == 1 }}",
                             'turn_on': {
                                 'service': 'light.turn_on',
                                 'entity_id': 'light.test_state'
@@ -506,8 +507,8 @@ class TestTemplateLight:
 
         state = self.hass.states.get('light.test_template_light')
         assert state != None
-        _LOGGER.error(str(state))
-        assert state.attributes.get('brightness') == 42
+
+        assert state.attributes.get('brightness') == '42'
 
 @asyncio.coroutine
 def test_restore_state(hass):

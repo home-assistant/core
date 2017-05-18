@@ -101,7 +101,7 @@ class LightTemplate(Light):
         self._level_template = level_template
         
         self._state = False
-        self._brightness = 0
+        self._brightness = None
         self._entities = entity_ids
 
         if self._template is not None:
@@ -112,8 +112,6 @@ class LightTemplate(Light):
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        if self._level_template is None:
-            return None
         return self._brightness
 
     @property
@@ -133,20 +131,17 @@ class LightTemplate(Light):
     def async_added_to_hass(self):
         """Register callbacks."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
-        _LOGGER.error("Previous state thawed " + str(state))
         if state:
             self._state = state.state == STATE_ON
 
         @callback
         def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
-            _LOGGER.error("state listener callback")
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
         def template_light_startup(event):
             """Update template on startup."""
-            _LOGGER.error("startup callback")
             async_track_state_change(
                 self.hass, self._entities, template_light_state_listener)
 
@@ -158,16 +153,13 @@ class LightTemplate(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        _LOGGER.error(str(kwargs))
-        _LOGGER.error(str(self._level_script))
+        self._state = True
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
             self.hass.async_add_job(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             self.hass.async_add_job(self._on_script.async_run())
-
-        self._state = True
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -192,7 +184,8 @@ class LightTemplate(Light):
                     self._state = None
 
             if self._level_template is not None:
-                self._brightness = self._level_template.async_render()
+                brightness = self._level_template.async_render()
+                self._brightness = brightness
 
         except TemplateError as ex:
             _LOGGER.error(ex)
