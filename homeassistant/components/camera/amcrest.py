@@ -19,6 +19,7 @@ from homeassistant.helpers.aiohttp_client import (
     async_get_clientsession, async_aiohttp_proxy_web, async_aiohttp_proxy_stream)
 
 REQUIREMENTS = ['amcrest==1.2.0']
+DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
