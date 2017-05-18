@@ -79,6 +79,7 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
     vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(const.ATTR_CONFIG_SIZE, default=2): vol.Coerce(int)
 })
 PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -409,12 +410,15 @@ def setup(hass, config):
         node = network.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         selection = service.data.get(const.ATTR_CONFIG_VALUE)
+        size = service.data.get(const.ATTR_CONFIG_SIZE)
+        param_set = False
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
                 .values()):
             if value.index != param:
                 continue
             if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
+                param_set = True
                 value.data = selection
                 _LOGGER.info("Setting config list parameter %s on Node %s "
                              "with selection %s", param, node_id,
@@ -422,10 +426,13 @@ def setup(hass, config):
                 break
             else:
                 value.data = int(selection)
+                param_set = True
                 _LOGGER.info("Setting config parameter %s on Node %s "
                              "with selection %s", param, node_id,
                              selection)
                 break
+        if not param_set:
+            node.set_config_param(param, selection, size)
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
