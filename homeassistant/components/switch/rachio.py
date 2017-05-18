@@ -1,6 +1,6 @@
 import logging
-import voluptuous as vol
 from datetime import timedelta
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
@@ -30,11 +30,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # noinspection PyUnusedLocal
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the component"""
-
+    """Set up the component."""
     # Get options
     manual_run_mins = config.get(CONF_MANUAL_RUN_MINS)
-    _LOGGER.debug("Rachio run time is " + str(manual_run_mins) + " min")
+    _LOGGER.debug("Rachio run time is %d min", manual_run_mins)
 
     # Get access token
     _LOGGER.debug("Getting Rachio access token...")
@@ -47,9 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     person = None
     try:
         person = _get_person(rachio)
-    except Exception as ex:
+    except KeyError:
         _LOGGER.error("Could not reach the Rachio API. "
-                      "Is your access token valid? " + type(ex).__name__)
+                      "Is your access token valid?")
         return False
 
     # Get and persist devices
@@ -73,22 +72,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def _get_person(rachio):
-    """Pull the account info of the person whose access token was provided"""
+    """Pull the account info of the person whose access token was provided."""
     person_id = rachio.person.getInfo()[1]['id']
     return rachio.person.get(person_id)[1]
 
 
 def _list_devices(rachio, manual_run_mins):
-    """Pull a list of devices on the account"""
+    """Pull a list of devices on the account."""
     return [RachioIro(rachio, d['id'], manual_run_mins)
             for d in _get_person(rachio)['devices']]
 
 
 class RachioIro(object):
-    """Represents one Rachio Iro"""
-    def __init__(self, r, device_id, manual_run_mins):
-        """Initialize a new device"""
-        self.r = r
+    """Represents one Rachio Iro."""
+
+    def __init__(self, rachio, device_id, manual_run_mins):
+        """Initialize a new device."""
+        self.rachio = rachio
         self._device_id = device_id
         self.manual_run_mins = manual_run_mins
         self._device = None
@@ -96,32 +96,32 @@ class RachioIro(object):
         self._zones = None
 
     def __str__(self):
-        """Display the device as a string"""
+        """Display the device as a string."""
         return "Rachio Iro " + self.serial_number
 
     @property
     def device_id(self):
-        """How the Rachio API refers to the device"""
+        """How the Rachio API refers to the device."""
         return self._device['id']
 
     @property
     def status(self):
-        """The current status of the device"""
+        """The current status of the device."""
         return self._device['status']
 
     @property
     def serial_number(self):
-        """The serial number of the device"""
+        """The serial number of the device."""
         return self._device['serialNumber']
 
     @property
     def is_paused(self):
-        """Whether the device is temporarily disabled"""
+        """Whether the device is temporarily disabled."""
         return self._device['paused']
 
     @property
     def is_on(self):
-        """Whether the device is powered on and connected"""
+        """Whether the device is powered on and connected."""
         return self._device['on']
 
     @property
@@ -130,7 +130,7 @@ class RachioIro(object):
 
     def list_zones(self, include_disabled=False):
         if not self._zones:
-            self._zones = [RachioZone(self.r, self, zone['id'],
+            self._zones = [RachioZone(self.rachio, self, zone['id'],
                                       self.manual_run_mins)
                            for zone in self._device['zones']]
 
@@ -142,21 +142,22 @@ class RachioIro(object):
 
     @util.Throttle(MIN_UPDATE_INTERVAL, MIN_FORCED_UPDATE_INTERVAL)
     def update(self):
-        """Pull updated device info from the Rachio API"""
-        self._device = self.r.device.get(self._device_id)[1]
-        self._running = self.r.device.getCurrentSchedule(self._device_id)[1]
+        """Pull updated device info from the Rachio API."""
+        self._device = self.rachio.device.get(self._device_id)[1]
+        self._running = self.rachio.device.getCurrentSchedule(self._device_id)[1]
 
         # Possibly pdate all zones
         for zone in self.list_zones(include_disabled=True):
             zone.update()
 
-        _LOGGER.debug("Updated " + str(self))
+        _LOGGER.debug("Updated %s", str(self))
 
 
 class RachioZone(SwitchDevice):
-    """Represents one zone of sprinklers connected to the Rachio Iro"""
+    """Represents one zone of sprinklers connected to the Rachio Iro."""
+
     def __init__(self, rachio, device, zone_id, manual_run_mins):
-        """Initialize a new Rachio Zone"""
+        """Initialize a new Rachio Zone."""
         self.rachio = rachio
         self._device = device
         self._zone_id = zone_id
@@ -164,66 +165,65 @@ class RachioZone(SwitchDevice):
         self._manual_run_mins = manual_run_mins
 
     def __str__(self):
-        """Display the zone as a string"""
+        """Display the zone as a string."""
         return "Rachio Zone " + self.name
 
     @property
     def zone_id(self):
-        """How the Rachio API refers to the zone"""
+        """How the Rachio API refers to the zone."""
         return self._zone['id']
 
     @property
     def unique_id(self):
-        """Generate a unique string ID for the zone"""
+        """Generate a unique string ID for the zone."""
         return '{iro}-{zone}'.format(
             iro=self._device.device_id,
             zone=self.zone_id)
 
     @property
     def number(self):
-        """The physical connection of the zone pump"""
+        """The physical connection of the zone pump."""
         return self._zone['zoneNumber']
 
     @property
     def name(self):
-        """The friendly name of the zone"""
+        """The friendly name of the zone."""
         return self._zone['name']
 
     @property
     def is_enabled(self):
-        """Whether the zone is allowed to run"""
+        """Whether the zone is allowed to run."""
         return self._zone['enabled']
 
     # TODO: fix this always returning false
     @property
     def is_on(self):
-        """Whether the zone is currently running"""
+        """Whether the zone is currently running."""
         self._device.update()
         schedule = self._device.current_schedule
         return self.zone_id == schedule.get('zoneId')
 
     def update(self):
-        """Pull updated zone info from the Rachio API"""
+        """Pull updated zone info from the Rachio API."""
         self._zone = self.rachio.zone.get(self._zone_id)[1]
 
         # Possibly update device
         self._device.update()
 
-        _LOGGER.debug("Updated " + str(self))
+        _LOGGER.debug("Updated %s", str(self))
 
     def turn_on(self, seconds=None):
-        """Start the zone"""
-
+        """Start the zone."""
         # Convert minutes to seconds
         seconds = seconds or (self._manual_run_mins * 60)
 
         # Stop other zones first
         self.turn_off()
 
-        _LOGGER.info("Watering {} for {} sec".format(self.name, seconds))
+        _LOGGER.info("Watering %s for %d sec", self.name, seconds)
         self.rachio.zone.start(self.zone_id, seconds)
 
     def turn_off(self):
-        """Stop all zones"""
+        """Stop all zones."""
         _LOGGER.info("Stopping watering of all zones")
         self.rachio.device.stopWater(self._device.device_id)
