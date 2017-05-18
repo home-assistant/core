@@ -72,7 +72,7 @@ def async_start(hass, discovery_topic, hass_config):
 
         discovery_hash = (component, object_id)
         if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-            _LOGGER.info("Component is already discovered: %s %s",
+            _LOGGER.info("Component has already been discovered: %s %s",
                          component, object_id)
             return
 
