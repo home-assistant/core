@@ -61,8 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
         vol.All(vol.In(STREAM_SOURCE_LIST)),
-    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=''):
-        cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
 })
 
 
