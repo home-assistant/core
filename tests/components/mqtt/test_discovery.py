@@ -93,4 +93,4 @@ def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     assert state.name == 'Beer'
     assert state_duplicate is None
     assert 'Component has already been discovered: ' \
-                            'binary_sensor bla' in caplog.text
+           'binary_sensor bla' in caplog.text
