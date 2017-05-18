@@ -56,7 +56,7 @@ alarmdecoder==0.12.1.0
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
-amcrest==1.1.9
+amcrest==1.2.0
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8

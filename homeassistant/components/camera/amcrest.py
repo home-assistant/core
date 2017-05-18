@@ -16,7 +16,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_web, async_aiohttp_proxy_stream)
+    async_get_clientsession, async_aiohttp_proxy_web,
+    async_aiohttp_proxy_stream)
 
 REQUIREMENTS = ['amcrest==1.2.0']
 DEPENDENCIES = ['ffmpeg']
@@ -142,7 +143,7 @@ class AmcrestCam(Camera):
             from haffmpeg import CameraMjpeg
 
             streaming_url = self._camera.rtsp_url(typeno=self._resolution)
-            stream =  CameraMjpeg(self._ffmpeg_binary, loop=self.hass.loop)
+            stream = CameraMjpeg(self._ffmpeg_binary, loop=self.hass.loop)
             yield from stream.open_camera(
                 streaming_url, extra_cmd=self._ffmpeg_arguments)
 
@@ -150,7 +151,6 @@ class AmcrestCam(Camera):
                 self.hass, request, stream,
                 'multipart/x-mixed-replace;boundary=ffserver')
             yield from stream.close()
-
 
     @property
     def name(self):
