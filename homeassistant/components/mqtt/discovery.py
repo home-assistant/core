@@ -28,7 +28,7 @@ ALLOWED_PLATFORMS = {
     'switch': ['mqtt'],
 }
 
-ALREADY_DISCOVERED = set()
+ALREADY_DISCOVERED = 'mqtt_discovered_components'
 
 
 @asyncio.coroutine
@@ -67,13 +67,16 @@ def async_start(hass, discovery_topic, hass_config):
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
 
-        discovery_hash = json.dumps([component, object_id], sort_keys=True)
-        if discovery_hash in ALREADY_DISCOVERED:
+        if ALREADY_DISCOVERED not in hass.data:
+            hass.data[ALREADY_DISCOVERED] = set()
+
+        discovery_hash = (component, object_id)
+        if discovery_hash in hass.data[ALREADY_DISCOVERED]:
             _LOGGER.info("Component is already discovered: %s %s",
                          component, object_id)
             return
 
-        ALREADY_DISCOVERED.add(discovery_hash)
+        hass.data[ALREADY_DISCOVERED].add(discovery_hash)
 
         _LOGGER.info("Found new component: %s %s", component, object_id)
 
