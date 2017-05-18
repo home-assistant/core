@@ -1,3 +1,4 @@
+"""Integration with the Rachio Iro sprinkler system controller."""
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -16,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_RACHIO = 'rachio'
 
 CONF_MANUAL_RUN_MINS = 'manual_run_mins'
-DEFAULT_MANUAL_RUN_MINS = 60
+DEFAULT_MANUAL_RUN_MINS = 10
 
 MIN_UPDATE_INTERVAL = timedelta(minutes=5)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
@@ -126,9 +127,11 @@ class RachioIro(object):
 
     @property
     def current_schedule(self):
+        """The schedule that the device is running right now."""
         return self._running
 
     def list_zones(self, include_disabled=False):
+        """A list of the zones connected to the device and their data."""
         if not self._zones:
             self._zones = [RachioZone(self.rachio, self, zone['id'],
                                       self.manual_run_mins)
@@ -141,10 +144,11 @@ class RachioIro(object):
             return [z for z in self._zones if z.is_enabled]
 
     @util.Throttle(MIN_UPDATE_INTERVAL, MIN_FORCED_UPDATE_INTERVAL)
-    def update(self):
+    def update(self, **kwargs):
         """Pull updated device info from the Rachio API."""
         self._device = self.rachio.device.get(self._device_id)[1]
-        self._running = self.rachio.device.getCurrentSchedule(self._device_id)[1]
+        self._running = self.rachio.device\
+                            .getCurrentSchedule(self._device_id)[1]
 
         # Possibly pdate all zones
         for zone in self.list_zones(include_disabled=True):
@@ -162,7 +166,7 @@ class RachioZone(SwitchDevice):
         self._device = device
         self._zone_id = zone_id
         self._zone = None
-        self._manual_run_mins = manual_run_mins
+        self._manual_run_secs = manual_run_mins * 60
 
     def __str__(self):
         """Display the zone as a string."""
@@ -212,10 +216,10 @@ class RachioZone(SwitchDevice):
 
         _LOGGER.debug("Updated %s", str(self))
 
-    def turn_on(self, seconds=None):
+    def turn_on(self):
         """Start the zone."""
         # Convert minutes to seconds
-        seconds = seconds or (self._manual_run_mins * 60)
+        seconds = self._manual_run_secs * 60
 
         # Stop other zones first
         self.turn_off()
