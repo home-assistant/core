@@ -150,7 +150,7 @@ class RachioIro(object):
         self._running = self.rachio.device\
                             .getCurrentSchedule(self._device_id)[1]
 
-        # Possibly pdate all zones
+        # Possibly update all zones
         for zone in self.list_zones(include_disabled=True):
             zone.update()
 
@@ -199,7 +199,6 @@ class RachioZone(SwitchDevice):
         """Whether the zone is allowed to run."""
         return self._zone['enabled']
 
-    # TODO: fix this always returning false
     @property
     def is_on(self):
         """Whether the zone is currently running."""
