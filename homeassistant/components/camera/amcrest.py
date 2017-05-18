@@ -12,6 +12,7 @@ import voluptuous as vol
 
 import homeassistant.loader as loader
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.helpers import config_validation as cv
@@ -27,13 +28,11 @@ _LOGGER = logging.getLogger(__name__)
 CONF_RESOLUTION = 'resolution'
 CONF_STREAM_SOURCE = 'stream_source'
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
-CONF_FFMPEG_BINARY = 'ffmpeg_binary'
 
 DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
 DEFAULT_STREAM_SOURCE = 'mjpeg'
-DEFAULT_FFMPEG_BINARY = '/usr/bin/ffmpeg'
 
 NOTIFICATION_ID = 'amcrest_notification'
 NOTIFICATION_TITLE = 'Amcrest Camera Setup'
@@ -63,8 +62,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STREAM_SOURCE, default=DEFAULT_STREAM_SOURCE):
         vol.All(vol.In(STREAM_SOURCE_LIST)),
     vol.Optional(CONF_FFMPEG_ARGUMENTS, default=''):
-        cv.string,
-    vol.Optional(CONF_FFMPEG_BINARY, default=DEFAULT_FFMPEG_BINARY):
         cv.string,
 })
 
@@ -102,10 +99,9 @@ class AmcrestCam(Camera):
         super(AmcrestCam, self).__init__()
         self._camera = camera
         self._base_url = self._camera.get_base_url()
-        self._hass = hass
         self._name = device_info.get(CONF_NAME)
+        self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
-        self._ffmpeg_binary = device_info.get(CONF_FFMPEG_BINARY)
         self._resolution = RESOLUTION_LIST[device_info.get(CONF_RESOLUTION)]
         self._stream_source = STREAM_SOURCE_LIST[
             device_info.get(CONF_STREAM_SOURCE)
@@ -143,7 +139,7 @@ class AmcrestCam(Camera):
             from haffmpeg import CameraMjpeg
 
             streaming_url = self._camera.rtsp_url(typeno=self._resolution)
-            stream = CameraMjpeg(self._ffmpeg_binary, loop=self.hass.loop)
+            stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
             yield from stream.open_camera(
                 streaming_url, extra_cmd=self._ffmpeg_arguments)
 
