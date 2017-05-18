@@ -1,7 +1,7 @@
 """
 Component that performs OpenCV classification on images.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.opencv/
 """
 from datetime import timedelta
@@ -9,21 +9,14 @@ import logging
 
 from homeassistant.core import split_entity_id
 from homeassistant.components.image_processing import (
-    ImageProcessingEntity,
-    PLATFORM_SCHEMA,
-)
+    ImageProcessingEntity, PLATFORM_SCHEMA)
 from homeassistant.components.opencv import (
-    ATTR_MATCHES,
-    CLASSIFIER_GROUP_CONFIG,
-    CONF_CLASSIFIER,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    process_image,
-)
-
-DEPENDENCIES = ['opencv']
+    ATTR_MATCHES, CLASSIFIER_GROUP_CONFIG, CONF_CLASSIFIER, CONF_ENTITY_ID,
+    CONF_NAME, process_image)
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['opencv']
 
 DEFAULT_TIMEOUT = 10
 
@@ -33,18 +26,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(CLASSIFIER_GROUP_CONFIG)
 
 
 def _create_processor_from_config(hass, camera_entity, config):
-    """Create an OpenCV processor from configurtaion."""
+    """Create an OpenCV processor from configuration."""
     classifier_config = config[CONF_CLASSIFIER]
     name = '{} {}'.format(
-        config[CONF_NAME],
-        split_entity_id(camera_entity)[1].replace('_', ' '))
+        config[CONF_NAME], split_entity_id(camera_entity)[1].replace('_', ' '))
 
     processor = OpenCVImageProcessor(
-        hass,
-        camera_entity,
-        name,
-        classifier_config,
-    )
+        hass, camera_entity, name, classifier_config)
 
     return processor
 
@@ -57,10 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for camera_entity in discovery_info[CONF_ENTITY_ID]:
         devices.append(
-            _create_processor_from_config(
-                hass,
-                camera_entity,
-                discovery_info))
+            _create_processor_from_config(hass, camera_entity, discovery_info))
 
     add_devices(devices)
 
@@ -115,6 +100,5 @@ class OpenCVImageProcessor(ImageProcessingEntity):
     def process_image(self, image):
         """Process the image."""
         self._last_image = image
-        self._matches = process_image(image,
-                                      self._classifier_configs,
-                                      False)
+        self._matches = process_image(
+            image, self._classifier_configs, False)

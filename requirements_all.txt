@@ -56,7 +56,7 @@ alarmdecoder==0.12.1.0
 
 # homeassistant.components.camera.amcrest
 # homeassistant.components.sensor.amcrest
-amcrest==1.1.9
+amcrest==1.2.0
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -188,7 +188,7 @@ evohomeclient==0.2.5
 fastdotcom==0.0.1
 
 # homeassistant.components.sensor.fedex
-fedexdeliverymanager==1.0.2
+fedexdeliverymanager==1.0.3
 
 # homeassistant.components.feedreader
 feedparser==5.2.1
@@ -357,7 +357,7 @@ libsoundtouch==0.3.0
 liffylights==0.9.4
 
 # homeassistant.components.light.limitlessled
-limitlessled==1.0.7
+limitlessled==1.0.8
 
 # homeassistant.components.media_player.liveboxplaytv
 liveboxplaytv==1.4.9
@@ -530,7 +530,7 @@ pydroid-ipcam==0.8
 pyebox==0.1.0
 
 # homeassistant.components.eight_sleep
-pyeight==0.0.4
+pyeight==0.0.5
 
 # homeassistant.components.media_player.emby
 pyemby==1.2
@@ -554,7 +554,7 @@ pyharmony==1.0.12
 pyhik==0.1.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.25
+pyhomematic==0.1.26
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.1.0
@@ -714,7 +714,7 @@ pyunifi==2.12
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.30
+pyvera==0.2.31
 
 # homeassistant.components.notify.html5
 pywebpush==1.0.0
@@ -832,7 +832,7 @@ twilio==5.7.0
 uber_rides==0.4.1
 
 # homeassistant.components.sensor.ups
-upsmychoice==1.0.2
+upsmychoice==1.0.4
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
