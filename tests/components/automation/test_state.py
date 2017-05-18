@@ -245,7 +245,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fails_setup_if_to_boolean_value(self):
         """Test for setup failure for boolean to."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'state',
@@ -260,7 +260,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fails_setup_if_from_boolean_value(self):
         """Test for setup failure for boolean from."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'state',
@@ -275,7 +275,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fails_setup_bad_for(self):
         """Test for setup failure for bad for."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'state',
@@ -293,7 +293,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fails_setup_for_without_to(self):
         """Test for setup failures for missing to."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'state',
@@ -475,7 +475,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fails_setup_for_without_time(self):
         """Test for setup failure if no time is provided."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'event',
@@ -493,7 +493,7 @@ class TestAutomationState(unittest.TestCase):
     def test_if_fails_setup_for_without_entity(self):
         """Test for setup failure if no entity is provided."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {'event_type': 'bla'},
                     'condition': {

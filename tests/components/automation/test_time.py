@@ -207,7 +207,7 @@ class TestAutomationTime(unittest.TestCase):
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'time',
@@ -230,7 +230,7 @@ class TestAutomationTime(unittest.TestCase):
         This should break the before rule.
         """
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'time',
