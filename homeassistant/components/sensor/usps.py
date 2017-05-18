@@ -99,7 +99,7 @@ class USPSPackageSensor(Entity):
 
 
 class USPSMailSensor(Entity):
-    "USPS Mail Sensor."""
+    """USPS Mail Sensor."""
 
     def __init__(self, session, name):
         """Initialize the sensor."""
