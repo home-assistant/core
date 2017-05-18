@@ -927,7 +927,6 @@ class TestZWaveServices(unittest.TestCase):
 
         assert value.data == 7
 
-
     def test_print_config_parameter(self):
         """Test zwave print_config_parameter service."""
         value1 = MockValue(
