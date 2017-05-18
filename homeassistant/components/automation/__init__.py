@@ -156,10 +156,7 @@ def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
-    success = yield from _async_process_config(hass, config, component)
-
-    if not success:
-        return False
+    yield from _async_process_config(hass, config, component)
 
     descriptions = yield from hass.loop.run_in_executor(
         None, conf_util.load_yaml_config_file, os.path.join(
@@ -417,8 +414,6 @@ def _async_process_config(hass, config, component):
 
     if entities:
         yield from component.async_add_entities(entities)
-
-    return len(entities) > 0
 
 
 def _async_get_action(hass, config, name):
