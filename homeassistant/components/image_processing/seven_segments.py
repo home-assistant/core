@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DIGITS = 'digits'
 CONF_HEIGHT = 'height'
-CONF_SSOCR_BIN = 'ssocr'
+CONF_SSOCR_BIN = 'ssocr_bin'
 CONF_THRESHOLD = 'threshold'
 CONF_WIDTH = 'width'
 CONF_X_POS = 'x_position'
