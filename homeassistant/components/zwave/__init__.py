@@ -245,7 +245,7 @@ def setup(hass, config):
 
     options.set_console_output(use_debug)
 
-    if config[DOMAIN][CONF_NETWORK_KEY] is not None:
+    if CONF_NETWORK_KEY in config[DOMAIN]:
         options.addOption("NetworkKey", config[DOMAIN][CONF_NETWORK_KEY])
 
     options.lock()
