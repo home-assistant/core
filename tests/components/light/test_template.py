@@ -470,6 +470,45 @@ class TestTemplateLight:
         # need to add assertions about optimistic state
         # assert state.attributes.get('brightness') == 124
 
+    def test_level_template(self):
+        """Test the setting of the state with off."""
+        with assert_setup_component(1):
+            assert setup.setup_component(self.hass, 'light', {
+                'light': {
+                    'platform': 'template',
+                    'lights': {
+                        'test_template_light': {
+                            'value_template': "{{ 1 == 2 }}",
+                            'turn_on': {
+                                'service': 'light.turn_on',
+                                'entity_id': 'light.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'light.turn_off',
+                                'entity_id': 'light.test_state'
+                            },
+                            'set_level': {
+                                'service': 'light.turn_on',
+                                'data_template': {
+                                  'entity_id': 'light.test_state',
+                                  'brightness': '{{brightness}}'
+                                }
+                            },
+                            'level_template': 
+                                '{{42}}'
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state != None
+        _LOGGER.error(str(state))
+        assert state.attributes.get('brightness') == 42
+
 @asyncio.coroutine
 def test_restore_state(hass):
     """Ensure states are restored on startup."""
