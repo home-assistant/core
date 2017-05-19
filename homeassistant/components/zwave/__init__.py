@@ -54,6 +54,7 @@ CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
+CONF_NETWORK_KEY = 'network_key'
 
 ATTR_POWER = 'power_consumption'
 
@@ -78,8 +79,8 @@ RENAME_NODE_SCHEMA = vol.Schema({
 SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_CONFIG_PARAMETER): vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int),
-    vol.Optional(const.ATTR_CONFIG_SIZE): vol.Coerce(int)
+    vol.Required(const.ATTR_CONFIG_VALUE): vol.Any(vol.Coerce(int), cv.string),
+    vol.Optional(const.ATTR_CONFIG_SIZE, default=2): vol.Coerce(int)
 })
 PRINT_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -125,6 +126,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
+        vol.Optional(CONF_NETWORK_KEY): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
@@ -245,6 +247,10 @@ def setup(hass, config):
         config_path=config[DOMAIN].get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
+
+    if CONF_NETWORK_KEY in config[DOMAIN]:
+        options.addOption("NetworkKey", config[DOMAIN][CONF_NETWORK_KEY])
+
     options.lock()
 
     network = hass.data[ZWAVE_NETWORK] = ZWaveNetwork(options, autostart=False)
@@ -410,28 +416,28 @@ def setup(hass, config):
         node = network.nodes[node_id]
         param = service.data.get(const.ATTR_CONFIG_PARAMETER)
         selection = service.data.get(const.ATTR_CONFIG_VALUE)
-        size = service.data.get(const.ATTR_CONFIG_SIZE, 2)
-        i = 0
+        size = service.data.get(const.ATTR_CONFIG_SIZE)
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_CONFIGURATION)
                 .values()):
-            if value.index == param and value.type == const.TYPE_LIST:
-                _LOGGER.debug("Values for parameter %s: %s", param,
-                              value.data_items)
-                i = len(value.data_items) - 1
-        if i == 0:
-            node.set_config_param(param, selection, size)
-        else:
-            if selection > i:
-                _LOGGER.error("Config parameter selection does not exist! "
-                              "Please check zwcfg_[home_id].xml in "
-                              "your homeassistant config directory. "
-                              "Available selections are 0 to %s", i)
+            if value.index != param:
+                continue
+            if value.type in [const.TYPE_LIST, const.TYPE_BOOL]:
+                value.data = selection
+                _LOGGER.info("Setting config list parameter %s on Node %s "
+                             "with selection %s", param, node_id,
+                             selection)
                 return
-            node.set_config_param(param, selection, size)
-            _LOGGER.info("Setting config parameter %s on Node %s "
-                         "with selection %s and size=%s", param, node_id,
-                         selection, size)
+            else:
+                value.data = int(selection)
+                _LOGGER.info("Setting config parameter %s on Node %s "
+                             "with selection %s", param, node_id,
+                             selection)
+                return
+        node.set_config_param(param, selection, size)
+        _LOGGER.info("Setting unknown config parameter %s on Node %s "
+                     "with selection %s", param, node_id,
+                     selection)
 
     def print_config_parameter(service):
         """Print a config parameter from a node."""
