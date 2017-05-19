@@ -209,6 +209,16 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         yield from self._group.set_volume(round(volume * 100))
         yield from self.async_update_ha_state()
 
+    def snapshot(self):
+        """Snapshot the group state."""
+        self._group.snapshot()
+
+    @asyncio.coroutine
+    def async_restore(self):
+        """Restore the group state."""
+        yield from self._group.restore()
+        yield from self.async_update_ha_state()
+
 
 class SnapcastClientDevice(MediaPlayerDevice):
     """Representation of a Snapcast client device."""
@@ -268,4 +278,14 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def async_set_volume_level(self, volume):
         """Set the volume level."""
         yield from self._client.set_volume(round(volume * 100))
+        yield from self.async_update_ha_state()
+
+    def snapshot(self):
+        """Snapshot the client state."""
+        self._client.snapshot()
+
+    @asyncio.coroutine
+    def async_restore(self):
+        """Restore the client state."""
+        yield from self._client.restore()
         yield from self.async_update_ha_state()
