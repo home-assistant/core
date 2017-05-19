@@ -148,7 +148,6 @@ def test_saving_event_exclude_event_type(hass_recorder):
     hass = hass_recorder({'exclude': {'event_types': 'test'}})
     events = _add_events(hass, {'test': 'nothing', 'test2': 'something'})
     assert len(events) == 1
-    #assert hass.e.get('test2.recorder') == states[0]
 
 
 def test_saving_state_exclude_domains(hass_recorder):
