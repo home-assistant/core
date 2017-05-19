@@ -224,8 +224,7 @@ class SpcWebGateway:
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout getting SPC data from %s.", url)
             return False
-        except (aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError):
+        except aiohttp.ClientError:
             _LOGGER.exception("Error getting SPC data from %s.", url)
             return False
         finally:
