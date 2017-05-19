@@ -54,6 +54,7 @@ CONF_REFRESH_DELAY = 'delay'
 CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
+CONF_NETWORK_KEY = 'network_key'
 
 ATTR_POWER = 'power_consumption'
 
@@ -125,6 +126,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_AUTOHEAL, default=DEFAULT_CONF_AUTOHEAL): cv.boolean,
         vol.Optional(CONF_CONFIG_PATH): cv.string,
+        vol.Optional(CONF_NETWORK_KEY): cv.string,
         vol.Optional(CONF_DEVICE_CONFIG, default={}):
             vol.Schema({cv.entity_id: DEVICE_CONFIG_SCHEMA_ENTRY}),
         vol.Optional(CONF_DEVICE_CONFIG_GLOB, default={}):
@@ -245,6 +247,10 @@ def setup(hass, config):
         config_path=config[DOMAIN].get(CONF_CONFIG_PATH))
 
     options.set_console_output(use_debug)
+
+    if CONF_NETWORK_KEY in config[DOMAIN]:
+        options.addOption("NetworkKey", config[DOMAIN][CONF_NETWORK_KEY])
+
     options.lock()
 
     network = hass.data[ZWAVE_NETWORK] = ZWaveNetwork(options, autostart=False)
