@@ -1,3 +1,4 @@
+"""Tests for Vanderbilt SPC binary sensor platform."""
 import asyncio
 
 import pytest
@@ -9,6 +10,7 @@ from tests.common import async_test_home_assistant
 
 @pytest.fixture
 def hass(loop):
+    """Home Assistant fixture with device mapping registry."""
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.data['spc_registry'] = SpcRegistry()
     yield hass
@@ -17,6 +19,7 @@ def hass(loop):
 
 @asyncio.coroutine
 def test_setup_platform(hass):
+    """Test autodiscovery of supported device types."""
     added_entities = []
 
     zones = {'devices': [{
@@ -45,7 +48,6 @@ def test_setup_platform(hass):
         'status': '0',
         }]}
 
-    @asyncio.coroutine
     def add_entities(entities):
         nonlocal added_entities
         added_entities = list(entities)

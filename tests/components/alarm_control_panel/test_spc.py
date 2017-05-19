@@ -1,3 +1,4 @@
+"""Tests for Vanderbilt SPC alarm control panel platform."""
 import asyncio
 
 import pytest
@@ -11,6 +12,7 @@ from homeassistant.const import (
 
 @pytest.fixture
 def hass(loop):
+    """Home Assistant fixture with device mapping registry."""
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.data['spc_registry'] = SpcRegistry()
     hass.data['spc_api'] = None
@@ -20,9 +22,9 @@ def hass(loop):
 
 @asyncio.coroutine
 def test_setup_platform(hass):
+    """Test adding areas as separate alarm control panel devices."""
     added_entities = []
 
-    @asyncio.coroutine
     def add_entities(entities):
         nonlocal added_entities
         added_entities = list(entities)
