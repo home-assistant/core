@@ -693,7 +693,8 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(ft.partial(self.play_media, media_type, media_id, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.play_media, media_type, media_id, **kwargs))
 
     def select_source(self, source):
         """Select input source."""

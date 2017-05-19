@@ -486,7 +486,8 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result = yield from self.hass.async_add_job(self._mqttc.connect, self.broker, self.port, self.keepalive)
+        result = yield from self.hass.async_add_job(
+            self._mqttc.connect, self.broker, self.port, self.keepalive)
 
         if result != 0:
             import paho.mqtt.client as mqtt
@@ -534,7 +535,8 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result, mid = yield from self.hass.async_add_job(self._mqttc.unsubscribe, topic)
+        result, mid = yield from self.hass.async_add_job(
+            self._mqttc.unsubscribe, topic)
 
         _raise_on_error(result)
         self.progress[mid] = topic

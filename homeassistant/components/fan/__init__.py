@@ -280,7 +280,8 @@ class FanEntity(ToggleEntity):
         """
         if speed is SPEED_OFF:
             return self.async_turn_off()
-        return self.hass.async_add_job(ft.partial(self.turn_on, speed, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_on, speed, **kwargs))
 
     def oscillate(self: ToggleEntity, oscillating: bool) -> None:
         """Oscillate the fan."""
