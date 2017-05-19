@@ -47,9 +47,9 @@ set_config_parameter:
     parameter:
       description: Parameter number to set (integer).
     value:
-      description: Value to set on parameter. (integer).
+      description: Value to set for parameter. (String value for list and bool parameters, integer for others).
     size:
-      description: (Optional) The size of the value. Defaults to 2.
+      description: (Optional) Set the size of the parameter value. Only needed if no parameters are available.
 
 print_config_parameter:
   description: Prints a Z-Wave node config parameter value to log.
