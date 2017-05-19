@@ -18,6 +18,6 @@ FINGERPRINTS = {
     "panels/ha-panel-iframe.html": "d920f0aa3c903680f2f8795e2255daab",
     "panels/ha-panel-logbook.html": "6dd6a16f52117318b202e60f98400163",
     "panels/ha-panel-map.html": "31c592c239636f91e07c7ac232a5ebc4",
-    "panels/ha-panel-zwave.html": "84fb45638d2a69bac343246a687f647c",
+    "panels/ha-panel-zwave.html": "19336d2c50c91dd6a122acc0606ff10d",
     "websocket_test.html": "575de64b431fe11c3785bf96d7813450"
 }
