@@ -79,8 +79,8 @@ class LocativeView(HomeAssistantView):
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            yield from hass.loop.run_in_executor(
-                None, partial(self.see, dev_id=device,
+            yield from hass.async_add_job(
+                partial(self.see, dev_id=device,
                               location_name=location_name,
                               gps=gps_location))
             return 'Setting location to {}'.format(location_name)
@@ -91,7 +91,7 @@ class LocativeView(HomeAssistantView):
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
-                yield from hass.loop.run_in_executor(
+                yield from hass.async_add_job(
                     None, partial(self.see, dev_id=device,
                                   location_name=location_name,
                                   gps=gps_location))

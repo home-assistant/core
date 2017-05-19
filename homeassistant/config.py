@@ -231,7 +231,7 @@ def async_hass_config_yaml(hass):
         conf = load_yaml_config_file(path)
         return conf
 
-    conf = yield from hass.loop.run_in_executor(None, _load_hass_yaml_config)
+    conf = yield from hass.async_add_job(_load_hass_yaml_config)
     return conf
 
 
@@ -404,8 +404,8 @@ def async_process_ha_core_config(hass, config):
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = yield from hass.loop.run_in_executor(
-            None, loc_util.detect_location_info)
+        info = yield from hass.async_add_job(
+            loc_util.detect_location_info)
 
         if info is None:
             _LOGGER.error('Could not detect location information')
@@ -430,8 +430,8 @@ def async_process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = yield from hass.loop.run_in_executor(
-            None, loc_util.elevation, hac.latitude, hac.longitude)
+        elevation = yield from hass.async_add_job(
+            loc_util.elevation, hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
 
