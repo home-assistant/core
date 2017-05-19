@@ -13,10 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
-    SERVICE_VOLUME_MUTE, SERVICE_SELECT_SOURCE, SERVICE_VOLUME_SET,
-    PLATFORM_SCHEMA, ATTR_INPUT_SOURCE, ATTR_MEDIA_VOLUME_LEVEL,
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN as MEDIA_PLAYER_DOMAIN,
-    MediaPlayerDevice)
+    PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
     CONF_PORT, ATTR_ENTITY_ID)
@@ -65,7 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         """Handle services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         devices = [device for device in hass.data[DOMAIN]
-                if device.entity_id in entity_ids]
+                   if device.entity_id in entity_ids]
         for device in devices:
             if service.service == SERVICE_SNAPSHOT:
                 device.snapshot()
@@ -254,4 +251,3 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def async_restore(self):
         """Restore the client state."""
         yield from self._client.restore()
-        #yield from self.async_update_ha_state()
