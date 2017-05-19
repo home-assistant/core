@@ -150,14 +150,14 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                 scanner = yield from platform.async_get_scanner(
                     hass, {DOMAIN: p_config})
             elif hasattr(platform, 'get_scanner'):
-                scanner = yield from hass.loop.run_in_executor(
-                    None, platform.get_scanner, hass, {DOMAIN: p_config})
+                scanner = yield from hass.async_add_job(
+                    platform.get_scanner, hass, {DOMAIN: p_config})
             elif hasattr(platform, 'async_setup_scanner'):
                 setup = yield from platform.async_setup_scanner(
                     hass, p_config, tracker.async_see, disc_info)
             elif hasattr(platform, 'setup_scanner'):
-                setup = yield from hass.loop.run_in_executor(
-                    None, platform.setup_scanner, hass, p_config, tracker.see,
+                setup = yield from hass.async_add_job(
+                    platform.setup_scanner, hass, p_config, tracker.see,
                     disc_info)
             else:
                 raise HomeAssistantError("Invalid device_tracker platform.")
@@ -209,8 +209,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
                  ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
         yield from tracker.async_see(**args)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml')
     )
     hass.services.async_register(
@@ -322,8 +322,8 @@ class DeviceTracker(object):
         This method is a coroutine.
         """
         with (yield from self._is_updating):
-            yield from self.hass.loop.run_in_executor(
-                None, update_config, self.hass.config.path(YAML_DEVICES),
+            yield from self.hass.async_add_job(
+                update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
 
     @asyncio.coroutine
@@ -608,7 +608,7 @@ class DeviceScanner(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.scan_devices)
+        return self.hass.async_add_job(self.scan_devices)
 
     def get_device_name(self, mac: str) -> str:
         """Get device name from mac."""
@@ -619,7 +619,7 @@ class DeviceScanner(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.get_device_name, mac)
+        return self.hass.async_add_job(self.get_device_name, mac)
 
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
@@ -650,8 +650,8 @@ def async_load_config(path: str, hass: HomeAssistantType,
     try:
         result = []
         try:
-            devices = yield from hass.loop.run_in_executor(
-                None, load_yaml_config_file, path)
+            devices = yield from hass.async_add_job(
+                load_yaml_config_file, path)
         except HomeAssistantError as err:
             _LOGGER.error("Unable to load %s: %s", path, str(err))
             return []
