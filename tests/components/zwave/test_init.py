@@ -897,6 +897,7 @@ class TestZWaveServices(unittest.TestCase):
         value = MockValue(
             index=12,
             command_class=const.COMMAND_CLASS_CONFIGURATION,
+            type=const.TYPE_BYTE,
         )
         value_list = MockValue(
             index=13,
@@ -911,38 +912,32 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 13,
-            const.ATTR_CONFIG_VALUE: 1,
+            const.ATTR_CONFIG_VALUE: 'item3',
         })
         self.hass.block_till_done()
 
-        assert node.set_config_param.called
-        assert len(node.set_config_param.mock_calls) == 1
-        assert node.set_config_param.mock_calls[0][1][0] == 13
-        assert node.set_config_param.mock_calls[0][1][1] == 1
-        assert node.set_config_param.mock_calls[0][1][2] == 2
-        node.set_config_param.reset_mock()
-
-        self.hass.services.call('zwave', 'set_config_parameter', {
-            const.ATTR_NODE_ID: 14,
-            const.ATTR_CONFIG_PARAMETER: 13,
-            const.ATTR_CONFIG_VALUE: 7,
-        })
-        self.hass.block_till_done()
-
-        assert not node.set_config_param.called
-        node.set_config_param.reset_mock()
+        assert value_list.data == 'item3'
 
         self.hass.services.call('zwave', 'set_config_parameter', {
             const.ATTR_NODE_ID: 14,
             const.ATTR_CONFIG_PARAMETER: 12,
+            const.ATTR_CONFIG_VALUE: 7,
+        })
+        self.hass.block_till_done()
+
+        assert value.data == 7
+
+        self.hass.services.call('zwave', 'set_config_parameter', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_PARAMETER: 19,
             const.ATTR_CONFIG_VALUE: 0x01020304,
-            const.ATTR_CONFIG_SIZE: 4,
+            const.ATTR_CONFIG_SIZE: 4
         })
         self.hass.block_till_done()
 
         assert node.set_config_param.called
         assert len(node.set_config_param.mock_calls) == 1
-        assert node.set_config_param.mock_calls[0][1][0] == 12
+        assert node.set_config_param.mock_calls[0][1][0] == 19
         assert node.set_config_param.mock_calls[0][1][1] == 0x01020304
         assert node.set_config_param.mock_calls[0][1][2] == 4
         node.set_config_param.reset_mock()
