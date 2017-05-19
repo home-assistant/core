@@ -5,14 +5,14 @@ import asyncio
 from homeassistant.core import callback, State, CoreState
 from homeassistant import setup
 import homeassistant.components as core
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_TRANSITION)
+from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_component)
 _LOGGER = logging.getLogger(__name__)
+
 
 class TestTemplateLight:
     """Test the Template light."""
@@ -58,8 +58,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -102,8 +102,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -137,8 +137,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -172,8 +172,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -206,8 +206,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -270,8 +270,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -300,8 +300,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -330,8 +330,8 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             }
                         }
@@ -457,8 +457,8 @@ class TestTemplateLight:
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test_template_light')
-        assert state.attributes.get('brightness') == None
-        
+        assert state.attributes.get('brightness') is None
+
         core.light.turn_on(
             self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 124})
         self.hass.block_till_done()
@@ -468,7 +468,7 @@ class TestTemplateLight:
 
         # need to add assertions about optimistic state
         state = self.hass.states.get('light.test_template_light')
-        assert state != None
+        assert state is not None
         assert state.attributes.get('brightness') == 124
 
     def test_level_template(self):
@@ -491,11 +491,11 @@ class TestTemplateLight:
                             'set_level': {
                                 'service': 'light.turn_on',
                                 'data_template': {
-                                  'entity_id': 'light.test_state',
-                                  'brightness': '{{brightness}}'
+                                    'entity_id': 'light.test_state',
+                                    'brightness': '{{brightness}}'
                                 }
                             },
-                            'level_template': 
+                            'level_template':
                                 '{{42}}'
                         }
                     }
@@ -506,9 +506,10 @@ class TestTemplateLight:
         self.hass.block_till_done()
 
         state = self.hass.states.get('light.test_template_light')
-        assert state != None
+        assert state is not None
 
         assert state.attributes.get('brightness') == '42'
+
 
 @asyncio.coroutine
 def test_restore_state(hass):
@@ -525,7 +526,7 @@ def test_restore_state(hass):
             'platform': 'template',
             'lights': {
                 'test_template_light': {
-                    'value_template': 
+                    'value_template':
                         "{{states.light.test_state.state}}",
                     'turn_on': {
                         'service': 'test.automation',

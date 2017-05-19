@@ -62,7 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         level_action = device_config[LEVEL_ACTION]
         level_template = device_config[LEVEL_TEMPLATE]
         entity_ids = []
-        
+
         if state_template is not None:
             entity_ids = (device_config.get(ATTR_ENTITY_ID) or
                           state_template.extract_entities())
@@ -99,7 +99,7 @@ class LightTemplate(Light):
         self._off_script = Script(hass, off_action)
         self._level_script = Script(hass, level_action)
         self._level_template = level_template
-        
+
         self._state = False
         self._brightness = None
         self._entities = entity_ids
@@ -190,4 +190,3 @@ class LightTemplate(Light):
         except TemplateError as ex:
             _LOGGER.error(ex)
             self._state = None
-
