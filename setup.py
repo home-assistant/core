@@ -15,7 +15,9 @@ DOWNLOAD_URL = ('{}/archive/'
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'requests>=2,<3',
+    # Don't upgrade Requests
+    # https://github.com/kennethreitz/requests/issues/4006
+    'requests==2.13',
     'pyyaml>=3.11,<4',
     'pytz>=2017.02',
     'pip>=7.1.0',
