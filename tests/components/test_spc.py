@@ -1,3 +1,4 @@
+"""Tests for Vanderbilt SPC component."""
 import asyncio
 
 import pytest
@@ -11,6 +12,7 @@ from homeassistant.const import (STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 
 @pytest.fixture
 def hass(loop):
+    """Home Assistant fixture with device mapping registry."""
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.data[spc.DATA_REGISTRY] = spc.SpcRegistry()
     hass.data[spc.DATA_API] = None
@@ -20,6 +22,7 @@ def hass(loop):
 
 @pytest.fixture
 def spcwebgw(hass):
+    """Fixture for the SPC Web Gateway API configured for localhost."""
     yield spc.SpcWebGateway(hass=hass,
                             api_url='http://localhost/',
                             ws_url='ws://localhost/')
@@ -27,6 +30,7 @@ def spcwebgw(hass):
 
 @pytest.fixture
 def aioclient_mock():
+    """HTTP client mock for areas and zones."""
     areas = """{"status":"success","data":{"area":[{"id":"1","name":"House",
     "mode":"0","last_set_time":"1485759851","last_set_user_id":"1",
     "last_set_user_name":"Pelle","last_unset_time":"1485800564",
@@ -54,6 +58,7 @@ def aioclient_mock():
 
 @asyncio.coroutine
 def test_update_alarm_device(hass, aioclient_mock, monkeypatch):
+    """Test that alarm panel state changes on incoming websocket data."""
     monkeypatch.setattr("homeassistant.components.spc.SpcWebGateway."
                         "start_listener", lambda x, *args: None)
     config = {
@@ -80,6 +85,7 @@ def test_update_alarm_device(hass, aioclient_mock, monkeypatch):
 
 @asyncio.coroutine
 def test_update_sensor_device(hass, aioclient_mock, monkeypatch):
+    """Test that sensors change state on incoming websocket data."""
     monkeypatch.setattr("homeassistant.components.spc.SpcWebGateway."
                         "start_listener", lambda x, *args: None)
     config = {
@@ -103,20 +109,27 @@ def test_update_sensor_device(hass, aioclient_mock, monkeypatch):
 
 
 class TestSpcRegistry:
+    """Test the device mapping registry."""
+
     def test_sensor_device(self):
+        """Test retrieving device based on ID."""
         r = spc.SpcRegistry()
         r.register_sensor_device('1', 'dummy')
         assert r.get_sensor_device('1') == 'dummy'
 
     def test_alarm_device(self):
+        """Test retrieving device based on zone name."""
         r = spc.SpcRegistry()
         r.register_alarm_device('Area 51', 'dummy')
         assert r.get_alarm_device('Area 51') == 'dummy'
 
 
 class TestSpcWebGateway:
+    """Test the SPC Web Gateway API wrapper."""
+
     @asyncio.coroutine
     def test_get_areas(self, spcwebgw, aioclient_mock):
+        """Test area retrieval."""
         result = yield from spcwebgw.get_areas()
         assert aioclient_mock.call_count == 1
         assert len(list(result)) == 2
@@ -128,6 +141,7 @@ class TestSpcWebGateway:
         ('set_a', spc.SpcWebGateway.AREA_COMMAND_PART_SET)
         ])
     def test_area_commands(self, spcwebgw, url_command, command):
+        """Test alarm arming/disarming."""
         with mock_aiohttp_client() as aioclient_mock:
             url = "http://localhost/spc/area/1/{}".format(url_command)
             aioclient_mock.put(url, text='{}')
