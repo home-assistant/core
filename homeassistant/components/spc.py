@@ -144,7 +144,7 @@ def _ws_process_message(message, async_callback, *args):
         _LOGGER.warning("Unsuccessful websocket message "
                         "delivered, ignoring: %s", message)
     try:
-           yield from async_callback(message['data']['sia'], *args)
+        yield from async_callback(message['data']['sia'], *args)
     except:    # pylint: disable=bare-except
         _LOGGER.exception("Exception in callback, ignoring.")
 

@@ -20,16 +20,31 @@ def hass(loop):
 
 @pytest.fixture
 def spcwebgw(hass):
-    yield spc.SpcWebGateway(hass=hass, 
-                            api_url='http://localhost/', 
+    yield spc.SpcWebGateway(hass=hass,
+                            api_url='http://localhost/',
                             ws_url='ws://localhost/')
 
 
 @pytest.fixture
 def aioclient_mock():
-    areas = """{"status":"success","data":{"area":[{"id":"1","name":"House","mode":"0","last_set_time":"1485759851","last_set_user_id":"1","last_set_user_name":"Pelle","last_unset_time":"1485800564","last_unset_user_id":"1","last_unset_user_name":"Pelle","last_alarm":"1478174896"},{"id":"3","name":"Garage","mode":"0","last_set_time":"1483705803","last_set_user_id":"9998","last_set_user_name":"Lisa","last_unset_time":"1483705808","last_unset_user_id":"9998","last_unset_user_name":"Lisa"}]}}"""
+    areas = """{"status":"success","data":{"area":[{"id":"1","name":"House",
+    "mode":"0","last_set_time":"1485759851","last_set_user_id":"1",
+    "last_set_user_name":"Pelle","last_unset_time":"1485800564",
+    "last_unset_user_id":"1","last_unset_user_name":"Pelle","last_alarm":
+    "1478174896"},{"id":"3","name":"Garage","mode":"0","last_set_time":
+    "1483705803","last_set_user_id":"9998","last_set_user_name":"Lisa",
+    "last_unset_time":"1483705808","last_unset_user_id":"9998",
+    "last_unset_user_name":"Lisa"}]}}"""
 
-    zones = """{"status":"success","data":{"zone":[{"id":"1","type":"3","zone_name":"Kitchen smoke","area":"1","area_name":"House","input":"0","logic_input":"0","status":"0","proc_state":"0","inhibit_allowed":"1","isolate_allowed":"1"},{"id":"3","type":"0","zone_name":"Hallway PIR","area":"1","area_name":"House","input":"0","logic_input":"0","status":"0","proc_state":"0","inhibit_allowed":"1","isolate_allowed":"1"},{"id":"5","type":"1","zone_name":"Front door","area":"1","area_name":"House","input":"1","logic_input":"0","status":"0","proc_state":"0","inhibit_allowed":"1","isolate_allowed":"1"}]}}"""
+    zones = """{"status":"success","data":{"zone":[{"id":"1","type":"3",
+    "zone_name":"Kitchen smoke","area":"1","area_name":"House","input":"0",
+    "logic_input":"0","status":"0","proc_state":"0","inhibit_allowed":"1",
+    "isolate_allowed":"1"},{"id":"3","type":"0","zone_name":"Hallway PIR",
+    "area":"1","area_name":"House","input":"0","logic_input":"0","status":
+    "0","proc_state":"0","inhibit_allowed":"1","isolate_allowed":"1"},
+    {"id":"5","type":"1","zone_name":"Front door","area":"1","area_name":
+    "House","input":"1","logic_input":"0","status":"0","proc_state":"0",
+    "inhibit_allowed":"1","isolate_allowed":"1"}]}}"""
 
     with mock_aiohttp_client() as mock_session:
         mock_session.get('http://localhost/spc/area', text=areas)
