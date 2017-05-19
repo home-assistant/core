@@ -270,16 +270,23 @@ class Recorder(threading.Thread):
                     self.queue.task_done()
                     continue
 
-            with session_scope(session=self.get_session()) as session:
-                dbevent = None
-                if event.event_type not in self.exclude_t:
-                    dbevent = Events.from_event(event)
-                    session.add(dbevent)
-
-                if event.event_type == EVENT_STATE_CHANGED and \
-                        EVENT_STATE_CHANGED not in self.exclude_t:
+            dbevent = None
+            dbstate = None
+            # Exclude event types
+            if event.event_type not in self.exclude_t:
+                dbevent = Events.from_event(event)
+                if event.event_type == EVENT_STATE_CHANGED:
                     dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
+
+            if dbevent is None and dbstate is None:
+                self.queue.task_done()
+                continue
+
+            with session_scope(session=self.get_session()) as session:
+                if dbevent is not None:
+                    session.add(dbevent)
+                if dbstate is not None:
                     session.add(dbstate)
 
             self.queue.task_done()
