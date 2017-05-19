@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['snapcast==2.0.2']
+REQUIREMENTS = ['snapcast==2.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,58 +60,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT, CONTROL_PORT)
 
-    def _snapshot_service(service):
-        """Snapshot current entity state."""
-        entity_ids = service.data[ATTR_ENTITY_ID]
-        for entity_id in entity_ids:
-            if not hass.states.get(entity_id):
-                continue
-            state = hass.states.get(entity_id)
-            input_source = state.attributes.get(ATTR_INPUT_SOURCE)
-            volume_level = state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL)
-            volume_muted = state.attributes.get(ATTR_MEDIA_VOLUME_MUTED)
-            hass.data[DOMAIN][entity_id] = {
-                ATTR_INPUT_SOURCE: input_source,
-                ATTR_MEDIA_VOLUME_LEVEL: volume_level,
-                ATTR_MEDIA_VOLUME_MUTED: volume_muted
-            }
-
-    def _restore_service(service):
-        """Restore snapshotted entity state."""
+    @asyncio.coroutine
+    def _handle_service(service):
+        """Handle services."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
-        for entity_id in entity_ids:
-            if entity_id not in hass.data[DOMAIN]:
-                continue
-            data = hass.data[DOMAIN][entity_id]
-            if data.get(ATTR_INPUT_SOURCE) is not None:
-                attributes = {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_INPUT_SOURCE: data[ATTR_INPUT_SOURCE],
-                }
-                hass.services.call(
-                    MEDIA_PLAYER_DOMAIN, SERVICE_SELECT_SOURCE, attributes)
-            if data.get(ATTR_MEDIA_VOLUME_LEVEL) is not None:
-                attributes = {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_MEDIA_VOLUME_LEVEL: data[ATTR_MEDIA_VOLUME_LEVEL]
-                }
-                hass.services.call(
-                    MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_SET, attributes)
-            if data.get(ATTR_MEDIA_VOLUME_MUTED) is not None:
-                attributes = {
-                    ATTR_ENTITY_ID: entity_id,
-                    ATTR_MEDIA_VOLUME_MUTED: data[ATTR_MEDIA_VOLUME_MUTED]
-                }
-                hass.services.call(
-                    MEDIA_PLAYER_DOMAIN, SERVICE_VOLUME_MUTE, attributes)
+        devices = [device for device in hass.data[DOMAIN]
+                if device.entity_id in entity_ids]
+        for device in devices:
+            if service.service == SERVICE_SNAPSHOT:
+                device.snapshot()
+            elif service.service == SERVICE_RESTORE:
+                yield from device.async_restore()
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, _snapshot_service,
+        DOMAIN, SERVICE_SNAPSHOT, _handle_service,
         descriptions.get(SERVICE_SNAPSHOT), schema=SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_RESTORE, _restore_service,
+        DOMAIN, SERVICE_RESTORE, _handle_service,
         descriptions.get(SERVICE_RESTORE), schema=SERVICE_SCHEMA)
 
     try:
@@ -121,11 +88,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error('Could not connect to Snapcast server at %s:%d',
                       host, port)
         return False
-    hass.data[DOMAIN] = {}
-    async_add_devices([SnapcastClientDevice(client)
-                       for client in server.clients])
-    async_add_devices([SnapcastGroupDevice(group)
-                       for group in server.groups])
+    groups = [SnapcastGroupDevice(group) for group in server.groups]
+    clients = [SnapcastClientDevice(client) for client in server.clients]
+    devices = groups + clients
+    hass.data[DOMAIN] = devices
+    async_add_devices(devices)
     return True
 
 
@@ -217,7 +184,6 @@ class SnapcastGroupDevice(MediaPlayerDevice):
     def async_restore(self):
         """Restore the group state."""
         yield from self._group.restore()
-        yield from self.async_update_ha_state()
 
 
 class SnapcastClientDevice(MediaPlayerDevice):
@@ -288,4 +254,4 @@ class SnapcastClientDevice(MediaPlayerDevice):
     def async_restore(self):
         """Restore the client state."""
         yield from self._client.restore()
-        yield from self.async_update_ha_state()
+        #yield from self.async_update_ha_state()
