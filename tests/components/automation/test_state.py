@@ -110,6 +110,26 @@ class TestAutomationState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_attribute_change_with_to_filter(self):
+        """Test for not firing on attribute change."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'state',
+                    'entity_id': 'test.entity',
+                    'to': 'world'
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        self.hass.states.set('test.entity', 'world', {'test_attribute': 11})
+        self.hass.states.set('test.entity', 'world', {'test_attribute': 12})
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+
     def test_if_fires_on_entity_change_with_state_filter(self):
         """Test for firing on entity change with state filter."""
         assert setup_component(self.hass, automation.DOMAIN, {
