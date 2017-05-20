@@ -56,6 +56,7 @@ connected zoneminder instance. Otherwise returns True.
             return True
         return self._version <= remote_version
 
+
 # Introduced in 1.30:
 #
 # https://github.com/ZoneMinder/ZoneMinder/commit/2888142e682bbc9950535d7e5aaef2cd20cda38d
@@ -122,7 +123,8 @@ def login():
             try:
                 ZM['version'] = packaging.version.parse(version_str)
             except packaging.version.InvalidVersion:
-                _LOGGER.exception("Failed to parse version string: %s", version_str)
+                _LOGGER.exception("Failed to parse version string: %s",
+                                  version_str)
     else:
         _LOGGER.error("Connection error logging into ZoneMinder")
         return False
