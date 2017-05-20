@@ -149,7 +149,7 @@ def setup(hass, base_config):
 
     def axis_device_discovered(service, discovery_info):
         """Called when axis devices has been found."""
-        host = discovery_info['host']
+        host = discovery_info[CONF_HOST]
         name = discovery_info['hostname']
         serialnumber = discovery_info['properties']['macaddress']
 
@@ -158,6 +158,7 @@ def setup(hass, base_config):
             if serialnumber in config_file:
                 try:
                     config = DEVICE_SCHEMA(config_file[serialnumber])
+                    config[CONF_HOST] = host
                 except vol.Invalid as err:
                     _LOGGER.error("Bad data from %s. %s", CONFIG_FILE, err)
                     return False
@@ -232,7 +233,7 @@ def setup_device(hass, config):
         if not device.initiate_metadatastream():
             notification = get_component('persistent_notification')
             notification.create(hass,
-                                'Dependency missing for sensors,'
+                                'Dependency missing for sensors, '
                                 'please check documentation',
                                 title=DOMAIN,
                                 notification_id='axis_notification')
