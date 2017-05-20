@@ -46,9 +46,10 @@ class _Feature:
         self._version = packaging.version.parse(version_str)
 
     def is_supported(self):
-        """Returns False if this feature isn't supported on the currently
-connected zoneminder instance. Otherwise returns True.
+        """Return the remote instance support for this feature.
 
+        Returns False if this feature isn't supported on the currently
+        connected zoneminder instance. Otherwise returns True.
         """
         remote_version = ZM.get('version', None)
         if remote_version is None:
