@@ -306,9 +306,6 @@ https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 # homeassistant.components.light.osramlightify
 https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5
 
-# homeassistant.components.lutron
-https://github.com/thecynic/pylutron/archive/v0.1.0.zip#pylutron==0.1.0
-
 # homeassistant.components.tado
 https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 
@@ -586,6 +583,9 @@ pyloopenergy==0.0.17
 
 # homeassistant.components.lutron_caseta
 pylutron-caseta==0.2.6
+
+# homeassistant.components.lutron
+pylutron==0.1.0
 
 # homeassistant.components.notify.mailgun
 pymailgunner==1.4
