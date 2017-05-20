@@ -98,6 +98,9 @@ class ZoneMinderCamera(MjpegCamera):
     def update(self):
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
+        if not zoneminder.ALARM_STATUS_FEATURE.is_supported():
+            return
+
         status_response = zoneminder.get_state(
             'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
         )

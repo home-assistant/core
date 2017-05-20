@@ -7,6 +7,7 @@ https://home-assistant.io/components/zoneminder/
 import logging
 from urllib.parse import urljoin
 
+import packaging.version
 import requests
 import voluptuous as vol
 
@@ -40,6 +41,27 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+class _Feature:
+    def __init__(self, version_str):
+        self._version = packaging.version.parse(version_str)
+
+    def is_supported(self):
+        """Returns False if this feature isn't supported on the currently
+connected zoneminder instance. Otherwise returns True.
+
+        """
+        remote_version = ZM.get('version', None)
+        if remote_version is None:
+            # Be optimistic, assume the remote end supports the feature.
+            return True
+        return self._version <= remote_version
+
+# Introduced in 1.30:
+#
+# https://github.com/ZoneMinder/ZoneMinder/commit/2888142e682bbc9950535d7e5aaef2cd20cda38d
+ALARM_STATUS_FEATURE = _Feature("1.30")
+
+
 def setup(hass, config):
     """Set up the ZoneMinder component."""
     global ZM
@@ -61,6 +83,7 @@ def setup(hass, config):
     ZM['username'] = username
     ZM['password'] = password
     ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
+    ZM['version'] = None
 
     hass.data[DOMAIN] = ZM
 
@@ -87,7 +110,20 @@ def login():
         ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
         timeout=DEFAULT_TIMEOUT)
 
-    if not req.ok:
+    if req.ok:
+        # Zoneminder always reports the apiversion as 1.0:
+        #
+        # https://github.com/ZoneMinder/ZoneMinder/blob/8a6105ee5b7aeb241c9336e977b976537235a581/web/api/app/Controller/HostController.php#L117
+        #
+        # Therefore have to rely on the actual version to determine features.
+        ZM['version'] = None
+        version_str = req.json().get('version', None)
+        if version_str:
+            try:
+                ZM['version'] = packaging.version.parse(version_str)
+            except packaging.version.InvalidVersion:
+                _LOGGER.exception("Failed to parse version string: %s", version_str)
+    else:
         _LOGGER.error("Connection error logging into ZoneMinder")
         return False
 
