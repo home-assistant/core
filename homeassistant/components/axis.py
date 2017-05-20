@@ -156,6 +156,7 @@ def setup(hass, base_config):
         if serialnumber not in AXIS_DEVICES:
             config_file = _read_config(hass)
             if serialnumber in config_file:
+                # Device config saved to file
                 try:
                     config = DEVICE_SCHEMA(config_file[serialnumber])
                     config[CONF_HOST] = host
@@ -165,7 +166,18 @@ def setup(hass, base_config):
                 if not setup_device(hass, config):
                     _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
             else:
+                # New device, create configuration request for UI
                 request_configuration(hass, name, host, serialnumber)
+        else:
+            # Device already registered, but on a different IP
+            print(host, name, serialnumber)
+            device = AXIS_DEVICES[serialnumber]
+            device._url = host
+            device._metadatastream.set_up_pipeline(device.metadata_url)
+            event = DOMAIN + '_' + AXIS_DEVICES[serialnumber].name
+            if host != name:
+                print(host, name, 'is not same')
+                hass.bus.fire(event, {CONF_HOST: host})
 
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
@@ -179,7 +191,6 @@ def setup(hass, base_config):
                 _LOGGER.error("Couldn\'t set up %s", config[CONF_NAME])
 
     # Services to communicate with device.
-
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 # {"name":"3","cgi":"param.cgi","action":"list","param":"Properties.Firmware.Version"}
