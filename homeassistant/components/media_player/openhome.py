@@ -92,7 +92,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
         if self._source["type"] == "Radio":
             self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
-        if self._source["type"] == "Playlist" || self._source["type"] == "Cloud":
+        if self._source["type"] in ("Playlist", "Cloud"):
             self._supported_features |= SUPPORT_PREVIOUS_TRACK | \
                 SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY
 
