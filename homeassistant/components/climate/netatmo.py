@@ -123,21 +123,21 @@ class NetatmoThermostat(ClimateDevice):
     @property
     def is_hg_mode_on(self):
         """Return true if frost-guard mode is on."""
-        return self._away
+        return self._hg
 
     def turn_hg_mode_on(self):
         """Turn frost-guard on."""
         mode = "hg"
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
-        self._away = True
+        self._hg = True
 
     def turn_hg_mode_off(self):
         """Turn frost-guard off."""
         mode = "program"
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
-        self._away = False
+        self._hg = False
 
     def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
         """Set new target temperature for 2 hours."""
@@ -149,6 +149,7 @@ class NetatmoThermostat(ClimateDevice):
             mode, temperature, endTimeOffset)
         self._target_temperature = temperature
         self._away = False
+        self._hg = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
