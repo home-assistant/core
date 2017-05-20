@@ -229,15 +229,17 @@ class EntityComponent(object):
 
         This method must be run in the event loop.
         """
+        def sorted_ids():
+            """Return our entity ids sorted by entity name."""
+            return sorted((ent_id for ent_id in self.entities.keys()),
+                          key=lambda x: self.entities[x].name)
+
         if self.group is None and self.group_name is not None:
             group = get_component('group')
             self.group = yield from group.Group.async_create_group(
-                self.hass, self.group_name, self.entities.keys(),
-                user_defined=False
-            )
+                self.hass, self.group_name, sorted_ids(), user_defined=False)
         elif self.group is not None:
-            yield from self.group.async_update_tracked_entity_ids(
-                self.entities.keys())
+            yield from self.group.async_update_tracked_entity_ids(sorted_ids())
 
     def reset(self):
         """Remove entities and reset the entity component to initial values."""

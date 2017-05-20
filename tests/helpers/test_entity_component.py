@@ -92,13 +92,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert group.attributes.get('entity_id') == ('test_domain.hello',)
 
         # group extended
-        component.add_entities([EntityTest(name='hello2')])
+        component.add_entities([EntityTest(name='goodbye')])
 
         assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
 
-        assert sorted(group.attributes.get('entity_id')) == \
-            ['test_domain.hello', 'test_domain.hello2']
+        # Sorted order
+        assert group.attributes.get('entity_id') == \
+            ('test_domain.goodbye', 'test_domain.hello')
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
