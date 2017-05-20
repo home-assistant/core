@@ -16,8 +16,7 @@ from homeassistant.const import (
 
 DOMAIN = 'modbus'
 
-REQUIREMENTS = ['https://github.com/bashwork/pymodbus/archive/'
-                'd7fc4f1cc975631e0a9011390e8017f64b612661.zip#pymodbus==1.2.0']
+REQUIREMENTS = ['pymodbus==1.3.0rc1']
 
 # Type of network
 CONF_BAUDRATE = 'baudrate'
