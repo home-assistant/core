@@ -83,11 +83,6 @@ class JuicenetDevice(Entity):
         self.device.update_state()
 
     @property
-    def should_poll(self):
-        """Always poll."""
-        return True
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
