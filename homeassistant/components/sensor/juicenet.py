@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class JuicenetSensorDevice(JuicenetDevice, Entity):
     """Implementation of a Juicenet sensor."""
-    
+
     def __init__(self, device, sensor_type, hass):
         """Initialise the sensor."""
         super().__init__(device, sensor_type, hass)

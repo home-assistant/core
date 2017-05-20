@@ -68,6 +68,7 @@ class JuicenetDevice(Entity):
     """Represent a base Juicenet device."""
 
     def __init__(self, device, sensor_type, hass):
+        """Initialise the sensor."""
         self.hass = hass
         self.device = device
         self.type = sensor_type
