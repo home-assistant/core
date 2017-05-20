@@ -17,9 +17,7 @@ from homeassistant.components.sensor import (PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 
-COMMIT = '9f61ff00c77c7c98ffa0af9dd3540df3dce4a836'
-REQUIREMENTS = ['https://github.com/molobrakos/python-pocketcasts/'
-                'archive/%s.zip#python-pocketcasts==0.0.1' % COMMIT]
+REQUIREMENTS = ['pocketcasts==0.1']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,

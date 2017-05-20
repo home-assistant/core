@@ -1,4 +1,9 @@
-"""Support for the IKEA Tradfri platform."""
+"""
+Support for the IKEA Tradfri platform.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.tradfri/
+"""
 import logging
 
 from homeassistant.components.light import (
@@ -6,7 +11,7 @@ from homeassistant.components.light import (
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
-from homeassistant.components.tradfri import KEY_GATEWAY
+from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS
 from homeassistant.util import color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,8 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lights = [dev for dev in devices if dev.has_light_control]
     add_devices(Tradfri(light) for light in lights)
 
-    groups = gateway.get_groups()
-    add_devices(TradfriGroup(group) for group in groups)
+    allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
+    if allow_tradfri_groups:
+        groups = gateway.get_groups()
+        add_devices(TradfriGroup(group) for group in groups)
 
 
 class TradfriGroup(Light):

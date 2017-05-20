@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-
 import logging
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.5']
+REQUIREMENTS = ['limitlessled==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

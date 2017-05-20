@@ -54,7 +54,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sense HAT sensor platform."""
-    data = EnvirophatData(config.get(CONF_USE_LEDS))
+    try:
+        # pylint: disable=import-error
+        import envirophat
+    except OSError:
+        _LOGGER.error("No Enviro pHAT was found.")
+        return False
+
+    data = EnvirophatData(envirophat, config.get(CONF_USE_LEDS))
 
     dev = []
     for variable in config[CONF_DISPLAY_OPTIONS]:
@@ -97,9 +104,6 @@ class EnvirophatSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        if not self.data.light:
-            _LOGGER.error("Didn't receive data")
-            return
 
         if self.type == 'light':
             self._state = self.data.light
@@ -138,8 +142,9 @@ class EnvirophatSensor(Entity):
 class EnvirophatData(object):
     """Get the latest data and update."""
 
-    def __init__(self, use_leds):
+    def __init__(self, envirophat, use_leds):
         """Initialize the data object."""
+        self.envirophat = envirophat
         self.use_leds = use_leds
         # sensors readings
         self.light = None
@@ -162,34 +167,32 @@ class EnvirophatData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Enviro pHAT."""
-        from envirophat import analog, leds, light, motion, weather
-
         # Light sensor reading: 16-bit integer
-        self.light = light.light()
+        self.light = self.envirophat.light.light()
         if self.use_leds:
-            # pylint: disable=no-value-for-parameter
-            leds.on()
+            self.envirophat.leds.on()
         # the three color values scaled agains the overall light, 0-255
-        self.light_red, self.light_green, self.light_blue = light.rgb()
+        self.light_red, self.light_green, self.light_blue = \
+            self.envirophat.light.rgb()
         if self.use_leds:
             # pylint: disable=no-value-for-parameter
-            leds.off()
+            self.envirophat.leds.off()
 
         # accelerometer readings in G
         self.accelerometer_x, self.accelerometer_y, self.accelerometer_z = \
-            motion.accelerometer()
+            self.envirophat.motion.accelerometer()
 
         # raw magnetometer reading
         self.magnetometer_x, self.magnetometer_y, self.magnetometer_z = \
-            motion.magnetometer()
+            self.envirophat.motion.magnetometer()
 
         # temperature resolution of BMP280 sensor: 0.01°C
-        self.temperature = round(weather.temperature(), 2)
+        self.temperature = round(self.envirophat.weather.temperature(), 2)
 
         # pressure resolution of BMP280 sensor: 0.16 Pa, rounding to 0.1 Pa
         # with conversion to 100 Pa = 1 hPa
-        self.pressure = round(weather.pressure() / 100.0, 3)
+        self.pressure = round(self.envirophat.weather.pressure() / 100.0, 3)
 
         # Voltage sensor, reading between 0-3.3V
         self.voltage_0, self.voltage_1, self.voltage_2, self.voltage_3 = \
-            analog.read_all()
+            self.envirophat.analog.read_all()

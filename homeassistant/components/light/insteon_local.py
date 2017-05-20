@@ -84,7 +84,7 @@ def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
         request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
-        _LOGGER.info("Device configuration done!")
+        _LOGGER.debug("Device configuration done")
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
     if device_id not in conf_lights:
@@ -107,7 +107,7 @@ def config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return True
     else:
