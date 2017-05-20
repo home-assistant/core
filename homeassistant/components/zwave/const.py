@@ -330,3 +330,5 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 DISC_WRITEONLY = "writeonly"
+
+METER_RESET_INDEX = 33
