@@ -1,7 +1,7 @@
 """
-Component that will help set the dlib face detect processing.
+Component that will help set the Dlib face detect processing.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.dlib_face_identify/
 """
 import logging
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Microsoft Face detection platform."""
+    """Set up the Dlib Face detection platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
         entities.append(DlibFaceIdentifyEntity(
@@ -43,7 +43,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
     """Dlib Face API entity for identify."""
 
     def __init__(self, camera_entity, faces, name=None):
-        """Initialize Dlib."""
+        """Initialize Dlib face identify entry."""
         # pylint: disable=import-error
         import face_recognition
         super().__init__()
@@ -77,7 +77,7 @@ class DlibFaceIdentifyEntity(ImageProcessingFaceEntity):
         import face_recognition
 
         fak_file = io.BytesIO(image)
-        fak_file.name = "snapshot.jpg"
+        fak_file.name = 'snapshot.jpg'
         fak_file.seek(0)
 
         image = face_recognition.load_image_file(fak_file)

@@ -2,16 +2,14 @@
 import logging
 import asyncio
 import random
-from os import path
 
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    DOMAIN, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR, ATTR_EFFECT,
-    ATTR_TRANSITION)
-from homeassistant.config import load_yaml_config_file
+    DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME,
+    ATTR_RGB_COLOR, ATTR_EFFECT, ATTR_TRANSITION,
+    VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT)
 from homeassistant.const import (ATTR_ENTITY_ID)
-from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +37,8 @@ LIFX_EFFECT_SCHEMA = vol.Schema({
 })
 
 LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
@@ -52,7 +51,8 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
 LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
-    ATTR_BRIGHTNESS: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
     vol.Optional(ATTR_PERIOD, default=60):
         vol.All(vol.Coerce(float), vol.Clamp(min=0.05)),
     vol.Optional(ATTR_CHANGE, default=20):
@@ -73,19 +73,12 @@ def setup(hass, lifx_manager):
     @asyncio.coroutine
     def async_service_handle(service):
         """Apply a service."""
-        entity_ids = extract_entity_ids(hass, service)
-        if entity_ids:
-            devices = [entity for entity in lifx_manager.entities.values()
-                       if entity.entity_id in entity_ids]
-        else:
-            devices = list(lifx_manager.entities.values())
-
-        if devices:
-            yield from start_effect(hass, devices,
+        entities = lifx_manager.service_to_entities(service)
+        if entities:
+            yield from start_effect(hass, entities,
                                     service.service, **service.data)
 
-    descriptions = load_yaml_config_file(
-        path.join(path.dirname(__file__), 'services.yaml'))
+    descriptions = lifx_manager.get_descriptions()
 
     hass.services.async_register(
         DOMAIN, SERVICE_EFFECT_BREATHE, async_service_handle,
@@ -292,7 +285,7 @@ class LIFXEffectColorloop(LIFXEffect):
         direction = 1 if random.randint(0, 1) else -1
 
         # Random start
-        hue = random.randint(0, 359)
+        hue = random.uniform(0, 360) % 360
 
         while self.lights:
             hue = (hue + direction*change) % 360
@@ -312,7 +305,7 @@ class LIFXEffectColorloop(LIFXEffect):
                     brightness = light.effect_data.color[2]
 
                 hsbk = [
-                    int(65535/359*lhue),
+                    int(65535/360*lhue),
                     int(random.uniform(0.8, 1.0)*65535),
                     brightness,
                     NEUTRAL_WHITE,

@@ -12,6 +12,8 @@ from homeassistant.setup import setup_component
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_service)
 
+from .test_init import mutagen_mock  # noqa
+
 
 class TestTTSGooglePlatform(object):
     """Test the Google speech component."""

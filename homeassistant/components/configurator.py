@@ -9,9 +9,11 @@ the user has submitted configuration information.
 import asyncio
 import logging
 
+from homeassistant.core import callback as async_callback
 from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
     ATTR_ENTITY_PICTURE
 from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.util.async import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _REQUESTS = {}
@@ -43,7 +45,9 @@ def request_config(
 
     Will return an ID to be used for sequent calls.
     """
-    instance = _get_instance(hass)
+    instance = run_callback_threadsafe(hass.loop,
+                                       _async_get_instance,
+                                       hass).result()
 
     request_id = instance.request_config(
         name, callback,
@@ -79,7 +83,8 @@ def async_setup(hass, config):
     return True
 
 
-def _get_instance(hass):
+@async_callback
+def _async_get_instance(hass):
     """Get an instance per hass object."""
     instance = hass.data.get(_KEY_INSTANCE)
 
@@ -97,7 +102,7 @@ class Configurator(object):
         self.hass = hass
         self._cur_id = 0
         self._requests = {}
-        hass.services.register(
+        hass.services.async_register(
             DOMAIN, SERVICE_CONFIGURE, self.handle_service_call)
 
     def request_config(

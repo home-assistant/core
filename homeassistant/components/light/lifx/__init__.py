@@ -9,6 +9,7 @@ import logging
 import asyncio
 import sys
 import math
+from os import path
 from functools import partial
 from datetime import timedelta
 import async_timeout
@@ -16,15 +17,19 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.light import (
-    Light, PLATFORM_SCHEMA, ATTR_BRIGHTNESS, ATTR_COLOR_NAME, ATTR_RGB_COLOR,
+    Light, DOMAIN, PLATFORM_SCHEMA, LIGHT_TURN_ON_SCHEMA,
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
     ATTR_XY_COLOR, ATTR_COLOR_TEMP, ATTR_TRANSITION, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR,
-    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT)
+    SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
+    preprocess_turn_on_alternatives)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.service import extract_entity_ids
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -41,7 +46,10 @@ BULB_LATENCY = 500
 
 CONF_SERVER = 'server'
 
+SERVICE_LIFX_SET_STATE = 'lifx_set_state'
+
 ATTR_HSBK = 'hsbk'
+ATTR_POWER = 'power'
 
 BYTE_MAX = 255
 SHORT_MAX = 65535
@@ -51,6 +59,10 @@ SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+})
+
+LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
+    ATTR_POWER: cv.boolean,
 })
 
 
@@ -86,6 +98,41 @@ class LIFXManager(object):
         self.entities = {}
         self.hass = hass
         self.async_add_devices = async_add_devices
+
+        @asyncio.coroutine
+        def async_service_handle(service):
+            """Apply a service."""
+            tasks = []
+            for light in self.service_to_entities(service):
+                if service.service == SERVICE_LIFX_SET_STATE:
+                    task = light.async_set_state(**service.data)
+                tasks.append(hass.async_add_job(task))
+            if tasks:
+                yield from asyncio.wait(tasks, loop=hass.loop)
+
+        descriptions = self.get_descriptions()
+
+        hass.services.async_register(
+            DOMAIN, SERVICE_LIFX_SET_STATE, async_service_handle,
+            descriptions.get(SERVICE_LIFX_SET_STATE),
+            schema=LIFX_SET_STATE_SCHEMA)
+
+    @staticmethod
+    def get_descriptions():
+        """Load and return descriptions for our own service calls."""
+        return load_yaml_config_file(
+            path.join(path.dirname(__file__), 'services.yaml'))
+
+    def service_to_entities(self, service):
+        """Return the known devices that a service call mentions."""
+        entity_ids = extract_entity_ids(self.hass, service)
+        if entity_ids:
+            entities = [entity for entity in self.entities.values()
+                        if entity.entity_id in entity_ids]
+        else:
+            entities = list(self.entities.values())
+
+        return entities
 
     @callback
     def register(self, device):
@@ -298,6 +345,18 @@ class LIFXLight(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
+        kwargs[ATTR_POWER] = True
+        yield from self.async_set_state(**kwargs)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the device off."""
+        kwargs[ATTR_POWER] = False
+        yield from self.async_set_state(**kwargs)
+
+    @asyncio.coroutine
+    def async_set_state(self, **kwargs):
+        """Set a color on the light and turn it on/off."""
         yield from self.stop_effect()
 
         if ATTR_EFFECT in kwargs:
@@ -309,39 +368,41 @@ class LIFXLight(Light):
         else:
             fade = 0
 
+        # These are both False if ATTR_POWER is not set
+        power_on = kwargs.get(ATTR_POWER, False)
+        power_off = not kwargs.get(ATTR_POWER, True)
+
         hsbk, changed_color = self.find_hsbk(**kwargs)
         _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
                       self.who, self._power, fade, *hsbk)
 
         if self._power == 0:
+            if power_off:
+                self.device.set_power(False, None, 0)
             if changed_color:
                 self.device.set_color(hsbk, None, 0)
-            self.device.set_power(True, None, fade)
+            if power_on:
+                self.device.set_power(True, None, fade)
         else:
-            self.device.set_power(True, None, 0)     # racing for power status
+            if power_on:
+                self.device.set_power(True, None, 0)
             if changed_color:
                 self.device.set_color(hsbk, None, fade)
+            if power_off:
+                self.device.set_power(False, None, fade)
 
-        self.update_later(0)
-        if fade < BULB_LATENCY:
-            self.set_power(1)
-            self.set_color(*hsbk)
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn the device off."""
-        yield from self.stop_effect()
-
-        if ATTR_TRANSITION in kwargs:
-            fade = int(kwargs[ATTR_TRANSITION] * 1000)
+        if power_on:
+            self.update_later(0)
         else:
-            fade = 0
+            self.update_later(fade)
 
-        self.device.set_power(False, None, fade)
-
-        self.update_later(fade)
-        if fade < BULB_LATENCY:
-            self.set_power(0)
+        if fade <= BULB_LATENCY:
+            if power_on:
+                self.set_power(1)
+            if power_off:
+                self.set_power(0)
+            if changed_color:
+                self.set_color(*hsbk)
 
     @asyncio.coroutine
     def async_update(self):
@@ -374,9 +435,7 @@ class LIFXLight(Light):
         if hsbk is not None:
             return [hsbk, True]
 
-        color_name = kwargs.pop(ATTR_COLOR_NAME, None)
-        if color_name is not None:
-            kwargs[ATTR_RGB_COLOR] = color_util.color_name_to_rgb(color_name)
+        preprocess_turn_on_alternatives(kwargs)
 
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \

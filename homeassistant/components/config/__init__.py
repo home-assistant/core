@@ -5,7 +5,7 @@ import os
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.const import EVENT_COMPONENT_LOADED, CONF_ID
 from homeassistant.setup import (
     async_prepare_setup_platform, ATTR_COMPONENT)
 from homeassistant.components.frontend import register_built_in_panel
@@ -14,8 +14,8 @@ from homeassistant.util.yaml import load_yaml, dump
 
 DOMAIN = 'config'
 DEPENDENCIES = ['http']
-SECTIONS = ('core', 'group', 'hassbian')
-ON_DEMAND = ('zwave', )
+SECTIONS = ('core', 'group', 'hassbian', 'automation')
+ON_DEMAND = ('zwave')
 
 
 @asyncio.coroutine
@@ -60,7 +60,7 @@ def async_setup(hass, config):
     return True
 
 
-class EditKeyBasedConfigView(HomeAssistantView):
+class BaseEditConfigView(HomeAssistantView):
     """Configure a Group endpoint."""
 
     def __init__(self, component, config_type, path, key_schema, data_schema,
@@ -73,13 +73,29 @@ class EditKeyBasedConfigView(HomeAssistantView):
         self.data_schema = data_schema
         self.post_write_hook = post_write_hook
 
+    def _empty_config(self):
+        """Empty config if file not found."""
+        raise NotImplementedError
+
+    def _get_value(self, data, config_key):
+        """Get value."""
+        raise NotImplementedError
+
+    def _write_value(self, data, config_key, new_value):
+        """Set value."""
+        raise NotImplementedError
+
     @asyncio.coroutine
     def get(self, request, config_key):
         """Fetch device specific config."""
         hass = request.app['hass']
-        current = yield from hass.loop.run_in_executor(
-            None, _read, hass.config.path(self.path))
-        return self.json(current.get(config_key, {}))
+        current = yield from self.read_config(hass)
+        value = self._get_value(current, config_key)
+
+        if value is None:
+            return self.json_message('Resource not found', 404)
+
+        return self.json(value)
 
     @asyncio.coroutine
     def post(self, request, config_key):
@@ -104,10 +120,10 @@ class EditKeyBasedConfigView(HomeAssistantView):
         hass = request.app['hass']
         path = hass.config.path(self.path)
 
-        current = yield from hass.loop.run_in_executor(None, _read, path)
-        current.setdefault(config_key, {}).update(data)
+        current = yield from self.read_config(hass)
+        self._write_value(current, config_key, data)
 
-        yield from hass.loop.run_in_executor(None, _write, path, current)
+        yield from hass.async_add_job(_write, path, current)
 
         if self.post_write_hook is not None:
             hass.async_add_job(self.post_write_hook(hass))
@@ -116,13 +132,59 @@ class EditKeyBasedConfigView(HomeAssistantView):
             'result': 'ok',
         })
 
+    @asyncio.coroutine
+    def read_config(self, hass):
+        """Read the config."""
+        current = yield from hass.async_add_job(
+            _read, hass.config.path(self.path))
+        if not current:
+            current = self._empty_config()
+        return current
+
+
+class EditKeyBasedConfigView(BaseEditConfigView):
+    """Configure a list of entries."""
+
+    def _empty_config(self):
+        """Return an empty config."""
+        return {}
+
+    def _get_value(self, data, config_key):
+        """Get value."""
+        return data.get(config_key, {})
+
+    def _write_value(self, data, config_key, new_value):
+        """Set value."""
+        data.setdefault(config_key, {}).update(new_value)
+
+
+class EditIdBasedConfigView(BaseEditConfigView):
+    """Configure key based config entries."""
+
+    def _empty_config(self):
+        """Return an empty config."""
+        return []
+
+    def _get_value(self, data, config_key):
+        """Get value."""
+        return next(
+            (val for val in data if val.get(CONF_ID) == config_key), None)
+
+    def _write_value(self, data, config_key, new_value):
+        """Set value."""
+        value = self._get_value(data, config_key)
+
+        if value is None:
+            value = {CONF_ID: config_key}
+            data.append(value)
+
+        value.update(new_value)
+
 
 def _read(path):
     """Read YAML helper."""
     if not os.path.isfile(path):
-        with open(path, 'w'):
-            pass
-        return {}
+        return None
 
     return load_yaml(path)
 

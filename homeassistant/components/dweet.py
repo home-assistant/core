@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['dweepy==0.2.0']
+REQUIREMENTS = ['dweepy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,4 +67,4 @@ def send_data(name, msg):
     try:
         dweepy.dweet_for(name, msg)
     except dweepy.DweepyError:
-        _LOGGER.error("Error saving data '%s' to Dweet.io", msg)
+        _LOGGER.error("Error saving data to Dweet.io: %s", msg)

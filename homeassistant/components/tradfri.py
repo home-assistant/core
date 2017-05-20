@@ -17,16 +17,22 @@ from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.loader import get_component
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
+REQUIREMENTS = ['pytradfri==1.1']
+
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
 KEY_CONFIG = 'tradfri_configuring'
 KEY_GATEWAY = 'tradfri_gateway'
-REQUIREMENTS = ['pytradfri==1.1']
+KEY_TRADFRI_GROUPS = 'tradfri_allow_tradfri_groups'
+CONF_ALLOW_TRADFRI_GROUPS = 'allow_tradfri_groups'
+DEFAULT_ALLOW_TRADFRI_GROUPS = True
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Inclusive(CONF_HOST, 'gateway'): cv.string,
         vol.Inclusive(CONF_API_KEY, 'gateway'): cv.string,
+        vol.Optional(CONF_ALLOW_TRADFRI_GROUPS,
+                     default=DEFAULT_ALLOW_TRADFRI_GROUPS): cv.boolean,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -47,7 +53,8 @@ def request_configuration(hass, config, host):
     def configuration_callback(callback_data):
         """Handle the submitted configuration."""
         res = yield from _setup_gateway(hass, config, host,
-                                        callback_data.get('key'))
+                                        callback_data.get('key'),
+                                        DEFAULT_ALLOW_TRADFRI_GROUPS)
         if not res:
             hass.async_add_job(configurator.notify_errors, instance,
                                "Unable to connect.")
@@ -77,6 +84,7 @@ def async_setup(hass, config):
     conf = config.get(DOMAIN, {})
     host = conf.get(CONF_HOST)
     key = conf.get(CONF_API_KEY)
+    allow_tradfri_groups = conf.get(CONF_ALLOW_TRADFRI_GROUPS)
 
     @asyncio.coroutine
     def gateway_discovered(service, info):
@@ -85,7 +93,8 @@ def async_setup(hass, config):
         host = info['host']
 
         if host in keys:
-            yield from _setup_gateway(hass, config, host, keys[host]['key'])
+            yield from _setup_gateway(hass, config, host, keys[host]['key'],
+                                      allow_tradfri_groups)
         else:
             hass.async_add_job(request_configuration, hass, config, host)
 
@@ -94,11 +103,12 @@ def async_setup(hass, config):
     if host is None:
         return True
 
-    return (yield from _setup_gateway(hass, config, host, key))
+    return (yield from _setup_gateway(hass, config, host, key,
+                                      allow_tradfri_groups))
 
 
 @asyncio.coroutine
-def _setup_gateway(hass, hass_config, host, key):
+def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import cli_api_factory, Gateway, RequestError, retry_timeout
 
@@ -111,6 +121,10 @@ def _setup_gateway(hass, hass_config, host, key):
     gateway_id = gateway.get_gateway_info().id
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
+
+    hass.data.setdefault(KEY_TRADFRI_GROUPS, {})
+    tradfri_groups = hass.data[KEY_TRADFRI_GROUPS]
+    tradfri_groups[gateway_id] = allow_tradfri_groups
 
     # Check if already set up
     if gateway_id in gateways:

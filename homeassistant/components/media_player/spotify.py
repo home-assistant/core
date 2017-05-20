@@ -176,6 +176,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._state = STATE_PAUSED
         if current.get('is_playing'):
             self._state = STATE_PLAYING
+        self._shuffle = current.get('shuffle_state')
         device = current.get('device')
         if device is None:
             self._state = STATE_IDLE
@@ -184,8 +185,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
                 self._volume = device.get('volume_percent') / 100
             if device.get('name'):
                 self._current_device = device.get('name')
-            if device.get('shuffle_state'):
-                self._shuffle = device.get('shuffle_state')
 
     def set_volume_level(self, volume):
         """Set the volume level."""
@@ -213,7 +212,8 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
 
     def select_source(self, source):
         """Select playback device."""
-        self._player.transfer_playback(self._devices[source])
+        self._player.transfer_playback(self._devices[source],
+                                       self._state == STATE_PLAYING)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media."""
