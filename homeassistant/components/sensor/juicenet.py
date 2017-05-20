@@ -25,6 +25,7 @@ SENSOR_TYPES = {
     'energy_added': ['Energy added', 'Wh']
 }
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Juicenet sensor"""
 
@@ -118,6 +119,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         """Return the state attributes."""
         attributes = super().device_state_attributes
         if self.type == 'status':
+            man_dev_id = self.device.id()
             if man_dev_id:
                 attributes["manufacturer_device_id"] = man_dev_id
         return attributes

@@ -30,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup(hass, config):
     """Set up the Juicenet component."""
     import pyjuicenet
@@ -61,6 +62,7 @@ def setup(hass, config):
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
 
     return True
+
 
 class JuicenetDevice(Entity):
     """Represent a base Juicenet device."""
