@@ -3,7 +3,6 @@ import asyncio
 import functools as ft
 import os
 import sys
-from datetime import timedelta
 from unittest.mock import patch, MagicMock, Mock
 from io import StringIO
 import logging
@@ -25,7 +24,7 @@ from homeassistant.const import (
     STATE_ON, STATE_OFF, DEVICE_DEFAULT_NAME, EVENT_TIME_CHANGED,
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
-from homeassistant.components import sun, mqtt, recorder
+from homeassistant.components import mqtt, recorder
 from homeassistant.components.http.auth import auth_middleware
 from homeassistant.components.http.const import (
     KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
@@ -34,7 +33,7 @@ from homeassistant.util.async import (
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
-INST_COUNT = 0
+INSTANCES = []
 
 
 def threadsafe_callback_factory(func):
@@ -99,11 +98,10 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    global INST_COUNT
-    INST_COUNT += 1
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
+    INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
 
@@ -135,8 +133,7 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        # 1. We only mock time during tests
-        # 2. We want block_till_done that is called inside stop_track_tasks
+        # We only mock time during tests and we want to track tasks
         with patch('homeassistant.core._async_create_timer'), \
                 patch.object(hass, 'async_stop_track_tasks'):
             yield from orig_start()
@@ -146,8 +143,7 @@ def async_test_home_assistant(loop):
     @ha.callback
     def clear_instance(event):
         """Clear global instance."""
-        global INST_COUNT
-        INST_COUNT -= 1
+        INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
@@ -211,20 +207,6 @@ def fire_service_discovered(hass, service, info):
         ATTR_SERVICE: service,
         ATTR_DISCOVERED: info
     })
-
-
-def ensure_sun_risen(hass):
-    """Trigger sun to rise if below horizon."""
-    if sun.is_on(hass):
-        return
-    fire_time_changed(hass, sun.next_rising_utc(hass) + timedelta(seconds=10))
-
-
-def ensure_sun_set(hass):
-    """Trigger sun to set if above horizon."""
-    if not sun.is_on(hass):
-        return
-    fire_time_changed(hass, sun.next_setting_utc(hass) + timedelta(seconds=10))
 
 
 def load_fixture(filename):
@@ -510,3 +492,38 @@ def mock_restore_cache(hass, states):
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
     mock_component(hass, recorder.DOMAIN)
+
+
+class MockDependency:
+    """Decorator to mock install a dependency."""
+
+    def __init__(self, root, *args):
+        """Initialize decorator."""
+        self.root = root
+        self.submodules = args
+
+    def __call__(self, func):
+        """Apply decorator."""
+        from unittest.mock import MagicMock, patch
+
+        def resolve(mock, path):
+            """Resolve a mock."""
+            if not path:
+                return mock
+
+            return resolve(getattr(mock, path[0]), path[1:])
+
+        def run_mocked(*args, **kwargs):
+            """Run with mocked dependencies."""
+            base = MagicMock()
+            to_mock = {
+                "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
+                for tom in self.submodules
+            }
+            to_mock[self.root] = base
+
+            with patch.dict('sys.modules', to_mock):
+                args = list(args) + [base]
+                func(*args, **kwargs)
+
+        return run_mocked

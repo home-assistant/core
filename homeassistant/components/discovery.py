@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.0.0rc3']
+REQUIREMENTS = ['netdisco==1.0.0']
 
 DOMAIN = 'discovery'
 
@@ -31,6 +31,7 @@ SERVICE_WEMO = 'belkin_wemo'
 SERVICE_HASS_IOS_APP = 'hass_ios'
 SERVICE_IKEA_TRADFRI = 'ikea_tradfri'
 SERVICE_HASSIO = 'hassio'
+SERVICE_AXIS = 'axis'
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
@@ -38,6 +39,7 @@ SERVICE_HANDLERS = {
     SERVICE_WEMO: ('wemo', None),
     SERVICE_IKEA_TRADFRI: ('tradfri', None),
     SERVICE_HASSIO: ('hassio', None),
+    SERVICE_AXIS: ('axis', None),
     'philips_hue': ('light', 'hue'),
     'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),

@@ -24,13 +24,12 @@ def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 light platform."""
     if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error("A connection has not been made to the ISY controller")
         return False
 
     devices = []
 
-    for node in isy.filter_nodes(isy.NODES, units=UOM,
-                                 states=STATES):
+    for node in isy.filter_nodes(isy.NODES, units=UOM, states=STATES):
         if node.dimmable or '51' in node.uom:
             devices.append(ISYLightDevice(node))
 
@@ -57,12 +56,12 @@ class ISYLightDevice(isy.ISYDevice, Light):
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 light device."""
         if not self._node.off():
-            _LOGGER.debug('Unable to turn on light.')
+            _LOGGER.debug("Unable to turn on light")
 
     def turn_on(self, brightness=None, **kwargs) -> None:
         """Send the turn on command to the ISY994 light device."""
         if not self._node.on(val=brightness):
-            _LOGGER.debug('Unable to turn on light.')
+            _LOGGER.debug("Unable to turn on light")
 
     @property
     def supported_features(self):

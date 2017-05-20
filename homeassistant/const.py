@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 44
-PATCH_VERSION = '2'
+MINOR_VERSION = 45
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -172,6 +172,7 @@ EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 # #### STATES ####
 STATE_ON = 'on'

@@ -141,9 +141,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
             if value.index != code_slot:
                 continue
-            if len(str(usercode)) > 4:
+            if len(str(usercode)) < 4:
                 _LOGGER.error("Invalid code provided: (%s) "
-                              "usercode must %s or less digits",
+                              "usercode must be atleast 4 and at most"
+                              " %s digits",
                               usercode, len(value.data))
                 break
             value.data = str(usercode)

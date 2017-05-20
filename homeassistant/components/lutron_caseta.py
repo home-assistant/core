@@ -14,9 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/gurumitts/'
-                'pylutron-caseta/archive/v0.2.6.zip#'
-                'pylutron-caseta==v0.2.6']
+REQUIREMENTS = ['pylutron-caseta==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +44,7 @@ def setup(hass, base_config):
 
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
-    for component in ('light', 'switch'):
+    for component in ('light', 'switch', 'cover'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True

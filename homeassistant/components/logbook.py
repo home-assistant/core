@@ -19,7 +19,8 @@ from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON, ATTR_HIDDEN, HTTP_BAD_REQUEST)
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, ATTR_HIDDEN, HTTP_BAD_REQUEST,
+    EVENT_LOGBOOK_ENTRY)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 
 DOMAIN = 'logbook'
@@ -47,9 +48,9 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-EVENT_LOGBOOK_ENTRY = 'logbook_entry'
-
 GROUP_BY_MINUTES = 15
+
+CONTINUOUS_DOMAINS = ['proximity', 'sensor']
 
 ATTR_NAME = 'name'
 ATTR_MESSAGE = 'message'
@@ -191,7 +192,8 @@ def humanify(events):
                 if entity_id is None:
                     continue
 
-                if entity_id.startswith('sensor.'):
+                if entity_id.startswith(tuple('{}.'.format(
+                        domain) for domain in CONTINUOUS_DOMAINS)):
                     last_sensor_event[entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -223,12 +225,12 @@ def humanify(events):
                 domain = to_state.domain
 
                 # Skip all but the last sensor state
-                if domain == 'sensor' and \
+                if domain in CONTINUOUS_DOMAINS and \
                    event != last_sensor_event[to_state.entity_id]:
                     continue
 
                 # Don't show continuous sensor value changes in the logbook
-                if domain == 'sensor' and \
+                if domain in CONTINUOUS_DOMAINS and \
                    to_state.attributes.get('unit_of_measurement'):
                     continue
 

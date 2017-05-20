@@ -51,6 +51,7 @@ SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
 SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
 SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
+SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
 
 DATA_SONOS = 'sonos'
 
@@ -62,6 +63,11 @@ CONF_INTERFACE_ADDR = 'interface_addr'
 
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
+ATTR_ALARM_ID = 'alarm_id'
+ATTR_VOLUME = 'volume'
+ATTR_ENABLED = 'enabled'
+ATTR_INCLUDE_LINKED_ZONES = 'include_linked_zones'
+ATTR_TIME = 'time'
 ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 
@@ -88,6 +94,14 @@ SONOS_STATES_SCHEMA = SONOS_SCHEMA.extend({
 SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
     vol.Required(ATTR_SLEEP_TIME):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=86399))
+})
+
+SONOS_UPDATE_ALARM_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Required(ATTR_ALARM_ID): cv.positive_int,
+    vol.Optional(ATTR_TIME): cv.time,
+    vol.Optional(ATTR_VOLUME): cv.small_float,
+    vol.Optional(ATTR_ENABLED): cv.boolean,
+    vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
 })
 
 
@@ -163,9 +177,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif service.service == SERVICE_RESTORE:
                 device.restore(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_SET_TIMER:
-                device.set_timer(service.data[ATTR_SLEEP_TIME])
+                device.set_sleep_timer(service.data[ATTR_SLEEP_TIME])
             elif service.service == SERVICE_CLEAR_TIMER:
-                device.clear_timer()
+                device.clear_sleep_timer()
+            elif service.service == SERVICE_UPDATE_ALARM:
+                device.update_alarm(**service.data)
 
             device.schedule_update_ha_state(True)
 
@@ -192,6 +208,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(
         DOMAIN, SERVICE_CLEAR_TIMER, service_handle,
         descriptions.get(SERVICE_CLEAR_TIMER), schema=SONOS_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
+        descriptions.get(SERVICE_UPDATE_ALARM),
+        schema=SONOS_UPDATE_ALARM_SCHEMA)
 
 
 def _parse_timespan(timespan):
@@ -1033,6 +1054,30 @@ class SonosDevice(MediaPlayerDevice):
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
         self._player.set_sleep_timer(None)
+
+    @soco_error
+    @soco_coordinator
+    def update_alarm(self, **data):
+        """Set the alarm clock on the player."""
+        from soco import alarms
+        a = None
+        for alarm in alarms.get_alarms(self.soco):
+            # pylint: disable=protected-access
+            if alarm._alarm_id == str(data[ATTR_ALARM_ID]):
+                a = alarm
+        if a is None:
+            _LOGGER.warning("did not find alarm with id %s",
+                            data[ATTR_ALARM_ID])
+            return
+        if ATTR_TIME in data:
+            a.start_time = data[ATTR_TIME]
+        if ATTR_VOLUME in data:
+            a.volume = int(data[ATTR_VOLUME] * 100)
+        if ATTR_ENABLED in data:
+            a.enabled = data[ATTR_ENABLED]
+        if ATTR_INCLUDE_LINKED_ZONES in data:
+            a.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
+        a.save()
 
     @property
     def device_state_attributes(self):

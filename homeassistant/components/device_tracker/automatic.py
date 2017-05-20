@@ -21,7 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.3.1']
+REQUIREMENTS = ['aioautomatic==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,8 @@ CONF_DEVICES = 'devices'
 
 DEFAULT_TIMEOUT = 5
 
-SCOPE = ['location', 'vehicle:profile', 'trip']
+DEFAULT_SCOPE = ['location', 'vehicle:profile', 'trip']
+FULL_SCOPE = DEFAULT_SCOPE + ['current_location']
 
 ATTR_FUEL_LEVEL = 'fuel_level'
 
@@ -58,8 +59,17 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
         client_session=async_get_clientsession(hass),
         request_kwargs={'timeout': DEFAULT_TIMEOUT})
     try:
-        session = yield from client.create_session_from_password(
-            SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
+        try:
+            session = yield from client.create_session_from_password(
+                FULL_SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
+        except aioautomatic.exceptions.ForbiddenError as exc:
+            if not str(exc).startswith("invalid_scope"):
+                raise exc
+            _LOGGER.info("Client not authorized for current_location scope. "
+                         "location:updated events will not be received.")
+            session = yield from client.create_session_from_password(
+                DEFAULT_SCOPE, config[CONF_USERNAME], config[CONF_PASSWORD])
+
         data = AutomaticData(
             hass, client, session, config[CONF_DEVICES], async_see)
 

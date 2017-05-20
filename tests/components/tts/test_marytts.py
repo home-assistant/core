@@ -11,6 +11,8 @@ from homeassistant.components.media_player import (
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_service)
 
+from .test_init import mutagen_mock  # noqa
+
 
 class TestTTSMaryTTSPlatform(object):
     """Test the speech component."""

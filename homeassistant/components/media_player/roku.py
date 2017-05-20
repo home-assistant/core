@@ -17,9 +17,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 
-REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.3.zip'
-    '#roku==3.1.3']
+REQUIREMENTS = ['python-roku==3.1.3']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
