@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Set up the NetAtmo Thermostat."""
+    """Set up the Netatmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
 
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class NetatmoThermostat(ClimateDevice):
-    """Representation a Netatmo thermostat."""
+    """Representation of a Netatmo thermostat."""
 
     def __init__(self, data, module_name, away_temp=None):
         """Initialize the sensor."""
@@ -64,6 +64,7 @@ class NetatmoThermostat(ClimateDevice):
         self._name = module_name
         self._target_temperature = None
         self._away = None
+        self._hg = None
         self.update()
 
     @property
@@ -118,6 +119,25 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
+    
+    @property
+    def is_hg_mode_on(self):
+        """Return true if frost-guard mode is on."""
+        return self._away
+
+    def turn_hg_mode_on(self):
+        """Turn frost-guard on."""
+        mode = "hg"
+        temp = None
+        self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
+        self._away = True
+
+    def turn_hg_mode_off(self):
+        """Turn frost-guard off."""
+        mode = "program"
+        temp = None
+        self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
+        self._away = False
 
     def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
         """Set new target temperature for 2 hours."""
@@ -136,6 +156,7 @@ class NetatmoThermostat(ClimateDevice):
         self._data.update()
         self._target_temperature = self._data.thermostatdata.setpoint_temp
         self._away = self._data.setpoint_mode == 'away'
+        self._hg = self._data.setpoint_mode == 'hg'
 
 
 class ThermostatData(object):
