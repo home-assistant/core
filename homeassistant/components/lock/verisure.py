@@ -101,7 +101,7 @@ class VerisureDoorlock(LockDevice):
         transaction_id = hub.session.set_lock_state(
             code,
             self._device_label,
-            state)['lockStateTransactionId']
+            state)['lockStateChangeTransactionId']
         _LOGGER.debug("Verisure doorlock %s", state)
         transaction = hub.session.get_lock_state_transaction(transaction_id)
         while 'result' not in transaction:
