@@ -27,8 +27,7 @@ SENSOR_TYPES = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Juicenet sensor"""
-
+    """Set up the Juicenet sensor."""
     api = hass.data[DOMAIN]['api']
 
     dev = []
@@ -43,9 +42,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class JuicenetSensorDevice(JuicenetDevice, Entity):
     """Implementation of a Juicenet sensor."""
-
+    
     def __init__(self, device, sensor_type, hass):
-        """Initialise the sensor"""
+        """Initialise the sensor."""
         super().__init__(device, sensor_type, hass)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -57,6 +56,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
 
     @property
     def name(self):
+        """Return the name of the device."""
         return '{} {}'.format(self.device.name(), self._name)
 
     @property
@@ -94,7 +94,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
 
     @property
     def state(self):
-        """Return the state"""
+        """Return the state."""
         state = None
         if self.type == 'status':
             state = self.device.getStatus()
