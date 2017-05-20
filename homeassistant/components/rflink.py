@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rflink==0.0.31']
+REQUIREMENTS = ['rflink==0.0.34']
 
 _LOGGER = logging.getLogger(__name__)
 

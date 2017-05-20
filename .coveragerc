@@ -20,6 +20,9 @@ omit =
     homeassistant/components/android_ip_webcam.py
     homeassistant/components/*/android_ip_webcam.py
 
+    homeassistant/components/axis.py
+    homeassistant/components/*/axis.py
+
     homeassistant/components/bbb_gpio.py
     homeassistant/components/*/bbb_gpio.py
 
@@ -59,6 +62,9 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
+    homeassistant/components/kira.py
+    homeassistant/components/*/kira.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
@@ -83,11 +89,17 @@ omit =
     homeassistant/components/qwikswitch.py
     homeassistant/components/*/qwikswitch.py
 
+    homeassistant/components/raspihats.py
+    homeassistant/components/*/raspihats.py
+
     homeassistant/components/rfxtrx.py
     homeassistant/components/*/rfxtrx.py
 
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
+
+    homeassistant/components/rpi_pfio.py
+    homeassistant/components/*/rpi_pfio.py
 
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
@@ -175,6 +187,7 @@ omit =
     homeassistant/components/binary_sensor/flic.py
     homeassistant/components/binary_sensor/hikvision.py
     homeassistant/components/binary_sensor/iss.py
+    homeassistant/components/binary_sensor/mystrom.py
     homeassistant/components/binary_sensor/pilight.py
     homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
@@ -239,6 +252,7 @@ omit =
     homeassistant/components/ifttt.py
     homeassistant/components/image_processing/dlib_face_detect.py
     homeassistant/components/image_processing/dlib_face_identify.py
+    homeassistant/components/image_processing/seven_segments.py
     homeassistant/components/joaoapps_join.py
     homeassistant/components/keyboard.py
     homeassistant/components/keyboard_remote.py
