@@ -44,7 +44,8 @@ class AxisCamera(MjpegCamera):
     def __init__(self, hass, config):
         """Initialize Axis Communications camera component."""
         super().__init__(hass, config)
-        hass.bus.listen(DOMAIN + '_' + config[CONF_NAME], self.new_ip)
+        hass.bus.listen(DOMAIN + '_' + config[CONF_NAME] + "_new_ip",
+                        self.new_ip)
 
     def new_ip(self, event):
         """Set new IP for video stream"""

@@ -170,11 +170,10 @@ def setup(hass, base_config):
                 request_configuration(hass, name, host, serialnumber)
         else:
             # Device already registered, but on a different IP
-            print(host, name, serialnumber)
             device = AXIS_DEVICES[serialnumber]
             device.url = host
-            if host != name:
-                hass.bus.fire(DOMAIN + '_' + device.name, {CONF_HOST: host})
+            hass.bus.fire(DOMAIN + '_' + device.name + "_new_ip",
+                          {CONF_HOST: host})
 
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
@@ -193,7 +192,6 @@ def setup(hass, base_config):
 
     def vapix_service(call):
         """Service to send a message."""
-        # for serial_number, device in AXIS_DEVICES.items():
         for _, device in AXIS_DEVICES.items():
             if device.name == call.data[CONF_NAME]:
                 response = device.do_request(call.data[SERVICE_CGI],
