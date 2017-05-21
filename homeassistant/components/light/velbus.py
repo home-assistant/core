@@ -7,7 +7,7 @@ from homeassistant.components.light import Light
 import asyncio
 import logging
 import velbus
-from custom_components.velbus import (VELBUS_MESSAGE)
+from homeassistant.components.velbus import (VELBUS_MESSAGE)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
 
