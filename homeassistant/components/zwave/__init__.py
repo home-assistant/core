@@ -95,6 +95,11 @@ REFRESH_ENTITY_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
 })
 
+RESET_NODE_METERS_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Optional(const.ATTR_INSTANCE, default=1): vol.Coerce(int)
+})
+
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_ASSOCIATION): cv.string,
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -499,6 +504,26 @@ def setup(hass, config):
         node = network.nodes[node_id]
         node.refresh_info()
 
+    def reset_node_meters(service):
+        """Reset meter counters of a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        instance = service.data.get(const.ATTR_INSTANCE)
+        node = network.nodes[node_id]
+        for value in (
+                node.get_values(class_id=const.COMMAND_CLASS_METER)
+                .values()):
+            if value.index != const.METER_RESET_INDEX:
+                continue
+            if value.instance != instance:
+                continue
+            network.manager.pressButton(value.value_id)
+            network.manager.releaseButton(value.value_id)
+            _LOGGER.info("Resetting meters on node %s instance %s....",
+                         node_id, instance)
+            return
+        _LOGGER.info("Node %s on instance %s does not have resettable "
+                     "meters.", node_id, instance)
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network...")
@@ -606,6 +631,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_REFRESH_NODE],
                                schema=NODE_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_RESET_NODE_METERS,
+                               reset_node_meters,
+                               descriptions[
+                                   const.SERVICE_RESET_NODE_METERS],
+                               schema=RESET_NODE_METERS_SCHEMA)
 
     # Setup autoheal
     if autoheal:
