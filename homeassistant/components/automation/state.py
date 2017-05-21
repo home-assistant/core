@@ -80,7 +80,8 @@ def async_trigger(hass, config, action):
             return
 
         # If only state attributes changed, ignore this event
-        if from_s.last_changed == to_s.last_changed:
+        if (from_s is not None and to_s is not None and
+                from_s.last_changed == to_s.last_changed):
             return
 
         @callback
