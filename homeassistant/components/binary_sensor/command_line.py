@@ -52,15 +52,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([CommandBinarySensor(
         hass, data, name, device_class, payload_on, payload_off,
-        value_template)])
+        value_template, config)])
 
 
 class CommandBinarySensor(BinarySensorDevice):
     """Representation of a command line binary sensor."""
 
     def __init__(self, hass, data, name, device_class, payload_on,
-                 payload_off, value_template):
+                 payload_off, value_template, config):
         """Initialize the Command line binary sensor."""
+        super(CommandBinarySensor, self).__init__(config)
         self._hass = hass
         self.data = data
         self._name = name

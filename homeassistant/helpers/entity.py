@@ -59,6 +59,15 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
 class Entity(object):
     """An abstract class for Home Assistant entities."""
 
+    def __init__(self, config):
+        """Configure basic properties."""
+        if (config):
+            self._unit_of_measurement = config.get('unit_of_measurement')
+            self._icon = config.get('icon')
+            self._entity_picture = config.get('entity_picture')
+            self._hidden = config.get('hidden')
+            self.entity_id = config.get('id')
+
     # pylint: disable=no-self-use
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
@@ -73,6 +82,21 @@ class Entity(object):
 
     # protect for multible updates
     _update_warn = None
+
+    # The icon to use in the frontend, if any
+    _icon = None
+
+    # The unit of measurement of this entity, if any
+    _unit_of_measurement = None
+
+    # The entity picture to use in the frontend, if any.
+    _entity_picture = None
+
+    # True if the entity should be hidden from UIs
+    _hidden = False
+
+    # The class of this device, from component DEVICE_CLASSES
+    _device_class = None
 
     @property
     def should_poll(self) -> bool:
@@ -116,27 +140,27 @@ class Entity(object):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return None
+        return self._device_class
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return None
+        return self._unit_of_measurement
 
     @property
     def icon(self):
         """Return the icon to use in the frontend, if any."""
-        return None
+        return self._icon
 
     @property
     def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
-        return None
+        return self._entity_picture
 
     @property
     def hidden(self) -> bool:
         """Return True if the entity should be hidden from UIs."""
-        return False
+        return self._hidden
 
     @property
     def available(self) -> bool:
