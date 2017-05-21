@@ -483,9 +483,8 @@ class BaseTelegramBotEntity:
             return None
         bad_fields = (not hasattr(msg_data, 'text') and
                       not hasattr(msg_data, 'data') and
-                      not hasattr(msg_data, 'from') and
                       not hasattr(msg_data, 'chat'))
-        if (bad_fields or
+        if (bad_fields or not hasattr(msg_data, 'from') or
                 msg_data['from'].get('id') not in self.allowed_chat_ids):
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data (%s)",
