@@ -1,0 +1,31 @@
+name: home-assistant
+summary: Open-source home automation platform running on Python 3
+description: |
+  Home Assistant is an open-source home automation platform running
+  on Python 3. Track and control all devices at home and automate
+  control. Installation in less than a minute.
+  See https://home-assistant.io/ for more details.
+icon: homeassistant/components/frontend/www_static/icons/favicon-512x512.png
+version: 0.34.5
+confinement: strict
+grade: stable
+
+apps:
+  home-assistant:
+    command: hass.wrapper
+    daemon: simple
+    plugs:
+      - network-bind
+  check-config:
+    command: hass.wrapper --script check_config
+
+parts:
+  common:
+    plugin: dump
+    source: virtualization/snap
+    snap:
+      - hass.wrapper
+  home-assistant:
+    plugin: python
+    source: .
+    requirements: requirements_all.txt
