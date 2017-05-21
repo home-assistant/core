@@ -28,6 +28,8 @@ ALLOWED_PLATFORMS = {
     'switch': ['mqtt'],
 }
 
+DISCOVERED_TOPICS = []
+
 
 @asyncio.coroutine
 def async_start(hass, discovery_topic, hass_config):
@@ -39,6 +41,9 @@ def async_start(hass, discovery_topic, hass_config):
         match = TOPIC_MATCHER.match(topic)
 
         if not match:
+            return
+
+        if topic in DISCOVERED_TOPICS:
             return
 
         prefix_topic, component, object_id = match.groups()
@@ -64,6 +69,8 @@ def async_start(hass, discovery_topic, hass_config):
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
+
+        DISCOVERED_TOPICS.append(topic)
 
         yield from async_load_platform(
             hass, component, platform, payload, hass_config)
