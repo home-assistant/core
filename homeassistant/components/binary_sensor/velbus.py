@@ -11,7 +11,7 @@ import asyncio
 import logging
 import velbus
 
-from custom_components.velbus import (VELBUS_MESSAGE)
+from homeassistant.components.velbus import (VELBUS_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)
 
