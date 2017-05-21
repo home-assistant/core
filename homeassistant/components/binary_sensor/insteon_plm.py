@@ -32,7 +32,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             InsteonPLMBinarySensorDevice(hass, plm, address, name)
         )
 
-    hass.async_add_job(async_add_devices(device_list))
+    async_add_devices(device_list)
 
 
 class InsteonPLMBinarySensorDevice(BinarySensorDevice):
@@ -67,7 +67,7 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
     def is_on(self):
         """Return the boolean response if the node is on."""
         sensorstate = self._plm.get_device_attr(self._address, 'sensorstate')
-        _LOGGER.info('sensor state for %s is %s', self._address, sensorstate)
+        _LOGGER.info("Sensor state for %s is %s", self._address, sensorstate)
         return bool(sensorstate)
 
     @property
@@ -83,5 +83,5 @@ class InsteonPLMBinarySensorDevice(BinarySensorDevice):
     @callback
     def async_binarysensor_update(self, message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._address)
+        _LOGGER.info("Received update calback from PLM for %s", self._address)
         self._hass.async_add_job(self.async_update_ha_state())

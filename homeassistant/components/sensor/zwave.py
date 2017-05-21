@@ -16,10 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_device(node, values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     # Generic Device mappings
-    if values.primary.command_class == zwave.const.COMMAND_CLASS_BATTERY:
-        return ZWaveSensor(values)
     if node.has_command_class(zwave.const.COMMAND_CLASS_SENSOR_MULTILEVEL):
         return ZWaveMultilevelSensor(values)
     if node.has_command_class(zwave.const.COMMAND_CLASS_METER) and \
@@ -40,7 +38,7 @@ class ZWaveSensor(zwave.ZWaveDeviceEntity):
         self.update_properties()
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle the data changes for node values."""
         self._state = self.values.primary.data
         self._units = self.values.primary.units
 

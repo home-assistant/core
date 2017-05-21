@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.3.1']
+REQUIREMENTS = ['denonavr==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Denon platform."""
+    """Set up the Denon platform."""
     import denonavr
 
     # Initialize list with receivers to be started
@@ -64,8 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info("Denon receiver at host %s initialized", host)
     # 2. option: discovery using netdisco
     if discovery_info is not None:
-        host = discovery_info[0]
-        name = discovery_info[1]
+        host = discovery_info.get('host')
+        name = discovery_info.get('name')
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)
@@ -116,9 +116,7 @@ class DenonDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest status information from device."""
-        # Update denonavr
         self._receiver.update()
-        # Refresh own data
         self._name = self._receiver.name
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
@@ -146,7 +144,7 @@ class DenonDevice(MediaPlayerDevice):
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return boolean if volume is currently muted."""
         return self._muted
 
     @property
@@ -163,7 +161,7 @@ class DenonDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return a list of available input sources."""
         return self._source_list
 
     @property

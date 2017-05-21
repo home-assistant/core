@@ -95,13 +95,12 @@ class UPCDeviceScanner(DeviceScanner):
 
     @asyncio.coroutine
     def async_get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Ge the firmware doesn't save the name of the wireless device."""
         return None
 
     @asyncio.coroutine
     def async_login(self):
         """Login into firmware and get first token."""
-        response = None
         try:
             # get first token
             with async_timeout.timeout(10, loop=self.hass.loop):
@@ -109,7 +108,8 @@ class UPCDeviceScanner(DeviceScanner):
                     "http://{}/common_page/login.html".format(self.host)
                 )
 
-            yield from response.text()
+                yield from response.text()
+
             self.token = response.cookies['sessionToken'].value
 
             # login
@@ -118,18 +118,12 @@ class UPCDeviceScanner(DeviceScanner):
                 'Password': self.password,
             })
 
-            # successfull?
-            if data is not None:
-                return True
-            return False
+            # Successful?
+            return data is not None
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Can not load login page from %s", self.host)
             return False
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
     @asyncio.coroutine
     def _async_ws_function(self, function, additional_form=None):
@@ -142,8 +136,7 @@ class UPCDeviceScanner(DeviceScanner):
         if additional_form:
             form_data.update(additional_form)
 
-        redirects = True if function != CMD_DEVICES else False
-        response = None
+        redirects = function != CMD_DEVICES
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 response = yield from self.websession.post(
@@ -163,10 +156,6 @@ class UPCDeviceScanner(DeviceScanner):
                 self.token = response.cookies['sessionToken'].value
                 return (yield from response.text())
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error on %s", function)
             self.token = None
-
-        finally:
-            if response is not None:
-                yield from response.release()

@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.13']
+REQUIREMENTS = ['pywemo==0.4.19']
 
 DOMAIN = 'wemo'
 
@@ -45,7 +45,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
-    """Common setup for WeMo devices."""
+    """Set up for WeMo devices."""
     import pywemo
 
     global SUBSCRIPTION_REGISTRY
@@ -62,7 +62,8 @@ def setup(hass, config):
     def discovery_dispatch(service, discovery_info):
         """Dispatcher for WeMo discovery events."""
         # name, model, location, mac
-        _, model_name, _, _, serial = discovery_info
+        model_name = discovery_info.get('model_name')
+        serial = discovery_info.get('serial')
 
         # Only register a device once
         if serial in KNOWN_DEVICES:
@@ -95,7 +96,12 @@ def setup(hass, config):
         if device is None:
             device = pywemo.discovery.device_from_description(url, None)
 
-        discovery_info = (device.name, device.model_name, url, device.mac,
-                          device.serialnumber)
+        discovery_info = {
+            'model_name': device.model_name,
+            'serial': device.serialnumber,
+            'mac_address': device.mac,
+            'ssdp_description': url,
+        }
+
         discovery.discover(hass, SERVICE_WEMO, discovery_info)
     return True

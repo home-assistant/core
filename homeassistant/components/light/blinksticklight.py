@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Add device specified by serial number."""
+    """Set up Blinkstick device specified by serial number."""
     from blinkstick import blinkstick
 
     name = config.get(CONF_NAME)
@@ -54,7 +54,7 @@ class BlinkStickLight(Light):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Set up polling."""
         return True
 
     @property

@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 
-REQUIREMENTS = ['openhomedevice==0.2.1']
+REQUIREMENTS = ['openhomedevice==0.4.0']
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
@@ -22,29 +22,30 @@ SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
 
 _LOGGER = logging.getLogger(__name__)
 
-# List of devices that have been registered
 DEVICES = []
 
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Openhome Platform."""
+    """Set up the Openhome platform."""
     from openhomedevice.Device import Device
 
-    if discovery_info:
-        _LOGGER.info('Openhome device found, (%s)', discovery_info[0])
-        device = Device(discovery_info[1])
-
-        # if device has already been discovered
-        if device.Uuid() in [x.unique_id for x in DEVICES]:
-            return True
-
-        device = OpenhomeDevice(hass, device)
-
-        add_devices([device], True)
-        DEVICES.append(device)
-
+    if not discovery_info:
         return True
+
+    name = discovery_info.get('name')
+    description = discovery_info.get('ssdp_description')
+    _LOGGER.info("Openhome device found: %s", name)
+    device = Device(description)
+
+    # if device has already been discovered
+    if device.Uuid() in [x.unique_id for x in DEVICES]:
+        return True
+
+    device = OpenhomeDevice(hass, device)
+
+    add_devices([device], True)
+    DEVICES.append(device)
 
     return True
 
@@ -91,7 +92,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
         if self._source["type"] == "Radio":
             self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
-        if self._source["type"] == "Playlist":
+        if self._source["type"] in ("Playlist", "Cloud"):
             self._supported_features |= SUPPORT_PREVIOUS_TRACK | \
                 SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY
 
@@ -151,7 +152,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     @property
@@ -172,17 +173,17 @@ class OpenhomeDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._track_information["albumArt"]
+        return self._track_information["albumArtwork"]
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._track_information["artist"]
+        return self._track_information["artist"][0]
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._track_information["album"]
+        return self._track_information["albumTitle"]
 
     @property
     def media_title(self):

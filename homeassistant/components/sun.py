@@ -4,20 +4,18 @@ Support for functionality to keep track of the sun.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sun/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
-import voluptuous as vol
-
 from homeassistant.const import CONF_ELEVATION
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
-    track_point_in_utc_time, track_utc_time_change)
+    async_track_point_in_utc_time, async_track_utc_time_change)
+from homeassistant.helpers.sun import (
+    get_astral_location, get_astral_event_next)
 from homeassistant.util import dt as dt_util
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
-
-REQUIREMENTS = ['astral==1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,114 +28,23 @@ STATE_BELOW_HORIZON = 'below_horizon'
 
 STATE_ATTR_AZIMUTH = 'azimuth'
 STATE_ATTR_ELEVATION = 'elevation'
+STATE_ATTR_NEXT_DAWN = 'next_dawn'
+STATE_ATTR_NEXT_DUSK = 'next_dusk'
+STATE_ATTR_NEXT_MIDNIGHT = 'next_midnight'
+STATE_ATTR_NEXT_NOON = 'next_noon'
 STATE_ATTR_NEXT_RISING = 'next_rising'
 STATE_ATTR_NEXT_SETTING = 'next_setting'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_ELEVATION): cv.positive_int,
-    }),
-}, extra=vol.ALLOW_EXTRA)
 
-
-def is_on(hass, entity_id=None):
-    """Test if the sun is currently up based on the statemachine."""
-    entity_id = entity_id or ENTITY_ID
-
-    return hass.states.is_state(entity_id, STATE_ABOVE_HORIZON)
-
-
-def next_setting(hass, entity_id=None):
-    """Local datetime object of the next sun setting.
-
-    Async friendly.
-    """
-    utc_next = next_setting_utc(hass, entity_id)
-
-    return dt_util.as_local(utc_next) if utc_next else None
-
-
-def next_setting_utc(hass, entity_id=None):
-    """UTC datetime object of the next sun setting.
-
-    Async friendly.
-    """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(
-            state.attributes[STATE_ATTR_NEXT_SETTING])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_SETTING does not exist
-        return None
-
-
-def next_rising(hass, entity_id=None):
-    """Local datetime object of the next sun rising.
-
-    Async friendly.
-    """
-    utc_next = next_rising_utc(hass, entity_id)
-
-    return dt_util.as_local(utc_next) if utc_next else None
-
-
-def next_rising_utc(hass, entity_id=None):
-    """UTC datetime object of the next sun rising.
-
-    Async friendly.
-    """
-    entity_id = entity_id or ENTITY_ID
-
-    state = hass.states.get(ENTITY_ID)
-
-    try:
-        return dt_util.parse_datetime(state.attributes[STATE_ATTR_NEXT_RISING])
-    except (AttributeError, KeyError):
-        # AttributeError if state is None
-        # KeyError if STATE_ATTR_NEXT_RISING does not exist
-        return None
-
-
-def setup(hass, config):
+@asyncio.coroutine
+def async_setup(hass, config):
     """Track the state of the sun."""
-    if None in (hass.config.latitude, hass.config.longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+    if config.get(CONF_ELEVATION) is not None:
+        _LOGGER.warning(
+            "Elevation is now configured in home assistant core. "
+            "See https://home-assistant.io/docs/configuration/basic/")
 
-    latitude = util.convert(hass.config.latitude, float)
-    longitude = util.convert(hass.config.longitude, float)
-    errors = []
-
-    if latitude is None:
-        errors.append('Latitude needs to be a decimal value')
-    elif -90 > latitude < 90:
-        errors.append('Latitude needs to be -90 .. 90')
-
-    if longitude is None:
-        errors.append('Longitude needs to be a decimal value')
-    elif -180 > longitude < 180:
-        errors.append('Longitude needs to be -180 .. 180')
-
-    if errors:
-        _LOGGER.error('Invalid configuration received: %s', ", ".join(errors))
-        return False
-
-    platform_config = config.get(DOMAIN, {})
-
-    elevation = platform_config.get(CONF_ELEVATION)
-    if elevation is None:
-        elevation = hass.config.elevation or 0
-
-    from astral import Location
-
-    location = Location(('', '', latitude, longitude,
-                         hass.config.time_zone.zone, elevation))
-
-    sun = Sun(hass, location)
+    sun = Sun(hass, get_astral_location(hass))
     sun.point_in_time_listener(dt_util.utcnow())
 
     return True
@@ -153,9 +60,11 @@ class Sun(Entity):
         self.hass = hass
         self.location = location
         self._state = self.next_rising = self.next_setting = None
-        self.solar_elevation = self.solar_azimuth = 0
+        self.next_dawn = self.next_dusk = None
+        self.next_midnight = self.next_noon = None
+        self.solar_elevation = self.solar_azimuth = None
 
-        track_utc_time_change(hass, self.timer_update, second=30)
+        async_track_utc_time_change(hass, self.timer_update, second=30)
 
     @property
     def name(self):
@@ -174,6 +83,10 @@ class Sun(Entity):
     def state_attributes(self):
         """Return the state attributes of the sun."""
         return {
+            STATE_ATTR_NEXT_DAWN: self.next_dawn.isoformat(),
+            STATE_ATTR_NEXT_DUSK: self.next_dusk.isoformat(),
+            STATE_ATTR_NEXT_MIDNIGHT: self.next_midnight.isoformat(),
+            STATE_ATTR_NEXT_NOON: self.next_noon.isoformat(),
             STATE_ATTR_NEXT_RISING: self.next_rising.isoformat(),
             STATE_ATTR_NEXT_SETTING: self.next_setting.isoformat(),
             STATE_ATTR_ELEVATION: round(self.solar_elevation, 2),
@@ -183,62 +96,45 @@ class Sun(Entity):
     @property
     def next_change(self):
         """Datetime when the next change to the state is."""
-        return min(self.next_rising, self.next_setting)
+        return min(self.next_dawn, self.next_dusk, self.next_midnight,
+                   self.next_noon, self.next_rising, self.next_setting)
 
+    @callback
     def update_as_of(self, utc_point_in_time):
-        """Calculate sun state at a point in UTC time."""
-        import astral
+        """Update the attributes containing solar events."""
+        self.next_dawn = get_astral_event_next(
+            self.hass, 'dawn', utc_point_in_time)
+        self.next_dusk = get_astral_event_next(
+            self.hass, 'dusk', utc_point_in_time)
+        self.next_midnight = get_astral_event_next(
+            self.hass, 'solar_midnight', utc_point_in_time)
+        self.next_noon = get_astral_event_next(
+            self.hass, 'solar_noon', utc_point_in_time)
+        self.next_rising = get_astral_event_next(
+            self.hass, 'sunrise', utc_point_in_time)
+        self.next_setting = get_astral_event_next(
+            self.hass, 'sunset', utc_point_in_time)
 
-        mod = -1
-        while True:
-            try:
-                next_rising_dt = self.location.sunrise(
-                    utc_point_in_time + timedelta(days=mod), local=False)
-                if next_rising_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
-
-        mod = -1
-        while True:
-            try:
-                next_setting_dt = (self.location.sunset(
-                    utc_point_in_time + timedelta(days=mod), local=False))
-                if next_setting_dt > utc_point_in_time:
-                    break
-            except astral.AstralError:
-                pass
-            mod += 1
-
-        self.next_rising = next_rising_dt
-        self.next_setting = next_setting_dt
-
+    @callback
     def update_sun_position(self, utc_point_in_time):
         """Calculate the position of the sun."""
-        from astral import Astral
+        self.solar_azimuth = self.location.solar_azimuth(utc_point_in_time)
+        self.solar_elevation = self.location.solar_elevation(utc_point_in_time)
 
-        self.solar_azimuth = Astral().solar_azimuth(
-            utc_point_in_time,
-            self.location.latitude,
-            self.location.longitude)
-
-        self.solar_elevation = Astral().solar_elevation(
-            utc_point_in_time,
-            self.location.latitude,
-            self.location.longitude)
-
+    @callback
     def point_in_time_listener(self, now):
-        """Called when the state of the sun has changed."""
+        """Run when the state of the sun has changed."""
+        self.update_sun_position(now)
         self.update_as_of(now)
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
         # Schedule next update at next_change+1 second so sun state has changed
-        track_point_in_utc_time(
+        async_track_point_in_utc_time(
             self.hass, self.point_in_time_listener,
             self.next_change + timedelta(seconds=1))
 
+    @callback
     def timer_update(self, time):
         """Needed to update solar elevation and azimuth."""
         self.update_sun_position(time)
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())

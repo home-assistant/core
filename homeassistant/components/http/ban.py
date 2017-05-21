@@ -94,8 +94,8 @@ def process_wrong_login(request):
             None, update_ip_bans_config, hass.config.path(IP_BANS_FILE),
             new_ban)
 
-        _LOGGER.warning('Banned IP %s for too many login attempts',
-                        remote_addr)
+        _LOGGER.warning(
+            "Banned IP %s for too many login attempts", remote_addr)
 
         persistent_notification.async_create(
             hass,
@@ -107,13 +107,13 @@ class IpBan(object):
     """Represents banned IP address."""
 
     def __init__(self, ip_ban: str, banned_at: datetime=None) -> None:
-        """Initializing Ip Ban object."""
+        """Initialize IP Ban object."""
         self.ip_address = ip_address(ip_ban)
         self.banned_at = banned_at or datetime.utcnow()
 
 
 def load_ip_bans_config(path: str):
-    """Loading list of banned IPs from config file."""
+    """Load list of banned IPs from config file."""
     ip_list = []
 
     if not os.path.isfile(path):
@@ -130,7 +130,7 @@ def load_ip_bans_config(path: str):
             ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
             ip_list.append(IpBan(ip_ban, ip_info['banned_at']))
         except vol.Invalid as err:
-            _LOGGER.error('Failed to load IP ban %s: %s', ip_info, err)
+            _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
             continue
 
     return ip_list

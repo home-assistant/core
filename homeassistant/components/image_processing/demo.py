@@ -1,7 +1,7 @@
 """
 Support for the demo image processing.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/demo/
 """
 from homeassistant.components.image_processing import ATTR_CONFIDENCE
@@ -12,7 +12,7 @@ from homeassistant.components.image_processing.microsoft_face_identify import (
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the demo image_processing platform."""
+    """Set up the demo image processing platform."""
     add_devices([
         DemoImageProcessingAlpr('camera.demo_camera', "Demo Alpr"),
         DemoImageProcessingFace(
@@ -21,10 +21,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class DemoImageProcessingAlpr(ImageProcessingAlprEntity):
-    """Demo alpr image processing entity."""
+    """Demo ALPR image processing entity."""
 
     def __init__(self, camera_entity, name):
-        """Initialize demo alpr."""
+        """Initialize demo ALPR image processing entity."""
         super().__init__()
 
         self._name = name
@@ -61,7 +61,7 @@ class DemoImageProcessingFace(ImageProcessingFaceEntity):
     """Demo face identify image processing entity."""
 
     def __init__(self, camera_entity, name):
-        """Initialize demo alpr."""
+        """Initialize demo face image processing entity."""
         super().__init__()
 
         self._name = name

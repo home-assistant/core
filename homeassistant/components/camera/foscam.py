@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a Foscam IP Camera."""
+    """Set up a Foscam IP Camera."""
     add_devices([FoscamCamera(config)])
 
 
@@ -60,15 +60,19 @@ class FoscamCamera(Camera):
         )
         self._name = device_info.get(CONF_NAME)
 
-        _LOGGER.info('Using the following URL for %s: %s',
+        _LOGGER.info("Using the following URL for %s: %s",
                      self._name, uri_template.format('***', '***'))
 
     def camera_image(self):
         """Return a still image reponse from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = requests.get(self._snap_picture_url, timeout=10)
-
-        return response.content
+        # Handle exception if host is not reachable or url failed
+        try:
+            response = requests.get(self._snap_picture_url, timeout=10)
+        except requests.exceptions.ConnectionError:
+            return None
+        else:
+            return response.content
 
     @property
     def name(self):

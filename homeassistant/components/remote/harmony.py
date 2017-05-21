@@ -8,7 +8,6 @@ import logging
 from os import path
 import urllib.parse
 
-
 import voluptuous as vol
 
 import homeassistant.components.remote as remote
@@ -25,6 +24,7 @@ REQUIREMENTS = ['pyharmony==1.0.12']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 5222
+DEVICES = []
 
 SERVICE_SYNC = 'harmony_sync'
 
@@ -35,8 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
 })
 
-KNOWN_HOSTS = []
-
 HARMONY_SYNC_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -45,6 +43,7 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Harmony platform."""
     import pyharmony
+    global DEVICES
 
     host = None
     if discovery_info:
@@ -54,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             DEFAULT_PORT)
 
         # Ignore hub name when checking if this hub is known - ip and port only
-        if host and host[1:] in [h[1:] for h in KNOWN_HOSTS]:
+        if host and host[1:] in [h[1:] for h in DEVICES]:
             _LOGGER.debug("Discovered host already known: %s", host)
             return
 
@@ -81,14 +80,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     harmony_conf_file = hass.config.path(
         '{}{}{}'.format('harmony_', slugify(name), '.conf'))
-    hub = HarmonyRemote(
+    device = HarmonyRemote(
         name, address, port,
         config.get(ATTR_ACTIVITY), harmony_conf_file, token)
 
-    KNOWN_HOSTS.append(host)
+    DEVICES.append(device)
 
-    add_devices([hub])
+    add_devices([device])
     register_services(hass)
+    return True
 
 
 def register_services(hass):
@@ -102,7 +102,7 @@ def register_services(hass):
 
 
 def _apply_service(service, service_func, *service_func_args):
-    """Internal func for applying a service."""
+    """Handle services to apply."""
     entity_ids = service.data.get('entity_id')
 
     if entity_ids:

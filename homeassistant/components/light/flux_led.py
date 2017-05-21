@@ -12,13 +12,13 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
-    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, Light,
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
+    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light,
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.15']
+REQUIREMENTS = ['flux_led==0.19']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,32 +27,34 @@ ATTR_MODE = 'mode'
 
 DOMAIN = 'flux_led'
 
-SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                    SUPPORT_RGB_COLOR)
+SUPPORT_FLUX_LED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
+                        SUPPORT_RGB_COLOR)
+SUPPORT_FLUX_LED_RGBW = (SUPPORT_WHITE_VALUE | SUPPORT_EFFECT |
+                         SUPPORT_RGB_COLOR)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
 
-# List of Supported Effects which aren't already declared in LIGHT
-EFFECT_RED_FADE = "red_fade"
-EFFECT_GREEN_FADE = "green_fade"
-EFFECT_BLUE_FADE = "blue_fade"
-EFFECT_YELLOW_FADE = "yellow_fade"
-EFFECT_CYAN_FADE = "cyan_fade"
-EFFECT_PURPLE_FADE = "purple_fade"
-EFFECT_WHITE_FADE = "white_fade"
-EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"
-EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"
-EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"
-EFFECT_COLORSTROBE = "colorstrobe"
-EFFECT_RED_STROBE = "red_strobe"
-EFFECT_GREEN_STROBE = "green_strobe"
-EFFECT_BLUE_STOBE = "blue_strobe"
-EFFECT_YELLOW_STROBE = "yellow_strobe"
-EFFECT_CYAN_STROBE = "cyan_strobe"
-EFFECT_PURPLE_STROBE = "purple_strobe"
-EFFECT_WHITE_STROBE = "white_strobe"
-EFFECT_COLORJUMP = "colorjump"
+# List of supported effects which aren't already declared in LIGHT
+EFFECT_RED_FADE = 'red_fade'
+EFFECT_GREEN_FADE = 'green_fade'
+EFFECT_BLUE_FADE = 'blue_fade'
+EFFECT_YELLOW_FADE = 'yellow_fade'
+EFFECT_CYAN_FADE = 'cyan_fade'
+EFFECT_PURPLE_FADE = 'purple_fade'
+EFFECT_WHITE_FADE = 'white_fade'
+EFFECT_RED_GREEN_CROSS_FADE = 'rg_cross_fade'
+EFFECT_RED_BLUE_CROSS_FADE = 'rb_cross_fade'
+EFFECT_GREEN_BLUE_CROSS_FADE = 'gb_cross_fade'
+EFFECT_COLORSTROBE = 'colorstrobe'
+EFFECT_RED_STROBE = 'red_strobe'
+EFFECT_GREEN_STROBE = 'green_strobe'
+EFFECT_BLUE_STOBE = 'blue_strobe'
+EFFECT_YELLOW_STROBE = 'yellow_strobe'
+EFFECT_CYAN_STROBE = 'cyan_strobe'
+EFFECT_PURPLE_STROBE = 'purple_strobe'
+EFFECT_WHITE_STROBE = 'white_strobe'
+EFFECT_COLORJUMP = 'colorjump'
 
 FLUX_EFFECT_LIST = [
     EFFECT_COLORLOOP,
@@ -92,7 +94,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Flux lights."""
+    """Set up the Flux lights."""
     import flux_led
     lights = []
     light_ips = []
@@ -108,20 +110,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(light)
             light_ips.append(ipaddr)
 
-    if discovery_info:
-        device = {}
-        # discovery_info: ip address,device id,device type
-        device['ipaddr'] = discovery_info[0]
-        device['name'] = discovery_info[1]
-        # As we don't know protocol and mode set to none to autodetect.
-        device[CONF_PROTOCOL] = None
-        device[ATTR_MODE] = None
-
-        light = FluxLight(device)
-        if light.is_valid:
-            lights.append(light)
-            light_ips.append(device['ipaddr'])
-
     if not config.get(CONF_AUTOMATIC_ADD, False):
         add_devices(lights)
         return
@@ -133,7 +121,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ipaddr = device['ipaddr']
         if ipaddr in light_ips:
             continue
-        device['name'] = device['id'] + " " + ipaddr
+        device['name'] = '{} {}'.format(device['id'], ipaddr)
         device[ATTR_MODE] = 'rgbw'
         device[CONF_PROTOCOL] = None
         light = FluxLight(device)
@@ -179,7 +167,7 @@ class FluxLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._ipaddr)
+        return '{}.{}'.format(self.__class__, self._ipaddr)
 
     @property
     def name(self):
@@ -194,7 +182,16 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._bulb.brightness
+        if self._mode == MODE_RGB:
+            return self._bulb.brightness
+        return None  # not used for RGBW
+
+    @property
+    def white_value(self):
+        """Return the white value of this light between 0..255."""
+        if self._mode == MODE_RGBW:
+            return self._bulb.getRgbw()[3]
+        return None  # not used for RGB
 
     @property
     def rgb_color(self):
@@ -204,7 +201,11 @@ class FluxLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_FLUX_LED
+        if self._mode == MODE_RGBW:
+            return SUPPORT_FLUX_LED_RGBW
+        elif self._mode == MODE_RGB:
+            return SUPPORT_FLUX_LED_RGB
+        return 0
 
     @property
     def effect_list(self):
@@ -218,21 +219,27 @@ class FluxLight(Light):
 
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
+        white_value = kwargs.get(ATTR_WHITE_VALUE)
         effect = kwargs.get(ATTR_EFFECT)
+
         if rgb is not None and brightness is not None:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
+        elif rgb is not None and white_value is not None:
+            self._bulb.setRgbw(*tuple(rgb), w=white_value)
         elif rgb is not None:
-            self._bulb.setRgb(*tuple(rgb))
+            # self.white_value and self.brightness are appropriately
+            # returning None for MODE_RGB and MODE_RGBW respectively
+            self._bulb.setRgbw(*tuple(rgb),
+                               w=self.white_value,
+                               brightness=self.brightness)
         elif brightness is not None:
-            if self._mode == 'rgbw':
-                self._bulb.setWarmWhite255(brightness)
-            elif self._mode == 'rgb':
-                (red, green, blue) = self._bulb.getRgb()
-                self._bulb.setRgb(red, green, blue, brightness=brightness)
+            self._bulb.setRgb(*self.rgb_color, brightness=brightness)
+        elif white_value is not None:
+            self._bulb.setRgbw(*self.rgb_color, w=white_value)
         elif effect == EFFECT_RANDOM:
-            self._bulb.setRgb(random.randrange(0, 255),
-                              random.randrange(0, 255),
-                              random.randrange(0, 255))
+            self._bulb.setRgb(random.randint(0, 255),
+                              random.randint(0, 255),
+                              random.randint(0, 255))
         elif effect == EFFECT_COLORLOOP:
             self._bulb.setPresetPattern(0x25, 50)
         elif effect == EFFECT_RED_FADE:

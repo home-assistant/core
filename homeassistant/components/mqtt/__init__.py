@@ -10,6 +10,7 @@ import os
 import socket
 import time
 import ssl
+import re
 import requests.certs
 
 import voluptuous as vol
@@ -28,6 +29,8 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
+REQUIREMENTS = ['paho-mqtt==1.2.3']
+
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'mqtt'
@@ -36,8 +39,6 @@ DATA_MQTT = 'mqtt'
 
 SERVICE_PUBLISH = 'publish'
 SIGNAL_MQTT_MESSAGE_RECEIVED = 'mqtt_message_received'
-
-REQUIREMENTS = ['paho-mqtt==1.2']
 
 CONF_EMBEDDED = 'embedded'
 CONF_BROKER = 'broker'
@@ -201,7 +202,8 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 
 @asyncio.coroutine
-def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
+                    encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     @callback
     def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
@@ -209,7 +211,20 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
         if not _match_topic(topic, dp_topic):
             return
 
-        hass.async_run_job(msg_callback, dp_topic, dp_payload, dp_qos)
+        if encoding is not None:
+            try:
+                payload = dp_payload.decode(encoding)
+                _LOGGER.debug("Received message on %s: %s", dp_topic, payload)
+            except (AttributeError, UnicodeDecodeError):
+                _LOGGER.error("Illegal payload encoding %s from "
+                              "MQTT topic: %s, Payload: %s",
+                              encoding, dp_topic, dp_payload)
+                return
+        else:
+            _LOGGER.debug("Received binary message on %s", dp_topic)
+            payload = dp_payload
+
+        hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
 
     async_remove = async_dispatcher_connect(
         hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
@@ -218,10 +233,12 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
     return async_remove
 
 
-def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
+              encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     async_remove = run_coroutine_threadsafe(
-        async_subscribe(hass, topic, msg_callback, qos),
+        async_subscribe(hass, topic, msg_callback,
+                        qos, encoding),
         hass.loop
     ).result()
 
@@ -277,7 +294,10 @@ def _async_setup_discovery(hass, config):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Start the MQTT protocol service."""
-    conf = config.get(DOMAIN, {})
+    conf = config.get(DOMAIN)
+
+    if conf is None:
+        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
 
     client_id = conf.get(CONF_CLIENT_ID)
     keepalive = conf.get(CONF_KEEPALIVE)
@@ -369,16 +389,16 @@ def async_setup(hass, config):
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
-        try:
-            if payload_template is not None:
+        if payload_template is not None:
+            try:
                 payload = \
                     template.Template(payload_template, hass).async_render()
-        except template.jinja2.TemplateError as exc:
-            _LOGGER.error(
-                "Unable to publish to '%s': rendering payload template of "
-                "'%s' failed because %s",
-                msg_topic, payload_template, exc)
-            return
+            except template.jinja2.TemplateError as exc:
+                _LOGGER.error(
+                    "Unable to publish to '%s': rendering payload template of "
+                    "'%s' failed because %s",
+                    msg_topic, payload_template, exc)
+                return
 
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
@@ -561,18 +581,10 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        try:
-            payload = msg.payload.decode('utf-8')
-        except (AttributeError, UnicodeDecodeError):
-            _LOGGER.error("Illegal utf-8 unicode payload from "
-                          "MQTT topic: %s, Payload: %s", msg.topic,
-                          msg.payload)
-        else:
-            _LOGGER.info("Received message on %s: %s", msg.topic, payload)
-            dispatcher_send(
-                self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, payload,
-                msg.qos
-            )
+        dispatcher_send(
+            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, msg.payload,
+            msg.qos
+        )
 
     def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Unsubscribe successful callback."""
@@ -627,12 +639,20 @@ def _raise_on_error(result):
 
 def _match_topic(subscription, topic):
     """Test if topic matches subscription."""
+    reg_ex_parts = []
+    suffix = ""
     if subscription.endswith('#'):
-        return (subscription[:-2] == topic or
-                topic.startswith(subscription[:-1]))
-
+        subscription = subscription[:-2]
+        suffix = "(.*)"
     sub_parts = subscription.split('/')
-    topic_parts = topic.split('/')
+    for sub_part in sub_parts:
+        if sub_part == "+":
+            reg_ex_parts.append(r"([^\/]+)")
+        else:
+            reg_ex_parts.append(sub_part)
 
-    return (len(sub_parts) == len(topic_parts) and
-            all(a == b for a, b in zip(sub_parts, topic_parts) if a != '+'))
+    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
+
+    reg = re.compile(reg_ex)
+
+    return reg.match(topic) is not None

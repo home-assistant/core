@@ -15,7 +15,7 @@ DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic switch platform."""
+    """Set up the Homematic switch platform."""
     if discovery_info is None:
         return
 

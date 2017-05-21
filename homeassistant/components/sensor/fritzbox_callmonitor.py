@@ -24,19 +24,21 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['fritzconnection==0.6.3']
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_NAME = 'Phone'
-DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
-DEFAULT_PORT = 1012
 
-VALUE_DEFAULT = 'idle'
-VALUE_RING = 'ringing'
-VALUE_CALL = 'dialing'
-VALUE_CONNECT = 'talking'
-VALUE_DISCONNECT = 'idle'
 CONF_PHONEBOOK = 'phonebook'
 CONF_PREFIXES = 'prefixes'
 
+DEFAULT_HOST = '169.254.1.1'  # IP valid for all Fritz!Box routers
+DEFAULT_NAME = 'Phone'
+DEFAULT_PORT = 1012
+
 INTERVAL_RECONNECT = 60
+
+VALUE_CALL = 'dialing'
+VALUE_CONNECT = 'talking'
+VALUE_DEFAULT = 'idle'
+VALUE_DISCONNECT = 'idle'
+VALUE_RING = 'ringing'
 
 # Return cached results if phonebook was downloaded less then this time ago.
 MIN_TIME_PHONEBOOK_UPDATE = datetime.timedelta(hours=6)
@@ -49,13 +51,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD, default='admin'): cv.string,
     vol.Optional(CONF_USERNAME, default=''): cv.string,
     vol.Optional(CONF_PHONEBOOK, default=0): cv.positive_int,
-    vol.Optional(CONF_PREFIXES, default=[]): vol.All(cv.ensure_list,
-                                                     [cv.string])
+    vol.Optional(CONF_PREFIXES, default=[]):
+        vol.All(cv.ensure_list, [cv.string])
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Fritz!Box call monitor sensor platform."""
+    """Set up Fritz!Box call monitor sensor platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -65,14 +67,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     prefixes = config.get('prefixes')
 
     try:
-        phonebook = FritzBoxPhonebook(host=host, port=port,
-                                      username=username, password=password,
-                                      phonebook_id=phonebook_id,
-                                      prefixes=prefixes)
+        phonebook = FritzBoxPhonebook(
+            host=host, port=port, username=username, password=password,
+            phonebook_id=phonebook_id, prefixes=prefixes)
     # pylint: disable=bare-except
     except:
         phonebook = None
-        _LOGGER.warning('Phonebook with ID %s not found on Fritz!Box',
+        _LOGGER.warning("Phonebook with ID %s not found on Fritz!Box",
                         phonebook_id)
 
     sensor = FritzBoxCallSensor(name=name, phonebook=phonebook)
@@ -116,7 +117,7 @@ class FritzBoxCallSensor(Entity):
 
     @property
     def should_poll(self):
-        """Polling needed only to update phonebook, if defined."""
+        """Only poll to update phonebook, if defined."""
         if self.phonebook is None:
             return False
         else:
@@ -250,9 +251,8 @@ class FritzBoxPhonebook(object):
         # pylint: disable=import-error
         import fritzconnection as fc
         # Establish a connection to the FRITZ!Box.
-        self.fph = fc.FritzPhonebook(address=self.host,
-                                     user=self.username,
-                                     password=self.password)
+        self.fph = fc.FritzPhonebook(
+            address=self.host, user=self.username, password=self.password)
 
         if self.phonebook_id not in self.fph.list_phonebooks:
             raise ValueError("Phonebook with this ID not found.")
@@ -266,7 +266,7 @@ class FritzBoxPhonebook(object):
         self.number_dict = {re.sub(r'[^\d\+]', '', nr): name
                             for name, nrs in self.phonebook_dict.items()
                             for nr in nrs}
-        _LOGGER.info('Fritz!Box phone book successfully updated.')
+        _LOGGER.info("Fritz!Box phone book successfully updated")
 
     def get_name(self, number):
         """Return a name for a given phone number."""

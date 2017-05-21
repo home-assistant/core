@@ -202,15 +202,15 @@ def _load_order_component(comp_name: str, load_order: OrderedSet,
 
         # If we are already loading it, we have a circular dependency.
         if dependency in loading:
-            _LOGGER.error('Circular dependency detected: %s -> %s',
+            _LOGGER.error("Circular dependency detected: %s -> %s",
                           comp_name, dependency)
             return OrderedSet()
 
         dep_load_order = _load_order_component(dependency, load_order, loading)
 
         # length == 0 means error loading dependency or children
-        if len(dep_load_order) == 0:
-            _LOGGER.error('Error loading %s dependency: %s',
+        if not dep_load_order:
+            _LOGGER.error("Error loading %s dependency: %s",
                           comp_name, dependency)
             return OrderedSet()
 

@@ -4,6 +4,7 @@ Interfaces with Wink Cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.wink/
 """
+import asyncio
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
@@ -16,11 +17,12 @@ from homeassistant.components.wink import WinkDevice, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['wink']
+
 STATE_ALARM_PRIVACY = 'Private'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Set up the Wink platform."""
     import pywink
 
     for camera in pywink.get_cameras():
@@ -40,6 +42,11 @@ class WinkCameraDevice(WinkDevice, alarm.AlarmControlPanel):
     def __init__(self, wink, hass):
         """Initialize the Wink alarm."""
         super().__init__(wink, hass)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['alarm_control_panel'].append(self)
 
     @property
     def state(self):

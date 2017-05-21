@@ -2,7 +2,7 @@
 Offer sun based automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#sun-trigger
+at https://home-assistant.io/docs/automation/trigger/#sun-trigger
 """
 import asyncio
 from datetime import timedelta
@@ -15,8 +15,6 @@ from homeassistant.const import (
     CONF_EVENT, CONF_OFFSET, CONF_PLATFORM, SUN_EVENT_SUNRISE)
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 import homeassistant.helpers.config_validation as cv
-
-DEPENDENCIES = ['sun']
 
 _LOGGER = logging.getLogger(__name__)
 

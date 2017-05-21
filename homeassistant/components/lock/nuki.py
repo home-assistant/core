@@ -6,13 +6,13 @@ https://home-assistant.io/components/lock.nuki/
 """
 from datetime import timedelta
 import logging
+
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import (LockDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_HOST, CONF_PORT, CONF_TOKEN)
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
-
 
 REQUIREMENTS = ['pynuki==1.2.2']
 
@@ -33,7 +33,7 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=5)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo lock platform."""
+    """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
     add_devices([NukiLock(lock) for lock in bridge.locks])

@@ -11,7 +11,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, CONF_MINIMUM, CONF_MAXIMUM)
+from homeassistant.const import (
+    CONF_NAME, CONF_MINIMUM, CONF_MAXIMUM, CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,28 +27,31 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MAXIMUM, default=DEFAULT_MAX): cv.positive_int,
     vol.Optional(CONF_MINIMUM, default=DEFAULT_MIN): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Random number sensor."""
+    """Set up the Random number sensor."""
     name = config.get(CONF_NAME)
     minimum = config.get(CONF_MINIMUM)
     maximum = config.get(CONF_MAXIMUM)
+    unit = config.get(CONF_UNIT_OF_MEASUREMENT)
 
-    async_add_devices([RandomSensor(name, minimum, maximum)], True)
+    async_add_devices([RandomSensor(name, minimum, maximum, unit)], True)
     return True
 
 
 class RandomSensor(Entity):
     """Representation of a Random number sensor."""
 
-    def __init__(self, name, minimum, maximum):
+    def __init__(self, name, minimum, maximum, unit_of_measurement):
         """Initialize the sensor."""
         self._name = name
         self._minimum = minimum
         self._maximum = maximum
+        self._unit_of_measurement = unit_of_measurement
         self._state = None
 
     @property
@@ -62,8 +66,13 @@ class RandomSensor(Entity):
 
     @property
     def icon(self):
-        """Icon to use in the frontend, if any."""
+        """Return the icon to use in the frontend, if any."""
         return ICON
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return self._unit_of_measurement
 
     @asyncio.coroutine
     def async_update(self):

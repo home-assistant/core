@@ -1,15 +1,4 @@
 config/*
-!config/home-assistant.conf.default
-
-# There is not a better solution afaik..
-!config/custom_components
-config/custom_components/*
-!config/custom_components/example.py
-!config/custom_components/hello_world.py
-!config/custom_components/mqtt_example.py
-!config/panels
-config/panels/*
-!config/panels/react.html
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
