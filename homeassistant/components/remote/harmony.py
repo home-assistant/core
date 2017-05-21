@@ -25,11 +25,12 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 5222
 DEVICES = []
+CONFIGS = []
 
 SERVICE_SYNC = 'harmony_sync'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Required(CONF_NAME): cv.string,
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(ATTR_ACTIVITY, default=None): cv.string,
@@ -46,29 +47,39 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     global DEVICES
 
     host = None
+    activity = None
+
     if discovery_info:
+        override = next(c for c in CONFIGS
+                        if c.get(CONF_NAME) == discovery_info.get(CONF_NAME))
+
+        port = DEFAULT_PORT
+        if override:
+            activity = override.get(ATTR_ACTIVITY)
+            port = override.get(CONF_PORT, DEFAULT_PORT)
         host = (
-            discovery_info['name'],
-            discovery_info['host'],
-            DEFAULT_PORT)
+            discovery_info.get(CONF_NAME),
+            discovery_info.get(CONF_HOST),
+            port)
 
         # Ignore hub name when checking if this hub is known - ip and port only
         if host and host[1:] in [h[1:] for h in DEVICES]:
             _LOGGER.debug("Discovered host already known: %s", host)
             return
-
     elif CONF_HOST in config:
         host = (
             config.get(CONF_NAME),
             config.get(CONF_HOST),
             config.get(CONF_PORT),
         )
+        activity = config.get(ATTR_ACTIVITY)
     else:
+        CONFIGS.append(config)
         return
 
     name, address, port = host
-    _LOGGER.info("Loading Harmony Platform: %s at %s:%s",
-                 name, address, port)
+    _LOGGER.info("Loading Harmony Platform: %s at %s:%s, startup activity: %s",
+                 name, address, port, activity)
     try:
         _LOGGER.debug("Calling pyharmony.ha_get_token for remote at: %s:%s",
                       address, port)
@@ -82,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         '{}{}{}'.format('harmony_', slugify(name), '.conf'))
     device = HarmonyRemote(
         name, address, port,
-        config.get(ATTR_ACTIVITY), harmony_conf_file, token)
+        activity, harmony_conf_file, token)
 
     DEVICES.append(device)
 
