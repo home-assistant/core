@@ -46,3 +46,6 @@ def test_get_device_mapping_mti_instance():
                     product_id='0005')
     value = MockValue(data=0, node=node, instance=1)
     assert workaround.get_device_mapping(value) == 'refresh_node_on_update'
+
+    value = MockValue(data=0, node=node, instance=2)
+    assert workaround.get_device_mapping(value) is None
