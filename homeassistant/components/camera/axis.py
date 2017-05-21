@@ -14,8 +14,8 @@ from homeassistant.components.camera.mjpeg import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['axis']
 DOMAIN = 'axis'
+DEPENDENCIES = [DOMAIN]
 
 
 def _get_image_url(host, mode):
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AxisCamera(MjpegCamera):
-    """Bla"""
+    """AxisCamera """
     def __init__(self, hass, config):
         """Initialize Axis Communications camera component."""
         super().__init__(hass, config)

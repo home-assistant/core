@@ -172,12 +172,9 @@ def setup(hass, base_config):
             # Device already registered, but on a different IP
             print(host, name, serialnumber)
             device = AXIS_DEVICES[serialnumber]
-            device._url = host
-            device._metadatastream.set_up_pipeline(device.metadata_url)
-            event = DOMAIN + '_' + AXIS_DEVICES[serialnumber].name
+            device.url = host
             if host != name:
-                print(host, name, 'is not same')
-                hass.bus.fire(event, {CONF_HOST: host})
+                hass.bus.fire(DOMAIN + '_' + device.name, {CONF_HOST: host})
 
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
@@ -193,10 +190,11 @@ def setup(hass, base_config):
     # Services to communicate with device.
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
-# {"name":"3","cgi":"param.cgi","action":"list","param":"Properties.Firmware.Version"}
+
     def vapix_service(call):
         """Service to send a message."""
-        for serial_number, device in AXIS_DEVICES.items():
+        # for serial_number, device in AXIS_DEVICES.items():
+        for _, device in AXIS_DEVICES.items():
             if device.name == call.data[CONF_NAME]:
                 response = device.do_request(call.data[SERVICE_CGI],
                                              call.data[SERVICE_ACTION],
@@ -370,4 +368,4 @@ REMAP = [{'type': 'motion',
           'class': 'input',
           'topic': 'tns1:Device/tnsaxis:IO/Port',
           'subscribe': 'onvif:Device/axis:IO/Port',
-          'platform': 'sensor'}, ]
+          'platform': 'binary_sensor'}, ]
