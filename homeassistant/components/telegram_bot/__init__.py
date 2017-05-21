@@ -479,19 +479,24 @@ class BaseTelegramBotEntity:
         self.hass = hass
 
     def _get_message_data(self, msg_data):
+        """Return boolean msg_data_is_ok and dict msg_data."""
         if not msg_data:
-            return None
-        bad_fields = (not hasattr(msg_data, 'text') and
-                      not hasattr(msg_data, 'data') and
-                      not hasattr(msg_data, 'chat'))
-        if (bad_fields or not hasattr(msg_data, 'from') or
-                msg_data['from'].get('id') not in self.allowed_chat_ids):
+            return False, None
+        bad_fields = ('text' not in msg_data and
+                      'data' not in msg_data and
+                      'chat' not in msg_data)
+        if bad_fields or 'from' not in msg_data:
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data (%s)",
                           msg_data)
-            return None
+            return False, None
+        if msg_data['from'].get('id') not in self.allowed_chat_ids \
+                or msg_data['chat'].get('id') not in self.allowed_chat_ids:
+            # Origin is not allowed.
+            _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
+            return True, None
 
-        return {
+        return True, {
             ATTR_USER_ID: msg_data['from']['id'],
             ATTR_CHAT_ID: msg_data['chat']['id'],
             ATTR_FROM_FIRST: msg_data['from']['first_name'],
@@ -503,9 +508,9 @@ class BaseTelegramBotEntity:
         if ATTR_MSG in data:
             event = EVENT_TELEGRAM_COMMAND
             data = data.get(ATTR_MSG)
-            event_data = self._get_message_data(data)
+            message_ok, event_data = self._get_message_data(data)
             if event_data is None:
-                return False
+                return message_ok
 
             if 'text' in data:
                 if data['text'][0] == '/':
@@ -526,9 +531,9 @@ class BaseTelegramBotEntity:
         elif ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get(ATTR_CALLBACK_QUERY)
-            event_data = self._get_message_data(data)
+            message_ok, event_data = self._get_message_data(data)
             if event_data is None:
-                return False
+                return message_ok
 
             event_data[ATTR_DATA] = data[ATTR_DATA]
             event_data[ATTR_MSG] = data[ATTR_MSG]
@@ -540,4 +545,4 @@ class BaseTelegramBotEntity:
         else:
             # Some other thing...
             _LOGGER.warning("SOME OTHER THING RECEIVED --> %s", data)
-            return False
+            return True
