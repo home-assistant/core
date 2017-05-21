@@ -38,6 +38,7 @@ ATTR_COMMAND = 'command'
 ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
 ATTR_MSG = 'message'
+ATTR_EDITED_MSG = 'edited_message'
 ATTR_CHAT_INSTANCE = 'chat_instance'
 ATTR_CHAT_ID = 'chat_id'
 ATTR_MSGID = 'id'
@@ -505,9 +506,12 @@ class BaseTelegramBotEntity:
 
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
-        if ATTR_MSG in data:
+        if ATTR_MSG in data or ATTR_EDITED_MSG in data:
             event = EVENT_TELEGRAM_COMMAND
-            data = data.get(ATTR_MSG)
+            if ATTR_MSG in data:
+                data = data.get(ATTR_MSG)
+            else:
+                data = data.get(ATTR_EDITED_MSG)
             message_ok, event_data = self._get_message_data(data)
             if event_data is None:
                 return message_ok
