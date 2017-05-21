@@ -178,6 +178,9 @@ omit =
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
+    homeassistant/components/velbus.py
+    homeassistant/components/*/velbus.py
+
     homeassistant/components/zha/__init__.py
     homeassistant/components/zha/const.py
     homeassistant/components/*/zha.py
