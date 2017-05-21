@@ -144,17 +144,17 @@ def test_setup_platform(hass, mock_openzwave):
     async_add_devices = MagicMock()
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, None)
+        hass, None, async_add_devices, None)
     assert not result
     assert not async_add_devices.called
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
     assert not result
     assert not async_add_devices.called
 
     result = yield from zwave.async_setup_platform(
-            hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
     assert result
     assert async_add_devices.called
     assert len(async_add_devices.mock_calls) == 1
@@ -1014,6 +1014,46 @@ class TestZWaveServices(unittest.TestCase):
         self.hass.block_till_done()
 
         assert value.data == 15
+
+    def test_reset_node_meters(self):
+        """Test zwave reset_node_meters service."""
+        value = MockValue(
+            instance=1,
+            index=8,
+            data=99.5,
+            command_class=const.COMMAND_CLASS_METER,
+        )
+        reset_value = MockValue(
+            instance=1,
+            index=33,
+            command_class=const.COMMAND_CLASS_METER,
+        )
+        node = MockNode(node_id=14)
+        node.values = {8: value, 33: reset_value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call('zwave', 'reset_node_meters', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_INSTANCE: 2,
+        })
+        self.hass.block_till_done()
+
+        assert not self.zwave_network.manager.pressButton.called
+        assert not self.zwave_network.manager.releaseButton.called
+
+        self.hass.services.call('zwave', 'reset_node_meters', {
+            const.ATTR_NODE_ID: 14,
+        })
+        self.hass.block_till_done()
+
+        assert self.zwave_network.manager.pressButton.called
+        value_id, = self.zwave_network.manager.pressButton.mock_calls.pop(0)[1]
+        assert value_id == reset_value.value_id
+        assert self.zwave_network.manager.releaseButton.called
+        value_id, = (
+            self.zwave_network.manager.releaseButton.mock_calls.pop(0)[1])
+        assert value_id == reset_value.value_id
 
     def test_add_association(self):
         """Test zwave change_association service."""
