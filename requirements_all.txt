@@ -689,6 +689,9 @@ python-telegram-bot==5.3.1
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
 
+# homeassistant.components.velbus
+python-velbus==2.0.6
+
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
 
