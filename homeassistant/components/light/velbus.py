@@ -3,10 +3,11 @@ Support for Velbus lights.
 
 For more details about this platform, please refer to the documentation at XXX
 """
-from homeassistant.components.light import Light
 import asyncio
 import logging
 import velbus
+
+from homeassistant.components.light import Light
 from homeassistant.components.velbus import (VELBUS_MESSAGE)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback

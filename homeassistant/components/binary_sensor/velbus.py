@@ -3,14 +3,13 @@ Support for Velbus switches.
 
 For more details about this platform, please refer to the documentation at XXX
 """
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.components.binary_sensor import BinarySensorDevice
-
 import asyncio
 import logging
 import velbus
 
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.velbus import (VELBUS_MESSAGE)
 
 _LOGGER = logging.getLogger(__name__)

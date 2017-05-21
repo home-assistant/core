@@ -30,9 +30,9 @@ CONFIG_MODULE = vol.Schema({
 })
 
 PLATFORM_SCHEMA = vol.Schema({
-        vol.Required('serial_port'): cv.string,
-        vol.Optional('lights'): vol.All(cv.ensure_list, [CONFIG_MODULE]),
-        vol.Optional('switches'): vol.All(cv.ensure_list, [CONFIG_MODULE])
+    vol.Required('serial_port'): cv.string,
+    vol.Optional('lights'): vol.All(cv.ensure_list, [CONFIG_MODULE]),
+    vol.Optional('switches'): vol.All(cv.ensure_list, [CONFIG_MODULE])
 })
 
 
@@ -47,14 +47,16 @@ def async_setup(hass, config):  # noqa: D401
     hass.data['VelbusController'] = controller
 
     @callback
-    def stop_velbus(event):
+    def stop_velbus(event):  # noqa: D401
+        """Callback to disconnect from serial port."""
         _LOGGER.debug("Shutting down ")
         connection.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_velbus)
 
     @callback
-    def handle_message(message):
+    def handle_message(message):  # noqa: D401
+        """Callback to dispatch Velbus message on event bus."""
         async_dispatcher_send(hass, VELBUS_MESSAGE, message)
 
     controller.subscribe(handle_message)
