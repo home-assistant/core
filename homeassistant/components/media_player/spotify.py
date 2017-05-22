@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_SECRET): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_CACHE_PATH): cv.string,
-    vol.Optional(CONF_ALIASES, {}): { cv.string: cv.string }
+    vol.Optional(CONF_ALIASES, {}): {cv.string: cv.string}
 })
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -160,15 +160,15 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         # Available devices
         devices = self._player.devices().get('devices')
         if devices is not None:
-            current_device_keys = self._devices.keys()
+            old_devices = self._devices
             self._devices = {self._aliases.get(device.get('id'),
                                                device.get('name')):
-                                    device.get('id')
+                             device.get('id')
                              for device in devices}
-            device_diff = {name:id for name, id in self._devices.items()
+            device_diff = {name: id for name, id in self._devices.items()
                            if old_devices.get(name, None) is None}
             if len(device_diff) > 0:
-              _LOGGER.info("New Devices: %s", str(device_diff))
+                _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
         if current is None:
