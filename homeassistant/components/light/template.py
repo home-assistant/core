@@ -192,7 +192,7 @@ class LightTemplate(Light):
             except TemplateError as ex:
                 _LOGGER.error(ex)
                 self._state = None
-            
+
             if state in _VALID_STATES:
                 self._state = state in ('true', STATE_ON)
             else:
@@ -206,7 +206,7 @@ class LightTemplate(Light):
                 brightness = self._level_template.async_render()
             except TemplateError as ex:
                 _LOGGER.error(ex)
-                self._state = None    
+                self._state = None
 
             if 0 <= brightness <= 255:
                 self._brightness = brightness
