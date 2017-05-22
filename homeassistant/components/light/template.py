@@ -66,12 +66,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = []
 
         if state_template is not None:
-            template_entity_ids = list(set(entity_ids) &
-                                       set(state_template.extract_entities()))
+            temp_ids = state_template.extract_entities()
+            template_entity_ids = list(set(template_entity_ids) |
+                                       set(temp_ids))
 
         if level_template is not None:
-            template_entity_ids = list(set(entity_ids) &
-                                       set(level_template.extract_entities()))
+            temp_ids = level_template.extract_entities()
+            template_entity_ids = list(set(template_entity_ids) |
+                                       set(temp_ids))
 
         entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
@@ -149,6 +151,7 @@ class LightTemplate(Light):
         @callback
         def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
+            _LOGGER.error("state change")
             self.hass.async_add_job(self.async_update_ha_state())
 
         @callback
@@ -201,6 +204,7 @@ class LightTemplate(Light):
                     'Expected: %s',
                     state, ', '.join(_VALID_STATES))
                 self._state = None
+
         if self._level_template is not None:
             try:
                 brightness = self._level_template.async_render()
