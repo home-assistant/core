@@ -385,6 +385,48 @@ class TestTemplateLight:
 
         assert len(self.calls) == 1
 
+    def test_on_action_optimistic(self):
+        """Test on action with optimistic state."""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'turn_on': {
+                            'service': 'test.automation',
+                        },
+                        'turn_off': {
+                            'service': 'light.turn_off',
+                            'entity_id': 'light.test_state'
+                        },
+                        'set_level': {
+                            'service': 'light.turn_on',
+                            'data_template': {
+                                'entity_id': 'light.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        self.hass.states.set('light.test_state', STATE_OFF)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.state == STATE_OFF
+
+        core.light.turn_on(self.hass, 'light.test_template_light')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert len(self.calls) == 1
+        assert state.state == STATE_ON
+
     def test_off_action(self):
         """Test off action."""
         assert setup.setup_component(self.hass, 'light', {
@@ -425,6 +467,45 @@ class TestTemplateLight:
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
+
+    def test_off_action_optimistic(self):
+        """Test off action with optimistic state."""
+        assert setup.setup_component(self.hass, 'light', {
+            'light': {
+                'platform': 'template',
+                'lights': {
+                    'test_template_light': {
+                        'turn_on': {
+                            'service': 'light.turn_on',
+                            'entity_id': 'light.test_state'
+                        },
+                        'turn_off': {
+                            'service': 'test.automation',
+                        },
+                        'set_level': {
+                            'service': 'light.turn_on',
+                            'data_template': {
+                                'entity_id': 'light.test_state',
+                                'brightness': '{{brightness}}'
+                            }
+                        }
+                    }
+                }
+            }
+        })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('light.test_template_light')
+        assert state.state == STATE_OFF
+
+        core.light.turn_off(self.hass, 'light.test_template_light')
+        self.hass.block_till_done()
+
+        assert len(self.calls) == 1
+        state = self.hass.states.get('light.test_template_light')
+        assert state.state == STATE_OFF
 
     def test_level_action_no_template(self):
         """Test setting brightness with optimistic template."""
