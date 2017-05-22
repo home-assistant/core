@@ -48,6 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_LIGHTS): vol.Schema({cv.slug: LIGHT_SCHEMA}),
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Template Lights."""
