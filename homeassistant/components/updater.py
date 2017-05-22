@@ -32,6 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_RELEASE_NOTES = 'release_notes'
 
 CONF_REPORTING = 'reporting'
+CONF_COMPONENT_REPORTING = 'share_components_info'
 
 DOMAIN = 'updater'
 
@@ -41,7 +42,8 @@ UPDATER_URL = 'https://updater.home-assistant.io/'
 UPDATER_UUID_FILE = '.uuid'
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {
-    vol.Optional(CONF_REPORTING, default=True): cv.boolean
+    vol.Optional(CONF_REPORTING, default=True): cv.boolean,
+    vol.Optional(CONF_COMPONENT_REPORTING, default=False): cv.boolean,
 }}, extra=vol.ALLOW_EXTRA)
 
 RESPONSE_SCHEMA = vol.Schema({
@@ -86,7 +88,7 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def check_new_version(now):
         """Check if a new version is available and report if one is."""
-        result = yield from get_newest_version(hass, huuid)
+        result = yield from get_newest_version(hass, huuid, config)
 
         if result is None:
             return
@@ -116,7 +118,7 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def get_system_info(hass):
+def get_system_info(hass, config):
     """Return info about the system."""
     info_object = {
         'arch': platform.machine(),
@@ -128,6 +130,9 @@ def get_system_info(hass):
         'version': CURRENT_VERSION,
         'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
     }
+
+    if config.get(CONF_COMPONENT_REPORTING):
+        info_object['components'] = list(hass.config.components)
 
     if platform.system() == 'Windows':
         info_object['os_version'] = platform.win32_ver()[0]
@@ -147,10 +152,10 @@ def get_system_info(hass):
 
 
 @asyncio.coroutine
-def get_newest_version(hass, huuid):
+def get_newest_version(hass, huuid, config):
     """Get the newest Home Assistant version."""
     if huuid:
-        info_object = yield from get_system_info(hass)
+        info_object = yield from get_system_info(hass, config)
         info_object['huuid'] = huuid
     else:
         info_object = {}
