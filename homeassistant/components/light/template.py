@@ -67,13 +67,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         if state_template is not None:
             temp_ids = state_template.extract_entities()
-            template_entity_ids = list(set(template_entity_ids) |
-                                       set(temp_ids))
+            if (str(temp_ids) != '*'):
+                template_entity_ids = list(set(template_entity_ids) |
+                                           set(temp_ids))
 
         if level_template is not None:
             temp_ids = level_template.extract_entities()
-            template_entity_ids = list(set(template_entity_ids) |
-                                       set(temp_ids))
+            if (str(temp_ids) != '*'):
+                template_entity_ids = list(set(template_entity_ids) |
+                                           set(temp_ids))
 
         entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
@@ -112,6 +114,7 @@ class LightTemplate(Light):
         self._state = False
         self._brightness = None
         self._entities = entity_ids
+        self._entities.append(self.entity_id)
 
         if self._template is not None:
             self._template.hass = self.hass
@@ -151,8 +154,11 @@ class LightTemplate(Light):
         @callback
         def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
-            _LOGGER.error("state change")
-            self.hass.async_add_job(self.async_update_ha_state())
+            # Determine need to evaluate template before returning.
+            yieldForRender = (self._template is not None or
+                              self._level_template is not None)
+            self.hass.async_add_job(
+                self.async_update_ha_state(yieldForRender))
 
         @callback
         def template_light_startup(event):
@@ -160,7 +166,11 @@ class LightTemplate(Light):
             async_track_state_change(
                 self.hass, self._entities, template_light_state_listener)
 
-            self.hass.async_add_job(self.async_update_ha_state())
+            # Determine need to evaluate template before returning.
+            yieldForRender = (self._template is not None or
+                              self._level_template is not None)
+            self.hass.async_add_job(
+                self.async_update_ha_state(yieldForRender))
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_light_startup)
@@ -169,15 +179,19 @@ class LightTemplate(Light):
     def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
             self.hass.async_add_job(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
-        elif ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
         else:
             self.hass.async_add_job(self._on_script.async_run())
+
+        # set optimistic states
         if self._template is None:
             self._state = True
+
+        if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
+            _LOGGER.info("Optimistically setting brightness to %s",
+                         kwargs[ATTR_BRIGHTNESS])
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
@@ -212,7 +226,7 @@ class LightTemplate(Light):
                 _LOGGER.error(ex)
                 self._state = None
 
-            if 0 <= brightness <= 255:
+            if 0 <= int(brightness) <= 255:
                 self._brightness = brightness
             else:
                 _LOGGER.error(
