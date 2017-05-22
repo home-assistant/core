@@ -17,7 +17,8 @@ from homeassistant.components.mqtt import CONF_STATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>[a-zA-Z0-9_-]+)/config')
+    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>[a-zA-Z0-9_-]+)'
+    '/config')
 
 SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor', 'switch']
 
