@@ -59,8 +59,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass, 'Error: {}<br />'
             'You will need to restart hass after fixing.'
             ''.format(ex),
-             title=NOTIFICATION_TITLE,
-             notification_id=NOTIFICATION_ID)
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
         return False
 
 
