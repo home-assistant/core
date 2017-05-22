@@ -106,7 +106,8 @@ def test_disable_reporting(hass, mock_get_uuid, mock_get_newest_version):
 @asyncio.coroutine
 def test_enabled_component_info(hass, mock_get_uuid):
     """Test if new entity is created if new version is available."""
-    with patch('homeassistant.components.updater.platform.system', Mock(return_value="junk")):
+    with patch('homeassistant.components.updater.platform.system',
+               Mock(return_value="junk")):
         res = yield from updater.get_system_info(hass, True)
         assert 'components' in res, 'Updater failed to generate component list'
 
@@ -114,9 +115,10 @@ def test_enabled_component_info(hass, mock_get_uuid):
 @asyncio.coroutine
 def test_disable_component_info(hass, mock_get_uuid):
     """Test if new entity is created if new version is available."""
-    with patch('homeassistant.components.updater.platform.system', Mock(return_value="junk")):
+    with patch('homeassistant.components.updater.platform.system',
+               Mock(return_value="junk")):
         res = yield from updater.get_system_info(hass, False)
-        assert 'components' not in res, 'Updater failed to NOT generate component list'
+        assert 'components' not in res, 'Updater failed, components generate'
 
 
 @asyncio.coroutine

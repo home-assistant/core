@@ -90,7 +90,7 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def check_new_version(now):
         """Check if a new version is available and report if one is."""
-        result = yield from get_newest_version(hass, huuid, 
+        result = yield from get_newest_version(hass, huuid,
                                                include_components)
 
         if result is None:
@@ -136,8 +136,6 @@ def get_system_info(hass, include_components):
 
     if include_components:
         info_object['components'] = list(hass.config.components)
-    #info_object['components'] = list(hass.config.components)
-
 
     if platform.system() == 'Windows':
         info_object['os_version'] = platform.win32_ver()[0]
