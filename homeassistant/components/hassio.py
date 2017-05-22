@@ -16,7 +16,7 @@ from aiohttp.hdrs import CONTENT_TYPE
 import async_timeout
 
 from homeassistant.const import CONTENT_TYPE_TEXT_PLAIN
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.components.frontend import register_built_in_panel
 
@@ -139,7 +139,7 @@ class HassIOView(HomeAssistantView):
 
     name = "api:hassio"
     url = "/api/hassio/{path:.+}"
-    requires_auth = True
+    requires_auth = False
 
     def __init__(self, hassio):
         """Initialize a hassio base view."""
@@ -148,6 +148,9 @@ class HassIOView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, request, path):
         """Route data to hassio."""
+        if path != 'panel' and not request[KEY_AUTHENTICATED]:
+            return web.Response(status=401)
+
         client = yield from self.hassio.command_proxy(path, request)
 
         data = yield from client.read()
