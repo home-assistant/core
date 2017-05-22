@@ -521,7 +521,7 @@ pydroid-ipcam==0.8
 pyebox==0.1.0
 
 # homeassistant.components.eight_sleep
-pyeight==0.0.5
+pyeight==0.0.6
 
 # homeassistant.components.media_player.emby
 pyemby==1.2
