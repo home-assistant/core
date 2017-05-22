@@ -74,5 +74,6 @@ class TestPersistentNotification:
 
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 1
         pn.dismiss(self.hass, notification_id='Beer 2')
+        self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
