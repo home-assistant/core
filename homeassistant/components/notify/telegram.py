@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET,
     PLATFORM_SCHEMA, BaseNotificationService)
@@ -27,7 +26,7 @@ ATTR_DOCUMENT = 'document'
 CONF_CHAT_ID = 'chat_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_CHAT_ID): cv.positive_int,
+    vol.Required(CONF_CHAT_ID): vol.Coerce(int),
 })
 
 
