@@ -463,11 +463,10 @@ class TestTemplateLight:
             self.hass, 'light.test_template_light', **{ATTR_BRIGHTNESS: 124})
         self.hass.block_till_done()
         assert len(self.calls) == 1
-        state = self.hass.states.get('light.test_template_light')
         assert self.calls[0].data['brightness'] == '124'
 
-        # need to add assertions about optimistic state
         state = self.hass.states.get('light.test_template_light')
+        _LOGGER.info(str(state.attributes))
         assert state is not None
         assert state.attributes.get('brightness') == 124
 
