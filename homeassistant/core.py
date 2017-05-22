@@ -723,6 +723,7 @@ class StateMachine(object):
         same_attr = is_existing and old_state.attributes == attributes
 
         if same_state and same_attr:
+            old_state.last_updated = dt_util.utcnow()
             return
 
         last_changed = old_state.last_changed if same_state else None
