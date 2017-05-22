@@ -85,10 +85,13 @@ def async_setup(hass, config):
     else:
         huuid = None
 
+    include_components = config.get(CONF_COMPONENT_REPORTING)
+
     @asyncio.coroutine
     def check_new_version(now):
         """Check if a new version is available and report if one is."""
-        result = yield from get_newest_version(hass, huuid, config)
+        result = yield from get_newest_version(hass, huuid, 
+                                               include_components)
 
         if result is None:
             return
@@ -118,7 +121,7 @@ def async_setup(hass, config):
 
 
 @asyncio.coroutine
-def get_system_info(hass, config):
+def get_system_info(hass, include_components):
     """Return info about the system."""
     info_object = {
         'arch': platform.machine(),
@@ -131,8 +134,10 @@ def get_system_info(hass, config):
         'virtualenv': os.environ.get('VIRTUAL_ENV') is not None,
     }
 
-    if config.get(CONF_COMPONENT_REPORTING):
+    if include_components:
         info_object['components'] = list(hass.config.components)
+    #info_object['components'] = list(hass.config.components)
+
 
     if platform.system() == 'Windows':
         info_object['os_version'] = platform.win32_ver()[0]
@@ -152,10 +157,10 @@ def get_system_info(hass, config):
 
 
 @asyncio.coroutine
-def get_newest_version(hass, huuid, config):
+def get_newest_version(hass, huuid, include_components):
     """Get the newest Home Assistant version."""
     if huuid:
-        info_object = yield from get_system_info(hass, config)
+        info_object = yield from get_system_info(hass, include_components)
         info_object['huuid'] = huuid
     else:
         info_object = {}
