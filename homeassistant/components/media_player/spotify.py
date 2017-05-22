@@ -120,7 +120,7 @@ class SpotifyAuthCallbackView(HomeAssistantView):
 class SpotifyMediaPlayer(MediaPlayerDevice):
     """Representation of a Spotify controller."""
 
-    def __init__(self, oauth, name, aliases={}):
+    def __init__(self, oauth, name, aliases):
         """Initialize."""
         self._name = name
         self._oauth = oauth
