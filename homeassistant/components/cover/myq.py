@@ -18,7 +18,7 @@ REQUIREMENTS = [
     'https://github.com/arraylabs/pymyq/archive/v0.0.8.zip'
     '#pymyq==0.0.8']
 
-_LOGGER = logging.get_LOGGER(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 DEFAULT_ENTITY_NAMESPACE = 'myq'
 DEFAULT_NAME = 'myq'
