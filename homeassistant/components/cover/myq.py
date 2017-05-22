@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
         return True
 
-    except (TypeError, KeyError, NameError) as ex:
+    except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         persistent_notification.create(
             hass, 'Error: {}<br />'
