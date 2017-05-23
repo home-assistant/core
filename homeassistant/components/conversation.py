@@ -17,6 +17,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import script
 from homeassistant.helpers.typing import HomeAssistantType
 
+from fuzzywuzzy import process as fuzzyExtract
+
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
 
 ATTR_TEXT = 'text'
@@ -37,34 +39,28 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: cv.ensure_list(vol.Schema({
     vol.Required('action'): cv.SCRIPT_SCHEMA,
 }))}, extra=vol.ALLOW_EXTRA)
 
-class VoiceSkill(script.Script):
-    def __init__(
-            self,
-            hass: HomeAssistantType,
-            config: dict
-        ) -> None:
-        self.keywords = config['keywords']
-        super().__init__(hass, config['action'], config['alias'])
-
 
 def setup(hass, config):
     """Register the process service."""
     warnings.filterwarnings('ignore', module='fuzzywuzzy')
-    from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
     config = config['conversation']
 
-    script_objs = [VoiceSkill(hass, c) for c in config]
+    choices = {tuple(c['keywords']): script.Script(
+        hass,
+        c['action'],
+        c['alias'],)
+            for c in config}
 
 
     def process(service):
         """Parse text into commands."""
-        for script in script_objs:
-            if set(service.data[ATTR_TEXT].split()).intersection(
-                    set(script.keywords)
-                ):
-                script.run()
+
+        text = service.data[ATTR_TEXT]
+        match = fuzzyExtract.extractOne(text, choices.keys())
+        if match[1] > 60:  # arbitrary value
+            choices[match[0]].run()  # run respective script
 
         return
         text = service.data[ATTR_TEXT]
