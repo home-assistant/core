@@ -279,12 +279,15 @@ class _Connection:
 
     @property
     def connected(self):
+        """Return connection state."""
         return self._connected
 
     def connect(self):
+        """Mark currenct connection state as connected."""
         self._connected = True
 
     def disconnect(self):
+        """Mark current connection state as disconnected."""
         self._connected = False
 
 
@@ -380,6 +383,7 @@ class TelnetConnection(_Connection):
         self._username = username
         self._password = password
         self._ap = ap
+        self._prompt_string = None
 
     def get_result(self):
         """Retrieve a single AsusWrtResult through a Telnet connection.
@@ -431,11 +435,11 @@ class TelnetConnection(_Connection):
 
     def connect(self):
         """Connect to the ASUS-WRT Telnet server."""
-        self._telnet = telnetlib.Telnet(self.host)
+        self._telnet = telnetlib.Telnet(self._host)
         self._telnet.read_until(b'login: ')
-        self._telnet.write((self.username + '\n').encode('ascii'))
+        self._telnet.write((self._username + '\n').encode('ascii'))
         self._telnet.read_until(b'Password: ')
-        self._telnet.write((self.password + '\n').encode('ascii'))
+        self._telnet.write((self._password + '\n').encode('ascii'))
         self._prompt_string = self._telnet.read_until(b'#').split(b'\n')[-1]
 
         super(TelnetConnection, self).connect()
@@ -443,8 +447,8 @@ class TelnetConnection(_Connection):
     def disconnect(self):
         """Disconnect the current Telnet connection."""
         try:
-            self._ssh.logout()
-        except:
+            self._telnet.write('exit\n'.encode('ascii'))
+        except Exception:
             pass
 
         super(TelnetConnection, self).disconnect()
