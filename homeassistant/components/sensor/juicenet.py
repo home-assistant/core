@@ -33,8 +33,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for device in api.get_devices():
         _id = device.id()
-        if _id not in hass.data[DOMAIN]['unique_ids']:
-            for variable in SENSOR_TYPES:
+        for variable in SENSOR_TYPES:
+            if "{}-{}".format(_id, variable) not in hass.data[DOMAIN]['unique_ids']:
                 dev.append(JuicenetSensorDevice(device, variable, hass))
 
     add_devices(dev)
