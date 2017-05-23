@@ -67,14 +67,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if state_template is not None:
             temp_ids = state_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
-                template_entity_ids = list(set(template_entity_ids) |
-                                           set(temp_ids))
+                template_entity_ids |= set(temp_ids)
 
         if level_template is not None:
             temp_ids = level_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
-                template_entity_ids = list(set(template_entity_ids) |
-                                           set(temp_ids))
+                template_entity_ids |= set(temp_ids)
+
+        if not template_entity_ids:
+            template_entity_ids = MATCH_ALL
 
         entity_ids = device_config.get(CONF_ENTITY_ID, template_entity_ids)
 
@@ -152,16 +153,15 @@ class LightTemplate(Light):
         @callback
         def template_light_state_listener(entity, old_state, new_state):
             """Handle target device state changes."""
-            if (
-                self._template is not None or
-                    self._level_template is not None):
-                self.hass.async_add_job(self.async_update_ha_state(True))
+            self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
         def template_light_startup(event):
             """Update template on startup."""
-            async_track_state_change(
-                self.hass, self._entities, template_light_state_listener)
+            if (self._template is not None or
+                    self._level_template is not None):
+                async_track_state_change(
+                    self.hass, self._entities, template_light_state_listener)
 
             self.hass.async_add_job(self.async_update_ha_state(True))
 
@@ -198,7 +198,7 @@ class LightTemplate(Light):
         self.hass.async_add_job(self._off_script.async_run())
         if self._template is None:
             self._state = False
-        self.hass.async_add_job(self.async_update_ha_state())
+            self.hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine
     def async_update(self):
