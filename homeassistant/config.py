@@ -36,6 +36,10 @@ VERSION_FILE = '.HA_VERSION'
 CONFIG_DIR_NAME = '.homeassistant'
 DATA_CUSTOMIZE = 'hass_customize'
 
+FILE_MIGRATION = [
+    ["ios.conf", ".ios.conf"],
+    ]
+
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
@@ -291,6 +295,12 @@ def process_ha_config_upgrade(hass):
 
     with open(version_path, 'wt') as outp:
         outp.write(__version__)
+
+    _LOGGER.info('Migrating old system config files to new locations')
+    for mfile in FILE_MIGRATION:
+        if os.path.isfile(hass.config.path(mfile[0])):
+            _LOGGER.info('Migrating %s to %s', mfile[0], mfile[1])
+            os.rename(hass.config.path(mfile[0]), hass.config.path(mfile[1]))
 
 
 @callback
