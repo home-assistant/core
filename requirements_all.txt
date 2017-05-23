@@ -784,7 +784,7 @@ sleepyq==0.6
 snapcast==1.2.2
 
 # homeassistant.components.climate.honeywell
-somecomfort==0.4.1
+somecomfort==0.5.0
 
 # homeassistant.components.sensor.speedtest
 speedtest-cli==1.0.6

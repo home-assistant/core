@@ -1,6 +1,5 @@
 """
 Support for Honeywell Round Connected and Honeywell Evohome thermostats.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.honeywell/
 """
@@ -20,7 +19,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['evohomeclient==0.2.5',
-                'somecomfort==0.4.1']
+                'somecomfort==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +118,7 @@ class RoundThermostat(ClimateDevice):
         """Initialize the thermostat."""
         self.device = device
         self._current_temperature = None
+        self._current_humidity = None
         self._target_temperature = None
         self._name = 'round connected'
         self._id = zone_id
@@ -142,6 +142,11 @@ class RoundThermostat(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         return self._current_temperature
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._current_humidity
 
     @property
     def target_temperature(self):
@@ -174,7 +179,6 @@ class RoundThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on.
-
         Honeywell does have a proprietary away mode, but it doesn't really work
         the way it should. For example: If you set a temperature manually
         it doesn't get overwritten when away mode is switched on.
@@ -202,6 +206,7 @@ class RoundThermostat(ClimateDevice):
             return
 
         self._current_temperature = data['temp']
+        self._current_temperature = data['humidity']
         self._target_temperature = data['setpoint']
         if data['thermostat'] == 'DOMESTIC_HOT_WATER':
             self._name = 'Hot Water'
@@ -245,6 +250,11 @@ class HoneywellUSThermostat(ClimateDevice):
     def current_temperature(self):
         """Return the current temperature."""
         return self._device.current_temperature
+
+    @property
+    def current_humidity(self):
+        """Return the current humidity."""
+        return self._device.current_humidity
 
     @property
     def target_temperature(self):
@@ -310,7 +320,6 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away on.
-
         Somecomfort does have a proprietary away mode, but it doesn't really
         work the way it should. For example: If you set a temperature manually
         it doesn't get overwritten when away mode is switched on.
@@ -373,7 +382,6 @@ class HoneywellUSThermostat(ClimateDevice):
 
     def _retry(self):
         """Recreate a new somecomfort client.
-
         When we got an error, the best way to be sure that the next query
         will succeed, is to recreate a new somecomfort client.
         """
