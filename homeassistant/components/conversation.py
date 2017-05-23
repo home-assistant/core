@@ -53,7 +53,6 @@ def setup(hass, config):
         c['alias'],)
             for c in config}
 
-
     def process(service):
         """Parse text into commands."""
 
@@ -62,7 +61,7 @@ def setup(hass, config):
         scorelimit = 60  # arbitrary value
         logging.info(f'''matched up text {text} and found
                 {match[0] if match[1] > scorelimit else "nothing"}'''
-        )
+                    )
         if match[1] > scorelimit:
             choices[match[0]].run()  # run respective script
 
