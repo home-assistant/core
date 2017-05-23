@@ -303,7 +303,7 @@ class TestConfig(unittest.TestCase):
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
     def test_migrate_file_on_upgrade(self, mock_os, mock_shutil):
-        """Test miragte of config files on upgrade."""
+        """Test migrate of config files on upgrade."""
         ha_version = '0.7.0'
 
         mock_os.path.isdir = mock.Mock(return_value=True)
@@ -328,7 +328,7 @@ class TestConfig(unittest.TestCase):
     @mock.patch('homeassistant.config.shutil')
     @mock.patch('homeassistant.config.os')
     def test_migrate_no_file_on_upgrade(self, mock_os, mock_shutil):
-        """Test not mirgating confgi files on upgrade."""
+        """Test not migrating config files on upgrade."""
         ha_version = '0.7.0'
 
         mock_os.path.isdir = mock.Mock(return_value=True)
