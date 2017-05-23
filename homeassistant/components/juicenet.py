@@ -6,7 +6,6 @@ https://home-assistant.io/components/juicenet
 """
 
 import logging
-import time
 
 import voluptuous as vol
 
@@ -86,4 +85,5 @@ class JuicenetDevice(Entity):
 
     @property
     def unique_id(self):
+        """Return an unique ID."""
         return "{}-{}".format(self.device.id(), self.type)
