@@ -217,8 +217,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
         asuswrt.connection.get_result()
-        self.assertEqual(telnet.read_until.call_count, 5) # Login + data retrieval
-        self.assertEqual(telnet.write.call_count, 4) # Login + data retrieval
+        self.assertEqual(telnet.read_until.call_count, 5)
+        self.assertEqual(telnet.write.call_count, 4)
         self.assertEqual(
             telnet.read_until.call_args_list[0],
             mock.call(b'login: ')
