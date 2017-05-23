@@ -35,7 +35,7 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: cv.ensure_list(vol.Schema({
     vol.Required('alias'): cv.string,
-    vol.Required('keywords'): vol.All(cv.ensure_list, [str]),
+    vol.Required('keywords'): cv.string,
     vol.Required('action'): cv.SCRIPT_SCHEMA,
 }))}, extra=vol.ALLOW_EXTRA)
 
@@ -47,7 +47,7 @@ def setup(hass, config):
     logger = logging.getLogger(__name__)
     config = config['conversation']
 
-    choices = {tuple(c['keywords']): script.Script(
+    choices = {c['keywords']: script.Script(
         hass,
         c['action'],
         c['alias'],)
@@ -59,7 +59,11 @@ def setup(hass, config):
 
         text = service.data[ATTR_TEXT]
         match = fuzzyExtract.extractOne(text, choices.keys())
-        if match[1] > 60:  # arbitrary value
+        scorelimit = 60  # arbitrary value
+        logging.info(f'''matched up text {text} and found
+                {match[0] if match[1] > scorelimit else "nothing"}'''
+        )
+        if match[1] > scorelimit:
             choices[match[0]].run()  # run respective script
 
         return
