@@ -128,7 +128,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
             self.connection = SshConnection(self.host, self.port,
                                             self.username,
                                             self.password,
-                                            self.ssh_key)
+                                            self.ssh_key,
+                                            self.mode == "ap")
         else:
             if not self.password:
                 _LOGGER.error("No password specified")
@@ -137,7 +138,8 @@ class AsusWrtDeviceScanner(DeviceScanner):
 
             self.connection = TelnetConnection(self.host, self.port,
                                                self.username,
-                                               self.password)
+                                               self.password,
+                                               self.mode == "ap")
 
         self.lock = threading.Lock()
 
@@ -289,7 +291,7 @@ class _Connection:
 class SshConnection(_Connection):
     """Maintains an SSH connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password, ssh_key):
+    def __init__(self, host, port, username, password, ssh_key, ap):
         """Initialize the SSH connection properties."""
         from pexpect import pxssh
 
@@ -301,6 +303,7 @@ class SshConnection(_Connection):
         self._username = username
         self._password = password
         self._ssh_key = ssh_key
+        self._ap = ap
 
     def get_result(self):
         """Retrieve a single AsusWrtResult through an SSH connection.
@@ -311,12 +314,12 @@ class SshConnection(_Connection):
         from pexpect import pxssh, exceptions
 
         try:
-            if not self._connected:
+            if not self.connected:
                 self.connect()
             self._ssh.sendline(_IP_NEIGH_CMD)
             self._ssh.prompt()
             neighbors = self._ssh.before.split(b'\n')[1:-1]
-            if self.mode == 'ap':
+            if self._ap:
                 self._ssh.sendline(_ARP_CMD)
                 self._ssh.prompt()
                 arp_result = self._ssh.before.split(b'\n')[1:-1]
@@ -349,7 +352,7 @@ class SshConnection(_Connection):
                         username=self._username, password=self._password,
                         ssh_key=self._ssh_key)
 
-        super(SshConnection, self)._connect()
+        super(SshConnection, self).connect()
 
     def disconnect(self):
         """Disconnect the current SSH connection."""
@@ -358,13 +361,13 @@ class SshConnection(_Connection):
         except:
             pass
 
-        super(SshConnection, self)._disconnect()
+        super(SshConnection, self).disconnect()
 
 
-class TelnetConnection:
+class TelnetConnection(_Connection):
     """Maintains a Telnet connection to an ASUS-WRT router."""
 
-    def __init__(self, host, port, username, password):
+    def __init__(self, host, port, username, password, ap):
         """Initialize the Telnet connection properties."""
         super(TelnetConnection, self).__init__()
 
@@ -373,6 +376,7 @@ class TelnetConnection:
         self._port = port
         self._username = username
         self._password = password
+        self._ap = ap
 
     def get_result(self):
         """Retrieve a single AsusWrtResult through a Telnet connection.
@@ -381,13 +385,13 @@ class TelnetConnection:
         use the existing connection.
         """
         try:
-            if not self._connected:
+            if not self.connected:
                 self.connect()
 
             self._telnet.write('{}\n'.format(_IP_NEIGH_CMD).encode('ascii'))
             neighbors = (self._telnet.read_until(self._prompt_string).
                          split(b'\n')[1:-1])
-            if self.mode == 'ap':
+            if self._ap:
                 self._telnet.write('{}\n'.format(_ARP_CMD).encode('ascii'))
                 arp_result = (self._telnet.read_until(self._prompt_string).
                               split(b'\n')[1:-1])
@@ -431,7 +435,7 @@ class TelnetConnection:
         self._telnet.write((self.password + '\n').encode('ascii'))
         self._prompt_string = self._telnet.read_until(b'#').split(b'\n')[-1]
 
-        super(TelnetConnection, self)._connect()
+        super(TelnetConnection, self).connect()
 
     def disconnect(self):
         """Disconnect the current Telnet connection."""
@@ -440,4 +444,4 @@ class TelnetConnection:
         except:
             pass
 
-        super(TelnetConnection, self)._disconnect()
+        super(TelnetConnection, self).disconnect()
