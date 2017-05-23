@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
 
-DEFAULT_AWAY_TEMPERATURE = 14
 # # The default offeset is 2 hours (when you use the thermostat itself)
 DEFAULT_TIME_OFFSET = 7200
 # # Return cached results if last scan was less then this time ago
@@ -57,7 +56,7 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 class NetatmoThermostat(ClimateDevice):
     """Representation of a Netatmo thermostat."""
 
-    def __init__(self, data, module_name, away_temp=None):
+    def __init__(self, data, module_name):
         """Initialize the sensor."""
         self._data = data
         self._state = None
