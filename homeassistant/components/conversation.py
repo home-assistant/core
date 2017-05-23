@@ -53,7 +53,7 @@ def setup(hass, config):
         attrs['action'],
         name)
         for name, attrs in config.items()} or {'': lambda: None}
-            # Make sure choices isnt empty
+# Make sure choices isnt empty
 
     def process(service):
         """Parse text into commands."""
