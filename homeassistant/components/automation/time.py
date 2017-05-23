@@ -13,6 +13,7 @@ from homeassistant.const import CONF_AFTER, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 
+CONF_DAY = "date"
 CONF_HOURS = "hours"
 CONF_MINUTES = "minutes"
 CONF_SECONDS = "seconds"
@@ -21,16 +22,22 @@ _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.All(vol.Schema({
     vol.Required(CONF_PLATFORM): 'time',
+    CONF_DATE: cv.date,
     CONF_AFTER: cv.time,
     CONF_HOURS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_MINUTES: vol.Any(vol.Coerce(int), vol.Coerce(str)),
     CONF_SECONDS: vol.Any(vol.Coerce(int), vol.Coerce(str)),
-}), cv.has_at_least_one_key(CONF_HOURS, CONF_MINUTES,
+}), cv.has_at_least_one_key(CONF_DATE,CONF_HOURS, CONF_MINUTES,
                             CONF_SECONDS, CONF_AFTER))
 
 
 def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
+    bflag =0;
+    if CONF_DATE in config:
+        date = config.get(CONF_DATE)
+        years,months,days = date.year,date.month,date.day#v
+        bflag =1;
     if CONF_AFTER in config:
         after = config.get(CONF_AFTER)
         hours, minutes, seconds = after.hour, after.minute, after.second
@@ -48,6 +55,10 @@ def async_trigger(hass, config, action):
                 'now': now,
             },
         })
-
-    return async_track_time_change(hass, time_automation_listener,
+    if (bflag ==1):
+        return async_track_time_change(hass, time_automation_listener,year=years,month=months,day=days,
                                    hour=hours, minute=minutes, second=seconds)
+    else:
+        return async_track_time_change(hass, time_automation_listener,
+                                   hour=hours, minute=minutes, second=seconds)
+
