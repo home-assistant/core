@@ -131,11 +131,15 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 _LOGGER.error("No password or private key specified")
                 self.success_init = False
                 return
+
+            self.connection = self.ssh_connection()
         else:
             if not self.password:
                 _LOGGER.error("No password specified")
                 self.success_init = False
                 return
+
+            self.connection = self.telnet_connection()
 
         self.lock = threading.Lock()
 
@@ -186,101 +190,94 @@ class AsusWrtDeviceScanner(DeviceScanner):
         """Retrieve data from ASUSWRT via the ssh protocol."""
         from pexpect import pxssh, exceptions
 
-        ssh = pxssh.pxssh()
-        try:
-            ssh.login(self.host, self.username, **self.ssh_args)
-        except exceptions.EOF as err:
-            _LOGGER.error("Connection refused. SSH enabled?")
-            return None
-        except pxssh.ExceptionPxssh as err:
-            _LOGGER.error("Unable to connect via SSH: %s", str(err))
-            return None
+        while True:
+            ssh = pxssh.pxssh()
+            try:
+                ssh.login(self.host, self.username, **self.ssh_args)
+            except exceptions.EOF as err:
+                _LOGGER.error("Connection refused. SSH enabled?")
+                yield None
+                continue
+            except pxssh.ExceptionPxssh as err:
+                _LOGGER.error("Unable to connect via SSH: %s", str(err))
+                yield None
+                continue
 
-        try:
-            ssh.sendline(_IP_NEIGH_CMD)
-            ssh.prompt()
-            neighbors = ssh.before.split(b'\n')[1:-1]
-            if self.mode == 'ap':
-                ssh.sendline(_ARP_CMD)
-                ssh.prompt()
-                arp_result = ssh.before.split(b'\n')[1:-1]
-                ssh.sendline(_WL_CMD)
-                ssh.prompt()
-                leases_result = ssh.before.split(b'\n')[1:-1]
-                ssh.sendline(_NVRAM_CMD)
-                ssh.prompt()
-                nvram_result = ssh.before.split(b'\n')[1].split(b'<')[1:]
-            else:
-                arp_result = ['']
-                nvram_result = ['']
-                ssh.sendline(_LEASES_CMD)
-                ssh.prompt()
-                leases_result = ssh.before.split(b'\n')[1:-1]
-            ssh.logout()
-            return AsusWrtResult(neighbors, leases_result, arp_result,
-                                 nvram_result)
-        except pxssh.ExceptionPxssh as exc:
-            _LOGGER.error("Unexpected response from router: %s", exc)
-            return None
+            try:
+                while True:
+                    ssh.sendline(_IP_NEIGH_CMD)
+                    ssh.prompt()
+                    neighbors = ssh.before.split(b'\n')[1:-1]
+                    if self.mode == 'ap':
+                        ssh.sendline(_ARP_CMD)
+                        ssh.prompt()
+                        arp_result = ssh.before.split(b'\n')[1:-1]
+                        ssh.sendline(_WL_CMD)
+                        ssh.prompt()
+                        leases_result = ssh.before.split(b'\n')[1:-1]
+                        ssh.sendline(_NVRAM_CMD)
+                        ssh.prompt()
+                        nvram_result = ssh.before.split(b'\n')[1].split(b'<')[1:]
+                    else:
+                        arp_result = ['']
+                        nvram_result = ['']
+                        ssh.sendline(_LEASES_CMD)
+                        ssh.prompt()
+                        leases_result = ssh.before.split(b'\n')[1:-1]
+                    ssh.logout()
+                    yield AsusWrtResult(neighbors, leases_result, arp_result,
+                                         nvram_result)
+            except pxssh.ExceptionPxssh as exc:
+                _LOGGER.error("Unexpected response from router: %s", exc)
+                yield None
 
     def telnet_connection(self):
         """Retrieve data from ASUSWRT via the telnet protocol."""
-        try:
-            telnet = telnetlib.Telnet(self.host)
-            telnet.read_until(b'login: ')
-            telnet.write((self.username + '\n').encode('ascii'))
-            telnet.read_until(b'Password: ')
-            telnet.write((self.password + '\n').encode('ascii'))
-            prompt_string = telnet.read_until(b'#').split(b'\n')[-1]
-            telnet.write('{}\n'.format(_IP_NEIGH_CMD).encode('ascii'))
-            neighbors = telnet.read_until(prompt_string).split(b'\n')[1:-1]
-            if self.mode == 'ap':
-                telnet.write('{}\n'.format(_ARP_CMD).encode('ascii'))
-                arp_result = (telnet.read_until(prompt_string).
-                              split(b'\n')[1:-1])
-                telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
-                leases_result = (telnet.read_until(prompt_string).
-                                 split(b'\n')[1:-1])
-                telnet.write('{}\n'.format(_NVRAM_CMD).encode('ascii'))
-                nvram_result = (telnet.read_until(prompt_string).
-                                split(b'\n')[1].split(b'<')[1:])
-            else:
-                arp_result = ['']
-                nvram_result = ['']
-                telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
-                leases_result = (telnet.read_until(prompt_string).
-                                 split(b'\n')[1:-1])
-            telnet.write('exit\n'.encode('ascii'))
-            return AsusWrtResult(neighbors, leases_result, arp_result,
-                                 nvram_result)
-        except EOFError:
-            _LOGGER.error("Unexpected response from router")
-            return None
-        except ConnectionRefusedError:
-            _LOGGER.error("Connection refused by router. Telnet enabled?")
-            return None
-        except socket.gaierror as exc:
-            _LOGGER.error("Socket exception: %s", exc)
-            return None
-        except OSError as exc:
-            _LOGGER.error("OSError: %s", exc)
-            return None
+        while True:
+            try:
+                telnet = telnetlib.Telnet(self.host)
+                telnet.read_until(b'login: ')
+                telnet.write((self.username + '\n').encode('ascii'))
+                telnet.read_until(b'Password: ')
+                telnet.write((self.password + '\n').encode('ascii'))
+                prompt_string = telnet.read_until(b'#').split(b'\n')[-1]
+                while True:
+                    telnet.write('{}\n'.format(_IP_NEIGH_CMD).encode('ascii'))
+                    neighbors = telnet.read_until(prompt_string).split(b'\n')[1:-1]
+                    if self.mode == 'ap':
+                        telnet.write('{}\n'.format(_ARP_CMD).encode('ascii'))
+                        arp_result = (telnet.read_until(prompt_string).
+                                      split(b'\n')[1:-1])
+                        telnet.write('{}\n'.format(_WL_CMD).encode('ascii'))
+                        leases_result = (telnet.read_until(prompt_string).
+                                         split(b'\n')[1:-1])
+                        telnet.write('{}\n'.format(_NVRAM_CMD).encode('ascii'))
+                        nvram_result = (telnet.read_until(prompt_string).
+                                        split(b'\n')[1].split(b'<')[1:])
+                    else:
+                        arp_result = ['']
+                        nvram_result = ['']
+                        telnet.write('{}\n'.format(_LEASES_CMD).encode('ascii'))
+                        leases_result = (telnet.read_until(prompt_string).
+                                         split(b'\n')[1:-1])
+                    yield AsusWrtResult(neighbors, leases_result, arp_result,
+                                         nvram_result)
+            except EOFError:
+                _LOGGER.error("Unexpected response from router")
+                yield None
+            except ConnectionRefusedError:
+                _LOGGER.error("Connection refused by router. Telnet enabled?")
+                yield None
+            except socket.gaierror as exc:
+                _LOGGER.error("Socket exception: %s", exc)
+                yield None
+            except OSError as exc:
+                _LOGGER.error("OSError: %s", exc)
+                yield None
 
     def get_asuswrt_data(self):
         """Retrieve data from ASUSWRT and return parsed result."""
-        if self.protocol == 'ssh':
-            result = self.ssh_connection()
-        elif self.protocol == 'telnet':
-            result = self.telnet_connection()
-        else:
-            # autodetect protocol
-            result = self.ssh_connection()
-            if result:
-                self.protocol = 'ssh'
-            else:
-                result = self.telnet_connection()
-                if result:
-                    self.protocol = 'telnet'
+        result = next(self.connection)
 
         if not result:
             return {}
