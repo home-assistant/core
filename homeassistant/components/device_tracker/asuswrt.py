@@ -360,11 +360,12 @@ class SshConnection(_Connection):
 
         super(SshConnection, self).connect()
 
-    def disconnect(self):
+    def disconnect(self):   \
+            # pylint: disable=broad-except
         """Disconnect the current SSH connection."""
         try:
             self._ssh.logout()
-        except:
+        except Exception:
             pass
 
         super(SshConnection, self).disconnect()
@@ -444,7 +445,8 @@ class TelnetConnection(_Connection):
 
         super(TelnetConnection, self).connect()
 
-    def disconnect(self):
+    def disconnect(self):   \
+            # pylint: disable=broad-except
         """Disconnect the current Telnet connection."""
         try:
             self._telnet.write('exit\n'.encode('ascii'))
