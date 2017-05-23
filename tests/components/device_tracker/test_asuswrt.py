@@ -139,7 +139,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user', port=22, ssh_key=FAKEFILE)
+            mock.call(host='fake_host', username='fake_user',
+                      ssh_key=FAKEFILE, port=22)
         )
 
     def test_ssh_login_with_password(self):
@@ -164,7 +165,8 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user', password='fake_pass', port=22)
+            mock.call(host='fake_host', username='fake_user',
+                      password='fake_pass', port=22)
         )
 
     def test_ssh_login_without_password_or_pubkey(self):  \
