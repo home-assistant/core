@@ -160,7 +160,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
-        asuswrt.onnection.get_result()
+        asuswrt.connection.get_result()
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,

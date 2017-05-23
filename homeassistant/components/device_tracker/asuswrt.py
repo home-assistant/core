@@ -348,9 +348,12 @@ class SshConnection(_Connection):
 
     def connect(self):
         """Connect to the ASUS-WRT SSH server."""
-        self._ssh.login(host=self._host, port=self._port,
-                        username=self._username, password=self._password,
-                        ssh_key=self._ssh_key)
+        if self._ssh_key:
+            self._ssh.login(host=self._host, port=self._port,
+                            username=self._username, ssh_key=self._ssh_key)
+        else:
+            self._ssh.login(host=self._host, port=self._port,
+                            username=self._username, password=self._password)
 
         super(SshConnection, self).connect()
 
