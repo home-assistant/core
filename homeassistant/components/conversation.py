@@ -46,7 +46,8 @@ def setup(hass, config):
     warnings.filterwarnings('ignore', module='fuzzywuzzy')
 
     logger = logging.getLogger(__name__)
-    config = config['conversation']
+    config = config.get(DOMAIN, {})
+    # Right way to do this-- taken from updater.py
 
     choices = {attrs['keywords']: script.Script(
         hass,
