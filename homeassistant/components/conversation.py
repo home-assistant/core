@@ -14,6 +14,8 @@ from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import script
+from homeassistant.helpers.typing import HomeAssistantType
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
 
@@ -29,9 +31,20 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: cv.ensure_list(vol.Schema({
+    vol.Required('alias'): cv.string,
+    vol.Required('keywords'): vol.All(cv.ensure_list, [str]),
+    vol.Required('action'): cv.SCRIPT_SCHEMA,
+}))}, extra=vol.ALLOW_EXTRA)
+
+class VoiceSkill(script.Script):
+    def __init__(
+            self,
+            hass: HomeAssistantType,
+            config: dict
+        ) -> None:
+        self.keywords = config['keywords']
+        super().__init__(hass, config['action'], config['alias'])
 
 
 def setup(hass, config):
@@ -40,9 +53,20 @@ def setup(hass, config):
     from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
+    config = config['conversation']
+
+    script_objs = [VoiceSkill(hass, c) for c in config]
+
 
     def process(service):
         """Parse text into commands."""
+        for script in script_objs:
+            if set(service.data[ATTR_TEXT].split()).intersection(
+                    set(script.keywords)
+                ):
+                script.run()
+
+        return
         text = service.data[ATTR_TEXT]
         match = REGEX_TURN_COMMAND.match(text)
 
