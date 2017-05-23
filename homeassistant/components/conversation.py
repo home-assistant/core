@@ -15,7 +15,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import script
-from homeassistant.helpers.typing import HomeAssistantType
 
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
