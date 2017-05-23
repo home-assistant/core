@@ -26,6 +26,15 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(HUB_ADDRESS): cv.string,
 })
 
+SCENE_DATA = 'sceneData'
+ROOM_DATA = 'roomData'
+SCENE_NAME = 'name'
+ROOM_NAME = 'name'
+SCENE_ID = 'id'
+ROOM_ID = 'id'
+ROOM_ID_IN_SCENE = 'roomId'
+STATE_ATTRIBUTE_ROOM_NAME = 'roomName'
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -42,7 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if not _scenes or not _rooms:
         return
     pvscenes = (PowerViewScene(hass, _scene, _rooms, _hub)
-                for _scene in _scenes['sceneData'])
+                for _scene in _scenes[SCENE_DATA])
     async_add_devices(pvscenes)
 
 
@@ -54,17 +63,17 @@ class PowerViewScene(Scene):
         self.hub = hub
         self.hass = hass
         self._sync_room_data(room_data, scene_data)
-        self._name = scene_data['name']
-        self._scene_id = scene_data['id']
+        self._name = scene_data[SCENE_NAME]
+        self._scene_id = scene_data[SCENE_ID]
         self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, str(scene_data['id']), hass=hass)
+            ENTITY_ID_FORMAT, str(scene_data[SCENE_ID]), hass=hass)
 
     def _sync_room_data(self, room_data, scene_data):
         """Sync the room data."""
-        room = next((room for room in room_data['roomData']
-                     if room['id'] == scene_data['roomId']), {})
+        room = next((room for room in room_data[ROOM_DATA]
+                     if room[ROOM_ID] == scene_data[ROOM_ID_IN_SCENE]), {})
 
-        self._room_name = room.get('name', '')
+        self._room_name = room.get(ROOM_NAME, '')
 
     @property
     def name(self):
@@ -74,7 +83,7 @@ class PowerViewScene(Scene):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'roomName': self._room_name}
+        return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
     def icon(self):
