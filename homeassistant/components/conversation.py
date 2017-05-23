@@ -17,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import script
 from homeassistant.helpers.typing import HomeAssistantType
 
-from fuzzywuzzy import process as fuzzyExtract
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
 
@@ -43,6 +42,7 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
 
 def setup(hass, config):
     """Register the process service."""
+    from fuzzywuzzy import process as fuzzyExtract
     warnings.filterwarnings('ignore', module='fuzzywuzzy')
 
     logger = logging.getLogger(__name__)
