@@ -33,11 +33,12 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
 })
 
-CONFIG_SCHEMA = vol.Schema({DOMAIN: cv.ensure_list(vol.Schema({
-    vol.Required('alias'): cv.string,
-    vol.Required('keywords'): cv.string,
-    vol.Required('action'): cv.SCRIPT_SCHEMA,
-}))}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
+    cv.string: vol.Schema({
+        vol.Required('keywords'): cv.string,
+        vol.Required('action'): cv.SCRIPT_SCHEMA,
+    })
+})}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -47,11 +48,11 @@ def setup(hass, config):
     logger = logging.getLogger(__name__)
     config = config['conversation']
 
-    choices = {c['keywords']: script.Script(
+    choices = {attrs['keywords']: script.Script(
         hass,
-        c['action'],
-        c['alias'],)
-            for c in config}
+        attrs['action'],
+        name)
+            for name, attrs in config.items()}
 
     def process(service):
         """Parse text into commands."""
