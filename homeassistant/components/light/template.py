@@ -62,7 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         level_action = device_config[CONF_LEVEL_ACTION]
         level_template = device_config[CONF_LEVEL_TEMPLATE]
 
-        template_entity_ids = []
+        template_entity_ids = set()
 
         if state_template is not None:
             temp_ids = state_template.extract_entities()
