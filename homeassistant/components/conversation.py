@@ -52,7 +52,7 @@ def setup(hass, config):
         hass,
         attrs['action'],
         name)
-            for name, attrs in config.items()} or {lambda: None}
+        for name, attrs in config.items()} or {'': lambda: None}
             # Make sure choices isnt empty
 
     def process(service):
