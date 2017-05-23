@@ -48,7 +48,7 @@ def create(hass, message, title=None, notification_id=None):
     hass.add_job(async_create, hass, message, title, notification_id)
 
 
-def dismiss(hass, notification_id=None):
+def dismiss(hass, notification_id):
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
 
@@ -68,12 +68,12 @@ def async_create(hass, message, title=None, notification_id=None):
 
 
 @callback
-def async_dismiss(hass, notification_id=None):
+def async_dismiss(hass, notification_id):
     """Remove a notification."""
     data = {
         key: value for key, value in [
             (ATTR_NOTIFICATION_ID, notification_id),
-        ] if value is not None
+        ]
     }
 
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
@@ -117,12 +117,7 @@ def async_setup(hass, config):
     @callback
     def dismiss_service(call):
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
-
-        if notification_id is not None:
-            entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
-        else:
-            entity_id = async_generate_entity_id(
-                ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass)
+        entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
         hass.states.async_remove(entity_id)
 
