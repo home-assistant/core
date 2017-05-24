@@ -92,7 +92,7 @@ class RestNotificationService(BaseNotificationService):
 
         if self._data:
             data.update(self._data)
-        if self._data_template:
+        elif self._data_template:
             def _data_template_creator(value):
                 """Recursive template creator helper function."""
                 if isinstance(value, list):
@@ -102,9 +102,7 @@ class RestNotificationService(BaseNotificationService):
                             for key, item in value.items()}
                 value.hass = self._hass
                 return value.async_render(kwargs)
-            _LOGGER.info('Data Template; ' + str(self._data_template))
             data.update(_data_template_creator(self._data_template))
-
 
         if self._method == 'POST':
             response = requests.post(self._resource, data=data, timeout=10)
