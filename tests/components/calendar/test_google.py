@@ -1,5 +1,5 @@
 """The tests for the google calendar component."""
-# pylint: disable=protected-access
+# pylint: disable=protected-access,bad-continuation
 import logging
 import unittest
 from unittest.mock import patch
@@ -39,6 +39,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
 
         self.hass.stop()
 
+    # pylint: disable=no-member
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_event(self, mock_next_event):
         """Test that we can create an event trigger on device."""
@@ -86,13 +87,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None,
                                                  '', {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event['summary'],
             'all_day': True,
             'offset_reached': False,
@@ -145,13 +146,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event['summary'],
             'all_day': False,
             'offset_reached': False,
@@ -207,13 +208,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_ON)
+        self.assertEqual(cal.state, STATE_ON)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event['summary'],
             'all_day': False,
             'offset_reached': False,
@@ -270,13 +271,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertTrue(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event_summary,
             'all_day': False,
             'offset_reached': True,
@@ -288,6 +289,65 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'description': ''
         })
 
+    @patch('homeassistant.components.calendar.google.GoogleCalendarData')
+    def test_default_offset_in_progress_event(self, mock_next_event):
+        """Test that we can create an event trigger on device."""
+        middle_of_event = dt_util.now() \
+            + dt_util.dt.timedelta(minutes=45)
+        event_summary = 'Test Event in Progress'
+        event = {
+            'start': {
+                'dateTime': middle_of_event.isoformat()
+            },
+            'end': {
+                'dateTime': (middle_of_event + dt_util.dt
+                             .timedelta(minutes=60))
+                .isoformat()
+            },
+            'summary': '{} !!-30'.format(event_summary),
+            'reminders': {'useDefault': True},
+            'id': 'aioehgni435lihje',
+            'status': 'confirmed',
+            'updated': '2016-11-05T15:52:07.329Z',
+            'organizer': {
+                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
+                'displayName': 'Organizer Name',
+                'self': True,
+            },
+            'created': '2016-11-05T15:52:07.000Z',
+            'iCalUID': 'dsfohuygtfvgbhnuju@google.com',
+            'sequence': 0,
+            'creator': {
+                'email': 'uvrttabwegnui4gtia3vyqb@import.calendar.google.com',
+                'displayName': 'Organizer Name',
+            },
+            'etag': '"2956722254658000"',
+            'kind': 'calendar#event',
+            'htmlLink': 'https://www.google.com/calendar/event?eid=*******',
+        }
+
+        mock_next_event.return_value.event = event
+
+        device_name = 'Test Event in Progress'
+        device_id = 'test_event_in_progress'
+
+        # Combined effect of default offset and event offset is 60 minutes
+        # early, so "offset_reached" should be True
+        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
+                                                 {'name': device_name,
+                                                  'default_offset': '-30'})
+
+        self.assertTrue(cal.offset_reached())
+
+        # Combined effect of default offset and event offset is 40 minutes
+        # early, so "offset_reached" should be False
+        cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
+                                                 {'name': device_name,
+                                                  'default_offset': '-10'})
+
+        self.assertFalse(cal.offset_reached())
+
+    # pylint: disable=no-member
     @pytest.mark.skip
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
     def test_all_day_offset_in_progress_event(self, mock_next_event):
@@ -339,13 +399,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertTrue(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event_summary,
             'all_day': True,
             'offset_reached': True,
@@ -406,13 +466,13 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
         cal = calendar.GoogleCalendarEventDevice(self.hass, None, device_id,
                                                  {'name': device_name})
 
-        self.assertEquals(cal.name, device_name)
+        self.assertEqual(cal.name, device_name)
 
-        self.assertEquals(cal.state, STATE_OFF)
+        self.assertEqual(cal.state, STATE_OFF)
 
         self.assertFalse(cal.offset_reached())
 
-        self.assertEquals(cal.device_state_attributes, {
+        self.assertEqual(cal.device_state_attributes, {
             'message': event_summary,
             'all_day': True,
             'offset_reached': False,
