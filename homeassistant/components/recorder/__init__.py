@@ -250,6 +250,11 @@ class Recorder(threading.Thread):
                 self.queue.task_done()
                 continue
 
+            # Exclude event types
+            if event.event_type in self.exclude_t:
+                self.queue.task_done()
+                continue
+
             if ATTR_ENTITY_ID in event.data:
                 entity_id = event.data[ATTR_ENTITY_ID]
                 domain = split_entity_id(entity_id)[0]
@@ -270,23 +275,13 @@ class Recorder(threading.Thread):
                     self.queue.task_done()
                     continue
 
-            dbevent = None
-            dbstate = None
-            # Exclude event types
-            if event.event_type not in self.exclude_t:
+            with session_scope(session=self.get_session()) as session:
                 dbevent = Events.from_event(event)
+                session.add(dbevent)
+
                 if event.event_type == EVENT_STATE_CHANGED:
                     dbstate = States.from_event(event)
                     dbstate.event_id = dbevent.event_id
-
-            if dbevent is None and dbstate is None:
-                self.queue.task_done()
-                continue
-
-            with session_scope(session=self.get_session()) as session:
-                if dbevent is not None:
-                    session.add(dbevent)
-                if dbstate is not None:
                     session.add(dbstate)
 
             self.queue.task_done()
