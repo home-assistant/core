@@ -119,7 +119,7 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
-    
+
     @property
     def is_frostguard_mode_on(self):
         """Return true if frost-guard mode is on."""
