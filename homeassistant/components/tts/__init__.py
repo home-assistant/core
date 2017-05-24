@@ -102,7 +102,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
-        """Set up a tts platform."""
+        """Set up a TTS platform."""
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
         if platform is None:
@@ -454,29 +454,29 @@ class SpeechManager(object):
 
 
 class Provider(object):
-    """Represent a single provider."""
+    """Represent a single TTS provider."""
 
     hass = None
     name = None
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return None
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return a list of supported languages."""
         return None
 
     @property
     def supported_options(self):
-        """List of supported options like voice, emotionen."""
+        """Return a list of supported options like voice, emotionen."""
         return None
 
     @property
     def default_options(self):
-        """Dict include default options."""
+        """Return a dict include default options."""
         return None
 
     def get_tts_audio(self, message, language, options=None):
@@ -496,11 +496,11 @@ class Provider(object):
 
 
 class TextToSpeechView(HomeAssistantView):
-    """TTS view to serve an speech audio."""
+    """TTS view to serve a speech audio."""
 
     requires_auth = False
-    url = "/api/tts_proxy/{filename}"
-    name = "api:tts:speech"
+    url = '/api/tts_proxy/{filename}'
+    name = 'api:tts:speech'
 
     def __init__(self, tts):
         """Initialize a tts view."""

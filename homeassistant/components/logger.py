@@ -62,7 +62,7 @@ class HomeAssistantLogFilter(logging.Filter):
         self.logfilter = logfilter
 
     def filter(self, record):
-        """A filter to use."""
+        """Filter the log entries."""
         # Log with filtered severity
         if LOGGER_LOGS in self.logfilter:
             for filtername in self.logfilter[LOGGER_LOGS]:
@@ -77,7 +77,7 @@ class HomeAssistantLogFilter(logging.Filter):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the logger component."""
+    """Set up the logger component."""
     logfilter = {}
 
     # Set default log severity

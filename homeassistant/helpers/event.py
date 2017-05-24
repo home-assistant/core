@@ -1,7 +1,7 @@
 """Helpers for listening to events."""
 import functools as ft
-from datetime import timedelta
 
+from homeassistant.helpers.sun import get_astral_event_next
 from ..core import HomeAssistant, callback
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
@@ -59,7 +59,7 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
 
     @callback
     def state_change_listener(event):
-        """The listener that listens for specific state changes."""
+        """Handle specific state changes."""
         if entity_ids != MATCH_ALL and \
            event.data.get('entity_id') not in entity_ids:
             return
@@ -175,7 +175,7 @@ def async_track_time_interval(hass, action, interval):
 
     @callback
     def interval_listener(now):
-        """Called when when the interval has elapsed."""
+        """Handle elaspsed intervals."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, interval_listener, next_interval())
@@ -197,29 +197,20 @@ track_time_interval = threaded_listener_factory(async_track_time_interval)
 @callback
 def async_track_sunrise(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunrise daily."""
-    from homeassistant.components import sun
-    offset = offset or timedelta()
     remove = None
-
-    def next_rise():
-        """Return the next sunrise."""
-        next_time = sun.next_rising_utc(hass) + offset
-
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
 
     @callback
     def sunrise_automation_listener(now):
-        """Called when it's time for action."""
+        """Handle points in time to execute actions."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
-            hass, sunrise_automation_listener, next_rise())
+            hass, sunrise_automation_listener, get_astral_event_next(
+                hass, 'sunrise', offset=offset))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
-        hass, sunrise_automation_listener, next_rise())
+        hass, sunrise_automation_listener, get_astral_event_next(
+            hass, 'sunrise', offset=offset))
 
     def remove_listener():
         """Remove sunset listener."""
@@ -234,29 +225,20 @@ track_sunrise = threaded_listener_factory(async_track_sunrise)
 @callback
 def async_track_sunset(hass, action, offset=None):
     """Add a listener that will fire a specified offset from sunset daily."""
-    from homeassistant.components import sun
-    offset = offset or timedelta()
     remove = None
-
-    def next_set():
-        """Return next sunrise."""
-        next_time = sun.next_setting_utc(hass) + offset
-
-        while next_time < dt_util.utcnow():
-            next_time = next_time + timedelta(days=1)
-
-        return next_time
 
     @callback
     def sunset_automation_listener(now):
-        """Called when it's time for action."""
+        """Handle points in time to execute actions."""
         nonlocal remove
         remove = async_track_point_in_utc_time(
-            hass, sunset_automation_listener, next_set())
+            hass, sunset_automation_listener, get_astral_event_next(
+                hass, 'sunset', offset=offset))
         hass.async_run_job(action)
 
     remove = async_track_point_in_utc_time(
-        hass, sunset_automation_listener, next_set())
+        hass, sunset_automation_listener, get_astral_event_next(
+            hass, 'sunset', offset=offset))
 
     def remove_listener():
         """Remove sunset listener."""

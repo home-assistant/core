@@ -98,6 +98,7 @@ tts:
   platform: google
 
 group: !include groups.yaml
+automation: !include automations.yaml
 """
 
 
@@ -112,7 +113,7 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
         vol.Schema({cv.string: dict}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        cv.ordered_dict(OrderedDict, cv.string),
+        vol.Schema({cv.string: OrderedDict}),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
@@ -158,10 +159,13 @@ def create_default_config(config_dir, detect_location=True):
     """
     from homeassistant.components.config.group import (
         CONFIG_PATH as GROUP_CONFIG_PATH)
+    from homeassistant.components.config.automation import (
+        CONFIG_PATH as AUTOMATION_CONFIG_PATH)
 
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
+    automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -202,6 +206,9 @@ def create_default_config(config_dir, detect_location=True):
 
         with open(group_yaml_path, 'w'):
             pass
+
+        with open(automation_yaml_path, 'wt') as fil:
+            fil.write('[]')
 
         return config_path
 
@@ -325,7 +332,7 @@ def async_process_ha_core_config(hass, config):
     hac = hass.config
 
     def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
+        """Help to set the time zone."""
         if time_zone_str is None:
             return
 
@@ -454,10 +461,9 @@ def _identify_config_schema(module):
     except (AttributeError, KeyError):
         return (None, None)
     t_schema = str(schema)
-    if (t_schema.startswith('<function ordered_dict') or
-            t_schema.startswith('<Schema({<function slug')):
+    if t_schema.startswith('{'):
         return ('dict', schema)
-    if t_schema.startswith('All(<function ensure_list'):
+    if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
     return '', schema
 

@@ -15,9 +15,8 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
-    color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
-    color_rgb_to_rgbw, color_rgbw_to_rgb
+from homeassistant.util.color import color_temperature_mired_to_kelvin, \
+    color_temperature_to_rgb, color_rgb_to_rgbw, color_rgbw_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,19 +38,20 @@ DEVICE_MAPPINGS = {
 
 # Generate midpoint color temperatures for bulbs that have limited
 # support for white light colors
-TEMP_MID_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 2 + HASS_COLOR_MIN
-TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
-TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
+TEMP_COLOR_MAX = 500  # mireds (inverted)
+TEMP_COLOR_MIN = 154
+TEMP_MID_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 2 + TEMP_COLOR_MIN
+TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
+TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
 def get_device(node, values, node_config, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     name = '{}.{}'.format(DOMAIN, zwave.object_id(values.primary))
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
-    _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
-                  ' CONF_REFRESH_DELAY=%s', name, node_config,
-                  refresh, delay)
+    _LOGGER.debug("name=%s node_config=%s CONF_REFRESH_VALUE=%s"
+                  " CONF_REFRESH_DELAY=%s", name, node_config, refresh, delay)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         return ZwaveColorLight(values, refresh, delay)
@@ -112,19 +112,19 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._brightness, self._state = brightness_state(self.values.primary)
 
     def value_added(self):
-        """Called when a new value is added to this entity."""
+        """Call when a new value is added to this entity."""
         self._supported_features = SUPPORT_BRIGHTNESS
         if self.values.dimming_duration is not None:
             self._supported_features |= SUPPORT_TRANSITION
 
     def value_changed(self):
-        """Called when a value for this entity's node has changed."""
+        """Call when a value for this entity's node has changed."""
         if self._refresh_value:
             if self._refreshing:
                 self._refreshing = False
             else:
                 def _refresh_value():
-                    """Used timer callback for delayed value refresh."""
+                    """Use timer callback for delayed value refresh."""
                     self._refreshing = True
                     self.values.primary.refresh()
 
@@ -217,7 +217,7 @@ class ZwaveColorLight(ZwaveDimmer):
         super().__init__(values, refresh, delay)
 
     def value_added(self):
-        """Called when a new value is added to this entity."""
+        """Call when a new value is added to this entity."""
         super().value_added()
 
         self._supported_features |= SUPPORT_RGB_COLOR

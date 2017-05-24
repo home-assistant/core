@@ -25,12 +25,12 @@ REQUIREMENTS = ['pyhydroquebec==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-KILOWATT_HOUR = "kWh"  # type: str
-PRICE = "CAD"  # type: str
-DAYS = "days"  # type: str
-CONF_CONTRACT = "contract"  # type: str
+KILOWATT_HOUR = 'kWh'  # type: str
+PRICE = 'CAD'  # type: str
+DAYS = 'days'  # type: str
+CONF_CONTRACT = 'contract'  # type: str
 
-DEFAULT_NAME = "HydroQuebec"
+DEFAULT_NAME = 'HydroQuebec'
 
 REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
@@ -73,10 +73,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-HOST = "https://www.hydroquebec.com"
-HOME_URL = "{}/portail/web/clientele/authentification".format(HOST)
-PROFILE_URL = ("{}/portail/fr/group/clientele/"
-               "portrait-de-consommation".format(HOST))
+HOST = 'https://www.hydroquebec.com'
+HOME_URL = '{}/portail/web/clientele/authentification'.format(HOST)
+PROFILE_URL = ('{}/portail/fr/group/clientele/'
+               'portrait-de-consommation'.format(HOST))
 MONTHLY_MAP = (('period_total_bill', 'montantFacturePeriode'),
                ('period_length', 'nbJourLecturePeriode'),
                ('period_total_days', 'nbJourPrevuPeriode'),
@@ -163,9 +163,8 @@ class HydroquebecData(object):
     def __init__(self, username, password, contract=None):
         """Initialize the data object."""
         from pyhydroquebec import HydroQuebecClient
-        self.client = HydroQuebecClient(username,
-                                        password,
-                                        REQUESTS_TIMEOUT)
+        self.client = HydroQuebecClient(
+            username, password, REQUESTS_TIMEOUT)
         self._contract = contract
         self.data = {}
 
@@ -187,7 +186,5 @@ class HydroquebecData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Return the latest collected data from HydroQuebec."""
-        # Fetch data
         self._fetch_data()
-        # Update data
         self.data = self.client.get_data(self._contract)[self._contract]

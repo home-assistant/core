@@ -39,7 +39,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the manual alarm platform."""
+    """Set up the manual alarm platform."""
     add_devices([ManualAlarm(
         hass,
         config[CONF_NAME],
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class ManualAlarm(alarm.AlarmControlPanel):
     """
-    Represents an alarm status.
+    Representation of an alarm status.
 
     When armed, will be pending for 'pending_time', after that armed.
     When triggered, will be pending for 'trigger_time'. After that will be
@@ -62,7 +62,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     def __init__(self, hass, name, code, pending_time,
                  trigger_time, disarm_after_trigger):
-        """Initalize the manual alarm panel."""
+        """Init the manual alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
         self._name = name
@@ -75,7 +75,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the plling state."""
         return False
 
     @property
@@ -166,5 +166,5 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """Validate given code."""
         check = self._code is None or code == self._code
         if not check:
-            _LOGGER.warning('Invalid code given for %s', state)
+            _LOGGER.warning("Invalid code given for %s", state)
         return check

@@ -1,4 +1,5 @@
-"""Support for Dutch Smart Meter Requirements.
+"""
+Support for Dutch Smart Meter Requirements.
 
 Also known as: Smartmeter or P1 port.
 
@@ -23,7 +24,6 @@ DSMR version the Entities for this component are create during bootstrap.
 Another loop (DSMR class) is setup which reads the telegram queue,
 stores/caches the latest telegram and notifies the Entities that the telegram
 has been updated.
-
 """
 import asyncio
 from datetime import timedelta
@@ -72,8 +72,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
 
     from dsmr_parser import obis_references as obis_ref
-    from dsmr_parser.clients.protocol import (create_dsmr_reader,
-                                              create_tcp_dsmr_reader)
+    from dsmr_parser.clients.protocol import (
+        create_dsmr_reader, create_tcp_dsmr_reader)
     import serial
 
     dsmr_version = config[CONF_DSMR_VERSION]
@@ -116,18 +116,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # Creates a asyncio.Protocol factory for reading DSMR telegrams from serial
     # and calls update_entities_telegram to update entities on arrival
     if config[CONF_HOST]:
-        reader_factory = partial(create_tcp_dsmr_reader,
-                                 config[CONF_HOST],
-                                 config[CONF_PORT],
-                                 config[CONF_DSMR_VERSION],
-                                 update_entities_telegram,
-                                 loop=hass.loop)
+        reader_factory = partial(
+            create_tcp_dsmr_reader, config[CONF_HOST], config[CONF_PORT],
+            config[CONF_DSMR_VERSION], update_entities_telegram,
+            loop=hass.loop)
     else:
-        reader_factory = partial(create_dsmr_reader,
-                                 config[CONF_PORT],
-                                 config[CONF_DSMR_VERSION],
-                                 update_entities_telegram,
-                                 loop=hass.loop)
+        reader_factory = partial(
+            create_dsmr_reader, config[CONF_PORT], config[CONF_DSMR_VERSION],
+            update_entities_telegram, loop=hass.loop)
 
     @asyncio.coroutine
     def connect_and_reconnect():
@@ -141,7 +137,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     TimeoutError):
                 # log any error while establishing connection and drop to retry
                 # connection wait
-                _LOGGER.exception('error connecting to DSMR')
+                _LOGGER.exception("Error connecting to DSMR")
                 transport = None
 
             if transport:
@@ -174,7 +170,7 @@ class DSMREntity(Entity):
     """Entity reading values from DSMR telegram."""
 
     def __init__(self, name, obis):
-        """"Initialize entity."""
+        """Initialize entity."""
         self._name = name
         self._obis = obis
         self.telegram = {}

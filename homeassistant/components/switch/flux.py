@@ -11,18 +11,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.light import is_on, turn_on
-from homeassistant.components.sun import next_setting, next_rising
 from homeassistant.components.switch import DOMAIN, SwitchDevice
 from homeassistant.const import CONF_NAME, CONF_PLATFORM
 from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util.color import (
     color_temperature_to_rgb, color_RGB_to_xy,
-    color_temperature_kelvin_to_mired, HASS_COLOR_MIN, HASS_COLOR_MAX)
+    color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['sun', 'light']
-SUN = "sun.sun"
+DEPENDENCIES = ['light']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_LIGHTS = 'lights'
@@ -81,7 +81,7 @@ def set_lights_temp(hass, lights, mired, brightness):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Flux switches."""
+    """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
     start_time = config.get(CONF_START_TIME)
@@ -113,7 +113,6 @@ class FluxSwitch(SwitchDevice):
         """Initialize the Flux switch."""
         self._name = name
         self.hass = hass
-        self._state = state
         self._lights = lights
         self._start_time = start_time
         self._stop_time = stop_time
@@ -133,15 +132,19 @@ class FluxSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state
+        return self.unsub_tracker is not None
 
     def turn_on(self, **kwargs):
         """Turn on flux."""
-        if not self._state:  # make initial update
-            self.flux_update()
-        self._state = True
-        self.unsub_tracker = track_time_change(self.hass, self.flux_update,
-                                               second=[0, 30])
+        if self.is_on:
+            return
+
+        # Make initial update
+        self.flux_update()
+
+        self.unsub_tracker = track_time_change(
+            self.hass, self.flux_update, second=[0, 30])
+
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
@@ -150,20 +153,17 @@ class FluxSwitch(SwitchDevice):
             self.unsub_tracker()
             self.unsub_tracker = None
 
-        self._state = False
         self.schedule_update_ha_state()
 
     def flux_update(self, now=None):
         """Update all the lights using flux."""
         if now is None:
             now = dt_now()
-        sunset = next_setting(self.hass, SUN).replace(day=now.day,
-                                                      month=now.month,
-                                                      year=now.year)
+        sunset = get_astral_event_date(self.hass, 'sunset', now.date())
         start_time = self.find_start_time(now)
-        stop_time = now.replace(hour=self._stop_time.hour,
-                                minute=self._stop_time.minute,
-                                second=0)
+        stop_time = now.replace(
+            hour=self._stop_time.hour, minute=self._stop_time.minute,
+            second=0)
 
         if start_time < now < sunset:
             # Daytime
@@ -201,27 +201,24 @@ class FluxSwitch(SwitchDevice):
         if self._mode == MODE_XY:
             set_lights_xy(self.hass, self._lights, x_val,
                           y_val, brightness)
-            _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%%"
-                         " of %s cycle complete at %s", x_val, y_val,
+            _LOGGER.info("Lights updated to x:%s y:%s brightness:%s, %s%% "
+                         "of %s cycle complete at %s", x_val, y_val,
                          brightness, round(
                              percentage_complete * 100), time_state, now)
         else:
             # Convert to mired and clamp to allowed values
             mired = color_temperature_kelvin_to_mired(temp)
-            mired = max(HASS_COLOR_MIN, min(mired, HASS_COLOR_MAX))
             set_lights_temp(self.hass, self._lights, mired, brightness)
-            _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%%"
-                         " of %s cycle complete at %s", mired, brightness,
+            _LOGGER.info("Lights updated to mired:%s brightness:%s, %s%% "
+                         "of %s cycle complete at %s", mired, brightness,
                          round(percentage_complete * 100), time_state, now)
 
     def find_start_time(self, now):
         """Return sunrise or start_time if given."""
         if self._start_time:
-            sunrise = now.replace(hour=self._start_time.hour,
-                                  minute=self._start_time.minute,
-                                  second=0)
+            sunrise = now.replace(
+                hour=self._start_time.hour, minute=self._start_time.minute,
+                second=0)
         else:
-            sunrise = next_rising(self.hass, SUN).replace(day=now.day,
-                                                          month=now.month,
-                                                          year=now.year)
+            sunrise = get_astral_event_date(self.hass, 'sunrise', now.date())
         return sunrise

@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Deutsche Bahn Sensor."""
+    """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
 

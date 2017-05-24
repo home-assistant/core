@@ -23,45 +23,46 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_ON, STATE_OFF, STATE_UNKNOWN,
     TEMP_CELSIUS)
 
-DOMAIN = "climate"
+DOMAIN = 'climate'
 
-ENTITY_ID_FORMAT = DOMAIN + ".{}"
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SERVICE_SET_AWAY_MODE = "set_away_mode"
-SERVICE_SET_AUX_HEAT = "set_aux_heat"
-SERVICE_SET_TEMPERATURE = "set_temperature"
-SERVICE_SET_FAN_MODE = "set_fan_mode"
-SERVICE_SET_HOLD_MODE = "set_hold_mode"
-SERVICE_SET_OPERATION_MODE = "set_operation_mode"
-SERVICE_SET_SWING_MODE = "set_swing_mode"
-SERVICE_SET_HUMIDITY = "set_humidity"
+SERVICE_SET_AWAY_MODE = 'set_away_mode'
+SERVICE_SET_AUX_HEAT = 'set_aux_heat'
+SERVICE_SET_TEMPERATURE = 'set_temperature'
+SERVICE_SET_FAN_MODE = 'set_fan_mode'
+SERVICE_SET_HOLD_MODE = 'set_hold_mode'
+SERVICE_SET_OPERATION_MODE = 'set_operation_mode'
+SERVICE_SET_SWING_MODE = 'set_swing_mode'
+SERVICE_SET_HUMIDITY = 'set_humidity'
 
-STATE_HEAT = "heat"
-STATE_COOL = "cool"
-STATE_IDLE = "idle"
-STATE_AUTO = "auto"
-STATE_DRY = "dry"
-STATE_FAN_ONLY = "fan_only"
+STATE_HEAT = 'heat'
+STATE_COOL = 'cool'
+STATE_IDLE = 'idle'
+STATE_AUTO = 'auto'
+STATE_DRY = 'dry'
+STATE_FAN_ONLY = 'fan_only'
 
-ATTR_CURRENT_TEMPERATURE = "current_temperature"
-ATTR_MAX_TEMP = "max_temp"
-ATTR_MIN_TEMP = "min_temp"
-ATTR_TARGET_TEMP_HIGH = "target_temp_high"
-ATTR_TARGET_TEMP_LOW = "target_temp_low"
-ATTR_AWAY_MODE = "away_mode"
-ATTR_AUX_HEAT = "aux_heat"
-ATTR_FAN_MODE = "fan_mode"
-ATTR_FAN_LIST = "fan_list"
-ATTR_CURRENT_HUMIDITY = "current_humidity"
-ATTR_HUMIDITY = "humidity"
-ATTR_MAX_HUMIDITY = "max_humidity"
-ATTR_MIN_HUMIDITY = "min_humidity"
-ATTR_HOLD_MODE = "hold_mode"
-ATTR_OPERATION_MODE = "operation_mode"
-ATTR_OPERATION_LIST = "operation_list"
-ATTR_SWING_MODE = "swing_mode"
-ATTR_SWING_LIST = "swing_list"
+ATTR_CURRENT_TEMPERATURE = 'current_temperature'
+ATTR_MAX_TEMP = 'max_temp'
+ATTR_MIN_TEMP = 'min_temp'
+ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
+ATTR_TARGET_TEMP_LOW = 'target_temp_low'
+ATTR_TARGET_TEMP_STEP = 'target_temp_step'
+ATTR_AWAY_MODE = 'away_mode'
+ATTR_AUX_HEAT = 'aux_heat'
+ATTR_FAN_MODE = 'fan_mode'
+ATTR_FAN_LIST = 'fan_list'
+ATTR_CURRENT_HUMIDITY = 'current_humidity'
+ATTR_HUMIDITY = 'humidity'
+ATTR_MAX_HUMIDITY = 'max_humidity'
+ATTR_MIN_HUMIDITY = 'min_humidity'
+ATTR_HOLD_MODE = 'hold_mode'
+ATTR_OPERATION_MODE = 'operation_mode'
+ATTR_OPERATION_LIST = 'operation_list'
+ATTR_SWING_MODE = 'swing_mode'
+ATTR_SWING_LIST = 'swing_list'
 
 # The degree of precision for each platform
 PRECISION_WHOLE = 1
@@ -208,7 +209,7 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup climate devices."""
+    """Set up climate devices."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     yield from component.async_setup(config)
 
@@ -273,7 +274,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_aux_heat_set_service(service):
-        """Set auxillary heater on target climate devices."""
+        """Set auxiliary heater on target climate devices."""
         target_climate = component.async_extract_from_service(service)
 
         aux_heat = service.data.get(ATTR_AUX_HEAT)
@@ -419,6 +420,10 @@ class ClimateDevice(Entity):
             ATTR_TEMPERATURE:
             self._convert_for_display(self.target_temperature),
         }
+
+        if self.target_temperature_step is not None:
+            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
+
         target_temp_high = self.target_temperature_high
         if target_temp_high is not None:
             data[ATTR_TARGET_TEMP_HIGH] = self._convert_for_display(
@@ -467,12 +472,12 @@ class ClimateDevice(Entity):
 
     @property
     def unit_of_measurement(self):
-        """The unit of measurement to display."""
+        """Return the unit of measurement to display."""
         return self.hass.config.units.temperature_unit
 
     @property
     def temperature_unit(self):
-        """The unit of measurement used by the platform."""
+        """Return the unit of measurement used by the platform."""
         raise NotImplementedError
 
     @property
@@ -492,7 +497,7 @@ class ClimateDevice(Entity):
 
     @property
     def operation_list(self):
-        """List of available operation modes."""
+        """Return the list of available operation modes."""
         return None
 
     @property
@@ -503,6 +508,11 @@ class ClimateDevice(Entity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        return None
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
         return None
 
     @property
@@ -537,7 +547,7 @@ class ClimateDevice(Entity):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return the list of available fan modes."""
         return None
 
     @property
@@ -547,7 +557,7 @@ class ClimateDevice(Entity):
 
     @property
     def swing_list(self):
-        """List of available swing modes."""
+        """Return the list of available swing modes."""
         return None
 
     def set_temperature(self, **kwargs):
@@ -695,8 +705,8 @@ class ClimateDevice(Entity):
         if temp is None or not isinstance(temp, Number):
             return temp
         if self.temperature_unit != self.unit_of_measurement:
-            temp = convert_temperature(temp, self.temperature_unit,
-                                       self.unit_of_measurement)
+            temp = convert_temperature(
+                temp, self.temperature_unit, self.unit_of_measurement)
         # Round in the units appropriate
         if self.precision == PRECISION_HALVES:
             return round(temp * 2) / 2.0

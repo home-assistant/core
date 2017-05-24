@@ -33,9 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
-        config.get('sender'),
-        config.get('password'),
-        config.get('recipient'),
+        config.get('sender'), config.get('password'), config.get('recipient'),
         config.get('tls'))
 
 
@@ -86,7 +84,7 @@ def send_message(sender, password, recipient, use_tls, message):
             self.disconnect(wait=True)
 
         def check_credentials(self, event):
-            """"Disconnect from the server if credentials are invalid."""
+            """Disconnect from the server if credentials are invalid."""
             self.disconnect()
 
     SendNotificationBot()

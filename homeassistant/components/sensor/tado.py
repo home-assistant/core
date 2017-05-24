@@ -84,7 +84,7 @@ class TadoSensor(Entity):
     """Representation of a tado Sensor."""
 
     def __init__(self, store, zone_name, zone_id, zone_variable, data_id):
-        """Initialization of TadoSensor class."""
+        """Initialize of the Tado Sensor."""
         self._store = store
 
         self.zone_name = zone_name

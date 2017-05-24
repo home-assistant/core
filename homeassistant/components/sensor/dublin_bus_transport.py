@@ -58,7 +58,7 @@ def due_in_minutes(timestamp):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the Dublin public transport sensor."""
+    """Set up the Dublin public transport sensor."""
     name = config.get(CONF_NAME)
     stop = config.get(CONF_STOP_ID)
     route = config.get(CONF_ROUTE)

@@ -14,9 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/gurumitts/'
-                'pylutron-caseta/archive/v0.2.6.zip#'
-                'pylutron-caseta==v0.2.6']
+REQUIREMENTS = ['pylutron-caseta==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, base_config):
-    """Setup the Lutron component."""
+    """Set up the Lutron component."""
     from pylutron_caseta.smartbridge import Smartbridge
 
     config = base_config.get(DOMAIN)
@@ -44,10 +42,9 @@ def setup(hass, base_config):
                       config[CONF_HOST])
         return False
 
-    _LOGGER.info("Connected to Lutron smartbridge at %s",
-                 config[CONF_HOST])
+    _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
-    for component in ('light', 'switch'):
+    for component in ('light', 'switch', 'cover'):
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     return True
@@ -88,8 +85,10 @@ class LutronCasetaDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attr = {'Device ID': self._device_id,
-                'Zone ID': self._device_zone}
+        attr = {
+            'Device ID': self._device_id,
+            'Zone ID': self._device_zone,
+        }
         return attr
 
     @property

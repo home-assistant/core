@@ -51,6 +51,7 @@ SERVICE_SNAPSHOT = 'sonos_snapshot'
 SERVICE_RESTORE = 'sonos_restore'
 SERVICE_SET_TIMER = 'sonos_set_sleep_timer'
 SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
+SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
 
 DATA_SONOS = 'sonos'
 
@@ -62,6 +63,11 @@ CONF_INTERFACE_ADDR = 'interface_addr'
 
 # Service call validation schemas
 ATTR_SLEEP_TIME = 'sleep_time'
+ATTR_ALARM_ID = 'alarm_id'
+ATTR_VOLUME = 'volume'
+ATTR_ENABLED = 'enabled'
+ATTR_INCLUDE_LINKED_ZONES = 'include_linked_zones'
+ATTR_TIME = 'time'
 ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 
@@ -90,9 +96,17 @@ SONOS_SET_TIMER_SCHEMA = SONOS_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=0, max=86399))
 })
 
+SONOS_UPDATE_ALARM_SCHEMA = SONOS_SCHEMA.extend({
+    vol.Required(ATTR_ALARM_ID): cv.positive_int,
+    vol.Optional(ATTR_TIME): cv.time,
+    vol.Optional(ATTR_VOLUME): cv.small_float,
+    vol.Optional(ATTR_ENABLED): cv.boolean,
+    vol.Optional(ATTR_INCLUDE_LINKED_ZONES): cv.boolean,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Sonos platform."""
+    """Set up the Sonos platform."""
     import soco
 
     if DATA_SONOS not in hass.data:
@@ -105,7 +119,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info:
         player = soco.SoCo(discovery_info.get('host'))
 
-        # if device allready exists by config
+        # if device already exists by config
         if player.uid in [x.unique_id for x in hass.data[DATA_SONOS]]:
             return
 
@@ -132,18 +146,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
 
         if not players:
-            _LOGGER.warning('No Sonos speakers found.')
+            _LOGGER.warning("No Sonos speakers found")
             return
 
         hass.data[DATA_SONOS] = [SonosDevice(p) for p in players]
         add_devices(hass.data[DATA_SONOS], True)
-        _LOGGER.info('Added %s Sonos speakers', len(players))
+        _LOGGER.info("Added %s Sonos speakers", len(players))
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
 
     def service_handle(service):
-        """Internal func for applying a service."""
+        """Handle for services."""
         entity_ids = service.data.get('entity_id')
 
         if entity_ids:
@@ -163,9 +177,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif service.service == SERVICE_RESTORE:
                 device.restore(service.data[ATTR_WITH_GROUP])
             elif service.service == SERVICE_SET_TIMER:
-                device.set_timer(service.data[ATTR_SLEEP_TIME])
+                device.set_sleep_timer(service.data[ATTR_SLEEP_TIME])
             elif service.service == SERVICE_CLEAR_TIMER:
-                device.clear_timer()
+                device.clear_sleep_timer()
+            elif service.service == SERVICE_UPDATE_ALARM:
+                device.update_alarm(**service.data)
 
             device.schedule_update_ha_state(True)
 
@@ -192,6 +208,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.services.register(
         DOMAIN, SERVICE_CLEAR_TIMER, service_handle,
         descriptions.get(SERVICE_CLEAR_TIMER), schema=SONOS_SCHEMA)
+
+    hass.services.register(
+        DOMAIN, SERVICE_UPDATE_ALARM, service_handle,
+        descriptions.get(SERVICE_UPDATE_ALARM),
+        schema=SONOS_UPDATE_ALARM_SCHEMA)
 
 
 def _parse_timespan(timespan):
@@ -221,28 +242,28 @@ def _get_entity_from_soco(hass, soco):
     for device in hass.data[DATA_SONOS]:
         if soco == device.soco:
             return device
-    raise ValueError("No entity for SoCo device!")
+    raise ValueError("No entity for SoCo device")
 
 
 def soco_error(funct):
-    """Decorator to catch soco exceptions."""
+    """Catch soco exceptions."""
     @ft.wraps(funct)
     def wrapper(*args, **kwargs):
-        """Wrapper for all soco exception."""
+        """Wrap for all soco exception."""
         from soco.exceptions import SoCoException
         try:
             return funct(*args, **kwargs)
         except SoCoException as err:
-            _LOGGER.error("Error on %s with %s.", funct.__name__, err)
+            _LOGGER.error("Error on %s with %s", funct.__name__, err)
 
     return wrapper
 
 
 def soco_coordinator(funct):
-    """Decorator to call funct on coordinator."""
+    """Call function on coordinator."""
     @ft.wraps(funct)
     def wrapper(device, *args, **kwargs):
-        """Wrapper for call to coordinator."""
+        """Wrap for call to coordinator."""
         if device.is_coordinator:
             return funct(device, *args, **kwargs)
         return funct(device.coordinator, *args, **kwargs)
@@ -296,7 +317,7 @@ class SonosDevice(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return True
 
     @property
@@ -340,8 +361,7 @@ class SonosDevice(MediaPlayerDevice):
     def _is_available(self):
         try:
             sock = socket.create_connection(
-                address=(self._player.ip_address, 1443),
-                timeout=3)
+                address=(self._player.ip_address, 1443), timeout=3)
             sock.close()
             return True
         except socket.error:
@@ -1034,6 +1054,30 @@ class SonosDevice(MediaPlayerDevice):
     def clear_sleep_timer(self):
         """Clear the timer on the player."""
         self._player.set_sleep_timer(None)
+
+    @soco_error
+    @soco_coordinator
+    def update_alarm(self, **data):
+        """Set the alarm clock on the player."""
+        from soco import alarms
+        a = None
+        for alarm in alarms.get_alarms(self.soco):
+            # pylint: disable=protected-access
+            if alarm._alarm_id == str(data[ATTR_ALARM_ID]):
+                a = alarm
+        if a is None:
+            _LOGGER.warning("did not find alarm with id %s",
+                            data[ATTR_ALARM_ID])
+            return
+        if ATTR_TIME in data:
+            a.start_time = data[ATTR_TIME]
+        if ATTR_VOLUME in data:
+            a.volume = int(data[ATTR_VOLUME] * 100)
+        if ATTR_ENABLED in data:
+            a.enabled = data[ATTR_ENABLED]
+        if ATTR_INCLUDE_LINKED_ZONES in data:
+            a.include_linked_zones = data[ATTR_INCLUDE_LINKED_ZONES]
+        a.save()
 
     @property
     def device_state_attributes(self):

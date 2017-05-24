@@ -10,7 +10,7 @@ from homeassistant.const import DEVICE_DEFAULT_NAME
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the demo remotes."""
+    """Set up the demo remotes."""
     add_devices_callback([
         DemoRemote('Remote One', False, None),
         DemoRemote('Remote Two', True, 'mdi:remote'),

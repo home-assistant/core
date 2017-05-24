@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the GPSD component."""
+    """Set up the GPSD component."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -57,9 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         sock.connect((host, port))
         sock.shutdown(2)
-        _LOGGER.debug('Connection to GPSD possible')
+        _LOGGER.debug("Connection to GPSD possible")
     except socket.error:
-        _LOGGER.error('Not able to connect to GPSD')
+        _LOGGER.error("Not able to connect to GPSD")
         return False
 
     add_devices([GpsdSensor(hass, name, host, port)])

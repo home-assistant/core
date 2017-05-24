@@ -4,15 +4,14 @@ Support for CM15A/CM19A X10 Controller using mochad daemon.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mochad/
 """
-
 import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.const import (CONF_HOST, CONF_PORT)
-from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ['pymochad==0.1.1']
 
@@ -31,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the mochad platform."""
+    """Set up the mochad component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
@@ -72,12 +71,12 @@ class MochadCtrl(object):
 
     @property
     def host(self):
-        """The server where mochad is running."""
+        """Return the server where mochad is running."""
         return self._host
 
     @property
     def port(self):
-        """The port mochad is running on."""
+        """Return the port mochad is running on."""
         return self._port
 
     def disconnect(self):

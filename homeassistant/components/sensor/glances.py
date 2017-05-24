@@ -93,7 +93,7 @@ class GlancesSensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         if self._name is None:
             return SENSOR_TYPES[self.type][0]
         else:
