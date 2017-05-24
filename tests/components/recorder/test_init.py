@@ -117,7 +117,7 @@ def _add_entities(hass, entity_ids):
 def _add_events(hass, events):
     with session_scope(hass=hass) as session:
         session.query(Events).delete(synchronize_session=False)
-    for event_type, event_data in events.items():
+    for event_type in events:
         hass.bus.fire(event_type)
         hass.block_till_done()
     hass.data[DATA_INSTANCE].block_till_done()
@@ -146,8 +146,9 @@ def test_saving_state_incl_entities(hass_recorder):
 def test_saving_event_exclude_event_type(hass_recorder):
     """Test saving and restoring an event."""
     hass = hass_recorder({'exclude': {'event_types': 'test'}})
-    events = _add_events(hass, {'test': 'nothing', 'test2': 'something'})
+    events = _add_events(hass, ['test', 'test2'])
     assert len(events) == 1
+    assert events[0].event_type == 'test2'
 
 
 def test_saving_state_exclude_domains(hass_recorder):
