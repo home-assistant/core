@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DATA,
                  default=None): dict,
     vol.Optional(CONF_DATA_TEMPLATE,
-                 default=None): { cv.match_all: cv.template_complex }
+                 default=None): {cv.match_all: cv.template_complex}
 })
 
 _LOGGER = logging.getLogger(__name__)
