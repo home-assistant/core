@@ -63,7 +63,7 @@ class NetatmoThermostat(ClimateDevice):
         self._name = module_name
         self._target_temperature = None
         self._away = None
-        self._hg = None
+        self._frostguard = None
         self.update()
 
     @property
@@ -111,7 +111,7 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
-        self._hg = False
+        self._frostguard = False
 
     def turn_away_mode_off(self):
         """Turn away off."""
@@ -121,24 +121,24 @@ class NetatmoThermostat(ClimateDevice):
         self._away = False
     
     @property
-    def is_hg_mode_on(self):
+    def is_frostguard_mode_on(self):
         """Return true if frost-guard mode is on."""
-        return self._hg
+        return self._frostguard
 
-    def turn_hg_mode_on(self):
+    def turn_frostguard_mode_on(self):
         """Turn frost-guard on."""
-        mode = "hg"
+        mode = "frostguard"
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
-        self._hg = True
+        self._frostguard = True
         self._away = False
 
-    def turn_hg_mode_off(self):
+    def turn_frostguard_mode_off(self):
         """Turn frost-guard off."""
         mode = "program"
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
-        self._hg = False
+        self._frostguard = False
 
     def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
         """Set new target temperature for 2 hours."""
@@ -150,7 +150,7 @@ class NetatmoThermostat(ClimateDevice):
             mode, temperature, endTimeOffset)
         self._target_temperature = temperature
         self._away = False
-        self._hg = False
+        self._frostguard = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -158,7 +158,7 @@ class NetatmoThermostat(ClimateDevice):
         self._data.update()
         self._target_temperature = self._data.thermostatdata.setpoint_temp
         self._away = self._data.setpoint_mode == 'away'
-        self._hg = self._data.setpoint_mode == 'hg'
+        self._frostguard = self._data.setpoint_mode == 'frostguard'
 
 
 class ThermostatData(object):
