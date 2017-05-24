@@ -539,7 +539,7 @@ pyfttt==0.3
 pygatt==3.1.1
 
 # homeassistant.components.remote.harmony
-pyharmony==1.0.12
+pyharmony==1.0.16
 
 # homeassistant.components.binary_sensor.hikvision
 pyhik==0.1.2
