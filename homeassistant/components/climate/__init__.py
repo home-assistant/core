@@ -683,7 +683,7 @@ class ClimateDevice(Entity):
         """Turn frost-guard mode off."""
         raise NotImplementedError()
 
-    def async_turn_away_mode_off(self):
+    def async_turn_hg_mode_off(self):
         """Turn frost-guard mode off.
 
         This method must be run in the event loop and returns a coroutine.
