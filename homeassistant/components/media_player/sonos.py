@@ -274,17 +274,16 @@ def soco_filter_upnperror(errorcodes=None):
             # UPnP exception otherwise
             _SOCO_SERVICES_LOGGER.disabled = True
 
-            returnval = None
             try:
-                returnval = funct(*args, **kwargs)
+                return funct(*args, **kwargs)
             except SoCoUPnPException as err:
-                if errorcodes is not None and err.error_code in errorcodes:
+                if err.error_code in errorcodes:
                     pass
                 else:
                     raise
+            finally:
+                _SOCO_SERVICES_LOGGER.disabled = False
 
-            _SOCO_SERVICES_LOGGER.disabled = False
-            return returnval
         return wrapper
     return decorator
 
@@ -666,7 +665,7 @@ class SonosDevice(MediaPlayerDevice):
 
             if playlist_position is not None and playlist_size is not None:
 
-                if playlist_position == 1:
+                if playlist_position <= 1:
                     support_previous_track = False
 
                 if playlist_position == playlist_size:
