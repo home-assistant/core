@@ -249,9 +249,7 @@ class Recorder(threading.Thread):
             elif event.event_type == EVENT_TIME_CHANGED:
                 self.queue.task_done()
                 continue
-
-            # Exclude event types
-            if event.event_type in self.exclude_t:
+            elif event.event_type in self.exclude_t:
                 self.queue.task_done()
                 continue
 
