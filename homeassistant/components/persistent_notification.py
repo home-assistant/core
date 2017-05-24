@@ -116,6 +116,7 @@ def async_setup(hass, config):
 
     @callback
     def dismiss_service(call):
+        """Handle the dismiss notification service call."""
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
         entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
