@@ -111,6 +111,7 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
+        self._hg = False
 
     def turn_away_mode_off(self):
         """Turn away off."""
@@ -130,6 +131,7 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._hg = True
+        self._away = False
 
     def turn_hg_mode_off(self):
         """Turn frost-guard off."""
