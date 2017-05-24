@@ -348,6 +348,10 @@ class SshConnection(_Connection):
             _LOGGER.error("Unexpected SSH error: %s", str(err))
             self.disconnect()
             return None
+        except AssertionError:
+            _LOGGER.error("Connection to router unavailable.")
+            self.disconnect()
+            return None
 
     def connect(self):
         """Connect to the ASUS-WRT SSH server."""
