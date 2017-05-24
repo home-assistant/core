@@ -297,10 +297,10 @@ def process_ha_config_upgrade(hass):
         outp.write(__version__)
 
     _LOGGER.info('Migrating old system config files to new locations')
-    for mfile in FILE_MIGRATION:
-        if os.path.isfile(hass.config.path(mfile[0])):
-            _LOGGER.info('Migrating %s to %s', mfile[0], mfile[1])
-            os.rename(hass.config.path(mfile[0]), hass.config.path(mfile[1]))
+    for oldf, newf in FILE_MIGRATION:
+        if os.path.isfile(hass.config.path(oldf)):
+            _LOGGER.info('Migrating %s to %s', oldf, newf)
+            os.rename(hass.config.path(oldf), hass.config.path(newf))
 
 
 @callback
