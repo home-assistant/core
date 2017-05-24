@@ -323,23 +323,39 @@ class TelegramNotificationService:
 
     def _get_msg_kwargs(self, data):
         """Get parameters in message data kwargs."""
-        def _make_row_of_kb(row_keyboard):
-            """Make a list of InlineKeyboardButtons from a list of tuples.
+        def _extract_inline_keyboard_buttons(row_keyboard):
+            """Make a list of InlineKeyboardButtons.
 
-            :param row_keyboard: [(text_b1, data_callback_b1),
-                                  (text_b2, data_callback_b2), ...]
+            It can accept:
+              - a list of tuples like:
+                `[(text_b1, data_callback_b1),
+                (text_b2, data_callback_b2), ...]
+              - a string like: `/cmd1, /cmd2, /cmd3`
+              - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
             """
             from telegram import InlineKeyboardButton
+            buttons = []
             if isinstance(row_keyboard, str):
-                return [InlineKeyboardButton(
-                    key.strip()[1:].upper(), callback_data=key)
-                        for key in row_keyboard.split(",")]
+                for key in row_keyboard.split(","):
+                    if ':/' in key:
+                        # commands like: 'Label:/cmd' become ('Label', '/cmd')
+                        label = key.split(':/')[0]
+                        data = key[len(label) + 1:]
+                        buttons.append(
+                            InlineKeyboardButton(label, callback_data=data))
+                    else:
+                        # commands like: '/cmd' become ('CMD', '/cmd')
+                        label = key.strip()[1:].upper()
+                        buttons.append(
+                            InlineKeyboardButton(label, callback_data=key))
             elif isinstance(row_keyboard, list):
-                return [InlineKeyboardButton(
-                    text_btn, callback_data=data_btn)
-                        for text_btn, data_btn in row_keyboard]
+                for entry in row_keyboard:
+                    text_btn, data_btn = entry
+                    buttons.append(
+                        InlineKeyboardButton(text_btn, callback_data=data_btn))
             else:
                 raise ValueError(str(row_keyboard))
+            return buttons
 
         # Defaults
         params = {
@@ -374,7 +390,7 @@ class TelegramNotificationService:
                 keys = data.get(ATTR_KEYBOARD_INLINE)
                 keys = keys if isinstance(keys, list) else [keys]
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
-                    [_make_row_of_kb(row) for row in keys])
+                    [_extract_inline_keyboard_buttons(row) for row in keys])
         return params
 
     def _send_msg(self, func_send, msg_error, *args_rep, **kwargs_rep):
