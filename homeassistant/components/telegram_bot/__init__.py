@@ -1,6 +1,5 @@
 """
 Component to send and receive Telegram messages.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/telegram_bot/
 """
@@ -219,8 +218,11 @@ def async_setup(hass, config):
             def _render_template_attr(data, attribute):
                 attribute_templ = data.get(attribute)
                 if attribute_templ:
-                    attribute_templ.hass = hass
-                    data[attribute] = attribute_templ.async_render()
+                    if not isinstance(attribute_templ, str):
+                        attribute_templ.hass = hass
+                        data[attribute] = attribute_templ.async_render()
+                    else:
+                        data[attribute] = attribute_templ
 
             msgtype = service.service
             kwargs = dict(service.data)
