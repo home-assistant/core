@@ -254,7 +254,7 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     @asyncio.coroutine
-    def async_frostguard_mode_set_service(service):
+    def async_frostguard_mode_set(service):
         """Set frost-guard mode on target climate devices."""
         target_climate = component.async_extract_from_service(service)
 
@@ -269,7 +269,7 @@ def async_setup(hass, config):
         yield from _async_update_climate(target_climate)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_FROSTGUARD_MODE, async_frostguard_mode_set_service,
+        DOMAIN, SERVICE_SET_FROSTGUARD_MODE, async_frostguard_mode_set,
         descriptions.get(SERVICE_SET_FROSTGUARD_MODE),
         schema=SET_FROSTGUARD_MODE_SCHEMA)
 
