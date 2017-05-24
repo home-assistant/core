@@ -500,7 +500,8 @@ class ClimateDevice(Entity):
 
         is_frostguard = self.is_frostguard_mode_on
         if is_frostguard is not None:
-            data[ATTR_FROSTGUARD_MODE] = STATE_ON if is_frostguard else STATE_OFF
+            data[ATTR_FROSTGUARD_MODE] = STATE_ON if is_frostguard \
+                else STATE_OFF
 
         is_away = self.is_away_mode_on
         if is_away is not None:
