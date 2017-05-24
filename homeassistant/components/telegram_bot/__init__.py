@@ -498,17 +498,22 @@ class BaseTelegramBotEntity:
                           msg_data)
             return False, None
         if msg_data['from'].get('id') not in self.allowed_chat_ids \
-                or msg_data['chat'].get('id') not in self.allowed_chat_ids:
+                or ('chat' in msg_data
+                    and msg_data['chat'].get('id')
+                    not in self.allowed_chat_ids):
             # Origin is not allowed.
             _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
             return True, None
 
-        return True, {
+        data = {
             ATTR_USER_ID: msg_data['from']['id'],
-            ATTR_CHAT_ID: msg_data['chat']['id'],
             ATTR_FROM_FIRST: msg_data['from']['first_name'],
             ATTR_FROM_LAST: msg_data['from']['last_name']
         }
+        if 'chat' in msg_data:
+            data[ATTR_CHAT_ID] = msg_data['chat']['id']
+
+        return True, data
 
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
