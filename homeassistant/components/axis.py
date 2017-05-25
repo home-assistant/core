@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
 
-REQUIREMENTS = ['axis==7']
+REQUIREMENTS = ['axis==8']
 
 _LOGGER = logging.getLogger(__name__)
 
