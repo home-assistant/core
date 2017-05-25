@@ -91,9 +91,8 @@ class LocativeView(HomeAssistantView):
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
                 yield from hass.async_add_job(
-                    None, partial(self.see, dev_id=device,
-                                  location_name=location_name,
-                                  gps=gps_location))
+                    partial(self.see, dev_id=device,
+                            location_name=location_name, gps=gps_location))
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we

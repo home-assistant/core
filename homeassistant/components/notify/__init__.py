@@ -98,7 +98,7 @@ def async_setup(hass, config):
                     platform.async_get_service(hass, p_config, discovery_info)
             elif hasattr(platform, 'get_service'):
                 notify_service = yield from hass.async_add_job(
-                    None, platform.get_service, hass, p_config, discovery_info)
+                    platform.get_service, hass, p_config, discovery_info)
             else:
                 raise HomeAssistantError("Invalid notify platform.")
 
