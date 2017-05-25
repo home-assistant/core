@@ -9,7 +9,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM)
+    CONF_EVENT, CONF_ENTITY_ID, CONF_ZONE, MATCH_ALL, CONF_PLATFORM,
+    STATE_NOT_HOME)
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
@@ -21,7 +22,7 @@ DEFAULT_EVENT = EVENT_ENTER
 TRIGGER_SCHEMA = vol.Schema({
     vol.Required(CONF_PLATFORM): 'zone',
     vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Required(CONF_ZONE): cv.entity_id,
+    vol.Required(CONF_ZONE): vol.Any(MATCH_ALL, cv.entity_id),
     vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
         vol.Any(EVENT_ENTER, EVENT_LEAVE),
 })
@@ -47,6 +48,23 @@ def async_trigger(hass, config, action):
         else:
             from_match = False
         to_match = condition.zone(hass, zone_state, to_s)
+
+        #
+        #  If zone is "*", trigger automation when entering or leaving
+        #
+        if zone_entity_id == MATCH_ALL and from_s.state != to_s.state:
+            if event == EVENT_ENTER and to_s.state != STATE_NOT_HOME or \
+               event == EVENT_LEAVE and from_s.state != STATE_NOT_HOME:
+                hass.async_run_job(action, {
+                    'trigger': {
+                        'platform': 'zone',
+                        'entity_id': entity,
+                        'from_state': from_s,
+                        'to_state': to_s,
+                        'zone': zone_state,
+                        'event': event,
+                    },
+                })
 
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
