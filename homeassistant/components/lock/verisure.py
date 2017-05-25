@@ -104,8 +104,11 @@ class VerisureDoorlock(LockDevice):
             state)['doorLockStateChangeTransactionId']
         _LOGGER.debug("Verisure doorlock %s", state)
         transaction = hub.session.get_lock_state_transaction(transaction_id)
-        while 'result' not in transaction:
+        while ('result' not in transaction or
+               transaction['result'] == 'NO_DATA'):
             sleep(0.5)
             transaction = hub.session.get_lock_state_transaction(
                 transaction_id)
         hub.update_overview(no_throttle=True)
+        if transaction['result'] == 'OK':
+            self._state = state

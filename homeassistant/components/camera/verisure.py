@@ -71,14 +71,15 @@ class VerisureSmartcam(Camera):
             _LOGGER.debug("The image is the same, or loading image_id")
             return
         _LOGGER.debug("Download new image %s", new_image_id)
+        new_image_path = os.path.join(
+            self._directory_path, '{}{}'.format(new_image_id, '.jpg'))
         hub.session.download_image(
-            self._device_label, new_image_id, self._directory_path)
+            self._device_label, new_image_id, os.path.join, new_image_path)
         _LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
         self._image_id = new_image_id
-        self._image = os.path.join(
-            self._directory_path, '{}{}'.format(self._image_id, '.jpg'))
+        self._image = new_image_path
 
     def delete_image(self, event):
         """Delete an old image."""
