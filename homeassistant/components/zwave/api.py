@@ -20,7 +20,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
         """Retrieve groups of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(const.DATA_ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -46,7 +46,7 @@ class ZWaveNodeConfigView(HomeAssistantView):
         """Retrieve configurations of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(const.DATA_ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -75,7 +75,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         """Retrieve usercodes of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(const.DATA_ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)

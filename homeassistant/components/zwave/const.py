@@ -18,8 +18,8 @@ NETWORK_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
 
-DATA_ZWAVE_DEVICES = 'zwave_devices'
-DATA_ZWAVE_NETWORK = 'zwave_network'
+DATA_DEVICES = 'zwave_devices'
+DATA_NETWORK = 'zwave_network'
 
 SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"
