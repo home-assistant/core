@@ -12,13 +12,15 @@ import logging
 import os
 
 import requests
+from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE)
+    CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
+    HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
@@ -28,6 +30,7 @@ REQUIREMENTS = ['python-telegram-bot==6.0.1']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_ARGS = 'args'
+ATTR_AUTHENTICATION = 'authentication'
 ATTR_CALLBACK_QUERY = 'callback_query'
 ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
 ATTR_CAPTION = 'caption'
@@ -110,6 +113,7 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_CAPTION): cv.template,
     vol.Optional(ATTR_USERNAME): cv.string,
     vol.Optional(ATTR_PASSWORD): cv.string,
+    vol.Optional(ATTR_AUTHENTICATION): cv.string,
 })
 SERVICE_SEND_LOCATION = 'send_location'
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
@@ -153,8 +157,8 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, file=None,
-              username=None, password=None, num_retries=7):
+def load_data(url=None, file=None, username=None, password=None,
+              authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
@@ -163,29 +167,31 @@ def load_data(url=None, file=None,
             while retry_num < num_retries:
                 params = {"timeout": 15}
                 if username is not None and password is not None:
-                    params["auth"] = (username, password)
+                    if authentication == HTTP_DIGEST_AUTHENTICATION:
+                        params["auth"] = HTTPDigestAuth(username, password)
+                    else:
+                        params["auth"] = HTTPBasicAuth(username, password)
                 req = requests.get(url, **params)
                 if not req.ok:
-                    _LOGGER.warning("Status code %s loading %s (retry #%s)",
-                                    req.status_code, url, retry_num + 1)
+                    _LOGGER.warning("Status code %s (retry #%s) loading %s.",
+                                    req.status_code, retry_num + 1, url)
                 else:
                     data = io.BytesIO(req.content)
                     if data.read():
                         data.seek(0)
                         return data
-                    _LOGGER.info("Retry load photo #%s in %s.",
-                                 num_retries + 1, url)
+                    _LOGGER.warning("Empty data (retry #%s) in %s).",
+                                    retry_num + 1, url)
                 retry_num += 1
             _LOGGER.warning("Can't load photo in %s after %s retries.",
-                            url, num_retries)
-
+                            url, retry_num)
         elif file is not None:
             # Load photo from file
             return open(file, "rb")
         else:
             _LOGGER.warning("Can't load photo. No photo found in params!")
 
-    except OSError as error:
+    except (OSError, TypeError) as error:
         _LOGGER.error("Can't load photo into ByteIO: %s", error)
 
     return None
@@ -363,9 +369,9 @@ class TelegramNotificationService:
                     if ':/' in key:
                         # commands like: 'Label:/cmd' become ('Label', '/cmd')
                         label = key.split(':/')[0]
-                        data = key[len(label) + 1:]
+                        command = key[len(label) + 1:]
                         buttons.append(
-                            InlineKeyboardButton(label, callback_data=data))
+                            InlineKeyboardButton(label, callback_data=command))
                     else:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
@@ -495,6 +501,7 @@ class TelegramNotificationService:
             file=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
+            authentication=kwargs.get(ATTR_AUTHENTICATION),
         )
         if file:
             for chat_id in self._get_target_chat_ids(target):
