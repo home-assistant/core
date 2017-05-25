@@ -18,6 +18,23 @@ def test_get_device_component_mapping():
     assert workaround.get_device_component_mapping(value) == 'binary_sensor'
 
 
+def test_get_device_component_mapping_mti():
+    """Test that component is returned."""
+    # GE Fan controller
+    node = MockNode(manufacturer_id='0063', product_type='4944',
+                    product_id='3034')
+    value = MockValue(data=0, node=node,
+                      command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+    assert workaround.get_device_component_mapping(value) == 'fan'
+
+    # GE Dimmer
+    node = MockNode(manufacturer_id='0063', product_type='4944',
+                    product_id='3031')
+    value = MockValue(data=0, node=node,
+                      command_class=const.COMMAND_CLASS_SWITCH_MULTILEVEL)
+    assert workaround.get_device_component_mapping(value) is None
+
+
 def test_get_device_no_mapping():
     """Test that no device mapping is returned."""
     node = MockNode(manufacturer_id=' ')
