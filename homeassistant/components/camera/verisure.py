@@ -74,7 +74,7 @@ class VerisureSmartcam(Camera):
         new_image_path = os.path.join(
             self._directory_path, '{}{}'.format(new_image_id, '.jpg'))
         hub.session.download_image(
-            self._device_label, new_image_id, os.path.join, new_image_path)
+            self._device_label, new_image_id, new_image_path)
         _LOGGER.debug("Old image_id=%s", self._image_id)
         self.delete_image(self)
 
