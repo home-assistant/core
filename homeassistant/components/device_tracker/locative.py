@@ -80,9 +80,8 @@ class LocativeView(HomeAssistantView):
 
         if direction == 'enter':
             yield from hass.async_add_job(
-                partial(self.see, dev_id=device,
-                              location_name=location_name,
-                              gps=gps_location))
+                partial(self.see, dev_id=device, location_name=location_name,
+                        gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
