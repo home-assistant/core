@@ -268,8 +268,8 @@ class IndexView(HomeAssistantView):
                 no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = yield from hass.loop.run_in_executor(
-            None, self.templates.get_template, 'index.html')
+        template = yield from hass.async_add_job(
+            self.templates.get_template, 'index.html')
 
         # pylint is wrong
         # pylint: disable=no-member

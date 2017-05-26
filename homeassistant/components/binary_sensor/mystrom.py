@@ -38,7 +38,7 @@ class MyStromView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """The GET request received from a myStrom button."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine

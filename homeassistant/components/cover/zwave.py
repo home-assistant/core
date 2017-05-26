@@ -41,7 +41,7 @@ class ZwaveRollershutter(zwave.ZWaveDeviceEntity, CoverDevice):
         """Initialize the Z-Wave rollershutter."""
         ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         # pylint: disable=no-member
-        self._network = hass.data[zwave.ZWAVE_NETWORK]
+        self._network = hass.data[zwave.const.DATA_NETWORK]
         self._open_id = None
         self._close_id = None
         self._current_position = None

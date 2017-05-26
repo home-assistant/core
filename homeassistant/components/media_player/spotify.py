@@ -110,7 +110,7 @@ class SpotifyAuthCallbackView(HomeAssistantView):
     def get(self, request):
         """Receive authorization token."""
         hass = request.app['hass']
-        self.oauth.get_access_token(request.GET['code'])
+        self.oauth.get_access_token(request.query['code'])
         hass.async_add_job(setup_platform, hass, self.config, self.add_devices)
 
 

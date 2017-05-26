@@ -12,6 +12,7 @@ import homeassistant.util.dt as dt_util
 from homeassistant.const import MATCH_ALL, CONF_PLATFORM
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_point_in_utc_time)
+from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 
 CONF_ENTITY_ID = 'entity_id'
@@ -40,10 +41,11 @@ def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
     from_state = config.get(CONF_FROM, MATCH_ALL)
-    to_state = config.get(CONF_TO) or config.get(CONF_STATE) or MATCH_ALL
+    to_state = get_deprecated(config, CONF_TO, CONF_STATE, MATCH_ALL)
     time_delta = config.get(CONF_FOR)
     async_remove_state_for_cancel = None
     async_remove_state_for_listener = None
+    match_all = (from_state == MATCH_ALL and to_state == MATCH_ALL)
 
     @callback
     def clear_listener():
@@ -75,13 +77,13 @@ def async_trigger(hass, config, action):
                 }
             })
 
-        if time_delta is None:
-            call_action()
+        # Ignore changes to state attributes if from/to is in use
+        if (not match_all and from_s is not None and to_s is not None and
+                from_s.last_changed == to_s.last_changed):
             return
 
-        # If only state attributes changed, ignore this event
-        if (from_s is not None and to_s is not None and
-                from_s.last_changed == to_s.last_changed):
+        if time_delta is None:
+            call_action()
             return
 
         @callback
