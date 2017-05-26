@@ -335,7 +335,9 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
-        if target:
+        if target is not None:
+            if isinstance(target, int):
+                target = [target]
             chat_ids = [t for t in target if t in self.allowed_chat_ids]
             if chat_ids:
                 return chat_ids
