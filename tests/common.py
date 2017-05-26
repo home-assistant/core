@@ -250,7 +250,7 @@ def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
     if 'http' not in hass.config.components:
         mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
+    app = web.Application(middlewares=[auth_middleware])
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
     app[KEY_BANS_ENABLED] = False

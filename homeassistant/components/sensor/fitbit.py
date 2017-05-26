@@ -299,7 +299,7 @@ class FitbitAuthCallbackView(HomeAssistantView):
         from oauthlib.oauth2.rfc6749.errors import MissingTokenError
 
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         response_message = """Fitbit has been successfully authorized!
         You can close this window now!"""

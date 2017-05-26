@@ -39,7 +39,7 @@ class GPSLoggerView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Handle for GPSLogger message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine
