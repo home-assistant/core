@@ -21,7 +21,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
-# from homeassistant.util.location import distance
 
 REQUIREMENTS = ['buienradar==0.3', 'xmltodict==0.11.0']
 
