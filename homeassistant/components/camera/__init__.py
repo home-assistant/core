@@ -241,7 +241,7 @@ class CameraView(HomeAssistantView):
             return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
-                         request.GET.get('token') in camera.access_tokens)
+                         request.query.get('token') in camera.access_tokens)
 
         if not authenticated:
             return web.Response(status=401)

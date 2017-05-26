@@ -223,7 +223,7 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = request.GET.get('end_time')
+        end_time = request.query.get('end_time')
         if end_time:
             end_time = dt_util.as_utc(
                 dt_util.parse_datetime(end_time))
@@ -231,7 +231,7 @@ class HistoryPeriodView(HomeAssistantView):
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_id = request.GET.get('filter_entity_id')
+        entity_id = request.query.get('filter_entity_id')
 
         result = yield from request.app['hass'].async_add_job(
             get_significant_states, request.app['hass'], start_time, end_time,

@@ -83,7 +83,7 @@ class APIEventStream(HomeAssistantView):
         stop_obj = object()
         to_write = asyncio.Queue(loop=hass.loop)
 
-        restrict = request.GET.get('restrict')
+        restrict = request.query.get('restrict')
         if restrict:
             restrict = restrict.split(',') + [EVENT_HOMEASSISTANT_STOP]
 
