@@ -138,7 +138,7 @@ class Camera(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.camera_image)
+        return self.hass.async_add_job(self.camera_image)
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):

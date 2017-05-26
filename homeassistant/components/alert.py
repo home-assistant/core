@@ -128,8 +128,8 @@ def async_setup(hass, config):
         all_alerts[entity.entity_id] = entity
 
     # Read descriptions
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
     descriptions = descriptions.get(DOMAIN, {})
 
