@@ -41,7 +41,7 @@ class LocativeView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Locative message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine
