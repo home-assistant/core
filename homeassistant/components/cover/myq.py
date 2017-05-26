@@ -20,7 +20,6 @@ REQUIREMENTS = [
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_ENTITY_NAMESPACE = 'myq'
 DEFAULT_NAME = 'myq'
 
 NOTIFICATION_ID = 'myq_notification'
