@@ -15,14 +15,17 @@ def test_get_values(hass, test_client):
     app = mock_http_component_app(hass)
     ZWaveNodeValueView().register(app.router)
 
-    node = MockNode(node_id=2)
+    node = MockNode(node_id=1)
     value = MockValue(value_id=123456, node=node, label='Test Label')
     values = MockEntityValues(primary=value)
-    hass.data[const.DATA_ENTITY_VALUES] = [values]
+    node2 = MockNode(node_id=2)
+    value2 = MockValue(value_id=234567, node=node2, label='Test Label 2')
+    values2 = MockEntityValues(primary=value2)
+    hass.data[const.DATA_ENTITY_VALUES] = [values, values2]
 
     client = yield from test_client(app)
 
-    resp = yield from client.get('/api/zwave/values/2')
+    resp = yield from client.get('/api/zwave/values/1')
 
     assert resp.status == 200
     result = yield from resp.json()
