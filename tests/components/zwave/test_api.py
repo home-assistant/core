@@ -3,9 +3,35 @@ import asyncio
 from unittest.mock import MagicMock
 from homeassistant.components.zwave import DATA_NETWORK, const
 from homeassistant.components.zwave.api import (
-    ZWaveNodeGroupView, ZWaveNodeConfigView, ZWaveUserCodeView)
+    ZWaveNodeValueView, ZWaveNodeGroupView, ZWaveNodeConfigView,
+    ZWaveUserCodeView)
 from tests.common import mock_http_component_app
-from tests.mock.zwave import MockNode, MockValue
+from tests.mock.zwave import MockNode, MockValue, MockEntityValues
+
+
+@asyncio.coroutine
+def test_get_values(hass, test_client):
+    """Test getting values on node."""
+    app = mock_http_component_app(hass)
+    ZWaveNodeValueView().register(app.router)
+
+    node = MockNode(node_id=2)
+    value = MockValue(value_id=123456, node=node, label='Test Label')
+    values = MockEntityValues(primary=value)
+    hass.data[const.DATA_ENTITY_VALUES] = [values]
+
+    client = yield from test_client(app)
+
+    resp = yield from client.get('/api/zwave/values/2')
+
+    assert resp.status == 200
+    result = yield from resp.json()
+
+    assert result == {
+        '123456': {
+            'label': 'Test Label',
+        }
+    }
 
 
 @asyncio.coroutine
