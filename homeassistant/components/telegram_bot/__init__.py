@@ -489,21 +489,21 @@ class TelegramNotificationService:
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
-        file = load_data(
+        file_content = load_data(
             url=kwargs.get(ATTR_URL),
             filepath=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
         )
-        if file:
+        if file_content:
             for chat_id in self._get_target_chat_ids(target):
                 _LOGGER.debug("send file to chat_id %s. Caption: %s.",
                               chat_id, caption)
                 self._send_msg(func_send, "Error sending file",
-                               chat_id, io.BytesIO(file.read()),
+                               chat_id, io.BytesIO(file_content.read()),
                                caption=caption, **params)
-                file.seek(0)
+                file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
 
