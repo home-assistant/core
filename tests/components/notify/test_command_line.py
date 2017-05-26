@@ -63,9 +63,9 @@ class TestCommandLine(unittest.TestCase):
                                         blocking=True)
             )
 
-            result = open(filename).read()
-            # the echo command adds a line break
-            self.assertEqual(result, "{}\n".format(message))
+            with open(filename) as fil:
+                # the echo command adds a line break
+                self.assertEqual(fil.read(), "{}\n".format(message))
 
     @patch('homeassistant.components.notify.command_line._LOGGER.error')
     def test_error_for_none_zero_exit_code(self, mock_error):
