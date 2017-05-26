@@ -8,8 +8,6 @@ from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
-ZWAVE_NETWORK = 'zwave_network'
-
 
 class ZWaveNodeGroupView(HomeAssistantView):
     """View to return the nodes group configuration."""
@@ -22,7 +20,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
         """Retrieve groups of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -48,7 +46,7 @@ class ZWaveNodeConfigView(HomeAssistantView):
         """Retrieve configurations of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -77,7 +75,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         """Retrieve usercodes of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
