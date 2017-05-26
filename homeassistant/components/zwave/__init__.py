@@ -30,7 +30,7 @@ from homeassistant.components.frontend import register_built_in_panel
 
 from . import api
 from . import const
-from .const import DOMAIN
+from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
@@ -67,10 +67,8 @@ DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-DATA_ZWAVE_DICT = 'zwave_devices'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
 URL_API_OZW_LOG = '/api/zwave/ozwlog'
-ZWAVE_NETWORK = 'zwave_network'
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -210,10 +208,10 @@ def get_config_value(node, value_index, tries=5):
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Z-Wave platform (generic part)."""
-    if discovery_info is None or ZWAVE_NETWORK not in hass.data:
+    if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_ZWAVE_DICT].pop(
+    device = hass.data[DATA_DEVICES].pop(
         discovery_info[const.DISCOVERY_DEVICE], None)
     if device is None:
         return False
@@ -258,8 +256,8 @@ def setup(hass, config):
 
     options.lock()
 
-    network = hass.data[ZWAVE_NETWORK] = ZWaveNetwork(options, autostart=False)
-    hass.data[DATA_ZWAVE_DICT] = {}
+    network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
+    hass.data[DATA_DEVICES] = {}
 
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
@@ -783,7 +781,7 @@ class ZWaveDeviceEntityValues():
         @asyncio.coroutine
         def discover_device(component, device, dict_id):
             """Put device in a dictionary and call discovery on it."""
-            self._hass.data[DATA_ZWAVE_DICT][dict_id] = device
+            self._hass.data[DATA_DEVICES][dict_id] = device
             yield from discovery.async_load_platform(
                 self._hass, component, DOMAIN,
                 {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)

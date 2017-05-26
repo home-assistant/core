@@ -8,7 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START
 from homeassistant.components import zwave
 from homeassistant.components.binary_sensor.zwave import get_device
 from homeassistant.components.zwave import (
-    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, ZWAVE_NETWORK)
+    const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
 from homeassistant.setup import setup_component
 
 import pytest
@@ -82,7 +82,7 @@ def test_network_options(hass, mock_openzwave):
 
     assert result
 
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.DATA_NETWORK]
     assert network.options.device == 'mock_usb_path'
     assert network.options.config_path == 'mock_config_path'
 
@@ -94,7 +94,7 @@ def test_auto_heal_midnight(hass, mock_openzwave):
         'zwave': {
             'autoheal': True,
         }}))
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
     time = datetime(2017, 5, 6, 0, 0, 0)
@@ -111,7 +111,7 @@ def test_auto_heal_disabled(hass, mock_openzwave):
         'zwave': {
             'autoheal': False,
         }}))
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.DATA_NETWORK]
     assert not network.heal.called
 
     time = datetime(2017, 5, 6, 0, 0, 0)
@@ -139,8 +139,8 @@ def test_frontend_panel_register(hass, mock_openzwave):
 def test_setup_platform(hass, mock_openzwave):
     """Test invalid device config."""
     mock_device = MagicMock()
-    hass.data[ZWAVE_NETWORK] = MagicMock()
-    hass.data[zwave.DATA_ZWAVE_DICT] = {456: mock_device}
+    hass.data[DATA_NETWORK] = MagicMock()
+    hass.data[zwave.DATA_DEVICES] = {456: mock_device}
     async_add_devices = MagicMock()
 
     result = yield from zwave.async_setup_platform(
@@ -170,7 +170,7 @@ def test_zwave_ready_wait(hass, mock_openzwave):
 
     with patch.object(zwave.time, 'sleep') as mock_sleep:
         with patch.object(zwave, '_LOGGER') as mock_logger:
-            hass.data[ZWAVE_NETWORK].state = MockNetwork.STATE_STARTED
+            hass.data[DATA_NETWORK].state = MockNetwork.STATE_STARTED
             hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
             yield from hass.async_block_till_done()
 
@@ -772,7 +772,7 @@ class TestZWaveServices(unittest.TestCase):
         # Initialize zwave
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
-        self.zwave_network = self.hass.data[ZWAVE_NETWORK]
+        self.zwave_network = self.hass.data[DATA_NETWORK]
         self.zwave_network.state = MockNetwork.STATE_READY
         self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
         self.hass.block_till_done()
