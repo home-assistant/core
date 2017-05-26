@@ -164,14 +164,14 @@ def load_data(url=None, filepath=None,
     try:
         if url is not None:
             # Load photo from URL
+            params = {"timeout": 15}
+            if username is not None and password is not None:
+                if authentication == HTTP_DIGEST_AUTHENTICATION:
+                    params["auth"] = HTTPDigestAuth(username, password)
+                else:
+                    params["auth"] = HTTPBasicAuth(username, password)
             retry_num = 0
             while retry_num < num_retries:
-                params = {"timeout": 15}
-                if username is not None and password is not None:
-                    if authentication == HTTP_DIGEST_AUTHENTICATION:
-                        params["auth"] = HTTPDigestAuth(username, password)
-                    else:
-                        params["auth"] = HTTPBasicAuth(username, password)
                 req = requests.get(url, **params)
                 if not req.ok:
                     _LOGGER.warning("Status code %s (retry #%s) loading %s.",
