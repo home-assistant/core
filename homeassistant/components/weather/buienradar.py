@@ -14,12 +14,14 @@ from homeassistant.const import \
 from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.buienradar import (
-    BrData, CONF_ATTRIBUTION, CONF_FORECAST)
+    BrData)
 from homeassistant.helpers.event import (
     async_track_time_interval)
 import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
+
+CONF_FORECAST = 'forecast'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
@@ -64,6 +66,11 @@ class BrWeather(WeatherEntity):
         self._data = data
 
     @property
+    def attribution(self):
+        """Return the attribution."""
+        return self._data.attribution
+
+    @property
     def name(self):
         """Return the name of the sensor."""
         return self._stationname or 'BR {}'.format(self._data.stationname
@@ -98,11 +105,6 @@ class BrWeather(WeatherEntity):
     def wind_bearing(self):
         """Return the name of the sensor."""
         return self._data.wind_bearing
-
-    @property
-    def attribution(self):
-        """Return the attribution."""
-        return CONF_ATTRIBUTION
 
     @property
     def temperature_unit(self):
