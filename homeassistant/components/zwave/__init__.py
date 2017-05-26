@@ -16,12 +16,13 @@ import voluptuous as vol
 from homeassistant.core import CoreState
 from homeassistant.loader import get_platform
 from homeassistant.helpers import discovery
+from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import convert, slugify
+from homeassistant.util import convert
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -162,28 +163,7 @@ def _obj_to_dict(obj):
 
 def _value_name(value):
     """Return the name of the value."""
-    return '{} {}'.format(node_name(value.node), value.label)
-
-
-def _node_object_id(node):
-    """Return the object_id of the node."""
-    node_object_id = '{}_{}'.format(slugify(node_name(node)), node.node_id)
-    return node_object_id
-
-
-def object_id(value):
-    """Return the object_id of the device value.
-
-    The object_id contains node_id and value instance id
-    to not collide with other entity_ids.
-    """
-    _object_id = "{}_{}_{}".format(slugify(_value_name(value)),
-                                   value.node.node_id, value.index)
-
-    # Add the instance id if there is more than one instance for the value
-    if value.instance > 1:
-        return '{}_{}'.format(_object_id, value.instance)
-    return _object_id
+    return '{} {}'.format(node_name(value.node), value.label).strip()
 
 
 def nice_print_node(node):
@@ -312,28 +292,15 @@ def setup(hass, config):
     def node_added(node):
         """Handle a new node on the network."""
         entity = ZWaveNodeEntity(node, network)
-        node_config = device_config.get(entity.entity_id)
+        name = node_name(node)
+        generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
+        node_config = device_config.get(generated_id)
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
                 "Ignoring node entity %s due to device settings",
-                entity.entity_id)
+                generated_id)
             return
         component.add_entities([entity])
-
-    def scene_activated(node, scene_id):
-        """Handle an activated scene on any node in the network."""
-        hass.bus.fire(const.EVENT_SCENE_ACTIVATED, {
-            ATTR_ENTITY_ID: _node_object_id(node),
-            const.ATTR_OBJECT_ID: _node_object_id(node),
-            const.ATTR_SCENE_ID: scene_id
-        })
-
-    def node_event_activated(node, value):
-        """Handle a nodeevent on any node in the network."""
-        hass.bus.fire(const.EVENT_NODE_EVENT, {
-            const.ATTR_OBJECT_ID: _node_object_id(node),
-            const.ATTR_BASIC_LEVEL: value
-        })
 
     def network_ready():
         """Handle the query of all awake nodes."""
@@ -352,10 +319,6 @@ def setup(hass, config):
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
         node_added, ZWaveNetwork.SIGNAL_NODE_ADDED, weak=False)
-    dispatcher.connect(
-        scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT, weak=False)
-    dispatcher.connect(
-        node_event_activated, ZWaveNetwork.SIGNAL_NODE_EVENT, weak=False)
     dispatcher.connect(
         network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
     dispatcher.connect(
@@ -757,9 +720,8 @@ class ZWaveDeviceEntityValues():
             self.primary)
         if workaround_component and workaround_component != component:
             if workaround_component == workaround.WORKAROUND_IGNORE:
-                _LOGGER.info("Ignoring device %s due to workaround.",
-                             "{}.{}".format(
-                                 component, object_id(self.primary)))
+                _LOGGER.info("Ignoring Node %d Value %d due to workaround.",
+                             self.primary.node.node_id, self.primary.value_id)
                 # No entity will be created for this value
                 self._workaround_ignore = True
                 return
@@ -767,8 +729,9 @@ class ZWaveDeviceEntityValues():
                           workaround_component, component)
             component = workaround_component
 
-        name = "{}.{}".format(component, object_id(self.primary))
-        node_config = self._device_config.get(name)
+        value_name = _value_name(self.primary)
+        generated_id = generate_entity_id(component + '.{}', value_name, [])
+        node_config = self._device_config.get(generated_id)
 
         # Configure node
         _LOGGER.debug("Adding Node_id=%s Generic_command_class=%s, "
@@ -781,7 +744,7 @@ class ZWaveDeviceEntityValues():
 
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
-                "Ignoring entity %s due to device settings", name)
+                "Ignoring entity %s due to device settings", generated_id)
             # No entity will be created for this value
             self._workaround_ignore = True
             return
@@ -828,7 +791,6 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         self.values = values
         self.node = values.primary.node
         self.values.primary.set_change_verified(False)
-        self.entity_id = "{}.{}".format(domain, object_id(values.primary))
 
         self._name = _value_name(self.values.primary)
         self._unique_id = "ZWAVE-{}-{}".format(self.node.node_id,

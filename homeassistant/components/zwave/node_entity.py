@@ -2,11 +2,12 @@
 import logging
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP
+from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import slugify
 
-from .const import ATTR_NODE_ID, DOMAIN, COMMAND_CLASS_WAKE_UP
+from .const import (
+    ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_BASIC_LEVEL,
+    EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED)
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,8 +85,6 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._name = node_name(self.node)
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
-        self.entity_id = "{}.{}_{}".format(
-            DOMAIN, slugify(self._name), self.node_id)
         self._attributes = {}
         self.wakeup_interval = None
         self.location = None
@@ -95,6 +94,10 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         dispatcher.connect(self.network_node_changed, ZWaveNetwork.SIGNAL_NODE)
         dispatcher.connect(
             self.network_node_changed, ZWaveNetwork.SIGNAL_NOTIFICATION)
+        dispatcher.connect(
+            self.network_node_event, ZWaveNetwork.SIGNAL_NODE_EVENT)
+        dispatcher.connect(
+            self.network_scene_activated, ZWaveNetwork.SIGNAL_SCENE_EVENT)
 
     def network_node_changed(self, node=None, args=None):
         """Handle a changed node on the network."""
@@ -133,6 +136,38 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._attributes = attributes
 
         self.maybe_schedule_update()
+
+    def network_node_event(self, node, value):
+        """Handle a node activated event on the network."""
+        if node.node_id == self.node.node_id:
+            self.node_event(value)
+
+    def node_event(self, value):
+        """Handle a node activated event for this node."""
+        if self.hass is None:
+            return
+
+        self.hass.bus.fire(EVENT_NODE_EVENT, {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_NODE_ID: self.node.node_id,
+            ATTR_BASIC_LEVEL: value
+        })
+
+    def network_scene_activated(self, node, scene_id):
+        """Handle a scene activated event on the network."""
+        if node.node_id == self.node.node_id:
+            self.scene_activated(scene_id)
+
+    def scene_activated(self, scene_id):
+        """Handle an activated scene for this node."""
+        if self.hass is None:
+            return
+
+        self.hass.bus.fire(EVENT_SCENE_ACTIVATED, {
+            ATTR_ENTITY_ID: self.entity_id,
+            ATTR_NODE_ID: self.node.node_id,
+            ATTR_SCENE_ID: scene_id
+        })
 
     @property
     def state(self):

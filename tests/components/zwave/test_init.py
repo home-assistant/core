@@ -222,7 +222,7 @@ def test_node_discovery(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('zwave.mock_node_14').state is 'unknown'
+    assert hass.states.get('zwave.mock_node').state is 'unknown'
 
 
 @asyncio.coroutine
@@ -237,7 +237,7 @@ def test_node_ignored(hass, mock_openzwave):
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
         yield from async_setup_component(hass, 'zwave', {'zwave': {
             'device_config': {
-                'zwave.mock_node_14': {
+                'zwave.mock_node': {
                     'ignored': True,
                     }}}})
 
@@ -247,7 +247,7 @@ def test_node_ignored(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('zwave.mock_node_14') is None
+    assert hass.states.get('zwave.mock_node') is None
 
 
 @asyncio.coroutine
@@ -272,7 +272,7 @@ def test_value_discovery(hass, mock_openzwave):
     yield from hass.async_block_till_done()
 
     assert hass.states.get(
-        'binary_sensor.mock_node_mock_value_11_12_13').state is 'off'
+        'binary_sensor.mock_node_mock_value').state is 'off'
 
 
 @asyncio.coroutine
@@ -297,9 +297,9 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0], node, setpoint)
     yield from hass.async_block_till_done()
 
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'temperature'] == 22.0
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'current_temperature'] is None
 
     def mock_update(self):
@@ -314,73 +314,10 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
         hass.async_add_job(mock_receivers[0], node, temperature)
         yield from hass.async_block_till_done()
 
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'temperature'] == 22.0
-    assert hass.states.get('climate.mock_node_mock_value_11_12_13').attributes[
+    assert hass.states.get('climate.mock_node_mock_value').attributes[
         'current_temperature'] == 23.5
-
-
-@asyncio.coroutine
-def test_scene_activated(hass, mock_openzwave):
-    """Test scene activated event."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_SCENE_EVENT:
-            mock_receivers.append(receiver)
-
-    with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
-
-    assert len(mock_receivers) == 1
-
-    events = []
-
-    def listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(const.EVENT_SCENE_ACTIVATED, listener)
-
-    node = MockNode(node_id=11)
-    scene_id = 123
-    hass.async_add_job(mock_receivers[0], node, scene_id)
-    yield from hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data[ATTR_ENTITY_ID] == "mock_node_11"
-    assert events[0].data[const.ATTR_OBJECT_ID] == "mock_node_11"
-    assert events[0].data[const.ATTR_SCENE_ID] == scene_id
-
-
-@asyncio.coroutine
-def test_node_event_activated(hass, mock_openzwave):
-    """Test Node event activated event."""
-    mock_receivers = []
-
-    def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_NODE_EVENT:
-            mock_receivers.append(receiver)
-
-    with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
-
-    assert len(mock_receivers) == 1
-
-    events = []
-
-    def listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(const.EVENT_NODE_EVENT, listener)
-
-    node = MockNode(node_id=11)
-    value = 234
-    hass.async_add_job(mock_receivers[0], node, value)
-    yield from hass.async_block_till_done()
-
-    assert len(events) == 1
-    assert events[0].data[const.ATTR_OBJECT_ID] == "mock_node_11"
-    assert events[0].data[const.ATTR_BASIC_LEVEL] == value
 
 
 @asyncio.coroutine
@@ -478,8 +415,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.no_match_value = MockValue(
             command_class='mock_bad_class', node=self.node)
 
-        self.entity_id = '{}.{}'.format('mock_component',
-                                        zwave.object_id(self.primary))
+        self.entity_id = 'mock_component.mock_node_mock_value'
         self.zwave_config = {}
         self.device_config = {self.entity_id: {}}
 
@@ -616,8 +552,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.node.manufacturer_id = '010f'
         self.node.product_type = '0b00'
         self.primary.command_class = const.COMMAND_CLASS_SENSOR_ALARM
-        self.entity_id = '{}.{}'.format('binary_sensor',
-                                        zwave.object_id(self.primary))
+        self.entity_id = 'binary_sensor.mock_node_mock_value'
         self.device_config = {self.entity_id: {}}
 
         self.mock_schema = {
