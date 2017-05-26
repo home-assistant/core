@@ -40,8 +40,8 @@ def ban_middleware(app, handler):
 
     if KEY_BANNED_IPS not in app:
         hass = app['hass']
-        app[KEY_BANNED_IPS] = yield from hass.loop.run_in_executor(
-            None, load_ip_bans_config, hass.config.path(IP_BANS_FILE))
+        app[KEY_BANNED_IPS] = yield from hass.async_add_job(
+            load_ip_bans_config, hass.config.path(IP_BANS_FILE))
 
     @asyncio.coroutine
     def ban_middleware_handler(request):
@@ -90,9 +90,8 @@ def process_wrong_login(request):
         request.app[KEY_BANNED_IPS].append(new_ban)
 
         hass = request.app['hass']
-        yield from hass.loop.run_in_executor(
-            None, update_ip_bans_config, hass.config.path(IP_BANS_FILE),
-            new_ban)
+        yield from hass.async_add_job(
+            update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban)
 
         _LOGGER.warning(
             "Banned IP %s for too many login attempts", remote_addr)
