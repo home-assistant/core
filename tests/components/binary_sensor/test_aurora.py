@@ -91,5 +91,5 @@ class TestAuroraSensorSetUp(unittest.TestCase):
         aurora.setup_platform(self.hass, config, mock_add_entities)
 
         aurora_component = entities[0]
-        self.assertEquals(aurora_component.aurora_data.visibility_level, '5')
+        self.assertEqual(aurora_component.aurora_data.visibility_level, '5')
         self.assertTrue(aurora_component.is_on)
