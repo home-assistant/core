@@ -151,8 +151,8 @@ class EntityComponent(object):
                     entity_platform.async_schedule_add_entities, discovery_info
                 )
             else:
-                task = self.hass.loop.run_in_executor(
-                    None, platform.setup_platform, self.hass, platform_config,
+                task = self.hass.async_add_job(
+                    platform.setup_platform, self.hass, platform_config,
                     entity_platform.schedule_add_entities, discovery_info
                 )
             yield from asyncio.wait_for(
@@ -195,7 +195,7 @@ class EntityComponent(object):
             if hasattr(entity, 'async_update'):
                 yield from entity.async_update()
             else:
-                yield from self.hass.loop.run_in_executor(None, entity.update)
+                yield from self.hass.async_add_job(entity.update)
 
         if getattr(entity, 'entity_id', None) is None:
             object_id = entity.name or DEVICE_DEFAULT_NAME
