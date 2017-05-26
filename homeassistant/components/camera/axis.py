@@ -40,7 +40,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class AxisCamera(MjpegCamera):
-    """AxisCamera """
+    """AxisCamera class."""
+
     def __init__(self, hass, config):
         """Initialize Axis Communications camera component."""
         super().__init__(hass, config)
@@ -48,7 +49,7 @@ class AxisCamera(MjpegCamera):
                         self.new_ip)
 
     def new_ip(self, event):
-        """Set new IP for video stream"""
+        """Set new IP for video stream."""
         self._mjpeg_url = _get_image_url(event.data.get(CONF_HOST), 'mjpeg')
         self._still_image_url = _get_image_url(event.data.get(CONF_HOST),
                                                'mjpeg')
