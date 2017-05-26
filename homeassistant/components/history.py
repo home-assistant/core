@@ -233,9 +233,9 @@ class HistoryPeriodView(HomeAssistantView):
             end_time = start_time + one_day
         entity_id = request.GET.get('filter_entity_id')
 
-        result = yield from request.app['hass'].loop.run_in_executor(
-            None, get_significant_states, request.app['hass'], start_time,
-            end_time, entity_id, self.filters)
+        result = yield from request.app['hass'].async_add_job(
+            get_significant_states, request.app['hass'], start_time, end_time,
+            entity_id, self.filters)
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start

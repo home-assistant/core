@@ -72,8 +72,8 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -117,7 +117,7 @@ class ImageProcessingEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.process_image, image)
+        return self.hass.async_add_job(self.process_image, image)
 
     @asyncio.coroutine
     def async_update(self):

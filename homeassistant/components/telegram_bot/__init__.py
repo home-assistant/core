@@ -179,8 +179,8 @@ def load_data(url=None, file=None, username=None, password=None):
 def async_setup(hass, config):
     """Set up the Telegram bot component."""
     conf = config[DOMAIN]
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine

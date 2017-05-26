@@ -213,8 +213,8 @@ def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -569,8 +569,8 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.set_temperature, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.set_temperature, **kwargs))
 
     def set_humidity(self, humidity):
         """Set new target humidity."""
@@ -581,8 +581,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_humidity, humidity)
+        return self.hass.async_add_job(self.set_humidity, humidity)
 
     def set_fan_mode(self, fan):
         """Set new target fan mode."""
@@ -593,8 +592,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_fan_mode, fan)
+        return self.hass.async_add_job(self.set_fan_mode, fan)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
@@ -605,8 +603,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_operation_mode, operation_mode)
+        return self.hass.async_add_job(self.set_operation_mode, operation_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing operation."""
@@ -617,8 +614,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_swing_mode, swing_mode)
+        return self.hass.async_add_job(self.set_swing_mode, swing_mode)
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
@@ -629,8 +625,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.turn_away_mode_on)
+        return self.hass.async_add_job(self.turn_away_mode_on)
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
@@ -641,8 +636,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.turn_away_mode_off)
+        return self.hass.async_add_job(self.turn_away_mode_off)
 
     def set_hold_mode(self, hold_mode):
         """Set new target hold mode."""
@@ -653,8 +647,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_hold_mode, hold_mode)
+        return self.hass.async_add_job(self.set_hold_mode, hold_mode)
 
     def turn_aux_heat_on(self):
         """Turn auxillary heater on."""
@@ -665,8 +658,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.turn_aux_heat_on)
+        return self.hass.async_add_job(self.turn_aux_heat_on)
 
     def turn_aux_heat_off(self):
         """Turn auxillary heater off."""
@@ -677,8 +669,7 @@ class ClimateDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.turn_aux_heat_off)
+        return self.hass.async_add_job(self.turn_aux_heat_off)
 
     @property
     def min_temp(self):
