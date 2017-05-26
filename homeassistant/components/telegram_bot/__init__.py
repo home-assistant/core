@@ -157,7 +157,8 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, file=None, username=None, password=None,
+def load_data(url=None, filepath=None,
+              username=None, password=None,
               authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
@@ -185,9 +186,9 @@ def load_data(url=None, file=None, username=None, password=None,
                 retry_num += 1
             _LOGGER.warning("Can't load photo in %s after %s retries.",
                             url, retry_num)
-        elif file is not None:
+        elif filepath is not None:
             # Load photo from file
-            return open(file, "rb")
+            return open(filepath, "rb")
         else:
             _LOGGER.warning("Can't load photo. No photo found in params!")
 
@@ -256,13 +257,9 @@ def async_setup(hass, config):
 
             msgtype = service.service
             kwargs = dict(service.data)
-            _render_template_attr(kwargs, ATTR_MESSAGE)
-            _render_template_attr(kwargs, ATTR_TITLE)
-            _render_template_attr(kwargs, ATTR_URL)
-            _render_template_attr(kwargs, ATTR_FILE)
-            _render_template_attr(kwargs, ATTR_CAPTION)
-            _render_template_attr(kwargs, ATTR_LONGITUDE)
-            _render_template_attr(kwargs, ATTR_LATITUDE)
+            for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
+                              ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
+                _render_template_attr(kwargs, attribute)
             _LOGGER.debug("NEW telegram_message %s: %s", msgtype, kwargs)
 
             if msgtype == SERVICE_SEND_MESSAGE:
@@ -338,16 +335,12 @@ class TelegramNotificationService:
         :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
-        if target is not None:
-            try:
-                chat_ids = [int(t) for t in target
-                            if int(t) in self.allowed_chat_ids]
-                if len(chat_ids) > 0:
-                    return chat_ids
-                _LOGGER.warning("Unallowed targets: %s", target)
-            except (ValueError, TypeError):
-                _LOGGER.warning("Bad target data: %s, using default: %s",
-                                target, self._default_user)
+        if target:
+            chat_ids = [t for t in target if t in self.allowed_chat_ids]
+            if chat_ids:
+                return chat_ids
+            _LOGGER.warning("Unallowed targets: %s, using default: %s",
+                            target, self._default_user)
         return [self._default_user]
 
     def _get_msg_kwargs(self, data):
@@ -498,7 +491,7 @@ class TelegramNotificationService:
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
         file = load_data(
             url=kwargs.get(ATTR_URL),
-            file=kwargs.get(ATTR_FILE),
+            filepath=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
