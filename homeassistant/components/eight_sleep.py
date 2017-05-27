@@ -24,7 +24,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pyeight==0.0.5']
+REQUIREMENTS = ['pyeight==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,8 +159,8 @@ def async_setup(hass, config):
             CONF_BINARY_SENSORS: binary_sensors,
         }, config))
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine

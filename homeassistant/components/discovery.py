@@ -115,8 +115,7 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def scan_devices(now):
         """Scan for devices."""
-        results = yield from hass.loop.run_in_executor(
-            None, _discover, netdisco)
+        results = yield from hass.async_add_job(_discover, netdisco)
 
         for result in results:
             hass.async_add_job(new_service_found(*result))

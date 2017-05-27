@@ -1,5 +1,6 @@
 """Test config utils."""
 # pylint: disable=protected-access
+import asyncio
 import os
 import unittest
 import unittest.mock as mock
@@ -546,7 +547,7 @@ def test_merge_duplicate_keys(merge_log_err):
     assert len(config['input_select']) == 1
 
 
-@pytest.mark.asyncio
+@asyncio.coroutine
 def test_merge_customize(hass):
     """Test loading core config onto hass object."""
     core_config = {

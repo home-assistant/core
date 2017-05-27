@@ -30,7 +30,7 @@ from homeassistant.components.frontend import register_built_in_panel
 
 from . import api
 from . import const
-from .const import DOMAIN
+from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
@@ -67,10 +67,8 @@ DEFAULT_CONF_INVERT_OPENCLOSE_BUTTONS = False
 DEFAULT_CONF_REFRESH_VALUE = False
 DEFAULT_CONF_REFRESH_DELAY = 5
 
-DATA_ZWAVE_DICT = 'zwave_devices'
 OZW_LOG_FILENAME = 'OZW_Log.txt'
 URL_API_OZW_LOG = '/api/zwave/ozwlog'
-ZWAVE_NETWORK = 'zwave_network'
 
 RENAME_NODE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
@@ -93,6 +91,11 @@ NODE_SERVICE_SCHEMA = vol.Schema({
 
 REFRESH_ENTITY_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+})
+
+RESET_NODE_METERS_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Optional(const.ATTR_INSTANCE, default=1): vol.Coerce(int)
 })
 
 CHANGE_ASSOCIATION_SCHEMA = vol.Schema({
@@ -205,10 +208,10 @@ def get_config_value(node, value_index, tries=5):
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Z-Wave platform (generic part)."""
-    if discovery_info is None or ZWAVE_NETWORK not in hass.data:
+    if discovery_info is None or DATA_NETWORK not in hass.data:
         return False
 
-    device = hass.data[DATA_ZWAVE_DICT].pop(
+    device = hass.data[DATA_DEVICES].pop(
         discovery_info[const.DISCOVERY_DEVICE], None)
     if device is None:
         return False
@@ -253,8 +256,8 @@ def setup(hass, config):
 
     options.lock()
 
-    network = hass.data[ZWAVE_NETWORK] = ZWaveNetwork(options, autostart=False)
-    hass.data[DATA_ZWAVE_DICT] = {}
+    network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
+    hass.data[DATA_DEVICES] = {}
 
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
@@ -499,6 +502,26 @@ def setup(hass, config):
         node = network.nodes[node_id]
         node.refresh_info()
 
+    def reset_node_meters(service):
+        """Reset meter counters of a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        instance = service.data.get(const.ATTR_INSTANCE)
+        node = network.nodes[node_id]
+        for value in (
+                node.get_values(class_id=const.COMMAND_CLASS_METER)
+                .values()):
+            if value.index != const.METER_RESET_INDEX:
+                continue
+            if value.instance != instance:
+                continue
+            network.manager.pressButton(value.value_id)
+            network.manager.releaseButton(value.value_id)
+            _LOGGER.info("Resetting meters on node %s instance %s....",
+                         node_id, instance)
+            return
+        _LOGGER.info("Node %s on instance %s does not have resettable "
+                     "meters.", node_id, instance)
+
     def start_zwave(_service_or_event):
         """Startup Z-Wave network."""
         _LOGGER.info("Starting Z-Wave network...")
@@ -606,6 +629,11 @@ def setup(hass, config):
                                descriptions[
                                    const.SERVICE_REFRESH_NODE],
                                schema=NODE_SERVICE_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_RESET_NODE_METERS,
+                               reset_node_meters,
+                               descriptions[
+                                   const.SERVICE_RESET_NODE_METERS],
+                               schema=RESET_NODE_METERS_SCHEMA)
 
     # Setup autoheal
     if autoheal:
@@ -753,7 +781,7 @@ class ZWaveDeviceEntityValues():
         @asyncio.coroutine
         def discover_device(component, device, dict_id):
             """Put device in a dictionary and call discovery on it."""
-            self._hass.data[DATA_ZWAVE_DICT][dict_id] = device
+            self._hass.data[DATA_DEVICES][dict_id] = device
             yield from discovery.async_load_platform(
                 self._hass, component, DOMAIN,
                 {const.DISCOVERY_DEVICE: dict_id}, self._zwave_config)

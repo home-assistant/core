@@ -250,7 +250,7 @@ def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
     if 'http' not in hass.config.components:
         mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
+    app = web.Application(middlewares=[auth_middleware])
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
     app[KEY_BANS_ENABLED] = False
@@ -317,13 +317,16 @@ class MockPlatform(object):
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None):
+                 platform_schema=None, async_setup_platform=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
         self._setup_platform = setup_platform
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if async_setup_platform is not None:
+            self.async_setup_platform = async_setup_platform
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
         """Set up the platform."""

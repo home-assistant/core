@@ -285,8 +285,8 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -341,8 +341,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = yield from hass.loop.run_in_executor(
-            None, load_profile_data, hass)
+        cls._all = yield from hass.async_add_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod
