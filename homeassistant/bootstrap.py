@@ -3,6 +3,7 @@ import asyncio
 import logging
 import logging.handlers
 import os
+from subprocess import Popen, PIPE
 import sys
 from time import time
 from collections import OrderedDict
@@ -281,6 +282,12 @@ def mount_local_lib_path(config_dir: str) -> str:
     Async friendly.
     """
     deps_dir = os.path.join(config_dir, 'deps')
-    if deps_dir not in sys.path:
-        sys.path.insert(0, os.path.join(config_dir, 'deps'))
+    env = os.environ.copy()
+    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
+    args = [sys.executable, '-m', 'site', '--user-site']
+    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    stdout, _ = process.communicate()
+    lib_dir = stdout.decode().strip()
+    if lib_dir not in sys.path:
+        sys.path.insert(0, lib_dir)
     return deps_dir

@@ -27,17 +27,22 @@ def install_package(package: str, upgrade: bool=True,
         if check_package_exists(package, target):
             return True
 
-        _LOGGER.info("Attempting install of %s", package)
+        _LOGGER.info('Attempting install of %s', package)
+        env = os.environ.copy()
         args = [sys.executable, '-m', 'pip', 'install', '--quiet', package]
         if upgrade:
             args.append('--upgrade')
-        if target:
-            args += ['--target', os.path.abspath(target)]
-
         if constraints is not None:
             args += ['--constraint', constraints]
-
-        process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+        if target:
+            # This only works if not running in venv
+            args += ['--user']
+            env['PYTHONUSERBASE'] = os.path.abspath(target)
+            if sys.platform != 'win32':
+                # Workaround for incompatible prefix setting
+                # See http://stackoverflow.com/a/4495175
+                args += ['--prefix=']
+        process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         _, stderr = process.communicate()
         if process.returncode != 0:
             _LOGGER.error("Unable to install package %s: %s",
@@ -59,12 +64,5 @@ def check_package_exists(package: str, lib_dir: str) -> bool:
         # This is a zip file
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
-    # Check packages from lib dir
-    if lib_dir is not None:
-        if any(dist in req for dist in
-               pkg_resources.find_distributions(lib_dir)):
-            return True
-
-    # Check packages from global + virtual environment
-    # pylint: disable=not-an-iterable
-    return any(dist in req for dist in pkg_resources.working_set)
+    env = pkg_resources.Environment()
+    return any(dist in req for dist in env[req.project_name])

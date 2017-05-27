@@ -40,7 +40,11 @@ def run(args: List) -> int:
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     for req in getattr(script, 'REQUIREMENTS', []):
-        if not install_package(req, target=deps_dir):
+        if hasattr(sys, 'real_prefix'):
+            returncode = install_package(req)
+        else:
+            returncode = install_package(req, target=deps_dir)
+        if not returncode:
             print('Aborting scipt, could not install dependency', req)
             return 1
 
