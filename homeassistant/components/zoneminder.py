@@ -41,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the ZoneMinder component."""
-    zm = {}
+    zm_data = {}
 
     conf = config[DOMAIN]
     if conf[CONF_SSL]:
@@ -54,14 +54,14 @@ def setup(hass, config):
     username = conf.get(CONF_USERNAME, None)
     password = conf.get(CONF_PASSWORD, None)
 
-    zm['server_origin'] = server_origin
-    zm['url'] = url
-    zm['username'] = username
-    zm['password'] = password
-    zm['path_zms'] = conf.get(CONF_PATH_ZMS)
-    zm['version'] = None
+    zm_data['server_origin'] = server_origin
+    zm_data['url'] = url
+    zm_data['username'] = username
+    zm_data['password'] = password
+    zm_data['path_zms'] = conf.get(CONF_PATH_ZMS)
+    zm_data['version'] = None
 
-    hass.data[DOMAIN] = zm
+    hass.data[DOMAIN] = zm_data
 
     return login(hass)
 
@@ -72,19 +72,20 @@ def login(hass):
     _LOGGER.debug("Attempting to login to ZoneMinder")
 
     login_post = {'view': 'console', 'action': 'login'}
-    zm = hass.data[DOMAIN]
-    if zm['username']:
-        login_post['username'] = zm['username']
-    if zm['password']:
-        login_post['password'] = zm['password']
+    zm_data = hass.data[DOMAIN]
+    if zm_data['username']:
+        login_post['username'] = zm_data['username']
+    if zm_data['password']:
+        login_post['password'] = zm_data['password']
 
-    req = requests.post(zm['url'] + '/index.php', data=login_post)
-    zm['cookies'] = req.cookies
+    req = requests.post(zm_data['url'] + '/index.php', data=login_post)
+    zm_data['cookies'] = req.cookies
 
     # Login calls returns a 200 response on both failure and success.
     # The only way to tell if you logged in correctly is to issue an api call.
     req = requests.get(
-        zm['url'] + 'api/host/getVersion.json', cookies=zm['cookies'],
+        zm_data['url'] + 'api/host/getVersion.json',
+        cookies=zm_data['cookies'],
         timeout=DEFAULT_TIMEOUT)
 
     if req.ok:
@@ -93,11 +94,11 @@ def login(hass):
         # https://github.com/ZoneMinder/ZoneMinder/blob/8a6105ee5b7aeb241c9336e977b976537235a581/web/api/app/Controller/HostController.php#L117
         #
         # Therefore have to rely on the actual version to determine features.
-        zm['version'] = None
+        zm_data['version'] = None
         version_str = req.json().get('version', None)
         if version_str:
             try:
-                zm['version'] = packaging.version.parse(version_str)
+                zm_data['version'] = packaging.version.parse(version_str)
             except packaging.version.InvalidVersion:
                 _LOGGER.exception("Failed to parse version string: %s",
                                   version_str)
@@ -112,14 +113,14 @@ def _zm_request(hass, method, api_url, data=None):
     """Perform a Zoneminder request."""
     # Since the API uses sessions that expire, sometimes we need to re-auth
     # if the call fails.
-    zm = hass.data[DOMAIN]
+    zm_data = hass.data[DOMAIN]
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
-            method, urljoin(zm['url'], api_url), data=data,
-            cookies=zm['cookies'], timeout=DEFAULT_TIMEOUT)
+            method, urljoin(zm_data['url'], api_url), data=data,
+            cookies=zm_data['cookies'], timeout=DEFAULT_TIMEOUT)
 
         if not req.ok:
-            login()
+            login(hass)
         else:
             break
 
@@ -153,5 +154,6 @@ _ALARM_STATUS_VERSION = packaging.version.parse("1.30")
 
 def alarm_status_supported(hass):
     """Get support for alarm status API."""
-    zm = hass.data[DOMAIN]
-    return zm['version'] is None or zm['version'] >= _ALARM_STATUS_VERSION
+    zm_data = hass.data[DOMAIN]
+    zm_version = zm_data['version']
+    return zm_version is None or zm_version >= _ALARM_STATUS_VERSION
