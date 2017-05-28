@@ -8,8 +8,6 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from buienradar import buienradar as br
-
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -30,41 +28,44 @@ _LOGGER = logging.getLogger(__name__)
 # Sensor types are defined like so:
 # SENSOR_TYPES = { 'key': ['Display name',
 #                          'unit of measurement',
+#                          icon (or None),
 #                }
 SENSOR_TYPES = {
-    br.STATIONNAME: ['Stationname', None],
-    br.SYMBOL: ['Symbol', None],
-    br.HUMIDITY: ['Humidity', '%'],
-    br.TEMPERATURE: ['Temperature', '°C'],
-    br.GROUNDTEMP: ['Ground Temperature', '°C'],
-    br.WINDSPEED: ['Wind speed', 'm/s'],
-    br.WINDFORCE: ['Wind force', 'Bft'],
-    br.WINDDIRECTION: ['Wind direction', '°'],
-    br.WINDAZIMUTH: ['Wind direction azimuth', None],
-    br.PRESSURE: ['Pressure', 'hPa'],
-    br.VISIBILITY: ['Visibility', 'm'],
-    br.WINDGUST: ['Wind gust', 'm/s'],
-    br.PRECIPITATION: ['Precipitation', 'mm/h'],
-    br.IRRADIANCE: ['Irradiance', 'W/m2'],
+    'stationname': ['Stationname', None, None],
+    'symbol': ['Symbol', None, None],
+    'humidity': ['Humidity', '%', 'mdi:water-percent'],
+    'temperature': ['Temperature', '°C', 'mdi:thermometer'],
+    'groundtemperature': ['Ground Temperature', '°C', 'mdi:thermometer'],
+    'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
+    'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
+    'winddirection': ['Wind direction', '°', 'mdi:compass-outline'],
+    'windazimuth': ['Wind direction azimuth', None, 'mdi:compass-outline'],
+    'pressure': ['Pressure', 'hPa', 'mdi:gauge'],
+    'visibility': ['Visibility', 'm', None],
+    'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
+    'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
+    'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
 }
 
+"""
 SENSOR_ICONS = {
-    br.HUMIDITY: 'mdi:water-percent',
-    br.TEMPERATURE: 'mdi:thermometer',
-    br.GROUNDTEMP: 'mdi:thermometer',
-    br.WINDSPEED: 'mdi:weather-windy',
-    br.WINDFORCE: 'mdi:weather-windy',
-    br.WINDDIRECTION: 'mdi:compass-outline',
-    br.WINDAZIMUTH: 'mdi:compass-outline',
-    br.PRESSURE: 'mdi:gauge',
-    br.WINDGUST: 'mdi:weather-windy',
-    br.IRRADIANCE: 'mdi:sunglasses',
-    br.PRECIPITATION: 'mdi:weather-pouring',
+    br.HUMIDITY: ,
+    br.TEMPERATURE: ,
+    br.GROUNDTEMP: ,
+    br.WINDSPEED: ,
+    br.WINDFORCE: ,
+    br.WINDDIRECTION: ,
+    br.WINDAZIMUTH: ,
+    br.PRESSURE: ,
+    br.WINDGUST: ,
+    br.IRRADIANCE: ,
+    br.PRECIPITATION: ,
 }
+"""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=[br.SYMBOL, br.TEMPERATURE]): vol.All(
+                 default=['symbol', 'temperature']): vol.All(
                      cv.ensure_list, vol.Length(min=1),
                      [vol.In(SENSOR_TYPES.keys())]),
     vol.Optional(CONF_LATITUDE): cv.latitude,
@@ -90,8 +91,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev.append(BrSensor(sensor_type))
     async_add_devices(dev)
 
-    weather = BrData(hass, coordinates, dev)
-    yield from weather.async_update()
+    data = BrData(hass, coordinates, dev)
+    # schedule the first update in 1 minute from now:
+    data.schedule_update(1)
 
 
 class BrSensor(Entity):
@@ -110,11 +112,13 @@ class BrSensor(Entity):
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        self._attribution = data.get(br.ATTRIBUTION)
-        if self.type == br.SYMBOL:
+        from buienradar.buienradar import (ATTRIBUTION, IMAGE, SYMBOL)
+
+        self._attribution = data.get(ATTRIBUTION)
+        if self.type == SYMBOL:
             # update weather symbol & status text
             new_state = data.get(self.type)
-            img = data.get(br.IMAGE)
+            img = data.get(IMAGE)
 
             # pylint: disable=protected-access
             if new_state != self._state or img != self._entity_picture:
@@ -152,7 +156,9 @@ class BrSensor(Entity):
     @property
     def entity_picture(self):
         """Weather symbol if type is symbol."""
-        if self.type != 'symbol':
+        from buienradar.buienradar import SYMBOL
+
+        if self.type != SYMBOL:
             return None
         else:
             return self._entity_picture
@@ -172,8 +178,7 @@ class BrSensor(Entity):
     @property
     def icon(self):
         """Return possible sensor specific icon."""
-        if self.type in SENSOR_ICONS:
-            return SENSOR_ICONS[self.type]
+        return SENSOR_TYPES[self.type][2]
 
 
 class BrData(object):
@@ -210,13 +215,16 @@ class BrData(object):
     @asyncio.coroutine
     def async_update(self, *_):
         """Update the data from buienradar."""
-        result = br.get_data()
-        if result[br.SUCCESS]:
-            result = br.parse_data(result[br.CONTENT],
-                                   latitude=self.coordinates[CONF_LATITUDE],
-                                   longitude=self.coordinates[CONF_LONGITUDE])
-            if result[br.SUCCESS]:
-                self.data = result[br.DATA]
+        from buienradar.buienradar import (get_data, parse_data, CONTENT,
+                                           DATA, MESSAGE, STATUS_CODE, SUCCESS)
+
+        result = get_data()
+        if result[SUCCESS]:
+            result = parse_data(result[CONTENT],
+                                latitude=self.coordinates[CONF_LATITUDE],
+                                longitude=self.coordinates[CONF_LONGITUDE])
+            if result[SUCCESS]:
+                self.data = result[DATA]
 
                 yield from self.update_devices()
 
@@ -227,67 +235,76 @@ class BrData(object):
             # unable to get the data
             _LOGGER.warning("Unable to retrieve data from Buienradar."
                             "(Msg: %s, status: %s,)",
-                            result.get(br.MESSAGE),
-                            result.get(br.STATUS_CODE),)
+                            result.get(MESSAGE),
+                            result.get(STATUS_CODE),)
             # schedule new call
             self.schedule_update(2)
 
     @property
     def attribution(self):
         """Return the attribution."""
-        return self.data.get(br.ATTRIBUTION)
+        from buienradar.buienradar import ATTRIBUTION
+        return self.data.get(ATTRIBUTION)
 
     @property
     def stationname(self):
         """Return the name of the selected weatherstation."""
-        return self.data.get(br.STATIONNAME)
+        from buienradar.buienradar import STATIONNAME
+        return self.data.get(STATIONNAME)
 
     @property
     def condition(self):
         """Return the condition."""
-        return self.data.get(br.SYMBOL)
+        from buienradar.buienradar import SYMBOL
+        return self.data.get(SYMBOL)
 
     @property
     def temperature(self):
         """Return the temperature, or None."""
+        from buienradar.buienradar import TEMPERATURE
         try:
-            return float(self.data.get(br.TEMPERATURE))
+            return float(self.data.get(TEMPERATURE))
         except (ValueError, TypeError):
             return None
 
     @property
     def pressure(self):
         """Return the pressure, or None."""
+        from buienradar.buienradar import PRESSURE
         try:
-            return float(self.data.get(br.PRESSURE))
+            return float(self.data.get(PRESSURE))
         except (ValueError, TypeError):
             return None
 
     @property
     def humidity(self):
         """Return the humidity, or None."""
+        from buienradar.buienradar import HUMIDITY
         try:
-            return int(self.data.get(br.HUMIDITY))
+            return int(self.data.get(HUMIDITY))
         except (ValueError, TypeError):
             return None
 
     @property
     def wind_speed(self):
         """Return the windspeed, or None."""
+        from buienradar.buienradar import WINDSPEED
         try:
-            return float(self.data.get(br.WINDSPEED))
+            return float(self.data.get(WINDSPEED))
         except (ValueError, TypeError):
             return None
 
     @property
     def wind_bearing(self):
         """Return the wind bearing, or None."""
+        from buienradar.buienradar import WINDDIRECTION
         try:
-            return int(self.data.get(br.WINDDIRECTION))
+            return int(self.data.get(WINDDIRECTION))
         except (ValueError, TypeError):
             return None
 
     @property
     def forecast(self):
         """Return the forecast data."""
-        return self.data.get(br.FORECAST)
+        from buienradar.buienradar import FORECAST
+        return self.data.get(FORECAST)
