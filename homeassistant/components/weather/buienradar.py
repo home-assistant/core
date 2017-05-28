@@ -56,6 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # schedule the first update in 1 minute from now:
     data.schedule_update(1)
 
+
 class BrWeather(WeatherEntity):
     """Representation of a weather condition."""
 
