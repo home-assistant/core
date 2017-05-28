@@ -1,12 +1,13 @@
 """Test Home Assistant package util methods."""
-import os
-import pkg_resources
-import unittest
-
-from subprocess import PIPE
 from distutils.sysconfig import get_python_lib
-from unittest.mock import call, patch, Mock
+import os
+from subprocess import PIPE
+import unittest
+from unittest.mock import Mock, call, patch
 
+import pkg_resources
+
+from homeassistant.const import CONSTRAINT_FILE
 import homeassistant.util.package as package
 
 RESOURCE_DIR = os.path.abspath(
@@ -46,6 +47,7 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         """Test an install attempt on a package that doesn't exist."""
         mock_exists.return_value = False
         mock_popen.return_value = self.mock_process
+        env = os.environ.copy()
 
         self.assertTrue(package.install_package(TEST_NEW_REQ, False))
 
@@ -58,7 +60,7 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
             call([
                 mock_sys.executable, '-m', 'pip', 'install', '--quiet',
                 TEST_NEW_REQ
-            ], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            ], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         )
 
     @patch('homeassistant.util.package.sys')
@@ -66,6 +68,7 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         """Test an upgrade attempt on a package."""
         mock_exists.return_value = False
         mock_popen.return_value = self.mock_process
+        env = os.environ.copy()
 
         self.assertTrue(package.install_package(TEST_NEW_REQ))
 
@@ -78,7 +81,7 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
             call([
                 mock_sys.executable, '-m', 'pip', 'install', '--quiet',
                 TEST_NEW_REQ, '--upgrade'
-            ], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            ], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         )
 
     @patch('homeassistant.util.package.sys')
@@ -87,6 +90,12 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         target = 'target_folder'
         mock_exists.return_value = False
         mock_popen.return_value = self.mock_process
+        env = os.environ.copy()
+        env['PYTHONUSERBASE'] = os.path.abspath(target)
+        mock_sys.platform = 'linux'
+        args = [
+            mock_sys.executable, '-m', 'pip', 'install', '--quiet',
+            TEST_NEW_REQ, '--user', '--prefix=']
 
         self.assertTrue(
             package.install_package(TEST_NEW_REQ, False, target=target)
@@ -98,10 +107,7 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         self.assertEqual(mock_popen.call_count, 1)
         self.assertEqual(
             mock_popen.call_args,
-            call([
-                mock_sys.executable, '-m', 'pip', 'install', '--quiet',
-                TEST_NEW_REQ, '--target', os.path.abspath(target)
-            ], stdin=PIPE, stdout=PIPE, stderr=PIPE)
+            call(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
         )
 
     @patch('homeassistant.util.package._LOGGER')
@@ -116,6 +122,30 @@ class TestPackageUtilInstallPackage(unittest.TestCase):
         self.assertFalse(package.install_package(TEST_NEW_REQ))
 
         self.assertEqual(mock_logger.error.call_count, 1)
+
+    @patch('homeassistant.util.package.sys')
+    def test_install_constraint(self, mock_sys, mock_exists, mock_popen):
+        """Test install with constraint file on not installed package."""
+        mock_exists.return_value = False
+        mock_popen.return_value = self.mock_process
+        env = os.environ.copy()
+        constraints = os.path.join(
+            os.path.dirname(__file__), CONSTRAINT_FILE)
+
+        self.assertTrue(package.install_package(
+            TEST_NEW_REQ, False, constraints=constraints))
+
+        self.assertEqual(mock_exists.call_count, 1)
+
+        self.assertEqual(self.mock_process.communicate.call_count, 1)
+        self.assertEqual(mock_popen.call_count, 1)
+        self.assertEqual(
+            mock_popen.call_args,
+            call([
+                mock_sys.executable, '-m', 'pip', 'install', '--quiet',
+                TEST_NEW_REQ, '--constraint', constraints
+            ], stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+        )
 
 
 class TestPackageUtilCheckPackageExists(unittest.TestCase):
