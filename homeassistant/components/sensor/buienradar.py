@@ -22,7 +22,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.3', 'xmltodict==0.11.0']
+REQUIREMENTS = ['buienradar==0.4', 'xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
