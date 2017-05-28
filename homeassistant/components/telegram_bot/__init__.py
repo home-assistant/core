@@ -180,6 +180,7 @@ def load_data(url=None, filepath=None,
                     data = io.BytesIO(req.content)
                     if data.read():
                         data.seek(0)
+                        data.name = url
                         return data
                     _LOGGER.warning("Empty data (retry #%s) in %s).",
                                     retry_num + 1, url)
@@ -502,9 +503,10 @@ class TelegramNotificationService:
             for chat_id in self._get_target_chat_ids(target):
                 _LOGGER.debug("send file to chat_id %s. Caption: %s.",
                               chat_id, caption)
+                content = io.BytesIO(file_content.read())
+                content.name = file_content.name
                 self._send_msg(func_send, "Error sending file",
-                               chat_id, io.BytesIO(file_content.read()),
-                               caption=caption, **params)
+                               chat_id, content, caption=caption, **params)
                 file_content.seek(0)
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
