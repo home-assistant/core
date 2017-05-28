@@ -44,7 +44,6 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Harmony platform."""
     import pyharmony
-    global DEVICES
 
     host = None
     activity = None
