@@ -24,7 +24,6 @@ REQUIREMENTS = ['buienradar==0.4', 'xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-
 # Sensor types are defined like so:
 # SENSOR_TYPES = { 'key': ['Display name',
 #                          'unit of measurement',
@@ -46,22 +45,6 @@ SENSOR_TYPES = {
     'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
     'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
 }
-
-"""
-SENSOR_ICONS = {
-    br.HUMIDITY: ,
-    br.TEMPERATURE: ,
-    br.GROUNDTEMP: ,
-    br.WINDSPEED: ,
-    br.WINDFORCE: ,
-    br.WINDDIRECTION: ,
-    br.WINDAZIMUTH: ,
-    br.PRESSURE: ,
-    br.WINDGUST: ,
-    br.IRRADIANCE: ,
-    br.PRECIPITATION: ,
-}
-"""
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS,
@@ -219,12 +202,12 @@ class BrData(object):
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
         result = get_data()
-        if result[SUCCESS]:
-            result = parse_data(result[CONTENT],
+        if result.get(SUCCESS):
+            result = parse_data(result.get(CONTENT),
                                 latitude=self.coordinates[CONF_LATITUDE],
                                 longitude=self.coordinates[CONF_LONGITUDE])
-            if result[SUCCESS]:
-                self.data = result[DATA]
+            if result.get(SUCCESS):
+                self.data = result.get(DATA)
 
                 yield from self.update_devices()
 
