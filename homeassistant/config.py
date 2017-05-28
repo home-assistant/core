@@ -1,9 +1,12 @@
 """Module to help with parsing and generating configuration files."""
 import asyncio
 from collections import OrderedDict
+# pylint: disable=no-name-in-module
+from distutils.version import LooseVersion  # pylint: disable=import-error
 import logging
 import os
 import re
+import shutil
 import sys
 # pylint: disable=unused-import
 from typing import Any, List, Tuple  # NOQA
@@ -293,6 +296,12 @@ def process_ha_config_upgrade(hass):
 
     _LOGGER.info('Upgrading config directory from %s to %s', conf_version,
                  __version__)
+
+    if LooseVersion(conf_version) < LooseVersion('0.46'):
+        # 0.46 introduced persistent deps dir.
+        lib_path = hass.config.path('deps')
+        if os.path.isdir(lib_path):
+            shutil.rmtree(lib_path)
 
     with open(version_path, 'wt') as outp:
         outp.write(__version__)

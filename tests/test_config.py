@@ -257,6 +257,30 @@ class TestConfig(unittest.TestCase):
 
         assert state.attributes['hidden']
 
+    @mock.patch('homeassistant.config.shutil')
+    @mock.patch('homeassistant.config.os')
+    def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
+        """Test removal of library on upgrade from before 0.46."""
+        ha_version = '0.45.0'
+        mock_os.path.isdir = mock.Mock(return_value=True)
+        mock_open = mock.mock_open()
+        with mock.patch('homeassistant.config.open', mock_open, create=True):
+            opened_file = mock_open.return_value
+            # pylint: disable=no-member
+            opened_file.readline.return_value = ha_version
+            self.hass.config.path = mock.Mock()
+            config_util.process_ha_config_upgrade(self.hass)
+            hass_path = self.hass.config.path.return_value
+
+            self.assertEqual(mock_os.path.isdir.call_count, 1)
+            self.assertEqual(
+                mock_os.path.isdir.call_args, mock.call(hass_path)
+            )
+            self.assertEqual(mock_shutil.rmtree.call_count, 1)
+            self.assertEqual(
+                mock_shutil.rmtree.call_args, mock.call(hass_path)
+            )
+
     def test_process_config_upgrade(self):
         """Test update of version on upgrade."""
         ha_version = '0.8.0'
