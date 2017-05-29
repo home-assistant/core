@@ -13,28 +13,25 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
-    ATTR_ATTRIBUTION)
+    ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.4', 'xmltodict==0.11.0']
+REQUIREMENTS = ['buienradar==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-# Sensor types are defined like so:
-# SENSOR_TYPES = { 'key': ['Display name',
-#                          'unit of measurement',
-#                          icon (or None),
-#                }
+# Supported sensor types:
 SENSOR_TYPES = {
     'stationname': ['Stationname', None, None],
     'symbol': ['Symbol', None, None],
     'humidity': ['Humidity', '%', 'mdi:water-percent'],
-    'temperature': ['Temperature', '°C', 'mdi:thermometer'],
-    'groundtemperature': ['Ground Temperature', '°C', 'mdi:thermometer'],
+    'temperature': ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
+    'groundtemperature': ['Ground Temperature', TEMP_CELSIUS,
+                          'mdi:thermometer'],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
     'winddirection': ['Wind direction', '°', 'mdi:compass-outline'],
@@ -58,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the buienradar_nl sensor."""
+    """Setup the buienradar sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -71,7 +68,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(BrSensor(sensor_type))
+        dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br')))
     async_add_devices(dev)
 
     data = BrData(hass, coordinates, dev)
@@ -82,22 +79,25 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BrSensor(Entity):
     """Representation of an Buienradar sensor."""
 
-    def __init__(self, sensor_type):
+    def __init__(self, sensor_type, client_name):
         """Initialize the sensor."""
-        self.client_name = 'br'
+        self.client_name = client_name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
         self._entity_picture = None
         self._attribution = None
+        self._stationname = None
 
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.buienradar import (ATTRIBUTION, IMAGE, SYMBOL)
+        from buienradar.buienradar import (ATTRIBUTION, IMAGE,
+                                           STATIONNAME, SYMBOL)
 
         self._attribution = data.get(ATTRIBUTION)
+        self._stationname = data.get(STATIONNAME)
         if self.type == SYMBOL:
             # update weather symbol & status text
             new_state = data.get(self.type)
@@ -151,6 +151,7 @@ class BrSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: self._attribution,
+            SENSOR_TYPES['stationname'][0]: self._stationname,
         }
 
     @property
