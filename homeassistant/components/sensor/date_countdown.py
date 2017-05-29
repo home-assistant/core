@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "DateCountdown"
+DEFAULT_NAME = "Countdown"
 CONF_DATE = 'date'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up certificate expiry sensor."""
+    """Set up date countdown sensor."""
     end_date = config.get(CONF_DATE)
     sensor_name = config.get(CONF_NAME)
 
