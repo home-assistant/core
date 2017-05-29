@@ -3,6 +3,7 @@ import asyncio
 import logging
 import logging.handlers
 import os
+from time import time
 
 from types import ModuleType
 from typing import Optional, Dict
@@ -175,6 +176,7 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     async_comp = hasattr(component, 'async_setup')
 
+    tic = time()
     _LOGGER.info("Setting up %s", domain)
     warn_task = hass.loop.call_later(
         SLOW_SETUP_WARNING, _LOGGER.warning,
@@ -191,6 +193,8 @@ def _async_setup_component(hass: core.HomeAssistant,
         async_notify_setup_error(hass, domain, True)
         return False
     finally:
+        _LOGGER.info("Setup of domain %s took %.1f seconds.",
+                     domain, time() - tic)
         warn_task.cancel()
 
     if result is False:
