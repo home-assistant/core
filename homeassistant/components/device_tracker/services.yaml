@@ -32,6 +32,10 @@ see:
       description: Battery level of device
       example: '100'
 
+    source_type:
+      description: Type of data source where the device was seen (Use "gps" with coordinates)
+      example: 'router'
+
 icloud:
   icloud_lost_iphone:
     description: Service to play the lost iphone sound on an iDevice
