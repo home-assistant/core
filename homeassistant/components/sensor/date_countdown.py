@@ -19,9 +19,9 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_DAYS = 'Days'
-ATTR_HOURS = 'Hours'
-ATTR_MINUTES = 'Minutes'
+ATTR_DAYS = 'days'
+ATTR_HOURS = 'hours'
+ATTR_MINUTES = 'minutes'
 
 DEFAULT_NAME = "Countdown"
 CONF_DATE = 'date'
