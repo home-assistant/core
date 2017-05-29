@@ -62,7 +62,7 @@ class Countdown(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
-    
+
     @property
     def device_state_attributes(self):
         return {
@@ -86,10 +86,10 @@ class Countdown(Entity):
         hours = seconds // 3600
         minutes = (seconds % 3600) // 60
         seconds = seconds % 60
-        
+
         self._data["days"] = days
         self._data["hours"] = hours
         self._data["minutes"] = minutes
-        
+
         self._state = str(days) + " days " + str(hours) \
             + " hours " + str(minutes) + " minutes"
