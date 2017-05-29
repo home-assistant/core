@@ -77,7 +77,8 @@ class TestStatisticsSensor(unittest.TestCase):
         self.assertEqual(self.total, state.attributes.get('total'))
         self.assertEqual('°C', state.attributes.get('unit_of_measurement'))
         self.assertEqual(self.change, state.attributes.get('change'))
-        self.assertEqual(self.average_change, state.attributes.get('average_change'))
+        self.assertEqual(self.average_change,
+                         state.attributes.get('average_change'))
 
     def test_sampling_size(self):
         """Test rotation."""
