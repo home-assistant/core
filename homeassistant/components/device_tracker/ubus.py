@@ -48,14 +48,15 @@ class UbusDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         host = config[CONF_HOST]
-        username, password = config[CONF_USERNAME], config[CONF_PASSWORD]
+        self.username = config[CONF_USERNAME]
+        self.password = config[CONF_PASSWORD]
 
         self.parse_api_pattern = re.compile(r"(?P<param>\w*) = (?P<value>.*);")
         self.lock = threading.Lock()
         self.last_results = {}
         self.url = 'http://{}/ubus'.format(host)
 
-        self.session_id = _get_session_id(self.url, username, password)
+        self._get_new_session_id()
         self.hostapd = []
         self.leasefile = None
         self.mac2name = None
@@ -70,9 +71,8 @@ class UbusDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         with self.lock:
             if self.leasefile is None:
-                result = _req_json_rpc(
-                    self.url, self.session_id, 'call', 'uci', 'get',
-                    config="dhcp", type="dnsmasq")
+                result = self._req_json_rpc(
+                    'call', 'uci', 'get', config="dhcp", type="dnsmasq")
                 if result:
                     values = result["values"].values()
                     self.leasefile = next(iter(values))["leasefile"]
@@ -80,9 +80,8 @@ class UbusDeviceScanner(DeviceScanner):
                     return
 
             if self.mac2name is None:
-                result = _req_json_rpc(
-                    self.url, self.session_id, 'call', 'file', 'read',
-                    path=self.leasefile)
+                result = self._req_json_rpc(
+                    'call', 'file', 'read', path=self.leasefile)
                 if result:
                     self.mac2name = dict()
                     for line in result["data"].splitlines():
@@ -107,15 +106,13 @@ class UbusDeviceScanner(DeviceScanner):
             _LOGGER.info("Checking ARP")
 
             if not self.hostapd:
-                hostapd = _req_json_rpc(
-                    self.url, self.session_id, 'list', 'hostapd.*', '')
+                hostapd = self._req_json_rpc('list', 'hostapd.*', '')
                 self.hostapd.extend(hostapd.keys())
 
             self.last_results = []
             results = 0
             for hostapd in self.hostapd:
-                result = _req_json_rpc(
-                    self.url, self.session_id, 'call', hostapd, 'get_clients')
+                result = self._req_json_rpc('call', hostapd, 'get_clients')
 
                 if result:
                     results = results + 1
@@ -123,38 +120,37 @@ class UbusDeviceScanner(DeviceScanner):
 
             return bool(results)
 
+    def _req_json_rpc(self, rpcmethod, subsystem, method, **params):
+        """Perform one JSON RPC operation."""
+        data = json.dumps({"jsonrpc": "2.0",
+                           "id": 1,
+                           "method": rpcmethod,
+                           "params": [self.session_id,
+                                      subsystem,
+                                      method,
+                                      params]})
 
-def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
-    """Perform one JSON RPC operation."""
-    data = json.dumps({"jsonrpc": "2.0",
-                       "id": 1,
-                       "method": rpcmethod,
-                       "params": [session_id,
-                                  subsystem,
-                                  method,
-                                  params]})
+        try:
+            res = requests.post(self.url, data=data, timeout=5)
 
-    try:
-        res = requests.post(url, data=data, timeout=5)
+        except requests.exceptions.Timeout:
+            return
 
-    except requests.exceptions.Timeout:
-        return
+        if res.status_code == 200:
+            response = res.json()
 
-    if res.status_code == 200:
-        response = res.json()
+            if rpcmethod == "call":
+                try:
+                    return response["result"][1]
+                except IndexError:
+                    return
+            else:
+                return response["result"]
 
-        if rpcmethod == "call":
-            try:
-                return response["result"][1]
-            except IndexError:
-                return
-        else:
-            return response["result"]
-
-
-def _get_session_id(url, username, password):
-    """Get the authentication token for the given host+username+password."""
-    res = _req_json_rpc(url, "00000000000000000000000000000000", 'call',
-                        'session', 'login', username=username,
-                        password=password)
-    return res["ubus_rpc_session"]
+    def _get_new_session_id(self):
+        """Get a new authentication token (aka session id)."""
+        self.session_id = "00000000000000000000000000000000"
+        res = self._req_json_rpc(
+            'call', 'session', 'login',
+            username=self.username, password=self.password)
+        self.session_id = res["ubus_rpc_session"]
