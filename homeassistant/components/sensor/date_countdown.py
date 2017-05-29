@@ -67,4 +67,4 @@ class Countdown(Entity):
         minutes = (seconds % 3600) // 60
         seconds = seconds % 60
         self._state = str(days) + " days " + str(hours) \
-        + " hours " + str(minutes) + " minutes"
+            + " hours " + str(minutes) + " minutes"
