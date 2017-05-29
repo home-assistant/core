@@ -46,7 +46,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             "Could not connect to Snapcast server at %s:%d", host, port)
         return False
 
-    add_devices([SnapcastDevice(client) for client in server.clients])
+    add_devices([
+        SnapcastDevice(client)
+        for client in server.clients
+        if client.connected
+    ])
 
 
 class SnapcastDevice(MediaPlayerDevice):
