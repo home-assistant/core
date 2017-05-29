@@ -4,7 +4,10 @@ Support for the IKEA Tradfri platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.tradfri/
 """
+import asyncio
 import logging
+import threading
+import time
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
@@ -19,6 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
+TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 ALLOWED_TEMPERATURES = {
     IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
 }
@@ -31,9 +35,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     gateway_id = discovery_info['gateway']
     gateway = hass.data[KEY_GATEWAY][gateway_id]
+
     devices = gateway.get_devices()
     lights = [dev for dev in devices if dev.has_light_control]
-    add_devices(Tradfri(light) for light in lights)
+    add_devices(TradfriLight(light) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
@@ -85,28 +90,33 @@ class TradfriGroup(Light):
         self._group.update()
 
 
-class Tradfri(Light):
+class TradfriLight(Light):
     """The platform class required by Home Asisstant."""
 
     def __init__(self, light):
         """Initialize a Light."""
-        self._light = light
-
-        # Caching of LightControl and light object
-        self._light_control = light.light_control
-        self._light_data = light.light_control.lights[0]
-        self._name = light.name
+        self._light = None
+        self._light_control = None
+        self._light_data = None
+        self._name = None
         self._rgb_color = None
-        self._features = SUPPORT_BRIGHTNESS
+        self._features = None
+        self._ok_temps = None
+        self._thread = None
 
-        if self._light_data.hex_color is not None:
-            if self._light.device_info.manufacturer == IKEA:
-                self._features |= SUPPORT_COLOR_TEMP
-            else:
-                self._features |= SUPPORT_RGB_COLOR
+        self._refresh(light)
 
-        self._ok_temps = ALLOWED_TEMPERATURES.get(
-            self._light.device_info.manufacturer)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Start thread when added to hass."""
+        self._thread = threading.Thread(target=self._start_observe)
+        self._thread.daemon = True
+        self._thread.start()
+
+    @property
+    def should_poll(self):
+        """No polling needed for tradfri light."""
+        return False
 
     @property
     def supported_features(self):
@@ -179,12 +189,45 @@ class Tradfri(Light):
             kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
             self._light_control.set_hex_color(self._ok_temps[kelvin])
 
-    def update(self):
-        """Fetch new state data for this light."""
-        self._light.update()
+    def _start_observe(self):
+        """Start observation of light."""
+        from pytradfri.error import RequestError
+
+        while True:
+            try:
+                self._light.observe(callback=self._observe_update, duration=-1)
+            except RequestError:
+                time.sleep(5)
+                _LOGGER.debug("Reconnecting observe for %s", self.name)
+
+    def _refresh(self, light):
+        """Refresh the light data."""
+        self._light = light
+
+        # Caching of LightControl and light object
+        self._light_control = light.light_control
+        self._light_data = light.light_control.lights[0]
+        self._name = light.name
+        self._rgb_color = None
+        self._features = SUPPORT_BRIGHTNESS
+
+        if self._light_data.hex_color is not None:
+            if self._light.device_info.manufacturer == IKEA:
+                self._features |= SUPPORT_COLOR_TEMP
+            else:
+                self._features |= SUPPORT_RGB_COLOR
+
+        self._ok_temps = ALLOWED_TEMPERATURES.get(
+            self._light.device_info.manufacturer)
+
+    def _observe_update(self, tradfri_device):
+        """Receive new state data for this light."""
+        self._refresh(tradfri_device)
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
         if self._light_data.hex_color not in (None, '0'):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)
+
+        self.schedule_update_ha_state()

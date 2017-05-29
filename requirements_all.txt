@@ -276,6 +276,9 @@ https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 # homeassistant.components.cover.myq
 https://github.com/arraylabs/pymyq/archive/v0.0.8.zip#pymyq==0.0.8
 
+# homeassistant.components.tradfri
+https://github.com/ggravlingen/pytradfri/archive/c7f7e4ca1bbc147d6351fea7694fa9583e56ef54.zip#pytradfri==1.1
+
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
 
@@ -703,9 +706,6 @@ python_openzwave==0.4.0.31
 
 # homeassistant.components.device_tracker.trackr
 pytrackr==0.0.5
-
-# homeassistant.components.tradfri
-pytradfri==1.1
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.12
