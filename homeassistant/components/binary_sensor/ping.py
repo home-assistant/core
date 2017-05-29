@@ -35,6 +35,9 @@ SCAN_INTERVAL = timedelta(minutes=5)
 PING_MATCHER = re.compile(
     r'(?P<min>\d+.\d+)\/(?P<avg>\d+.\d+)\/(?P<max>\d+.\d+)\/(?P<mdev>\d+.\d+)')
 
+WIN32_PING_MATCHER = re.compile(
+    r'(?P<min>\d+)ms.+(?P<max>\d+)ms.+(?P<avg>\d+)ms')
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -102,7 +105,7 @@ class PingData(object):
 
         if sys.platform == 'win32':
             self._ping_cmd = [
-                'ping', '-n', str(self._count), '-w 1000', self._ip_address]
+                'ping', '-n', str(self._count), '-w', '1000', self._ip_address]
         else:
             self._ping_cmd = [
                 'ping', '-n', '-q', '-c', str(self._count), '-W1',
@@ -114,13 +117,23 @@ class PingData(object):
             self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         try:
             out = pinger.communicate()
-            match = PING_MATCHER.search(str(out).split('\n')[-1])
-            rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
-            return {
-                'min': rtt_min,
-                'avg': rtt_avg,
-                'max': rtt_max,
-                'mdev': rtt_mdev}
+            _LOGGER.debug("Output is %s", str(out))
+            if sys.platform == 'win32':
+                match = WIN32_PING_MATCHER.search(str(out).split('\n')[-1])
+                rtt_min, rtt_avg, rtt_max = match.groups()
+                return {
+                    'min': rtt_min,
+                    'avg': rtt_avg,
+                    'max': rtt_max,
+                    'mdev': ''}
+            else:
+                match = PING_MATCHER.search(str(out).split('\n')[-1])
+                rtt_min, rtt_avg, rtt_max, rtt_mdev = match.groups()
+                return {
+                    'min': rtt_min,
+                    'avg': rtt_avg,
+                    'max': rtt_max,
+                    'mdev': rtt_mdev}
         except (subprocess.CalledProcessError, AttributeError):
             return False
 

@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Apple TV platform."""
+    """Set up the Apple TV platform."""
     import pyatv
 
     if discovery_info is not None:
@@ -95,12 +95,13 @@ class AppleTvDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to HASS."""
+        """Handle when an entity is about to be added to Home Assistant."""
         if not self._is_off:
             self._atv.push_updater.start()
 
     @callback
     def _set_power_off(self, is_off):
+        """Set the power to off."""
         self._playing = None
         self._artwork_hash = None
         self._is_off = is_off

@@ -10,6 +10,7 @@ import os
 import socket
 import time
 import ssl
+import re
 import requests.certs
 
 import voluptuous as vol
@@ -213,8 +214,7 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
         if encoding is not None:
             try:
                 payload = dp_payload.decode(encoding)
-                _LOGGER.debug("Received message on %s: %s",
-                              dp_topic, payload)
+                _LOGGER.debug("Received message on %s: %s", dp_topic, payload)
             except (AttributeError, UnicodeDecodeError):
                 _LOGGER.error("Illegal payload encoding %s from "
                               "MQTT topic: %s, Payload: %s",
@@ -403,8 +403,8 @@ def async_setup(hass, config):
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -477,8 +477,8 @@ class MQTT(object):
         This method must be run in the event loop and returns a coroutine.
         """
         with (yield from self._paho_lock):
-            yield from self.hass.loop.run_in_executor(
-                None, self._mqttc.publish, topic, payload, qos, retain)
+            yield from self.hass.async_add_job(
+                self._mqttc.publish, topic, payload, qos, retain)
 
     @asyncio.coroutine
     def async_connect(self):
@@ -486,8 +486,8 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result = yield from self.hass.loop.run_in_executor(
-            None, self._mqttc.connect, self.broker, self.port, self.keepalive)
+        result = yield from self.hass.async_add_job(
+            self._mqttc.connect, self.broker, self.port, self.keepalive)
 
         if result != 0:
             import paho.mqtt.client as mqtt
@@ -507,7 +507,7 @@ class MQTT(object):
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
 
-        return self.hass.loop.run_in_executor(None, stop)
+        return self.hass.async_add_job(stop)
 
     @asyncio.coroutine
     def async_subscribe(self, topic, qos):
@@ -522,8 +522,8 @@ class MQTT(object):
             if topic in self.topics:
                 return
 
-            result, mid = yield from self.hass.loop.run_in_executor(
-                None, self._mqttc.subscribe, topic, qos)
+            result, mid = yield from self.hass.async_add_job(
+                self._mqttc.subscribe, topic, qos)
 
             _raise_on_error(result)
             self.progress[mid] = topic
@@ -535,8 +535,8 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result, mid = yield from self.hass.loop.run_in_executor(
-            None, self._mqttc.unsubscribe, topic)
+        result, mid = yield from self.hass.async_add_job(
+            self._mqttc.unsubscribe, topic)
 
         _raise_on_error(result)
         self.progress[mid] = topic
@@ -639,12 +639,20 @@ def _raise_on_error(result):
 
 def _match_topic(subscription, topic):
     """Test if topic matches subscription."""
+    reg_ex_parts = []
+    suffix = ""
     if subscription.endswith('#'):
-        return (subscription[:-2] == topic or
-                topic.startswith(subscription[:-1]))
-
+        subscription = subscription[:-2]
+        suffix = "(.*)"
     sub_parts = subscription.split('/')
-    topic_parts = topic.split('/')
+    for sub_part in sub_parts:
+        if sub_part == "+":
+            reg_ex_parts.append(r"([^\/]+)")
+        else:
+            reg_ex_parts.append(sub_part)
 
-    return (len(sub_parts) == len(topic_parts) and
-            all(a == b for a, b in zip(sub_parts, topic_parts) if a != '+'))
+    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
+
+    reg = re.compile(reg_ex)
+
+    return reg.match(topic) is not None

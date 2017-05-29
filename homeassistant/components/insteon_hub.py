@@ -29,12 +29,12 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup Insteon Hub component.
+    """Set up the Insteon Hub component.
 
     This will automatically import associated lights.
     """
-    _LOGGER.warning('Component disabled at request from Insteon. '
-                    'For more information: https://goo.gl/zLJaic')
+    _LOGGER.warning("Component disabled at request from Insteon. "
+                    "For more information: https://goo.gl/zLJaic")
     return False
     # pylint: disable=unreachable
     import insteon

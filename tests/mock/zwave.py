@@ -32,6 +32,23 @@ def notification(node_id, network=None):
     )
 
 
+class MockOption(MagicMock):
+    """Mock Z-Wave options."""
+
+    def __init__(self, device=None, config_path=None, user_path=None,
+                 cmd_line=None):
+        """Initialize a Z-Wave mock options."""
+        super().__init__()
+        self.device = device
+        self.config_path = config_path
+        self.user_path = user_path
+        self.cmd_line = cmd_line
+
+    def _get_child_mock(self, **kw):
+        """Create child mocks with right MagicMock class."""
+        return MagicMock(**kw)
+
+
 class MockNetwork(MagicMock):
     """Mock Z-Wave network."""
 
@@ -84,9 +101,10 @@ class MockNetwork(MagicMock):
     STATE_AWAKED = 7
     STATE_READY = 10
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, options=None, *args, **kwargs):
         """Initialize a Z-Wave mock network."""
         super().__init__()
+        self.options = options
         self.state = MockNetwork.STATE_STOPPED
 
 

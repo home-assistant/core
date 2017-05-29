@@ -107,21 +107,21 @@ class TadoDataStore:
         return data
 
     def get_zones(self):
-        """Wrapper for getZones()."""
+        """Wrap for getZones()."""
         return self.tado.getZones()
 
     def get_capabilities(self, tado_id):
-        """Wrapper for getCapabilities(..)."""
+        """Wrap for getCapabilities(..)."""
         return self.tado.getCapabilities(tado_id)
 
     def get_me(self):
-        """Wrapper for getMet()."""
+        """Wrap for getMet()."""
         return self.tado.getMe()
 
     def reset_zone_overlay(self, zone_id):
-        """Wrapper for resetZoneOverlay(..)."""
+        """Wrap for resetZoneOverlay(..)."""
         return self.tado.resetZoneOverlay(zone_id)
 
     def set_zone_overlay(self, zone_id, mode, temperature=None, duration=None):
-        """Wrapper for setZoneOverlay(..)."""
+        """Wrap for setZoneOverlay(..)."""
         return self.tado.setZoneOverlay(zone_id, mode, temperature, duration)

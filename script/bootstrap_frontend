@@ -1,5 +1,5 @@
 #!/bin/sh
-# Resolve all frontend dependencies that the application requires to run.
+# Resolve all frontend dependencies that the application requires to develop.
 
 # Stop on errors
 set -e

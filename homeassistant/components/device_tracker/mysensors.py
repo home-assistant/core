@@ -15,12 +15,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup the MySensors tracker."""
+    """Set up the MySensors tracker."""
     def mysensors_callback(gateway, msg):
-        """Callback for mysensors platform."""
+        """Set up callback for mysensors platform."""
         node = gateway.sensors[msg.node_id]
         if node.sketch_name is None:
-            _LOGGER.debug('No sketch_name: node %s', msg.node_id)
+            _LOGGER.debug("No sketch_name: node %s", msg.node_id)
             return
 
         pres = gateway.const.Presentation
@@ -35,8 +35,8 @@ def setup_scanner(hass, config, see, discovery_info=None):
         try:
             latitude, longitude, _ = position.split(',')
         except ValueError:
-            _LOGGER.error('Payload for V_POSITION %s is not of format '
-                          'latitude,longitude,altitude', position)
+            _LOGGER.error("Payload for V_POSITION %s is not of format "
+                          "latitude, longitude, altitude", position)
             return
         name = '{} {} {}'.format(
             node.sketch_name, msg.node_id, child.id)

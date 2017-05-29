@@ -16,8 +16,8 @@ def device(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=b'test1', data_items=[0, 1, 2], node=node),
-        fan_mode=MockValue(data=b'test2', data_items=[3, 4, 5], node=node),
+        mode=MockValue(data='test1', data_items=[0, 1, 2], node=node),
+        fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
         fan_state=MockValue(data=7, node=node),
     )
@@ -34,12 +34,12 @@ def device_zxt_120(hass, mock_openzwave):
     values = MockEntityValues(
         primary=MockValue(data=1, node=node),
         temperature=MockValue(data=5, node=node, units=None),
-        mode=MockValue(data=b'test1', data_items=[0, 1, 2], node=node),
-        fan_mode=MockValue(data=b'test2', data_items=[3, 4, 5], node=node),
+        mode=MockValue(data='test1', data_items=[0, 1, 2], node=node),
+        fan_mode=MockValue(data='test2', data_items=[3, 4, 5], node=node),
         operating_state=MockValue(data=6, node=node),
         fan_state=MockValue(data=7, node=node),
         zxt_120_swing_mode=MockValue(
-            data=b'test3', data_items=[6, 7, 8], node=node),
+            data='test3', data_items=[6, 7, 8], node=node),
     )
     device = zwave.get_device(hass, node=node, values=values, node_config={})
 
@@ -54,16 +54,16 @@ def test_zxt_120_swing_mode(device_zxt_120):
     assert device._zxt_120 == 1
 
     # Test set mode
-    assert device.values.zxt_120_swing_mode.data == b'test3'
+    assert device.values.zxt_120_swing_mode.data == 'test3'
     device.set_swing_mode('test_swing_set')
-    assert device.values.zxt_120_swing_mode.data == b'test_swing_set'
+    assert device.values.zxt_120_swing_mode.data == 'test_swing_set'
 
     # Test mode changed
     value_changed(device.values.zxt_120_swing_mode)
-    assert device.current_swing_mode == b'test_swing_set'
-    device.values.zxt_120_swing_mode.data = b'test_swing_updated'
+    assert device.current_swing_mode == 'test_swing_set'
+    device.values.zxt_120_swing_mode.data = 'test_swing_updated'
     value_changed(device.values.zxt_120_swing_mode)
-    assert device.current_swing_mode == b'test_swing_updated'
+    assert device.current_swing_mode == 'test_swing_updated'
 
 
 def test_temperature_unit(device):
@@ -104,16 +104,16 @@ def test_target_value_set(device):
 
 def test_operation_value_set(device):
     """Test values changed for climate device."""
-    assert device.values.mode.data == b'test1'
+    assert device.values.mode.data == 'test1'
     device.set_operation_mode('test_set')
-    assert device.values.mode.data == b'test_set'
+    assert device.values.mode.data == 'test_set'
 
 
 def test_fan_mode_value_set(device):
     """Test values changed for climate device."""
-    assert device.values.fan_mode.data == b'test2'
+    assert device.values.fan_mode.data == 'test2'
     device.set_fan_mode('test_fan_set')
-    assert device.values.fan_mode.data == b'test_fan_set'
+    assert device.values.fan_mode.data == 'test_fan_set'
 
 
 def test_target_value_changed(device):
@@ -134,18 +134,18 @@ def test_temperature_value_changed(device):
 
 def test_operation_value_changed(device):
     """Test values changed for climate device."""
-    assert device.current_operation == b'test1'
-    device.values.mode.data = b'test_updated'
+    assert device.current_operation == 'test1'
+    device.values.mode.data = 'test_updated'
     value_changed(device.values.mode)
-    assert device.current_operation == b'test_updated'
+    assert device.current_operation == 'test_updated'
 
 
 def test_fan_mode_value_changed(device):
     """Test values changed for climate device."""
-    assert device.current_fan_mode == b'test2'
-    device.values.fan_mode.data = b'test_updated_fan'
+    assert device.current_fan_mode == 'test2'
+    device.values.fan_mode.data = 'test_updated_fan'
     value_changed(device.values.fan_mode)
-    assert device.current_fan_mode == b'test_updated_fan'
+    assert device.current_fan_mode == 'test_updated_fan'
 
 
 def test_operating_state_value_changed(device):

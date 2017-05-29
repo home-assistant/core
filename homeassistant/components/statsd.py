@@ -39,7 +39,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the StatsD component."""
+    """Set up the StatsD component."""
     import statsd
 
     conf = config[DOMAIN]
