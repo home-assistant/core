@@ -89,8 +89,8 @@ def async_setup(hass, config):
         conf.get(CONF_RUN_TEST, DEFAULT_RUN_TEST)
     )
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     # Register service

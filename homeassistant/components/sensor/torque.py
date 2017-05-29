@@ -75,7 +75,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     def get(self, request):
         """Handle Torque data request."""
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
             return

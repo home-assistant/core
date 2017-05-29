@@ -69,8 +69,8 @@ def send_message(hass, message, title=None, data=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the notify services."""
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     targets = {}
@@ -97,8 +97,8 @@ def async_setup(hass, config):
                 notify_service = yield from \
                     platform.async_get_service(hass, p_config, discovery_info)
             elif hasattr(platform, 'get_service'):
-                notify_service = yield from hass.loop.run_in_executor(
-                    None, platform.get_service, hass, p_config, discovery_info)
+                notify_service = yield from hass.async_add_job(
+                    platform.get_service, hass, p_config, discovery_info)
             else:
                 raise HomeAssistantError("Invalid notify platform.")
 
@@ -192,5 +192,5 @@ class BaseNotificationService(object):
         kwargs can contain ATTR_TITLE to specify a title.
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, partial(self.send_message, message, **kwargs))
+        return self.hass.async_add_job(
+            partial(self.send_message, message, **kwargs))

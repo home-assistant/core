@@ -114,6 +114,7 @@ def async_setup(hass, config):
 
         hass.states.async_set(entity_id, message, attr)
 
+<<<<<<< HEAD
     @callback
     def dismiss_service(call):
         """Handle the dismiss notification service call."""
@@ -122,6 +123,8 @@ def async_setup(hass, config):
 
         hass.states.async_remove(entity_id)
 
+=======
+>>>>>>> home-assistant/dev
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml')
