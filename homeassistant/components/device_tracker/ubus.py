@@ -30,6 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string
 })
 
+# From:
+# http://git.openwrt.org/?p=project/uhttpd.git;a=blob;f=ubus.c;hb=a8bf9c00842224edb394e79909053f7628ee6a82#l103
+_ERROR_ACCESS_DENIED = -32002
+
+_NULL_SESSION_ID = "00000000000000000000000000000000"
+
 
 def get_scanner(hass, config):
     """Validate the configuration and return an ubus scanner."""
@@ -122,34 +128,53 @@ class UbusDeviceScanner(DeviceScanner):
 
     def _req_json_rpc(self, rpcmethod, subsystem, method, **params):
         """Perform one JSON RPC operation."""
-        data = json.dumps({"jsonrpc": "2.0",
-                           "id": 1,
-                           "method": rpcmethod,
-                           "params": [self.session_id,
-                                      subsystem,
-                                      method,
-                                      params]})
+        retry_count = 2
+        while retry_count >= 0:
+            retry_count -= 1
+            data = json.dumps({"jsonrpc": "2.0",
+                               "id": 1,
+                               "method": rpcmethod,
+                               "params": [self.session_id,
+                                          subsystem,
+                                          method,
+                                          params]})
 
-        try:
-            res = requests.post(self.url, data=data, timeout=5)
+            try:
+                res = requests.post(self.url, data=data, timeout=5)
 
-        except requests.exceptions.Timeout:
-            return
+            except requests.exceptions.Timeout:
+                return
 
-        if res.status_code == 200:
-            response = res.json()
+            if res.status_code == 200:
+                response = res.json()
 
-            if rpcmethod == "call":
-                try:
-                    return response["result"][1]
-                except IndexError:
-                    return
-            else:
-                return response["result"]
+                if rpcmethod == "call":
+                    error = response.get("error", None)
+                    if error is not None:
+                        error_code = error["code"]
+                        error_message = error["message"]
+                        have_session_id = self.session_id != _NULL_SESSION_ID
+                        access_denied = error_code == _ERROR_ACCESS_DENIED
+                        if access_denied and have_session_id:
+                            _LOGGER.info(
+                                "Session has expired, requesting new session")
+                            self._get_new_session_id()
+                            # Retry the request with the new session id
+                            continue
+                        else:
+                            _LOGGER.error("Request failed %d: %s",
+                                          error_code, error_message)
+                            return
+                    try:
+                        return response["result"][1]
+                    except IndexError:
+                        return
+                else:
+                    return response["result"]
 
     def _get_new_session_id(self):
         """Get a new authentication token (aka session id)."""
-        self.session_id = "00000000000000000000000000000000"
+        self.session_id = _NULL_SESSION_ID
         res = self._req_json_rpc(
             'call', 'session', 'login',
             username=self.username, password=self.password)
