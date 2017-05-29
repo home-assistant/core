@@ -12,7 +12,8 @@ import async_timeout
 from aiohttp.client_exceptions import ClientError
 
 from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA)  # NOQA
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity)
+from homeassistant.components.telegram_bot import PLATFORM_SCHEMA  # NOQA
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_API_KEY)
 from homeassistant.core import callback
