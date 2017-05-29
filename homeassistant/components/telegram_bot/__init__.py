@@ -7,7 +7,6 @@ https://home-assistant.io/components/telegram_bot/
 import asyncio
 import io
 from functools import partial
-from ipaddress import ip_network
 import logging
 import os
 
@@ -60,9 +59,17 @@ ATTR_USER_ID = 'user_id'
 ATTR_USERNAME = 'username'
 
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
-CONF_TRUSTED_NETWORKS = 'trusted_networks'
 
 DOMAIN = 'telegram_bot'
+
+SERVICE_SEND_MESSAGE = 'send_message'
+SERVICE_SEND_PHOTO = 'send_photo'
+SERVICE_SEND_DOCUMENT = 'send_document'
+SERVICE_SEND_LOCATION = 'send_location'
+SERVICE_EDIT_MESSAGE = 'edit_message'
+SERVICE_EDIT_CAPTION = 'edit_caption'
+SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
+SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
 
 EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
@@ -71,26 +78,13 @@ EVENT_TELEGRAM_TEXT = 'telegram_text'
 PARSER_HTML = 'html'
 PARSER_MD = 'markdown'
 
-DEFAULT_TRUSTED_NETWORKS = [
-    ip_network('149.154.167.197/32'),
-    ip_network('149.154.167.198/31'),
-    ip_network('149.154.167.200/29'),
-    ip_network('149.154.167.208/28'),
-    ip_network('149.154.167.224/29'),
-    ip_network('149.154.167.232/31')
-]
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PLATFORM): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_ALLOWED_CHAT_IDS):
-            vol.All(cv.ensure_list, [vol.Coerce(int)]),
-        vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
-        vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
-            vol.All(cv.ensure_list, [ip_network])
-    }),
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_PLATFORM): cv.string,
+    vol.Required(CONF_API_KEY): cv.string,
+    vol.Required(CONF_ALLOWED_CHAT_IDS):
+        vol.All(cv.ensure_list, [vol.Coerce(int)]),
+    vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+})
 
 BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
@@ -100,13 +94,12 @@ BASE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_KEYBOARD): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
-SERVICE_SEND_MESSAGE = 'send_message'
+
 SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE): cv.template,
 })
-SERVICE_SEND_PHOTO = 'send_photo'
-SERVICE_SEND_DOCUMENT = 'send_document'
+
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_URL): cv.template,
     vol.Optional(ATTR_FILE): cv.template,
@@ -115,30 +108,30 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_PASSWORD): cv.string,
     vol.Optional(ATTR_AUTHENTICATION): cv.string,
 })
-SERVICE_SEND_LOCATION = 'send_location'
+
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_LONGITUDE): cv.template,
     vol.Required(ATTR_LATITUDE): cv.template,
 })
-SERVICE_EDIT_MESSAGE = 'edit_message'
+
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend({
     vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
 })
-SERVICE_EDIT_CAPTION = 'edit_caption'
+
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema({
     vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     vol.Required(ATTR_CAPTION): cv.template,
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
-SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
+
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema({
     vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
-SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
+
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
     vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
@@ -157,8 +150,7 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, filepath=None,
-              username=None, password=None,
+def load_data(url=None, filepath=None, username=None, password=None,
               authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
