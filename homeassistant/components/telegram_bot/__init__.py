@@ -253,7 +253,7 @@ def async_setup(hass, config):
             for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
                               ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
                 _render_template_attr(kwargs, attribute)
-            _LOGGER.debug("NEW telegram_message %s: %s", msgtype, kwargs)
+            _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
             if msgtype == SERVICE_SEND_MESSAGE:
                 yield from hass.async_add_job(
@@ -418,22 +418,22 @@ class TelegramNotificationService:
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
-                _LOGGER.debug("LAST MSG ID: %s (from chat_id %s)",
+                _LOGGER.debug("Last message ID: %s (from chat_id %s)",
                               self._last_message_id, chat_id)
             elif not isinstance(out, bool):
-                _LOGGER.warning("UPDATE LAST MSG??: out_type:%s, out=%s",
+                _LOGGER.warning("Update last message: out_type:%s, out=%s",
                                 type(out), out)
             return out
         except TelegramError:
             _LOGGER.exception(msg_error)
 
     def send_message(self, message="", target=None, **kwargs):
-        """Send a message to one or multiple pre-allowed chat_ids."""
+        """Send a message to one or multiple pre-allowed chat IDs."""
         title = kwargs.get(ATTR_TITLE)
         text = '{}\n{}'.format(title, message) if title else message
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
-            _LOGGER.debug("send_message in chat_id %s with params: %s",
+            _LOGGER.debug("Send message in chat ID %s with params: %s",
                           chat_id, params)
             self._send_msg(self.bot.sendMessage,
                            "Error sending message",
@@ -444,13 +444,13 @@ class TelegramNotificationService:
         chat_id = self._get_target_chat_ids(chat_id)[0]
         message_id, inline_message_id = self._get_msg_ids(kwargs, chat_id)
         params = self._get_msg_kwargs(kwargs)
-        _LOGGER.debug("edit_message %s in chat_id %s with params: %s",
+        _LOGGER.debug("Edit message %s in chat ID %s with params: %s",
                       message_id or inline_message_id, chat_id, params)
         if type_edit == SERVICE_EDIT_MESSAGE:
             message = kwargs.get(ATTR_MESSAGE)
             title = kwargs.get(ATTR_TITLE)
             text = '{}\n{}'.format(title, message) if title else message
-            _LOGGER.debug("editing message w/id %s.",
+            _LOGGER.debug("Editing message with ID %s.",
                           message_id or inline_message_id)
             return self._send_msg(self.bot.editMessageText,
                                   "Error editing text message",
@@ -472,8 +472,8 @@ class TelegramNotificationService:
                               show_alert=False, **kwargs):
         """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
-        _LOGGER.debug("answer_callback_query w/callback_id %s: %s, alert: %s.",
-                      callback_query_id, message, show_alert)
+        _LOGGER.debug("Answer callback query with callback ID %s: %s, "
+                      "alert: %s.", callback_query_id, message, show_alert)
         self._send_msg(self.bot.answerCallbackQuery,
                        "Error sending answer callback query",
                        callback_query_id,
@@ -493,7 +493,7 @@ class TelegramNotificationService:
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
-                _LOGGER.debug("send file to chat_id %s. Caption: %s.",
+                _LOGGER.debug("Send file to chat ID %s. Caption: %s.",
                               chat_id, caption)
                 self._send_msg(func_send, "Error sending file",
                                chat_id, file_content,
@@ -508,7 +508,7 @@ class TelegramNotificationService:
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
-            _LOGGER.debug("send location %s/%s to chat_id %s.",
+            _LOGGER.debug("Send location %s/%s to chat ID %s.",
                           latitude, longitude, chat_id)
             self._send_msg(self.bot.sendLocation,
                            "Error sending location",
@@ -575,7 +575,6 @@ class BaseTelegramBotEntity:
                     event_data[ATTR_TEXT] = data['text']
                     event = EVENT_TELEGRAM_TEXT
             else:
-                # Some other thing...
                 _LOGGER.warning("Message without text data received: %s", data)
                 event_data[ATTR_TEXT] = str(data)
                 event = EVENT_TELEGRAM_TEXT
@@ -597,6 +596,5 @@ class BaseTelegramBotEntity:
             self.hass.bus.async_fire(event, event_data)
             return True
         else:
-            # Some other thing...
-            _LOGGER.warning("SOME OTHER THING RECEIVED --> %s", data)
+            _LOGGER.warning("Message with unknown data received: %s", data)
             return True
