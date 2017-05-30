@@ -4,6 +4,7 @@ This component provides HA sensor for Netgear Arlo IP cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.arlo/
 """
+import asyncio
 import logging
 from datetime import timedelta
 import voluptuous as vol
@@ -39,9 +40,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SCAN_INTERVAL = timedelta(seconds=90)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an Arlo IP sensor."""
     arlo = hass.data.get('arlo')
+    if not arlo:
+        return False
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
@@ -56,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                         camera.name)
                 sensors.append(ArloSensor(hass, name, camera, sensor_type))
 
-    add_devices(sensors, True)
+    async_add_devices(sensors, True)
     return True
 
 
