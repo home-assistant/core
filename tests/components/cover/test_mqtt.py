@@ -274,7 +274,7 @@ class TestCoverMQTT(unittest.TestCase):
         current_cover_position = self.hass.states.get(
             'cover.test').attributes['current_position']
         self.assertEqual(22, current_cover_position)
-    
+
     def test_set_position_templated(self):
         """Test setting cover position via template."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
@@ -318,7 +318,6 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(('position-topic', 62, 0, False),
                          self.mock_publish.mock_calls[-2][1])
 
-
     def test_no_command_topic(self):
         """Test with no command topic."""
         self.assertTrue(setup_component(self.hass, cover.DOMAIN, {
@@ -333,9 +332,6 @@ class TestCoverMQTT(unittest.TestCase):
                 'tilt_status_topic': 'tilt-status'
             }
         }))
-
-        state_attributes_dict = self.hass.states.get(
-            'cover.test').attributes
 
         self.assertEqual(240, self.hass.states.get(
             'cover.test').attributes['supported_features'])
@@ -355,9 +351,6 @@ class TestCoverMQTT(unittest.TestCase):
                 'tilt_status_topic': 'tilt-status'
             }
         }))
-
-        state_attributes_dict = self.hass.states.get(
-            'cover.test').attributes
 
         self.assertEqual(251, self.hass.states.get(
             'cover.test').attributes['supported_features'])
