@@ -784,7 +784,7 @@ sleepyq==0.6
 # smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast
-snapcast==1.2.2
+snapcast==2.0.6
 
 # homeassistant.components.climate.honeywell
 somecomfort==0.4.1
