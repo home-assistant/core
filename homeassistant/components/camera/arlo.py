@@ -24,9 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
-CONTENT_TYPE_HEADER = 'Content-Type'
-TIMEOUT = 5
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
