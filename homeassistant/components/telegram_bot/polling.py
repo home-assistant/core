@@ -12,13 +12,16 @@ import async_timeout
 from aiohttp.client_exceptions import ClientError
 
 from homeassistant.components.telegram_bot import (
-    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity)
+    CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity,
+    PLATFORM_SCHEMA as TELEGRAM_PLATFORM_SCHEMA)
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, CONF_API_KEY)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
 
 @asyncio.coroutine
