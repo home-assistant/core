@@ -16,6 +16,7 @@ from homeassistant.components.cover import (
     SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
     SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_STOP, SUPPORT_SET_POSITION,
     ATTR_POSITION)
+from homeassistant.exceptions import TemplateError
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, CONF_OPTIMISTIC, STATE_OPEN,
     STATE_CLOSED, STATE_UNKNOWN)
@@ -98,7 +99,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttCover(hass,
+    async_add_devices([MqttCover(
+        hass,
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -127,7 +129,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttCover(CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, hass, name, state_topic, command_topic, tilt_command_topic,
+    def __init__(self, hass, name, state_topic, command_topic,
+                 tilt_command_topic,
                  tilt_status_topic, qos, retain, state_open, state_closed,
                  payload_open, payload_close, payload_stop,
                  optimistic, value_template, tilt_open_position,
@@ -335,7 +338,7 @@ class MqttCover(CoverDevice):
 
         mqtt.async_publish(self.hass, self._tilt_command_topic,
                            level, self._qos, self._retain)
-    
+
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
@@ -347,10 +350,9 @@ class MqttCover(CoverDevice):
                 except TemplateError as ex:
                     _LOGGER.error(ex)
                     self._state = None
-            
-            mqtt.async_publish(self.hass, self._position_topic,
-                           position, self._qos, self._retain)
 
+            mqtt.async_publish(self.hass, self._position_topic,
+                               position, self._qos, self._retain)
 
     def find_percentage_in_range(self, position):
         """Find the 0-100% value within the specified range."""
