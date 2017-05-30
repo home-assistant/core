@@ -13,7 +13,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA,  CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, SOURCE_TYPE_ROUTER)
+    PLATFORM_SCHEMA,  CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
+    SOURCE_TYPE_ROUTER)
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant import util
 from homeassistant import const
