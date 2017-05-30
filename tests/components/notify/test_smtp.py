@@ -21,8 +21,10 @@ class TestNotifySmtp(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.mailer = MockSMTP('localhost', 25, 'test@test.com', 1, 'testuser',
-                               'testpass', 'testrecip@test.com', 0)
+        self.mailer = MockSMTP('localhost', 25, 5, 'test@test.com', 1,
+                               'testuser', 'testpass',
+                               ['recip1@example.com', 'testrecip@test.com'],
+                               'HomeAssistant', 0)
 
     def tearDown(self):  # pylint: disable=invalid-name
         """"Stop down everything that was started."""
@@ -36,8 +38,8 @@ class TestNotifySmtp(unittest.TestCase):
                     'MIME-Version: 1.0\n'
                     'Content-Transfer-Encoding: 7bit\n'
                     'Subject: Home Assistant\n'
-                    'To: testrecip@test.com\n'
-                    'From: test@test.com\n'
+                    'To: recip1@example.com,testrecip@test.com\n'
+                    'From: HomeAssistant <test@test.com>\n'
                     'X-Mailer: HomeAssistant\n'
                     'Date: [^\n]+\n'
                     'Message-Id: <[^@]+@[^>]+>\n'
@@ -50,4 +52,25 @@ class TestNotifySmtp(unittest.TestCase):
         """Test build of mixed text email behavior."""
         msg = self.mailer.send_message('Test msg',
                                        data={'images': ['test.jpg']})
+        self.assertTrue('Content-Type: multipart/related' in msg)
+
+    @patch('email.utils.make_msgid', return_value='<mock@mock>')
+    def test_html_email(self, mock_make_msgid):
+        """Test build of html email behavior."""
+        html = '''
+        <!DOCTYPE html>
+        <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+            <head><meta charset="UTF-8"></head>
+            <body>
+              <div>
+                <h1>Intruder alert at apartment!!</h1>
+              </div>
+              <div>
+                <img alt="test.jpg" src="cid:test.jpg"/>
+              </div>
+            </body>
+        </html>'''
+        msg = self.mailer.send_message('Test msg',
+                                       data={'html': html,
+                                             'images': ['test.jpg']})
         self.assertTrue('Content-Type: multipart/related' in msg)

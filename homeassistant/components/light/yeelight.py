@@ -26,11 +26,11 @@ REQUIREMENTS = ['yeelight==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_TRANSITION = "transition"
+CONF_TRANSITION = 'transition'
 DEFAULT_TRANSITION = 350
 
-CONF_SAVE_ON_CHANGE = "save_on_change"
-CONF_MODE_MUSIC = "use_music_mode"
+CONF_SAVE_ON_CHANGE = 'save_on_change'
+CONF_MODE_MUSIC = 'use_music_mode'
 
 DOMAIN = 'yeelight'
 
@@ -44,16 +44,17 @@ DEVICE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
 
-SUPPORT_YEELIGHT_RGB = (SUPPORT_RGB_COLOR |
-                        SUPPORT_COLOR_TEMP)
-
 SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
                     SUPPORT_TRANSITION |
                     SUPPORT_FLASH)
 
+SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
+                        SUPPORT_RGB_COLOR |
+                        SUPPORT_COLOR_TEMP)
+
 
 def _cmd(func):
-    """A wrapper to catch exceptions from the bulb."""
+    """Define a wrapper to catch exceptions from the bulb."""
     def _wrap(self, *args, **kwargs):
         import yeelight
         try:
@@ -66,14 +67,14 @@ def _cmd(func):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yeelight bulbs."""
+    """Set up the Yeelight bulbs."""
     lights = []
     if discovery_info is not None:
         _LOGGER.debug("Adding autodetected %s", discovery_info['hostname'])
 
-        # not using hostname, as it seems to vary.
-        name = "yeelight_%s_%s" % (discovery_info["device_type"],
-                                   discovery_info["properties"]["mac"])
+        # Not using hostname, as it seems to vary.
+        name = "yeelight_%s_%s" % (discovery_info['device_type'],
+                                   discovery_info['properties']['mac'])
         device = {'name': name, 'ipaddr': discovery_info['host']}
 
         lights.append(YeelightLight(device, DEVICE_SCHEMA({})))
@@ -84,14 +85,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = {'name': device_config[CONF_NAME], 'ipaddr': ipaddr}
             lights.append(YeelightLight(device, device_config))
 
-    add_devices(lights, True)  # true to request an update before adding.
+    add_devices(lights, True)
 
 
 class YeelightLight(Light):
     """Representation of a Yeelight light."""
 
     def __init__(self, device, config):
-        """Initialize the light."""
+        """Initialize the Yeelight light."""
         self.config = config
         self._name = device['name']
         self._ipaddr = device['ipaddr']
@@ -141,8 +142,8 @@ class YeelightLight(Light):
         return self._brightness
 
     def _get_rgb_from_properties(self):
-        rgb = self._properties.get("rgb", None)
-        color_mode = self._properties.get("color_mode", None)
+        rgb = self._properties.get('rgb', None)
+        color_mode = self._properties.get('color_mode', None)
         if not rgb or not color_mode:
             return rgb
 
@@ -150,9 +151,9 @@ class YeelightLight(Light):
         if color_mode == 2:  # color temperature
             return color_temperature_to_rgb(self.color_temp)
         if color_mode == 3:  # hsv
-            hue = self._properties.get("hue")
-            sat = self._properties.get("sat")
-            val = self._properties.get("bright")
+            hue = self._properties.get('hue')
+            sat = self._properties.get('sat')
+            val = self._properties.get('bright')
             return colorsys.hsv_to_rgb(hue, sat, val)
 
         rgb = int(rgb)
@@ -179,9 +180,6 @@ class YeelightLight(Light):
                 self._bulb_device = yeelight.Bulb(self._ipaddr)
                 self._bulb_device.get_properties()  # force init for type
 
-                btype = self._bulb_device.bulb_type
-                if btype == yeelight.BulbType.Color:
-                    self._supported_features |= SUPPORT_YEELIGHT_RGB
                 self._available = True
             except yeelight.BulbException as ex:
                 self._available = False
@@ -203,13 +201,16 @@ class YeelightLight(Light):
         try:
             self._bulb.get_properties()
 
-            self._is_on = self._properties.get("power") == "on"
+            if self._bulb_device.bulb_type == yeelight.BulbType.Color:
+                self._supported_features = SUPPORT_YEELIGHT_RGB
 
-            bright = self._properties.get("bright", None)
+            self._is_on = self._properties.get('power') == 'on'
+
+            bright = self._properties.get('bright', None)
             if bright:
                 self._brightness = 255 * (int(bright) / 100)
 
-            temp_in_k = self._properties.get("ct", None)
+            temp_in_k = self._properties.get('ct', None)
             if temp_in_k:
                 self._color_temp = kelvin_to_mired(int(temp_in_k))
 
@@ -254,7 +255,8 @@ class YeelightLight(Light):
     def set_flash(self, flash) -> None:
         """Activate flash."""
         if flash:
-            from yeelight import RGBTransition, SleepTransition, Flow
+            from yeelight import (RGBTransition, SleepTransition, Flow,
+                                  BulbException)
             if self._bulb.last_properties["color_mode"] != 1:
                 _LOGGER.error("Flash supported currently only in RGB mode.")
                 return
@@ -279,10 +281,14 @@ class YeelightLight(Light):
                               duration=duration))
 
             flow = Flow(count=count, transitions=transitions)
-            self._bulb.start_flow(flow)
+            try:
+                self._bulb.start_flow(flow)
+            except BulbException as ex:
+                _LOGGER.error("Unable to set flash: %s", ex)
 
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
+        import yeelight
         brightness = kwargs.get(ATTR_BRIGHTNESS)
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
@@ -292,22 +298,43 @@ class YeelightLight(Light):
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
             duration = int(kwargs.get(ATTR_TRANSITION) * 1000)  # kwarg in s
 
-        self._bulb.turn_on(duration=duration)
+        try:
+            self._bulb.turn_on(duration=duration)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb on: %s", ex)
+            return
 
         if self.config[CONF_MODE_MUSIC] and not self._bulb.music_mode:
-            self.set_music_mode(self.config[CONF_MODE_MUSIC])
+            try:
+                self.set_music_mode(self.config[CONF_MODE_MUSIC])
+            except yeelight.BulbException as ex:
+                _LOGGER.error("Unable to turn on music mode,"
+                              "consider disabling it: %s", ex)
 
-        # values checked for none in methods
-        self.set_rgb(rgb, duration)
-        self.set_colortemp(colortemp, duration)
-        self.set_brightness(brightness, duration)
-        self.set_flash(flash)
+        try:
+            # values checked for none in methods
+            self.set_rgb(rgb, duration)
+            self.set_colortemp(colortemp, duration)
+            self.set_brightness(brightness, duration)
+            self.set_flash(flash)
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to set bulb properties: %s", ex)
+            return
 
         # save the current state if we had a manual change.
-        if self.config[CONF_SAVE_ON_CHANGE]:
-            if brightness or colortemp or rgb:
+        if self.config[CONF_SAVE_ON_CHANGE] and (brightness
+                                                 or colortemp
+                                                 or rgb):
+            try:
                 self.set_default()
+            except yeelight.BulbException as ex:
+                _LOGGER.error("Unable to set the defaults: %s", ex)
+                return
 
     def turn_off(self, **kwargs) -> None:
         """Turn off."""
-        self._bulb.turn_off()
+        import yeelight
+        try:
+            self._bulb.turn_off()
+        except yeelight.BulbException as ex:
+            _LOGGER.error("Unable to turn the bulb off: %s", ex)

@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the template sensors."""
+    """Set up the template sensors."""
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -100,7 +100,7 @@ class SensorTemplate(Entity):
 
         @callback
         def template_sensor_state_listener(entity, old_state, new_state):
-            """Called when the target device changes state."""
+            """Handle device state changes."""
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback

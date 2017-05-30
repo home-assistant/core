@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     insteonhub = hass.data['insteon_local']
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
-    if len(conf_lights):
+    if conf_lights:
         for device_id in conf_lights:
             setup_light(device_id, conf_lights[device_id], insteonhub, hass,
                         add_devices)
@@ -64,7 +64,7 @@ def request_configuration(device_id, insteonhub, model, hass,
         return
 
     def insteon_light_config_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Set up actions to do when our configuration callback is called."""
         setup_light(device_id, data.get('name'), insteonhub, hass,
                     add_devices_callback)
 
@@ -84,7 +84,7 @@ def setup_light(device_id, name, insteonhub, hass, add_devices_callback):
         request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
-        _LOGGER.info("Device configuration done!")
+        _LOGGER.debug("Device configuration done")
 
     conf_lights = config_from_file(hass.config.path(INSTEON_LOCAL_LIGHTS_CONF))
     if device_id not in conf_lights:
@@ -107,7 +107,7 @@ def config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return True
     else:
@@ -152,6 +152,10 @@ class InsteonLocalDimmerDevice(Light):
     def update(self):
         """Update state of the light."""
         resp = self.node.status(0)
+
+        while 'error' in resp and resp['error'] is True:
+            resp = self.node.status(0)
+
         if 'cmd2' in resp:
             self._value = int(resp['cmd2'], 16)
 
@@ -171,7 +175,7 @@ class InsteonLocalDimmerDevice(Light):
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS]) / 255 * 100
 
-        self.node.on(brightness)
+        self.node.change_level(brightness)
 
     def turn_off(self, **kwargs):
         """Turn device off."""

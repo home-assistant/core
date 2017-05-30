@@ -15,7 +15,7 @@ DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic switch platform."""
+    """Set up the Homematic switch platform."""
     if discovery_info is None:
         return
 
@@ -40,8 +40,8 @@ class HMSwitch(HMDevice, SwitchDevice):
             return False
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
+    def today_energy_kwh(self):
+        """Return the current power usage in kWh."""
         if "ENERGY_COUNTER" in self._data:
             try:
                 return self._data["ENERGY_COUNTER"] / 1000

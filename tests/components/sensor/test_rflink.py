@@ -73,15 +73,15 @@ def test_default_setup(hass, monkeypatch):
 
 
 @asyncio.coroutine
-def test_new_sensors_group(hass, monkeypatch):
-    """New devices should be added to configured group."""
+def test_disable_automatic_add(hass, monkeypatch):
+    """If disabled new devices should not be automatically added."""
     config = {
         'rflink': {
             'port': '/dev/ttyABC0',
         },
         DOMAIN: {
             'platform': 'rflink',
-            'new_devices_group': 'new_rflink_sensors',
+            'automatic_add': False,
         },
     }
 
@@ -91,13 +91,12 @@ def test_new_sensors_group(hass, monkeypatch):
 
     # test event for new unconfigured sensor
     event_callback({
-        'id': 'test',
+        'id': 'test2',
         'sensor': 'temperature',
         'value': 0,
         'unit': '°C',
     })
     yield from hass.async_block_till_done()
 
-    # make sure new device is added to correct group
-    group = hass.states.get('group.new_rflink_sensors')
-    assert group.attributes.get('entity_id') == ('sensor.test',)
+    # make sure new device is not added
+    assert not hass.states.get('sensor.test2')

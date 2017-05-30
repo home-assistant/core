@@ -15,9 +15,8 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['fritzconnection==0.6']
+REQUIREMENTS = ['fritzconnection==0.6.3']
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,9 +52,8 @@ class FritzBoxScanner(DeviceScanner):
 
         # Establish a connection to the FRITZ!Box.
         try:
-            self.fritz_box = fc.FritzHosts(address=self.host,
-                                           user=self.username,
-                                           password=self.password)
+            self.fritz_box = fc.FritzHosts(
+                address=self.host, user=self.username, password=self.password)
         except (ValueError, TypeError):
             self.fritz_box = None
 
@@ -65,12 +63,12 @@ class FritzBoxScanner(DeviceScanner):
             self.success_init = False
 
         if self.success_init:
-            _LOGGER.info('Successfully connected to %s',
+            _LOGGER.info("Successfully connected to %s",
                          self.fritz_box.modelname)
             self._update_info()
         else:
-            _LOGGER.error('Failed to establish connection to FRITZ!Box '
-                          'with IP: %s', self.host)
+            _LOGGER.error("Failed to establish connection to FRITZ!Box "
+                          "with IP: %s", self.host)
 
     def scan_devices(self):
         """Scan for new devices and return a list of found device ids."""
@@ -96,6 +94,6 @@ class FritzBoxScanner(DeviceScanner):
         if not self.success_init:
             return False
 
-        _LOGGER.info('Scanning')
+        _LOGGER.info("Scanning")
         self.last_results = self.fritz_box.get_hosts_info()
         return True

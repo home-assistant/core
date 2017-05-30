@@ -26,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_ACTIVITY = 'activity'
 ATTR_COMMAND = 'command'
 ATTR_DEVICE = 'device'
+ATTR_NUM_REPEATS = 'num_repeats'
+ATTR_DELAY_SECS = 'delay_secs'
 
 DOMAIN = 'remote'
 
@@ -40,6 +42,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SYNC = 'sync'
 
+DEFAULT_NUM_REPEATS = '1'
+DEFAULT_DELAY_SECS = '0.4'
+
 REMOTE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -50,7 +55,9 @@ REMOTE_SERVICE_TURN_ON_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
 
 REMOTE_SERVICE_SEND_COMMAND_SCHEMA = REMOTE_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_DEVICE): cv.string,
-    vol.Required(ATTR_COMMAND): cv.string,
+    vol.Required(ATTR_COMMAND): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ATTR_NUM_REPEATS, default=DEFAULT_NUM_REPEATS): cv.string,
+    vol.Optional(ATTR_DELAY_SECS, default=DEFAULT_DELAY_SECS): cv.string
 })
 
 
@@ -74,11 +81,19 @@ def turn_off(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
 
-def send_command(hass, device, command, entity_id=None):
+def send_command(hass, device, command, entity_id=None,
+                 num_repeats=None, delay_secs=None):
     """Send a command to a device."""
     data = {ATTR_DEVICE: str(device), ATTR_COMMAND: command}
     if entity_id:
         data[ATTR_ENTITY_ID] = entity_id
+
+    if num_repeats:
+        data[ATTR_NUM_REPEATS] = num_repeats
+
+    if delay_secs:
+        data[ATTR_DELAY_SECS] = delay_secs
+
     hass.services.call(DOMAIN, SERVICE_SEND_COMMAND, data)
 
 
@@ -97,13 +112,16 @@ def async_setup(hass, config):
         activity_id = service.data.get(ATTR_ACTIVITY)
         device = service.data.get(ATTR_DEVICE)
         command = service.data.get(ATTR_COMMAND)
+        num_repeats = service.data.get(ATTR_NUM_REPEATS)
+        delay_secs = service.data.get(ATTR_DELAY_SECS)
 
         for remote in target_remotes:
             if service.service == SERVICE_TURN_ON:
                 yield from remote.async_turn_on(activity=activity_id)
             elif service.service == SERVICE_SEND_COMMAND:
                 yield from remote.async_send_command(
-                    device=device, command=command)
+                    device=device, command=command,
+                    num_repeats=num_repeats, delay_secs=delay_secs)
             else:
                 yield from remote.async_turn_off()
 
@@ -112,7 +130,7 @@ def async_setup(hass, config):
             if not remote.should_poll:
                 continue
 
-            update_coro = hass.loop.create_task(
+            update_coro = hass.async_add_job(
                 remote.async_update_ha_state(True))
             if hasattr(remote, 'async_update'):
                 update_tasks.append(update_coro)
@@ -122,8 +140,8 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
@@ -153,5 +171,4 @@ class RemoteDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.send_command, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.send_command, **kwargs))

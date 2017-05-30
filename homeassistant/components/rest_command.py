@@ -8,6 +8,7 @@ import asyncio
 import logging
 
 import aiohttp
+from aiohttp import hdrs
 import async_timeout
 import voluptuous as vol
 
@@ -31,6 +32,8 @@ SUPPORT_REST_METHODS = [
     'delete',
 ]
 
+CONF_CONTENT_TYPE = 'content_type'
+
 COMMAND_SCHEMA = vol.Schema({
     vol.Required(CONF_URL): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
@@ -39,6 +42,7 @@ COMMAND_SCHEMA = vol.Schema({
     vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
     vol.Optional(CONF_PAYLOAD): cv.template,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
+    vol.Optional(CONF_CONTENT_TYPE): cv.string
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -50,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the rest_command component."""
+    """Set up the REST command component."""
     websession = async_get_clientsession(hass)
 
     def async_register_rest_command(name, command_config):
@@ -72,6 +76,11 @@ def async_setup(hass, config):
             template_payload = command_config[CONF_PAYLOAD]
             template_payload.hass = hass
 
+        headers = None
+        if CONF_CONTENT_TYPE in command_config:
+            content_type = command_config[CONF_CONTENT_TYPE]
+            headers = {hdrs.CONTENT_TYPE: content_type}
+
         @asyncio.coroutine
         def async_service_handler(service):
             """Execute a shell command service."""
@@ -81,30 +90,26 @@ def async_setup(hass, config):
                     template_payload.async_render(variables=service.data),
                     'utf-8')
 
-            request = None
             try:
                 with async_timeout.timeout(timeout, loop=hass.loop):
                     request = yield from getattr(websession, method)(
                         template_url.async_render(variables=service.data),
                         data=payload,
-                        auth=auth
+                        auth=auth,
+                        headers=headers
                     )
 
-                    if request.status == 200:
-                        _LOGGER.info("Success call %s.", request.url)
-                        return
-
+                if request.status < 400:
+                    _LOGGER.info("Success call %s.", request.url)
+                else:
                     _LOGGER.warning(
                         "Error %d on call %s.", request.status, request.url)
+
             except asyncio.TimeoutError:
                 _LOGGER.warning("Timeout call %s.", request.url)
 
-            except aiohttp.errors.ClientError:
+            except aiohttp.ClientError:
                 _LOGGER.error("Client error %s.", request.url)
-
-            finally:
-                if request is not None:
-                    yield from request.release()
 
         # register services
         hass.services.async_register(DOMAIN, name, async_service_handler)

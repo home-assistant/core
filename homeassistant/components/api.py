@@ -17,9 +17,9 @@ from homeassistant.bootstrap import ERROR_LOG_FILENAME
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, EVENT_TIME_CHANGED,
     HTTP_BAD_REQUEST, HTTP_CREATED, HTTP_NOT_FOUND,
-    HTTP_UNPROCESSABLE_ENTITY, MATCH_ALL, URL_API, URL_API_COMPONENTS,
+    MATCH_ALL, URL_API, URL_API_COMPONENTS,
     URL_API_CONFIG, URL_API_DISCOVERY_INFO, URL_API_ERROR_LOG,
-    URL_API_EVENT_FORWARD, URL_API_EVENTS, URL_API_SERVICES,
+    URL_API_EVENTS, URL_API_SERVICES,
     URL_API_STATES, URL_API_STATES_ENTITY, URL_API_STREAM, URL_API_TEMPLATE,
     __version__)
 from homeassistant.exceptions import TemplateError
@@ -48,10 +48,11 @@ def setup(hass, config):
     hass.http.register_view(APIEventView)
     hass.http.register_view(APIServicesView)
     hass.http.register_view(APIDomainServicesView)
-    hass.http.register_view(APIEventForwardingView)
     hass.http.register_view(APIComponentsView)
-    hass.http.register_view(APIErrorLogView)
     hass.http.register_view(APITemplateView)
+
+    hass.http.register_static_path(
+        URL_API_ERROR_LOG, hass.config.path(ERROR_LOG_FILENAME), False)
 
     return True
 
@@ -82,7 +83,7 @@ class APIEventStream(HomeAssistantView):
         stop_obj = object()
         to_write = asyncio.Queue(loop=hass.loop)
 
-        restrict = request.GET.get('restrict')
+        restrict = request.query.get('restrict')
         if restrict:
             restrict = restrict.split(',') + [EVENT_HOMEASSISTANT_STOP]
 
@@ -317,77 +318,6 @@ class APIDomainServicesView(HomeAssistantView):
         return self.json(changed_states)
 
 
-class APIEventForwardingView(HomeAssistantView):
-    """View to handle EventForwarding requests."""
-
-    url = URL_API_EVENT_FORWARD
-    name = "api:event-forward"
-    event_forwarder = None
-
-    @asyncio.coroutine
-    def post(self, request):
-        """Setup an event forwarder."""
-        hass = request.app['hass']
-        try:
-            data = yield from request.json()
-        except ValueError:
-            return self.json_message("No data received.", HTTP_BAD_REQUEST)
-
-        try:
-            host = data['host']
-            api_password = data['api_password']
-        except KeyError:
-            return self.json_message("No host or api_password received.",
-                                     HTTP_BAD_REQUEST)
-
-        try:
-            port = int(data['port']) if 'port' in data else None
-        except ValueError:
-            return self.json_message("Invalid value received for port.",
-                                     HTTP_UNPROCESSABLE_ENTITY)
-
-        api = rem.API(host, api_password, port)
-
-        valid = yield from hass.loop.run_in_executor(
-            None, api.validate_api)
-        if not valid:
-            return self.json_message("Unable to validate API.",
-                                     HTTP_UNPROCESSABLE_ENTITY)
-
-        if self.event_forwarder is None:
-            self.event_forwarder = rem.EventForwarder(hass)
-
-        self.event_forwarder.async_connect(api)
-
-        return self.json_message("Event forwarding setup.")
-
-    @asyncio.coroutine
-    def delete(self, request):
-        """Remove event forwarder."""
-        try:
-            data = yield from request.json()
-        except ValueError:
-            return self.json_message("No data received.", HTTP_BAD_REQUEST)
-
-        try:
-            host = data['host']
-        except KeyError:
-            return self.json_message("No host received.", HTTP_BAD_REQUEST)
-
-        try:
-            port = int(data['port']) if 'port' in data else None
-        except ValueError:
-            return self.json_message("Invalid value received for port.",
-                                     HTTP_UNPROCESSABLE_ENTITY)
-
-        if self.event_forwarder is not None:
-            api = rem.API(host, None, port)
-
-            self.event_forwarder.async_disconnect(api)
-
-        return self.json_message("Event forwarding cancelled.")
-
-
 class APIComponentsView(HomeAssistantView):
     """View to handle Components requests."""
 
@@ -398,20 +328,6 @@ class APIComponentsView(HomeAssistantView):
     def get(self, request):
         """Get current loaded components."""
         return self.json(request.app['hass'].config.components)
-
-
-class APIErrorLogView(HomeAssistantView):
-    """View to handle ErrorLog requests."""
-
-    url = URL_API_ERROR_LOG
-    name = "api:error-log"
-
-    @asyncio.coroutine
-    def get(self, request):
-        """Serve error log."""
-        resp = yield from self.file(
-            request, request.app['hass'].config.path(ERROR_LOG_FILENAME))
-        return resp
 
 
 class APITemplateView(HomeAssistantView):

@@ -17,27 +17,30 @@ from .version import FINGERPRINTS
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api']
+
 URL_PANEL_COMPONENT = '/frontend/panels/{}.html'
 URL_PANEL_COMPONENT_FP = '/frontend/panels/{}-{}.html'
+
 STATIC_PATH = os.path.join(os.path.dirname(__file__), 'www_static/')
+
 MANIFEST_JSON = {
-    "background_color": "#FFFFFF",
-    "description": "Open-source home automation platform running on Python 3.",
-    "dir": "ltr",
-    "display": "standalone",
-    "icons": [],
-    "lang": "en-US",
-    "name": "Home Assistant",
-    "short_name": "Assistant",
-    "start_url": "/",
-    "theme_color": "#03A9F4"
+    'background_color': '#FFFFFF',
+    'description': 'Open-source home automation platform running on Python 3.',
+    'dir': 'ltr',
+    'display': 'standalone',
+    'icons': [],
+    'lang': 'en-US',
+    'name': 'Home Assistant',
+    'short_name': 'Assistant',
+    'start_url': '/',
+    'theme_color': '#03A9F4'
 }
 
 for size in (192, 384, 512, 1024):
     MANIFEST_JSON['icons'].append({
-        "src": "/static/icons/favicon-{}x{}.png".format(size, size),
-        "sizes": "{}x{}".format(size, size),
-        "type": "image/png"
+        'src': '/static/icons/favicon-{}x{}.png'.format(size, size),
+        'sizes': '{}x{}'.format(size, size),
+        'type': 'image/png'
     })
 
 DATA_PANELS = 'frontend_panels'
@@ -92,10 +95,10 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
         url_path = component_name
 
     if url_path in panels:
-        _LOGGER.warning('Overwriting component %s', url_path)
+        _LOGGER.warning("Overwriting component %s", url_path)
     if not os.path.isfile(path):
-        _LOGGER.error('Panel %s component does not exist: %s',
-                      component_name, path)
+        _LOGGER.error(
+            "Panel %s component does not exist: %s", component_name, path)
         return
 
     if md5 is None:
@@ -133,8 +136,8 @@ def register_panel(hass, component_name, path, md5=None, sidebar_title=None,
     index_view = hass.data.get(DATA_INDEX_VIEW)
 
     if index_view:
-        hass.http.app.router.add_route('get', '/{}'.format(url_path),
-                                       index_view.get)
+        hass.http.app.router.add_route(
+            'get', '/{}'.format(url_path), index_view.get)
 
 
 def add_manifest_json_key(key, val):
@@ -143,7 +146,7 @@ def add_manifest_json_key(key, val):
 
 
 def setup(hass, config):
-    """Setup serving the frontend."""
+    """Set up the serving of the frontend."""
     hass.http.register_view(BootstrapView)
     hass.http.register_view(ManifestJSONView)
 
@@ -153,7 +156,7 @@ def setup(hass, config):
         sw_path = "service_worker.js"
 
     hass.http.register_static_path("/service_worker.js",
-                                   os.path.join(STATIC_PATH, sw_path), 0)
+                                   os.path.join(STATIC_PATH, sw_path), False)
     hass.http.register_static_path("/robots.txt",
                                    os.path.join(STATIC_PATH, "robots.txt"))
     hass.http.register_static_path("/static", STATIC_PATH)
@@ -186,8 +189,8 @@ def setup(hass, config):
 class BootstrapView(HomeAssistantView):
     """View to bootstrap frontend with all needed data."""
 
-    url = "/api/bootstrap"
-    name = "api:bootstrap"
+    url = '/api/bootstrap'
+    name = 'api:bootstrap'
 
     @callback
     def get(self, request):
@@ -207,7 +210,7 @@ class IndexView(HomeAssistantView):
     """Serve the frontend."""
 
     url = '/'
-    name = "frontend:index"
+    name = 'frontend:index'
     requires_auth = False
     extra_urls = ['/states', '/states/{entity_id}']
 
@@ -265,8 +268,8 @@ class IndexView(HomeAssistantView):
                 no_auth = 'true'
 
         icons_url = '/static/mdi-{}.html'.format(FINGERPRINTS['mdi.html'])
-        template = yield from hass.loop.run_in_executor(
-            None, self.templates.get_template, 'index.html')
+        template = yield from hass.async_add_job(
+            self.templates.get_template, 'index.html')
 
         # pylint is wrong
         # pylint: disable=no-member
@@ -284,8 +287,8 @@ class ManifestJSONView(HomeAssistantView):
     """View to return a manifest.json."""
 
     requires_auth = False
-    url = "/manifest.json"
-    name = "manifestjson"
+    url = '/manifest.json'
+    name = 'manifestjson'
 
     @asyncio.coroutine
     def get(self, request):    # pylint: disable=no-self-use

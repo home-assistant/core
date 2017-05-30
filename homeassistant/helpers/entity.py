@@ -19,6 +19,7 @@ from homeassistant.util.async import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
+SLOW_UPDATE_WARNING = 10
 
 
 def generate_entity_id(entity_id_format: str, name: Optional[str],
@@ -69,6 +70,9 @@ class Entity(object):
 
     # If we reported if this entity was slow
     _slow_reported = False
+
+    # protect for multible updates
+    _update_warn = None
 
     @property
     def should_poll(self) -> bool:
@@ -199,12 +203,31 @@ class Entity(object):
             raise NoEntitySpecifiedError(
                 "No entity id specified for entity {}".format(self.name))
 
+        # update entity data
         if force_refresh:
-            if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
-                yield from self.async_update()
-            else:
-                yield from self.hass.loop.run_in_executor(None, self.update)
+            if self._update_warn:
+                _LOGGER.warning("Update for %s is already in progress",
+                                self.entity_id)
+                return
+
+            self._update_warn = self.hass.loop.call_later(
+                SLOW_UPDATE_WARNING, _LOGGER.warning,
+                "Update of %s is taking over %s seconds", self.entity_id,
+                SLOW_UPDATE_WARNING
+            )
+
+            try:
+                if hasattr(self, 'async_update'):
+                    # pylint: disable=no-member
+                    yield from self.async_update()
+                else:
+                    yield from self.hass.async_add_job(self.update)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Update for %s fails", self.entity_id)
+                return
+            finally:
+                self._update_warn.cancel()
+                self._update_warn = None
 
         start = timer()
 
@@ -240,9 +263,9 @@ class Entity(object):
 
         if not self._slow_reported and end - start > 0.4:
             self._slow_reported = True
-            _LOGGER.warning('Updating state for %s took %.3f seconds. '
-                            'Please report platform to the developers at '
-                            'https://goo.gl/Nvioub', self.entity_id,
+            _LOGGER.warning("Updating state for %s took %.3f seconds. "
+                            "Please report platform to the developers at "
+                            "https://goo.gl/Nvioub", self.entity_id,
                             end - start)
 
         # Overwrite properties that have been set in the config file.
@@ -292,7 +315,7 @@ class Entity(object):
         self.hass.states.async_remove(self.entity_id)
 
     def _attr_setter(self, name, typ, attr, attrs):
-        """Helper method to populate attributes based on properties."""
+        """Populate attributes based on properties."""
         if attr in attrs:
             return
 
@@ -339,8 +362,8 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_on, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -351,8 +374,8 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_off, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_off, **kwargs))
 
     def toggle(self) -> None:
         """Toggle the entity."""

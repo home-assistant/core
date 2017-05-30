@@ -16,7 +16,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['octoprint']
@@ -24,7 +23,6 @@ DEPENDENCIES = ['octoprint']
 DEFAULT_NAME = 'OctoPrint'
 
 SENSOR_TYPES = {
-    # API Endpoint, Group, Key, unit
     'Temperatures': ['printer', 'temperature', '*', TEMP_CELSIUS],
     'Current State': ['printer', 'state', 'text', None],
     'Job Percentage': ['job', 'progress', 'completion', '%'],
@@ -39,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available OctoPrint sensors."""
+    """Set up the available OctoPrint sensors."""
     octoprint = get_component('octoprint')
     name = config.get(CONF_NAME)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
@@ -50,23 +48,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if octo_type == "Temperatures":
             for tool in octoprint.OCTOPRINT.get_tools():
                 for temp_type in types:
-                    new_sensor = OctoPrintSensor(octoprint.OCTOPRINT,
-                                                 temp_type,
-                                                 temp_type,
-                                                 name,
-                                                 SENSOR_TYPES[octo_type][3],
-                                                 SENSOR_TYPES[octo_type][0],
-                                                 SENSOR_TYPES[octo_type][1],
-                                                 tool)
+                    new_sensor = OctoPrintSensor(
+                        octoprint.OCTOPRINT, temp_type, temp_type, name,
+                        SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
+                        SENSOR_TYPES[octo_type][1], tool)
                     devices.append(new_sensor)
         else:
-            new_sensor = OctoPrintSensor(octoprint.OCTOPRINT,
-                                         octo_type,
-                                         SENSOR_TYPES[octo_type][2],
-                                         name,
-                                         SENSOR_TYPES[octo_type][3],
-                                         SENSOR_TYPES[octo_type][0],
-                                         SENSOR_TYPES[octo_type][1])
+            new_sensor = OctoPrintSensor(
+                octoprint.OCTOPRINT, octo_type, SENSOR_TYPES[octo_type][2],
+                name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
+                SENSOR_TYPES[octo_type][1])
             devices.append(new_sensor)
     add_devices(devices)
 
@@ -113,20 +104,19 @@ class OctoPrintSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self.api.update(self.sensor_type,
-                                          self.api_endpoint,
-                                          self.api_group,
-                                          self.api_tool)
+            self._state = self.api.update(
+                self.sensor_type, self.api_endpoint, self.api_group,
+                self.api_tool)
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return
 
-        if self._state is None:
+        if self._state is None and self.sensor_type != "completion":
             _LOGGER.warning("Unable to locate value for %s", self.sensor_type)
             return

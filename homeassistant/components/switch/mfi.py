@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup mFi sensors."""
+    """Set up mFi sensors."""
     host = config.get(CONF_HOST)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         client = MFiClient(host, username, password, port=port,
                            use_tls=use_tls, verify=verify_tls)
     except (FailedToLogin, requests.exceptions.ConnectionError) as ex:
-        _LOGGER.error('Unable to connect to mFi: %s', str(ex))
+        _LOGGER.error("Unable to connect to mFi: %s", str(ex))
         return False
 
     add_devices(MfiSwitch(port)
@@ -75,7 +75,7 @@ class MfiSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Polling is needed."""
+        """Return the polling state."""
         return True
 
     @property
@@ -111,9 +111,9 @@ class MfiSwitch(SwitchDevice):
         self._target_state = False
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
-        return int(self._port.data.get('active_pwr', 0) * 1000)
+    def current_power_w(self):
+        """Return the current power usage in W."""
+        return int(self._port.data.get('active_pwr', 0))
 
     @property
     def device_state_attributes(self):

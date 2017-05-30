@@ -31,7 +31,8 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_SET,
     SERVICE_VOLUME_MUTE, SERVICE_TOGGLE, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK)
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_SEEK,
+    SERVICE_SHUFFLE_SET)
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -81,6 +82,7 @@ ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
+ATTR_MEDIA_SHUFFLE = 'shuffle'
 
 MEDIA_TYPE_MUSIC = 'music'
 MEDIA_TYPE_TVSHOW = 'tvshow'
@@ -104,6 +106,7 @@ SUPPORT_SELECT_SOURCE = 2048
 SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
+SUPPORT_SHUFFLE_SET = 32768
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -131,6 +134,10 @@ MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_CONTENT_TYPE): cv.string,
     vol.Required(ATTR_MEDIA_CONTENT_ID): cv.string,
     vol.Optional(ATTR_MEDIA_ENQUEUE): cv.boolean,
+})
+
+MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
 SERVICE_TO_METHOD = {
@@ -161,6 +168,9 @@ SERVICE_TO_METHOD = {
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
+    SERVICE_SHUFFLE_SET: {
+        'method': 'async_set_shuffle',
+        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
 }
 
 ATTR_TO_PROPERTY = [
@@ -185,6 +195,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_MEDIA_SHUFFLE,
 ]
 
 
@@ -322,6 +333,16 @@ def clear_playlist(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
 
 
+def set_shuffle(hass, shuffle, entity_id=None):
+    """Send the media player the command to enable/disable shuffle mode."""
+    data = {ATTR_MEDIA_SHUFFLE: shuffle}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for media_players."""
@@ -332,8 +353,8 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -358,6 +379,9 @@ def async_setup(hass, config):
             params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
             params[ATTR_MEDIA_ENQUEUE] = \
                 service.data.get(ATTR_MEDIA_ENQUEUE)
+        elif service.service == SERVICE_SHUFFLE_SET:
+            params[ATTR_MEDIA_SHUFFLE] = \
+                service.data.get(ATTR_MEDIA_SHUFFLE)
         target_players = component.async_extract_from_service(service)
 
         update_tasks = []
@@ -540,6 +564,11 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        return None
+
+    @property
     @deprecated_substitute('supported_media_commands')
     def supported_features(self):
         """Flag media player features that are supported."""
@@ -554,8 +583,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.turn_on)
+        return self.hass.async_add_job(self.turn_on)
 
     def turn_off(self):
         """Turn the media player off."""
@@ -566,8 +594,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.turn_off)
+        return self.hass.async_add_job(self.turn_off)
 
     def mute_volume(self, mute):
         """Mute the volume."""
@@ -578,8 +605,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.mute_volume, mute)
+        return self.hass.async_add_job(self.mute_volume, mute)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -590,8 +616,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_volume_level, volume)
+        return self.hass.async_add_job(self.set_volume_level, volume)
 
     def media_play(self):
         """Send play commmand."""
@@ -602,8 +627,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.media_play)
+        return self.hass.async_add_job(self.media_play)
 
     def media_pause(self):
         """Send pause command."""
@@ -614,8 +638,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.media_pause)
+        return self.hass.async_add_job(self.media_pause)
 
     def media_stop(self):
         """Send stop command."""
@@ -626,8 +649,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.media_stop)
+        return self.hass.async_add_job(self.media_stop)
 
     def media_previous_track(self):
         """Send previous track command."""
@@ -638,8 +660,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.media_previous_track)
+        return self.hass.async_add_job(self.media_previous_track)
 
     def media_next_track(self):
         """Send next track command."""
@@ -650,8 +671,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.media_next_track)
+        return self.hass.async_add_job(self.media_next_track)
 
     def media_seek(self, position):
         """Send seek command."""
@@ -662,8 +682,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.media_seek, position)
+        return self.hass.async_add_job(self.media_seek, position)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
@@ -674,8 +693,8 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.play_media, media_type, media_id, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.play_media, media_type, media_id, **kwargs))
 
     def select_source(self, source):
         """Select input source."""
@@ -686,8 +705,7 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.select_source, source)
+        return self.hass.async_add_job(self.select_source, source)
 
     def clear_playlist(self):
         """Clear players playlist."""
@@ -698,8 +716,18 @@ class MediaPlayerDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.clear_playlist)
+        return self.hass.async_add_job(self.clear_playlist)
+
+    def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        raise NotImplementedError()
+
+    def async_set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.set_shuffle, shuffle)
 
     # No need to overwrite these.
     @property
@@ -757,6 +785,11 @@ class MediaPlayerDevice(Entity):
         """Boolean if clear playlist command supported."""
         return bool(self.supported_features & SUPPORT_CLEAR_PLAYLIST)
 
+    @property
+    def support_shuffle_set(self):
+        """Boolean if shuffle is supported."""
+        return bool(self.supported_features & SUPPORT_SHUFFLE_SET)
+
     def async_toggle(self):
         """Toggle the power on the media player.
 
@@ -764,7 +797,7 @@ class MediaPlayerDevice(Entity):
         """
         if hasattr(self, 'toggle'):
             # pylint: disable=no-member
-            return self.hass.loop.run_in_executor(None, self.toggle)
+            return self.hass.async_add_job(self.toggle)
 
         if self.state in [STATE_OFF, STATE_IDLE]:
             return self.async_turn_on()
@@ -779,7 +812,7 @@ class MediaPlayerDevice(Entity):
         """
         if hasattr(self, 'volume_up'):
             # pylint: disable=no-member
-            yield from self.hass.loop.run_in_executor(None, self.volume_up)
+            yield from self.hass.async_add_job(self.volume_up)
             return
 
         if self.volume_level < 1:
@@ -794,7 +827,7 @@ class MediaPlayerDevice(Entity):
         """
         if hasattr(self, 'volume_down'):
             # pylint: disable=no-member
-            yield from self.hass.loop.run_in_executor(None, self.volume_down)
+            yield from self.hass.async_add_job(self.volume_down)
             return
 
         if self.volume_level > 0:
@@ -808,7 +841,7 @@ class MediaPlayerDevice(Entity):
         """
         if hasattr(self, 'media_play_pause'):
             # pylint: disable=no-member
-            return self.hass.loop.run_in_executor(None, self.media_play_pause)
+            return self.hass.async_add_job(self.media_play_pause)
 
         if self.state == STATE_PLAYING:
             return self.async_media_pause()
@@ -851,7 +884,7 @@ class MediaPlayerDevice(Entity):
 
 @asyncio.coroutine
 def _async_fetch_image(hass, url):
-    """Helper method to fetch image.
+    """Fetch image.
 
     Images are cached in memory (the images are typically 10-100kB in size).
     """
@@ -864,20 +897,18 @@ def _async_fetch_image(hass, url):
 
     content, content_type = (None, None)
     websession = async_get_clientsession(hass)
-    response = None
     try:
         with async_timeout.timeout(10, loop=hass.loop):
             response = yield from websession.get(url)
-        if response.status == 200:
-            content = yield from response.read()
-            content_type = response.headers.get(CONTENT_TYPE_HEADER)
+
+            if response.status == 200:
+                content = yield from response.read()
+                content_type = response.headers.get(CONTENT_TYPE_HEADER)
+                if content_type:
+                    content_type = content_type.split(';')[0]
 
     except asyncio.TimeoutError:
         pass
-
-    finally:
-        if response is not None:
-            yield from response.release()
 
     if not content:
         return (None, None)
@@ -900,8 +931,8 @@ class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
     requires_auth = False
-    url = "/api/media_player_proxy/{entity_id}"
-    name = "api:media_player:image"
+    url = '/api/media_player_proxy/{entity_id}'
+    name = 'api:media_player:image'
 
     def __init__(self, entities):
         """Initialize a media player view."""
@@ -916,7 +947,7 @@ class MediaPlayerImageView(HomeAssistantView):
             return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
-                         request.GET.get('token') == player.access_token)
+                         request.query.get('token') == player.access_token)
 
         if not authenticated:
             return web.Response(status=401)

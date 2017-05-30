@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the Swiss public transport sensor."""
+    """Set up the Swiss public transport sensor."""
     name = config.get(CONF_NAME)
     # journal contains [0] Station ID start, [1] Station ID destination
     # [2] Station name start, and [3] Station name destination
@@ -52,8 +52,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         for location in [config.get(CONF_START), config.get(CONF_DESTINATION)]:
             # transport.opendata.ch doesn't play nice with requests.Session
-            result = requests.get(_RESOURCE + 'locations?query=%s' % location,
-                                  timeout=10)
+            result = requests.get(
+                '{}locations?query={}'.format(_RESOURCE, location), timeout=10)
             journey.append(result.json()['stations'][0]['name'])
     except KeyError:
         _LOGGER.exception(

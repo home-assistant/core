@@ -113,7 +113,7 @@ def async_setup(hass, config):
             if not alarm.should_poll:
                 continue
 
-            update_coro = hass.loop.create_task(
+            update_coro = hass.async_add_job(
                 alarm.async_update_ha_state(True))
             if hasattr(alarm, 'async_update'):
                 update_tasks.append(update_coro)
@@ -123,8 +123,8 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     for service in SERVICE_TO_METHOD:
@@ -158,8 +158,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_disarm, code)
+        return self.hass.async_add_job(self.alarm_disarm, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -170,8 +169,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_arm_home, code)
+        return self.hass.async_add_job(self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -182,8 +180,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_arm_away, code)
+        return self.hass.async_add_job(self.alarm_arm_away, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
@@ -194,8 +191,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.alarm_trigger, code)
+        return self.hass.async_add_job(self.alarm_trigger, code)
 
     @property
     def state_attributes(self):

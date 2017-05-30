@@ -66,7 +66,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_get_engine(hass, config):
-    """Setup VoiceRSS speech component."""
+    """Set up VoiceRSS speech component."""
     return YandexSpeechKitProvider(hass, config)
 
 
@@ -86,22 +86,20 @@ class YandexSpeechKitProvider(Provider):
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return self._language
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine
     def async_get_tts_audio(self, message, language, options=None):
         """Load TTS from yandex."""
         websession = async_get_clientsession(self.hass)
-
         actual_language = language
 
-        request = None
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
                 url_param = {
@@ -114,21 +112,17 @@ class YandexSpeechKitProvider(Provider):
                     'speed': self._speed
                 }
 
-                request = yield from websession.get(YANDEX_API_URL,
-                                                    params=url_param)
+                request = yield from websession.get(
+                    YANDEX_API_URL, params=url_param)
 
                 if request.status != 200:
-                    _LOGGER.error("Error %d on load url %s.",
+                    _LOGGER.error("Error %d on load URL %s",
                                   request.status, request.url)
                     return (None, None)
                 data = yield from request.read()
 
-        except (asyncio.TimeoutError, aiohttp.errors.ClientError):
-            _LOGGER.error("Timeout for yandex speech kit api.")
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Timeout for yandex speech kit API")
             return (None, None)
-
-        finally:
-            if request is not None:
-                yield from request.release()
 
         return (self._codec, data)

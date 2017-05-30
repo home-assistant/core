@@ -4,19 +4,18 @@ Sensors of a KNX Device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
-from homeassistant.const import (TEMP_CELSIUS, TEMPERATURE, CONF_TYPE,
-                                 ILLUMINANCE, SPEED_MS, CONF_MINIMUM,
-                                 CONF_MAXIMUM)
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMPERATURE, CONF_TYPE, ILLUMINANCE, SPEED_MS, CONF_MINIMUM,
+    CONF_MAXIMUM)
 from homeassistant.components.knx import (KNXConfig, KNXGroupAddress)
 
-
-DEPENDENCIES = ["knx"]
+DEPENDENCIES = ['knx']
 
 # Speed units
-SPEED_METERPERSECOND = "m/s"  # type: str
+SPEED_METERPERSECOND = 'm/s'  # type: str
 
 # Illuminance units
-ILLUMINANCE_LUX = "lx"  # type: str
+ILLUMINANCE_LUX = 'lx'  # type: str
 
 #  Predefined Minimum, Maximum Values for Sensors
 #  Temperature as defined in KNX Standard 3.10 - 9.001 DPT_Value_Temp
@@ -33,25 +32,24 @@ KNX_SPEED_MS_MAX = 670760
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the KNX Sensor platform."""
-    # Add KNX Temperature Sensors
+    """Set up the KNX Sensor platform."""
     # KNX Datapoint 9.001 DPT_Value_Temp
     if config[CONF_TYPE] == TEMPERATURE:
         minimum_value, maximum_value = \
-            update_and_define_min_max(config, KNX_TEMP_MIN,
-                                      KNX_TEMP_MAX)
+            update_and_define_min_max(config, KNX_TEMP_MIN, KNX_TEMP_MAX)
 
         add_entities([
-            KNXSensorFloatClass(hass, KNXConfig(config), TEMP_CELSIUS,
-                                minimum_value, maximum_value)
+            KNXSensorFloatClass(
+                hass, KNXConfig(config), TEMP_CELSIUS, minimum_value,
+                maximum_value)
         ])
 
     # Add KNX Speed Sensors(Like Wind Speed)
     # KNX Datapoint 9.005 DPT_Value_Wsp
     elif config[CONF_TYPE] == SPEED_MS:
         minimum_value, maximum_value = \
-            update_and_define_min_max(config, KNX_SPEED_MS_MIN,
-                                      KNX_SPEED_MS_MAX)
+            update_and_define_min_max(
+                config, KNX_SPEED_MS_MIN, KNX_SPEED_MS_MAX)
 
         add_entities([
             KNXSensorFloatClass(hass, KNXConfig(config), SPEED_METERPERSECOND,
@@ -70,9 +68,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ])
 
 
-def update_and_define_min_max(config, minimum_default,
-                              maximum_default):
-    """Function help determinate a min/max value defined in config."""
+def update_and_define_min_max(config, minimum_default, maximum_default):
+    """Determine a min/max value defined in the configuration."""
     minimum_value = minimum_default
     maximum_value = maximum_default
     if config.get(CONF_MINIMUM):
@@ -129,6 +126,6 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
         self._value = None
 
         if self._data:
-            value = knx2_to_float(self._data)
+            value = 0 if self._data == 0 else knx2_to_float(self._data)
             if self._minimum_value <= value <= self._maximum_value:
                 self._value = value

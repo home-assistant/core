@@ -1,11 +1,11 @@
 """Models for SQLAlchemy."""
-
 import json
 from datetime import datetime
 import logging
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
-                        String, Text, distinct)
+from sqlalchemy import (
+    Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text,
+    distinct)
 from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
@@ -16,7 +16,7 @@ from homeassistant.remote import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,13 +66,16 @@ class States(Base):   # type: ignore
     attributes = Column(Text)
     event_id = Column(Integer, ForeignKey('events.event_id'))
     last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
-    last_updated = Column(DateTime(timezone=True), default=datetime.utcnow)
+    last_updated = Column(DateTime(timezone=True), default=datetime.utcnow,
+                          index=True)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
 
     __table_args__ = (Index('states__state_changes',
                             'last_changed', 'last_updated', 'entity_id'),
                       Index('states__significant_changes',
-                            'domain', 'last_updated', 'entity_id'), )
+                            'domain', 'last_updated', 'entity_id'),
+                      Index('ix_states_entity_id_created',
+                            'entity_id', 'created'),)
 
     @staticmethod
     def from_event(event):
@@ -123,6 +126,8 @@ class RecorderRuns(Base):   # type: ignore
     end = Column(DateTime(timezone=True))
     closed_incorrect = Column(Boolean, default=False)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
+
+    __table_args__ = (Index('ix_recorder_runs_start_end', 'start', 'end'),)
 
     def entity_ids(self, point_in_time=None):
         """Return the entity ids that existed in this run.

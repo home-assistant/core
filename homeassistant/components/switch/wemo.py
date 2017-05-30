@@ -5,8 +5,10 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.wemo/
 """
 import logging
+from datetime import datetime, timedelta
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
 from homeassistant.loader import get_component
@@ -15,13 +17,13 @@ DEPENDENCIES = ['wemo']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_SENSOR_STATE = "sensor_state"
-ATTR_SWITCH_MODE = "switch_mode"
+ATTR_SENSOR_STATE = 'sensor_state'
+ATTR_SWITCH_MODE = 'switch_mode'
 ATTR_CURRENT_STATE_DETAIL = 'state_detail'
-ATTR_COFFEMAKER_MODE = "coffeemaker_mode"
+ATTR_COFFEMAKER_MODE = 'coffeemaker_mode'
 
-MAKER_SWITCH_MOMENTARY = "momentary"
-MAKER_SWITCH_TOGGLE = "toggle"
+MAKER_SWITCH_MOMENTARY = 'momentary'
+MAKER_SWITCH_TOGGLE = 'toggle'
 
 WEMO_ON = 1
 WEMO_OFF = 0
@@ -30,12 +32,12 @@ WEMO_STANDBY = 8
 
 # pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup discovered WeMo switches."""
+    """Set up discovered WeMo switches."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
-        location = discovery_info[2]
-        mac = discovery_info[3]
+        location = discovery_info['ssdp_description']
+        mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
 
         if device:
@@ -59,16 +61,12 @@ class WemoSwitch(SwitchDevice):
         wemo.SUBSCRIPTION_REGISTRY.register(self.wemo)
         wemo.SUBSCRIPTION_REGISTRY.on(self.wemo, None, self._update_callback)
 
-    def _update_callback(self, _device, _params):
-        """Called by the Wemo device callback to update state."""
-        _LOGGER.info(
-            'Subscription update for  %s',
-            _device)
-        if self._model_name == 'CoffeeMaker':
-            self.wemo.subscription_callback(_params)
-            self._update(force_update=False)
-        else:
-            self.update()
+    def _update_callback(self, _device, _type, _params):
+        """Update the state by the Wemo device."""
+        _LOGGER.info("Subscription update for  %s", _device)
+        updated = self.wemo.subscription_update(_type, _params)
+        self._update(force_update=(not updated))
+
         if not hasattr(self, 'hass'):
             return
         self.schedule_update_ha_state()
@@ -76,6 +74,8 @@ class WemoSwitch(SwitchDevice):
     @property
     def should_poll(self):
         """No polling needed with subscriptions."""
+        if self._model_name == 'Insight':
+            return True
         return False
 
     @property
@@ -110,22 +110,44 @@ class WemoSwitch(SwitchDevice):
         if self.insight_params or (self.coffeemaker_mode is not None):
             attr[ATTR_CURRENT_STATE_DETAIL] = self.detail_state
 
+        if self.insight_params:
+            attr['on_latest_time'] = \
+                WemoSwitch.as_uptime(self.insight_params['onfor'])
+            attr['on_today_time'] = \
+                WemoSwitch.as_uptime(self.insight_params['ontoday'])
+            attr['on_total_time'] = \
+                WemoSwitch.as_uptime(self.insight_params['ontotal'])
+            attr['power_threshold_w'] = \
+                convert(
+                    self.insight_params['powerthreshold'], float, 0.0
+                ) / 1000.0
+
         if self.coffeemaker_mode is not None:
             attr[ATTR_COFFEMAKER_MODE] = self.coffeemaker_mode
 
         return attr
 
-    @property
-    def current_power_mwh(self):
-        """Current power usage in mWh."""
-        if self.insight_params:
-            return self.insight_params['currentpower']
+    @staticmethod
+    def as_uptime(_seconds):
+        """Format seconds into uptime string in the format: 00d 00h 00m 00s."""
+        uptime = datetime(1, 1, 1) + timedelta(seconds=_seconds)
+        return "{:0>2d}d {:0>2d}h {:0>2d}m {:0>2d}s".format(
+            uptime.day-1, uptime.hour, uptime.minute, uptime.second)
 
     @property
-    def today_power_mw(self):
-        """Today total power usage in mW."""
+    def current_power_w(self):
+        """Return the current power usage in W."""
         if self.insight_params:
-            return self.insight_params['todaymw']
+            return convert(
+                self.insight_params['currentpower'], float, 0.0
+                ) / 1000.0
+
+    @property
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
+        if self.insight_params:
+            miliwatts = convert(self.insight_params['todaymw'], float, 0.0)
+            return round(miliwatts / (1000.0 * 1000.0 * 60), 2)
 
     @property
     def detail_state(self):
@@ -150,7 +172,7 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def available(self):
-        """True if switch is available."""
+        """Return true if switch is available."""
         if self._model_name == 'Insight' and self.insight_params is None:
             return False
         if self._model_name == 'Maker' and self.maker_params is None:
@@ -161,7 +183,7 @@ class WemoSwitch(SwitchDevice):
 
     @property
     def icon(self):
-        """Icon of device based on its type."""
+        """Return the icon of device based on its type."""
         if self._model_name == 'CoffeeMaker':
             return 'mdi:coffee'
         else:
@@ -184,6 +206,7 @@ class WemoSwitch(SwitchDevice):
         self._update(force_update=True)
 
     def _update(self, force_update=True):
+        """Update the device state."""
         try:
             self._state = self.wemo.get_state(force_update)
             if self._model_name == 'Insight':
@@ -194,5 +217,6 @@ class WemoSwitch(SwitchDevice):
                 self.maker_params = self.wemo.maker_params
             elif self._model_name == 'CoffeeMaker':
                 self.coffeemaker_mode = self.wemo.mode
-        except AttributeError:
-            _LOGGER.warning('Could not update status for %s', self.name)
+        except AttributeError as err:
+            _LOGGER.warning("Could not update status for %s (%s)",
+                            self.name, err)

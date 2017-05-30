@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 # pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a generic IP Camera."""
+    """Set up a generic IP Camera."""
     async_add_devices([GenericCamera(hass, config)])
 
 
@@ -85,8 +85,8 @@ class GenericCamera(Camera):
         try:
             url = self._still_image_url.async_render()
         except TemplateError as err:
-            _LOGGER.error('Error parsing template %s: %s',
-                          self._still_image_url, err)
+            _LOGGER.error(
+                "Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
 
         if url == self._last_url and self._limit_refetch:
@@ -100,14 +100,13 @@ class GenericCamera(Camera):
                     response = requests.get(url, timeout=10, auth=self._auth)
                     return response.content
                 except requests.exceptions.RequestException as error:
-                    _LOGGER.error('Error getting camera image: %s', error)
+                    _LOGGER.error("Error getting camera image: %s", error)
                     return self._last_image
 
-            self._last_image = yield from self.hass.loop.run_in_executor(
-                None, fetch)
+            self._last_image = yield from self.hass.async_add_job(
+                fetch)
         # async
         else:
-            response = None
             try:
                 websession = async_get_clientsession(self.hass)
                 with async_timeout.timeout(10, loop=self.hass.loop):
@@ -115,16 +114,11 @@ class GenericCamera(Camera):
                         url, auth=self._auth)
                 self._last_image = yield from response.read()
             except asyncio.TimeoutError:
-                _LOGGER.error('Timeout getting camera image')
+                _LOGGER.error("Timeout getting camera image")
                 return self._last_image
-            except (aiohttp.errors.ClientError,
-                    aiohttp.errors.DisconnectedError,
-                    aiohttp.errors.HttpProcessingError) as err:
-                _LOGGER.error('Error getting new camera image: %s', err)
+            except aiohttp.ClientError as err:
+                _LOGGER.error("Error getting new camera image: %s", err)
                 return self._last_image
-            finally:
-                if response is not None:
-                    yield from response.release()
 
         self._last_url = url
         return self._last_image

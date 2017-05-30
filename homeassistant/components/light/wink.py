@@ -4,6 +4,7 @@ Support for Wink lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.wink/
 """
+import asyncio
 import colorsys
 
 from homeassistant.components.light import (
@@ -20,7 +21,7 @@ SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink lights."""
+    """Set up the Wink lights."""
     import pywink
 
     for light in pywink.get_light_bulbs():
@@ -35,6 +36,11 @@ class WinkLight(WinkDevice, Light):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['light'].append(self)
 
     @property
     def is_on(self):
@@ -51,7 +57,7 @@ class WinkLight(WinkDevice, Light):
 
     @property
     def rgb_color(self):
-        """Current bulb color in RGB."""
+        """Define current bulb color in RGB."""
         if not self.wink.supports_hue_saturation():
             return None
         else:
@@ -68,14 +74,14 @@ class WinkLight(WinkDevice, Light):
 
     @property
     def xy_color(self):
-        """Current bulb color in CIE 1931 (XY) color space."""
+        """Define current bulb color in CIE 1931 (XY) color space."""
         if not self.wink.supports_xy_color():
             return None
         return self.wink.color_xy()
 
     @property
     def color_temp(self):
-        """Current bulb color in degrees Kelvin."""
+        """Define current bulb color in degrees Kelvin."""
         if not self.wink.supports_temperature():
             return None
         return color_util.color_temperature_kelvin_to_mired(
@@ -101,8 +107,8 @@ class WinkLight(WinkDevice, Light):
                 state_kwargs['color_xy'] = xyb[0], xyb[1]
                 state_kwargs['brightness'] = xyb[2]
             elif self.wink.supports_hue_saturation():
-                hsv = colorsys.rgb_to_hsv(rgb_color[0],
-                                          rgb_color[1], rgb_color[2])
+                hsv = colorsys.rgb_to_hsv(
+                    rgb_color[0], rgb_color[1], rgb_color[2])
                 state_kwargs['color_hue_saturation'] = hsv[0], hsv[1]
 
         if color_temp_mired:

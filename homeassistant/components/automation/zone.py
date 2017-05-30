@@ -2,7 +2,7 @@
 Offer zone automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#zone-trigger
+at https://home-assistant.io/docs/automation/trigger/#zone-trigger
 """
 import asyncio
 import voluptuous as vol
@@ -14,8 +14,8 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
 
-EVENT_ENTER = "enter"
-EVENT_LEAVE = "leave"
+EVENT_ENTER = 'enter'
+EVENT_LEAVE = 'leave'
 DEFAULT_EVENT = EVENT_ENTER
 
 TRIGGER_SCHEMA = vol.Schema({

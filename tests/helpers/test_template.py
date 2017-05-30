@@ -1,6 +1,7 @@
 """Test Home Assistant template helper methods."""
 from datetime import datetime
 import unittest
+import random
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -151,13 +152,14 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_timestamp_custom(self):
         """Test the timestamps to custom filter."""
+        now = dt_util.utcnow()
         tests = [
             (None, None, None, 'None'),
             (1469119144, None, True, '2016-07-21 16:39:04'),
             (1469119144, '%Y', True, '2016'),
             (1469119144, 'invalid', True, 'invalid'),
-            (dt_util.as_timestamp(dt_util.utcnow()), None, False,
-                dt_util.now().strftime('%Y-%m-%d %H:%M:%S'))
+            (dt_util.as_timestamp(now), None, False,
+                now.strftime('%Y-%m-%d %H:%M:%S'))
         ]
 
         for inp, fmt, local, out in tests:
@@ -202,11 +204,12 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_timestamp_utc(self):
         """Test the timestamps to local filter."""
+        now = dt_util.utcnow()
         tests = {
             None: 'None',
             1469119144: '2016-07-21 16:39:04',
-            dt_util.as_timestamp(dt_util.utcnow()):
-                dt_util.now().strftime('%Y-%m-%d %H:%M:%S')
+            dt_util.as_timestamp(now):
+                now.strftime('%Y-%m-%d %H:%M:%S')
         }
 
         for inp, out in tests.items():
@@ -229,6 +232,15 @@ class TestHelpersTemplate(unittest.TestCase):
             '"%Y-%m-%dT%H:%M:%S%z")) }}'
         self.assertEqual("1706951424.0",
                          template.Template(tpl, self.hass).render())
+
+    @patch.object(random, 'choice')
+    def test_random_every_time(self, test_choice):
+        """Ensure the random filter runs every time, not just once."""
+        tpl = template.Template('{{ [1,2] | random }}', self.hass)
+        test_choice.return_value = 'foo'
+        self.assertEqual('foo', tpl.render())
+        test_choice.return_value = 'bar'
+        self.assertEqual('bar', tpl.render())
 
     def test_passing_vars_as_keywords(self):
         """Test passing variables as keywords."""
@@ -312,6 +324,11 @@ class TestHelpersTemplate(unittest.TestCase):
             """, self.hass)
         self.assertEqual('yes', tpl.render())
 
+        tpl = template.Template("""
+{{ is_state("test.noobject", "available") }}
+            """, self.hass)
+        self.assertEqual('False', tpl.render())
+
     def test_is_state_attr(self):
         """Test is_state_attr method."""
         self.hass.states.set('test.object', 'available', {'mode': 'on'})
@@ -319,6 +336,11 @@ class TestHelpersTemplate(unittest.TestCase):
 {% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
                 """, self.hass)
         self.assertEqual('yes', tpl.render())
+
+        tpl = template.Template("""
+{{ is_state_attr("test.noobject", "mode", "on") }}
+                """, self.hass)
+        self.assertEqual('False', tpl.render())
 
     def test_states_function(self):
         """Test using states as a function."""

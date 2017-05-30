@@ -18,29 +18,30 @@ from homeassistant.components.device_tracker import (  # NOQA
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['http']
+URL = '/api/locative'
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup an endpoint for the Locative application."""
+    """Set up an endpoint for the Locative application."""
     hass.http.register_view(LocativeView(see))
 
     return True
 
 
 class LocativeView(HomeAssistantView):
-    """View to handle locative requests."""
+    """View to handle Locative requests."""
 
-    url = '/api/locative'
+    url = URL
     name = 'api:locative'
 
     def __init__(self, see):
-        """Initialize Locative url endpoints."""
+        """Initialize Locative URL endpoints."""
         self.see = see
 
     @asyncio.coroutine
     def get(self, request):
         """Locative message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine
@@ -51,7 +52,6 @@ class LocativeView(HomeAssistantView):
         return res
 
     @asyncio.coroutine
-    # pylint: disable=too-many-return-statements
     def _handle(self, hass, data):
         """Handle locative request."""
         if 'latitude' not in data or 'longitude' not in data:
@@ -79,10 +79,9 @@ class LocativeView(HomeAssistantView):
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            yield from hass.loop.run_in_executor(
-                None, partial(self.see, dev_id=device,
-                              location_name=location_name,
-                              gps=gps_location))
+            yield from hass.async_add_job(
+                partial(self.see, dev_id=device, location_name=location_name,
+                        gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
@@ -91,10 +90,9 @@ class LocativeView(HomeAssistantView):
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
-                yield from hass.loop.run_in_executor(
-                    None, partial(self.see, dev_id=device,
-                                  location_name=location_name,
-                                  gps=gps_location))
+                yield from hass.async_add_job(
+                    partial(self.see, dev_id=device,
+                            location_name=location_name, gps=gps_location))
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we

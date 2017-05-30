@@ -1,5 +1,5 @@
 #!/bin/bash
-# Install requirements and build dependencies for Home Assinstant in Docker.
+# Install requirements and build dependencies for Home Assistant in Docker.
 
 # Stop on errors
 set -e
@@ -7,9 +7,9 @@ set -e
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
-INSTALL_OPENZWAVE="${INSTALL_OPENZWAVE:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
+INSTALL_COAP_CLIENT="${INSTALL_COAP_CLIENT:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -23,13 +23,13 @@ PACKAGES=(
   bluetooth libglib2.0-dev libbluetooth-dev
   # homeassistant.components.device_tracker.owntracks
   libsodium13
+  # homeassistant.components.zwave
+  libudev-dev
 )
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
   cmake git
-  # python-openzwave
-  cython3 libudev-dev
   # libcec
   swig
 )
@@ -50,16 +50,16 @@ if [ "$INSTALL_FFMPEG" == "yes" ]; then
   virtualization/Docker/scripts/ffmpeg
 fi
 
-if [ "$INSTALL_OPENZWAVE" == "yes" ]; then
-  virtualization/Docker/scripts/python_openzwave
-fi
-
 if [ "$INSTALL_LIBCEC" == "yes" ]; then
   virtualization/Docker/scripts/libcec
 fi
 
 if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
   virtualization/Docker/scripts/phantomjs
+fi
+
+if [ "$INSTALL_COAP_CLIENT" == "yes" ]; then
+  virtualization/Docker/scripts/coap_client
 fi
 
 # Remove packages

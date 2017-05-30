@@ -16,9 +16,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.loader import get_component
 from homeassistant.util import Throttle
 
-REQUIREMENTS = [
-    'https://github.com/nkgilley/python-ecobee-api/archive/'
-    '4856a704670c53afe1882178a89c209b5f98533d.zip#python-ecobee==0.0.6']
+REQUIREMENTS = ['python-ecobee-api==0.0.7']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +50,7 @@ def request_configuration(network, hass, config):
 
     # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration callbacks."""
         network.request_tokens()
         network.update()
         setup_ecobee(hass, network, config)
@@ -68,7 +66,7 @@ def request_configuration(network, hass, config):
 
 
 def setup_ecobee(hass, network, config):
-    """Setup Ecobee thermostat."""
+    """Set up the Ecobee thermostat."""
     # If ecobee has a PIN then it needs to be configured.
     if network.pin is not None:
         request_configuration(network, hass, config)
@@ -80,8 +78,8 @@ def setup_ecobee(hass, network, config):
 
     hold_temp = config[DOMAIN].get(CONF_HOLD_TEMP)
 
-    discovery.load_platform(hass, 'climate', DOMAIN,
-                            {'hold_temp': hold_temp}, config)
+    discovery.load_platform(
+        hass, 'climate', DOMAIN, {'hold_temp': hold_temp}, config)
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
 
@@ -90,7 +88,7 @@ class EcobeeData(object):
     """Get the latest data and update the states."""
 
     def __init__(self, config_file):
-        """Initialize the Ecobee data object."""
+        """Init the Ecobee data object."""
         from pyecobee import Ecobee
         self.ecobee = Ecobee(config_file)
 
@@ -102,7 +100,7 @@ class EcobeeData(object):
 
 
 def setup(hass, config):
-    """Setup Ecobee.
+    """Set up the Ecobee.
 
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.

@@ -1,0 +1,227 @@
+send_message:
+  description: Send a notification
+
+  fields:
+    message:
+      description: Message body of the notification.
+      example: The garage door has been open for 10 minutes.
+
+    title:
+      description: Optional title for your notification. Will be composed as '%title\n%message'
+      example: 'Your Garage Door Friend'
+
+    target:
+      description: An array of pre-authorized chat_ids to send the notification to. If not present, first allowed chat_id is the default.
+      example: '[12345, 67890] or 12345'
+
+    parse_mode:
+      description: "Parser for the message text: `html` or `markdown`."
+      example: 'html'
+
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+
+    disable_web_page_preview:
+      description: Disables link previews for links in the message.
+      example: true
+
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+send_photo:
+  description: Send a photo
+
+  fields:
+    url:
+      description: Remote path to an image.
+      example: 'http://example.org/path/to/the/image.png'
+
+    file:
+      description: Local path to an image.
+      example: '/path/to/the/image.png'
+
+    caption:
+      description: The title of the image.
+      example: 'My image'
+
+    username:
+      description: Username for a URL which require HTTP basic authentication.
+      example: myuser
+
+    password:
+      description: Password for a URL which require HTTP basic authentication.
+      example: myuser_pwd
+
+    target:
+      description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
+      example: '[12345, 67890] or 12345'
+
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+send_document:
+  description: Send a document
+
+  fields:
+    url:
+      description: Remote path to a document.
+      example: 'http://example.org/path/to/the/document.odf'
+
+    file:
+      description: Local path to a document.
+      example: '/tmp/whatever.odf'
+
+    caption:
+      description: The title of the document.
+      example: Document Title xy
+
+    username:
+      description: Username for a URL which require HTTP basic authentication.
+      example: myuser
+
+    password:
+      description: Password for a URL which require HTTP basic authentication.
+      example: myuser_pwd
+
+    target:
+      description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
+      example: '[12345, 67890] or 12345'
+
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+send_location:
+  description: Send a location
+
+  fields:
+    latitude:
+      description: The latitude to send.
+      example: -15.123
+
+    longitude:
+      description: The longitude to send.
+      example: 38.123
+
+    target:
+      description: An array of pre-authorized chat_ids to send the location to. If not present, first allowed chat_id is the default.
+      example: '[12345, 67890] or 12345'
+
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+edit_message:
+  description: Edit a previusly sent message.
+
+  fields:
+    message_id:
+      description: id of the message to edit.
+      example: '{{ trigger.event.data.message.message_id }}'
+
+    chat_id:
+      description: The chat_id where to edit the message.
+      example: 12345
+
+    message:
+      description: Message body of the notification.
+      example: The garage door has been open for 10 minutes.
+
+    title:
+      description: Optional title for your notification. Will be composed as '%title\n%message'
+      example: 'Your Garage Door Friend'
+
+    parse_mode:
+      description: "Parser for the message text: `html` or `markdown`."
+      example: 'html'
+
+    disable_web_page_preview:
+      description: Disables link previews for links in the message.
+      example: true
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+edit_caption:
+  description: Edit the caption of a previusly sent message.
+
+  fields:
+    message_id:
+      description: id of the message to edit.
+      example: '{{ trigger.event.data.message.message_id }}'
+
+    chat_id:
+      description: The chat_id where to edit the caption.
+      example: 12345
+
+    caption:
+      description: Message body of the notification.
+      example: The garage door has been open for 10 minutes.
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+edit_replymarkup:
+  description: Edit the inline keyboard of a previusly sent message.
+
+  fields:
+    message_id:
+      description: id of the message to edit.
+      example: '{{ trigger.event.data.message.message_id }}'
+
+    chat_id:
+      description: The chat_id where to edit the reply_markup.
+      example: 12345
+
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
+answer_callback_query:
+  description: Respond to a callback query originated by clicking on an online keyboard button. The answer will be displayed to the user as a notification at the top of the chat screen or as an alert.
+
+  fields:
+    message:
+      description: Unformatted text message body of the notification.
+      example: "OK, I'm listening"
+
+    callback_query_id:
+      description: Unique id of the callback response.
+      example: '{{ trigger.event.data.id }}'
+
+    show_alert:
+      description: Show a permanent notification.
+      example: true

@@ -4,32 +4,37 @@ Support to interface with the Emby API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.emby/
 """
+import asyncio
 import logging
-
-from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
-    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK, MediaPlayerDevice,
-    SUPPORT_PLAY, PLATFORM_SCHEMA)
+    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_PREVIOUS_TRACK,
+    MediaPlayerDevice, SUPPORT_PLAY, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_HOST, CONF_API_KEY, CONF_PORT, CONF_SSL, DEVICE_DEFAULT_NAME,
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
-from homeassistant.helpers.event import (track_utc_time_change)
-from homeassistant.util import Throttle
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+    CONF_HOST, CONF_PORT, CONF_SSL, CONF_API_KEY, DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pyemby==0.2']
+REQUIREMENTS = ['pyemby==1.2']
 
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
+_LOGGER = logging.getLogger(__name__)
+
+CONF_AUTO_HIDE = 'auto_hide'
 
 MEDIA_TYPE_TRAILER = 'trailer'
+MEDIA_TYPE_GENERIC_VIDEO = 'video'
 
+DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8096
+DEFAULT_SSL_PORT = 8920
+DEFAULT_SSL = False
+DEFAULT_AUTO_HIDE = False
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,223 +42,214 @@ SUPPORT_EMBY = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_STOP | SUPPORT_SEEK | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default='localhost'): cv.string,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_PORT, default=None): cv.port,
+    vol.Optional(CONF_AUTO_HIDE, default=DEFAULT_AUTO_HIDE): cv.boolean,
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Emby platform."""
-    from pyemby.emby import EmbyRemote
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the Emby platform."""
+    from pyemby import EmbyServer
 
-    _host = config.get(CONF_HOST)
-    _key = config.get(CONF_API_KEY)
-    _port = config.get(CONF_PORT)
+    host = config.get(CONF_HOST)
+    key = config.get(CONF_API_KEY)
+    port = config.get(CONF_PORT)
+    ssl = config.get(CONF_SSL)
+    auto_hide = config.get(CONF_AUTO_HIDE)
 
-    if config.get(CONF_SSL):
-        _protocol = "https"
-    else:
-        _protocol = "http"
+    if port is None:
+        port = DEFAULT_SSL_PORT if ssl else DEFAULT_PORT
 
-    _url = '{}://{}:{}'.format(_protocol, _host, _port)
+    _LOGGER.debug("Setting up Emby server at: %s:%s", host, port)
 
-    _LOGGER.debug('Setting up Emby server at: %s', _url)
+    emby = EmbyServer(host, key, port, ssl, hass.loop)
 
-    embyserver = EmbyRemote(_key, _url)
+    active_emby_devices = {}
+    inactive_emby_devices = {}
 
-    emby_clients = {}
-    emby_sessions = {}
-    track_utc_time_change(hass, lambda now: update_devices(), second=30)
+    @callback
+    def device_update_callback(data):
+        """Handle devices which are added to Emby."""
+        new_devices = []
+        active_devices = []
+        for dev_id in emby.devices:
+            active_devices.append(dev_id)
+            if dev_id not in active_emby_devices and \
+                    dev_id not in inactive_emby_devices:
+                new = EmbyDevice(emby, dev_id)
+                active_emby_devices[dev_id] = new
+                new_devices.append(new)
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_devices():
-        """Update the devices objects."""
-        devices = embyserver.get_sessions()
-        if devices is None:
-            _LOGGER.error('Error listing Emby devices.')
-            return
+            elif dev_id in inactive_emby_devices:
+                if emby.devices[dev_id].state != 'Off':
+                    add = inactive_emby_devices.pop(dev_id)
+                    active_emby_devices[dev_id] = add
+                    _LOGGER.debug("Showing %s, item: %s", dev_id, add)
+                    add.set_available(True)
+                    add.set_hidden(False)
 
-        new_emby_clients = []
-        for device in devices:
-            if device['DeviceId'] == embyserver.unique_id:
-                break
+        if new_devices:
+            _LOGGER.debug("Adding new devices: %s", new_devices)
+            async_add_devices(new_devices, update_before_add=True)
 
-            if device['DeviceId'] not in emby_clients:
-                _LOGGER.debug('New Emby DeviceID: %s. Adding to Clients.',
-                              device['DeviceId'])
-                new_client = EmbyClient(embyserver, device, emby_sessions,
-                                        update_devices, update_sessions)
-                emby_clients[device['DeviceId']] = new_client
-                new_emby_clients.append(new_client)
-            else:
-                emby_clients[device['DeviceId']].set_device(device)
+    @callback
+    def device_removal_callback(data):
+        """Handle the removal of devices from Emby."""
+        if data in active_emby_devices:
+            rem = active_emby_devices.pop(data)
+            inactive_emby_devices[data] = rem
+            _LOGGER.debug("Inactive %s, item: %s", data, rem)
+            rem.set_available(False)
+            if auto_hide:
+                rem.set_hidden(True)
 
-        if new_emby_clients:
-            add_devices_callback(new_emby_clients)
+    @callback
+    def start_emby(event):
+        """Start Emby connection."""
+        emby.start()
 
-    @Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    def update_sessions():
-        """Update the sessions objects."""
-        sessions = embyserver.get_sessions()
-        if sessions is None:
-            _LOGGER.error('Error listing Emby sessions')
-            return
+    @asyncio.coroutine
+    def stop_emby(event):
+        """Stop Emby connection."""
+        yield from emby.stop()
 
-        emby_sessions.clear()
-        for session in sessions:
-            emby_sessions[session['DeviceId']] = session
+    emby.add_new_devices_callback(device_update_callback)
+    emby.add_stale_devices_callback(device_removal_callback)
 
-    update_devices()
-    update_sessions()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_emby)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_emby)
 
 
-class EmbyClient(MediaPlayerDevice):
-    """Representation of a Emby device."""
+class EmbyDevice(MediaPlayerDevice):
+    """Representation of an Emby device."""
 
-    # pylint: disable=too-many-arguments, too-many-public-methods,
-
-    def __init__(self, client, device, emby_sessions, update_devices,
-                 update_sessions):
+    def __init__(self, emby, device_id):
         """Initialize the Emby device."""
-        self.emby_sessions = emby_sessions
-        self.update_devices = update_devices
-        self.update_sessions = update_sessions
-        self.client = client
-        self.set_device(device)
+        _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
+        self.emby = emby
+        self.device_id = device_id
+        self.device = self.emby.devices[self.device_id]
+
+        self._hidden = False
+        self._available = True
+
         self.media_status_last_position = None
         self.media_status_received = None
 
-    def set_device(self, device):
-        """Set the device property."""
-        self.device = device
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callback."""
+        self.emby.add_update_callback(
+            self.async_update_callback, self.device_id)
+
+    @callback
+    def async_update_callback(self, msg):
+        """Handle device updates."""
+        # Check if we should update progress
+        if self.device.media_position:
+            if self.device.media_position != self.media_status_last_position:
+                self.media_status_last_position = self.device.media_position
+                self.media_status_received = dt_util.utcnow()
+        elif not self.device.is_nowplaying:
+            # No position, but we have an old value and are still playing
+            self.media_status_last_position = None
+            self.media_status_received = None
+
+        self.hass.async_add_job(self.async_update_ha_state())
+
+    @property
+    def hidden(self):
+        """Return True if entity should be hidden from UI."""
+        return self._hidden
+
+    def set_hidden(self, value):
+        """Set hidden property."""
+        self._hidden = value
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    def set_available(self, value):
+        """Set available property."""
+        self._available = value
 
     @property
     def unique_id(self):
         """Return the id of this emby client."""
-        return '{}.{}'.format(
-            self.__class__, self.device['DeviceId'])
+        return '{}.{}'.format(self.__class__, self.device_id)
 
     @property
     def supports_remote_control(self):
         """Return control ability."""
-        return self.device['SupportsRemoteControl']
+        return self.device.supports_remote_control
 
     @property
     def name(self):
         """Return the name of the device."""
-        return 'emby_{}'.format(self.device['DeviceName']) or \
-            DEVICE_DEFAULT_NAME
+        return 'Emby - {} - {}'.format(self.device.client, self.device.name) \
+            or DEVICE_DEFAULT_NAME
 
     @property
-    def session(self):
-        """Return the session, if any."""
-        if self.device['DeviceId'] not in self.emby_sessions:
-            return None
-
-        return self.emby_sessions[self.device['DeviceId']]
-
-    @property
-    def now_playing_item(self):
-        """Return the currently playing item, if any."""
-        session = self.session
-        if session is not None and 'NowPlayingItem' in session:
-            return session['NowPlayingItem']
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
 
     @property
     def state(self):
         """Return the state of the device."""
-        session = self.session
-        if session:
-            if 'NowPlayingItem' in session:
-                if session['PlayState']['IsPaused']:
-                    return STATE_PAUSED
-                else:
-                    return STATE_PLAYING
-            else:
-                return STATE_IDLE
-        # This is nasty. Need to find a way to determine alive
-        else:
+        state = self.device.state
+        if state == 'Paused':
+            return STATE_PAUSED
+        elif state == 'Playing':
+            return STATE_PLAYING
+        elif state == 'Idle':
+            return STATE_IDLE
+        elif state == 'Off':
             return STATE_OFF
-
-        return STATE_UNKNOWN
-
-    def update(self):
-        """Get the latest details."""
-        self.update_devices(no_throttle=True)
-        self.update_sessions(no_throttle=True)
-        # Check if we should update progress
-        try:
-            position = self.session['PlayState']['PositionTicks']
-        except (KeyError, TypeError):
-            self.media_status_last_position = None
-            self.media_status_received = None
-        else:
-            position = int(position) / 10000000
-            if position != self.media_status_last_position:
-                self.media_status_last_position = position
-                self.media_status_received = dt_util.utcnow()
-
-    def play_percent(self):
-        """Return current media percent complete."""
-        if self.now_playing_item['RunTimeTicks'] and \
-                self.session['PlayState']['PositionTicks']:
-            try:
-                return int(self.session['PlayState']['PositionTicks']) / \
-                    int(self.now_playing_item['RunTimeTicks']) * 100
-            except KeyError:
-                return 0
-        else:
-            return 0
 
     @property
     def app_name(self):
         """Return current user as app_name."""
         # Ideally the media_player object would have a user property.
-        try:
-            return self.device['UserName']
-        except KeyError:
-            return None
+        return self.device.username
 
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        if self.now_playing_item is not None:
-            try:
-                return self.now_playing_item['Id']
-            except KeyError:
-                return None
+        return self.device.media_id
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        if self.now_playing_item is None:
-            return None
-        try:
-            media_type = self.now_playing_item['Type']
-            if media_type == 'Episode':
-                return MEDIA_TYPE_TVSHOW
-            elif media_type == 'Movie':
-                return MEDIA_TYPE_VIDEO
-            elif media_type == 'Trailer':
-                return MEDIA_TYPE_TRAILER
-            return None
-        except KeyError:
-            return None
+        media_type = self.device.media_type
+        if media_type == 'Episode':
+            return MEDIA_TYPE_TVSHOW
+        elif media_type == 'Movie':
+            return MEDIA_TYPE_VIDEO
+        elif media_type == 'Trailer':
+            return MEDIA_TYPE_TRAILER
+        elif media_type == 'Music':
+            return MEDIA_TYPE_MUSIC
+        elif media_type == 'Video':
+            return MEDIA_TYPE_GENERIC_VIDEO
+        elif media_type == 'Audio':
+            return MEDIA_TYPE_MUSIC
+        return None
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
-        if self.now_playing_item and self.media_content_type:
-            try:
-                return int(self.now_playing_item['RunTimeTicks']) / 10000000
-            except KeyError:
-                return None
+        """Return the duration of current playing media in seconds."""
+        return self.device.media_runtime
 
     @property
     def media_position(self):
-        """Position of current playing media in seconds."""
+        """Return the position of current playing media in seconds."""
         return self.media_status_last_position
 
     @property
@@ -267,46 +263,43 @@ class EmbyClient(MediaPlayerDevice):
 
     @property
     def media_image_url(self):
-        """Image url of current playing media."""
-        if self.now_playing_item is not None:
-            try:
-                return self.client.get_image(
-                    self.now_playing_item['ThumbItemId'], 'Thumb', 0)
-            except KeyError:
-                try:
-                    return self.client.get_image(
-                        self.now_playing_item[
-                            'PrimaryImageItemId'], 'Primary', 0)
-                except KeyError:
-                    return None
+        """Return the image URL of current playing media."""
+        return self.device.media_image_url
 
     @property
     def media_title(self):
-        """Title of current playing media."""
-        # find a string we can use as a title
-        if self.now_playing_item is not None:
-            return self.now_playing_item['Name']
+        """Return the title of current playing media."""
+        return self.device.media_title
 
     @property
     def media_season(self):
         """Season of curent playing media (TV Show only)."""
-        if self.now_playing_item is not None and \
-           'ParentIndexNumber' in self.now_playing_item:
-            return self.now_playing_item['ParentIndexNumber']
+        return self.device.media_season
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
-        if self.now_playing_item is not None and \
-           'SeriesName' in self.now_playing_item:
-            return self.now_playing_item['SeriesName']
+        """Return the title of the series of current playing media (TV)."""
+        return self.device.media_series_title
 
     @property
     def media_episode(self):
-        """Episode of current playing media (TV Show only)."""
-        if self.now_playing_item is not None and \
-           'IndexNumber' in self.now_playing_item:
-            return self.now_playing_item['IndexNumber']
+        """Return the episode of current playing media (TV only)."""
+        return self.device.media_episode
+
+    @property
+    def media_album_name(self):
+        """Return the album name of current playing media (Music only)."""
+        return self.device.media_album_name
+
+    @property
+    def media_artist(self):
+        """Return the artist of current playing media (Music track only)."""
+        return self.device.media_artist
+
+    @property
+    def media_album_artist(self):
+        """Return the album artist of current playing media (Music only)."""
+        return self.device.media_album_artist
 
     @property
     def supported_features(self):
@@ -316,20 +309,44 @@ class EmbyClient(MediaPlayerDevice):
         else:
             return None
 
-    def media_play(self):
-        """Send play command."""
-        if self.supports_remote_control:
-            self.client.play(self.session)
+    def async_media_play(self):
+        """Play media.
 
-    def media_pause(self):
-        """Send pause command."""
-        if self.supports_remote_control:
-            self.client.pause(self.session)
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.device.media_play()
 
-    def media_next_track(self):
-        """Send next track command."""
-        self.client.next_track(self.session)
+    def async_media_pause(self):
+        """Pause the media player.
 
-    def media_previous_track(self):
-        """Send previous track command."""
-        self.client.previous_track(self.session)
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.device.media_pause()
+
+    def async_media_stop(self):
+        """Stop the media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.device.media_stop()
+
+    def async_media_next_track(self):
+        """Send next track command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.device.media_next()
+
+    def async_media_previous_track(self):
+        """Send next track command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.device.media_previous()
+
+    def async_media_seek(self, position):
+        """Send seek command.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.device.media_seek(position)

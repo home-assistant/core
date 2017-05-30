@@ -19,38 +19,38 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = []
 
 
-def get_device(value, **kwargs):
-    """Create zwave entity device."""
-    device_mapping = workaround.get_device_mapping(value)
+def get_device(values, **kwargs):
+    """Create Z-Wave entity device."""
+    device_mapping = workaround.get_device_mapping(values.primary)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
         # Default the multiplier to 4
-        re_arm_multiplier = (zwave.get_config_value(value.node, 9) or 4)
-        return ZWaveTriggerSensor(value, "motion", re_arm_multiplier * 8)
+        re_arm_multiplier = zwave.get_config_value(values.primary.node, 9) or 4
+        return ZWaveTriggerSensor(values, "motion", re_arm_multiplier * 8)
 
-    if workaround.get_device_component_mapping(value) == DOMAIN:
-        return ZWaveBinarySensor(value, None)
+    if workaround.get_device_component_mapping(values.primary) == DOMAIN:
+        return ZWaveBinarySensor(values, None)
 
-    if value.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
-        return ZWaveBinarySensor(value, None)
+    if values.primary.command_class == zwave.const.COMMAND_CLASS_SENSOR_BINARY:
+        return ZWaveBinarySensor(values, None)
     return None
 
 
 class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
     """Representation of a binary sensor within Z-Wave."""
 
-    def __init__(self, value, device_class):
+    def __init__(self, values, device_class):
         """Initialize the sensor."""
-        zwave.ZWaveDeviceEntity.__init__(self, value, DOMAIN)
+        zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._sensor_type = device_class
-        self._state = self._value.data
+        self._state = self.values.primary.data
 
     def update_properties(self):
-        """Callback on data changes for node values."""
-        self._state = self._value.data
+        """Handle data changes for node values."""
+        self._state = self.values.primary.data
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state
 
     @property
@@ -58,24 +58,19 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         """Return the class of this sensor, from DEVICE_CLASSES."""
         return self._sensor_type
 
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
 
 class ZWaveTriggerSensor(ZWaveBinarySensor):
     """Representation of a stateless sensor within Z-Wave."""
 
-    def __init__(self, value, device_class, re_arm_sec=60):
+    def __init__(self, values, device_class, re_arm_sec=60):
         """Initialize the sensor."""
-        super(ZWaveTriggerSensor, self).__init__(value, device_class)
+        super(ZWaveTriggerSensor, self).__init__(values, device_class)
         self.re_arm_sec = re_arm_sec
         self.invalidate_after = None
 
     def update_properties(self):
-        """Called when a value for this entity's node has changed."""
-        self._state = self._value.data
+        """Handle value changes for this entity's node."""
+        self._state = self.values.primary.data
         # only allow this value to be true for re_arm secs
         if not self.hass:
             return
@@ -88,7 +83,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
 
     @property
     def is_on(self):
-        """Return True if movement has happened within the rearm time."""
+        """Return true if movement has happened within the rearm time."""
         return self._state and \
             (self.invalidate_after is None or
              self.invalidate_after > dt_util.utcnow())

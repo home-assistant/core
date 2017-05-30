@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Verisure platform."""
+    """Set up the Verisure platform."""
     sensors = []
 
     if int(hub.config.get(CONF_THERMOMETERS, 1)):

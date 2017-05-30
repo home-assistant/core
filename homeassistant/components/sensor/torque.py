@@ -41,11 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def decode(value):
-    """Double-decode required."""
-    return value.encode('raw_unicode_escape').decode('utf-8')
-
-
 def convert_pid(value):
     """Convert pid from hex string to integer."""
     return int(value, 16)
@@ -53,7 +48,7 @@ def convert_pid(value):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Torque platform."""
+    """Set up the Torque platform."""
     vehicle = config.get(CONF_NAME)
     email = config.get(CONF_EMAIL)
     sensors = {}
@@ -80,7 +75,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     def get(self, request):
         """Handle Torque data request."""
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
             return
@@ -94,10 +89,10 @@ class TorqueReceiveDataView(HomeAssistantView):
 
             if is_name:
                 pid = convert_pid(is_name.group(1))
-                names[pid] = decode(data[key])
+                names[pid] = data[key]
             elif is_unit:
                 pid = convert_pid(is_unit.group(1))
-                units[pid] = decode(data[key])
+                units[pid] = data[key]
             elif is_value:
                 pid = convert_pid(is_value.group(1))
                 if pid in self.sensors:
@@ -110,7 +105,7 @@ class TorqueReceiveDataView(HomeAssistantView):
                     units.get(pid, None))
                 hass.async_add_job(self.add_devices, [self.sensors[pid]])
 
-        return None
+        return "OK!"
 
 
 class TorqueSensor(Entity):

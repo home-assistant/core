@@ -133,7 +133,7 @@ def async_reproduce_state(hass, states, blocking=False):
     for state in states:
 
         if hass.states.get(state.entity_id) is None:
-            _LOGGER.warning('reproduce_state: Unable to find entity %s',
+            _LOGGER.warning("reproduce_state: Unable to find entity %s",
                             state.entity_id)
             continue
 
@@ -142,7 +142,12 @@ def async_reproduce_state(hass, states, blocking=False):
         else:
             service_domain = state.domain
 
-        domain_services = hass.services.async_services()[service_domain]
+        domain_services = hass.services.async_services().get(service_domain)
+
+        if not domain_services:
+            _LOGGER.warning(
+                "reproduce_state: Unable to reproduce state %s (1)", state)
+            continue
 
         service = None
         for _service in domain_services.keys():
@@ -157,8 +162,8 @@ def async_reproduce_state(hass, states, blocking=False):
                 break
 
         if not service:
-            _LOGGER.warning("reproduce_state: Unable to reproduce state %s",
-                            state)
+            _LOGGER.warning(
+                "reproduce_state: Unable to reproduce state %s (2)", state)
             continue
 
         # We group service calls for entities by service call

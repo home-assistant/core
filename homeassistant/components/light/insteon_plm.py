@@ -1,5 +1,5 @@
 """
-Support for INSTEON lights via PowerLinc Modem.
+Support for Insteon lights via PowerLinc Modem.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_plm/
@@ -12,16 +12,16 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 from homeassistant.loader import get_component
 
+_LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['insteon_plm']
 
 MAX_BRIGHTNESS = 255
 
-_LOGGER = logging.getLogger(__name__)
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the INSTEON PLM device class for the hass platform."""
+    """Set up the Insteon PLM device."""
     plm = hass.data['insteon_plm']
 
     device_list = []
@@ -30,13 +30,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         address = device.get('address_hex')
         dimmable = bool('dimmable' in device.get('capabilities'))
 
-        _LOGGER.info('Registered %s with light platform.', name)
+        _LOGGER.info("Registered %s with light platform", name)
 
         device_list.append(
             InsteonPLMDimmerDevice(hass, plm, address, name, dimmable)
         )
 
-    hass.async_add_job(async_add_devices(device_list))
+    async_add_devices(device_list)
 
 
 class InsteonPLMDimmerDevice(Light):
@@ -72,14 +72,14 @@ class InsteonPLMDimmerDevice(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.debug('on level for %s is %s', self._address, onlevel)
+        _LOGGER.debug("on level for %s is %s", self._address, onlevel)
         return int(onlevel)
 
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
         onlevel = self._plm.get_device_attr(self._address, 'onlevel')
-        _LOGGER.debug('on level for %s is %s', self._address, onlevel)
+        _LOGGER.debug("on level for %s is %s", self._address, onlevel)
         return bool(onlevel)
 
     @property
@@ -101,7 +101,7 @@ class InsteonPLMDimmerDevice(Light):
     @callback
     def async_light_update(self, message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from PLM for %s', self._address)
+        _LOGGER.info("Received update calback from PLM for %s", self._address)
         self._hass.async_add_job(self.async_update_ha_state())
 
     @asyncio.coroutine

@@ -59,7 +59,7 @@ def get_average(temp_base):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Sense HAT sensor platform."""
+    """Set up the Sense HAT sensor platform."""
     data = SenseHatData(config.get(CONF_IS_HAT_ATTACHED))
     dev = []
     for variable in config[CONF_DISPLAY_OPTIONS]:

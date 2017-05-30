@@ -17,21 +17,23 @@ from homeassistant.util import Throttle
 
 from requests.exceptions import RequestException
 
-REQUIREMENTS = ['fritzconnection==0.6']
+REQUIREMENTS = ['fritzconnection==0.6.3']
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+_LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_IP = '169.254.1.1'  # This IP is valid for all FRITZ!Box routers.
 
-ATTR_IS_LINKED = "is_linked"
-ATTR_IS_CONNECTED = "is_connected"
-ATTR_WAN_ACCESS_TYPE = "wan_access_type"
-ATTR_EXTERNAL_IP = "external_ip"
-ATTR_UPTIME = "uptime"
-ATTR_BYTES_SENT = "bytes_sent"
-ATTR_BYTES_RECEIVED = "bytes_received"
-ATTR_MAX_BYTE_RATE_UP = "max_byte_rate_up"
-ATTR_MAX_BYTE_RATE_DOWN = "max_byte_rate_down"
+ATTR_BYTES_RECEIVED = 'bytes_received'
+ATTR_BYTES_SENT = 'bytes_sent'
+ATTR_EXTERNAL_IP = 'external_ip'
+ATTR_IS_CONNECTED = 'is_connected'
+ATTR_IS_LINKED = 'is_linked'
+ATTR_MAX_BYTE_RATE_DOWN = 'max_byte_rate_down'
+ATTR_MAX_BYTE_RATE_UP = 'max_byte_rate_up'
+ATTR_UPTIME = 'uptime'
+ATTR_WAN_ACCESS_TYPE = 'wan_access_type'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
 STATE_ONLINE = 'online'
 STATE_OFFLINE = 'offline'
@@ -41,8 +43,6 @@ ICON = 'mdi:web'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
 })
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):

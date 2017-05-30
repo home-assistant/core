@@ -47,9 +47,9 @@ set_config_parameter:
     parameter:
       description: Parameter number to set (integer).
     value:
-      description: Value to set on parameter. (integer).
+      description: Value to set for parameter. (String value for list and bool parameters, integer for others).
     size:
-      description: (Optional) The size of the value. Defaults to 2.
+      description: (Optional) Set the size of the parameter value. Only needed if no parameters are available.
 
 print_config_parameter:
   description: Prints a Z-Wave node config parameter value to log.
@@ -75,7 +75,7 @@ refresh_entity:
 refresh_node:
   description: Refresh zwave node.
   fields:
-    entity_id:
+    node_id:
       description: ID of the node to refresh.
       example: 10
 
@@ -102,9 +102,17 @@ test_network:
 rename_node:
   description: Set the name(s) of a node.
   fields:
-    entity_id:
-      description: Name(s) of entities to to rename
-      example: 'light.leviton_vrmx11lz_multilevel_scene_switch_level_40'
+    node_id:
+      description: ID of the node to rename.
+      example: 10
     name:
       description: New Name
       example: 'kitchen'
+
+reset_node_meters:
+  description: Resets the meter counters of a node.
+  fields:
+    node_id:
+      description: Node id of the device to reset meters for. (integer)
+    instance:
+      description: (Optional) Instance of association. Defaults to instance 1.

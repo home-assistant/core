@@ -45,7 +45,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
-    vol.Required(CONF_MONITORED_CONDITIONS):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MiFlora sensor."""
+    """Set up the MiFlora sensor."""
     from miflora import miflora_poller
 
     cache = config.get(CONF_CACHE)
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         unit = SENSOR_TYPES[parameter][1]
 
         prefix = config.get(CONF_NAME)
-        if len(prefix) > 0:
+        if prefix:
             name = "{} {}".format(prefix, name)
 
         devs.append(MiFloraSensor(
@@ -145,7 +145,7 @@ class MiFloraSensor(Entity):
                          self.name)
             # Remove old data from median list or set sensor value to None
             # if no data is available anymore
-            if len(self.data) > 0:
+            if self.data:
                 self.data = self.data[1:]
             else:
                 self._state = None

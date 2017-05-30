@@ -10,7 +10,7 @@ from homeassistant.helpers.event import track_utc_time_change
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo covers."""
+    """Set up the Demo covers."""
     add_devices([
         DemoCover(hass, 'Kitchen Window'),
         DemoCover(hass, 'Hall Window', 10),

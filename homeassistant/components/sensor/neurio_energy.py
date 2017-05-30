@@ -1,18 +1,21 @@
 """
-Support for monitoring  an Neurio hub.
+Support for monitoring a Neurio energy sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.neurio_energy/
 """
 import logging
+from datetime import timedelta
 
 import requests.exceptions
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_API_KEY, CONF_NAME)
+from homeassistant.const import (CONF_API_KEY)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['neurio==0.3.1']
 
@@ -21,48 +24,133 @@ _LOGGER = logging.getLogger(__name__)
 CONF_API_SECRET = 'api_secret'
 CONF_SENSOR_ID = 'sensor_id'
 
-DEFAULT_NAME = 'Energy Usage'
+ACTIVE_NAME = 'Energy Usage'
+DAILY_NAME = 'Daily Energy Usage'
+
+ACTIVE_TYPE = 'active'
+DAILY_TYPE = 'daily'
 
 ICON = 'mdi:flash'
+
+MIN_TIME_BETWEEN_DAILY_UPDATES = timedelta(seconds=150)
+MIN_TIME_BETWEEN_ACTIVE_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_API_SECRET): cv.string,
     vol.Optional(CONF_SENSOR_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Neurio sensor."""
-    name = config.get(CONF_NAME)
+    """Set up the Neurio sensor."""
     api_key = config.get(CONF_API_KEY)
     api_secret = config.get(CONF_API_SECRET)
     sensor_id = config.get(CONF_SENSOR_ID)
 
-    if not sensor_id:
+    data = NeurioData(api_key, api_secret, sensor_id)
+
+    @Throttle(MIN_TIME_BETWEEN_DAILY_UPDATES)
+    def update_daily():
+        """Update the daily power usage."""
+        data.get_daily_usage()
+
+    @Throttle(MIN_TIME_BETWEEN_ACTIVE_UPDATES)
+    def update_active():
+        """Update the active power usage."""
+        data.get_active_power()
+
+    update_daily()
+    update_active()
+
+    # Active power sensor
+    add_devices([NeurioEnergy(data, ACTIVE_NAME, ACTIVE_TYPE, update_active)])
+    # Daily power sensor
+    add_devices([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
+
+
+class NeurioData(object):
+    """Stores data retrieved from Neurio sensor."""
+
+    def __init__(self, api_key, api_secret, sensor_id):
+        """Initialize the data."""
         import neurio
-        neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
-        neurio_client = neurio.Client(token_provider=neurio_tp)
-        user_info = neurio_client.get_user_information()
-        _LOGGER.warning('Sensor ID auto-detected, set api_sensor_id: "%s"',
-                        user_info["locations"][0]["sensors"][0]["sensorId"])
-        sensor_id = user_info["locations"][0]["sensors"][0]["sensorId"]
 
-    add_devices([NeurioEnergy(api_key, api_secret, name, sensor_id)])
-
-
-class NeurioEnergy(Entity):
-    """Implementation of an Neurio energy."""
-
-    def __init__(self, api_key, api_secret, name, sensor_id):
-        """Initialize the sensor."""
-        self._name = name
         self.api_key = api_key
         self.api_secret = api_secret
         self.sensor_id = sensor_id
+
+        self._daily_usage = None
+        self._active_power = None
+
         self._state = None
-        self._unit_of_measurement = 'W'
+
+        neurio_tp = neurio.TokenProvider(key=api_key, secret=api_secret)
+        self.neurio_client = neurio.Client(token_provider=neurio_tp)
+
+        if not self.sensor_id:
+            user_info = self.neurio_client.get_user_information()
+            _LOGGER.warning("Sensor ID auto-detected: %s", user_info[
+                "locations"][0]["sensors"][0]["sensorId"])
+            self.sensor_id = user_info[
+                "locations"][0]["sensors"][0]["sensorId"]
+
+    @property
+    def daily_usage(self):
+        """Return latest daily usage value."""
+        return self._daily_usage
+
+    @property
+    def active_power(self):
+        """Return latest active power value."""
+        return self._active_power
+
+    def get_active_power(self):
+        """Return current power value."""
+        try:
+            sample = self.neurio_client.get_samples_live_last(self.sensor_id)
+            self._active_power = sample['consumptionPower']
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update current power usage")
+            return None
+
+    def get_daily_usage(self):
+        """Return current daily power usage."""
+        kwh = 0
+        start_time = dt_util.start_of_local_day() \
+            .astimezone(dt_util.UTC).isoformat()
+        end_time = dt_util.utcnow().isoformat()
+
+        _LOGGER.debug('Start: %s, End: %s', start_time, end_time)
+
+        try:
+            history = self.neurio_client.get_samples_stats(
+                self.sensor_id, start_time, 'days', end_time)
+        except (requests.exceptions.RequestException, ValueError, KeyError):
+            _LOGGER.warning("Could not update daily power usage")
+            return None
+
+        for result in history:
+            kwh += result['consumptionEnergy'] / 3600000
+
+        self._daily_usage = round(kwh, 2)
+
+
+class NeurioEnergy(Entity):
+    """Implementation of a Neurio energy sensor."""
+
+    def __init__(self, data, name, sensor_type, update_call):
+        """Initialize the sensor."""
+        self._name = name
+        self._data = data
+        self._sensor_type = sensor_type
+        self.update_sensor = update_call
+        self._state = None
+
+        if sensor_type == ACTIVE_TYPE:
+            self._unit_of_measurement = 'W'
+        elif sensor_type == DAILY_TYPE:
+            self._unit_of_measurement = 'kWh'
 
     @property
     def name(self):
@@ -85,14 +173,10 @@ class NeurioEnergy(Entity):
         return ICON
 
     def update(self):
-        """Get the Neurio monitor data from the web service."""
-        import neurio
-        try:
-            neurio_tp = neurio.TokenProvider(
-                key=self.api_key, secret=self.api_secret)
-            neurio_client = neurio.Client(token_provider=neurio_tp)
-            sample = neurio_client.get_samples_live_last(
-                sensor_id=self.sensor_id)
-            self._state = sample['consumptionPower']
-        except (requests.exceptions.RequestException, ValueError, KeyError):
-            _LOGGER.warning('Could not update status for %s', self.name)
+        """Get the latest data, update state."""
+        self.update_sensor()
+
+        if self._sensor_type == ACTIVE_TYPE:
+            self._state = self._data.active_power
+        elif self._sensor_type == DAILY_TYPE:
+            self._state = self._data.daily_usage

@@ -23,14 +23,16 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 from homeassistant.util import slugify
 
+_LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'microsoft_face'
 DEPENDENCIES = ['camera']
 
-_LOGGER = logging.getLogger(__name__)
-
-FACE_API_URL = "https://westus.api.cognitive.microsoft.com/face/v1.0/{0}"
+FACE_API_URL = "api.cognitive.microsoft.com/face/v1.0/{0}"
 
 DATA_MICROSOFT_FACE = 'microsoft_face'
+
+CONF_AZURE_REGION = 'azure_region'
 
 SERVICE_CREATE_GROUP = 'create_group'
 SERVICE_DELETE_GROUP = 'delete_group'
@@ -49,6 +51,7 @@ DEFAULT_TIMEOUT = 10
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
+        vol.Optional(CONF_AZURE_REGION, default="westus"): cv.string,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -111,10 +114,11 @@ def face_person(hass, group, person, camera_entity):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup microsoft face."""
+    """Set up microsoft face."""
     entities = {}
     face = MicrosoftFace(
         hass,
+        config[DOMAIN].get(CONF_AZURE_REGION),
         config[DOMAIN].get(CONF_API_KEY),
         config[DOMAIN].get(CONF_TIMEOUT),
         entities
@@ -129,8 +133,8 @@ def async_setup(hass, config):
 
     hass.data[DATA_MICROSOFT_FACE] = face
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -304,12 +308,13 @@ class MicrosoftFaceGroupEntity(Entity):
 class MicrosoftFace(object):
     """Microsoft Face api for HomeAssistant."""
 
-    def __init__(self, hass, api_key, timeout, entities):
+    def __init__(self, hass, server_loc, api_key, timeout, entities):
         """Initialize Microsoft Face api."""
         self.hass = hass
         self.websession = async_get_clientsession(hass)
         self.timeout = timeout
         self._api_key = api_key
+        self._server_url = "https://{0}.{1}".format(server_loc, FACE_API_URL)
         self._store = {}
         self._entities = entities
 
@@ -346,7 +351,7 @@ class MicrosoftFace(object):
                  params=None):
         """Make a api call."""
         headers = {"Ocp-Apim-Subscription-Key": self._api_key}
-        url = FACE_API_URL.format(function)
+        url = self._server_url.format(function)
 
         payload = None
         if binary:
@@ -359,30 +364,25 @@ class MicrosoftFace(object):
             else:
                 payload = None
 
-        response = None
         try:
             with async_timeout.timeout(self.timeout, loop=self.hass.loop):
                 response = yield from getattr(self.websession, method)(
                     url, data=payload, headers=headers, params=params)
 
                 answer = yield from response.json()
-                _LOGGER.debug("Read from microsoft face api: %s", answer)
-                if response.status == 200 or response.status == 202:
-                    return answer
 
-                _LOGGER.warning("Error %d microsoft face api %s",
-                                response.status, response.url)
-                raise HomeAssistantError(answer['error']['message'])
+            _LOGGER.debug("Read from microsoft face api: %s", answer)
+            if response.status < 300:
+                return answer
 
-        except (aiohttp.errors.ClientError,
-                aiohttp.errors.ClientDisconnectedError):
+            _LOGGER.warning("Error %d microsoft face api %s",
+                            response.status, response.url)
+            raise HomeAssistantError(answer['error']['message'])
+
+        except aiohttp.ClientError:
             _LOGGER.warning("Can't connect to microsoft face api")
 
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout from microsoft face api %s", response.url)
-
-        finally:
-            if response is not None:
-                yield from response.release()
 
         raise HomeAssistantError("Network error on microsoft face api.")

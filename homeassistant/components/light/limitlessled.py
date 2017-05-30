@@ -4,7 +4,6 @@ Support for LimitlessLED bulbs.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.limitlessled/
 """
-
 import logging
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['limitlessled==1.0.5']
+REQUIREMENTS = ['limitlessled==1.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,14 +24,13 @@ CONF_BRIDGES = 'bridges'
 CONF_GROUPS = 'groups'
 CONF_NUMBER = 'number'
 CONF_VERSION = 'version'
-CONF_BRIDGE_LED = 'bridge_led'
 
 DEFAULT_LED_TYPE = 'rgbw'
 DEFAULT_PORT = 5987
 DEFAULT_TRANSITION = 0
 DEFAULT_VERSION = 6
 
-LED_TYPE = ['rgbw', 'rgbww', 'white']
+LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
 
 RGB_BOUNDARY = 40
 
@@ -54,7 +52,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Optional(CONF_VERSION,
                          default=DEFAULT_VERSION): cv.positive_int,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_BRIDGE_LED, default=False): cv.boolean,
             vol.Required(CONF_GROUPS):  vol.All(cv.ensure_list, [
                 {
                     vol.Required(CONF_NAME): cv.string,
@@ -97,7 +94,7 @@ def rewrite_legacy(config):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LimitlessLED lights."""
+    """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
     # Two legacy configuration formats are supported to maintain backwards
@@ -116,8 +113,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 group_conf.get(CONF_NAME),
                 group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
             lights.append(LimitlessLEDGroup.factory(group))
-        if bridge_conf.get(CONF_BRIDGE_LED) and bridge.bridge_led is not None:
-            lights.append(LimitlessLEDGroup.factory(bridge.bridge_led))
     add_devices(lights)
 
 
@@ -127,7 +122,7 @@ def state(new_state):
     Specify True (turn on) or False (turn off).
     """
     def decorator(function):
-        """Decorator function."""
+        """Set up the decorator function."""
         # pylint: disable=no-member,protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
@@ -380,12 +375,12 @@ class LimitlessLEDRGBWWGroup(LimitlessLEDGroup):
 
 def _from_hass_temperature(temperature):
     """Convert Home Assistant color temperature units to percentage."""
-    return (temperature - 154) / 346
+    return 1 - (temperature - 154) / 346
 
 
 def _to_hass_temperature(temperature):
     """Convert percentage to Home Assistant color temperature units."""
-    return int(temperature * 346) + 154
+    return 500 - int(temperature * 346)
 
 
 def _from_hass_brightness(brightness):

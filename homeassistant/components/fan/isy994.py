@@ -35,9 +35,9 @@ STATES = [SPEED_OFF, SPEED_LOW, 'med', SPEED_HIGH]
 # pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 fan platform."""
+    """Set up the ISY994 fan platform."""
     if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
+        _LOGGER.error("A connection has not been made to the ISY controller")
         return False
 
     devices = []
@@ -78,7 +78,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def set_speed(self, speed: str) -> None:
         """Send the set speed command to the ISY994 fan device."""
         if not self._node.on(val=STATE_TO_VALUE.get(speed, 0)):
-            _LOGGER.debug('Unable to set fan speed')
+            _LOGGER.debug("Unable to set fan speed")
         else:
             self.speed = self.state
 
@@ -89,7 +89,7 @@ class ISYFanDevice(isy.ISYDevice, FanEntity):
     def turn_off(self, **kwargs) -> None:
         """Send the turn off command to the ISY994 fan device."""
         if not self._node.off():
-            _LOGGER.debug('Unable to set fan speed')
+            _LOGGER.debug("Unable to set fan speed")
         else:
             self.speed = self.state
 
@@ -112,13 +112,13 @@ class ISYFanProgram(ISYFanDevice):
     def turn_off(self, **kwargs) -> None:
         """Send the turn on command to ISY994 fan program."""
         if not self._actions.runThen():
-            _LOGGER.error('Unable to open the cover')
+            _LOGGER.error("Unable to turn off the fan")
         else:
             self.speed = STATE_ON if self.is_on else STATE_OFF
 
     def turn_on(self, **kwargs) -> None:
         """Send the turn off command to ISY994 fan program."""
         if not self._actions.runElse():
-            _LOGGER.error('Unable to close the cover')
+            _LOGGER.error("Unable to turn on the fan")
         else:
             self.speed = STATE_ON if self.is_on else STATE_OFF

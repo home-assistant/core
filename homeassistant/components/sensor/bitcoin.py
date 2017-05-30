@@ -66,8 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     currency = config.get(CONF_CURRENCY)
 
     if currency not in exchangerates.get_ticker():
-        _LOGGER.warning('Currency "%s" is not available. Using "USD"',
-                        currency)
+        _LOGGER.warning("Currency %s is not available. Using USD", currency)
         currency = DEFAULT_CURRENCY
 
     data = BitcoinData()

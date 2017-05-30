@@ -28,13 +28,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Digital Ocean droplet switch."""
+    """Set up the Digital Ocean droplet switch."""
     digital_ocean = get_component('digital_ocean')
     droplets = config.get(CONF_DROPLETS)
 
     dev = []
     for droplet in droplets:
         droplet_id = digital_ocean.DIGITAL_OCEAN.get_droplet_id(droplet)
+        if droplet_id is None:
+            _LOGGER.error("Droplet %s is not available", droplet)
+            return False
         dev.append(DigitalOceanSwitch(
             digital_ocean.DIGITAL_OCEAN, droplet_id))
 

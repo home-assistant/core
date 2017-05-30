@@ -17,13 +17,15 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
+ATTR_MESSAGE = 'message'
+ATTR_NOTIFICATION_ID = 'notification_id'
+ATTR_TITLE = 'title'
+
 DOMAIN = 'persistent_notification'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SERVICE_CREATE = 'create'
-ATTR_TITLE = 'title'
-ATTR_MESSAGE = 'message'
-ATTR_NOTIFICATION_ID = 'notification_id'
 
 SCHEMA_SERVICE_CREATE = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
@@ -57,7 +59,7 @@ def async_create(hass, message, title=None, notification_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the persistent notification component."""
+    """Set up the persistent notification component."""
     @callback
     def create_service(call):
         """Handle a create notification service call."""
@@ -90,8 +92,8 @@ def async_setup(hass, config):
 
         hass.states.async_set(entity_id, message, attr)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml')
     )
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,

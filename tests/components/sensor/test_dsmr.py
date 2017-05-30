@@ -20,7 +20,7 @@ from tests.common import assert_setup_component
 @pytest.fixture
 def mock_connection_factory(monkeypatch):
     """Mock the create functions for serial and TCP Asyncio connections."""
-    from dsmr_parser.protocol import DSMRProtocol
+    from dsmr_parser.clients.protocol import DSMRProtocol
     transport = asynctest.Mock(spec=asyncio.Transport)
     protocol = asynctest.Mock(spec=DSMRProtocol)
 
@@ -32,10 +32,10 @@ def mock_connection_factory(monkeypatch):
 
     # apply the mock to both connection factories
     monkeypatch.setattr(
-        'dsmr_parser.protocol.create_dsmr_reader',
+        'dsmr_parser.clients.protocol.create_dsmr_reader',
         connection_factory)
     monkeypatch.setattr(
-        'dsmr_parser.protocol.create_tcp_dsmr_reader',
+        'dsmr_parser.clients.protocol.create_tcp_dsmr_reader',
         connection_factory)
 
     return connection_factory, transport, protocol
@@ -56,7 +56,7 @@ def test_default_setup(hass, mock_connection_factory):
 
     telegram = {
         CURRENT_ELECTRICITY_USAGE: CosemObject([
-            {'value': Decimal('0.1'), 'unit': 'kWh'}
+            {'value': Decimal('0.0'), 'unit': 'kWh'}
         ]),
         ELECTRICITY_ACTIVE_TARIFF: CosemObject([
             {'value': '0001', 'unit': ''}
@@ -82,7 +82,7 @@ def test_default_setup(hass, mock_connection_factory):
 
     # ensure entities have new state value after incoming telegram
     power_consumption = hass.states.get('sensor.power_consumption')
-    assert power_consumption.state == '0.1'
+    assert power_consumption.state == '0.0'
     assert power_consumption.attributes.get('unit_of_measurement') is 'kWh'
 
     # tariff should be translated in human readable and have no unit
@@ -161,7 +161,7 @@ def test_connection_errors_retry(hass, monkeypatch, mock_connection_factory):
             TimeoutError])
 
     monkeypatch.setattr(
-        'dsmr_parser.protocol.create_dsmr_reader',
+        'dsmr_parser.clients.protocol.create_dsmr_reader',
         first_fail_connection_factory)
     yield from async_setup_component(hass, 'sensor', {'sensor': config})
 
@@ -199,5 +199,5 @@ def test_reconnect(hass, monkeypatch, mock_connection_factory):
     # wait for sleep to resolve
     yield from hass.async_block_till_done()
 
-    assert connection_factory.call_count == 2, \
+    assert connection_factory.call_count >= 2, \
         'connecting not retried'

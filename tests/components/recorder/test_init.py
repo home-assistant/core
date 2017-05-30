@@ -114,6 +114,18 @@ def _add_entities(hass, entity_ids):
         return [st.to_native() for st in session.query(States)]
 
 
+def _add_events(hass, events):
+    with session_scope(hass=hass) as session:
+        session.query(Events).delete(synchronize_session=False)
+    for event_type in events:
+        hass.bus.fire(event_type)
+        hass.block_till_done()
+    hass.data[DATA_INSTANCE].block_till_done()
+
+    with session_scope(hass=hass) as session:
+        return [ev.to_native() for ev in session.query(Events)]
+
+
 # pylint: disable=redefined-outer-name,invalid-name
 def test_saving_state_include_domains(hass_recorder):
     """Test saving and restoring a state."""
@@ -129,6 +141,14 @@ def test_saving_state_incl_entities(hass_recorder):
     states = _add_entities(hass, ['test.recorder', 'test2.recorder'])
     assert len(states) == 1
     assert hass.states.get('test2.recorder') == states[0]
+
+
+def test_saving_event_exclude_event_type(hass_recorder):
+    """Test saving and restoring an event."""
+    hass = hass_recorder({'exclude': {'event_types': 'test'}})
+    events = _add_events(hass, ['test', 'test2'])
+    assert len(events) == 1
+    assert events[0].event_type == 'test2'
 
 
 def test_saving_state_exclude_domains(hass_recorder):
