@@ -65,7 +65,7 @@ class ArloSensor(Entity):
 
     def __init__(self, hass, name, device, sensor_type):
         """Initialize an Arlo sensor."""
-        super(ArloSensor, self).__init__()
+        super().__init__()
         self._name = name
         self._hass = hass
         self._data = device

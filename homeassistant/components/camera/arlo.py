@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.arlo/
 """
 import asyncio
 import logging
-from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
@@ -28,8 +27,6 @@ CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 CONTENT_TYPE_HEADER = 'Content-Type'
 TIMEOUT = 5
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
@@ -38,15 +35,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
     arlo = hass.data.get('arlo')
+    if not arlo:
+        return False
 
     cameras = []
     for camera in arlo.cameras:
         cameras.append(ArloCam(hass, camera, config))
 
-    add_devices(cameras, True)
+    async_add_devices(cameras, True)
     return True
 
 
@@ -55,7 +55,8 @@ class ArloCam(Camera):
 
     def __init__(self, hass, camera, device_info):
         """Initialize an Arlo camera."""
-        super(ArloCam, self).__init__()
+        super().__init__()
+
         self._camera = camera
         self._name = self._camera.name
         self._ffmpeg = hass.data[DATA_FFMPEG]
