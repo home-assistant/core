@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +46,11 @@ class AxisCamera(MjpegCamera):
     def __init__(self, hass, config):
         """Initialize Axis Communications camera component."""
         super().__init__(hass, config)
-        hass.bus.listen(DOMAIN + '_' + config[CONF_NAME] + "_new_ip",
-                        self.new_ip)
+        async_dispatcher_connect(hass,
+                                 DOMAIN + '_' + config[CONF_NAME] + '_new_ip',
+                                 self._new_ip)
 
-    def new_ip(self, event):
+    def _new_ip(self, host):
         """Set new IP for video stream."""
-        self._mjpeg_url = _get_image_url(event.data.get(CONF_HOST), 'mjpeg')
-        self._still_image_url = _get_image_url(event.data.get(CONF_HOST),
-                                               'mjpeg')
+        self._mjpeg_url = _get_image_url(host, 'mjpeg')
+        self._still_image_url = _get_image_url(host, 'mjpeg')

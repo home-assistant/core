@@ -19,6 +19,7 @@ from homeassistant.const import (ATTR_LOCATION, ATTR_TRIPPED,
 from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import get_component
 
@@ -174,8 +175,9 @@ def setup(hass, base_config):
             # Device already registered, but on a different IP
             device = AXIS_DEVICES[serialnumber]
             device.url = host
-            hass.bus.fire(DOMAIN + '_' + device.name + "_new_ip",
-                          {CONF_HOST: host})
+            async_dispatcher_send(hass,
+                                  DOMAIN + '_' + device.name + '_new_ip',
+                                  host)
 
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
