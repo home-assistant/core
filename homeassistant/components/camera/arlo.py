@@ -27,7 +27,7 @@ CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
         cv.string,
-    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=''):
+    vol.Optional(CONF_FFMPEG_ARGUMENTS):
         cv.string,
 })
 
