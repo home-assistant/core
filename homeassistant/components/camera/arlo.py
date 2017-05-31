@@ -9,12 +9,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.arlo import (
-    DEFAULT_BRAND, DEFAULT_ENTITY_NAMESPACE)
+from homeassistant.components.arlo import DEFAULT_BRAND
 
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import CONF_ENTITY_NAMESPACE
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
 
@@ -25,8 +23,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
     vol.Optional(CONF_FFMPEG_ARGUMENTS):
         cv.string,
 })

@@ -11,11 +11,10 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.arlo import (
-    CONF_ATTRIBUTION, DEFAULT_BRAND, DEFAULT_ENTITY_NAMESPACE)
+    CONF_ATTRIBUTION, DEFAULT_BRAND)
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
-    STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, STATE_UNKNOWN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 
@@ -31,8 +30,6 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE):
-        cv.string,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })

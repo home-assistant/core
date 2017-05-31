@@ -21,7 +21,6 @@ CONF_ATTRIBUTION = 'Data provided by arlo.netgear.com'
 
 DOMAIN = 'arlo'
 
-DEFAULT_ENTITY_NAMESPACE = 'arlo'
 DEFAULT_BRAND = 'Netgear Arlo'
 
 NOTIFICATION_ID = 'arlo_notification'
