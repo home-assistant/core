@@ -3,7 +3,7 @@ import asyncio
 import argparse
 from contextlib import suppress
 import logging
-import time
+from timeit import default_timer as timer
 
 from homeassistant import core
 
@@ -64,11 +64,11 @@ def async_million_events(hass):
 
     hass.bus.async_listen(event_name, listener)
 
-    start = time.time()
+    start = timer()
 
     for _ in range(10**6):
         hass.bus.async_fire(event_name)
 
     yield from event.wait()
 
-    return time.time() - start
+    return timer() - start
