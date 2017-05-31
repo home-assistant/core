@@ -98,9 +98,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
+    set_position_template = config.get(CONF_SET_POSITION_TEMPLATE)
+    if set_position_template is not None:
+        set_position_template.hass = hass
 
     async_add_devices([MqttCover(
-        hass,
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -122,15 +124,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_TILT_STATE_OPTIMISTIC),
         config.get(CONF_TILT_INVERT_STATE),
         config.get(CONF_POSITION_TOPIC),
-        config.get(CONF_SET_POSITION_TEMPLATE),
+        set_position_template,
     )])
 
 
 class MqttCover(CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, hass, name, state_topic, command_topic,
-                 tilt_command_topic,
+    def __init__(self, name, state_topic, command_topic, tilt_command_topic,
                  tilt_status_topic, qos, retain, state_open, state_closed,
                  payload_open, payload_close, payload_stop,
                  optimistic, value_template, tilt_open_position,
@@ -162,8 +163,6 @@ class MqttCover(CoverDevice):
         self._tilt_invert = tilt_invert
         self._position_topic = position_topic
         self._set_position_template = set_position_template
-        if set_position_template is not None:
-            self._set_position_template.hass = hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -259,9 +258,6 @@ class MqttCover(CoverDevice):
         if self._position_topic is not None:
             supported_features |= SUPPORT_SET_POSITION
 
-        if self.current_cover_position is not None:
-            supported_features |= SUPPORT_SET_POSITION
-
         if self._tilt_command_topic is not None:
             supported_features |= TILT_FEATURES
 
@@ -346,7 +342,8 @@ class MqttCover(CoverDevice):
             position = kwargs[ATTR_POSITION]
             if self._set_position_template is not None:
                 try:
-                    position = self._set_position_template.async_render()
+                    position = self._set_position_template.async_render(
+                        **kwargs)
                 except TemplateError as ex:
                     _LOGGER.error(ex)
                     self._state = None
