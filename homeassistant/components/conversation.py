@@ -52,22 +52,24 @@ def setup(hass, config):
         hass,
         attrs['action'],
         name)
-        for name, attrs in config.items()} or {'': lambda: None}
-# Make sure choices isnt empty
+        for name, attrs in config.items()}
+
 
     def process(service):
         """Parse text into commands."""
 
-        text = service.data[ATTR_TEXT]
-        match = fuzzyExtract.extractOne(text, choices.keys())
-        scorelimit = 60  # arbitrary value
-        logging.info('matched up text %s and found %s' % (
-            text, [match[0] if match[1] > scorelimit else 'nothing']
+        # if actually configured
+        if choices:
+            text = service.data[ATTR_TEXT]
+            match = fuzzyExtract.extractOne(text, choices.keys())
+            scorelimit = 60  # arbitrary value
+            logging.info('matched up text %s and found %s' % (
+                text, [match[0] if match[1] > scorelimit else 'nothing']
+                )
             )
-        )
-        if match[1] > scorelimit:
-            choices[match[0]].run()  # run respective script
-            return
+            if match[1] > scorelimit:
+                choices[match[0]].run()  # run respective script
+                return
 
         text = service.data[ATTR_TEXT]
         match = REGEX_TURN_COMMAND.match(text)
