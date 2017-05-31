@@ -17,9 +17,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zoneminder']
 
+DEFAULT_CAUSE = "Home Assistant Triggered Event"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND_ON): cv.string,
     vol.Required(CONF_COMMAND_OFF): cv.string,
+    vol.Optional('ext_trigger_time', default=60): cv.time,
+    vol.Optional('ext_trigger_enable', default=False): cv.boolean,
+    vol.Optional('ext_trigger_cause', default=DEFAULT_CAUSE): cv.string
 })
 
 
@@ -40,6 +45,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 off_state
             )
         )
+        if config.get('ext_trigger_enable'):
+            switches.append(
+                ZMTriggerMonitors(
+                    int(i['Monitor']['Id']),
+                    i['Monitor']['Name'],
+                    config.get('ext_trigger_cause'),
+                    config.get('ext_trigger_time')
+                )
+            )
 
     add_devices(switches)
 
@@ -88,3 +102,37 @@ class ZMSwitchMonitors(SwitchDevice):
             'api/monitors/%i.json' % self._monitor_id,
             {'Monitor[Function]': self._off_state}
         )
+
+
+class ZMTriggerMonitors(SwitchDevice):
+    """Representation of External Trigger."""
+
+    def __init__(self, monitor_id, monitor_name, cause, timeout):
+        """Initialize the switch."""
+        self._monitor_id = monitor_id
+        self._monitor_name = monitor_name
+        self._ison = None
+        self._cause = cause
+        self._timeout = timeout
+
+    @property
+    def is_on(self):
+        """Return True if entity is on."""
+        return self._ison
+
+    def turn_on(self):
+        """Turn the entity on."""
+        zoneminder.zm_trigger(
+            self._monitor_id, "on", self._cause, self._timeout)
+        self._ison = True
+
+    def turn_off(self):
+        """Turn the entity off."""
+        zoneminder.zm_trigger(
+            self._monitor_id, "off", self._cause, self._timeout)
+        self._ison = False
+
+    @property
+    def name(self):
+        """Return the name of the switch."""
+        return "%s Trigger" % self._monitor_name
