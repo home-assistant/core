@@ -4,7 +4,10 @@ Twitter platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.twitter/
 """
+import json
 import logging
+import mimetypes
+import os
 
 import voluptuous as vol
 
@@ -51,17 +54,96 @@ class TwitterNotificationService(BaseNotificationService):
                               access_token_secret)
 
     def send_message(self, message="", **kwargs):
-        """Tweet a message."""
+        """Tweet a message, optionally with media"""
+        media = kwargs.get('media', None)
+        media_id = self.upload_media(media)
+
         if self.user:
-            resp = self.api.request(
-                'direct_messages/new', {'text': message, 'user': self.user})
+            resp = self.api.request('direct_messages/new',
+                                    {'text': message, 'user': self.user,
+                                     'media_ids': media_id})
         else:
-            resp = self.api.request('statuses/update', {'status': message})
+            resp = self.api.request('statuses/update',
+                                    {'status': message, 'media_ids': media_id})
 
         if resp.status_code != 200:
-            import json
-            obj = json.loads(resp.text)
-            error_message = obj['errors'][0]['message']
-            error_code = obj['errors'][0]['code']
-            _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
-                          error_message, error_code)
+            self.log_error_resp(resp)
+
+    def upload_media(self, media_path=None):
+        """Upload media."""
+        if media_path:
+            (media_type, _) = mimetypes.guess_type(media_path)
+            total_bytes = os.path.getsize(media_path)
+
+            file = open(media_path, 'rb')
+            resp = self.upload_media_init(media_type, total_bytes)
+
+            media_id = None
+            if resp.status_code not in range(200, 299):
+                self.log_error_resp(resp)
+            else:
+                media_id = resp.json()['media_id']
+                media_id = self.upload_media_chunked(file, total_bytes,
+                                                     media_id)
+
+                resp = self.upload_media_finalize(media_id)
+                if resp.status_code not in range(200, 299):
+                    self.log_error_resp(resp)
+
+            return media_id
+
+    def upload_media_init(self, media_type, total_bytes):
+        """Upload media, INIT phase."""
+        resp = self.api.request('media/upload',
+                                {'command': 'INIT', 'media_type': media_type,
+                                 'total_bytes': total_bytes})
+        return resp
+
+    def upload_media_chunked(self, file, total_bytes, media_id):
+        """Upload media, chunked append."""
+        segment_id = 0
+        bytes_sent = 0
+        while bytes_sent < total_bytes:
+            chunk = file.read(4 * 1024 * 1024)
+            resp = self.upload_media_append(chunk, media_id, segment_id)
+            if resp.status_code not in range(200, 299):
+                self.log_error_resp_append(resp)
+                return None
+            segment_id = segment_id + 1
+            bytes_sent = file.tell()
+            self.log_bytes_sent(bytes_sent, total_bytes)
+        return media_id
+
+    def upload_media_append(self, chunk, media_id, segment_id):
+        """Upload media, append phase."""
+        return self.api.request('media/upload',
+                                {'command': 'APPEND', 'media_id': media_id,
+                                 'segment_index': segment_id},
+                                {'media': chunk})
+
+    def upload_media_finalize(self, media_id):
+        """Upload media, finalize phase."""
+        return self.api.request('media/upload',
+                                {'command': 'FINALIZE', 'media_id': media_id})
+
+    @staticmethod
+    def log_bytes_sent(bytes_sent, total_bytes):
+        """Log upload progress."""
+        _LOGGER.debug("%s of %s bytes uploaded", str(bytes_sent),
+                      str(total_bytes))
+
+    @staticmethod
+    def log_error_resp(resp):
+        """Log error response."""
+        obj = json.loads(resp.text)
+        error_message = obj['error']
+        _LOGGER.error("Error %s : %s", resp.status_code, error_message)
+
+    @staticmethod
+    def log_error_resp_append(resp):
+        """Log error response, during upload append phase."""
+        obj = json.loads(resp.text)
+        error_message = obj['errors'][0]['message']
+        error_code = obj['errors'][0]['code']
+        _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
+                      error_message, error_code)

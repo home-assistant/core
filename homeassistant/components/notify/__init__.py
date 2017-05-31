@@ -34,6 +34,9 @@ ATTR_TARGET = 'target'
 ATTR_TITLE = 'title'
 ATTR_TITLE_DEFAULT = "Home Assistant"
 
+# Media to include with notification
+ATTR_MEDIA = 'media'
+
 DOMAIN = 'notify'
 
 SERVICE_NOTIFY = 'notify'
@@ -48,10 +51,11 @@ NOTIFY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_TITLE): cv.template,
     vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_DATA): dict,
+    vol.Optional(ATTR_MEDIA): cv.isfile,
 })
 
 
-def send_message(hass, message, title=None, data=None):
+def send_message(hass, message, title=None, data=None, media=None):
     """Send a notification message."""
     info = {
         ATTR_MESSAGE: message
@@ -59,6 +63,9 @@ def send_message(hass, message, title=None, data=None):
 
     if title is not None:
         info[ATTR_TITLE] = title
+
+    if media is not None:
+        info[ATTR_MEDIA] = media
 
     if data is not None:
         info[ATTR_DATA] = data
@@ -132,6 +139,7 @@ def async_setup(hass, config):
             message.hass = hass
             kwargs[ATTR_MESSAGE] = message.async_render()
             kwargs[ATTR_DATA] = service.data.get(ATTR_DATA)
+            kwargs[ATTR_MEDIA] = service.data.get(ATTR_MEDIA)
 
             yield from notify_service.async_send_message(**kwargs)
 

@@ -97,14 +97,17 @@ class TestNotifyDemo(unittest.TestCase):
     def test_method_forwards_correct_data(self):
         """Test that all data from the service gets forwarded to service."""
         self._setup_notify()
+        import tempfile
+        temp_media_file = tempfile.NamedTemporaryFile(mode='r')
         notify.send_message(self.hass, 'my message', 'my title',
-                            {'hello': 'world'})
+                            {'hello': 'world'}, temp_media_file.name)
         self.hass.block_till_done()
         self.assertTrue(len(self.events) == 1)
         data = self.events[0].data
         assert {
             'message': 'my message',
             'title': 'my title',
+            'media': temp_media_file.name,
             'data': {'hello': 'world'}
         } == data
 
@@ -129,6 +132,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.assertTrue(len(self.events) == 1)
         assert {
             'message': 'Test 123 4',
+            'media': None,
             'data': {
                 'push': {
                     'sound':
@@ -160,6 +164,7 @@ class TestNotifyDemo(unittest.TestCase):
         assert {
             'message': 'Test 123 4',
             'title': 'Test',
+            'media': None,
             'data': {
                 'push': {
                     'sound':
@@ -191,5 +196,6 @@ class TestNotifyDemo(unittest.TestCase):
             'message': 'my message',
             'target': ['test target id'],
             'title': 'my title',
+            'media': None,
             'data': {'hello': 'world'}
         } == data

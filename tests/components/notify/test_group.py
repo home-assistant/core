@@ -67,11 +67,13 @@ class TestNotifyGroup(unittest.TestCase):
         assert self.service1.send_message.mock_calls[0][1][0] == 'Hello'
         assert self.service1.send_message.mock_calls[0][2] == {
             'title': 'Test notification',
-            'data': {'hello': 'world'}
+            'data': {'hello': 'world'},
+            'media': None,
         }
         assert self.service2.send_message.mock_calls[0][1][0] == 'Hello'
         assert self.service2.send_message.mock_calls[0][2] == {
             'target': ['unnamed device'],
             'title': 'Test notification',
-            'data': {'hello': 'world', 'test': 'message'}
+            'data': {'hello': 'world', 'test': 'message'},
+            'media': None,
         }
