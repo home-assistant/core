@@ -41,8 +41,8 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
 
 def setup(hass, config):
     """Register the process service."""
-    from fuzzywuzzy import process as fuzzyExtract
     warnings.filterwarnings('ignore', module='fuzzywuzzy')
+    from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
     config = config.get(DOMAIN, {})
