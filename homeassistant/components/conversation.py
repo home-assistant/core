@@ -66,7 +66,8 @@ def setup(hass, config):
             )
         )
         if match[1] > scorelimit:
-            return choices[match[0]].run()  # run respective script
+            choices[match[0]].run()  # run respective script
+            return
 
         text = service.data[ATTR_TEXT]
         match = REGEX_TURN_COMMAND.match(text)
