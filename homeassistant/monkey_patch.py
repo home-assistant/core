@@ -49,6 +49,7 @@ def disable_c_asyncio():
     Requires Python 3.6+.
     """
     class AsyncioImportFinder:
+        """Finder that blocks C version of asyncio being loaded."""
         PATH_TRIGGER = '_asyncio'
 
         def __init__(self, path_entry):
@@ -57,6 +58,7 @@ def disable_c_asyncio():
             return
 
         def find_module(self, fullname, path=None):
+            """Find a module."""
             if fullname == self.PATH_TRIGGER:
                 raise ModuleNotFoundError()
             return None
@@ -65,6 +67,6 @@ def disable_c_asyncio():
     sys.path.insert(0, AsyncioImportFinder.PATH_TRIGGER)
 
     try:
-        import _asyncio
+        import _asyncio  # noqa
     except ImportError:
         pass
