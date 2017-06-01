@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Philips TV platform."""
+    """Set up the Philips TV platform."""
     import haphilipsjs
 
     name = config.get(CONF_NAME)

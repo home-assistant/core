@@ -26,7 +26,7 @@ from homeassistant.util.dt import utcnow
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL)
 
-REQUIREMENTS = ['pydroid-ipcam==0.7']
+REQUIREMENTS = ['pydroid-ipcam==0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

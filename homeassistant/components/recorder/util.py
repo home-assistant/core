@@ -24,7 +24,7 @@ def session_scope(*, hass=None, session=None):
         yield session
         session.commit()
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.error('Error executing query: %s', err)
+        _LOGGER.error("Error executing query: %s", err)
         session.rollback()
         raise
     finally:
@@ -43,7 +43,7 @@ def commit(session, work):
             session.commit()
             return True
         except sqlalchemy.exc.OperationalError as err:
-            _LOGGER.error('Error executing query: %s', err)
+            _LOGGER.error("Error executing query: %s", err)
             session.rollback()
             time.sleep(QUERY_RETRY_WAIT)
     return False
@@ -63,7 +63,7 @@ def execute(qry):
                 (row.to_native() for row in qry)
                 if row is not None]
         except SQLAlchemyError as err:
-            _LOGGER.error('Error executing query: %s', err)
+            _LOGGER.error("Error executing query: %s", err)
 
             if tryno == RETRIES - 1:
                 raise

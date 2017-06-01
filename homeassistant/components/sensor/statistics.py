@@ -80,7 +80,7 @@ class StatisticsSensor(Entity):
         @callback
         # pylint: disable=invalid-name
         def async_stats_sensor_state_listener(entity, old_state, new_state):
-            """Called when the sensor changes state."""
+            """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 

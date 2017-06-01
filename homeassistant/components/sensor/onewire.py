@@ -14,8 +14,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import STATE_UNKNOWN, TEMP_CELSIUS
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_MOUNT_DIR = 'mount_dir'
 CONF_NAMES = 'names'
+
 DEFAULT_MOUNT_DIR = '/sys/bus/w1/devices/'
 DEVICE_FAMILIES = ('10', '22', '28', '3B', '42')
 
@@ -24,12 +27,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MOUNT_DIR, default=DEFAULT_MOUNT_DIR): cv.string,
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the one wire Sensors."""
+    """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)
     sensor_ids = []
     device_files = []
@@ -51,9 +52,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     os.path.split(family_file_path)[0], 'temperature'))
 
     if device_files == []:
-        _LOGGER.error('No onewire sensor found. Check if '
-                      'dtoverlay=w1-gpio is in your /boot/config.txt. '
-                      'Check the mount_dir parameter if it\'s defined.')
+        _LOGGER.error("No onewire sensor found. Check if dtoverlay=w1-gpio "
+                      "is in your /boot/config.txt. "
+                      "Check the mount_dir parameter if it's defined")
         return
 
     devs = []
@@ -129,11 +130,11 @@ class OneWire(Entity):
                 if len(temp_read) == 1:
                     temp = round(float(temp_read[0]), 1)
             except ValueError:
-                _LOGGER.warning('Invalid temperature value read from ' +
+                _LOGGER.warning("Invalid temperature value read from %s",
                                 self._device_file)
             except FileNotFoundError:
-                _LOGGER.warning('Cannot read from sensor: ' +
-                                self._device_file)
+                _LOGGER.warning(
+                    "Cannot read from sensor: %s", self._device_file)
 
         if temp < -55 or temp > 125:
             return

@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Panasonic Viera TV platform."""
+    """Set up the Panasonic Viera TV platform."""
     from panasonic_viera import RemoteControl
 
     mac = config.get(CONF_MAC)
@@ -51,11 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if discovery_info:
         _LOGGER.debug('%s', discovery_info)
-        vals = discovery_info.split(':')
-        if len(vals) > 1:
-            port = vals[1]
-
-        host = vals[0]
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
         remote = RemoteControl(host, port)
         add_devices([PanasonicVieraTVDevice(mac, name, remote)])
         return True

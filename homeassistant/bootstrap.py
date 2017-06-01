@@ -1,4 +1,4 @@
-"""Provides methods to bootstrap a home assistant instance."""
+"""Provide methods to bootstrap a Home Assistant instance."""
 import asyncio
 import logging
 import logging.handlers
@@ -27,7 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
 FIRST_INIT_COMPONENT = set((
-    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction'))
+    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
+    'frontend', 'history'))
 
 
 def from_config_dict(config: Dict[str, Any],
@@ -74,8 +75,6 @@ def async_from_config_dict(config: Dict[str, Any],
     This method is a coroutine.
     """
     start = time()
-    hass.async_track_tasks()
-
     core_config = config.get(core.DOMAIN, {})
 
     try:
@@ -84,8 +83,7 @@ def async_from_config_dict(config: Dict[str, Any],
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
-    yield from hass.loop.run_in_executor(
-        None, conf_util.process_ha_config_upgrade, hass)
+    yield from hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
         async_enable_logging(hass, verbose, log_rotate_days)
@@ -96,7 +94,7 @@ def async_from_config_dict(config: Dict[str, Any],
                         'This may cause issues.')
 
     if not loader.PREPARED:
-        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
+        yield from hass.async_add_job(loader.prepare, hass)
 
     # Merge packages
     conf_util.merge_packages_config(
@@ -140,10 +138,10 @@ def async_from_config_dict(config: Dict[str, Any],
             continue
         hass.async_add_job(async_setup_component(hass, component, config))
 
-    yield from hass.async_stop_track_tasks()
+    yield from hass.async_block_till_done()
 
     stop = time()
-    _LOGGER.info('Home Assistant initialized in %ss', round(stop-start, 2))
+    _LOGGER.info('Home Assistant initialized in %.2fs', stop-start)
 
     async_register_signal_handling(hass)
     return hass
@@ -185,14 +183,13 @@ def async_from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    yield from hass.loop.run_in_executor(
-        None, mount_local_lib_path, config_dir)
+    yield from hass.async_add_job(mount_local_lib_path, config_dir)
 
     async_enable_logging(hass, verbose, log_rotate_days)
 
     try:
-        config_dict = yield from hass.loop.run_in_executor(
-            None, conf_util.load_yaml_config_file, config_path)
+        config_dict = yield from hass.async_add_job(
+            conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         _LOGGER.error('Error loading %s: %s', config_path, err)
         return None
@@ -207,7 +204,7 @@ def async_from_config_file(config_path: str,
 @core.callback
 def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
                          log_rotate_days=None) -> None:
-    """Setup the logging.
+    """Set up the logging.
 
     This method must be run in the event loop.
     """
@@ -215,12 +212,12 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
     fmt = ("%(asctime)s %(levelname)s (%(threadName)s) "
            "[%(name)s] %(message)s")
     colorfmt = "%(log_color)s{}%(reset)s".format(fmt)
-    datefmt = '%y-%m-%d %H:%M:%S'
+    datefmt = '%Y-%m-%d %H:%M:%S'
 
-    # suppress overly verbose logs from libraries that aren't helpful
-    logging.getLogger("requests").setLevel(logging.WARNING)
-    logging.getLogger("urllib3").setLevel(logging.WARNING)
-    logging.getLogger("aiohttp.access").setLevel(logging.WARNING)
+    # Suppress overly verbose logs from libraries that aren't helpful
+    logging.getLogger('requests').setLevel(logging.WARNING)
+    logging.getLogger('urllib3').setLevel(logging.WARNING)
+    logging.getLogger('aiohttp.access').setLevel(logging.WARNING)
 
     try:
         from colorlog import ColoredFormatter
@@ -275,7 +272,7 @@ def async_enable_logging(hass: core.HomeAssistant, verbose: bool=False,
 
     else:
         _LOGGER.error(
-            'Unable to setup error log %s (access denied)', err_log_path)
+            "Unable to setup error log %s (access denied)", err_log_path)
 
 
 def mount_local_lib_path(config_dir: str) -> str:

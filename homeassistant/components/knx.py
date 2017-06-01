@@ -8,17 +8,17 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['knxip==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_HOST = '0.0.0.0'
-DEFAULT_PORT = '3671'
+DEFAULT_PORT = 3671
 DOMAIN = 'knx'
 
 EVENT_KNX_FRAME_RECEIVED = 'knx_frame_received'
@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the connection to the KNX IP interface."""
+    """Set up the connection to the KNX IP interface."""
     global KNXTUNNEL
 
     from knxip.ip import KNXIPTunnel
@@ -94,12 +94,12 @@ class KNXConfig(object):
 
     @property
     def name(self):
-        """The name given to the entity."""
+        """Return the name given to the entity."""
         return self.config['name']
 
     @property
     def address(self):
-        """The address of the device as an integer value.
+        """Return the address of the device as an integer value.
 
         3 types of addresses are supported:
         integer - 0-65535
@@ -110,7 +110,7 @@ class KNXConfig(object):
 
     @property
     def state_address(self):
-        """The group address the device sends its current state to.
+        """Return the group address the device sends its current state to.
 
         Some KNX devices can send the current state to a seperate
         group address. This makes send e.g. when an actuator can
@@ -145,12 +145,12 @@ class KNXGroupAddress(Entity):
 
     @property
     def name(self):
-        """The entity's display name."""
+        """Return the entity's display name."""
         return self._config.name
 
     @property
     def config(self):
-        """The entity's configuration."""
+        """Return the entity's configuration."""
         return self._config
 
     @property
@@ -175,7 +175,7 @@ class KNXGroupAddress(Entity):
 
     @property
     def cache(self):
-        """The name given to the entity."""
+        """Return the name given to the entity."""
         return self._config.config.get('cache', True)
 
     def group_write(self, value):
@@ -257,12 +257,12 @@ class KNXMultiAddressDevice(Entity):
 
     @property
     def name(self):
-        """The entity's display name."""
+        """Return the entity's display name."""
         return self._config.name
 
     @property
     def config(self):
-        """The entity's configuration."""
+        """Return the entity's configuration."""
         return self._config
 
     @property
@@ -272,7 +272,7 @@ class KNXMultiAddressDevice(Entity):
 
     @property
     def cache(self):
-        """The name given to the entity."""
+        """Return the name given to the entity."""
         return self._config.config.get('cache', True)
 
     def has_attribute(self, name):

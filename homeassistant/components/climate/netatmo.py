@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the NetAtmo Thermostat."""
+    """Set up the NetAtmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
 
@@ -150,7 +150,6 @@ class ThermostatData(object):
         self.current_temperature = None
         self.target_temperature = None
         self.setpoint_mode = None
-        # self.operation =
 
     def get_module_names(self):
         """Return all module available on the API as a list."""

@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discover_info=None):
-    """Setup the CMUS platform."""
+    """Set up the CMUS platform."""
     from pycmus import exceptions
 
     host = config.get(CONF_HOST)
@@ -166,7 +166,7 @@ class CmusDevice(MediaPlayerDevice):
         self.cmus.set_volume(int(volume * 100))
 
     def volume_up(self):
-        """Function to send CMUS the command for volume up."""
+        """Set the volume up."""
         left = self.status['set'].get('vol_left')
         right = self.status['set'].get('vol_right')
         if left != right:
@@ -178,7 +178,7 @@ class CmusDevice(MediaPlayerDevice):
             self.cmus.set_volume(int(current_volume) + 5)
 
     def volume_down(self):
-        """Function to send CMUS the command for volume down."""
+        """Set the volume down."""
         left = self.status['set'].get('vol_left')
         right = self.status['set'].get('vol_right')
         if left != right:

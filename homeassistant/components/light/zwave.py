@@ -10,14 +10,13 @@ import logging
 # pylint: disable=import-error
 from threading import Timer
 from homeassistant.components.light import ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, \
-    ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
-    SUPPORT_RGB_COLOR, DOMAIN, Light
+    ATTR_RGB_COLOR, ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, \
+    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, DOMAIN, Light
 from homeassistant.components import zwave
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.util.color import HASS_COLOR_MAX, HASS_COLOR_MIN, \
-    color_temperature_mired_to_kelvin, color_temperature_to_rgb, \
-    color_rgb_to_rgbw, color_rgbw_to_rgb
+from homeassistant.util.color import color_temperature_mired_to_kelvin, \
+    color_temperature_to_rgb, color_rgb_to_rgbw, color_rgbw_to_rgb
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,24 +38,20 @@ DEVICE_MAPPINGS = {
 
 # Generate midpoint color temperatures for bulbs that have limited
 # support for white light colors
-TEMP_MID_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 2 + HASS_COLOR_MIN
-TEMP_WARM_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 * 2 + HASS_COLOR_MIN
-TEMP_COLD_HASS = (HASS_COLOR_MAX - HASS_COLOR_MIN) / 3 + HASS_COLOR_MIN
-
-SUPPORT_ZWAVE_DIMMER = SUPPORT_BRIGHTNESS
-SUPPORT_ZWAVE_COLOR = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-SUPPORT_ZWAVE_COLORTEMP = (SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-                           | SUPPORT_COLOR_TEMP)
+TEMP_COLOR_MAX = 500  # mireds (inverted)
+TEMP_COLOR_MIN = 154
+TEMP_MID_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 2 + TEMP_COLOR_MIN
+TEMP_WARM_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 * 2 + TEMP_COLOR_MIN
+TEMP_COLD_HASS = (TEMP_COLOR_MAX - TEMP_COLOR_MIN) / 3 + TEMP_COLOR_MIN
 
 
 def get_device(node, values, node_config, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     name = '{}.{}'.format(DOMAIN, zwave.object_id(values.primary))
     refresh = node_config.get(zwave.CONF_REFRESH_VALUE)
     delay = node_config.get(zwave.CONF_REFRESH_DELAY)
-    _LOGGER.debug('name=%s node_config=%s CONF_REFRESH_VALUE=%s'
-                  ' CONF_REFRESH_DELAY=%s', name, node_config,
-                  refresh, delay)
+    _LOGGER.debug("name=%s node_config=%s CONF_REFRESH_VALUE=%s"
+                  " CONF_REFRESH_DELAY=%s", name, node_config, refresh, delay)
 
     if node.has_command_class(zwave.const.COMMAND_CLASS_SWITCH_COLOR):
         return ZwaveColorLight(values, refresh, delay)
@@ -72,6 +67,13 @@ def brightness_state(value):
         return 0, STATE_OFF
 
 
+def ct_to_rgb(temp):
+    """Convert color temperature (mireds) to RGB."""
+    colorlist = list(
+        color_temperature_to_rgb(color_temperature_mired_to_kelvin(temp)))
+    return [int(val) for val in colorlist]
+
+
 class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     """Representation of a Z-Wave dimmer."""
 
@@ -80,6 +82,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         zwave.ZWaveDeviceEntity.__init__(self, values, DOMAIN)
         self._brightness = None
         self._state = None
+        self._supported_features = None
         self._delay = delay
         self._refresh_value = refresh
         self._zw098 = None
@@ -100,6 +103,7 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         self._timer = None
         _LOGGER.debug('self._refreshing=%s self.delay=%s',
                       self._refresh_value, self._delay)
+        self.value_added()
         self.update_properties()
 
     def update_properties(self):
@@ -107,14 +111,20 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
         # Brightness
         self._brightness, self._state = brightness_state(self.values.primary)
 
+    def value_added(self):
+        """Call when a new value is added to this entity."""
+        self._supported_features = SUPPORT_BRIGHTNESS
+        if self.values.dimming_duration is not None:
+            self._supported_features |= SUPPORT_TRANSITION
+
     def value_changed(self):
-        """Called when a value for this entity's node has changed."""
+        """Call when a value for this entity's node has changed."""
         if self._refresh_value:
             if self._refreshing:
                 self._refreshing = False
             else:
                 def _refresh_value():
-                    """Used timer callback for delayed value refresh."""
+                    """Use timer callback for delayed value refresh."""
                     self._refreshing = True
                     self.values.primary.refresh()
 
@@ -139,10 +149,43 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_ZWAVE_DIMMER
+        return self._supported_features
+
+    def _set_duration(self, **kwargs):
+        """Set the transition time for the brightness value.
+
+        Zwave Dimming Duration values:
+        0x00      = instant
+        0x01-0x7F = 1 second to 127 seconds
+        0x80-0xFE = 1 minute to 127 minutes
+        0xFF      = factory default
+        """
+        if self.values.dimming_duration is None:
+            if ATTR_TRANSITION in kwargs:
+                _LOGGER.debug("Dimming not supported by %s.", self.entity_id)
+            return
+
+        if ATTR_TRANSITION not in kwargs:
+            self.values.dimming_duration.data = 0xFF
+            return
+
+        transition = kwargs[ATTR_TRANSITION]
+        if transition <= 127:
+            self.values.dimming_duration.data = int(transition)
+        elif transition > 7620:
+            self.values.dimming_duration.data = 0xFE
+            _LOGGER.warning("Transition clipped to 127 minutes for %s.",
+                            self.entity_id)
+        else:
+            minutes = int(transition / 60)
+            _LOGGER.debug("Transition rounded to %d minutes for %s.",
+                          minutes, self.entity_id)
+            self.values.dimming_duration.data = minutes + 0x7F
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        self._set_duration(**kwargs)
+
         # Zwave multilevel switches use a range of [0, 99] to control
         # brightness. Level 255 means to set it to previous value.
         if ATTR_BRIGHTNESS in kwargs:
@@ -156,15 +199,10 @@ class ZwaveDimmer(zwave.ZWaveDeviceEntity, Light):
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
+        self._set_duration(**kwargs)
+
         if self.node.set_dimmer(self.values.primary.value_id, 0):
             self._state = STATE_OFF
-
-
-def ct_to_rgb(temp):
-    """Convert color temperature (mireds) to RGB."""
-    colorlist = list(
-        color_temperature_to_rgb(color_temperature_mired_to_kelvin(temp)))
-    return [int(val) for val in colorlist]
 
 
 class ZwaveColorLight(ZwaveDimmer):
@@ -177,6 +215,14 @@ class ZwaveColorLight(ZwaveDimmer):
         self._ct = None
 
         super().__init__(values, refresh, delay)
+
+    def value_added(self):
+        """Call when a new value is added to this entity."""
+        super().value_added()
+
+        self._supported_features |= SUPPORT_RGB_COLOR
+        if self._zw098:
+            self._supported_features |= SUPPORT_COLOR_TEMP
 
     def update_properties(self):
         """Update internal properties based on zwave values."""
@@ -264,35 +310,27 @@ class ZwaveColorLight(ZwaveDimmer):
             if self._zw098:
                 if kwargs[ATTR_COLOR_TEMP] > TEMP_MID_HASS:
                     self._ct = TEMP_WARM_HASS
-                    rgbw = b'#000000ff00'
+                    rgbw = '#000000ff00'
                 else:
                     self._ct = TEMP_COLD_HASS
-                    rgbw = b'#00000000ff'
+                    rgbw = '#00000000ff'
 
         elif ATTR_RGB_COLOR in kwargs:
             self._rgb = kwargs[ATTR_RGB_COLOR]
             if (not self._zw098 and (
                     self._color_channels & COLOR_CHANNEL_WARM_WHITE or
                     self._color_channels & COLOR_CHANNEL_COLD_WHITE)):
-                rgbw = b'#'
+                rgbw = '#'
                 for colorval in color_rgb_to_rgbw(*self._rgb):
-                    rgbw += format(colorval, '02x').encode('utf-8')
-                rgbw += b'00'
+                    rgbw += format(colorval, '02x')
+                rgbw += '00'
             else:
-                rgbw = b'#'
+                rgbw = '#'
                 for colorval in self._rgb:
-                    rgbw += format(colorval, '02x').encode('utf-8')
-                rgbw += b'0000'
+                    rgbw += format(colorval, '02x')
+                rgbw += '0000'
 
         if rgbw and self.values.color:
             self.values.color.data = rgbw
 
         super().turn_on(**kwargs)
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._zw098:
-            return SUPPORT_ZWAVE_COLORTEMP
-        else:
-            return SUPPORT_ZWAVE_COLOR

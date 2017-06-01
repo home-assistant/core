@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NAD platform."""
+    """Set up the NAD platform."""
     from nad_receiver import NADReceiver
     add_devices([NAD(
         config.get(CONF_NAME),

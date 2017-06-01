@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Pi-Hole sensor."""
+    """Set up the Pi-Hole sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     use_ssl = config.get(CONF_SSL)

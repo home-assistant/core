@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
-from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
@@ -21,7 +20,7 @@ SUPPORT_VERA = SUPPORT_BRIGHTNESS
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Vera lights."""
+    """Set up the Vera lights."""
     add_devices(
         VeraLight(device, VERA_CONTROLLER) for device in VERA_DEVICES['light'])
 
@@ -53,13 +52,13 @@ class VeraLight(VeraDevice, Light):
         else:
             self.vera_device.switch_on()
 
-        self._state = STATE_ON
+        self._state = True
         self.schedule_update_ha_state(True)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.vera_device.switch_off()
-        self._state = STATE_OFF
+        self._state = False
         self.schedule_update_ha_state()
 
     @property
@@ -68,5 +67,5 @@ class VeraLight(VeraDevice, Light):
         return self._state
 
     def update(self):
-        """Called by the vera device callback to update state."""
+        """Call to update state."""
         self._state = self.vera_device.is_switched_on()

@@ -13,14 +13,13 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_PORT, STATE_UNKNOWN)
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.loader as loader
 
 from requests.exceptions import HTTPError, ConnectTimeout
 
-REQUIREMENTS = ['amcrest==1.1.4']
+REQUIREMENTS = ['amcrest==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +28,7 @@ NOTIFICATION_TITLE = 'Amcrest Sensor Setup'
 
 DEFAULT_NAME = 'Amcrest'
 DEFAULT_PORT = 80
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types are defined like: Name, units, icon
 SENSOR_TYPES = {
@@ -44,8 +43,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        vol.All(vol.Coerce(int), vol.Range(min=1)),
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -122,6 +119,8 @@ class AmcrestSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
+        _LOGGER.debug("Pulling data from %s sensor.", self._name)
+
         try:
             version, build_date = self._camera.software_information
             self._attrs['Build Date'] = build_date.split('=')[-1]
@@ -147,4 +146,4 @@ class AmcrestSensor(Entity):
             sd_total = self._camera.storage_total
             self._attrs['Total'] = '{0} {1}'.format(*sd_total)
             self._attrs['Used'] = '{0} {1}'.format(*sd_used)
-            self._state = self._camera.percent(sd_used[0], sd_total[0])
+            self._state = self._camera.storage_used_percent

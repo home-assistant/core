@@ -316,3 +316,89 @@ ffmpeg:
 logger:
   set_level:
     description: Set log level for components.
+
+hassio:
+  host_reboot:
+    description: Reboot host computer.
+
+  host_shutdown:
+    description: Poweroff host computer.
+
+  host_update:
+    description: Update host computer.
+    fields:
+      version:
+        description: Optional or it will be use the latest version.
+        example: '0.3'
+
+  supervisor_update:
+    description: Update HassIO supervisor.
+    fields:
+      version:
+        description: Optional or it will be use the latest version.
+        example: '0.3'
+
+  supervisor_reload:
+    description: Reload HassIO supervisor addons/updates/configs.
+
+  homeassistant_update:
+    description: Update HomeAssistant docker image.
+    fields:
+      version:
+        description: Optional or it will be use the latest version.
+        example: '0.40.1'
+
+  addon_install:
+    description: Install a HassIO docker addon.
+    fields:
+      addon:
+        description: Name of addon.
+        example: 'smb_config'
+      version:
+        description: Optional or it will be use the latest version.
+        example: '0.2'
+
+  addon_uninstall:
+    description: Uninstall a HassIO docker addon.
+    fields:
+      addon:
+        description: Name of addon.
+        example: 'smb_config'
+
+  addon_update:
+    description: Update a HassIO docker addon.
+    fields:
+      addon:
+        description: Name of addon.
+        example: 'smb_config'
+      version:
+        description: Optional or it will be use the latest version.
+        example: '0.2'
+
+  addon_start:
+    description: Start a HassIO docker addon.
+    fields:
+      addon:
+        description: Name of addon.
+        example: 'smb_config'
+
+  addon_stop:
+    description: Stop a HassIO docker addon.
+    fields:
+      addon:
+        description: Name of addon.
+        example: 'smb_config'
+
+eight_sleep:
+  heat_set:
+    description: Set heating level for eight sleep.
+    fields:
+      entity_id:
+        description: Entity id of the bed state to adjust.
+        example: 'sensor.eight_left_bed_state'
+      target:
+        description: Target heating level from 0-100.
+        example: 35
+      duration:
+        description: Duration to heat at the target level in seconds.
+        example: 3600

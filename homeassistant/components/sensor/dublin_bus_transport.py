@@ -1,4 +1,5 @@
-"""Support for Dublin RTPI information from data.dublinked.ie.
+"""
+Support for Dublin RTPI information from data.dublinked.ie.
 
 For more info on the API see :
 https://data.gov.ie/dataset/real-time-passenger-information-rtpi-for-dublin-bus-bus-eireann-luas-and-irish-rail/resource/4b9f2c4f-6bf5-4958-a43a-f12dab04cf61
@@ -22,11 +23,11 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation'
 
-ATTR_STOP_ID = "Stop ID"
-ATTR_ROUTE = "Route"
-ATTR_DUE_IN = "Due in"
-ATTR_DUE_AT = "Due at"
-ATTR_NEXT_UP = "Later Bus"
+ATTR_STOP_ID = 'Stop ID'
+ATTR_ROUTE = 'Route'
+ATTR_DUE_IN = 'Due in'
+ATTR_DUE_AT = 'Due at'
+ATTR_NEXT_UP = 'Later Bus'
 
 CONF_ATTRIBUTION = "Data provided by data.dublinked.ie"
 CONF_STOP_ID = 'stopid'
@@ -36,7 +37,7 @@ DEFAULT_NAME = 'Next Bus'
 ICON = 'mdi:bus'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
-TIME_STR_FORMAT = "%H:%M"
+TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STOP_ID): cv.string,
@@ -57,7 +58,7 @@ def due_in_minutes(timestamp):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Get the Dublin public transport sensor."""
+    """Set up the Dublin public transport sensor."""
     name = config.get(CONF_NAME)
     stop = config.get(CONF_STOP_ID)
     route = config.get(CONF_ROUTE)
@@ -92,7 +93,7 @@ class DublinPublicTransportSensor(Entity):
         """Return the state attributes."""
         if self._times is not None:
             next_up = "None"
-            if len(self._times) > 1:
+            if self._times:
                 next_up = self._times[1][ATTR_ROUTE] + " in "
                 next_up += self._times[1][ATTR_DUE_IN]
 
@@ -108,7 +109,7 @@ class DublinPublicTransportSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return "min"
+        return 'min'
 
     @property
     def icon(self):
@@ -178,7 +179,7 @@ class PublicTransportData(object):
                                 due_in_minutes(due_at)}
                 self.info.append(bus_data)
 
-        if len(self.info) == 0:
+        if not self.info:
             self.info = [{ATTR_DUE_AT: 'n/a',
                           ATTR_ROUTE: self.route,
                           ATTR_DUE_IN: 'n/a'}]

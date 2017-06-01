@@ -21,8 +21,8 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.6.zip'
-    '#braviarc==0.3.6']
+    'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
+    '#braviarc==0.3.7']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -76,7 +76,7 @@ def _config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(new_config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return True
     else:
@@ -88,7 +88,7 @@ def _config_from_file(filename, config=None):
             except ValueError as error:
                 return {}
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
+                _LOGGER.error("Reading config file failed: %s", error)
                 # This won't work yet
                 return False
         else:
@@ -97,16 +97,16 @@ def _config_from_file(filename, config=None):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Sony Bravia TV platform."""
+    """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)
 
     if host is None:
-        return  # if no host configured, do not continue
+        return
 
     pin = None
     bravia_config = _config_from_file(hass.config.path(BRAVIA_CONFIG_FILE))
-    while len(bravia_config):
-        # Setup a configured TV
+    while bravia_config:
+        # Set up a configured TV
         host_ip, host_config = bravia_config.popitem()
         if host_ip == host:
             pin = host_config['pin']
@@ -119,7 +119,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_bravia(config, pin, hass, add_devices):
-    """Setup a Sony Bravia TV based on host parameter."""
+    """Set up a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
@@ -135,13 +135,13 @@ def setup_bravia(config, pin, hass, add_devices):
             request_id = _CONFIGURING.pop(host)
             configurator = get_component('configurator')
             configurator.request_done(request_id)
-            _LOGGER.info('Discovery configuration done!')
+            _LOGGER.info("Discovery configuration done")
 
         # Save config
         if not _config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
                 {host: {'pin': pin, 'host': host, 'mac': mac}}):
-            _LOGGER.error('failed to save config file')
+            _LOGGER.error("Failed to save configuration file")
 
         add_devices([BraviaTVDevice(host, mac, name, pin)])
 
@@ -160,7 +160,7 @@ def request_configuration(config, hass, add_devices):
         return
 
     def bravia_configuration_callback(data):
-        """Callback after user enter PIN."""
+        """Handle the entry of user PIN."""
         from braviarc import braviarc
 
         pin = data.get('pin')
@@ -236,7 +236,7 @@ class BraviaTVDevice(MediaPlayerDevice):
                 self._state = STATE_ON
                 playing_info = self._braviarc.get_playing_info()
                 self._reset_playing_info()
-                if playing_info is None or len(playing_info) == 0:
+                if playing_info is None or not playing_info:
                     self._channel_name = 'App'
                 else:
                     self._program_name = playing_info.get('programTitle')
@@ -275,7 +275,7 @@ class BraviaTVDevice(MediaPlayerDevice):
             self._muted = volume_info.get('mute')
 
     def _refresh_channels(self):
-        if len(self._source_list) == 0:
+        if not self._source_list:
             self._content_mapping = self._braviarc. \
                 load_source_list()
             self._source_list = []

@@ -22,6 +22,9 @@ U = TypeVar('U')
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
 RE_SLUGIFY = re.compile(r'[^a-z0-9_]+')
+TBL_SLUGIFY = {
+    ord('ß'): 'ss'
+}
 
 
 def sanitize_filename(filename: str) -> str:
@@ -36,9 +39,13 @@ def sanitize_path(path: str) -> str:
 
 def slugify(text: str) -> str:
     """Slugify a given text."""
-    text = normalize('NFKD', text).lower().replace(" ", "_")
+    text = normalize('NFKD', text)
+    text = text.lower()
+    text = text.replace(" ", "_")
+    text = text.translate(TBL_SLUGIFY)
+    text = RE_SLUGIFY.sub("", text)
 
-    return RE_SLUGIFY.sub("", text)
+    return text
 
 
 def repr_helper(inp: Any) -> str:
@@ -178,7 +185,7 @@ class OrderedSet(MutableSet):
             next_item[1] = prev_item
 
     def __iter__(self):
-        """Iteration of the set."""
+        """Iterate of the set."""
         end = self.end
         curr = end[2]
         while curr is not end:
@@ -266,7 +273,7 @@ class Throttle(object):
 
         @wraps(method)
         def wrapper(*args, **kwargs):
-            """Wrapper that allows wrapped to be called only once per min_time.
+            """Wrap that allows wrapped to be called only once per min_time.
 
             If we cannot acquire the lock, it is running so return None.
             """

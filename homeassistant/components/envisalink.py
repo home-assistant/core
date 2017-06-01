@@ -16,29 +16,29 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==2.0']
+REQUIREMENTS = ['pyenvisalink==2.1']
 
 _LOGGER = logging.getLogger(__name__)
+
 DOMAIN = 'envisalink'
 
 DATA_EVL = 'envisalink'
 
-CONF_EVL_HOST = 'host'
-CONF_EVL_PORT = 'port'
-CONF_PANEL_TYPE = 'panel_type'
-CONF_EVL_VERSION = 'evl_version'
 CONF_CODE = 'code'
-CONF_USERNAME = 'user_name'
-CONF_PASS = 'password'
+CONF_EVL_HOST = 'host'
 CONF_EVL_KEEPALIVE = 'keepalive_interval'
-CONF_ZONEDUMP_INTERVAL = 'zonedump_interval'
-CONF_ZONES = 'zones'
-CONF_PARTITIONS = 'partitions'
-
-CONF_ZONENAME = 'name'
-CONF_ZONETYPE = 'type'
-CONF_PARTITIONNAME = 'name'
+CONF_EVL_PORT = 'port'
+CONF_EVL_VERSION = 'evl_version'
+CONF_PANEL_TYPE = 'panel_type'
 CONF_PANIC = 'panic_type'
+CONF_PARTITIONNAME = 'name'
+CONF_PARTITIONS = 'partitions'
+CONF_PASS = 'password'
+CONF_USERNAME = 'user_name'
+CONF_ZONEDUMP_INTERVAL = 'zonedump_interval'
+CONF_ZONENAME = 'name'
+CONF_ZONES = 'zones'
+CONF_ZONETYPE = 'type'
 
 DEFAULT_PORT = 4025
 DEFAULT_EVL_VERSION = 3
@@ -83,7 +83,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Common setup for Envisalink devices."""
+    """Set up for Envisalink devices."""
     from pyenvisalink import EnvisalinkAlarmPanel
 
     conf = config.get(DOMAIN)
@@ -109,27 +109,27 @@ def async_setup(hass, config):
 
     @callback
     def login_fail_callback(data):
-        """Callback for when the evl rejects our login."""
-        _LOGGER.error("The envisalink rejected your credentials.")
+        """Handle when the evl rejects our login."""
+        _LOGGER.error("The Envisalink rejected your credentials")
         sync_connect.set_result(False)
 
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
-        _LOGGER.error("Could not establish a connection with the envisalink.")
+        _LOGGER.error("Could not establish a connection with the Envisalink")
         sync_connect.set_result(False)
 
     @callback
     def connection_success_callback(data):
-        """Callback for a successful connection."""
-        _LOGGER.info("Established a connection with the envisalink.")
+        """Handle a successful connection."""
+        _LOGGER.info("Established a connection with the Envisalink")
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
         sync_connect.set_result(True)
 
     @callback
     def zones_updated_callback(data):
         """Handle zone timer updates."""
-        _LOGGER.info("Envisalink sent a zone update event.  Updating zones...")
+        _LOGGER.info("Envisalink sent a zone update event. Updating zones...")
         async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
 
     @callback
@@ -141,13 +141,13 @@ def async_setup(hass, config):
     @callback
     def partition_updated_callback(data):
         """Handle partition changes thrown by evl (including alarms)."""
-        _LOGGER.info("The envisalink sent a partition update event.")
+        _LOGGER.info("The envisalink sent a partition update event")
         async_dispatcher_send(hass, SIGNAL_PARTITION_UPDATE, data)
 
     @callback
     def stop_envisalink(event):
         """Shutdown envisalink connection and thread on exit."""
-        _LOGGER.info("Shutting down envisalink.")
+        _LOGGER.info("Shutting down Envisalink")
         controller.stop()
 
     controller.callback_zone_timer_dump = zones_updated_callback
