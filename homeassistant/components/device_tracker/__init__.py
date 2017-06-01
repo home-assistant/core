@@ -300,6 +300,7 @@ class DeviceTracker(object):
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
             ATTR_ENTITY_ID: device.entity_id,
             ATTR_HOST_NAME: device.host_name,
+            ATTR_MAC: device.mac,
         })
 
         # During init, we ignore the group
