@@ -6,6 +6,7 @@ https://home-assistant.io/components/verisure/
 """
 import logging
 from time import sleep
+from time import time
 from homeassistant.components.verisure import HUB as hub
 from homeassistant.components.verisure import (CONF_LOCKS, CONF_CODE_DIGITS)
 from homeassistant.components.lock import LockDevice
@@ -37,6 +38,7 @@ class VerisureDoorlock(LockDevice):
         self._state = STATE_UNKNOWN
         self._digits = hub.config.get(CONF_CODE_DIGITS)
         self._changed_by = None
+        self._change_timestamp = 0
 
     @property
     def name(self):
@@ -69,6 +71,8 @@ class VerisureDoorlock(LockDevice):
 
     def update(self):
         """Update lock status."""
+        if time() - self._change_timestamp < 10:
+            return
         hub.update_overview()
         status = hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].lockedState",
@@ -109,6 +113,6 @@ class VerisureDoorlock(LockDevice):
             sleep(0.5)
             transaction = hub.session.get_lock_state_transaction(
                 transaction_id)
-        hub.update_overview(no_throttle=True)
         if transaction['result'] == 'OK':
             self._state = state
+            self._change_timestamp = time()
