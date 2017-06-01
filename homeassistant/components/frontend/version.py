@@ -6,7 +6,7 @@ FINGERPRINTS = {
     "frontend.html": "fbb9d6bdd3d661db26cad9475a5e22f1",
     "mdi.html": "f407a5a57addbe93817ee1b244d33fbe",
     "micromarkdown-js.html": "93b5ec4016f0bba585521cf4d18dec1a",
-    "panels/ha-panel-automation.html": "f9a6727e2354224577298fc0f2dadc2e",
+    "panels/ha-panel-automation.html": "21cba0a4fee9d2b45dda47f7a1dd82d8",
     "panels/ha-panel-config.html": "59d9eb28758b497a4d9b2428f978b9b1",
     "panels/ha-panel-dev-event.html": "2db9c218065ef0f61d8d08db8093cad2",
     "panels/ha-panel-dev-info.html": "61610e015a411cfc84edd2c4d489e71d",
@@ -18,6 +18,6 @@ FINGERPRINTS = {
     "panels/ha-panel-iframe.html": "d920f0aa3c903680f2f8795e2255daab",
     "panels/ha-panel-logbook.html": "6dd6a16f52117318b202e60f98400163",
     "panels/ha-panel-map.html": "31c592c239636f91e07c7ac232a5ebc4",
-    "panels/ha-panel-zwave.html": "84fb45638d2a69bac343246a687f647c",
+    "panels/ha-panel-zwave.html": "19336d2c50c91dd6a122acc0606ff10d",
     "websocket_test.html": "575de64b431fe11c3785bf96d7813450"
 }

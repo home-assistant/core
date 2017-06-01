@@ -42,6 +42,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.debug("telegram webhook Status: %s", current_status)
     handler_url = '{0}{1}'.format(hass.config.api.base_url,
                                   TELEGRAM_HANDLER_URL)
+    if not handler_url.startswith('https'):
+        _LOGGER.error("Invalid telegram webhook %s must be https", handler_url)
+        return False
+
     if current_status and current_status['url'] != handler_url:
         result = yield from hass.async_add_job(bot.setWebhook, handler_url)
         if result:

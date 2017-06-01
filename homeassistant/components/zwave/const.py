@@ -37,6 +37,7 @@ SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
+SERVICE_RESET_NODE_METERS = "reset_node_meters"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -329,3 +330,5 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 DISC_WRITEONLY = "writeonly"
+
+METER_RESET_INDEX = 33

@@ -1,4 +1,4 @@
-﻿"""
+"""
 Tado component to create a climate device for each zone.
 
 For more details about this platform, please refer to the documentation at

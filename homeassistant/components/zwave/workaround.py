@@ -24,7 +24,7 @@ SOMFY_ZRTSI = 0x5a52
 PHILIO_SLIM_SENSOR_MOTION_MTII = (PHILIO, PHILIO_SENSOR, PHILIO_SLIM_SENSOR, 0)
 PHILIO_3_IN_1_SENSOR_GEN_4_MOTION_MTII = (
     PHILIO, PHILIO_SENSOR, PHILIO_3_IN_1_SENSOR_GEN_4, 0)
-PHILIO_PAN07_MTII = (PHILIO, PHILIO_SWITCH, PHILIO_PAN07, 0)
+PHILIO_PAN07_MTI_INSTANCE = (PHILIO, PHILIO_SWITCH, PHILIO_PAN07, 1)
 WENZHOU_SLIM_SENSOR_MOTION_MTII = (
     WENZHOU, PHILIO_SENSOR, PHILIO_SLIM_SENSOR, 0)
 
@@ -39,7 +39,11 @@ DEVICE_MAPPINGS_MTII = {
     PHILIO_SLIM_SENSOR_MOTION_MTII: WORKAROUND_NO_OFF_EVENT,
     PHILIO_3_IN_1_SENSOR_GEN_4_MOTION_MTII: WORKAROUND_NO_OFF_EVENT,
     WENZHOU_SLIM_SENSOR_MOTION_MTII: WORKAROUND_NO_OFF_EVENT,
-    PHILIO_PAN07_MTII: WORKAROUND_REFRESH_NODE_ON_UPDATE,
+}
+
+# List of workarounds by (manufacturer_id, product_type, product_id, instance)
+DEVICE_MAPPINGS_MTI_INSTANCE = {
+    PHILIO_PAN07_MTI_INSTANCE: WORKAROUND_REFRESH_NODE_ON_UPDATE,
 }
 
 SOMFY_ZRTSI_CONTROLLER_MT = (SOMFY, SOMFY_ZRTSI)
@@ -91,6 +95,12 @@ def get_device_mapping(value):
             (manufacturer_id, product_type, product_id, value.index))
         if result:
             return result
+
+        result = DEVICE_MAPPINGS_MTI_INSTANCE.get(
+            (manufacturer_id, product_type, product_id, value.instance))
+        if result:
+            return result
+
         return DEVICE_MAPPINGS_MT.get((manufacturer_id, product_type))
 
     return None
