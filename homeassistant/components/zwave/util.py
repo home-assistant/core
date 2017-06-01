@@ -43,21 +43,6 @@ def check_value_schema(value, schema):
         _LOGGER.debug("value.genre %s not in genre %s",
                       value.genre, schema[const.DISC_GENRE])
         return False
-    if (const.DISC_READONLY in schema and
-            value.is_read_only is not schema[const.DISC_READONLY]):
-        _LOGGER.debug("value.is_read_only %s not %s",
-                      value.is_read_only, schema[const.DISC_READONLY])
-        return False
-    if (const.DISC_WRITEONLY in schema and
-            value.is_write_only is not schema[const.DISC_WRITEONLY]):
-        _LOGGER.debug("value.is_write_only %s not %s",
-                      value.is_write_only, schema[const.DISC_WRITEONLY])
-        return False
-    if (const.DISC_LABEL in schema and
-            value.label not in schema[const.DISC_LABEL]):
-        _LOGGER.debug("value.label %s not in label %s",
-                      value.label, schema[const.DISC_LABEL])
-        return False
     if (const.DISC_INDEX in schema and
             value.index not in schema[const.DISC_INDEX]):
         _LOGGER.debug("value.index %s not in index %s",
@@ -68,6 +53,10 @@ def check_value_schema(value, schema):
         _LOGGER.debug("value.instance %s not in instance %s",
                       value.instance, schema[const.DISC_INSTANCE])
         return False
+    if const.DISC_SCHEMAS in schema:
+        for schema_item in schema[const.DISC_SCHEMAS]:
+            if not check_value_schema(value, schema_item):
+                return False
     return True
 
 

@@ -308,9 +308,9 @@ def test_value_discovery_existing_entity(hass, mock_openzwave):
     with patch.object(zwave.node_entity.ZWaveBaseEntity,
                       'maybe_schedule_update', new=mock_update):
         temperature = MockValue(
-            data=23.5, node=node, index=12, instance=13,
+            data=23.5, node=node, index=1, instance=13,
             command_class=const.COMMAND_CLASS_SENSOR_MULTILEVEL,
-            label='Temperature', genre=const.GENRE_USER, units='C')
+            genre=const.GENRE_USER, units='C')
         hass.async_add_job(mock_receivers[0], node, temperature)
         yield from hass.async_block_till_done()
 
