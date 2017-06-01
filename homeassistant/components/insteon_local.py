@@ -51,7 +51,8 @@ def setup(hass, config):
         if not os.path.exists(hass.config.path('.insteon_cache')):
             os.makedirs(hass.config.path('.insteon_cache'))
 
-        insteonhub = Hub(host, username, password, port, timeout, _LOGGER, hass.config.path('.insteon_cache'))
+        insteonhub = Hub(host, username, password, port, timeout, _LOGGER,
+                         hass.config.path('.insteon_cache'))
 
         # Check for successful connection
         insteonhub.get_buffer_status()
