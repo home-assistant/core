@@ -158,7 +158,9 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         """Update state and attributes."""
         self.refresh_spotify_instance()
         # Available devices
-        devices = self._player.devices().get('devices')
+        player_devices = self._player.devices()
+        if player_devices is not None:
+            devices = player_devices.get('devices')
         if devices is not None:
             old_devices = self._devices
             self._devices = {self._aliases.get(device.get('id'),
