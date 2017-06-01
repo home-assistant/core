@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['xmltodict==0.10.2']
+REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://www.hydrodata.ch/xml/SMS.xml'
@@ -41,17 +41,16 @@ ATTR_DISCHARGE_MAX = 'discharge_max'
 ATTR_WATERLEVEL_MAX = 'level_max'
 ATTR_TEMPERATURE_MAX = 'temperature_max'
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): vol.Coerce(int),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Swiss hydrological sensor."""
+    """Set up the Swiss hydrological sensor."""
     import xmltodict
 
     name = config.get(CONF_NAME)
@@ -61,10 +60,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(_RESOURCE, timeout=5)
         if any(str(station) == location.get('@StrNr') for location in
                xmltodict.parse(response.text)['AKT_Data']['MesPar']) is False:
-            _LOGGER.error('The given station does not exist: %s', station)
+            _LOGGER.error("The given station does not exist: %s", station)
             return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error('The URL is not accessible')
+        _LOGGER.error("The URL is not accessible")
         return False
 
     data = HydrologicalData(station)
@@ -164,7 +163,7 @@ class HydrologicalData(object):
         try:
             response = requests.get(_RESOURCE, timeout=5)
         except requests.exceptions.ConnectionError:
-            _LOGGER.error('Unable to retrieve data from %s', _RESOURCE)
+            _LOGGER.error("Unable to retrieve data from %s", _RESOURCE)
 
         try:
             stations = xmltodict.parse(response.text)['AKT_Data']['MesPar']

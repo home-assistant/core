@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a MQTT JSON Light."""
+    """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
     async_add_devices([MqttJson(
@@ -148,26 +148,22 @@ class MqttJson(Light):
         self._flash_times = flash_times
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
-        self._supported_features |= (rgb is not None and SUPPORT_RGB_COLOR)
-        self._supported_features |= (brightness is not None and
-                                     SUPPORT_BRIGHTNESS)
-        self._supported_features |= (color_temp is not None and
-                                     SUPPORT_COLOR_TEMP)
-        self._supported_features |= (effect is not None and
-                                     SUPPORT_EFFECT)
-        self._supported_features |= (white_value is not None and
-                                     SUPPORT_WHITE_VALUE)
-        self._supported_features |= (xy is not None and SUPPORT_XY_COLOR)
+        self._supported_features |= (rgb and SUPPORT_RGB_COLOR)
+        self._supported_features |= (brightness and SUPPORT_BRIGHTNESS)
+        self._supported_features |= (color_temp and SUPPORT_COLOR_TEMP)
+        self._supported_features |= (effect and SUPPORT_EFFECT)
+        self._supported_features |= (white_value and SUPPORT_WHITE_VALUE)
+        self._supported_features |= (xy and SUPPORT_XY_COLOR)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method is a coroutine.
         """
         @callback
         def state_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle new MQTT messages."""
             values = json.loads(payload)
 
             if values['state'] == 'ON':
@@ -193,7 +189,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid brightness value received')
+                    _LOGGER.warning("Invalid brightness value received")
 
             if self._color_temp is not None:
                 try:
@@ -201,7 +197,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid color temp value received')
+                    _LOGGER.warning("Invalid color temp value received")
 
             if self._effect is not None:
                 try:
@@ -209,7 +205,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid effect value received')
+                    _LOGGER.warning("Invalid effect value received")
 
             if self._white_value is not None:
                 try:
@@ -217,7 +213,7 @@ class MqttJson(Light):
                 except KeyError:
                     pass
                 except ValueError:
-                    _LOGGER.warning('Invalid white value value received')
+                    _LOGGER.warning("Invalid white value value received")
 
             if self._xy is not None:
                 try:

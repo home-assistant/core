@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Binary Sensor platform fo EnOcean."""
+    """Set up the Binary Sensor platform for EnOcean."""
     dev_id = config.get(CONF_ID)
     devname = config.get(CONF_NAME)
     device_class = get_deprecated(config, CONF_DEVICE_CLASS, CONF_SENSOR_CLASS)
@@ -44,7 +44,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
     def __init__(self, dev_id, devname, device_class):
         """Initialize the EnOcean binary sensor."""
         enocean.EnOceanDevice.__init__(self)
-        self.stype = "listener"
+        self.stype = 'listener'
         self.dev_id = dev_id
         self.which = -1
         self.onoff = -1
@@ -53,7 +53,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
 
     @property
     def name(self):
-        """The default name for the binary sensor."""
+        """Return the default name for the binary sensor."""
         return self.devname
 
     @property
@@ -80,7 +80,7 @@ class EnOceanBinarySensor(enocean.EnOceanDevice, BinarySensorDevice):
         elif value2 == 0x10:
             self.which = 1
             self.onoff = 1
-        self.hass.bus.fire('button_pressed', {"id": self.dev_id,
+        self.hass.bus.fire('button_pressed', {'id': self.dev_id,
                                               'pushed': value,
                                               'which': self.which,
                                               'onoff': self.onoff})

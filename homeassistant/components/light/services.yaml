@@ -25,8 +25,12 @@ turn_on:
       example: '[0.52, 0.43]'
 
     color_temp:
-      description: Color temperature for the light in mireds (154-500)
-      example: '250'
+      description: Color temperature for the light in mireds
+      example: 250
+
+    kelvin:
+      description: Color temperature for the light in Kelvin
+      example: 4000
 
     white_value:
       description: Number between 0..255 indicating level of white
@@ -35,6 +39,10 @@ turn_on:
     brightness:
       description: Number between 0..255 indicating brightness
       example: 120
+
+    brightness_pct:
+      description: Number between 0..100 indicating percentage of full brightness
+      example: 47
 
     profile:
       description: Name of a light profile to use

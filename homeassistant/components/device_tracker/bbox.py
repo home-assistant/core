@@ -37,7 +37,7 @@ class BboxDeviceScanner(DeviceScanner):
         self.last_results = []  # type: List[Device]
 
         self.success_init = self._update_info()
-        _LOGGER.info("Bbox scanner initialized")
+        _LOGGER.info("Scanner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -57,7 +57,7 @@ class BboxDeviceScanner(DeviceScanner):
 
     @Throttle(MIN_TIME_BETWEEN_SCANS)
     def _update_info(self):
-        """Check the bbox for devices.
+        """Check the Bbox for devices.
 
         Returns boolean if scanning successful.
         """
@@ -79,5 +79,5 @@ class BboxDeviceScanner(DeviceScanner):
 
         self.last_results = last_results
 
-        _LOGGER.info("Bbox scan successful")
+        _LOGGER.info("Scan successful")
         return True

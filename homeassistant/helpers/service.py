@@ -81,7 +81,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
 
 
 def extract_entity_ids(hass, service_call, expand_group=True):
-    """Helper method to extract a list of entity ids from a service call.
+    """Extract a list of entity ids from a service call.
 
     Will convert group entity ids to the entity ids it represents.
 

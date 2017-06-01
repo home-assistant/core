@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['speedtest-cli==1.0.2']
+REQUIREMENTS = ['speedtest-cli==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 _SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
@@ -125,7 +125,7 @@ class SpeedtestSensor(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
+        """Handle all entity which are about to be added."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if not state:
             return
@@ -140,17 +140,16 @@ class SpeedtestData(object):
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
         if not config.get(CONF_MANUAL):
-            track_time_change(hass, self.update,
-                              second=config.get(CONF_SECOND),
-                              minute=config.get(CONF_MINUTE),
-                              hour=config.get(CONF_HOUR),
-                              day=config.get(CONF_DAY))
+            track_time_change(
+                hass, self.update, second=config.get(CONF_SECOND),
+                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
+                day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""
         import speedtest
 
-        _LOGGER.info('Executing speedtest...')
+        _LOGGER.info("Executing speedtest...")
         try:
             args = [sys.executable, speedtest.__file__, '--simple']
             if self._server_id:
@@ -161,6 +160,8 @@ class SpeedtestData(object):
         except CalledProcessError as process_error:
             _LOGGER.error("Error executing speedtest: %s", process_error)
             return
-        self.data = {'ping': round(float(re_output[1]), 2),
-                     'download': round(float(re_output[2]), 2),
-                     'upload': round(float(re_output[3]), 2)}
+        self.data = {
+            'ping': round(float(re_output[1]), 2),
+            'download': round(float(re_output[2]), 2),
+            'upload': round(float(re_output[3]), 2),
+        }

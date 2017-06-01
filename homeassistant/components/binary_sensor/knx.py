@@ -11,7 +11,7 @@ DEPENDENCIES = ['knx']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the KNX binary sensor platform."""
+    """Set up the KNX binary sensor platform."""
     add_devices([KNXSwitch(hass, KNXConfig(config))])
 
 

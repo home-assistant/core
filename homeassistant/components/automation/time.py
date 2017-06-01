@@ -2,7 +2,7 @@
 Offer time listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#time-trigger
+at https://home-assistant.io/docs/automation/trigger/#time-trigger
 """
 import asyncio
 import logging
@@ -14,9 +14,9 @@ from homeassistant.const import CONF_AFTER, CONF_PLATFORM
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
 
-CONF_HOURS = "hours"
-CONF_MINUTES = "minutes"
-CONF_SECONDS = "seconds"
+CONF_HOURS = 'hours'
+CONF_MINUTES = 'minutes'
+CONF_SECONDS = 'seconds'
 
 _LOGGER = logging.getLogger(__name__)
 

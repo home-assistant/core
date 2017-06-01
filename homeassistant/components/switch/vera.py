@@ -8,7 +8,6 @@ import logging
 
 from homeassistant.util import convert
 from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
-from homeassistant.const import (STATE_OFF, STATE_ON)
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
 
@@ -18,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Find and return Vera switches."""
+    """Set up the Vera switches."""
     add_devices(
         VeraSwitch(device, VERA_CONTROLLER) for
         device in VERA_DEVICES['switch'])
@@ -36,18 +35,18 @@ class VeraSwitch(VeraDevice, SwitchDevice):
     def turn_on(self, **kwargs):
         """Turn device on."""
         self.vera_device.switch_on()
-        self._state = STATE_ON
+        self._state = True
         self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs):
         """Turn device off."""
         self.vera_device.switch_off()
-        self._state = STATE_OFF
+        self._state = False
         self.schedule_update_ha_state()
 
     @property
     def current_power_w(self):
-        """Current power usage in W."""
+        """Return the current power usage in W."""
         power = self.vera_device.power
         if power:
             return convert(power, float, 0.0)
@@ -58,5 +57,5 @@ class VeraSwitch(VeraDevice, SwitchDevice):
         return self._state
 
     def update(self):
-        """Called by the vera device callback to update state."""
+        """Update device state."""
         self._state = self.vera_device.is_switched_on()

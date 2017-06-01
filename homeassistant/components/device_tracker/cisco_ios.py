@@ -16,7 +16,6 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, \
     CONF_PORT
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -57,7 +56,7 @@ class CiscoDeviceScanner(DeviceScanner):
 
     # pylint: disable=no-self-use
     def get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Get the firmware doesn't save the name of the wireless device."""
         return None
 
     def scan_devices(self):
@@ -135,9 +134,9 @@ class CiscoDeviceScanner(DeviceScanner):
 
             devices_result = cisco_ssh.before
 
-            return devices_result.decode("utf-8")
+            return devices_result.decode('utf-8')
         except pxssh.ExceptionPxssh as px_e:
-            _LOGGER.error("pxssh failed on login.")
+            _LOGGER.error("pxssh failed on login")
             _LOGGER.error(px_e)
 
         return None

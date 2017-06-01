@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 42
+MINOR_VERSION = 46
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -137,6 +137,7 @@ CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_CLASS = 'sensor_class'
+CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
@@ -172,6 +173,7 @@ EVENT_PLATFORM_DISCOVERED = 'platform_discovered'
 EVENT_COMPONENT_LOADED = 'component_loaded'
 EVENT_SERVICE_REGISTERED = 'service_registered'
 EVENT_SERVICE_REMOVED = 'service_removed'
+EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -324,6 +326,7 @@ SERVICE_MEDIA_STOP = 'media_stop'
 SERVICE_MEDIA_NEXT_TRACK = 'media_next_track'
 SERVICE_MEDIA_PREVIOUS_TRACK = 'media_previous_track'
 SERVICE_MEDIA_SEEK = 'media_seek'
+SERVICE_SHUFFLE_SET = 'shuffle_set'
 
 SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
@@ -361,7 +364,6 @@ URL_API_EVENTS = '/api/events'
 URL_API_EVENTS_EVENT = '/api/events/{}'
 URL_API_SERVICES = '/api/services'
 URL_API_SERVICES_SERVICE = '/api/services/{}/{}'
-URL_API_EVENT_FORWARD = '/api/event_forwarding'
 URL_API_COMPONENTS = '/api/components'
 URL_API_ERROR_LOG = '/api/error_log'
 URL_API_LOG_OUT = '/api/log_out'

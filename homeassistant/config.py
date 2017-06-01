@@ -68,6 +68,10 @@ http:
   # base_url: example.duckdns.org:8123
 
 # Checks for available updates
+# Note: This component will send some information about your system to
+# the developers to assist with development of Home Assistant.
+# For more information, please see:
+# https://home-assistant.io/blog/2016/10/25/explaining-the-updater/
 updater:
 
 # Discover some devices automatically
@@ -94,6 +98,7 @@ tts:
   platform: google
 
 group: !include groups.yaml
+automation: !include automations.yaml
 """
 
 
@@ -108,7 +113,7 @@ CUSTOMIZE_CONFIG_SCHEMA = vol.Schema({
     vol.Optional(CONF_CUSTOMIZE_DOMAIN, default={}):
         vol.Schema({cv.string: dict}),
     vol.Optional(CONF_CUSTOMIZE_GLOB, default={}):
-        vol.Schema({cv.string: dict}),
+        vol.Schema({cv.string: OrderedDict}),
 })
 
 CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
@@ -154,10 +159,13 @@ def create_default_config(config_dir, detect_location=True):
     """
     from homeassistant.components.config.group import (
         CONFIG_PATH as GROUP_CONFIG_PATH)
+    from homeassistant.components.config.automation import (
+        CONFIG_PATH as AUTOMATION_CONFIG_PATH)
 
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
     version_path = os.path.join(config_dir, VERSION_FILE)
     group_yaml_path = os.path.join(config_dir, GROUP_CONFIG_PATH)
+    automation_yaml_path = os.path.join(config_dir, AUTOMATION_CONFIG_PATH)
 
     info = {attr: default for attr, default, _, _ in DEFAULT_CORE_CONFIG}
 
@@ -199,6 +207,9 @@ def create_default_config(config_dir, detect_location=True):
         with open(group_yaml_path, 'w'):
             pass
 
+        with open(automation_yaml_path, 'wt') as fil:
+            fil.write('[]')
+
         return config_path
 
     except IOError:
@@ -220,7 +231,7 @@ def async_hass_config_yaml(hass):
         conf = load_yaml_config_file(path)
         return conf
 
-    conf = yield from hass.loop.run_in_executor(None, _load_hass_yaml_config)
+    conf = yield from hass.async_add_job(_load_hass_yaml_config)
     return conf
 
 
@@ -321,7 +332,7 @@ def async_process_ha_core_config(hass, config):
     hac = hass.config
 
     def set_time_zone(time_zone_str):
-        """Helper method to set time zone."""
+        """Help to set the time zone."""
         if time_zone_str is None:
             return
 
@@ -393,8 +404,8 @@ def async_process_ha_core_config(hass, config):
     # If we miss some of the needed values, auto detect them
     if None in (hac.latitude, hac.longitude, hac.units,
                 hac.time_zone):
-        info = yield from hass.loop.run_in_executor(
-            None, loc_util.detect_location_info)
+        info = yield from hass.async_add_job(
+            loc_util.detect_location_info)
 
         if info is None:
             _LOGGER.error('Could not detect location information')
@@ -419,8 +430,8 @@ def async_process_ha_core_config(hass, config):
 
     if hac.elevation is None and hac.latitude is not None and \
        hac.longitude is not None:
-        elevation = yield from hass.loop.run_in_executor(
-            None, loc_util.elevation, hac.latitude, hac.longitude)
+        elevation = yield from hass.async_add_job(
+            loc_util.elevation, hac.latitude, hac.longitude)
         hac.elevation = elevation
         discovered.append(('elevation', elevation))
 
@@ -450,10 +461,9 @@ def _identify_config_schema(module):
     except (AttributeError, KeyError):
         return (None, None)
     t_schema = str(schema)
-    if (t_schema.startswith('<function ordered_dict') or
-            t_schema.startswith('<Schema({<function slug')):
+    if t_schema.startswith('{'):
         return ('dict', schema)
-    if t_schema.startswith('All(<function ensure_list'):
+    if t_schema.startswith(('[', 'All(<function ensure_list')):
         return ('list', schema)
     return '', schema
 

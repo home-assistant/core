@@ -46,9 +46,9 @@ class LiteJetLight(Light):
         self.update()
 
     def _on_load_changed(self):
-        """Called on a LiteJet thread when a load's state changes."""
+        """Handle state changes."""
         _LOGGER.debug("Updating due to notification for %s", self._name)
-        self._hass.async_add_job(self.async_update_ha_state(True))
+        self.schedule_update_ha_state(True)
 
     @property
     def supported_features(self):
@@ -57,7 +57,7 @@ class LiteJetLight(Light):
 
     @property
     def name(self):
-        """The light's name."""
+        """Return the light's name."""
         return self._name
 
     @property

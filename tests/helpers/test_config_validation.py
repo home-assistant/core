@@ -1,5 +1,4 @@
 """Test config validators."""
-from collections import OrderedDict
 from datetime import timedelta, datetime, date
 import enum
 import os
@@ -446,63 +445,6 @@ def test_has_at_least_one_key():
 
     for value in ({'beer': None}, {'soda': None}):
         schema(value)
-
-
-def test_ordered_dict_only_dict():
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.match_all))
-
-    for value in (None, [], 100, 'hello'):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-
-def test_ordered_dict_order():
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(int, cv.string))
-
-    val = OrderedDict()
-    val['first'] = 1
-    val['second'] = 2
-
-    validated = schema(val)
-
-    assert isinstance(validated, OrderedDict)
-    assert ['first', 'second'] == list(validated.keys())
-
-
-def test_ordered_dict_key_validator():
-    """Test ordered_dict key validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.string))
-
-    with pytest.raises(vol.Invalid):
-        schema({None: 1})
-
-    schema({'hello': 'world'})
-
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, int))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': 1})
-
-    schema({1: 'works'})
-
-
-def test_ordered_dict_value_validator():  # pylint: disable=invalid-name
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.string))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': None})
-
-    schema({'hello': 'world'})
-
-    schema = vol.Schema(cv.ordered_dict(int))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': 'world'})
-
-    schema({'hello': 5})
 
 
 def test_enum():

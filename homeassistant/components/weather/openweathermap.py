@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OpenWeatherMap weather platform."""
+    """Set up the OpenWeatherMap weather platform."""
     import pyowm
 
     longitude = config.get(CONF_LONGITUDE, round(hass.config.longitude, 5))

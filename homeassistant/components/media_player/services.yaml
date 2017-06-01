@@ -154,6 +154,33 @@ clear_playlist:
       description: Name(s) of entites to change source on
       example: 'media_player.living_room_chromecast'
 
+shuffle_set:
+  description: Set shuffling state
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to set
+      example: 'media_player.spotify'
+    shuffle:
+      description: True/false for enabling/disabling shuffle
+      example: true
+
+snapcast_snapshot:
+  description: Take a snapshot of the media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be snapshotted. Platform dependent.
+      example: 'media_player.living_room'
+
+snapcast_restore:
+  description: Restore a snapshot of the media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be restored. Platform dependent.
+      example: 'media_player.living_room'
+
 sonos_join:
   description: Group player together.
 
@@ -222,30 +249,70 @@ soundtouch_play_everywhere:
   description: Play on all Bose Soundtouch devices
 
   fields:
-    entity_id:
-      description: Name of entites that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
+    master:
+      description: Name of the master entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
       example: 'media_player.soundtouch_home'
 
 soundtouch_create_zone:
   description: Create a multi-room zone
 
   fields:
-    entity_id:
-      description: Name of entites that will coordinate the multi-room zone. Platform dependent.
+    master:
+      description: Name of the master entity that will coordinate the multi-room zone. Platform dependent.
       example: 'media_player.soundtouch_home'
+    slaves:
+      description: Name of slaves entities to add to the new zone
+      example: 'media_player.soundtouch_bedroom'
 
 soundtouch_add_zone_slave:
   description: Add a slave to a multi-room zone
 
   fields:
-    entity_id:
-      description: Name of entites that will be added to the multi-room zone. Platform dependent.
+    master:
+      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
       example: 'media_player.soundtouch_home'
+    slaves:
+      description: Name of slaves entities to add to the existing zone
+      example: 'media_player.soundtouch_bedroom'
 
 soundtouch_remove_zone_slave:
   description: Remove a slave from the multi-room zone
 
   fields:
-    entity_id:
-      description: Name of entites that will be remove from the multi-room zone. Platform dependent.
+    master:
+      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
       example: 'media_player.soundtouch_home'
+    slaves:
+      description: Name of slaves entities to remove from the existing zone
+      example: 'media_player.soundtouch_bedroom'
+
+kodi_add_to_playlist:
+  description: Add music to the default playlist (i.e. playlistid=0).
+
+  fields:
+    entity_id:
+      description: Name(s) of the Kodi entities where to add the media.
+      example: 'media_player.living_room_kodi'
+    media_type:
+      description: Media type identifier. It must be one of SONG or ALBUM.
+      example: ALBUM
+    media_id:
+      description: Unique Id of the media entry to add (`songid` or albumid`). If not defined, `media_name` and `artist_name` are needed to search the Kodi music library.
+      example: 123456
+    media_name:
+      description: Optional media name for filtering media. Can be 'ALL' when `media_type` is 'ALBUM' and `artist_name` is specified, to add all songs from one artist.
+      example: 'Highway to Hell'
+    artist_name:
+      description: Optional artist name for filtering media.
+      example: 'AC/DC'
+
+kodi_call_method:
+  description: 'Call a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`.'
+
+  fields:
+    entity_id:
+      description: Name(s) of the Kodi entities where to run the API method.
+      example: 'media_player.living_room_kodi'
+    method:
+      description: Name of the Kodi JSONRPC API method to be called.
+      example: 'VideoLibrary.GetRecentlyAddedEpisodes'
