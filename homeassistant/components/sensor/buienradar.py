@@ -8,6 +8,8 @@ import asyncio
 from datetime import timedelta
 import logging
 
+import async_timeout
+import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -15,6 +17,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_LATITUDE, CONF_LONGITUDE,
     CONF_MONITORED_CONDITIONS, CONF_NAME, TEMP_CELSIUS)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
@@ -73,7 +76,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     data = BrData(hass, coordinates, dev)
     # schedule the first update in 1 minute from now:
-    data.schedule_update(1)
+    _LOGGER.debug("Start running....")
+    yield from data.schedule_update(1)
 
 
 class BrSensor(Entity):
@@ -188,21 +192,50 @@ class BrData(object):
             if tasks:
                 yield from asyncio.wait(tasks, loop=self.hass.loop)
 
+    @asyncio.coroutine
     def schedule_update(self, minute=1):
-        """Schedule an update after minutes minutes."""
-        # schedule new call
+        """Schedule an update after minute minutes."""
         _LOGGER.debug("Scheduling next update in %s minutes.", minute)
         nxt = dt_util.utcnow() + timedelta(minutes=minute)
         async_track_point_in_utc_time(self.hass, self.async_update,
                                       nxt)
 
     @asyncio.coroutine
+    def get_data(self, url):
+        """Load xmpl data from specified url."""
+        from buienradar.buienradar import (CONTENT,
+                                           MESSAGE, STATUS_CODE, SUCCESS)
+
+        _LOGGER.debug("Calling url: %s...", url)
+        result = {SUCCESS: False, MESSAGE: None}
+        resp = None
+        try:
+            websession = async_get_clientsession(self.hass)
+            with async_timeout.timeout(10, loop=self.hass.loop):
+                resp = yield from websession.get(url)
+
+                result[SUCCESS] = (resp.status == 200)
+                result[STATUS_CODE] = resp.status
+                result[CONTENT] = yield from resp.text()
+
+                return result
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            result[MESSAGE] = "%s" % err
+            return result
+        finally:
+            if resp is not None:
+                yield from resp.release()
+
+    @asyncio.coroutine
     def async_update(self, *_):
         """Update the data from buienradar."""
-        from buienradar.buienradar import (get_data, parse_data, CONTENT,
+        from buienradar.buienradar import (parse_data, CONTENT,
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
-        result = get_data()
+        result = yield from self.get_data('http://xml.buienradar.nl')
+        if result.get(SUCCESS, False) is False:
+            result = yield from self.get_data('http://api.buienradar.nl')
+
         if result.get(SUCCESS):
             result = parse_data(result.get(CONTENT),
                                 latitude=self.coordinates[CONF_LATITUDE],
@@ -212,9 +245,9 @@ class BrData(object):
 
                 yield from self.update_devices()
 
-                self.schedule_update(10)
+                yield from self.schedule_update(10)
             else:
-                self.schedule_update(2)
+                yield from self.schedule_update(2)
         else:
             # unable to get the data
             _LOGGER.warning("Unable to retrieve data from Buienradar."
@@ -222,7 +255,7 @@ class BrData(object):
                             result.get(MESSAGE),
                             result.get(STATUS_CODE),)
             # schedule new call
-            self.schedule_update(2)
+            yield from self.schedule_update(2)
 
     @property
     def attribution(self):
