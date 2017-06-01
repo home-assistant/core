@@ -38,7 +38,7 @@ SENSOR_SCHEMA = vol.Schema({
 
 AWAY_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOME_MODE): cv.string,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list)
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -136,18 +136,18 @@ def setup(hass, config):
 
     def set_mode(service):
         """Set the home/away mode for a Nest structure."""
-        if 'structure' in service.data:
-            structures = service.data['structure']
+        if ATTR_STRUCTURE in service.data:
+            structures = service.data[ATTR_STRUCTURE]
         else:
             structures = hass.data[DATA_NEST].local_structure
 
         for structure in nest.structures:
             if structure.name in structures:
                 _LOGGER.info("Setting mode for %s", structure.name)
-                structure.away = service.data['home_mode']
+                structure.away = service.data[ATTR_HOME_MODE]
             else:
                 _LOGGER.error("Invalid structure %s",
-                              service.data['structure'])
+                              service.data[ATTR_STRUCTURE])
 
     hass.services.register(
         DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
