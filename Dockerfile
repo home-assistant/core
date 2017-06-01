@@ -1,4 +1,4 @@
-FROM python:3.5
+FROM python:3.6
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
 # Uncomment any of the following lines to disable the installation.
@@ -26,4 +26,5 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 # Copy source
 COPY . .
 
+ENV HASS_MONKEYPATCH_ASYNCIO 1
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
