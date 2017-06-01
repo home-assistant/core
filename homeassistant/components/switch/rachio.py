@@ -217,9 +217,6 @@ class RachioZone(SwitchDevice):
 
     def turn_on(self):
         """Start the zone."""
-        # Convert minutes to seconds
-        seconds = self._manual_run_secs * 60
-
         # Stop other zones first
         self.turn_off()
 
