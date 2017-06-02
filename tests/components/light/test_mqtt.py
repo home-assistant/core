@@ -491,8 +491,10 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         self.mock_publish.reset_mock()
+        light.turn_on(self.hass, 'light.test',
+                      brightness=50, xy_color=[0.123, 0.123])
         light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
-                      brightness=50, white_value=80, xy_color=[0.123, 0.123])
+                      white_value=80)
         self.hass.block_till_done()
 
         self.mock_publish().async_publish.assert_has_calls([

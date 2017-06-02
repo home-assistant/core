@@ -37,6 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 # speaker every 10 seconds. Quiet it down a bit to just actual problems.
 _SOCO_LOGGER = logging.getLogger('soco')
 _SOCO_LOGGER.setLevel(logging.ERROR)
+_SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
 _REQUESTS_LOGGER = logging.getLogger('requests')
 _REQUESTS_LOGGER.setLevel(logging.ERROR)
 
@@ -72,6 +73,8 @@ ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 
 ATTR_IS_COORDINATOR = 'is_coordinator'
+
+UPNP_ERRORS_TO_IGNORE = ['701']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
@@ -255,8 +258,34 @@ def soco_error(funct):
             return funct(*args, **kwargs)
         except SoCoException as err:
             _LOGGER.error("Error on %s with %s", funct.__name__, err)
-
     return wrapper
+
+
+def soco_filter_upnperror(errorcodes=None):
+    """Filter out specified UPnP errors from logs."""
+    def decorator(funct):
+        """Decorator function."""
+        @ft.wraps(funct)
+        def wrapper(*args, **kwargs):
+            """Wrap for all soco UPnP exception."""
+            from soco.exceptions import SoCoUPnPException
+
+            # Temporarily disable SoCo logging because it will log the
+            # UPnP exception otherwise
+            _SOCO_SERVICES_LOGGER.disabled = True
+
+            try:
+                return funct(*args, **kwargs)
+            except SoCoUPnPException as err:
+                if err.error_code in errorcodes:
+                    pass
+                else:
+                    raise
+            finally:
+                _SOCO_SERVICES_LOGGER.disabled = False
+
+        return wrapper
+    return decorator
 
 
 def soco_coordinator(funct):
@@ -297,6 +326,7 @@ class SonosDevice(MediaPlayerDevice):
         self._media_next_title = None
         self._support_previous_track = False
         self._support_next_track = False
+        self._support_play = False
         self._support_stop = False
         self._support_pause = False
         self._current_track_uri = None
@@ -411,6 +441,7 @@ class SonosDevice(MediaPlayerDevice):
             self._current_track_is_radio_stream = False
             self._support_previous_track = False
             self._support_next_track = False
+            self._support_play = False
             self._support_stop = False
             self._support_pause = False
             self._is_playing_tv = False
@@ -494,6 +525,7 @@ class SonosDevice(MediaPlayerDevice):
 
             support_previous_track = False
             support_next_track = False
+            support_play = False
             support_stop = False
             support_pause = False
 
@@ -515,7 +547,8 @@ class SonosDevice(MediaPlayerDevice):
             )
             support_previous_track = False
             support_next_track = False
-            support_stop = False
+            support_play = True
+            support_stop = True
             support_pause = False
 
             source_name = 'Radio'
@@ -578,6 +611,7 @@ class SonosDevice(MediaPlayerDevice):
             )
             support_previous_track = True
             support_next_track = True
+            support_play = True
             support_stop = True
             support_pause = True
 
@@ -631,7 +665,7 @@ class SonosDevice(MediaPlayerDevice):
 
             if playlist_position is not None and playlist_size is not None:
 
-                if playlist_position == 1:
+                if playlist_position <= 1:
                     support_previous_track = False
 
                 if playlist_position == playlist_size:
@@ -651,6 +685,7 @@ class SonosDevice(MediaPlayerDevice):
         self._current_track_is_radio_stream = is_radio_stream
         self._support_previous_track = support_previous_track
         self._support_next_track = support_next_track
+        self._support_play = support_play
         self._support_stop = support_stop
         self._support_pause = support_pause
         self._is_playing_tv = is_playing_tv
@@ -813,6 +848,9 @@ class SonosDevice(MediaPlayerDevice):
         if not self._support_next_track:
             supported = supported ^ SUPPORT_NEXT_TRACK
 
+        if not self._support_play:
+            supported = supported ^ SUPPORT_PLAY
+
         if not self._support_stop:
             supported = supported ^ SUPPORT_STOP
 
@@ -889,21 +927,25 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def turn_off(self):
         """Turn off media player."""
-        self.media_pause()
+        if self._support_pause:
+            self.media_pause()
 
     @soco_error
+    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_play(self):
         """Send play command."""
         self._player.play()
 
     @soco_error
+    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_stop(self):
         """Send stop command."""
         self._player.stop()
 
     @soco_error
+    @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)
     @soco_coordinator
     def media_pause(self):
         """Send pause command."""
@@ -936,7 +978,8 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def turn_on(self):
         """Turn the media player on."""
-        self.media_play()
+        if self.support_play:
+            self.media_play()
 
     @soco_error
     @soco_coordinator
