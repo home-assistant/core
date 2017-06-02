@@ -85,7 +85,7 @@ class iOSNotificationService(BaseNotificationService):
 
         for target in targets:
             if target not in ios.enabled_push_ids():
-                _LOGGER.error("The target (%s) does not exist in ios.conf.",
+                _LOGGER.error("The target (%s) does not exist in .ios.conf.",
                               targets)
                 return
 

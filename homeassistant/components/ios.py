@@ -167,7 +167,7 @@ IDENTIFY_SCHEMA = vol.Schema({
     vol.Optional(ATTR_PUSH_SOUNDS): list
 }, extra=vol.ALLOW_EXTRA)
 
-CONFIGURATION_FILE = 'ios.conf'
+CONFIGURATION_FILE = '.ios.conf'
 
 CONFIG_FILE = {ATTR_DEVICES: {}}
 
