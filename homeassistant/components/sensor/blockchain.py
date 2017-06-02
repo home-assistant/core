@@ -37,7 +37,7 @@ class BlockchainSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name.rstrip()
+        return self._name
 
     @property
     def state(self):
