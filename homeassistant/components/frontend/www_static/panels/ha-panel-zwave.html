@@ -31,6 +31,200 @@
     });
     this.selectedNodeAttrs = att.sort();
   },
+});</script><dom-module id="zwave-values" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node Values"><div class="device-picker"><paper-dropdown-menu label="Value" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedValue}}"><template is="dom-repeat" items="[[values]]" as="item"><paper-item>[[computeSelectCaption(item)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsValueSelected(selectedValue)]]"><paper-input float-label="Value Name" type="text" value="{{newValueNameInput}}" placeholder="[[computeGetValueName(selectedValue)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_value" service-data="[[computeValueNameServiceData(newValueNameInput)]]">Rename Value</ha-call-service-button></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-values',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+    },
+
+    values: {
+      type: Array,
+    },
+
+    selectedNode: {
+      type: Number,
+    },
+
+    selectedValue: {
+      type: Number,
+      value: -1,
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshValues(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  computeSelectCaption: function (item) {
+    return item.value.label;
+  },
+
+  computeGetValueName: function (selectedValue) {
+    return this.values[selectedValue].value.label;
+  },
+
+  computeIsValueSelected: function (selectedValue) {
+    return (!this.nodes || this.selectedNode === -1 || selectedValue === -1);
+  },
+
+  refreshValues: function (selectedNode) {
+    var valueData = [];
+    this.hass.callApi('GET', 'zwave/values/' + this.nodes[selectedNode].attributes.node_id).then(function (values) {
+      Object.entries(values).forEach(([key, value]) => {
+        valueData.push({ key, value });
+      });
+      this.values = valueData;
+      this.selectedValueChanged(this.selectedValue);
+    }.bind(this));
+  },
+
+  computeValueNameServiceData: function (newValueNameInput) {
+    if (!this.selectedNode === -1 || this.selectedValue === -1) return -1;
+    return {
+      node_id: this.nodes[this.selectedNode].attributes.node_id,
+      value_id: this.values[this.selectedValue].key,
+      name: newValueNameInput,
+    };
+  },
+});</script><dom-module id="zwave-groups" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node group associations"><div class="device-picker"><paper-dropdown-menu label="Node to control" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedTargetNode}}"><template is="dom-repeat" items="[[nodes]]" as="state"><paper-item>[[computeSelectCaption(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsTargetNodeSelected(selectedTargetNode)]]"><div class="device-picker"><paper-dropdown-menu label="Group" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedGroup}}"><template is="dom-repeat" items="[[groups]]" as="state"><paper-item>[[computeSelectCaptionGroup(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><template is="dom-if" if="[[!computeIsGroupSelected(selectedGroup)]]"><div class="help-text"><span>Other Nodes in this group:</span><template is="dom-repeat" items="[[otherGroupNodes]]" as="state"><span>[[state]]</span></template></div><div class="help-text"><span>Max Associations:</span> <span>[[maxAssociations]]</span></div><div class="card-actions"><template is="dom-if" if="[[!noAssociationsLeft]]"><ha-call-service-button hass="[[hass]]" domain="zwave" service="change_association" service-data="[[computeAssocServiceData(selectedGroup, &quot;add&quot;)]]">Add To Group</ha-call-service-button></template><ha-call-service-button hass="[[hass]]" domain="zwave" service="change_association" service-data="[[computeAssocServiceData(selectedGroup, &quot;remove&quot;)]]">Remove From Group</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-groups',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+    },
+
+    groups: {
+      type: Array,
+    },
+
+    selectedNode: {
+      type: Number,
+    },
+
+    selectedTargetNode: {
+      type: Number,
+      value: -1
+    },
+
+    selectedGroup: {
+      type: Number,
+      value: -1,
+      observer: 'selectedGroupChanged'
+    },
+
+    otherGroupNodes: {
+      type: Array,
+      value: -1,
+      computed: 'computeOtherGroupNodes(selectedGroup)'
+    },
+
+    maxAssociations: {
+      type: String,
+      value: '',
+      computed: 'computeMaxAssociations(selectedGroup)'
+    },
+
+    noAssociationsLeft: {
+      type: Boolean,
+      value: true,
+      computed: 'computeAssociationsLeft(selectedGroup)'
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshGroups(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  computeAssociationsLeft: function (selectedGroup) {
+    if (selectedGroup === -1) return true;
+    return (this.maxAssociations === this.otherGroupNodes.length);
+  },
+
+  computeMaxAssociations: function (selectedGroup) {
+    if (selectedGroup === -1) return -1;
+    var maxAssociations = this.groups[selectedGroup].value.max_associations;
+    if (!maxAssociations) return ['None'];
+    return maxAssociations;
+  },
+
+  computeOtherGroupNodes: function (selectedGroup) {
+    if (selectedGroup === -1) return -1;
+    var associations = Object.values(this.groups[selectedGroup].value.associations);
+    if (!associations.length) return ['None'];
+    return associations;
+  },
+
+  computeSelectCaption: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj) + ' (Node:' +
+      stateObj.attributes.node_id + ' ' +
+      stateObj.attributes.query_stage + ')';
+  },
+
+  computeSelectCaptionGroup: function (stateObj) {
+    return (stateObj.key + ': ' + stateObj.value.label);
+  },
+
+  computeIsTargetNodeSelected: function (selectedTargetNode) {
+    return (!this.nodes || selectedTargetNode === -1);
+  },
+
+  computeIsGroupSelected: function (selectedGroup) {
+    return (!this.nodes || this.selectedNode === -1 || selectedGroup === -1);
+  },
+
+  computeAssocServiceData: function (selectedGroup, type) {
+    if (!this.groups === -1 || selectedGroup === -1 || this.selectedNode === -1) return -1;
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      association: type,
+      target_node_id: this.nodes[this.selectedTargetNode].attributes.node_id,
+      group: this.groups[selectedGroup].key };
+  },
+
+  refreshGroups: function (selectedNode) {
+    var groupData = [];
+    this.hass.callApi('GET', 'zwave/groups/' + this.nodes[selectedNode].attributes.node_id).then(function (groups) {
+      Object.entries(groups).forEach(([key, value]) => {
+        groupData.push({ key, value });
+      });
+      this.groups = groupData;
+      this.selectedGroupChanged(this.selectedGroup);
+    }.bind(this));
+  },
+
+  selectedGroupChanged: function (selectedGroup) {
+    if (this.selectedGroup === -1 || selectedGroup === -1) return;
+    this.maxAssociations = this.groups[selectedGroup].value.max_associations;
+    this.otherGroupNodes = Object.values(this.groups[selectedGroup].value.associations);
+  },
 });</script><dom-module id="zwave-node-config" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node config options"><template is="dom-if" if="[[wakeupNode]]"><div class="card-actions"><paper-input float-label="Wakeup Interval" type="number" value="{{wakeupInput}}" placeholder="[[computeGetWakeupValue(selectedNode)]]"><div suffix="">seconds</div></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="set_wakeup" service-data="[[computeWakeupServiceData(wakeupInput)]]">Set Wakeup</ha-call-service-button></div></template><div class="device-picker"><paper-dropdown-menu label="Config parameter" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedConfigParameter}}"><template is="dom-repeat" items="[[config]]" as="state"><paper-item>[[computeSelectCaptionConfigParameter(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'List')]]"><div class="device-picker"><paper-dropdown-menu label="Config value" class="flex" placeholder="{{loadedConfigValue}}"><paper-listbox class="dropdown-content" selected="{{selectedConfigValue}}"><template is="dom-repeat" items="[[selectedConfigParameterValues]]" as="state"><paper-item>[[state]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'Byte Short Int')]]"><div class="card-actions"><paper-input label="{{selectedConfigParameterNumValues}}" type="number" value="{{selectedConfigValue}}" max="{{configParameterMax}}" min="{{configParameterMin}}"></paper-input></div></template><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'Bool Button')]]"><div class="device-picker"><paper-dropdown-menu label="Config value" class="flex" placeholder="{{loadedConfigValue}}"><paper-listbox class="dropdown-content" selected="{{selectedConfigValue}}"><template is="dom-repeat" items="[[selectedConfigParameterValues]]" as="state"><paper-item>[[state]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><div class="help-text"><span>[[configValueHelpText]]</span></div><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'Bool Button Byte Short Int List')]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="set_config_parameter" service-data="[[computeSetConfigParameterServiceData(selectedConfigValue)]]">Set Config Parameter</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
   is: 'zwave-node-config',
 
@@ -313,131 +507,7 @@
       this.selectedUserCodeChanged(this.selectedUserCode);
     }.bind(this));
   },
-});</script><dom-module id="zwave-groups" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node group associations"><div class="device-picker"><paper-dropdown-menu label="Node to control" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedTargetNode}}"><template is="dom-repeat" items="[[nodes]]" as="state"><paper-item>[[computeSelectCaption(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsTargetNodeSelected(selectedTargetNode)]]"><div class="device-picker"><paper-dropdown-menu label="Group" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedGroup}}"><template is="dom-repeat" items="[[groups]]" as="state"><paper-item>[[computeSelectCaptionGroup(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><template is="dom-if" if="[[!computeIsGroupSelected(selectedGroup)]]"><div class="help-text"><span>Other Nodes in this group:</span><template is="dom-repeat" items="[[otherGroupNodes]]" as="state"><span>[[state]]</span></template></div><div class="help-text"><span>Max Associations:</span> <span>[[maxAssociations]]</span></div><div class="card-actions"><template is="dom-if" if="[[!noAssociationsLeft]]"><ha-call-service-button hass="[[hass]]" domain="zwave" service="change_association" service-data="[[computeAssocServiceData(selectedGroup, &quot;add&quot;)]]">Add To Group</ha-call-service-button></template><ha-call-service-button hass="[[hass]]" domain="zwave" service="change_association" service-data="[[computeAssocServiceData(selectedGroup, &quot;remove&quot;)]]">Remove From Group</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
-  is: 'zwave-groups',
-
-  properties: {
-    hass: {
-      type: Object,
-    },
-
-    nodes: {
-      type: Array,
-    },
-
-    groups: {
-      type: Array,
-    },
-
-    selectedNode: {
-      type: Number,
-    },
-
-    selectedTargetNode: {
-      type: Number,
-      value: -1
-    },
-
-    selectedGroup: {
-      type: Number,
-      value: -1,
-      observer: 'selectedGroupChanged'
-    },
-
-    otherGroupNodes: {
-      type: Array,
-      value: -1,
-      computed: 'computeOtherGroupNodes(selectedGroup)'
-    },
-
-    maxAssociations: {
-      type: String,
-      value: '',
-      computed: 'computeMaxAssociations(selectedGroup)'
-    },
-
-    noAssociationsLeft: {
-      type: Boolean,
-      value: true,
-      computed: 'computeAssociationsLeft(selectedGroup)'
-    },
-  },
-
-  listeners: {
-    'hass-service-called': 'serviceCalled',
-  },
-
-  serviceCalled: function (ev) {
-    if (ev.detail.success) {
-      var foo = this;
-      setTimeout(function () {
-        foo.refreshGroups(foo.selectedNode);
-      }, 5000);
-    }
-  },
-
-  computeAssociationsLeft: function (selectedGroup) {
-    if (selectedGroup === -1) return true;
-    return (this.maxAssociations === this.otherGroupNodes.length);
-  },
-
-  computeMaxAssociations: function (selectedGroup) {
-    if (selectedGroup === -1) return -1;
-    var maxAssociations = this.groups[selectedGroup].value.max_associations;
-    if (!maxAssociations) return ['None'];
-    return maxAssociations;
-  },
-
-  computeOtherGroupNodes: function (selectedGroup) {
-    if (selectedGroup === -1) return -1;
-    var associations = Object.values(this.groups[selectedGroup].value.associations);
-    if (!associations.length) return ['None'];
-    return associations;
-  },
-
-  computeSelectCaption: function (stateObj) {
-    return window.hassUtil.computeStateName(stateObj) + ' (Node:' +
-      stateObj.attributes.node_id + ' ' +
-      stateObj.attributes.query_stage + ')';
-  },
-
-  computeSelectCaptionGroup: function (stateObj) {
-    return (stateObj.key + ': ' + stateObj.value.label);
-  },
-
-  computeIsTargetNodeSelected: function (selectedTargetNode) {
-    return (!this.nodes || selectedTargetNode === -1);
-  },
-
-  computeIsGroupSelected: function (selectedGroup) {
-    return (!this.nodes || this.selectedNode === -1 || selectedGroup === -1);
-  },
-
-  computeAssocServiceData: function (selectedGroup, type) {
-    if (!this.groups === -1 || selectedGroup === -1 || this.selectedNode === -1) return -1;
-    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
-      association: type,
-      target_node_id: this.nodes[this.selectedTargetNode].attributes.node_id,
-      group: this.groups[selectedGroup].key };
-  },
-
-  refreshGroups: function (selectedNode) {
-    var groupData = [];
-    this.hass.callApi('GET', 'zwave/groups/' + this.nodes[selectedNode].attributes.node_id).then(function (groups) {
-      Object.entries(groups).forEach(([key, value]) => {
-        groupData.push({ key, value });
-      });
-      this.groups = groupData;
-      this.selectedGroupChanged(this.selectedGroup);
-    }.bind(this));
-  },
-
-  selectedGroupChanged: function (selectedGroup) {
-    if (this.selectedGroup === -1 || selectedGroup === -1) return;
-    this.maxAssociations = this.groups[selectedGroup].value.max_associations;
-    this.otherGroupNodes = Object.values(this.groups[selectedGroup].value.associations);
-  },
-});</script></div><dom-module id="ha-panel-zwave"><template><style include="iron-flex ha-style">.content{margin-top:24px}.node-info{margin-left:16px;text-transform:capitalize}.help-text{padding-left:24px;padding-right:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}</style><app-header-layout has-scrolling-region=""><app-header fixed=""><app-toolbar><ha-menu-button narrow="[[narrow]]" show-menu="[[showMenu]]"></ha-menu-button><div main-title="">Z-Wave Manager</div></app-toolbar></app-header><div class="content"><zwave-network id="zwave-network" hass="[[hass]]"></zwave-network></div><div class="content"><paper-card heading="Z-Wave Node Management"><div class="card-content">Z-Wave Node controls.</div><div class="device-picker"><paper-dropdown-menu label="Nodes" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedNode}}"><template is="dom-repeat" items="[[nodes]]" as="state"><paper-item>[[computeSelectCaption(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="refresh_node" service-data="[[computeNodeServiceData(selectedNode)]]">Refresh Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="remove_failed_node" service-data="[[computeNodeServiceData(selectedNode)]]">Remove Failed Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="replace_failed_node" service-data="[[computeNodeServiceData(selectedNode)]]">Replace Failed Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="print_node" service-data="[[computeNodeServiceData(selectedNode)]]">Print Node</ha-call-service-button></div><div class="card-actions"><paper-input float-label="New node name" type="text" value="{{newNodeNameInput}}" placeholder="[[computeGetNodeName(selectedNode)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_node" service-data="[[computeNodeNameServiceData(newNodeNameInput)]]">Rename Node</ha-call-service-button></div><div class="device-picker"><paper-dropdown-menu label="Entities of this node" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedEntity}}"><template is="dom-repeat" items="[[entities]]" as="state"><paper-item>[[computeSelectCaptionEnt(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsEntitySelected(selectedEntity)]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="refresh_entity" service-data="[[computeRefreshEntityServiceData(selectedEntity)]]">Refresh Entity</ha-call-service-button></div><div class="content"><div class="card-actions"><paper-button toggles="" raised="" noink="" active="{{entityInfoActive}}">Entity Attributes</paper-button></div><template is="dom-if" if="{{entityInfoActive}}"><template is="dom-repeat" items="[[selectedEntityAttrs]]" as="state"><div class="node-info"><span>[[state]]</span></div></template></template></div></template></template></paper-card></div><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-node-information id="zwave-node-information" nodes="[[nodes]]" selected-node="[[selectedNode]]"></zwave-node-information></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-groups hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" groups="[[groups]]"></zwave-groups></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-node-config hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" config="[[config]]"></zwave-node-config></template><template is="dom-if" if="{{hasNodeUserCodes}}"><zwave-usercodes id="zwave-usercodes" hass="[[hass]]" nodes="[[nodes]]" user-codes="[[userCodes]]" selected-node="[[selectedNode]]"></zwave-usercodes></template><div class="content"><ozw-log id="ozw-log" hass="[[hass]]"></ozw-log></div></app-header-layout></template></dom-module><script>Polymer({
+});</script></div><dom-module id="ha-panel-zwave"><template><style include="iron-flex ha-style">.content{margin-top:24px}.node-info{margin-left:16px;text-transform:capitalize}.help-text{padding-left:24px;padding-right:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}</style><app-header-layout has-scrolling-region=""><app-header fixed=""><app-toolbar><ha-menu-button narrow="[[narrow]]" show-menu="[[showMenu]]"></ha-menu-button><div main-title="">Z-Wave Manager</div></app-toolbar></app-header><div class="content"><zwave-network id="zwave-network" hass="[[hass]]"></zwave-network></div><div class="content"><paper-card heading="Z-Wave Node Management"><div class="card-content">Z-Wave Node controls.</div><div class="device-picker"><paper-dropdown-menu label="Nodes" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedNode}}"><template is="dom-repeat" items="[[nodes]]" as="state"><paper-item>[[computeSelectCaption(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="refresh_node" service-data="[[computeNodeServiceData(selectedNode)]]">Refresh Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="remove_failed_node" service-data="[[computeNodeServiceData(selectedNode)]]">Remove Failed Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="replace_failed_node" service-data="[[computeNodeServiceData(selectedNode)]]">Replace Failed Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="print_node" service-data="[[computeNodeServiceData(selectedNode)]]">Print Node</ha-call-service-button></div><div class="card-actions"><paper-input float-label="New node name" type="text" value="{{newNodeNameInput}}" placeholder="[[computeGetNodeName(selectedNode)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_node" service-data="[[computeNodeNameServiceData(newNodeNameInput)]]">Rename Node</ha-call-service-button></div><div class="device-picker"><paper-dropdown-menu label="Entities of this node" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedEntity}}"><template is="dom-repeat" items="[[entities]]" as="state"><paper-item>[[computeSelectCaptionEnt(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsEntitySelected(selectedEntity)]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="refresh_entity" service-data="[[computeRefreshEntityServiceData(selectedEntity)]]">Refresh Entity</ha-call-service-button></div><div class="content"><div class="card-actions"><paper-button toggles="" raised="" noink="" active="{{entityInfoActive}}">Entity Attributes</paper-button></div><template is="dom-if" if="{{entityInfoActive}}"><template is="dom-repeat" items="[[selectedEntityAttrs]]" as="state"><div class="node-info"><span>[[state]]</span></div></template></template></div></template></template></paper-card></div><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-node-information id="zwave-node-information" nodes="[[nodes]]" selected-node="[[selectedNode]]"></zwave-node-information></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-values hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" values="[[values]]"></zwave-values></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-groups hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" groups="[[groups]]"></zwave-groups></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-node-config hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" config="[[config]]"></zwave-node-config></template><template is="dom-if" if="{{hasNodeUserCodes}}"><zwave-usercodes id="zwave-usercodes" hass="[[hass]]" nodes="[[nodes]]" user-codes="[[userCodes]]" selected-node="[[selectedNode]]"></zwave-usercodes></template><div class="content"><ozw-log id="ozw-log" hass="[[hass]]"></ozw-log></div></app-header-layout></template></dom-module><script>Polymer({
   is: 'ha-panel-zwave',
 
   properties: {
@@ -491,6 +561,10 @@
     selectedEntityAttrs: {
       type: Array,
       computed: 'computeSelectedEntityAttrs(selectedEntity)'
+    },
+
+    values: {
+      type: Array,
     },
 
     groups: {
@@ -559,6 +633,8 @@
   },
 
   selectedNodeChanged: function (selectedNode) {
+    this.newNodeNameInput = '';
+
     if (selectedNode === -1) return;
     this.selectedConfigParameter = -1;
     this.selectedConfigParameterValue = -1;
@@ -569,6 +645,13 @@
         configData.push({ key, value });
       });
       this.config = configData;
+    }.bind(this));
+    var valueData = [];
+    this.hass.callApi('GET', 'zwave/values/' + this.nodes[selectedNode].attributes.node_id).then(function (values) {
+      Object.entries(values).forEach(([key, value]) => {
+        valueData.push({ key, value });
+      });
+      this.values = valueData;
     }.bind(this));
     var groupData = [];
     this.hass.callApi('GET', 'zwave/groups/' + this.nodes[selectedNode].attributes.node_id).then(function (groups) {
@@ -630,9 +713,7 @@
   computeGetNodeName: function (selectedNode) {
     if (this.selectedNode === -1 ||
       !this.nodes[selectedNode].entity_id) return -1;
-    var str = (this.nodes[selectedNode].entity_id);
-    var name = str.replace('zwave.', '');
-    return name;
+    return this.nodes[selectedNode].attributes.node_name;
   },
 
   computeNodeNameServiceData: function (newNodeNameInput) {
