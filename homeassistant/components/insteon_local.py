@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_local/
 """
 import logging
+import os
 
 import requests
 import voluptuous as vol
@@ -12,7 +13,6 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
-import os
 
 REQUIREMENTS = ['insteonlocal==0.52']
 
