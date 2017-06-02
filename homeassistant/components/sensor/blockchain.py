@@ -4,12 +4,14 @@ Support for Blockchain.info sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.blockchain/
 """
+import logging
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 
-REQUIREMENTS = ['python-blockchain-api==0.0.1']
+REQUIREMENTS = ['python-blockchain-api==0.0.2']
+_LOGGER = logging.getLogger(__name__)
 CONF_ADDRESSES = 'addresses'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -20,13 +22,18 @@ BASE_URL = 'https://blockchain.info/multiaddr?active='
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the etherscan sensors."""
-    add_devices([BlockchainSensor('Bitcoin Balance',
-                                  config.get(CONF_ADDRESSES))])
+    """Set up the blockchain sensors."""
+    from pyblockchain import validate_address
+    addresses = config.get(CONF_ADDRESSES)
+    for address in addresses:
+        if not validate_address(address):
+            _LOGGER.error("Bitcoin address is not valid: " + address)
+            return False
+    add_devices([BlockchainSensor('Bitcoin Balance', addresses)])
 
 
 class BlockchainSensor(Entity):
-    """Representation of an Etherscan.io sensor."""
+    """Representation of a blockchain.info sensor."""
 
     def __init__(self, name, addresses):
         """Initialize the sensor."""
