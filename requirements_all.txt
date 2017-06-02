@@ -400,7 +400,7 @@ oemthermostat==1.1
 onkyo-eiscp==1.1
 
 # homeassistant.components.image_processing.opencv
-opencv-python==3.2.0.6
+# opencv-python==3.2.0.6
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
