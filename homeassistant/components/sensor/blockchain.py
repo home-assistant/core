@@ -18,8 +18,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ADDRESSES): [cv.string]
 })
 
-BASE_URL = 'https://blockchain.info/multiaddr?active='
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the blockchain sensors."""
@@ -46,7 +44,7 @@ class BlockchainSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name.rstrip()
+        return self._name
 
     @property
     def state(self):
