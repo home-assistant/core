@@ -7,7 +7,8 @@ https://home-assistant.io/components/tellduslive/
 from datetime import datetime, timedelta
 import logging
 
-from homeassistant.const import ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL, DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_START)
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -56,7 +57,8 @@ def setup(hass, config):
         return False
 
     hass.data[DOMAIN] = client
-    client.update(utcnow())
+
+    hass.bus.listen(EVENT_HOMEASSISTANT_START, client.update)
 
     return True
 
@@ -91,7 +93,7 @@ class TelldusLiveClient(object):
         response = self._client.request_user()
         return response and 'email' in response
 
-    def update(self, now):
+    def update(self, *args):
         """Periodically poll the servers for current state."""
         _LOGGER.debug("Updating")
         try:
