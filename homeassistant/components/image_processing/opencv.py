@@ -72,13 +72,14 @@ def _create_processor_from_config(hass, camera_entity, config):
 
 
 def _get_default_classifier(dest_path):
-    """Downloads the default OpenCV classifier."""
+    """Download the default OpenCV classifier."""
     _LOGGER.info('Downloading default classifier')
     req = requests.get(CASCADE_URL, stream=True)
     with open(dest_path, 'wb') as fil:
         for chunk in req.iter_content(chunk_size=1024):
             if chunk:  # filter out keep-alive new chunks
                 fil.write(chunk)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the OpenCV image processing platform."""
@@ -160,23 +161,23 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             else:
                 path = classifier
 
-        # pylint: disable=no-member
-        cascade = cv2.CascadeClassifier(path)
+            # pylint: disable=no-member
+            cascade = cv2.CascadeClassifier(path)
 
-        detections = cascade.detectMultiScale(
+            detections = cascade.detectMultiScale(
                 cv_image,
                 scaleFactor=scale,
                 minNeighbors=neighbors,
                 minSize=min_size)
-        matches = {}
-        total_matches = 0
-        regions = []
-        # pylint: disable=invalid-name
-        for (x, y, w, h) in detections:
-            regions.append((int(x), int(y), int(w), int(h)))
-            total_matches += 1
+            matches = {}
+            total_matches = 0
+            regions = []
+            # pylint: disable=invalid-name
+            for (x, y, w, h) in detections:
+                regions.append((int(x), int(y), int(w), int(h)))
+                total_matches += 1
 
-        matches[name] = regions
+            matches[name] = regions
 
         self._matches = matches
         self._total_matches = total_matches
