@@ -146,7 +146,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
         # pylint: disable=no-member
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)),
-                                              cv2.IMREAD_UNCHANGED)
+                                cv2.IMREAD_UNCHANGED)
 
         for name, classifier in self._classifiers.items():
             scale = DEFAULT_SCALE
