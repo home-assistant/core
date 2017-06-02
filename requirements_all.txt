@@ -382,7 +382,7 @@ mutagen==1.37.0
 myusps==1.1.1
 
 # homeassistant.components.discovery
-netdisco==1.0.0
+netdisco==1.0.1
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
