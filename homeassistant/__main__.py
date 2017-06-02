@@ -10,6 +10,7 @@ import threading
 
 from typing import Optional, List
 
+from homeassistant import monkey_patch
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER_WIN,
     RESTART_EXIT_CODE,
 )
-from homeassistant.util.async import run_callback_threadsafe
 
 
 def attempt_use_uvloop():
@@ -310,6 +310,9 @@ def setup_and_run_hass(config_dir: str,
         return None
 
     if args.open_ui:
+        # Imported here to avoid importing asyncio before monkey patch
+        from homeassistant.util.async import run_callback_threadsafe
+
         def open_browser(event):
             """Open the webinterface in a browser."""
             if hass.config.api is not None:
@@ -370,6 +373,13 @@ def try_to_restart() -> None:
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
+
+    if os.environ.get('HASS_MONKEYPATCH_ASYNCIO') == '1':
+        if sys.version_info[:3] >= (3, 6):
+            monkey_patch.disable_c_asyncio()
+        monkey_patch.patch_weakref_tasks()
+    elif sys.version_info[:3] < (3, 5, 3):
+        monkey_patch.patch_weakref_tasks()
 
     attempt_use_uvloop()
 
