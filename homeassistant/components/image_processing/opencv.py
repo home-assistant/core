@@ -180,4 +180,3 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
         self._matches = matches
         self._total_matches = total_matches
-
