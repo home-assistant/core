@@ -76,9 +76,9 @@ def _get_default_classifier(dest_path):
     _LOGGER.info('Downloading default classifier')
     req = requests.get(CASCADE_URL, stream=True)
     with open(dest_path, 'wb') as fil:
-       for chunk in req.iter_content(chunk_size=1024):
-           if chunk:  # filter out keep-alive new chunks
-               fil.write(chunk) 
+        for chunk in req.iter_content(chunk_size=1024):
+            if chunk:  # filter out keep-alive new chunks
+                fil.write(chunk)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the OpenCV image processing platform."""
@@ -146,7 +146,7 @@ class OpenCVImageProcessor(ImageProcessingEntity):
 
         # pylint: disable=no-member
         cv_image = cv2.imdecode(numpy.asarray(bytearray(image)),
-            cv2.IMREAD_UNCHANGED)
+                                              cv2.IMREAD_UNCHANGED)
 
         for name, classifier in self._classifiers.items():
             scale = DEFAULT_SCALE
