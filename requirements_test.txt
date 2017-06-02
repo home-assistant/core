@@ -3,12 +3,11 @@
 # new version
 flake8==3.3
 pylint==1.6.5
-mypy==0.501
+mypy==0.511
 pydocstyle==1.1.1
 coveralls>=1.1
 pytest>=2.9.2
 pytest-aiohttp>=0.1.3
-pytest-asyncio>=0.5.0
 pytest-cov>=2.3.1
 pytest-timeout>=1.2.0
 pytest-catchlog>=1.2.2

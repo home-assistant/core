@@ -4,6 +4,7 @@ Support for Wink lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.wink/
 """
+import asyncio
 import colorsys
 
 from homeassistant.components.light import (
@@ -17,8 +18,6 @@ from homeassistant.util.color import \
 DEPENDENCIES = ['wink']
 
 SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
-
-RGB_MODES = ['hsb', 'rgb']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -38,6 +37,11 @@ class WinkLight(WinkDevice, Light):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['light'].append(self)
+
     @property
     def is_on(self):
         """Return true if light is on."""
@@ -56,8 +60,6 @@ class WinkLight(WinkDevice, Light):
         """Define current bulb color in RGB."""
         if not self.wink.supports_hue_saturation():
             return None
-        elif self.wink.color_model() not in RGB_MODES:
-            return False
         else:
             hue = self.wink.color_hue()
             saturation = self.wink.color_saturation()

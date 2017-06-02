@@ -128,7 +128,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.const.DATA_NETWORK]
 
     def set_usercode(service):
         """Set the usercode to index X on the lock."""
@@ -141,9 +141,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 class_id=zwave.const.COMMAND_CLASS_USER_CODE).values():
             if value.index != code_slot:
                 continue
-            if len(str(usercode)) > 4:
+            if len(str(usercode)) < 4:
                 _LOGGER.error("Invalid code provided: (%s) "
-                              "usercode must %s or less digits",
+                              "usercode must be atleast 4 and at most"
+                              " %s digits",
                               usercode, len(value.data))
                 break
             value.data = str(usercode)

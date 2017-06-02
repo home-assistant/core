@@ -12,10 +12,9 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, ATTR_WHITE_VALUE,
-    EFFECT_COLORLOOP, EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, SUPPORT_WHITE_VALUE, Light,
-    PLATFORM_SCHEMA)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
+    EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
+    SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['flux_led==0.19']
@@ -27,10 +26,8 @@ ATTR_MODE = 'mode'
 
 DOMAIN = 'flux_led'
 
-SUPPORT_FLUX_LED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                        SUPPORT_RGB_COLOR)
-SUPPORT_FLUX_LED_RGBW = (SUPPORT_WHITE_VALUE | SUPPORT_EFFECT |
-                         SUPPORT_RGB_COLOR)
+SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
+                    SUPPORT_RGB_COLOR)
 
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
@@ -182,16 +179,7 @@ class FluxLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        if self._mode == MODE_RGB:
-            return self._bulb.brightness
-        return None  # not used for RGBW
-
-    @property
-    def white_value(self):
-        """Return the white value of this light between 0..255."""
-        if self._mode == MODE_RGBW:
-            return self._bulb.getRgbw()[3]
-        return None  # not used for RGB
+        return self._bulb.brightness
 
     @property
     def rgb_color(self):
@@ -201,11 +189,7 @@ class FluxLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._mode == MODE_RGBW:
-            return SUPPORT_FLUX_LED_RGBW
-        elif self._mode == MODE_RGB:
-            return SUPPORT_FLUX_LED_RGB
-        return 0
+        return SUPPORT_FLUX_LED
 
     @property
     def effect_list(self):
@@ -219,23 +203,17 @@ class FluxLight(Light):
 
         rgb = kwargs.get(ATTR_RGB_COLOR)
         brightness = kwargs.get(ATTR_BRIGHTNESS)
-        white_value = kwargs.get(ATTR_WHITE_VALUE)
         effect = kwargs.get(ATTR_EFFECT)
-
         if rgb is not None and brightness is not None:
             self._bulb.setRgb(*tuple(rgb), brightness=brightness)
-        elif rgb is not None and white_value is not None:
-            self._bulb.setRgbw(*tuple(rgb), w=white_value)
         elif rgb is not None:
-            # self.white_value and self.brightness are appropriately
-            # returning None for MODE_RGB and MODE_RGBW respectively
-            self._bulb.setRgbw(*tuple(rgb),
-                               w=self.white_value,
-                               brightness=self.brightness)
+            self._bulb.setRgb(*tuple(rgb))
         elif brightness is not None:
-            self._bulb.setRgb(*self.rgb_color, brightness=brightness)
-        elif white_value is not None:
-            self._bulb.setRgbw(*self.rgb_color, w=white_value)
+            if self._mode == 'rgbw':
+                self._bulb.setWarmWhite255(brightness)
+            elif self._mode == 'rgb':
+                (red, green, blue) = self._bulb.getRgb()
+                self._bulb.setRgb(red, green, blue, brightness=brightness)
         elif effect == EFFECT_RANDOM:
             self._bulb.setRgb(random.randint(0, 255),
                               random.randint(0, 255),

@@ -138,7 +138,7 @@ class Camera(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.camera_image)
+        return self.hass.async_add_job(self.camera_image)
 
     @asyncio.coroutine
     def handle_async_mjpeg_stream(self, request):
@@ -241,7 +241,7 @@ class CameraView(HomeAssistantView):
             return web.Response(status=status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
-                         request.GET.get('token') in camera.access_tokens)
+                         request.query.get('token') in camera.access_tokens)
 
         if not authenticated:
             return web.Response(status=401)
@@ -269,7 +269,7 @@ class CameraImageView(CameraView):
                 image = yield from camera.async_camera_image()
 
             if image:
-                return web.Response(body=image)
+                return web.Response(body=image, content_type='image/jpeg')
 
         return web.Response(status=500)
 

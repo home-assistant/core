@@ -108,8 +108,8 @@ def async_setup(hass, config):
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -150,8 +150,7 @@ class LockDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.lock, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.lock, **kwargs))
 
     def unlock(self, **kwargs):
         """Unlock the lock."""
@@ -162,8 +161,7 @@ class LockDevice(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.unlock, **kwargs))
+        return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
 
     @property
     def state_attributes(self):

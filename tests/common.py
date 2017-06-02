@@ -33,7 +33,7 @@ from homeassistant.util.async import (
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
-INST_COUNT = 0
+INSTANCES = []
 
 
 def threadsafe_callback_factory(func):
@@ -98,11 +98,10 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    global INST_COUNT
-    INST_COUNT += 1
     loop._thread_ident = threading.get_ident()
 
     hass = ha.HomeAssistant(loop)
+    INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
 
@@ -134,8 +133,7 @@ def async_test_home_assistant(loop):
     @asyncio.coroutine
     def mock_async_start():
         """Start the mocking."""
-        # 1. We only mock time during tests
-        # 2. We want block_till_done that is called inside stop_track_tasks
+        # We only mock time during tests and we want to track tasks
         with patch('homeassistant.core._async_create_timer'), \
                 patch.object(hass, 'async_stop_track_tasks'):
             yield from orig_start()
@@ -145,8 +143,7 @@ def async_test_home_assistant(loop):
     @ha.callback
     def clear_instance(event):
         """Clear global instance."""
-        global INST_COUNT
-        INST_COUNT -= 1
+        INSTANCES.remove(hass)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, clear_instance)
 
@@ -253,7 +250,7 @@ def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
     if 'http' not in hass.config.components:
         mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
+    app = web.Application(middlewares=[auth_middleware])
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
     app[KEY_BANS_ENABLED] = False
@@ -320,13 +317,16 @@ class MockPlatform(object):
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None):
+                 platform_schema=None, async_setup_platform=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
         self._setup_platform = setup_platform
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if async_setup_platform is not None:
+            self.async_setup_platform = async_setup_platform
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
         """Set up the platform."""
@@ -495,3 +495,38 @@ def mock_restore_cache(hass, states):
         "Duplicate entity_id? {}".format(states)
     hass.state = ha.CoreState.starting
     mock_component(hass, recorder.DOMAIN)
+
+
+class MockDependency:
+    """Decorator to mock install a dependency."""
+
+    def __init__(self, root, *args):
+        """Initialize decorator."""
+        self.root = root
+        self.submodules = args
+
+    def __call__(self, func):
+        """Apply decorator."""
+        from unittest.mock import MagicMock, patch
+
+        def resolve(mock, path):
+            """Resolve a mock."""
+            if not path:
+                return mock
+
+            return resolve(getattr(mock, path[0]), path[1:])
+
+        def run_mocked(*args, **kwargs):
+            """Run with mocked dependencies."""
+            base = MagicMock()
+            to_mock = {
+                "{}.{}".format(self.root, tom): resolve(base, tom.split('.'))
+                for tom in self.submodules
+            }
+            to_mock[self.root] = base
+
+            with patch.dict('sys.modules', to_mock):
+                args = list(args) + [base]
+                func(*args, **kwargs)
+
+        return run_mocked

@@ -49,9 +49,9 @@ class TestKiraSensor(unittest.TestCase):
 
         assert remote.name == 'kira'
 
-        command = "FAKE_COMMAND"
+        command = ["FAKE_COMMAND"]
         device = "FAKE_DEVICE"
-        commandTuple = (command, device)
+        commandTuple = (command[0], device)
         remote.send_command(device=device, command=command)
 
         self.mock_kira.sendCode.assert_called_with(commandTuple)

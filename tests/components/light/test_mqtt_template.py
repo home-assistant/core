@@ -245,19 +245,27 @@ class TestLightMQTTTemplate(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        # turn on the light with brightness, color, color temp and white val
+        # turn on the light with brightness, color
         light.turn_on(self.hass, 'light.test', brightness=50,
-                      rgb_color=[75, 75, 75], color_temp=200, white_value=139)
+                      rgb_color=[75, 75, 75])
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
                          self.mock_publish.mock_calls[-2][1][0])
-        self.assertEqual(2, self.mock_publish.mock_calls[-2][1][2])
-        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the payload
         payload = self.mock_publish.mock_calls[-2][1][1]
-        self.assertEqual('on,50,200,139,75-75-75', payload)
+        self.assertEqual('on,50,,,75-75-75', payload)
+
+        # turn on the light with color temp and white val
+        light.turn_on(self.hass, 'light.test', color_temp=200, white_value=139)
+        self.hass.block_till_done()
+
+        payload = self.mock_publish.mock_calls[-2][1][1]
+        self.assertEqual('on,,200,139,--', payload)
+
+        self.assertEqual(2, self.mock_publish.mock_calls[-2][1][2])
+        self.assertEqual(False, self.mock_publish.mock_calls[-2][1][3])
 
         # check the state
         state = self.hass.states.get('light.test')

@@ -195,7 +195,7 @@ class Luminary(Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
                           self._name, self._brightness)
-            self._brightness = self._luminary.set_luminance(
+            self._luminary.set_luminance(
                 int(self._brightness / 2.55),
                 transition)
 

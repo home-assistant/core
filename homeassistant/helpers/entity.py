@@ -221,8 +221,7 @@ class Entity(object):
                     # pylint: disable=no-member
                     yield from self.async_update()
                 else:
-                    yield from self.hass.loop.run_in_executor(
-                        None, self.update)
+                    yield from self.hass.async_add_job(self.update)
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Update for %s fails", self.entity_id)
                 return
@@ -363,8 +362,8 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_on, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
@@ -375,8 +374,8 @@ class ToggleEntity(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_off, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_off, **kwargs))
 
     def toggle(self) -> None:
         """Toggle the entity."""
