@@ -17,6 +17,8 @@ from homeassistant.components.image_processing import (
     ImageProcessingEntity)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['opencv-python==3.2.0.6', 'numpy==1.12.0']
+
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MATCHES = 'matches'
