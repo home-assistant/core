@@ -288,6 +288,9 @@ https://github.com/jabesq/pybotvac/archive/v0.0.3.zip#pybotvac==0.0.3
 # homeassistant.components.sensor.sabnzbd
 https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad59154092599278661af17e2a9f2cf5e2a9.zip#python-sabnzbd==0.1
 
+# homeassistant.components.sensor.co2mini
+https://github.com/jannau/CO2Meter/archive/fea592cfd2b54124e4afdc20320f5c929e1c07d6.zip#CO2Meter==2.0
+
 # homeassistant.components.media_player.nad
 https://github.com/joopert/nad_receiver/archive/0.0.3.zip#nad_receiver==0.0.3
 
