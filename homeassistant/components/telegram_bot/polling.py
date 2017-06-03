@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config):
     """Set up the Telegram polling platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
