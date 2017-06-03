@@ -8,6 +8,8 @@ import logging
 
 import voluptuous as vol
 
+import re
+
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
     CONF_PORT, CONF_SSL, CONF_VERIFY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -147,6 +149,7 @@ def setup(hass, config):
             }
         ]
 
+        percent_remove_regex = re.compile(r"^([0-9.])+\%$")
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
                 # If the key is already in fields
@@ -157,6 +160,8 @@ def setup(hass, config):
                 # But if we can not do it we store the value
                 # as string add "_str" postfix to the field key
                 try:
+                    if percent_remove_regex.match(value):
+                        value = value.replace("%", "")
                     json_body[0]['fields'][key] = float(value)
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
