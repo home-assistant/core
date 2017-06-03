@@ -115,7 +115,7 @@ def get_service(hass, config, discovery_info=None):
         add_manifest_json_key(
             ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(gcm_api_key, registrations)
+    return HTML5NotificationService(gcm_api_key, registrations, json_path)
 
 
 def _load_config(filename):
@@ -327,10 +327,11 @@ class HTML5PushCallbackView(HomeAssistantView):
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    def __init__(self, gcm_key, registrations):
+    def __init__(self, gcm_key, registrations, json_path):
         """Initialize the service."""
         self._gcm_key = gcm_key
         self.registrations = registrations
+        self.registrations_json_path = json_path
 
     @property
     def targets(self):
@@ -383,7 +384,7 @@ class HTML5NotificationService(BaseNotificationService):
         if not targets:
             targets = self.registrations.keys()
 
-        for target in targets:
+        for target in list(targets):
             info = self.registrations.get(target)
             if info is None:
                 _LOGGER.error("%s is not a valid HTML5 push notification"
@@ -399,5 +400,16 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
-            WebPusher(info[ATTR_SUBSCRIPTION]).send(
+            response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
                 json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+
+            # pylint: disable=no-member
+            if response.status_code == 410:
+                _LOGGER.info("Notification channel has expired")
+                reg = self.registrations.pop(target)
+                if not _save_config(self.registrations_json_path,
+                                    self.registrations):
+                    self.registrations[target] = reg
+                    _LOGGER.error("Error saving registration.")
+                else:
+                    _LOGGER.info("Configuration saved")
