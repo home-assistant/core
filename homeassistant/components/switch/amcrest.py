@@ -1,5 +1,5 @@
 """
-Support turning on/off motion detection on Amcrest IP cameras.
+This component supports turning on/off motion detection on Amcrest IP cameras.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.amcrest/
@@ -53,7 +53,6 @@ class AmcrestMotionSwitch(ToggleEntity):
 
     def __init__(self, device_info, camera):
         """Initialize the switch."""
-        # XXX DAP wtf is this: super(AmcrestSensor, self).__init__()
         #self._attrs = {}
         self._camera = camera
         self._name = device_info.get(CONF_NAME)
@@ -83,18 +82,6 @@ class AmcrestMotionSwitch(ToggleEntity):
     def is_on(self):
         """Return true if motion detection is on."""
         return self._state == STATE_ON
-
-
-    #@property
-    #def device_state_attributes(self):
-    #    """Return the state attributes."""
-    #    return self._attrs
-    #
-    #
-    #@property
-    #def icon(self):
-    #    """Icon to use in the frontend, if any."""
-    #    return self._icon
 
 
     def turn_on(self, **kwargs):
