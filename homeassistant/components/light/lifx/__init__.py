@@ -47,6 +47,7 @@ SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_HSBK = 'hsbk'
 ATTR_INFRARED = 'infrared'
+ATTR_ZONES = 'zones'
 ATTR_POWER = 'power'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -55,6 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
     ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
+    ATTR_ZONES: vol.All(cv.ensure_list, [cv.positive_int]),
     ATTR_POWER: cv.boolean,
 })
 
@@ -184,7 +186,7 @@ class AwaitAioLIFX:
     def wait(self, method):
         """Call an aiolifx method and wait for its response or a timeout."""
         self.event.clear()
-        method(self.callback)
+        method(callb=self.callback)
 
         while self.light.available and not self.event.is_set():
             try:
@@ -377,22 +379,16 @@ class LIFXLight(Light):
         power_on = kwargs.get(ATTR_POWER, False)
         power_off = not kwargs.get(ATTR_POWER, True)
 
-        hsbk, changed_color = self.find_hsbk(**kwargs)
-        _LOGGER.debug("turn_on: %s (%d) %d %d %d %d %d",
-                      self.who, self._power, fade, *hsbk)
-
         if self._power == 0:
             if power_off:
                 self.device.set_power(False, None, 0)
-            if changed_color:
-                self.device.set_color(hsbk, None, 0)
+            hsbk = yield from self.send_color(kwargs, duration=0)
             if power_on:
                 self.device.set_power(True, None, fade)
         else:
             if power_on:
                 self.device.set_power(True, None, 0)
-            if changed_color:
-                self.device.set_color(hsbk, None, fade)
+            hsbk = yield from self.send_color(kwargs, duration=fade)
             if power_off:
                 self.device.set_power(False, None, fade)
 
@@ -406,8 +402,55 @@ class LIFXLight(Light):
                 self.set_power(1)
             if power_off:
                 self.set_power(0)
-            if changed_color:
+            if hsbk:
                 self.set_color(*hsbk)
+
+    @asyncio.coroutine
+    def send_color(self, kwargs, duration=None):
+        """Send a color change to the device."""
+        hsbk, changed_color = self.find_hsbk(**kwargs)
+
+        if not changed_color:
+            return None
+
+        zones = kwargs.get(ATTR_ZONES, None)
+        if zones is None:
+            self.device.set_color(hsbk, None, duration)
+            return hsbk
+
+        # Get zone count and the first 8 colors
+        resp = yield from AwaitAioLIFX(self).wait(
+            partial(self.device.get_color_zones, start_index=0))
+        if resp is None:
+            return
+        num_zones = resp.count
+
+        # Decide zones
+        if len(zones) == 0:
+            zones = range(0, num_zones)
+        else:
+            zones = list(filter(lambda x: x < num_zones, set(zones)))
+
+        # Send new color to each zone
+        segment = 0
+        for index in range(0, len(zones)):
+            zone = zones[index]
+
+            # Get next 8 colors
+            current_segment = zone//8
+            if segment != current_segment:
+                segment = current_segment
+                yield from AwaitAioLIFX(self).wait(
+                    partial(self.device.get_color_zones,
+                            start_index=segment*8))
+
+            zone_hsbk, _ = \
+                self.find_hsbk(current=self.device.color_zones[zone], **kwargs)
+            apply = 1 if (index == len(zones)-1) else 0
+            self.device.set_color_zones(
+                zone, zone, zone_hsbk, duration, apply=apply)
+
+        return None
 
     @asyncio.coroutine
     def async_update(self):
@@ -432,9 +475,12 @@ class LIFXLight(Light):
                 self.set_color(*self.device.color)
                 self._name = self.device.label
 
-    def find_hsbk(self, **kwargs):
+    def find_hsbk(self, current=None, **kwargs):
         """Find the desired color from a number of possible inputs."""
         changed_color = False
+
+        if current is None:
+            current = [self._hue, self._sat, self._bri, self._kel]
 
         hsbk = kwargs.pop(ATTR_HSBK, None)
         if hsbk is not None:
@@ -449,9 +495,7 @@ class LIFXLight(Light):
             brightness = convert_8_to_16(brightness)
             changed_color = True
         else:
-            hue = self._hue
-            saturation = self._sat
-            brightness = self._bri
+            hue, saturation, brightness = current[0:3]
 
         if ATTR_XY_COLOR in kwargs:
             hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
@@ -469,13 +513,13 @@ class LIFXLight(Light):
             if changed_color:
                 kelvin = 3500
             else:
-                kelvin = self._kel
+                kelvin = current[3]
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
             changed_color = True
         else:
-            brightness = self._bri
+            brightness = current[2]
 
         return [[hue, saturation, brightness, kelvin], changed_color]
 
