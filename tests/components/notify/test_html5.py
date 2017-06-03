@@ -86,10 +86,14 @@ class TestHtml5Notify(object):
         service.send_message('Hello', target=['device', 'non_existing'],
                              data={'icon': 'beer.png'})
 
-        assert len(mock_wp.mock_calls) == 2
+        print(mock_wp.mock_calls)
+
+        assert len(mock_wp.mock_calls) == 3
 
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
+        # Third mock_call checks the status_code of the response.
+        assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
 
         # Call to send
         payload = json.loads(mock_wp.mock_calls[1][1][0])
@@ -376,11 +380,13 @@ class TestHtml5Notify(object):
                 service.send_message('Hello', target=['device'],
                                      data={'icon': 'beer.png'})
 
-            assert len(mock_wp.mock_calls) == 2
+            assert len(mock_wp.mock_calls) == 3
 
             # WebPusher constructor
             assert mock_wp.mock_calls[0][1][0] == \
                 SUBSCRIPTION_1['subscription']
+            # Third mock_call checks the status_code of the response.
+            assert mock_wp.mock_calls[2][0] == '().send().status_code.__eq__'
 
             # Call to send
             push_payload = json.loads(mock_wp.mock_calls[1][1][0])
