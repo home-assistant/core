@@ -91,6 +91,6 @@ class AmcrestMotionSwitch(ToggleEntity):
     def update(self):
         """Update Motion Detection state."""
         _LOGGER.debug("Pulling Motion Detection data from %s sensor.",
-            self._name)
+                      self._name)
         detection = self._camera.is_motion_detector_on()
         self._state = STATE_ON if detection else STATE_OFF
