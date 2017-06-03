@@ -868,6 +868,23 @@ class TestZWaveServices(unittest.TestCase):
 
         assert self.zwave_network.nodes[11].name == 'test_name'
 
+    def test_rename_value(self):
+        """Test zwave rename_value service."""
+        node = MockNode(node_id=14)
+        value = MockValue(index=12, value_id=123456, label="Old Label")
+        node.values = {123456: value}
+        self.zwave_network.nodes = {11: node}
+
+        assert value.label == "Old Label"
+        self.hass.services.call('zwave', 'rename_value', {
+            const.ATTR_NODE_ID: 11,
+            const.ATTR_VALUE_ID: 123456,
+            const.ATTR_NAME: "New Label",
+        })
+        self.hass.block_till_done()
+
+        assert value.label == "New Label"
+
     def test_remove_failed_node(self):
         """Test zwave remove_failed_node service."""
         self.hass.services.call('zwave', 'remove_failed_node', {
