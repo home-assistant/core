@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_local/
 """
 import logging
+import os
 
 import requests
 import voluptuous as vol
@@ -13,7 +14,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_HOST, CONF_PORT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['insteonlocal==0.48']
+REQUIREMENTS = ['insteonlocal==0.52']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +48,12 @@ def setup(hass, config):
     timeout = conf.get(CONF_TIMEOUT)
 
     try:
-        insteonhub = Hub(host, username, password, port, timeout, _LOGGER)
+        if not os.path.exists(hass.config.path('.insteon_cache')):
+            os.makedirs(hass.config.path('.insteon_cache'))
+
+        insteonhub = Hub(host, username, password, port, timeout, _LOGGER,
+                         hass.config.path('.insteon_cache'))
+
         # Check for successful connection
         insteonhub.get_buffer_status()
     except requests.exceptions.ConnectTimeout:
