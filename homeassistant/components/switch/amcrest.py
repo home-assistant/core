@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_USERNAME, CONF_PASSWORD,
     CONF_PORT, STATE_UNKNOWN, STATE_OFF, STATE_ON)
 from homeassistant.helpers.entity import ToggleEntity
+import homeassistant.loader as loader
 
 REQUIREMENTS = ['amcrest==1.2.0']
 _LOGGER = logging.getLogger(__name__)
