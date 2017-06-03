@@ -194,95 +194,92 @@ def load_data(url=None, filepath=None, username=None, password=None,
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Telegram bot component."""
-    conf = config[DOMAIN]
+    if not config[DOMAIN]:
+        return False
+
+    p_config = config[DOMAIN][0]
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
+    p_type = p_config.get(CONF_PLATFORM)
+
+    platform = yield from async_prepare_setup_platform(
+        hass, config, DOMAIN, p_type)
+
+    if platform is None:
+        return
+
+    _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
+    try:
+        receiver_service = yield from \
+            platform.async_setup_platform(hass, p_config)
+        if receiver_service is None:
+            _LOGGER.error(
+                "Failed to initialize Telegram bot %s", p_type)
+            return False
+
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error setting up platform %s", p_type)
+        return False
+
+    notify_service = TelegramNotificationService(
+        hass,
+        p_config.get(CONF_API_KEY),
+        p_config.get(CONF_ALLOWED_CHAT_IDS),
+        p_config.get(ATTR_PARSER)
+    )
+
     @asyncio.coroutine
-    def async_setup_platform(p_type, p_config=None, discovery_info=None):
-        """Set up a Telegram bot platform."""
-        platform = yield from async_prepare_setup_platform(
-            hass, config, DOMAIN, p_type)
+    def async_send_telegram_message(service):
+        """Handle sending Telegram Bot message service calls."""
+        def _render_template_attr(data, attribute):
+            attribute_templ = data.get(attribute)
+            if attribute_templ:
+                if any([isinstance(attribute_templ, vtype)
+                        for vtype in [float, int, str]]):
+                    data[attribute] = attribute_templ
+                else:
+                    attribute_templ.hass = hass
+                    try:
+                        data[attribute] = attribute_templ.async_render()
+                    except TemplateError as exc:
+                        _LOGGER.error(
+                            "TemplateError in %s: %s -> %s",
+                            attribute, attribute_templ.template, exc)
+                        data[attribute] = attribute_templ.template
 
-        if platform is None:
-            _LOGGER.error("Unknown notification service specified")
-            return
+        msgtype = service.service
+        kwargs = dict(service.data)
+        for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
+                          ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
+            _render_template_attr(kwargs, attribute)
+        _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
 
-        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
-        try:
-            receiver_service = yield from \
-                platform.async_setup_platform(hass, p_config, discovery_info)
-            if receiver_service is None:
-                _LOGGER.error(
-                    "Failed to initialize Telegram bot %s", p_type)
-                return
+        if msgtype == SERVICE_SEND_MESSAGE:
+            yield from hass.async_add_job(
+                partial(notify_service.send_message, **kwargs))
+        elif msgtype == SERVICE_SEND_PHOTO:
+            yield from hass.async_add_job(
+                partial(notify_service.send_file, True, **kwargs))
+        elif msgtype == SERVICE_SEND_DOCUMENT:
+            yield from hass.async_add_job(
+                partial(notify_service.send_file, False, **kwargs))
+        elif msgtype == SERVICE_SEND_LOCATION:
+            yield from hass.async_add_job(
+                partial(notify_service.send_location, **kwargs))
+        elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
+            yield from hass.async_add_job(
+                partial(notify_service.answer_callback_query, **kwargs))
+        else:
+            yield from hass.async_add_job(
+                partial(notify_service.edit_message, msgtype, **kwargs))
 
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform %s", p_type)
-            return
-
-        notify_service = TelegramNotificationService(
-            hass,
-            p_config.get(CONF_API_KEY),
-            p_config.get(CONF_ALLOWED_CHAT_IDS),
-            p_config.get(ATTR_PARSER)
-        )
-
-        @asyncio.coroutine
-        def async_send_telegram_message(service):
-            """Handle sending Telegram Bot message service calls."""
-            def _render_template_attr(data, attribute):
-                attribute_templ = data.get(attribute)
-                if attribute_templ:
-                    if any([isinstance(attribute_templ, vtype)
-                            for vtype in [float, int, str]]):
-                        data[attribute] = attribute_templ
-                    else:
-                        attribute_templ.hass = hass
-                        try:
-                            data[attribute] = attribute_templ.async_render()
-                        except TemplateError as exc:
-                            _LOGGER.error(
-                                "TemplateError in %s: %s -> %s",
-                                attribute, attribute_templ.template, exc)
-                            data[attribute] = attribute_templ.template
-
-            msgtype = service.service
-            kwargs = dict(service.data)
-            for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
-                              ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
-                _render_template_attr(kwargs, attribute)
-            _LOGGER.debug("New telegram message %s: %s", msgtype, kwargs)
-
-            if msgtype == SERVICE_SEND_MESSAGE:
-                yield from hass.async_add_job(
-                    partial(notify_service.send_message, **kwargs))
-            elif msgtype == SERVICE_SEND_PHOTO:
-                yield from hass.async_add_job(
-                    partial(notify_service.send_file, True, **kwargs))
-            elif msgtype == SERVICE_SEND_DOCUMENT:
-                yield from hass.async_add_job(
-                    partial(notify_service.send_file, False, **kwargs))
-            elif msgtype == SERVICE_SEND_LOCATION:
-                yield from hass.async_add_job(
-                    partial(notify_service.send_location, **kwargs))
-            elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-                yield from hass.async_add_job(
-                    partial(notify_service.answer_callback_query, **kwargs))
-            else:
-                yield from hass.async_add_job(
-                    partial(notify_service.edit_message, msgtype, **kwargs))
-
-        # Register notification services
-        for service_notif, schema in SERVICE_MAP.items():
-            hass.services.async_register(
-                DOMAIN, service_notif, async_send_telegram_message,
-                descriptions.get(service_notif), schema=schema)
-
-        return True
-
-    yield from async_setup_platform(conf.get(CONF_PLATFORM), conf)
+    # Register notification services
+    for service_notif, schema in SERVICE_MAP.items():
+        hass.services.async_register(
+            DOMAIN, service_notif, async_send_telegram_message,
+            descriptions.get(service_notif), schema=schema)
 
     return True
 
