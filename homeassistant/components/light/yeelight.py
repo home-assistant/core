@@ -16,13 +16,13 @@ from homeassistant.util.color import (
 from homeassistant.const import CONF_DEVICES, CONF_NAME
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_COLOR_TEMP,
-    ATTR_FLASH, FLASH_SHORT, FLASH_LONG,
+    ATTR_FLASH, FLASH_SHORT, FLASH_LONG, ATTR_EFFECT,
     SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, SUPPORT_TRANSITION,
-    SUPPORT_COLOR_TEMP, SUPPORT_FLASH,
+    SUPPORT_COLOR_TEMP, SUPPORT_FLASH, SUPPORT_EFFECT,
     Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yeelight==0.2.2']
+REQUIREMENTS = ['yeelight==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,43 @@ SUPPORT_YEELIGHT = (SUPPORT_BRIGHTNESS |
 
 SUPPORT_YEELIGHT_RGB = (SUPPORT_YEELIGHT |
                         SUPPORT_RGB_COLOR |
+                        SUPPORT_EFFECT |
                         SUPPORT_COLOR_TEMP)
+
+EFFECT_DISCO = "Disco"
+EFFECT_TEMP = "Slow Temp"
+EFFECT_STROBE = "Strobe epilepsy!"
+EFFECT_STROBE_COLOR = "Strobe color"
+EFFECT_ALARM = "Alarm"
+EFFECT_POLICE = "Police"
+EFFECT_POLICE2 = "Police2"
+EFFECT_CHRISTMAS = "Christmas"
+EFFECT_RGB = "RGB"
+EFFECT_RANDOM_LOOP = "Random Loop"
+EFFECT_FAST_RANDOM_LOOP = "Fast Random Loop"
+EFFECT_SLOWDOWN = "Slowdown"
+EFFECT_WHATSAPP = "WhatsApp"
+EFFECT_FACEBOOK = "Facebook"
+EFFECT_TWITTER = "Twitter"
+EFFECT_STOP = "Stop"
+
+YEELIGHT_EFFECT_LIST = [
+    EFFECT_DISCO,
+    EFFECT_TEMP,
+    EFFECT_STROBE,
+    EFFECT_STROBE_COLOR,
+    EFFECT_ALARM,
+    EFFECT_POLICE,
+    EFFECT_POLICE2,
+    EFFECT_CHRISTMAS,
+    EFFECT_RGB,
+    EFFECT_RANDOM_LOOP,
+    EFFECT_FAST_RANDOM_LOOP,
+    EFFECT_SLOWDOWN,
+    EFFECT_WHATSAPP,
+    EFFECT_FACEBOOK,
+    EFFECT_TWITTER,
+    EFFECT_STOP]
 
 
 def _cmd(func):
@@ -115,6 +151,11 @@ class YeelightLight(Light):
     def supported_features(self) -> int:
         """Flag supported features."""
         return self._supported_features
+
+    @property
+    def effect_list(self):
+        """Return the list of supported effects."""
+        return YEELIGHT_EFFECT_LIST
 
     @property
     def unique_id(self) -> str:
@@ -286,6 +327,54 @@ class YeelightLight(Light):
             except BulbException as ex:
                 _LOGGER.error("Unable to set flash: %s", ex)
 
+    @_cmd
+    def set_effect(self, effect) -> None:
+        """Activate effect."""
+        if effect:
+            from yeelight import (Flow, BulbException)
+            from yeelight.transitions import (disco, temp, strobe, pulse,
+                                              strobe_color, alarm, police,
+                                              police2, christmas, rgb,
+                                              randomloop, slowdown)
+            if effect == EFFECT_STOP:
+                self._bulb.stop_flow()
+                return
+            if effect == EFFECT_DISCO:
+                flow = Flow(count=0, transitions=disco())
+            if effect == EFFECT_TEMP:
+                flow = Flow(count=0, transitions=temp())
+            if effect == EFFECT_STROBE:
+                flow = Flow(count=0, transitions=strobe())
+            if effect == EFFECT_STROBE_COLOR:
+                flow = Flow(count=0, transitions=strobe_color())
+            if effect == EFFECT_ALARM:
+                flow = Flow(count=0, transitions=alarm())
+            if effect == EFFECT_POLICE:
+                flow = Flow(count=0, transitions=police())
+            if effect == EFFECT_POLICE2:
+                flow = Flow(count=0, transitions=police2())
+            if effect == EFFECT_CHRISTMAS:
+                flow = Flow(count=0, transitions=christmas())
+            if effect == EFFECT_RGB:
+                flow = Flow(count=0, transitions=rgb())
+            if effect == EFFECT_RANDOM_LOOP:
+                flow = Flow(count=0, transitions=randomloop())
+            if effect == EFFECT_FAST_RANDOM_LOOP:
+                flow = Flow(count=0, transitions=randomloop(duration=250))
+            if effect == EFFECT_SLOWDOWN:
+                flow = Flow(count=0, transitions=slowdown())
+            if effect == EFFECT_WHATSAPP:
+                flow = Flow(count=2, transitions=pulse(37, 211, 102))
+            if effect == EFFECT_FACEBOOK:
+                flow = Flow(count=2, transitions=pulse(59, 89, 152))
+            if effect == EFFECT_TWITTER:
+                flow = Flow(count=2, transitions=pulse(0, 172, 237))
+
+            try:
+                self._bulb.start_flow(flow)
+            except BulbException as ex:
+                _LOGGER.error("Unable to set effect: %s", ex)
+
     def turn_on(self, **kwargs) -> None:
         """Turn the bulb on."""
         import yeelight
@@ -293,6 +382,7 @@ class YeelightLight(Light):
         colortemp = kwargs.get(ATTR_COLOR_TEMP)
         rgb = kwargs.get(ATTR_RGB_COLOR)
         flash = kwargs.get(ATTR_FLASH)
+        effect = kwargs.get(ATTR_EFFECT)
 
         duration = int(self.config[CONF_TRANSITION])  # in ms
         if ATTR_TRANSITION in kwargs:  # passed kwarg overrides config
@@ -317,6 +407,7 @@ class YeelightLight(Light):
             self.set_colortemp(colortemp, duration)
             self.set_brightness(brightness, duration)
             self.set_flash(flash)
+            self.set_effect(effect)
         except yeelight.BulbException as ex:
             _LOGGER.error("Unable to set bulb properties: %s", ex)
             return
