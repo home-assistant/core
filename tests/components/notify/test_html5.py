@@ -90,7 +90,6 @@ class TestHtml5Notify(object):
 
         assert len(mock_wp.mock_calls) == 3
 
-
         # WebPusher constructor
         assert mock_wp.mock_calls[0][1][0] == SUBSCRIPTION_1['subscription']
         # Third mock_call checks the status_code of the response.

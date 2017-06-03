@@ -403,7 +403,8 @@ class HTML5NotificationService(BaseNotificationService):
             response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
                 json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
 
-            if (response.status_code == 410):
+            # pylint: disable=no-member
+            if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)
                 if not _save_config(self.registrations_json_path,
