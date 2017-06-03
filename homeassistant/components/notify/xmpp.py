@@ -33,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def get_service(hass, config, discovery_info=None):
     """Get the Jabber (XMPP) notification service."""
     return XmppNotificationService(
-        config.get('sender'), config.get('password'), config.get('recipient'),
-        config.get('tls'))
+        config.get(CONF_SENDER), config.get(CONF_PASSWORD),
+        config.get(CONF_RECIPIENT), config.get(CONF_TLS))
 
 
 class XmppNotificationService(BaseNotificationService):
@@ -52,7 +52,7 @@ class XmppNotificationService(BaseNotificationService):
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = '{}: {}'.format(title, message) if title else message
 
-        send_message(self._sender + '/home-assistant', self._password,
+        send_message('{}/home-assistant'.format(self._sender), self._password,
                      self._recipient, self._tls, data)
 
 
