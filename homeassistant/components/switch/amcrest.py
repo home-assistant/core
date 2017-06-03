@@ -18,6 +18,8 @@ from homeassistant.helpers.entity import ToggleEntity
 
 REQUIREMENTS = ['amcrest==1.2.0']
 _LOGGER = logging.getLogger(__name__)
+NOTIFICATION_ID = 'amcrest_switch_notification'
+NOTIFICATION_TITLE = 'Amcrest Switch Setup'
 
 DEFAULT_NAME = 'Amcrest'
 DEFAULT_PORT = 80
@@ -39,10 +41,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         config.get(CONF_HOST), config.get(CONF_PORT),
         config.get(CONF_USERNAME), config.get(CONF_PASSWORD)).camera
 
+    persistent_notification = loader.get_component('persistent_notification')
     try:
         camera.current_time
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Amcrest camera: %s", str(ex))
+        persistent_notification.create(
+            hass, 'Error: {}<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(ex),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
         return False
 
     add_devices([AmcrestMotionSwitch(config, camera)])
