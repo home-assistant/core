@@ -197,6 +197,7 @@ omit =
     homeassistant/components/binary_sensor/pilight.py
     homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
+    homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
