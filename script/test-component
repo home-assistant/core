@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# run test suite for a specific platform/component
+
+# usage: script/test-component component_name [pytest argument..]
+# example: script/test-component rflink -k light -x
+
+pyenv=py34
+hass=.tox/$pyenv/bin/hass
+
+if ! test -f requirements_all.txt; then
+    echo "This script needs to run from home-assistant source directory."
+    exit 1
+fi
+
+component=${1:?Please specify component name as first argument}
+shift
+
+# determine if installed dependencies need to be updated, doing it this way allows to shave of
+# a large amount of time on small test runs. Hass binary get's touched during (re)install. This
+# allows testing it against potentially updated requirement files.
+if ! test -f $hass || test $hass -ot requirements_all.txt || test $hass -ot requirements_test.txt;then
+    tox -e $pyenv --notest
+fi
+
+# Compile a list of all valid testfiles. Pytest fails on a file argument that is not found.
+testfiles=($(ls tests/components/"test_$component.py" tests/components/"$component"/test_*.py tests/components/*/"test_$component.py" 2>/dev/null))
+
+# invoke pytest directly in the virtualenv to bypass tox dependency checking
+.tox/$pyenv/bin/py.test "${testfiles[@]}" "$@"
