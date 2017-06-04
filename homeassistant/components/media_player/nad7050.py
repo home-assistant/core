@@ -178,4 +178,3 @@ class NAD7050(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
