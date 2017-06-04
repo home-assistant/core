@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Set up the Unifi device_tracker."""
-    from pyunifi.controller import Controller
+    from pyunifi.controller import Controller, APIError
 
     host = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -77,6 +77,7 @@ class UnifiScanner(DeviceScanner):
 
     def _update(self):
         """Get the clients from the device."""
+        from pyunifi.controller import APIError
         try:
             clients = self._controller.get_clients()
         except APIError as ex:
