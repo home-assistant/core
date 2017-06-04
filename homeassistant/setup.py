@@ -3,6 +3,7 @@ import asyncio
 import logging
 import logging.handlers
 import os
+from timeit import default_timer as timer
 
 from types import ModuleType
 from typing import Optional, Dict
@@ -83,7 +84,7 @@ def _async_process_requirements(hass: core.HomeAssistant, name: str,
 
     with (yield from pip_lock):
         for req in requirements:
-            ret = yield from hass.loop.run_in_executor(None, pip_install, req)
+            ret = yield from hass.async_add_job(pip_install, req)
             if not ret:
                 _LOGGER.error("Not initializing %s because could not install "
                               "dependency %s", name, req)
@@ -175,6 +176,7 @@ def _async_setup_component(hass: core.HomeAssistant,
 
     async_comp = hasattr(component, 'async_setup')
 
+    start = timer()
     _LOGGER.info("Setting up %s", domain)
     warn_task = hass.loop.call_later(
         SLOW_SETUP_WARNING, _LOGGER.warning,
@@ -184,14 +186,16 @@ def _async_setup_component(hass: core.HomeAssistant,
         if async_comp:
             result = yield from component.async_setup(hass, processed_config)
         else:
-            result = yield from hass.loop.run_in_executor(
-                None, component.setup, hass, processed_config)
+            result = yield from hass.async_add_job(
+                component.setup, hass, processed_config)
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, True)
         return False
     finally:
+        end = timer()
         warn_task.cancel()
+    _LOGGER.info("Setup of domain %s took %.1f seconds.", domain, end - start)
 
     if result is False:
         log_error("Component failed to initialize.")

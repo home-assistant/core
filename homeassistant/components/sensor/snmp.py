@@ -16,7 +16,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pysnmp==4.3.5']
+REQUIREMENTS = ['pysnmp==4.3.7']
 
 _LOGGER = logging.getLogger(__name__)
 

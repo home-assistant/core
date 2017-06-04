@@ -108,3 +108,11 @@ rename_node:
     name:
       description: New Name
       example: 'kitchen'
+
+reset_node_meters:
+  description: Resets the meter counters of a node.
+  fields:
+    node_id:
+      description: Node id of the device to reset meters for. (integer)
+    instance:
+      description: (Optional) Instance of association. Defaults to instance 1.

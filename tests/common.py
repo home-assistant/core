@@ -12,7 +12,7 @@ from contextlib import contextmanager
 from aiohttp import web
 
 from homeassistant import core as ha, loader
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import ToggleEntity
@@ -45,8 +45,23 @@ def threadsafe_callback_factory(func):
     def threadsafe(*args, **kwargs):
         """Call func threadsafe."""
         hass = args[0]
-        run_callback_threadsafe(
+        return run_callback_threadsafe(
             hass.loop, ft.partial(func, *args, **kwargs)).result()
+
+    return threadsafe
+
+
+def threadsafe_coroutine_factory(func):
+    """Create threadsafe functions out of coroutine.
+
+    Callback needs to have `hass` as first argument.
+    """
+    @ft.wraps(func)
+    def threadsafe(*args, **kwargs):
+        """Call func threadsafe."""
+        hass = args[0]
+        return run_coroutine_threadsafe(
+            func(*args, **kwargs), hass.loop).result()
 
     return threadsafe
 
@@ -250,7 +265,7 @@ def mock_http_component_app(hass, api_password=None):
     """Create an aiohttp.web.Application instance for testing."""
     if 'http' not in hass.config.components:
         mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware], loop=hass.loop)
+    app = web.Application(middlewares=[auth_middleware])
     app['hass'] = hass
     app[KEY_USE_X_FORWARDED_FOR] = False
     app[KEY_BANS_ENABLED] = False
@@ -258,16 +273,20 @@ def mock_http_component_app(hass, api_password=None):
     return app
 
 
-def mock_mqtt_component(hass):
+@asyncio.coroutine
+def async_mock_mqtt_component(hass):
     """Mock the MQTT component."""
     with patch('homeassistant.components.mqtt.MQTT') as mock_mqtt:
         mock_mqtt().async_connect.return_value = mock_coro(True)
-        setup_component(hass, mqtt.DOMAIN, {
+        yield from async_setup_component(hass, mqtt.DOMAIN, {
             mqtt.DOMAIN: {
                 mqtt.CONF_BROKER: 'mock-broker',
             }
         })
         return mock_mqtt
+
+
+mock_mqtt_component = threadsafe_coroutine_factory(async_mock_mqtt_component)
 
 
 @ha.callback
@@ -317,13 +336,16 @@ class MockPlatform(object):
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None):
+                 platform_schema=None, async_setup_platform=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
         self._setup_platform = setup_platform
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if async_setup_platform is not None:
+            self.async_setup_platform = async_setup_platform
 
     def setup_platform(self, hass, config, add_devices, discovery_info=None):
         """Set up the platform."""

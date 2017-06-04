@@ -37,7 +37,7 @@ from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.6']
+REQUIREMENTS = ['aiolifx==0.4.7']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -53,9 +53,6 @@ ATTR_POWER = 'power'
 
 BYTE_MAX = 255
 SHORT_MAX = 65535
-
-SUPPORT_LIFX = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
-                SUPPORT_XY_COLOR | SUPPORT_TRANSITION | SUPPORT_EFFECT)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
@@ -230,6 +227,12 @@ class LIFXLight(Light):
         self.set_color(*device.color)
 
     @property
+    def lifxwhite(self):
+        """Return whether this is a white-only bulb."""
+        # https://lan.developer.lifx.com/docs/lifx-products
+        return self.product in [10, 11, 18]
+
+    @property
     def available(self):
         """Return the availability of the device."""
         return self.registered
@@ -273,8 +276,7 @@ class LIFXLight(Light):
     def min_mireds(self):
         """Return the coldest color_temp that this light supports."""
         # The 3 LIFX "White" products supported a limited temperature range
-        # https://lan.developer.lifx.com/docs/lifx-products
-        if self.product in [10, 11, 18]:
+        if self.lifxwhite:
             kelvin = 6500
         else:
             kelvin = 9000
@@ -284,8 +286,7 @@ class LIFXLight(Light):
     def max_mireds(self):
         """Return the warmest color_temp that this light supports."""
         # The 3 LIFX "White" products supported a limited temperature range
-        # https://lan.developer.lifx.com/docs/lifx-products
-        if self.product in [10, 11, 18]:
+        if self.lifxwhite:
             kelvin = 2700
         else:
             kelvin = 2500
@@ -305,12 +306,18 @@ class LIFXLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_LIFX
+        features = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
+                    SUPPORT_TRANSITION | SUPPORT_EFFECT)
+
+        if not self.lifxwhite:
+            features |= SUPPORT_RGB_COLOR | SUPPORT_XY_COLOR
+
+        return features
 
     @property
     def effect_list(self):
         """Return the list of supported effects."""
-        return lifx_effects.effect_list()
+        return lifx_effects.effect_list(self)
 
     @asyncio.coroutine
     def update_after_transition(self, now):

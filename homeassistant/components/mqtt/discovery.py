@@ -17,7 +17,8 @@ from homeassistant.components.mqtt import CONF_STATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>\w+)/config')
+    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>[a-zA-Z0-9_-]+)'
+    '/config')
 
 SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor', 'switch']
 
@@ -27,6 +28,8 @@ ALLOWED_PLATFORMS = {
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
 }
+
+ALREADY_DISCOVERED = 'mqtt_discovered_components'
 
 
 @asyncio.coroutine
@@ -64,6 +67,19 @@ def async_start(hass, discovery_topic, hass_config):
         if CONF_STATE_TOPIC not in payload:
             payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
                 discovery_topic, component, object_id)
+
+        if ALREADY_DISCOVERED not in hass.data:
+            hass.data[ALREADY_DISCOVERED] = set()
+
+        discovery_hash = (component, object_id)
+        if discovery_hash in hass.data[ALREADY_DISCOVERED]:
+            _LOGGER.info("Component has already been discovered: %s %s",
+                         component, object_id)
+            return
+
+        hass.data[ALREADY_DISCOVERED].add(discovery_hash)
+
+        _LOGGER.info("Found new component: %s %s", component, object_id)
 
         yield from async_load_platform(
             hass, component, platform, payload, hass_config)
