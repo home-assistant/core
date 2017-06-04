@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['tapsaff==0.1.0']
+REQUIREMENTS = ['tapsaff==0.1.3']
 
 CONF_LOCATION = "location"
 
@@ -80,4 +80,7 @@ class TapsAffData(object):
 
     def update(self):
         """Get the latest data from the Taps Aff API and updates the states."""
-        self._is_taps_aff = self.taps_aff.is_taps_aff
+        try:
+            self._is_taps_aff = self.taps_aff.is_taps_aff
+        except RuntimeError:
+            logging.error("TapsAff Update failed, check configured location")
