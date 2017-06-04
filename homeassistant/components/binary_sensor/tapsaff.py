@@ -1,37 +1,37 @@
 """
-Support for Taps Aff binary sensor.
+Support for Taps Affs.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.tapsaff/
 """
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME)
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['tapsaff==0.1.3']
 
-CONF_LOCATION = "location"
-
 _LOGGER = logging.getLogger(__name__)
+
+CONF_LOCATION = 'location'
 
 DEFAULT_NAME = 'Taps Aff'
 
 SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_LOCATION): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the taps aff sensor."""
+    """Set up the Taps Aff binary sensor."""
     name = config.get(CONF_NAME)
     location = config.get(CONF_LOCATION)
 
@@ -41,10 +41,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class TapsAffSensor(BinarySensorDevice):
-    """Implementation of a taps aff sensor."""
+    """Implementation of a Taps Aff binary sensor."""
 
     def __init__(self, taps_aff_data, name):
-        """Initialize the sensor."""
+        """Initialize the Taps Aff sensor."""
         self.data = taps_aff_data
         self._name = name
 
@@ -83,4 +83,4 @@ class TapsAffData(object):
         try:
             self._is_taps_aff = self.taps_aff.is_taps_aff
         except RuntimeError:
-            logging.error("TapsAff Update failed, check configured location")
+            _LOGGER.error("Update failed. Check configured location")
