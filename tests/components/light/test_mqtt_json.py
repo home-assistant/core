@@ -294,7 +294,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
+        light.turn_on(self.hass, 'light.test',
                       brightness=50, color_temp=155, effect='colorloop',
                       white_value=170)
         self.hass.block_till_done()
@@ -308,15 +308,11 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(50, message_json["brightness"])
         self.assertEqual(155, message_json["color_temp"])
         self.assertEqual('colorloop', message_json["effect"])
-        self.assertEqual(75, message_json["color"]["r"])
-        self.assertEqual(75, message_json["color"]["g"])
-        self.assertEqual(75, message_json["color"]["b"])
         self.assertEqual(170, message_json["white_value"])
         self.assertEqual("ON", message_json["state"])
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual((75, 75, 75), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(155, state.attributes['color_temp'])
         self.assertEqual('colorloop', state.attributes['effect'])

@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 45
-PATCH_VERSION = '1'
+MINOR_VERSION = 46
+PATCH_VERSION = '0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -59,6 +59,7 @@ CONF_ACCESS_TOKEN = 'access_token'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
+CONF_AT = 'at'
 CONF_AUTHENTICATION = 'authentication'
 CONF_BASE = 'base'
 CONF_BEFORE = 'before'
@@ -137,6 +138,7 @@ CONF_RGB = 'rgb'
 CONF_SCAN_INTERVAL = 'scan_interval'
 CONF_SENDER = 'sender'
 CONF_SENSOR_CLASS = 'sensor_class'
+CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'

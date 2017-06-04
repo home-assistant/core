@@ -135,11 +135,12 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
-        asuswrt.ssh_connection()
+        asuswrt.connection.get_result()
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user', port=22, ssh_key=FAKEFILE)
+            mock.call('fake_host', 'fake_user',
+                      ssh_key=FAKEFILE, port=22)
         )
 
     def test_ssh_login_with_password(self):
@@ -160,11 +161,12 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
         asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
-        asuswrt.ssh_connection()
+        asuswrt.connection.get_result()
         self.assertEqual(ssh.login.call_count, 1)
         self.assertEqual(
             ssh.login.call_args,
-            mock.call('fake_host', 'fake_user', password='fake_pass', port=22)
+            mock.call('fake_host', 'fake_user',
+                      password='fake_pass', port=22)
         )
 
     def test_ssh_login_without_password_or_pubkey(self):  \
@@ -194,3 +196,75 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             assert setup_component(self.hass, DOMAIN,
                                    {DOMAIN: conf_dict})
         ssh.login.assert_not_called()
+
+    def test_telnet_login_with_password(self):
+        """Test that login is done with password when configured to."""
+        telnet = mock.MagicMock()
+        telnet_mock = mock.patch('telnetlib.Telnet', return_value=telnet)
+        telnet_mock.start()
+        self.addCleanup(telnet_mock.stop)
+        conf_dict = PLATFORM_SCHEMA({
+            CONF_PLATFORM: 'asuswrt',
+            CONF_PROTOCOL: 'telnet',
+            CONF_HOST: 'fake_host',
+            CONF_USERNAME: 'fake_user',
+            CONF_PASSWORD: 'fake_pass'
+        })
+        update_mock = mock.patch(
+            'homeassistant.components.device_tracker.asuswrt.'
+            'AsusWrtDeviceScanner.get_asuswrt_data')
+        update_mock.start()
+        self.addCleanup(update_mock.stop)
+        asuswrt = device_tracker.asuswrt.AsusWrtDeviceScanner(conf_dict)
+        asuswrt.connection.get_result()
+        self.assertEqual(telnet.read_until.call_count, 5)
+        self.assertEqual(telnet.write.call_count, 4)
+        self.assertEqual(
+            telnet.read_until.call_args_list[0],
+            mock.call(b'login: ')
+        )
+        self.assertEqual(
+            telnet.write.call_args_list[0],
+            mock.call(b'fake_user\n')
+        )
+        self.assertEqual(
+            telnet.read_until.call_args_list[1],
+            mock.call(b'Password: ')
+        )
+        self.assertEqual(
+            telnet.write.call_args_list[1],
+            mock.call(b'fake_pass\n')
+        )
+        self.assertEqual(
+            telnet.read_until.call_args_list[2],
+            mock.call(b'#')
+        )
+
+    def test_telnet_login_without_password(self):  \
+            # pylint: disable=invalid-name
+        """Test that login is not called without password or pub_key."""
+        telnet = mock.MagicMock()
+        telnet_mock = mock.patch('telnetlib.Telnet', return_value=telnet)
+        telnet_mock.start()
+        self.addCleanup(telnet_mock.stop)
+
+        conf_dict = {
+            CONF_PLATFORM: 'asuswrt',
+            CONF_PROTOCOL: 'telnet',
+            CONF_HOST: 'fake_host',
+            CONF_USERNAME: 'fake_user',
+        }
+
+        with self.assertRaises(vol.Invalid):
+            conf_dict = PLATFORM_SCHEMA(conf_dict)
+
+        update_mock = mock.patch(
+            'homeassistant.components.device_tracker.asuswrt.'
+            'AsusWrtDeviceScanner.get_asuswrt_data')
+        update_mock.start()
+        self.addCleanup(update_mock.stop)
+
+        with assert_setup_component(0):
+            assert setup_component(self.hass, DOMAIN,
+                                   {DOMAIN: conf_dict})
+        telnet.login.assert_not_called()

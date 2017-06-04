@@ -166,10 +166,10 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
         _LOGGER.warning("Value cannot be processed as a number: %s", value)
         return False
 
-    if below is not None and value > below:
+    if below is not None and value >= below:
         return False
 
-    if above is not None and value < above:
+    if above is not None and value <= above:
         return False
 
     return True

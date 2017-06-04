@@ -1,7 +1,6 @@
 """The tests device sun light trigger component."""
 # pylint: disable=protected-access
 from datetime import datetime
-import os
 import unittest
 from unittest.mock import patch
 
@@ -12,32 +11,7 @@ from homeassistant.components import (
     device_tracker, light, device_sun_light_trigger)
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    get_test_config_dir, get_test_home_assistant, fire_time_changed)
-
-
-KNOWN_DEV_YAML_PATH = os.path.join(get_test_config_dir(),
-                                   device_tracker.YAML_DEVICES)
-
-
-# pylint: disable=invalid-name
-def setUpModule():
-    """Write a device tracker known devices file to be used."""
-    device_tracker.update_config(
-        KNOWN_DEV_YAML_PATH, 'device_1', device_tracker.Device(
-            None, None, True, 'device_1', 'DEV1',
-            picture='http://example.com/dev1.jpg'))
-
-    device_tracker.update_config(
-        KNOWN_DEV_YAML_PATH, 'device_2', device_tracker.Device(
-            None, None, True, 'device_2', 'DEV2',
-            picture='http://example.com/dev2.jpg'))
-
-
-# pylint: disable=invalid-name
-def tearDownModule():
-    """Remove device tracker known devices file."""
-    os.remove(KNOWN_DEV_YAML_PATH)
+from tests.common import get_test_home_assistant, fire_time_changed
 
 
 class TestDeviceSunLightTrigger(unittest.TestCase):
@@ -55,9 +29,28 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         loader.get_component('light.test').init()
 
-        self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
-        }))
+        with patch(
+            'homeassistant.components.device_tracker.load_yaml_config_file',
+            return_value={
+                'device_1': {
+                    'hide_if_away': False,
+                    'mac': 'DEV1',
+                    'name': 'Unnamed Device',
+                    'picture': 'http://example.com/dev1.jpg',
+                    'track': True,
+                    'vendor': None
+                },
+                'device_2': {
+                    'hide_if_away': False,
+                    'mac': 'DEV2',
+                    'name': 'Unnamed Device',
+                    'picture': 'http://example.com/dev2.jpg',
+                    'track': True,
+                    'vendor': None}
+                }):
+            self.assertTrue(setup_component(self.hass, device_tracker.DOMAIN, {
+                device_tracker.DOMAIN: {CONF_PLATFORM: 'test'}
+            }))
 
         self.assertTrue(setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {CONF_PLATFORM: 'test'}

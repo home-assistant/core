@@ -246,7 +246,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, verify=False)
+        target_check = jwt.decode(token, options={'verify_signature': False})
         if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]

@@ -41,7 +41,7 @@ class LocativeView(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request):
         """Locative message received as GET."""
-        res = yield from self._handle(request.app['hass'], request.GET)
+        res = yield from self._handle(request.app['hass'], request.query)
         return res
 
     @asyncio.coroutine
@@ -79,10 +79,9 @@ class LocativeView(HomeAssistantView):
         gps_location = (data[ATTR_LATITUDE], data[ATTR_LONGITUDE])
 
         if direction == 'enter':
-            yield from hass.loop.run_in_executor(
-                None, partial(self.see, dev_id=device,
-                              location_name=location_name,
-                              gps=gps_location))
+            yield from hass.async_add_job(
+                partial(self.see, dev_id=device, location_name=location_name,
+                        gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
         elif direction == 'exit':
@@ -91,10 +90,9 @@ class LocativeView(HomeAssistantView):
 
             if current_state is None or current_state.state == location_name:
                 location_name = STATE_NOT_HOME
-                yield from hass.loop.run_in_executor(
-                    None, partial(self.see, dev_id=device,
-                                  location_name=location_name,
-                                  gps=gps_location))
+                yield from hass.async_add_job(
+                    partial(self.see, dev_id=device,
+                            location_name=location_name, gps=gps_location))
                 return 'Setting location to not home'
             else:
                 # Ignore the message if it is telling us to exit a zone that we
