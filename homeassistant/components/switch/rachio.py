@@ -220,8 +220,8 @@ class RachioZone(SwitchDevice):
         # Stop other zones first
         self.turn_off()
 
-        _LOGGER.info("Watering %s for %d sec", self.name, seconds)
-        self.rachio.zone.start(self.zone_id, seconds)
+        _LOGGER.info("Watering %s for %d s", self.name, self._manual_run_secs)
+        self.rachio.zone.start(self.zone_id, self._manual_run_secs)
 
     def turn_off(self):
         """Stop all zones."""
