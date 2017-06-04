@@ -9,11 +9,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor \
-    import (BinarySensorDevice, PLATFORM_SCHEMA)
+from homeassistant.components.binary_sensor import (
+    BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['tapsaff==0.1.0']
 
@@ -23,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Taps Aff'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
+SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -79,7 +78,6 @@ class TapsAffData(object):
         """Return true if taps aff."""
         return self._is_taps_aff
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Taps Aff API and updates the states."""
         self._is_taps_aff = self.taps_aff.is_taps_aff
