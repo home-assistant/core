@@ -742,7 +742,7 @@ pytrackr==0.0.5
 pytradfri==1.1
 
 # homeassistant.components.device_tracker.unifi
-pyunifi==2.12
+pyunifi==2.13
 
 # homeassistant.components.keyboard
 # pyuserinput==0.1.11

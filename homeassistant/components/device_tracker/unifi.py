@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 
-REQUIREMENTS = ['pyunifi==2.12']
+REQUIREMENTS = ['pyunifi==2.13']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
@@ -53,7 +53,7 @@ def get_scanner(hass, config):
     try:
         ctrl = Controller(host, username, password, port, version='v4',
                           site_id=site_id, ssl_verify=verify_ssl)
-    except urllib.error.HTTPError as ex:
+    except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
         persistent_notification.create(
             hass, 'Failed to connect to Unifi. '
@@ -79,7 +79,7 @@ class UnifiScanner(DeviceScanner):
         """Get the clients from the device."""
         try:
             clients = self._controller.get_clients()
-        except urllib.error.HTTPError as ex:
+        except APIError as ex:
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
