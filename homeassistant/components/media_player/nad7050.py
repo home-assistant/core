@@ -5,9 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.nad7050/
 """
 import logging
-import codecs
-import socket
-from time import sleep
 import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET,
@@ -18,12 +15,15 @@ from homeassistant.const import (
     CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['https://github.com/joopert/nad_receiver/archive/'
+                '0.0.4.zip#nad_receiver==0.0.4']
+
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'NAD D 7050'
 DEFAULT_MIN_VOLUME = -60
 DEFAULT_MAX_VOLUME = -10
-DEFAULT_VOLUME_STEP = 2
+DEFAULT_VOLUME_STEP = 4
 
 SUPPORT_NAD = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
               SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE
@@ -44,8 +44,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the NAD platform."""
+    from nad_receiver import NADReceiverTCP
     add_devices([NAD7050(
-        config.get(CONF_HOST),
+        NADReceiverTCP(config.get(CONF_HOST)),
         config.get(CONF_NAME),
         config.get(CONF_MIN_VOLUME),
         config.get(CONF_MAX_VOLUME),
@@ -56,26 +57,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class NAD7050(MediaPlayerDevice):
     """Representation of a NAD D 7050 device."""
 
-    def __init__(self, host, name, min_volume, max_volume, volume_step):
+    def __init__(self, d7050, name, min_volume, max_volume, volume_step):
         """Initialize the amplifier."""
         self._name = name
-        self._host = host
-        self._port = 50001
-        self._buffersize = 1024
-        self._min_volume = (min_volume + 90) * 2  # conversion to nad vol range
-        self._max_volume = (max_volume + 90) * 2  # conversion to nad vol range
+        self.d7050 = d7050
+        self._min_vol = (min_volume + 90) * 2  # from dB to nad vol (0-200)
+        self._max_vol = (max_volume + 90) * 2  # from dB to nad vol (0-200)
         self._volume_step = volume_step
         self._state = None
         self._mute = None
+        self._nad_volume = None
         self._volume = None
         self._source = None
-        self._source_mapping = {'00': 'Coaxial 1', '01': 'Coaxial 2',
-                                '02': 'Optical 1', '03': 'Optical 2',
-                                '04': 'Computer', '05': 'Airplay',
-                                '06': 'Dock', '07': 'Bluetooth'}
-        self._source_list = list(self._source_mapping.values())
-        self._reverse_mapping = \
-            {value: key for key, value in self._source_mapping.items()}
+        self._source_list = d7050.available_sources()
 
         self.update()
 
@@ -91,72 +85,40 @@ class NAD7050(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        query_all = \
-            "000102020400010202060001020207000102020800010202050001020209" \
-            "000102020a000102020c0001020203000102020d00010207000001020800"
+        nad_status = self.d7050.status()
 
-        nad_reply = self.send(query_all, read_reply=True)
-        if nad_reply is None:
+        if nad_status is None:
             return
-        nad_reply = codecs.encode(nad_reply, 'hex').decode("utf-8")
-
-        # split reply into parts of 10 characters
-        num_chars = 10
-        nad_status = [nad_reply[i:i + num_chars]
-                      for i in range(0, len(nad_reply), num_chars)]
-        logging.debug(nad_status)
-        volume = int(nad_status[0][-2:], 16)  # converts 2B hex value to int
-        power = nad_status[5][-2:]
-        mute = nad_status[6][-2:]
-        source = nad_status[7][-2:]
-
-        # Update current volume
-        self._volume = self.nad_volume_to_internal_volume(volume)
-
-        # Update muted state
-        self._mute = bool(mute == '01')
 
         # Update on/off state
-        if power == '01':
+        if nad_status['power']:
             self._state = STATE_ON
         else:
             self._state = STATE_OFF
 
-        # Update current source
-        self._source = self._source_mapping[source]
-        logging.debug("Updated source to %s", self._source)
+        # Update current volume
+        self._volume = self.nad_vol_to_internal_vol(nad_status['volume'])
+        self._nad_volume = nad_status['volume']
 
-    def nad_volume_to_internal_volume(self, nad_volume):
+        # Update muted state
+        self._mute = nad_status['muted']
+
+        # Update current source
+        self._source = nad_status['source']
+
+    def nad_vol_to_internal_vol(self, nad_volume):
         """Convert nad volume range (0-200) to internal volume range.
 
         Takes into account configured min and max volume.
         """
-        if nad_volume < self._min_volume:
+        if nad_volume < self._min_vol:
             volume_internal = 0.0
-        if nad_volume > self._max_volume:
+        if nad_volume > self._max_vol:
             volume_internal = 1.0
         else:
-            volume_internal = (nad_volume - self._min_volume) / \
-                              (self._max_volume - self._min_volume)
-        logging.debug("updating volume to %i", volume_internal)
+            volume_internal = (nad_volume - self._min_vol) / \
+                              (self._max_vol - self._min_vol)
         return volume_internal
-
-    def send(self, message, read_reply=False):
-        """Send a command string to the amplifier."""
-        try:
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.connect((self._host, self._port))
-        except ConnectionError:
-            return
-        message = codecs.decode(message, 'hex_codec')
-        sock.send(message)
-        sleep(0.5)
-        if read_reply:
-            reply = sock.recv(self._buffersize)
-            sock.close()
-            return reply
-        sock.close()
-        sleep(1)
 
     @property
     def supported_features(self):
@@ -165,46 +127,37 @@ class NAD7050(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        self.send('00010207000001020207')  # Power save off
-        self.send('0001020900')  # Device off
+        self.d7050.power_off()
 
     def turn_on(self):
         """Turn the media player on."""
-        self.send('0001020901')
+        self.d7050.power_on()
 
     def volume_up(self):
         """Step volume up in the configured increments."""
-        volume_step = self._volume_to_step()
-        self.set_volume_level(self._volume + volume_step)
+        self.d7050.set_volume(self._nad_volume + 2 * self._volume_step)
 
     def volume_down(self):
         """Step volume down in the configured increments."""
-        volume_step = self._volume_to_step()
-        self.set_volume_level(self._volume - volume_step)
-
-    def _volume_to_step(self):
-        """Convert configured volume_step into internal volume delta."""
-        return self._volume_step * 2 / (self._max_volume - self._min_volume)
+        self.d7050.set_volume(self._nad_volume - 2 * self._volume_step)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         nad_volume_to_set = \
-            int(round(volume * (self._max_volume - self._min_volume) +
-                      self._min_volume))
-        self.send('00010204{}'.format(format(nad_volume_to_set, "02x")))
+            int(round(volume * (self._max_vol - self._min_vol) +
+                      self._min_vol))
+        self.d7050.set_volume(nad_volume_to_set)
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.send('0001020a01')
+            self.d7050.mute()
         else:
-            self.send('0001020a00')
+            self.d7050.unmute()
 
     def select_source(self, source):
         """Select input source."""
-        if source in self._source_list:
-            source = self._reverse_mapping[source]
-        self.send('00010203' + source)
+        self.d7050.select_source(source)
 
     @property
     def source(self):
@@ -214,7 +167,7 @@ class NAD7050(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self._source_list
+        return self.d7050.available_sources()
 
     @property
     def volume_level(self):
@@ -225,3 +178,4 @@ class NAD7050(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
+
