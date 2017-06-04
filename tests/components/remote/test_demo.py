@@ -86,7 +86,8 @@ class TestDemoRemote(unittest.TestCase):
 
         remote.send_command(
             self.hass, entity_id='entity_id_val',
-            device='test_device', command='test_command')
+            device='test_device', command=['test_command'],
+            num_repeats='2', delay_secs='0.8')
 
         self.hass.block_till_done()
 

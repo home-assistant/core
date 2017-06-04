@@ -19,6 +19,7 @@ from homeassistant.util.async import (
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 SLOW_SETUP_WARNING = 10
+SLOW_SETUP_MAX_WAIT = 60
 
 
 class EntityComponent(object):
@@ -145,20 +146,26 @@ class EntityComponent(object):
 
         try:
             if getattr(platform, 'async_setup_platform', None):
-                yield from platform.async_setup_platform(
+                task = platform.async_setup_platform(
                     self.hass, platform_config,
                     entity_platform.async_schedule_add_entities, discovery_info
                 )
             else:
-                yield from self.hass.loop.run_in_executor(
-                    None, platform.setup_platform, self.hass, platform_config,
+                task = self.hass.async_add_job(
+                    platform.setup_platform, self.hass, platform_config,
                     entity_platform.schedule_add_entities, discovery_info
                 )
-
+            yield from asyncio.wait_for(
+                asyncio.shield(task, loop=self.hass.loop),
+                SLOW_SETUP_MAX_WAIT, loop=self.hass.loop)
             yield from entity_platform.async_block_entities_done()
-
             self.hass.config.components.add(
                 '{}.{}'.format(self.domain, platform_type))
+        except asyncio.TimeoutError:
+            self.logger.error(
+                "Setup of platform %s is taking longer than %s seconds."
+                " Startup will proceed without waiting any longer.",
+                platform_type, SLOW_SETUP_MAX_WAIT)
         except Exception:  # pylint: disable=broad-except
             self.logger.exception(
                 "Error while setting up platform %s", platform_type)
@@ -188,7 +195,7 @@ class EntityComponent(object):
             if hasattr(entity, 'async_update'):
                 yield from entity.async_update()
             else:
-                yield from self.hass.loop.run_in_executor(None, entity.update)
+                yield from self.hass.async_add_job(entity.update)
 
         if getattr(entity, 'entity_id', None) is None:
             object_id = entity.name or DEVICE_DEFAULT_NAME
@@ -232,12 +239,12 @@ class EntityComponent(object):
         if self.group is None and self.group_name is not None:
             group = get_component('group')
             self.group = yield from group.Group.async_create_group(
-                self.hass, self.group_name, self.entities.keys(),
-                user_defined=False
-            )
+                self.hass, self.group_name,
+                sorted(self.entities, key=lambda x: self.entities[x].name),
+                user_defined=False)
         elif self.group is not None:
             yield from self.group.async_update_tracked_entity_ids(
-                self.entities.keys())
+                sorted(self.entities, key=lambda x: self.entities[x].name))
 
     def reset(self):
         """Remove entities and reset the entity component to initial values."""

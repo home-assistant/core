@@ -165,6 +165,22 @@ shuffle_set:
       description: True/false for enabling/disabling shuffle
       example: true
 
+snapcast_snapshot:
+  description: Take a snapshot of the media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be snapshotted. Platform dependent.
+      example: 'media_player.living_room'
+
+snapcast_restore:
+  description: Restore a snapshot of the media player.
+
+  fields:
+    entity_id:
+      description: Name(s) of entites that will be restored. Platform dependent.
+      example: 'media_player.living_room'
+
 sonos_join:
   description: Group player together.
 

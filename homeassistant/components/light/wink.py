@@ -19,8 +19,6 @@ DEPENDENCIES = ['wink']
 
 SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR
 
-RGB_MODES = ['hsb', 'rgb']
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Wink lights."""
@@ -62,8 +60,6 @@ class WinkLight(WinkDevice, Light):
         """Define current bulb color in RGB."""
         if not self.wink.supports_hue_saturation():
             return None
-        elif self.wink.color_model() not in RGB_MODES:
-            return False
         else:
             hue = self.wink.color_hue()
             saturation = self.wink.color_saturation()

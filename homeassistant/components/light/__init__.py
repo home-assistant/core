@@ -77,6 +77,8 @@ EFFECT_COLORLOOP = "colorloop"
 EFFECT_RANDOM = "random"
 EFFECT_WHITE = "white"
 
+COLOR_GROUP = "Color descriptors"
+
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
 PROP_TO_ATTR = {
@@ -98,17 +100,21 @@ VALID_BRIGHTNESS_PCT = vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
 
 LIGHT_TURN_ON_SCHEMA = vol.Schema({
     ATTR_ENTITY_ID: cv.entity_ids,
-    ATTR_PROFILE: cv.string,
+    vol.Exclusive(ATTR_PROFILE, COLOR_GROUP): cv.string,
     ATTR_TRANSITION: VALID_TRANSITION,
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
     ATTR_BRIGHTNESS_PCT: VALID_BRIGHTNESS_PCT,
-    ATTR_COLOR_NAME: cv.string,
-    ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
-                            vol.Coerce(tuple)),
-    ATTR_XY_COLOR: vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
-                           vol.Coerce(tuple)),
-    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
-    ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
+    vol.Exclusive(ATTR_COLOR_NAME, COLOR_GROUP): cv.string,
+    vol.Exclusive(ATTR_RGB_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_XY_COLOR, COLOR_GROUP):
+        vol.All(vol.ExactSequence((cv.small_float, cv.small_float)),
+                vol.Coerce(tuple)),
+    vol.Exclusive(ATTR_COLOR_TEMP, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Exclusive(ATTR_KELVIN, COLOR_GROUP):
+        vol.All(vol.Coerce(int), vol.Range(min=0)),
     ATTR_WHITE_VALUE: vol.All(vol.Coerce(int), vol.Range(min=0, max=255)),
     ATTR_FLASH: vol.In([FLASH_SHORT, FLASH_LONG]),
     ATTR_EFFECT: cv.string,
@@ -285,8 +291,8 @@ def async_setup(hass, config):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -341,8 +347,7 @@ class Profiles:
                         return None
             return profiles
 
-        cls._all = yield from hass.loop.run_in_executor(
-            None, load_profile_data, hass)
+        cls._all = yield from hass.async_add_job(load_profile_data, hass)
         return cls._all is not None
 
     @classmethod

@@ -1,6 +1,7 @@
 """Test Home Assistant template helper methods."""
 from datetime import datetime
 import unittest
+import random
 from unittest.mock import patch
 
 from homeassistant.components import group
@@ -231,6 +232,15 @@ class TestHelpersTemplate(unittest.TestCase):
             '"%Y-%m-%dT%H:%M:%S%z")) }}'
         self.assertEqual("1706951424.0",
                          template.Template(tpl, self.hass).render())
+
+    @patch.object(random, 'choice')
+    def test_random_every_time(self, test_choice):
+        """Ensure the random filter runs every time, not just once."""
+        tpl = template.Template('{{ [1,2] | random }}', self.hass)
+        test_choice.return_value = 'foo'
+        self.assertEqual('foo', tpl.render())
+        test_choice.return_value = 'bar'
+        self.assertEqual('bar', tpl.render())
 
     def test_passing_vars_as_keywords(self):
         """Test passing variables as keywords."""

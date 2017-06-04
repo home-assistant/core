@@ -32,7 +32,7 @@ send_message:
 
     inline_keyboard:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with asociated callback data.
-      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+      example: '["/button1, /button2", "/button3"] or ["Text button1:/button1, Text button2:/button2", "Text button3:/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
 send_photo:
   description: Send a photo
