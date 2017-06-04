@@ -10,8 +10,7 @@ import logging
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/thecynic/pylutron/archive/v0.1.0.zip#'
-                'pylutron==0.1.0']
+REQUIREMENTS = ['pylutron==0.1.0']
 
 DOMAIN = 'lutron'
 

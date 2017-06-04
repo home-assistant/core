@@ -83,8 +83,7 @@ def async_from_config_dict(config: Dict[str, Any],
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
-    yield from hass.loop.run_in_executor(
-        None, conf_util.process_ha_config_upgrade, hass)
+    yield from hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
 
     if enable_log:
         async_enable_logging(hass, verbose, log_rotate_days)
@@ -95,7 +94,7 @@ def async_from_config_dict(config: Dict[str, Any],
                         'This may cause issues.')
 
     if not loader.PREPARED:
-        yield from hass.loop.run_in_executor(None, loader.prepare, hass)
+        yield from hass.async_add_job(loader.prepare, hass)
 
     # Merge packages
     conf_util.merge_packages_config(
@@ -184,14 +183,13 @@ def async_from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    yield from hass.loop.run_in_executor(
-        None, mount_local_lib_path, config_dir)
+    yield from hass.async_add_job(mount_local_lib_path, config_dir)
 
     async_enable_logging(hass, verbose, log_rotate_days)
 
     try:
-        config_dict = yield from hass.loop.run_in_executor(
-            None, conf_util.load_yaml_config_file, config_path)
+        config_dict = yield from hass.async_add_job(
+            conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         _LOGGER.error('Error loading %s: %s', config_path, err)
         return None

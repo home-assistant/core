@@ -20,6 +20,9 @@ omit =
     homeassistant/components/android_ip_webcam.py
     homeassistant/components/*/android_ip_webcam.py
 
+    homeassistant/components/arlo.py
+    homeassistant/components/*/arlo.py
+
     homeassistant/components/axis.py
     homeassistant/components/*/axis.py
 
@@ -88,6 +91,9 @@ omit =
 
     homeassistant/components/qwikswitch.py
     homeassistant/components/*/qwikswitch.py
+
+    homeassistant/components/rachio.py
+    homeassistant/components/*/rachio.py
 
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py

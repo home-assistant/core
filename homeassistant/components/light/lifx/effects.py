@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     DOMAIN, ATTR_BRIGHTNESS, ATTR_BRIGHTNESS_PCT, ATTR_COLOR_NAME,
-    ATTR_RGB_COLOR, ATTR_EFFECT, ATTR_TRANSITION,
+    ATTR_RGB_COLOR, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_EFFECT, ATTR_TRANSITION,
     VALID_BRIGHTNESS, VALID_BRIGHTNESS_PCT)
 from homeassistant.const import (ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
@@ -42,6 +42,8 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_COLOR_NAME: cv.string,
     ATTR_RGB_COLOR: vol.All(vol.ExactSequence((cv.byte, cv.byte, cv.byte)),
                             vol.Coerce(tuple)),
+    ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
+    ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
     vol.Optional(ATTR_PERIOD, default=1.0):
         vol.All(vol.Coerce(float), vol.Range(min=0.05)),
     vol.Optional(ATTR_CYCLES, default=1.0):
@@ -131,14 +133,21 @@ def default_effect(light, **kwargs):
     yield from light.hass.services.async_call(DOMAIN, service, data)
 
 
-def effect_list():
-    """Return the list of supported effects."""
-    return [
-        SERVICE_EFFECT_COLORLOOP,
-        SERVICE_EFFECT_BREATHE,
-        SERVICE_EFFECT_PULSE,
-        SERVICE_EFFECT_STOP,
-    ]
+def effect_list(light):
+    """Return the list of supported effects for this light."""
+    if light.lifxwhite:
+        return [
+            SERVICE_EFFECT_BREATHE,
+            SERVICE_EFFECT_PULSE,
+            SERVICE_EFFECT_STOP,
+        ]
+    else:
+        return [
+            SERVICE_EFFECT_COLORLOOP,
+            SERVICE_EFFECT_BREATHE,
+            SERVICE_EFFECT_PULSE,
+            SERVICE_EFFECT_STOP,
+        ]
 
 
 class LIFXEffectData(object):
@@ -230,12 +239,14 @@ class LIFXEffectBreathe(LIFXEffect):
         cycles = kwargs[ATTR_CYCLES]
         hsbk, color_changed = light.find_hsbk(**kwargs)
 
-        # Default color is to fully (de)saturate with full brightness
+        # Set default effect color based on current setting
         if not color_changed:
-            if hsbk[1] > 65536/2:
-                hsbk = [hsbk[0], 0, 65535, 4000]
+            if light.lifxwhite or hsbk[1] < 65536/2:
+                # White: toggle brightness
+                hsbk[2] = 65535 if hsbk[2] < 65536/2 else 0
             else:
-                hsbk = [hsbk[0], 65535, 65535, hsbk[3]]
+                # Color: fully desaturate with full brightness
+                hsbk = [hsbk[0], 0, 65535, 4000]
 
         # Start the effect
         args = {

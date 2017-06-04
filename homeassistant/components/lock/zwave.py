@@ -128,7 +128,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     descriptions = load_yaml_config_file(
         path.join(path.dirname(__file__), 'services.yaml'))
-    network = hass.data[zwave.ZWAVE_NETWORK]
+    network = hass.data[zwave.const.DATA_NETWORK]
 
     def set_usercode(service):
         """Set the usercode to index X on the lock."""

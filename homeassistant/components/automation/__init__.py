@@ -158,8 +158,8 @@ def async_setup(hass, config):
 
     yield from _async_process_config(hass, config, component)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, conf_util.load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        conf_util.load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml')
     )
 

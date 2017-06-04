@@ -95,7 +95,7 @@ class NetioApiView(HomeAssistantView):
     def get(self, request, host):
         """Request handler."""
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
         states, consumptions, cumulated_consumptions, start_dates = \
             [], [], [], []
 
