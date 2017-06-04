@@ -100,7 +100,7 @@ def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
             CONF_PASSWORD: 'password',
         }
     }
-    mock_ctrl.side_effect = urllib.error.HTTPError(
+    mock_ctrl.side_effect = APIError(
         '/', 500, 'foo', {}, None)
     result = unifi.get_scanner(hass, config)
     assert result is False
@@ -122,7 +122,7 @@ def test_scanner_update():
 def test_scanner_update_error():
     """Test the scanner update for error."""
     ctrl = mock.MagicMock()
-    ctrl.get_clients.side_effect = urllib.error.HTTPError(
+    ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
     unifi.UnifiScanner(ctrl)
 
