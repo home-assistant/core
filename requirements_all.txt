@@ -628,6 +628,7 @@ pyqwikswitch==0.4
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.1
 
+# homeassistant.components.sensor.raven_emu
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
 
