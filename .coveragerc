@@ -372,6 +372,7 @@ omit =
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/blockchain.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/dublin_bus_transport.py
