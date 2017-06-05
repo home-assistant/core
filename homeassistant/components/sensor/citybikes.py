@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.citybikes/
 import logging
 from datetime import timedelta
 
-### import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -48,7 +47,10 @@ PLATFORM_SCHEMA = vol.All(
         vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
         vol.Exclusive(CONF_RADIUS, 'station_filter'): cv.positive_int,
         vol.Exclusive(CONF_STATIONS_LIST, 'station_filter'):
-            vol.All(cv.ensure_list, [cv.string]) # TODO: Make sure list is not empty
+            vol.All(
+                cv.ensure_list,
+                vol.Length(min=1),
+                [cv.string]) # TODO: Make sure list is not empty
     }))
 
 
