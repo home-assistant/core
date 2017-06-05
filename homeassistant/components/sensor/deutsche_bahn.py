@@ -9,11 +9,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
-from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['schiene==0.18']
 
@@ -47,6 +46,7 @@ class DeutscheBahnSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} to {}'.format(start, goal)
         self.data = SchieneData(start, goal)
+        self._state = None
 
     @property
     def name(self):
