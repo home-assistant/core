@@ -514,6 +514,9 @@ pychromecast==0.8.1
 # homeassistant.components.media_player.cmus
 pycmus==0.1.0
 
+# homeassistant.components.c_Elta
+pycountry==17.1.8
+
 # homeassistant.components.sensor.cups
 # pycups==1.9.73
 
