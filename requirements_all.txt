@@ -21,7 +21,7 @@ astral==1.4
 PyISY==1.0.7
 
 # homeassistant.components.notify.html5
-PyJWT==1.4.2
+PyJWT==1.5.0
 
 # homeassistant.components.sensor.mvglive
 PyMVGLive==1.1.4
@@ -735,7 +735,7 @@ pyunifi==2.12
 pyvera==0.2.31
 
 # homeassistant.components.notify.html5
-pywebpush==1.0.0
+pywebpush==1.0.4
 
 # homeassistant.components.wemo
 pywemo==0.4.19
