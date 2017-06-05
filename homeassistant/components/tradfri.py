@@ -18,7 +18,7 @@ from homeassistant.loader import get_component
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
 REQUIREMENTS = ['https://github.com/ggravlingen/pytradfri/archive/'
-                'f90bef758079b6e3cd86dc77e329aba22161ca69.zip#pytradfri==2.0']
+                '39da698c225dce712bf14e3edd9d8fdfd10153f1.zip#pytradfri==2.0']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
@@ -112,8 +112,7 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri.error import RequestError
-    from pytradfri.gateway import Gateway
+    from pytradfri import Gateway, RequestError
     from pytradfri.api.aiocoap_api import api_factory
 
     try:
