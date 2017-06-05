@@ -18,9 +18,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_TOKEN): cv.string,
+    vol.Required(CONF_TOKEN): vol.All(str, vol.Length(min=32, max=32)),
     vol.Optional(CONF_NAME): cv.string,
-
 })
 
 REQUIREMENTS = ['python-mirobo==0.0.7']
@@ -28,7 +27,7 @@ REQUIREMENTS = ['python-mirobo==0.0.7']
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the vacuum from config."""
+    """Set up the vacuum from config."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     token = config.get(CONF_TOKEN)
@@ -50,7 +49,6 @@ class MiroboSwitch(SwitchDevice):
         self._state = None
         self._state_attrs = {}
         self._is_on = False
-        _LOGGER.info("hello I'm %s", self._name)
 
     @property
     def name(self):
