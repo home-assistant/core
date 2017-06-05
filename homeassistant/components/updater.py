@@ -32,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_RELEASE_NOTES = 'release_notes'
 
 CONF_REPORTING = 'reporting'
-CONF_COMPONENT_REPORTING = 'share_components_info'
+CONF_COMPONENT_REPORTING = 'include_used_components'
 
 DOMAIN = 'updater'
 
