@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.citybikes/
 """
 import logging
-### from datetime import timedelta
+from datetime import timedelta
 
 ### import requests
 import voluptuous as vol
@@ -23,7 +23,7 @@ REQUIREMENTS = ['python-citybikes==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
+SCAN_INTERVAL = timedelta(seconds=12)  # Arbitrary
 DOMAIN = 'citybikes'
 CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
@@ -38,15 +38,17 @@ CITYBIKES_ATTRIBUTION = "Information provided by the CityBikes Project "\
                         "(https://citybik.es/#about)"
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_NETWORK): cv.string,
-    vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-    vol.Exclusive(CONF_RADIUS, 'station_filter'): cv.positive_int,
-    vol.Exclusive(CONF_STATIONS_LIST, 'station_filter'):
-        vol.All(cv.ensure_list, [cv.string])
-})
+PLATFORM_SCHEMA = vol.All(
+    cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
+    PLATFORM_SCHEMA.extend({
+        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NETWORK): cv.string,
+        vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
+        vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
+        vol.Exclusive(CONF_RADIUS, 'station_filter'): cv.positive_int,
+        vol.Exclusive(CONF_STATIONS_LIST, 'station_filter'):
+            vol.All(cv.ensure_list, [cv.string]) # TODO: Make sure list is not empty
+    }))
 
 
 def _filter_stations(network, radius, latitude, longitude, stations_list):
@@ -60,8 +62,8 @@ def _filter_stations(network, radius, latitude, longitude, stations_list):
                 if station['id'] in stations_list:
                     yield station
                     continue
-                if 'extra' in station
-                    and 'uid' in station['extra']
+                if 'extra' in station \
+                    and 'uid' in station['extra'] \
                     and str(station['extra']['uid']) in stations_list:
                         yield station
 
@@ -100,12 +102,12 @@ class CityBikesNetworkPoller(object):
     def get(self, station_id, update=True):
         """Return the station with the given id."""
         if update:
-            self.update()
+            self._update()
         for station in self._network.stations:
             if station[ATTR_STATION_ID] == station_id:
                 return station
 
-    @Throttle
+    @Throttle(SCAN_INTERVAL)
     def _update(self):
         """Update the state of the network."""
         self._network.request()
@@ -121,8 +123,8 @@ class CityBikesStationSensor(Entity):
 
     def _update(self, station):
         self._id = station[ATTR_STATION_ID]
-        self._uid = station[ATTR_EXTRA]['uid'] if ATTR_EXTRA in station
-                                            and 'uid' in station[ATTR_EXTRA]
+        self._uid = station[ATTR_EXTRA]['uid'] if ATTR_EXTRA in station \
+                                            and 'uid' in station[ATTR_EXTRA] \
                                             else None
         self._latitude = station[ATTR_LATITUDE]
         self._longitude = station[ATTR_LONGITUDE]
@@ -130,7 +132,7 @@ class CityBikesStationSensor(Entity):
         self._free_bikes = station[ATTR_FREE_BIKES]
         self._timestamp = station[ATTR_TIMESTAMP]
         self._friendly_name = station[ATTR_STATION_NAME]
-        self._name = slugify(self._base_name + station[ATTR_STATION_NAME])
+        self._name = slugify("{}_{}".format(self._base_name, station[ATTR_STATION_NAME]))
 
     @property
     def name(self):
