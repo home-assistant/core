@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([MoldIndicator(
         hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-        indoor_humidity_sensor, calib_factor)])
+        indoor_humidity_sensor, calib_factor)], True)
 
 
 class MoldIndicator(Entity):
@@ -93,8 +93,6 @@ class MoldIndicator(Entity):
 
         if indoor_hum:
             self._indoor_hum = MoldIndicator._update_hum_sensor(indoor_hum)
-
-        self.update()
 
     @staticmethod
     def _update_temp_sensor(state):
