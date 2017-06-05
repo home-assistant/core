@@ -67,6 +67,7 @@ TEST_REQUIREMENTS = (
     'pywebpush',
     'PyJWT',
     'restrictedpython',
+    'pyunifi',
 )
 
 IGNORE_PACKAGES = (

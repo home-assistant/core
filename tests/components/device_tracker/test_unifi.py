@@ -1,6 +1,7 @@
 """The tests for the Unifi WAP device tracker platform."""
 from unittest import mock
 import urllib
+from pyunifi.controller import APIError
 
 import pytest
 import voluptuous as vol
@@ -98,6 +99,7 @@ def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
             CONF_PLATFORM: unifi.DOMAIN,
             CONF_USERNAME: 'foo',
             CONF_PASSWORD: 'password',
+            CONF_VERIFY_SSL: False
         }
     }
     mock_ctrl.side_effect = APIError(
