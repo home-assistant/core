@@ -24,7 +24,7 @@ CONF_START = 'from'
 
 ICON = 'mdi:train'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
+SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
 
-    add_devices([DeutscheBahnSensor(start, destination)])
+    add_devices([DeutscheBahnSensor(start, destination)], True)
 
 
 class DeutscheBahnSensor(Entity):
@@ -47,7 +47,6 @@ class DeutscheBahnSensor(Entity):
         """Initialize the sensor."""
         self._name = '{} to {}'.format(start, goal)
         self.data = SchieneData(start, goal)
-        self.update()
 
     @property
     def name(self):
@@ -92,7 +91,6 @@ class SchieneData(object):
         self.schiene = schiene.Schiene()
         self.connections = [{}]
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the connection data."""
         self.connections = self.schiene.connections(

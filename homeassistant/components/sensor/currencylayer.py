@@ -66,6 +66,7 @@ class CurrencylayerSensor(Entity):
         self.rest = rest
         self._quote = quote
         self._base = base
+        self._state = None
 
     @property
     def name(self):
