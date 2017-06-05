@@ -313,7 +313,11 @@ omit =
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/nad.py
     homeassistant/components/media_player/onkyo.py
+    homeassistant/components/media_player/onkyo_serial.py
+<<<<<<< HEAD
     homeassistant/components/media_player/openhome.py
+=======
+>>>>>>> 2f6fbea05a0105b922af61620ab47062e4059fbe
     homeassistant/components/media_player/panasonic_viera.py
     homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/philips_js.py
