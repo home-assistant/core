@@ -25,6 +25,8 @@ from homeassistant.helpers.script import Script
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
 
+CONF_ICON_TEMPLATE = 'icon_template'
+
 ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
 

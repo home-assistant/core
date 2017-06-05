@@ -574,16 +574,16 @@ SENSOR_TYPES = {
         "Precipitation Intensity in 4 Days", 3, 'qpf_allday', 'in',
         LENGTH_INCHES, "mdi:umbrella"),
     'precip_1d': WUDailySimpleForecastSensorConfig(
-        "Percipitation Probability Today", 0, "pop", None, "%",
+        "Precipitation Probability Today", 0, "pop", None, "%",
         "mdi:umbrella"),
     'precip_2d': WUDailySimpleForecastSensorConfig(
-        "Percipitation Probability Tomorrow", 1, "pop", None, "%",
+        "Precipitation Probability Tomorrow", 1, "pop", None, "%",
         "mdi:umbrella"),
     'precip_3d': WUDailySimpleForecastSensorConfig(
-        "Percipitation Probability in 3 Days", 2, "pop", None, "%",
+        "Precipitation Probability in 3 Days", 2, "pop", None, "%",
         "mdi:umbrella"),
     'precip_4d': WUDailySimpleForecastSensorConfig(
-        "Percipitation Probability in 4 Days", 3, "pop", None, "%",
+        "Precipitation Probability in 4 Days", 3, "pop", None, "%",
         "mdi:umbrella"),
 }
 

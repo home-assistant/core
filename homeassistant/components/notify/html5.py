@@ -48,6 +48,7 @@ ATTR_ENDPOINT = 'endpoint'
 ATTR_KEYS = 'keys'
 ATTR_AUTH = 'auth'
 ATTR_P256DH = 'p256dh'
+ATTR_EXPIRATIONTIME = 'expirationTime'
 
 ATTR_TAG = 'tag'
 ATTR_ACTION = 'action'
@@ -71,7 +72,9 @@ SUBSCRIPTION_SCHEMA = vol.All(dict,
                               vol.Schema({
                                   # pylint: disable=no-value-for-parameter
                                   vol.Required(ATTR_ENDPOINT): vol.Url(),
-                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA
+                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA,
+                                  vol.Optional(ATTR_EXPIRATIONTIME):
+                                      vol.Any(None, cv.positive_int)
                                   }))
 
 REGISTER_SCHEMA = vol.Schema({
