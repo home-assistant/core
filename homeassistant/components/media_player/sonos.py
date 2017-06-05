@@ -22,13 +22,12 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF, ATTR_ENTITY_ID,
-    CONF_HOSTS)
+    CONF_HOSTS, ATTR_TIME)
 from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['SoCo==0.12']
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +67,6 @@ ATTR_ALARM_ID = 'alarm_id'
 ATTR_VOLUME = 'volume'
 ATTR_ENABLED = 'enabled'
 ATTR_INCLUDE_LINKED_ZONES = 'include_linked_zones'
-ATTR_TIME = 'time'
 ATTR_MASTER = 'master'
 ATTR_WITH_GROUP = 'with_group'
 

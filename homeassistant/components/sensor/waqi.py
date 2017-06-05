@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TEMPERATURE, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, STATE_UNKNOWN)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
@@ -28,7 +28,6 @@ ATTR_PM10 = 'pm_10'
 ATTR_PM2_5 = 'pm_2_5'
 ATTR_PRESSURE = 'pressure'
 ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
-ATTR_TIME = 'time'
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
 CONF_LOCATIONS = 'locations'
