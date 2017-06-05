@@ -22,7 +22,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-mirobo==0.0.7']
+REQUIREMENTS = ['python-mirobo==0.0.8']
 
 
 # pylint: disable=unused-argument
@@ -88,23 +88,26 @@ class MiroboSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on."""
+        from mirobo import VacuumException
         try:
             self.vacuum.start()
             self._is_on = True
-        except Exception as ex:
+        except VacuumException as ex:
             _LOGGER.error("Unable to start the vacuum: %s", ex)
 
     def turn_off(self, **kwargs):
         """Turn the vacuum off and return to home."""
+        from mirobo import VacuumException
         try:
             self.vacuum.stop()
             self.vacuum.home()
             self._is_on = False
-        except Exception as ex:
+        except VacuumException as ex:
             _LOGGER.error("Unable to turn off and return home: %s", ex)
 
     def update(self):
         """Fetch state from the device."""
+        from mirobo import VacuumException
         try:
             state = self.vacuum.status()
             _LOGGER.debug("got state from the vacuum: %s", state)
@@ -117,5 +120,5 @@ class MiroboSwitch(SwitchDevice):
 
             self._state = state.state_code
             self._is_on = state.is_on
-        except Exception as ex:
+        except VacuumException as ex:
             _LOGGER.error("Got exception while fetching the state: %s", ex)
