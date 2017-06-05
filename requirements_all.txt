@@ -651,6 +651,9 @@ pythinkingcleaner==0.0.3
 # homeassistant.components.sensor.blockchain
 python-blockchain-api==0.0.2
 
+# homeassistant.components.sensor.citybikes
+python-citybikes==0.1.3
+
 # homeassistant.components.media_player.clementine
 python-clementine-remote==1.0.1
 
