@@ -46,15 +46,14 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     devices_commands = yield from api(devices_command)
     devices = yield from api(*devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
-    yield from add_devices(TradfriLight(light, api, hass) for light in lights)
+    add_devices(TradfriLight(light, api, hass) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
         groups_command = gateway.get_groups()
         groups_commands = yield from api(groups_command)
         groups = yield from api(*groups_commands)
-        yield from add_devices(TradfriGroup(group, api, hass)
-                               for group in groups)
+        add_devices(TradfriGroup(group, api, hass) for group in groups)
 
 
 class TradfriGroup(Light):
