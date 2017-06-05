@@ -149,7 +149,7 @@ def setup(hass, config):
             }
         ]
 
-        percent_remove_regex = re.compile(r'[\d.]+')
+        non_digit_tail = re.compile(r'[\d.]+')
         non_decimal = re.compile(r'[^\d.]+')
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
@@ -165,9 +165,7 @@ def setup(hass, config):
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
                     json_body[0]['fields'][new_key] = str(value)
-                    if percent_remove_regex.match(
-                        json_body[0]['fields'][new_key]
-                    ):
+                    if non_digit_tail.match(json_body[0]['fields'][new_key]):
                         json_body[0]['fields'][key] = float(
                             non_decimal.sub('', value))
 
