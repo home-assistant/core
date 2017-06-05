@@ -1,10 +1,11 @@
 """
 This module will attempt to open a port in your router for Home Assistant.
 
-For more details about UPnP, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/upnp/
 """
 import logging
+from urllib.parse import urlsplit
 
 import voluptuous as vol
 
@@ -32,11 +33,15 @@ def setup(hass, config):
     try:
         upnp.selectigd()
     except Exception:
-        _LOGGER.exception("Error when attempting to discover a UPnP IGD")
+        _LOGGER.exception("Error when attempting to discover an UPnP IGD")
         return False
 
-    upnp.addportmapping(hass.config.api.port, 'TCP', hass.config.api.host,
-                        hass.config.api.port, 'Home Assistant', '')
+    base_url = urlsplit(hass.config.api.base_url)
+    host = base_url.hostname
+    external_port = internal_port = base_url.port
+
+    upnp.addportmapping(
+        external_port, 'TCP', host, internal_port, 'Home Assistant', '')
 
     def deregister_port(event):
         """De-register the UPnP port mapping."""
