@@ -52,7 +52,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         devices.append(device)
 
     async_add_devices(devices, True)
-    return True
 
 
 class TimeDateSensor(Entity):
