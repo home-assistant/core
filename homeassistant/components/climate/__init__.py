@@ -28,6 +28,7 @@ DOMAIN = 'climate'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
 
+SERVICE_SET_FROSTGUARD_MODE = 'set_frostguard_mode'
 SERVICE_SET_AWAY_MODE = 'set_away_mode'
 SERVICE_SET_AUX_HEAT = 'set_aux_heat'
 SERVICE_SET_TEMPERATURE = 'set_temperature'
@@ -50,6 +51,7 @@ ATTR_MIN_TEMP = 'min_temp'
 ATTR_TARGET_TEMP_HIGH = 'target_temp_high'
 ATTR_TARGET_TEMP_LOW = 'target_temp_low'
 ATTR_TARGET_TEMP_STEP = 'target_temp_step'
+ATTR_FROSTGUARD_MODE = 'frostguard_mode'
 ATTR_AWAY_MODE = 'away_mode'
 ATTR_AUX_HEAT = 'aux_heat'
 ATTR_FAN_MODE = 'fan_mode'
@@ -77,6 +79,10 @@ CONVERTIBLE_ATTRIBUTE = [
 
 _LOGGER = logging.getLogger(__name__)
 
+SET_FROSTGUARD_MODE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_FROSTGUARD_MODE): cv.boolean,
+})
 SET_AWAY_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_AWAY_MODE): cv.boolean,
@@ -112,6 +118,18 @@ SET_SWING_MODE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_SWING_MODE): cv.string,
 })
+
+
+def set_frostguard_mode(hass, frostguard_mode, entity_id=None):
+    """Turn all or specified climate devices frost-guard mode on."""
+    data = {
+        ATTR_FROSTGUARD_MODE: frostguard_mode
+    }
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SET_FROSTGUARD_MODE, data)
 
 
 def set_away_mode(hass, away_mode, entity_id=None):
@@ -234,6 +252,26 @@ def async_setup(hass, config):
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    @asyncio.coroutine
+    def async_frostguard_mode_set(service):
+        """Set frost-guard mode on target climate devices."""
+        target_climate = component.async_extract_from_service(service)
+
+        frostguard_mode = service.data.get(ATTR_FROSTGUARD_MODE)
+
+        for climate in target_climate:
+            if frostguard_mode:
+                yield from climate.async_turn_frostguard_mode_on()
+            else:
+                yield from climate.async_turn_frostguard_mode_off()
+
+        yield from _async_update_climate(target_climate)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_FROSTGUARD_MODE, async_frostguard_mode_set,
+        descriptions.get(SERVICE_SET_FROSTGUARD_MODE),
+        schema=SET_FROSTGUARD_MODE_SCHEMA)
 
     @asyncio.coroutine
     def async_away_mode_set_service(service):
@@ -460,6 +498,11 @@ class ClimateDevice(Entity):
             if self.swing_list:
                 data[ATTR_SWING_LIST] = self.swing_list
 
+        is_frostguard = self.is_frostguard_mode_on
+        if is_frostguard is not None:
+            data[ATTR_FROSTGUARD_MODE] = STATE_ON if is_frostguard \
+                else STATE_OFF
+
         is_away = self.is_away_mode_on
         if is_away is not None:
             data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
@@ -523,6 +566,11 @@ class ClimateDevice(Entity):
     @property
     def target_temperature_low(self):
         """Return the lowbound target temperature we try to reach."""
+        return None
+
+    @property
+    def is_frostguard_mode_on(self):
+        """Return true if frostguard mode is on."""
         return None
 
     @property
@@ -615,6 +663,30 @@ class ClimateDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.set_swing_mode, swing_mode)
+
+    def turn_frostguard_mode_on(self):
+        """Turn frost-guard mode on."""
+        raise NotImplementedError()
+
+    def async_turn_frostguard_mode_on(self):
+        """Turn frost-guard mode on.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_frostguard_mode_on)
+
+    def turn_frostguard_mode_off(self):
+        """Turn frost-guard mode off."""
+        raise NotImplementedError()
+
+    def async_turn_frostguard_mode_off(self):
+        """Turn frost-guard mode off.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.loop.run_in_executor(
+            None, self.turn_frostguard_mode_off)
 
     def turn_away_mode_on(self):
         """Turn away mode on."""

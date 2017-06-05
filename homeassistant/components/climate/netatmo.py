@@ -22,7 +22,6 @@ _LOGGER = logging.getLogger(__name__)
 CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
 
-DEFAULT_AWAY_TEMPERATURE = 14
 # # The default offeset is 2 hours (when you use the thermostat itself)
 DEFAULT_TIME_OFFSET = 7200
 # # Return cached results if last scan was less then this time ago
@@ -37,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Set up the NetAtmo Thermostat."""
+    """Set up the Netatmo Thermostat."""
     netatmo = get_component('netatmo')
     device = config.get(CONF_RELAY)
 
@@ -55,15 +54,16 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
 
 
 class NetatmoThermostat(ClimateDevice):
-    """Representation a Netatmo thermostat."""
+    """Representation of a Netatmo thermostat."""
 
-    def __init__(self, data, module_name, away_temp=None):
+    def __init__(self, data, module_name):
         """Initialize the sensor."""
         self._data = data
         self._state = None
         self._name = module_name
         self._target_temperature = None
         self._away = None
+        self._frostguard = None
         self.update()
 
     @property
@@ -111,6 +111,7 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
+        self._frostguard = False
 
     def turn_away_mode_off(self):
         """Turn away off."""
@@ -118,6 +119,26 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
+
+    @property
+    def is_frostguard_mode_on(self):
+        """Return true if frost-guard mode is on."""
+        return self._frostguard
+
+    def turn_frostguard_mode_on(self):
+        """Turn frost-guard on."""
+        mode = "frostguard"
+        temp = None
+        self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
+        self._frostguard = True
+        self._away = False
+
+    def turn_frostguard_mode_off(self):
+        """Turn frost-guard off."""
+        mode = "program"
+        temp = None
+        self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
+        self._frostguard = False
 
     def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
         """Set new target temperature for 2 hours."""
@@ -129,6 +150,7 @@ class NetatmoThermostat(ClimateDevice):
             mode, temperature, endTimeOffset)
         self._target_temperature = temperature
         self._away = False
+        self._frostguard = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -136,6 +158,7 @@ class NetatmoThermostat(ClimateDevice):
         self._data.update()
         self._target_temperature = self._data.thermostatdata.setpoint_temp
         self._away = self._data.setpoint_mode == 'away'
+        self._frostguard = self._data.setpoint_mode == 'frostguard'
 
 
 class ThermostatData(object):
