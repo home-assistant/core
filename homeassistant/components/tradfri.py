@@ -112,7 +112,8 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
-    from pytradfri import Gateway, RequestError
+    from pytradfri.error import RequestError
+    from pytradfri.gateway import Gateway
     from pytradfri.api.aiocoap_api import api_factory
 
     try:

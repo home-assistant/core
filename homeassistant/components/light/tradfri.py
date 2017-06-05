@@ -6,7 +6,6 @@ https://home-assistant.io/components/light.tradfri/
 """
 import asyncio
 import logging
-import time
 
 try:
     from asyncio import ensure_future
@@ -54,7 +53,8 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
         groups_command = gateway.get_groups()
         groups_commands = yield from api(groups_command)
         groups = yield from api(*groups_commands)
-        yield from add_devices(TradfriGroup(group, api, hass) for group in groups)
+        yield from add_devices(TradfriGroup(group, api, hass)
+                               for group in groups)
 
 
 class TradfriGroup(Light):
