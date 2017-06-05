@@ -13,12 +13,11 @@ from datetime import timedelta, datetime
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'https://data.dublinked.ie/cgi-bin/rtpi/realtimebusinformation'
@@ -36,7 +35,7 @@ CONF_ROUTE = 'route'
 DEFAULT_NAME = 'Next Bus'
 ICON = 'mdi:bus'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=1)
 TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -64,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     route = config.get(CONF_ROUTE)
 
     data = PublicTransportData(stop, route)
-    add_devices([DublinPublicTransportSensor(data, stop, route, name)])
+    add_devices([DublinPublicTransportSensor(data, stop, route, name)], True)
 
 
 class DublinPublicTransportSensor(Entity):
@@ -76,7 +75,7 @@ class DublinPublicTransportSensor(Entity):
         self._name = name
         self._stop = stop
         self._route = route
-        self.update()
+        self._times = self._state = None
 
     @property
     def name(self):
@@ -137,7 +136,6 @@ class PublicTransportData(object):
                       ATTR_ROUTE: self.route,
                       ATTR_DUE_IN: 'n/a'}]
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from opendata.ch."""
         params = {}
@@ -149,10 +147,7 @@ class PublicTransportData(object):
         params['maxresults'] = 2
         params['format'] = 'json'
 
-        response = requests.get(
-            _RESOURCE,
-            params,
-            timeout=10)
+        response = requests.get(_RESOURCE, params, timeout=10)
 
         if response.status_code != 200:
             self.info = [{ATTR_DUE_AT: 'n/a',
@@ -175,8 +170,7 @@ class PublicTransportData(object):
             if due_at is not None and route is not None:
                 bus_data = {ATTR_DUE_AT: due_at,
                             ATTR_ROUTE: route,
-                            ATTR_DUE_IN:
-                                due_in_minutes(due_at)}
+                            ATTR_DUE_IN: due_in_minutes(due_at)}
                 self.info.append(bus_data)
 
         if not self.info:
