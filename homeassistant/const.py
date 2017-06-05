@@ -202,8 +202,10 @@ STATE_UNAVAILABLE = 'unavailable'
 # Attribution
 ATTR_ATTRIBUTION = 'attribution'
 
-# Contains current time for a TIME_CHANGED event
+# Contains time-related attributes
 ATTR_NOW = 'now'
+ATTR_DATE = 'date'
+ATTR_TIME = 'time'
 
 # Contains domain, service for a SERVICE_CALL event
 ATTR_DOMAIN = 'domain'
