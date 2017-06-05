@@ -1,4 +1,4 @@
-"""The tests for the radarr platform."""
+"""The tests for the Radarr platform."""
 import unittest
 
 import pytest
@@ -347,7 +347,7 @@ class TestRadarrSetup(unittest.TestCase):
     def test_upcoming_today(self, req_mock):
         """Test filtering for a single day.
 
-        Radarr needs to respond with at least 2 days
+        Radarr needs to respond with at least 2 days.
         """
         config = {
             'platform': 'radarr',
@@ -375,7 +375,7 @@ class TestRadarrSetup(unittest.TestCase):
 
     @unittest.mock.patch('requests.get', side_effect=mocked_requests_get)
     def test_system_status(self, req_mock):
-        """Test getting system status"""
+        """Test the getting of the system status."""
         config = {
             'platform': 'radarr',
             'api_key': 'foo',
