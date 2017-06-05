@@ -26,6 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+CONF_SERVICE_URL = 'service_url'
+DEFAULT_SERVICE_URL = 'https://vocapi.wirelesscar.net/customerapi/rest/v3.0/'
 
 RESOURCES = {'position': ('device_tracker',),
              'lock': ('lock', 'Lock'),
@@ -51,6 +53,7 @@ CONFIG_SCHEMA = vol.Schema({
             {cv.slug: cv.string}),
         vol.Optional(CONF_RESOURCES): vol.All(
             cv.ensure_list, [vol.In(RESOURCES)]),
+        vol.Optional(CONF_SERVICE_URL, default=DEFAULT_SERVICE_URL): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -60,7 +63,8 @@ def setup(hass, config):
     from volvooncall import Connection
     connection = Connection(
         config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD))
+        config[DOMAIN].get(CONF_PASSWORD),
+        config[DOMAIN].get(CONF_SERVICE_URL))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 
