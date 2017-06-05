@@ -10,12 +10,11 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS)
-import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = '/admin/api.php'
@@ -30,7 +29,7 @@ DEFAULT_NAME = 'Pi-Hole'
 DEFAULT_SSL = False
 DEFAULT_VERIFY_SSL = True
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 MONITORED_CONDITIONS = {
     'dns_queries_today': ['DNS Queries Today',
@@ -67,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = [PiHoleSensor(hass, api, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
 
-    add_devices(sensors)
+    add_devices(sensors, True)
 
 
 class PiHoleSensor(Entity):
@@ -134,7 +133,6 @@ class PiHoleAPI(object):
 
         self.update()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Pi-Hole."""
         try:
