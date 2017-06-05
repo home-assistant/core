@@ -41,13 +41,13 @@ def mocked_requests_get(*args, **kwargs):
                 "images": [
                     {
                         "coverType": "poster",
-                        "url": "/radarr/MediaCover/12/poster.jpg"
-                            + "?lastWrite=636208663600000000"
+                        "url": ("/radarr/MediaCover/12/poster.jpg"
+                                "?lastWrite=636208663600000000")
                     },
                     {
                         "coverType": "banner",
-                        "url": "/radarr/MediaCover/12/banner.jpg"
-                            + "?lastWrite=636208663600000000"
+                        "url": ("/radarr/MediaCover/12/banner.jpg"
+                                "?lastWrite=636208663600000000")
                     }
                 ],
                 "website": "",
@@ -106,13 +106,13 @@ def mocked_requests_get(*args, **kwargs):
                 "images": [
                     {
                         "coverType": "poster",
-                        "url": "/radarr/MediaCover/1/poster.jpg"
-                             + "?lastWrite=636200219330000000"
+                        "url": ("/radarr/MediaCover/1/poster.jpg"
+                                "?lastWrite=636200219330000000")
                     },
                     {
                         "coverType": "banner",
-                        "url": "/radarr/MediaCover/1/banner.jpg"
-                             + "?lastWrite=636200219340000000"
+                        "url": ("/radarr/MediaCover/1/banner.jpg"
+                                "?lastWrite=636200219340000000")
                     }
                 ],
                 "website": "https://www.ubisoft.com/en-US/",
@@ -178,9 +178,9 @@ def mocked_requests_get(*args, **kwargs):
             "authentication": "forms",
             "sqliteVersion": "3.16.2",
             "urlBase": "",
-            "runtimeVersion": "4.6.1 "
-                            + "(Stable 4.6.1.3/abb06f1 "
-                            + "Mon Oct  3 07:57:59 UTC 2016)"
+            "runtimeVersion": ("4.6.1 "
+                               "(Stable 4.6.1.3/abb06f1 "
+                               "Mon Oct  3 07:57:59 UTC 2016)")
         }, 200)
     else:
         return MockResponse({
