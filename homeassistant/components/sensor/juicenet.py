@@ -107,7 +107,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        attributes = super().device_state_attributes
+        attributes = {}
         if self.type == 'status':
             man_dev_id = self.device.id()
             if man_dev_id:
