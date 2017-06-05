@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 at https://home-assistant.io/components/sensor.juicenet/
 """
 
-import asyncio
 import logging
 
 from homeassistant.const import TEMP_CELSIUS
