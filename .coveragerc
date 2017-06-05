@@ -439,6 +439,7 @@ omit =
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/qnap.py
+    homeassistant/components/sensor/radarr.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
