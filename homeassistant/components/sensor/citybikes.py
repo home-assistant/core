@@ -56,24 +56,24 @@ PLATFORM_SCHEMA = vol.All(
 
 
 def _filter_stations(network, radius, latitude, longitude, stations_list):
-        if radius > 0:
-            for station, dist in network.stations.near(latitude, longitude):
-                # 'dist' is in weird units, let's calculate again
-                dist = location.distance(latitude, longitude,
-                                         station[ATTR_LATITUDE],
-                                         station[ATTR_LONGITUDE])
-                if dist > radius:
-                    break
+    if radius > 0:
+        for station, dist in network.stations.near(latitude, longitude):
+            # 'dist' is in weird units, let's calculate again
+            dist = location.distance(latitude, longitude,
+                                     station[ATTR_LATITUDE],
+                                     station[ATTR_LONGITUDE])
+            if dist > radius:
+                break
+            yield station
+    else:
+        for station in network.stations:
+            if station['id'] in stations_list:
                 yield station
-        else:
-            for station in network.stations:
-                if station['id'] in stations_list:
-                    yield station
-                    continue
-                if 'extra' in station:
-                    if 'uid' in station['extra']:
-                        if str(station['extra']['uid']) in stations_list:
-                            yield station
+                continue
+            if 'extra' in station:
+                if 'uid' in station['extra']:
+                    if str(station['extra']['uid']) in stations_list:
+                        yield station
 
 
 # pylint: disable=unused-argument
@@ -97,9 +97,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     poller = CityBikesNetworkPoller(network)
 
     add_devices(CityBikesStationSensor(poller, station,
-                config.get(CONF_NAME, DOMAIN))
-                for station in _filter_stations(
-                    network, radius, latitude, longitude, stations_list))
+                                       config.get(CONF_NAME, DOMAIN))
+                for station in _filter_stations(network, radius, latitude,
+                                                longitude, stations_list))
 
 
 class CityBikesNetworkPoller(object):
@@ -144,7 +144,7 @@ class CityBikesStationSensor(Entity):
         self._timestamp = station[ATTR_TIMESTAMP]
         self._friendly_name = station[ATTR_STATION_NAME]
         self._name = slugify("{}_{}".format(self._base_name,
-                             station[ATTR_STATION_NAME]))
+                                            station[ATTR_STATION_NAME]))
 
     @property
     def name(self):
