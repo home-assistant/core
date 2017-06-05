@@ -631,6 +631,9 @@ pysensibo==1.0.1
 # homeassistant.components.switch.acer_projector
 pyserial==3.1.1
 
+# homeassistant.components.lock.sesame
+pysesame==0.0.2
+
 # homeassistant.components.sensor.sma
 pysma==0.1.3
 
