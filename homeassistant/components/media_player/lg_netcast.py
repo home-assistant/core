@@ -4,7 +4,9 @@ Support for LG TV running on NetCast 3 or 4.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.lg_netcast/
 """
+import datetime
 from datetime import timedelta
+import hashlib
 import logging
 
 from requests import RequestException
@@ -14,11 +16,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
     SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, SUPPORT_VOLUME_SET,
+    MEDIA_TYPE_CHANNEL, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-import homeassistant.util as util
+import time
 
 REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
                 'v0.2.0.zip#pylgnetcast==0.2.0']
@@ -27,13 +30,13 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'LG TV Remote'
 
-MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
                SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | \
-               SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+               SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | \
+               SUPPORT_VOLUME_SET
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -81,7 +84,6 @@ class LgTVDevice(MediaPlayerDevice):
         except (LgNetCastError, RequestException):
             self._state = STATE_OFF
 
-    @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
         """Retrieve the latest data from the LG TV."""
         from pylgnetcast import LgNetCastError
@@ -172,6 +174,13 @@ class LgTVDevice(MediaPlayerDevice):
         """URL for obtaining a screen capture."""
         return self._client.url + 'data?target=screen_image'
 
+    @property
+    def media_image_hash(self):
+        """Hash value for media image."""
+        timestamp = datetime.datetime.utcnow().timestamp()
+        tid = "%s_%s" % (self._channel_name, int(timestamp / 30.0))
+        return hashlib.md5(tid.encode('utf-8')).hexdigest()[:5]
+
     def turn_off(self):
         """Turn off media player."""
         self.send_command(1)
@@ -183,6 +192,16 @@ class LgTVDevice(MediaPlayerDevice):
     def volume_down(self):
         """Volume down media player."""
         self.send_command(25)
+
+    def set_volume_level(self, volume):
+        """Set volume level."""
+        target_volume = int(volume * 100)
+        for _ in range(abs(target_volume - int(self._volume))):
+            if target_volume > self._volume:
+                self.volume_up()
+            else:
+                self.volume_down()
+            time.sleep(0.2)
 
     def mute_volume(self, mute):
         """Send mute command."""
