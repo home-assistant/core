@@ -29,6 +29,7 @@ CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
 CONF_STATIONS_LIST = 'stations'
 ATTR_STATION_ID = 'id'
+ATTR_STATION_UID = 'id'
 ATTR_STATION_NAME = 'name'
 ATTR_EXTRA = 'extra'
 ATTR_EMPTY_SLOTS = 'empty_slots'
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.All(
                 cv.ensure_list,
                 vol.Length(min=1),
-                [cv.string]) # TODO: Make sure list is not empty
+                [cv.string])
     }))
 
 
@@ -69,10 +70,10 @@ def _filter_stations(network, radius, latitude, longitude, stations_list):
                 if station['id'] in stations_list:
                     yield station
                     continue
-                if 'extra' in station \
-                    and 'uid' in station['extra'] \
-                    and str(station['extra']['uid']) in stations_list:
-                        yield station
+                if 'extra' in station:
+                    if 'uid' in station['extra']:
+                        if str(station['extra']['uid']) in stations_list:
+                            yield station
 
 
 # pylint: disable=unused-argument
@@ -82,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    
+
     network_uid = config.get(CONF_NETWORK)
     if not network_uid:
         network = Client().networks.near(latitude, longitude)[0][0]
@@ -96,9 +97,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     poller = CityBikesNetworkPoller(network)
 
     add_devices(CityBikesStationSensor(poller, station,
-                    config.get(CONF_NAME, DOMAIN))
-                    for station in _filter_stations(
-                        network, radius, latitude, longitude, stations_list))
+                config.get(CONF_NAME, DOMAIN))
+                for station in _filter_stations(
+                    network, radius, latitude, longitude, stations_list))
 
 
 class CityBikesNetworkPoller(object):
@@ -121,6 +122,7 @@ class CityBikesNetworkPoller(object):
         """Update the state of the network."""
         self._network.request()
 
+
 class CityBikesStationSensor(Entity):
     """CityBikes API Sensor."""
 
@@ -133,15 +135,16 @@ class CityBikesStationSensor(Entity):
     def _update(self, station):
         self._id = station[ATTR_STATION_ID]
         self._uid = station[ATTR_EXTRA]['uid'] if ATTR_EXTRA in station \
-                                            and 'uid' in station[ATTR_EXTRA] \
-                                            else None
+            and 'uid' in station[ATTR_EXTRA] \
+            else None
         self._latitude = station[ATTR_LATITUDE]
         self._longitude = station[ATTR_LONGITUDE]
         self._empty_slots = station[ATTR_EMPTY_SLOTS]
         self._free_bikes = station[ATTR_FREE_BIKES]
         self._timestamp = station[ATTR_TIMESTAMP]
         self._friendly_name = station[ATTR_STATION_NAME]
-        self._name = slugify("{}_{}".format(self._base_name, station[ATTR_STATION_NAME]))
+        self._name = slugify("{}_{}".format(self._base_name,
+                             station[ATTR_STATION_NAME]))
 
     @property
     def name(self):
@@ -163,6 +166,7 @@ class CityBikesStationSensor(Entity):
         return {
             ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION,
             ATTR_STATION_ID: self._id,
+            ATTR_STATION_UID: self._uid,
             ATTR_LATITUDE: self._latitude,
             ATTR_LONGITUDE: self._longitude,
             ATTR_EMPTY_SLOTS: self._empty_slots,
