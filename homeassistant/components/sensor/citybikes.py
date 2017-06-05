@@ -13,10 +13,11 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME)
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME,
+    LENGTH_METERS, LENGTH_FEET)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-from homeassistant.util import slugify
+from homeassistant.util import (
+    Throttle, slugify, location, distance)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-citybikes==0.1.3']
@@ -53,8 +54,12 @@ PLATFORM_SCHEMA = vol.All(
 
 def _filter_stations(network, radius, latitude, longitude, stations_list):
         if radius > 0:
-            for station, distance in network.stations.near(latitude, longitude):
-                if distance * 1000 > radius:
+            for station, dist in network.stations.near(latitude, longitude):
+                # 'dist' is in weird units, let's calculate again
+                dist = location.distance(latitude, longitude,
+                                         station[ATTR_LATITUDE],
+                                         station[ATTR_LONGITUDE])
+                if dist > radius:
                     break
                 yield station
         else:
@@ -84,6 +89,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     stations_list = config.get(CONF_STATIONS_LIST, [])
     radius = config.get(CONF_RADIUS, 0)
+    if not hass.config.units.is_metric:
+        radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
     poller = CityBikesNetworkPoller(network)
 
     add_devices(CityBikesStationSensor(poller, station,
