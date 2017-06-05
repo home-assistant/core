@@ -32,16 +32,11 @@ def setup(hass, config):
     import pyjuicenet
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['unique_ids'] = []
-    hass.data[DOMAIN]['entities'] = {}
 
     access_token = config[DOMAIN].get(CONF_ACCESS_TOKEN)
-
     hass.data[DOMAIN]['api'] = pyjuicenet.Api(access_token)
 
-    hass.data[DOMAIN]['entities']['sensor'] = []
     discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-
     return True
 
 
@@ -62,16 +57,6 @@ class JuicenetDevice(Entity):
     def update(self):
         """Update state of the device."""
         self.device.update_state()
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {}
-        if self.type == 'status':
-            man_dev_id = self._manufacturer_device_id
-            if man_dev_id:
-                attributes["manufacturer_device_id"] = man_dev_id
-        return attributes
 
     @property
     def _manufacturer_device_id(self):

@@ -33,9 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dev = []
     for device in api.get_devices():
         for variable in SENSOR_TYPES:
-            _id = "{}-{}".format(device.id(), variable)
-            if _id not in hass.data[DOMAIN]['unique_ids']:
-                dev.append(JuicenetSensorDevice(device, variable, hass))
+            dev.append(JuicenetSensorDevice(device, variable, hass))
 
     add_devices(dev)
 
@@ -48,11 +46,6 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         super().__init__(device, sensor_type, hass)
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
-        self.hass.data[DOMAIN]['entities']['sensor'].append(self)
 
     @property
     def name(self):
@@ -83,8 +76,6 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
             icon = 'mdi:timer'
         elif self.type == 'energy_added':
             icon = 'mdi:flash'
-        else:
-            icon = 'mdi:eye'
         return icon
 
     @property
