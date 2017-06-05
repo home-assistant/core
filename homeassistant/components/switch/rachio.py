@@ -8,8 +8,8 @@ import homeassistant.util as util
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_ACCESS_TOKEN
 
-REQUIREMENTS = ['https://github.com/Klikini/rachiopy'
-                '/archive/2c8996fcfa97a9f361a789e0c998797ed2805281.zip'
+REQUIREMENTS = ['https://github.com/rfverbruggen/rachiopy'
+                '/archive/989bd28ef5353be62e0eabb93b3339f74bc7ee44.zip'
                 '#rachiopy==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,7 +19,7 @@ DATA_RACHIO = 'rachio'
 CONF_MANUAL_RUN_MINS = 'manual_run_mins'
 DEFAULT_MANUAL_RUN_MINS = 10
 
-MIN_UPDATE_INTERVAL = timedelta(minutes=5)
+MIN_UPDATE_INTERVAL = timedelta(seconds=5)
 MIN_FORCED_UPDATE_INTERVAL = timedelta(seconds=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
