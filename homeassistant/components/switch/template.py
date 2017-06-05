@@ -13,8 +13,8 @@ from homeassistant.core import callback
 from homeassistant.components.switch import (
     ENTITY_ID_FORMAT, SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, STATE_OFF, STATE_ON,
-    ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
+    ATTR_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, STATE_OFF,
+    STATE_ON, ATTR_ENTITY_ID, CONF_SWITCHES, EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -24,8 +24,6 @@ from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
-
-CONF_ICON_TEMPLATE = 'icon_template'
 
 ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
