@@ -23,7 +23,7 @@ REQUIREMENTS = ['python-citybikes==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=12)  # Arbitrary
+SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 DOMAIN = 'citybikes'
 CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
