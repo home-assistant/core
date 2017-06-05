@@ -95,7 +95,7 @@ class LogitechMediaServer(object):
         result = []
         data = yield from self.async_query('players', 'status')
 
-        for players in data['players_loop']:
+        for players in data.get('players_loop', []):
             player = SqueezeBoxDevice(
                 self, players['playerid'], players['name'])
             yield from player.async_update()

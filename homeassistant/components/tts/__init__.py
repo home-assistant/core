@@ -96,8 +96,8 @@ def async_setup(hass, config):
 
     hass.http.register_view(TextToSpeechView(tts))
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file,
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
@@ -113,8 +113,8 @@ def async_setup(hass, config):
                 provider = yield from platform.async_get_engine(
                     hass, p_config)
             else:
-                provider = yield from hass.loop.run_in_executor(
-                    None, platform.get_engine, hass, p_config)
+                provider = yield from hass.async_add_job(
+                    platform.get_engine, hass, p_config)
 
             if provider is None:
                 _LOGGER.error("Error setting up platform %s", p_type)
@@ -207,8 +207,8 @@ class SpeechManager(object):
             return cache_dir
 
         try:
-            self.cache_dir = yield from self.hass.loop.run_in_executor(
-                None, init_tts_cache_dir, cache_dir)
+            self.cache_dir = yield from self.hass.async_add_job(
+                init_tts_cache_dir, cache_dir)
         except OSError as err:
             raise HomeAssistantError("Can't init cache dir {}".format(err))
 
@@ -228,8 +228,7 @@ class SpeechManager(object):
             return cache
 
         try:
-            cache_files = yield from self.hass.loop.run_in_executor(
-                None, get_cache_files)
+            cache_files = yield from self.hass.async_add_job(get_cache_files)
         except OSError as err:
             raise HomeAssistantError("Can't read cache dir {}".format(err))
 
@@ -250,7 +249,7 @@ class SpeechManager(object):
                     _LOGGER.warning(
                         "Can't remove cache file '%s': %s", filename, err)
 
-        yield from self.hass.loop.run_in_executor(None, remove_files)
+        yield from self.hass.async_add_job(remove_files)
         self.file_cache = {}
 
     @callback
@@ -355,7 +354,7 @@ class SpeechManager(object):
                 speech.write(data)
 
         try:
-            yield from self.hass.loop.run_in_executor(None, save_speech)
+            yield from self.hass.async_add_job(save_speech)
             self.file_cache[key] = filename
         except OSError:
             _LOGGER.error("Can't write %s", filename)
@@ -378,7 +377,7 @@ class SpeechManager(object):
                 return speech.read()
 
         try:
-            data = yield from self.hass.loop.run_in_executor(None, load_speech)
+            data = yield from self.hass.async_add_job(load_speech)
         except OSError:
             del self.file_cache[key]
             raise HomeAssistantError("Can't read {}".format(voice_file))
@@ -490,9 +489,8 @@ class Provider(object):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(
-                self.get_tts_audio, message, language, options=options))
+        return self.hass.async_add_job(
+            ft.partial(self.get_tts_audio, message, language, options=options))
 
 
 class TextToSpeechView(HomeAssistantView):

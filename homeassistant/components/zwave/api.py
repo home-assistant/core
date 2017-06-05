@@ -8,7 +8,31 @@ from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
-ZWAVE_NETWORK = 'zwave_network'
+
+class ZWaveNodeValueView(HomeAssistantView):
+    """View to return the node values."""
+
+    url = r"/api/zwave/values/{node_id:\d+}"
+    name = "api:zwave:values"
+
+    @ha.callback
+    def get(self, request, node_id):
+        """Retrieve groups of node."""
+        nodeid = int(node_id)
+        hass = request.app['hass']
+        values_list = hass.data[const.DATA_ENTITY_VALUES]
+
+        values_data = {}
+        # Return a list of values for this node that are used as a
+        # primary value for an entity
+        for entity_values in values_list:
+            if entity_values.primary.node.node_id != nodeid:
+                continue
+
+            values_data[entity_values.primary.value_id] = {
+                'label': entity_values.primary.label,
+            }
+        return self.json(values_data)
 
 
 class ZWaveNodeGroupView(HomeAssistantView):
@@ -22,7 +46,7 @@ class ZWaveNodeGroupView(HomeAssistantView):
         """Retrieve groups of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -48,7 +72,7 @@ class ZWaveNodeConfigView(HomeAssistantView):
         """Retrieve configurations of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -77,7 +101,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         """Retrieve usercodes of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
-        network = hass.data.get(ZWAVE_NETWORK)
+        network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)

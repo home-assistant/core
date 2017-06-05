@@ -16,8 +16,7 @@ from homeassistant.components.emulated_hue.hue_api import (
     HueAllLightsStateView, HueOneLightStateView, HueOneLightChangeView)
 from homeassistant.components.emulated_hue import Config
 
-from tests.common import (
-    get_test_instance_port, mock_http_component_app)
+from tests.common import get_test_instance_port
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -114,7 +113,7 @@ def hass_hue(loop, hass):
 @pytest.fixture
 def hue_client(loop, hass_hue, test_client):
     """Create web client for emulated hue api."""
-    web_app = mock_http_component_app(hass_hue)
+    web_app = hass_hue.http.app
     config = Config(None, {'type': 'alexa'})
 
     HueUsernameView().register(web_app.router)

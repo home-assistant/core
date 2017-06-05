@@ -296,11 +296,9 @@ class SshConnection(_Connection):
 
     def __init__(self, host, port, username, password, ssh_key, ap):
         """Initialize the SSH connection properties."""
-        from pexpect import pxssh
-
         super(SshConnection, self).__init__()
 
-        self._ssh = pxssh.pxssh()
+        self._ssh = None
         self._host = host
         self._port = port
         self._username = username
@@ -348,9 +346,16 @@ class SshConnection(_Connection):
             _LOGGER.error("Unexpected SSH error: %s", str(err))
             self.disconnect()
             return None
+        except AssertionError as err:
+            _LOGGER.error("Connection to router unavailable: %s", str(err))
+            self.disconnect()
+            return None
 
     def connect(self):
         """Connect to the ASUS-WRT SSH server."""
+        from pexpect import pxssh
+
+        self._ssh = pxssh.pxssh()
         if self._ssh_key:
             self._ssh.login(self._host, self._username,
                             ssh_key=self._ssh_key, port=self._port)
@@ -367,6 +372,8 @@ class SshConnection(_Connection):
             self._ssh.logout()
         except Exception:
             pass
+        finally:
+            self._ssh = None
 
         super(SshConnection, self).disconnect()
 

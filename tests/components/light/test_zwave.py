@@ -24,7 +24,7 @@ class MockLightValues(MockEntityValues):
 
 
 def test_get_device_detects_dimmer(mock_openzwave):
-    """Test get_device returns a color light."""
+    """Test get_device returns a normal dimmer."""
     node = MockNode()
     value = MockValue(data=0, node=node)
     values = MockLightValues(primary=value)

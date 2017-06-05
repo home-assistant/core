@@ -17,6 +17,7 @@ ATTR_READY = 'is_ready'
 ATTR_FAILED = 'is_failed'
 ATTR_PRODUCT_NAME = 'product_name'
 ATTR_MANUFACTURER_NAME = 'manufacturer_name'
+ATTR_NODE_NAME = 'node_name'
 
 STAGE_COMPLETE = 'Complete'
 
@@ -165,6 +166,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self.node_id,
+            ATTR_NODE_NAME: self._name,
             ATTR_MANUFACTURER_NAME: self._manufacturer_name,
             ATTR_PRODUCT_NAME: self._product_name,
         }
