@@ -215,6 +215,7 @@ def get_date(zone, offset=0):
 
 
 def get_release_date(data):
+    """Get release date."""
     date = data['physicalRelease']
     if not date:
         date = data['inCinemas']
@@ -222,6 +223,7 @@ def get_release_date(data):
 
 
 def to_key(data):
+    """Get key."""
     return '{} ({})'.format(data['title'], data['year'])
 
 
