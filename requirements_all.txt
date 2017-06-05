@@ -277,7 +277,7 @@ https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.tradfri
-https://github.com/ggravlingen/pytradfri/archive/c7f7e4ca1bbc147d6351fea7694fa9583e56ef54.zip#pytradfri==1.1
+https://github.com/ggravlingen/pytradfri/archive/f90bef758079b6e3cd86dc77e329aba22161ca69.zip#pytradfri==2.0
 
 # homeassistant.components.media_player.spotify
 https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
