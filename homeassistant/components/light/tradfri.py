@@ -112,7 +112,7 @@ class TradfriGroup(Light):
     def _async_start_observe(self, err=None):
         """Start observation of light."""
         if err:
-            _LOGGER.info("Observation failed for {}".format(self._name), err)
+            _LOGGER.info("Observation failed for %", self._name, exc_info=err)
 
         cmd = self._group.observe(callback=self._observe_update,
                                   err_callback=self._async_start_observe,
@@ -240,7 +240,7 @@ class TradfriLight(Light):
     def _async_start_observe(self, err=None):
         """Start observation of light."""
         if err:
-            _LOGGER.info("Observation failed for {}".format(self._name), err)
+            _LOGGER.info("Observation failed for %", self._name, exc_info=err)
 
         cmd = self._light.observe(callback=self._observe_update,
                                   err_callback=self._async_start_observe,
