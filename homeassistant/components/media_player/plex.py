@@ -76,7 +76,7 @@ def config_from_file(filename, config=None):
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Plex platform."""
+    """Set up the Plex platform."""
     # get config from plex.conf
     file_config = config_from_file(hass.config.path(PLEX_CONFIG_FILE))
 
@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
 
 def setup_plexserver(host, token, hass, config, add_devices_callback):
-    """Setup a plexserver based on host parameter."""
+    """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
@@ -110,8 +110,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
         # No token or wrong token
-        request_configuration(host, hass, config,
-                              add_devices_callback)
+        request_configuration(host, hass, config, add_devices_callback)
         return
 
     # If we came here and configuring this host, mark as done
@@ -141,7 +140,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
         try:
             devices = plexserver.clients()
         except plexapi.exceptions.BadRequest:
-            _LOGGER.exception('Error listing plex devices')
+            _LOGGER.exception("Error listing plex devices")
             return
         except OSError:
             _LOGGER.error("Could not connect to plex server at http://%s",
@@ -214,10 +213,9 @@ def request_configuration(host, hass, config, add_devices_callback):
         return
 
     def plex_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
-        setup_plexserver(host,
-                         data.get('token'), hass, config,
-                         add_devices_callback)
+        """Handle configuration changes."""
+        setup_plexserver(
+            host, data.get('token'), hass, config, add_devices_callback)
 
     _CONFIGURING[host] = configurator.request_config(
         hass,
@@ -547,12 +545,12 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def media_content_id(self):
-        """Content ID of current playing media."""
+        """Return the content ID of current playing media."""
         return self._media_content_id
 
     @property
     def media_content_type(self):
-        """Content type of current playing media."""
+        """Return the content type of current playing media."""
         if self._session_type == 'clip':
             _LOGGER.debug("Clip content type detected, "
                           "compatibility may vary: %s", self.entity_id)
@@ -568,57 +566,57 @@ class PlexClient(MediaPlayerDevice):
 
     @property
     def media_artist(self):
-        """Artist of current playing media, music track only."""
+        """Return the artist of current playing media, music track only."""
         return self._media_artist
 
     @property
     def media_album_name(self):
-        """Album name of current playing media, music track only."""
+        """Return the album name of current playing media, music track only."""
         return self._media_album_name
 
     @property
     def media_album_artist(self):
-        """Album artist of current playing media, music track only."""
+        """Return the album artist of current playing media, music only."""
         return self._media_album_artist
 
     @property
     def media_track(self):
-        """Track number of current playing media, music track only."""
+        """Return the track number of current playing media, music only."""
         return self._media_track
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
+        """Return the duration of current playing media in seconds."""
         return self._media_duration
 
     @property
     def media_image_url(self):
-        """Image url of current playing media."""
+        """Return the image URL of current playing media."""
         return self._media_image_url
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         return self._media_title
 
     @property
     def media_season(self):
-        """Season of curent playing media (TV Show only)."""
+        """Return the season of current playing media (TV Show only)."""
         return self._media_season
 
     @property
     def media_series_title(self):
-        """The title of the series of current playing media (TV Show only)."""
+        """Return the title of the series of current playing media."""
         return self._media_series_title
 
     @property
     def media_episode(self):
-        """Episode of current playing media (TV Show only)."""
+        """Return the episode of current playing media (TV Show only)."""
         return self._media_episode
 
     @property
     def make(self):
-        """The make of the device (ex. SHIELD Android TV)."""
+        """Return the make of the device (ex. SHIELD Android TV)."""
         return self._make
 
     @property

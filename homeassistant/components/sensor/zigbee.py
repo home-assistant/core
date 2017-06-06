@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ZigBee platform.
+    """Set up the ZigBee platform.
 
     Uses the 'type' config value to work out which type of ZigBee sensor we're
     dealing with and instantiates the relevant classes to handle it.
@@ -67,7 +67,7 @@ class ZigBeeTemperatureSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit the value is expressed in."""
+        """Return the unit of measurement the value is expressed in."""
         return TEMP_CELSIUS
 
     def update(self, *args):

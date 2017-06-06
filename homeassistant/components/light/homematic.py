@@ -18,7 +18,7 @@ SUPPORT_HOMEMATIC = SUPPORT_BRIGHTNESS
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic light platform."""
+    """Set up the Homematic light platform."""
     if discovery_info is None:
         return
 

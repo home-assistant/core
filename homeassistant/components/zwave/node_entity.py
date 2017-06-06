@@ -17,6 +17,7 @@ ATTR_READY = 'is_ready'
 ATTR_FAILED = 'is_failed'
 ATTR_PRODUCT_NAME = 'product_name'
 ATTR_MANUFACTURER_NAME = 'manufacturer_name'
+ATTR_NODE_NAME = 'node_name'
 
 STAGE_COMPLETE = 'Complete'
 
@@ -96,7 +97,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             self.network_node_changed, ZWaveNetwork.SIGNAL_NOTIFICATION)
 
     def network_node_changed(self, node=None, args=None):
-        """Called when node has changed on the network."""
+        """Handle a changed node on the network."""
         if node and node.node_id != self.node_id:
             return
         if args is not None and 'nodeId' in args and \
@@ -106,8 +107,8 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
 
     def get_node_statistics(self):
         """Retrieve statistics from the node."""
-        return self._network.manager.getNodeStatistics(self._network.home_id,
-                                                       self.node_id)
+        return self._network.manager.getNodeStatistics(
+            self._network.home_id, self.node_id)
 
     def node_changed(self):
         """Update node properties."""
@@ -165,6 +166,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         """Return the device specific state attributes."""
         attrs = {
             ATTR_NODE_ID: self.node_id,
+            ATTR_NODE_NAME: self._name,
             ATTR_MANUFACTURER_NAME: self._manufacturer_name,
             ATTR_PRODUCT_NAME: self._product_name,
         }

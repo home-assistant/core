@@ -79,7 +79,7 @@ class MqttBinarySensor(BinarySensorDevice):
         """
         @callback
         def message_received(topic, payload, qos):
-            """A new MQTT message has been received."""
+            """Handle a new received MQTT message."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload)
@@ -95,7 +95,7 @@ class MqttBinarySensor(BinarySensorDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property

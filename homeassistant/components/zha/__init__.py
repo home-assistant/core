@@ -9,13 +9,11 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
-import homeassistant.helpers.config_validation as cv
 
-
-# Definitions for interfacing with the rest of HA
 REQUIREMENTS = ['bellows==0.2.7']
 
 DOMAIN = 'zha'
@@ -38,9 +36,9 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-ATTR_DURATION = "duration"
+ATTR_DURATION = 'duration'
 
-SERVICE_PERMIT = "permit"
+SERVICE_PERMIT = 'permit'
 SERVICE_DESCRIPTIONS = {
     SERVICE_PERMIT: {
         "description": "Allow nodes to join the Zigbee network",
@@ -72,7 +70,7 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup ZHA.
+    """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
     """
@@ -109,7 +107,7 @@ def async_setup(hass, config):
 
 
 class ApplicationListener:
-    """Handlers for events that happen on the ZigBee application."""
+    """All handlers for events that happen on the ZigBee application."""
 
     def __init__(self, hass, config):
         """Initialize the listener."""
@@ -213,7 +211,7 @@ class Entity(entity.Entity):
     _domain = None  # Must be overriden by subclasses
 
     def __init__(self, endpoint, clusters, manufacturer, model, **kwargs):
-        """Initialize ZHA entity."""
+        """Init ZHA entity."""
         self._device_state_attributes = {}
         ieeetail = ''.join([
             '%02x' % (o, ) for o in endpoint.device.ieee[-4:]

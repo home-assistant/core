@@ -1,7 +1,7 @@
 # Describes the format for available remote services
 
 turn_on:
-  description: Semds the Power On Command
+  description: Sends the Power On Command
 
   fields:
     entity_id:
@@ -20,7 +20,7 @@ turn_off:
       example: 'remote.family_room'
 
 send_command:
-  description: Semds a single command to a single device
+  description: Sends a single command to a single device
 
   fields:
     entity_id:
@@ -30,8 +30,14 @@ send_command:
       description: Device ID to send command to
       example: '32756745'
     command:
-      description: Command to send
+      description: A single command or a list of commands to send.
       example: 'Play'
+    num_repeats:
+      description: An optional value that specifies the number of times you want to repeat the command(s). If not specified, the command(s) will not be repeated
+      example: '5'
+    delay_secs:
+      description: An optional value that specifies that number of seconds you want to wait in between repeated commands. If not specified, the default of 0.4 seconds will be used
+      example: '0.75'
 
 harmony_sync:
   description: Syncs the remote's configuration

@@ -17,9 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/pschmitt/pymailgun/'
-                'archive/1.3.zip#'
-                'pymailgun==1.3']
+REQUIREMENTS = ['pymailgunner==1.4']
 
 # Images to attach to notification
 ATTR_IMAGES = 'images'
@@ -65,7 +63,7 @@ class MailgunNotificationService(BaseNotificationService):
 
     def initialize_client(self):
         """Initialize the connection to Mailgun."""
-        from pymailgun import Client
+        from pymailgunner import Client
         self._client = Client(self._token, self._domain, self._sandbox)
         _LOGGER.debug("Mailgun domain: %s", self._client.domain)
         self._domain = self._client.domain
@@ -74,7 +72,7 @@ class MailgunNotificationService(BaseNotificationService):
 
     def connection_is_valid(self):
         """Check whether the provided credentials are valid."""
-        from pymailgun import (MailgunCredentialsError, MailgunDomainError)
+        from pymailgunner import (MailgunCredentialsError, MailgunDomainError)
         try:
             self.initialize_client()
         except MailgunCredentialsError:
@@ -87,7 +85,7 @@ class MailgunNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a mail to the recipient."""
-        from pymailgun import MailgunError
+        from pymailgunner import MailgunError
         subject = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
         data = kwargs.get(ATTR_DATA)
         files = data.get(ATTR_IMAGES) if data else None

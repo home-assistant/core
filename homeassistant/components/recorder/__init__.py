@@ -33,15 +33,18 @@ from . import purge, migration
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-DOMAIN = 'recorder'
+REQUIREMENTS = ['sqlalchemy==1.1.10']
 
-REQUIREMENTS = ['sqlalchemy==1.1.9']
+_LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'recorder'
 
 DEFAULT_URL = 'sqlite:///{hass_config_path}'
 DEFAULT_DB_FILE = 'home-assistant_v2.db'
 
 CONF_DB_URL = 'db_url'
 CONF_PURGE_DAYS = 'purge_days'
+CONF_EVENT_TYPES = 'event_types'
 
 CONNECT_RETRY_WAIT = 3
 
@@ -49,6 +52,8 @@ FILTER_SCHEMA = vol.Schema({
     vol.Optional(CONF_EXCLUDE, default={}): vol.Schema({
         vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
         vol.Optional(CONF_DOMAINS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_EVENT_TYPES, default=[]):
             vol.All(cv.ensure_list, [cv.string])
     }),
     vol.Optional(CONF_INCLUDE, default={}): vol.Schema({
@@ -65,8 +70,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_DB_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 def wait_connection_ready(hass):
@@ -101,7 +104,7 @@ def run_information(hass, point_in_time: Optional[datetime]=None):
 
 @asyncio.coroutine
 def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Setup the recorder."""
+    """Set up the recorder."""
     conf = config.get(DOMAIN, {})
     purge_days = conf.get(CONF_PURGE_DAYS)
 
@@ -142,6 +145,7 @@ class Recorder(threading.Thread):
         self.include_d = include.get(CONF_DOMAINS, [])
         self.exclude = exclude.get(CONF_ENTITIES, []) + \
             exclude.get(CONF_DOMAINS, [])
+        self.exclude_t = exclude.get(CONF_EVENT_TYPES, [])
 
         self.get_session = None
 
@@ -175,7 +179,7 @@ class Recorder(threading.Thread):
         if not connected:
             @callback
             def connection_failed():
-                """Connection failed tasks."""
+                """Connect failed tasks."""
                 self.async_db_ready.set_result(False)
                 persistent_notification.async_create(
                     self.hass,
@@ -243,6 +247,9 @@ class Recorder(threading.Thread):
                 purge.purge_old_data(self, self.purge_days)
                 continue
             elif event.event_type == EVENT_TIME_CHANGED:
+                self.queue.task_done()
+                continue
+            elif event.event_type in self.exclude_t:
                 self.queue.task_done()
                 continue
 

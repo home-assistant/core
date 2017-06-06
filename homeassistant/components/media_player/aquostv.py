@@ -61,7 +61,7 @@ SOURCES = {0: 'TV / Antenna',
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Sharp Aquos TV platform."""
+    """Set up the Sharp Aquos TV platform."""
     import sharp_aquos_rc
 
     name = config.get(CONF_NAME)
@@ -77,30 +77,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             port = vals[1]
 
         host = vals[0]
-        remote = sharp_aquos_rc.TV(host,
-                                   port,
-                                   username,
-                                   password,
-                                   timeout=20)
+        remote = sharp_aquos_rc.TV(host, port, username, password, timeout=20)
         add_devices([SharpAquosTVDevice(name, remote, power_on_enabled)])
         return True
 
     host = config.get(CONF_HOST)
-    remote = sharp_aquos_rc.TV(host,
-                               port,
-                               username,
-                               password,
-                               15,
-                               1)
+    remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
     add_devices([SharpAquosTVDevice(name, remote, power_on_enabled)])
     return True
 
 
 def _retry(func):
-    """Decorator to handle query retries."""
+    """Handle query retries."""
     def wrapper(obj, *args, **kwargs):
-        """Wrapper for all query functions."""
+        """Wrap all query functions."""
         update_retries = 5
         while update_retries > 0:
             try:

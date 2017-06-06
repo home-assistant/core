@@ -14,11 +14,10 @@ from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_PROTOCOL
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ATTR_EFFECT, EFFECT_COLORLOOP,
     EFFECT_RANDOM, SUPPORT_BRIGHTNESS, SUPPORT_EFFECT,
-    SUPPORT_RGB_COLOR, Light,
-    PLATFORM_SCHEMA)
+    SUPPORT_RGB_COLOR, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['flux_led==0.18']
+REQUIREMENTS = ['flux_led==0.19']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,26 +32,26 @@ SUPPORT_FLUX_LED = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
 MODE_RGB = 'rgb'
 MODE_RGBW = 'rgbw'
 
-# List of Supported Effects which aren't already declared in LIGHT
-EFFECT_RED_FADE = "red_fade"
-EFFECT_GREEN_FADE = "green_fade"
-EFFECT_BLUE_FADE = "blue_fade"
-EFFECT_YELLOW_FADE = "yellow_fade"
-EFFECT_CYAN_FADE = "cyan_fade"
-EFFECT_PURPLE_FADE = "purple_fade"
-EFFECT_WHITE_FADE = "white_fade"
-EFFECT_RED_GREEN_CROSS_FADE = "rg_cross_fade"
-EFFECT_RED_BLUE_CROSS_FADE = "rb_cross_fade"
-EFFECT_GREEN_BLUE_CROSS_FADE = "gb_cross_fade"
-EFFECT_COLORSTROBE = "colorstrobe"
-EFFECT_RED_STROBE = "red_strobe"
-EFFECT_GREEN_STROBE = "green_strobe"
-EFFECT_BLUE_STOBE = "blue_strobe"
-EFFECT_YELLOW_STROBE = "yellow_strobe"
-EFFECT_CYAN_STROBE = "cyan_strobe"
-EFFECT_PURPLE_STROBE = "purple_strobe"
-EFFECT_WHITE_STROBE = "white_strobe"
-EFFECT_COLORJUMP = "colorjump"
+# List of supported effects which aren't already declared in LIGHT
+EFFECT_RED_FADE = 'red_fade'
+EFFECT_GREEN_FADE = 'green_fade'
+EFFECT_BLUE_FADE = 'blue_fade'
+EFFECT_YELLOW_FADE = 'yellow_fade'
+EFFECT_CYAN_FADE = 'cyan_fade'
+EFFECT_PURPLE_FADE = 'purple_fade'
+EFFECT_WHITE_FADE = 'white_fade'
+EFFECT_RED_GREEN_CROSS_FADE = 'rg_cross_fade'
+EFFECT_RED_BLUE_CROSS_FADE = 'rb_cross_fade'
+EFFECT_GREEN_BLUE_CROSS_FADE = 'gb_cross_fade'
+EFFECT_COLORSTROBE = 'colorstrobe'
+EFFECT_RED_STROBE = 'red_strobe'
+EFFECT_GREEN_STROBE = 'green_strobe'
+EFFECT_BLUE_STOBE = 'blue_strobe'
+EFFECT_YELLOW_STROBE = 'yellow_strobe'
+EFFECT_CYAN_STROBE = 'cyan_strobe'
+EFFECT_PURPLE_STROBE = 'purple_strobe'
+EFFECT_WHITE_STROBE = 'white_strobe'
+EFFECT_COLORJUMP = 'colorjump'
 
 FLUX_EFFECT_LIST = [
     EFFECT_COLORLOOP,
@@ -92,7 +91,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Flux lights."""
+    """Set up the Flux lights."""
     import flux_led
     lights = []
     light_ips = []
@@ -119,7 +118,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ipaddr = device['ipaddr']
         if ipaddr in light_ips:
             continue
-        device['name'] = device['id'] + " " + ipaddr
+        device['name'] = '{} {}'.format(device['id'], ipaddr)
         device[ATTR_MODE] = 'rgbw'
         device[CONF_PROTOCOL] = None
         light = FluxLight(device)
@@ -165,7 +164,7 @@ class FluxLight(Light):
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return "{}.{}".format(self.__class__, self._ipaddr)
+        return '{}.{}'.format(self.__class__, self._ipaddr)
 
     @property
     def name(self):

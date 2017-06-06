@@ -62,7 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             req = yield from websession.get(resource)
 
         if req.status >= 400:
-            _LOGGER.error('Got non-ok response from resource: %s', req.status)
+            _LOGGER.error("Got non-ok response from resource: %s", req.status)
             return False
 
     except (TypeError, ValueError):
@@ -95,7 +95,7 @@ class RestSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     @property

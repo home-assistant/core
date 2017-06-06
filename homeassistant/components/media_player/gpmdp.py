@@ -62,7 +62,7 @@ def request_configuration(hass, config, url, add_devices_callback):
 
     # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration changes."""
         while True:
             from websocket import _exceptions
             try:
@@ -79,8 +79,8 @@ def request_configuration(hass, config, url, add_devices_callback):
                                        'arguments': ['Home Assistant', pin]}))
             tmpmsg = json.loads(websocket.recv())
             if tmpmsg['channel'] == 'time':
-                _LOGGER.error('Error setting up GPMDP. Please pause'
-                              ' the desktop player and try again.')
+                _LOGGER.error("Error setting up GPMDP. Please pause "
+                              "the desktop player and try again")
                 break
             code = tmpmsg['payload']
             if code == 'CODE_REQUIRED':
@@ -106,7 +106,7 @@ def request_configuration(hass, config, url, add_devices_callback):
 
 
 def setup_gpmdp(hass, config, code, add_devices):
-    """Setup gpmdp."""
+    """Set up gpmdp."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)

@@ -20,7 +20,7 @@ SUPPORT_VERA = SUPPORT_BRIGHTNESS
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Vera lights."""
+    """Set up the Vera lights."""
     add_devices(
         VeraLight(device, VERA_CONTROLLER) for device in VERA_DEVICES['light'])
 
@@ -67,5 +67,5 @@ class VeraLight(VeraDevice, Light):
         return self._state
 
     def update(self):
-        """Called by the vera device callback to update state."""
+        """Call to update state."""
         self._state = self.vera_device.is_switched_on()

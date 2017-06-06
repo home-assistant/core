@@ -73,7 +73,7 @@ class GNTPNotificationService(BaseNotificationService):
         try:
             self.gntp.register()
         except gntp.errors.NetworkError:
-            _LOGGER.error('Unable to register with the GNTP host.')
+            _LOGGER.error("Unable to register with the GNTP host")
             return
 
     def send_message(self, message="", **kwargs):

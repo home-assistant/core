@@ -7,7 +7,6 @@ set -e
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
-INSTALL_OPENZWAVE="${INSTALL_OPENZWAVE:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_COAP_CLIENT="${INSTALL_COAP_CLIENT:-yes}"
@@ -24,13 +23,13 @@ PACKAGES=(
   bluetooth libglib2.0-dev libbluetooth-dev
   # homeassistant.components.device_tracker.owntracks
   libsodium13
+  # homeassistant.components.zwave
+  libudev-dev
 )
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
   cmake git
-  # python-openzwave
-  cython3 libudev-dev
   # libcec
   swig
 )
@@ -49,10 +48,6 @@ fi
 
 if [ "$INSTALL_FFMPEG" == "yes" ]; then
   virtualization/Docker/scripts/ffmpeg
-fi
-
-if [ "$INSTALL_OPENZWAVE" == "yes" ]; then
-  virtualization/Docker/scripts/python_openzwave
 fi
 
 if [ "$INSTALL_LIBCEC" == "yes" ]; then

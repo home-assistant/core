@@ -36,7 +36,7 @@ ATTR_FORECAST_TIME = 'datetime'
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the weather component."""
+    """Set up the weather component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from component.async_setup(config)

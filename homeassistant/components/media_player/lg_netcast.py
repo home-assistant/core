@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LG TV platform."""
+    """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
     client = LgNetCastClient(
         config.get(CONF_HOST), config.get(CONF_ACCESS_TOKEN))

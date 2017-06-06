@@ -7,9 +7,6 @@ from typing import Tuple
 
 _LOGGER = logging.getLogger(__name__)
 
-HASS_COLOR_MAX = 500  # mireds (inverted)
-HASS_COLOR_MIN = 154
-
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
@@ -268,10 +265,10 @@ def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-sequence-index
-def color_xy_brightness_to_hsv(vX: float, vY: float,
-                               ibrightness: int) -> Tuple[int, int, int]:
-    """Convert an xy brightness color to its hsv representation."""
-    return color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, ibrightness))
+def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
+    """Convert an xy color to its hs representation."""
+    h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
+    return (h, s)
 
 
 # pylint: disable=invalid-sequence-index

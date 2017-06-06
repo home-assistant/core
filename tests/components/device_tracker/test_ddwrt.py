@@ -87,7 +87,7 @@ class TestDdwrt(unittest.TestCase):
                     }})
 
                 self.assertTrue(
-                    'Invalid response from ddwrt' in
+                    'Invalid response from DD-WRT' in
                     str(mock_error.call_args_list[-1]))
 
     @mock.patch('homeassistant.components.device_tracker._LOGGER.error')

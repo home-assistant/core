@@ -10,14 +10,13 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
-REQUIREMENTS = ['dweepy==0.2.0']
+REQUIREMENTS = ['dweepy==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +24,7 @@ CONF_DEVICE = 'device'
 
 DEFAULT_NAME = 'Dweet.io Sensor'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE): cv.string,
@@ -37,27 +36,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Dweet sensor."""
+    """Set up the Dweet sensor."""
     import dweepy
 
     name = config.get(CONF_NAME)
     device = config.get(CONF_DEVICE)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
-    value_template.hass = hass
+    if value_template is not None:
+        value_template.hass = hass
+
     try:
         content = json.dumps(dweepy.get_latest_dweet_for(device)[0]['content'])
     except dweepy.DweepyError:
-        _LOGGER.error("Device/thing '%s' could not be found", device)
+        _LOGGER.error("Device/thing %s could not be found", device)
         return False
 
     if value_template.render_with_possible_json_value(content) == '':
-        _LOGGER.error("'%s' was not found", value_template)
+        _LOGGER.error("%s was not found", value_template)
         return False
 
     dweet = DweetData(device)
 
-    add_devices([DweetSensor(hass, dweet, name, value_template, unit)])
+    add_devices([DweetSensor(hass, dweet, name, value_template, unit)], True)
 
 
 class DweetSensor(Entity):
@@ -71,7 +72,6 @@ class DweetSensor(Entity):
         self._value_template = value_template
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
-        self.update()
 
     @property
     def name(self):
@@ -86,17 +86,18 @@ class DweetSensor(Entity):
     @property
     def state(self):
         """Return the state."""
-        if self.dweet.data is None:
-            return STATE_UNKNOWN
-        else:
-            values = json.dumps(self.dweet.data[0]['content'])
-            value = self._value_template.render_with_possible_json_value(
-                values)
-            return value
+        return self._state
 
     def update(self):
         """Get the latest data from REST API."""
         self.dweet.update()
+
+        if self.dweet.data is None:
+            self._state = STATE_UNKNOWN
+        else:
+            values = json.dumps(self.dweet.data[0]['content'])
+            self._state = self._value_template.render_with_possible_json_value(
+                values, STATE_UNKNOWN)
 
 
 class DweetData(object):
@@ -107,7 +108,6 @@ class DweetData(object):
         self._device = device
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Dweet.io."""
         import dweepy
@@ -115,5 +115,5 @@ class DweetData(object):
         try:
             self.data = dweepy.get_latest_dweet_for(self._device)
         except dweepy.DweepyError:
-            _LOGGER.error("Device '%s' could not be found", self._device)
+            _LOGGER.warning("Device %s doesn't contain any data", self._device)
             self.data = None

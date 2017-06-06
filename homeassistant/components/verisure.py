@@ -23,6 +23,7 @@ REQUIREMENTS = ['vsure==0.11.1']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DEVICE_SERIAL = 'device_serial'
+
 CONF_ALARM = 'alarm'
 CONF_CODE_DIGITS = 'code_digits'
 CONF_HYDROMETERS = 'hygrometers'
@@ -31,7 +32,9 @@ CONF_MOUSE = 'mouse'
 CONF_SMARTPLUGS = 'smartplugs'
 CONF_THERMOMETERS = 'thermometers'
 CONF_SMARTCAM = 'smartcam'
+
 DOMAIN = 'verisure'
+
 SERVICE_CAPTURE_SMARTCAM = 'capture_smartcam'
 
 HUB = None
@@ -57,7 +60,7 @@ CAPTURE_IMAGE_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Verisure component."""
+    """Set up the Verisure component."""
     import verisure
     global HUB
     HUB = VerisureHub(config[DOMAIN], verisure)
@@ -75,7 +78,7 @@ def setup(hass, config):
         """Capture a new picture from a smartcam."""
         device_id = service.data.get(ATTR_DEVICE_SERIAL)
         HUB.smartcam_capture(device_id)
-        _LOGGER.debug('Capturing new image from %s', ATTR_DEVICE_SERIAL)
+        _LOGGER.debug("Capturing new image from %s", ATTR_DEVICE_SERIAL)
 
     hass.services.register(DOMAIN, SERVICE_CAPTURE_SMARTCAM,
                            capture_smartcam,
@@ -119,7 +122,7 @@ class VerisureHub(object):
         try:
             self.my_pages.login()
         except self._verisure.Error as ex:
-            _LOGGER.error('Could not log in to verisure mypages, %s', ex)
+            _LOGGER.error("Could not log in to verisure mypages, %s", ex)
             return False
         return True
 
@@ -168,9 +171,9 @@ class VerisureHub(object):
     @Throttle(timedelta(seconds=30))
     def update_smartcam_imagelist(self):
         """Update the imagelist for the camera."""
-        _LOGGER.debug('Running update imagelist')
+        _LOGGER.debug("Running update imagelist")
         self.smartcam_dict = self.my_pages.smartcam.get_imagelist()
-        _LOGGER.debug('New dict: %s', self.smartcam_dict)
+        _LOGGER.debug("New dict: %s", self.smartcam_dict)
 
     @Throttle(timedelta(seconds=30))
     def smartcam_capture(self, device_id):
@@ -191,7 +194,7 @@ class VerisureHub(object):
                 except AttributeError:
                     status[overview.deviceLabel] = overview
         except self._verisure.Error as ex:
-            _LOGGER.info('Caught connection error %s, tries to reconnect', ex)
+            _LOGGER.info("Caught connection error %s, tries to reconnect", ex)
             self.reconnect()
 
     def reconnect(self):

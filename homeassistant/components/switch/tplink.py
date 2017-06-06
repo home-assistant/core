@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the TPLink switch platform."""
+    """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)

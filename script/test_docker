@@ -1,5 +1,8 @@
 #!/bin/sh
 # Executes the tests with tox in a docker container.
+# Every argment is passed to tox to allow running only a subset of tests.
+# The following example will only run media_player tests:
+# ./test_docker -- tests/components/media_player/
 
 # Stop on errors
 set -e
@@ -10,4 +13,4 @@ docker build -t home-assistant-test -f virtualization/Docker/Dockerfile.dev .
 docker run --rm \
     -v `pwd`/.tox/:/usr/src/app/.tox/ \
     -t -i home-assistant-test \
-    tox -e py35
+    tox -e py36 ${@:2}

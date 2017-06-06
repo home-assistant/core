@@ -16,7 +16,7 @@ DEPENDENCIES = ['zha']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Zigbee Home Automation switches."""
+    """Set up Zigbee Home Automation switches."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return

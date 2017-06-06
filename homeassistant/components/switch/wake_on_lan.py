@@ -66,7 +66,7 @@ class WOLSwitch(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Poll for status regularly."""
+        """Return the polling state."""
         return True
 
     @property
@@ -76,14 +76,14 @@ class WOLSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     def turn_on(self):
         """Turn the device on."""
         if self._broadcast_address:
-            self._wol.send_magic_packet(self._mac_address,
-                                        ip_address=self._broadcast_address)
+            self._wol.send_magic_packet(
+                self._mac_address, ip_address=self._broadcast_address)
         else:
             self._wol.send_magic_packet(self._mac_address)
 

@@ -98,6 +98,8 @@ class TestMicrosoftFaceDetect(object):
             }
         }
 
+        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -108,15 +110,15 @@ class TestMicrosoftFaceDetect(object):
     def test_ms_detect_process_image(self, poll_mock, aioclient_mock):
         """Setup and scan a picture and test plates from event."""
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups"),
+            self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group1/persons"),
+            self.endpoint_url.format("persongroups/test_group1/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group2/persons"),
+            self.endpoint_url.format("persongroups/test_group2/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
 
@@ -139,7 +141,7 @@ class TestMicrosoftFaceDetect(object):
         aioclient_mock.get(url, content=b'image')
 
         aioclient_mock.post(
-            mf.FACE_API_URL.format("detect"),
+            self.endpoint_url.format("detect"),
             text=load_fixture('microsoft_face_detect.json'),
             params={'returnFaceAttributes': "age,gender"}
         )

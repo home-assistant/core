@@ -130,8 +130,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Dark Sky sensor."""
-    # latitude and longitude are inclusive on config
+    """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
@@ -163,8 +162,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
-                sensors.append(DarkSkySensor(forecast_data,
-                                             variable, name, forecast_day))
+                sensors.append(DarkSkySensor(
+                    forecast_data, variable, name, forecast_day))
 
     add_devices(sensors, True)
 
@@ -189,8 +188,8 @@ class DarkSkySensor(Entity):
         if self.forecast_day == 0:
             return '{} {}'.format(self.client_name, self._name)
         else:
-            return '{} {} {}'.format(self.client_name, self._name,
-                                     self.forecast_day)
+            return '{} {} {}'.format(
+                self.client_name, self._name, self.forecast_day)
 
     @property
     def state(self):
@@ -285,7 +284,7 @@ class DarkSkySensor(Entity):
 
     def get_state(self, data):
         """
-        Helper function that returns a new state based on the type.
+        Return a new state based on the type.
 
         If the sensor type is unknown, the current state is returned.
         """

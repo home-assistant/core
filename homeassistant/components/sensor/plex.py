@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Plex sensor."""
+    """Set up the Plex sensor."""
     name = config.get(CONF_NAME)
     plex_user = config.get(CONF_USERNAME)
     plex_password = config.get(CONF_PASSWORD)

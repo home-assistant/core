@@ -107,7 +107,7 @@ class PushBulletNotificationProvider():
         self.thread.start()
 
     def on_push(self, data):
-        """Method to update the current data.
+        """Update the current data.
 
         Currently only monitors pushes but might be extended to monitor
         different kinds of Pushbullet events.
@@ -117,11 +117,11 @@ class PushBulletNotificationProvider():
 
     @property
     def data(self):
-        """The current data stored in the provider."""
+        """Return the current data stored in the provider."""
         return self._data
 
     def retrieve_pushes(self):
-        """The method to run the daemon thread in.
+        """Retrieve_pushes.
 
         Spawn a new Listener and links it to self.on_push.
         """

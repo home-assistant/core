@@ -104,7 +104,7 @@ def _find_host_from_config(hass, filename=PHUE_CONFIG_FILE):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Hue lights."""
+    """Set up the Hue lights."""
     # Default needed in case of discovery
     filename = config.get(CONF_FILENAME, PHUE_CONFIG_FILE)
     allow_unreachable = config.get(CONF_ALLOW_UNREACHABLE,
@@ -140,7 +140,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                  allow_in_emulated_hue, allow_hue_groups):
-    """Setup a phue bridge based on host parameter."""
+    """Set up a phue bridge based on host parameter."""
     import phue
 
     try:
@@ -273,7 +273,7 @@ def request_configuration(host, hass, add_devices, filename,
 
     # pylint: disable=unused-argument
     def hue_configuration_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Set up actions to do when our configuration callback is called."""
         setup_bridge(host, hass, add_devices, filename, allow_unreachable,
                      allow_in_emulated_hue, allow_hue_groups)
 
@@ -380,12 +380,10 @@ class HueLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             if self.info.get('manufacturername') == "OSRAM":
-                hsv = color_util.color_xy_brightness_to_hsv(
-                    *kwargs[ATTR_XY_COLOR],
-                    ibrightness=self.info['bri'])
-                command['hue'] = hsv[0]
-                command['sat'] = hsv[1]
-                command['bri'] = hsv[2]
+                hue, sat = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
+                command['hue'] = hue
+                command['sat'] = sat
+                command['bri'] = self.info['bri']
             else:
                 command['xy'] = kwargs[ATTR_XY_COLOR]
         elif ATTR_RGB_COLOR in kwargs:
@@ -405,7 +403,8 @@ class HueLight(Light):
             command['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs:
-            command['ct'] = kwargs[ATTR_COLOR_TEMP]
+            temp = kwargs[ATTR_COLOR_TEMP]
+            command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))
 
         flash = kwargs.get(ATTR_FLASH)
 

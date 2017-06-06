@@ -104,7 +104,8 @@ class ITachIP2IRRemote(remote.RemoteDevice):
 
     def send_command(self, **kwargs):
         """Send a command to one device."""
-        self.itachip2ir.send(self._name, kwargs[ATTR_COMMAND], 1)
+        for command in kwargs[ATTR_COMMAND]:
+            self.itachip2ir.send(self._name, command, 1)
 
     def update(self):
         """Update the device."""

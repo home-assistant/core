@@ -17,13 +17,13 @@ import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.const import (EVENT_HOMEASSISTANT_START,
-                                 EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-                                 STATE_NOT_HOME, STATE_OFF, STATE_ON,
-                                 ATTR_HIDDEN, HTTP_BAD_REQUEST)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
+    STATE_NOT_HOME, STATE_OFF, STATE_ON, ATTR_HIDDEN, HTTP_BAD_REQUEST,
+    EVENT_LOGBOOK_ENTRY)
 from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
 
-DOMAIN = "logbook"
+DOMAIN = 'logbook'
 DEPENDENCIES = ['recorder', 'frontend']
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,9 +48,9 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-EVENT_LOGBOOK_ENTRY = 'logbook_entry'
-
 GROUP_BY_MINUTES = 15
+
+CONTINUOUS_DOMAINS = ['proximity', 'sensor']
 
 ATTR_NAME = 'name'
 ATTR_MESSAGE = 'message'
@@ -100,11 +100,11 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    register_built_in_panel(hass, 'logbook', 'Logbook',
-                            'mdi:format-list-bulleted-type')
+    register_built_in_panel(
+        hass, 'logbook', 'Logbook', 'mdi:format-list-bulleted-type')
 
-    hass.services.register(DOMAIN, 'log', log_message,
-                           schema=LOG_MESSAGE_SCHEMA)
+    hass.services.register(
+        DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
     return True
 
 
@@ -134,8 +134,8 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.loop.run_in_executor(
-            None, _get_events, hass, start_day, end_day)
+        events = yield from hass.async_add_job(
+            _get_events, hass, start_day, end_day)
         events = _exclude_events(events, self.config)
         return self.json(humanify(events))
 
@@ -164,11 +164,11 @@ class Entry(object):
 
 
 def humanify(events):
-    """Generator that converts a list of events into Entry objects.
+    """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
-     - if 2+ sensor updates in GROUP_BY_MINUTES, show last
-     - if home assistant stop and start happen in same minute call it restarted
+    - if 2+ sensor updates in GROUP_BY_MINUTES, show last
+    - if home assistant stop and start happen in same minute call it restarted
     """
     # Group events in batches of GROUP_BY_MINUTES
     for _, g_events in groupby(
@@ -192,7 +192,8 @@ def humanify(events):
                 if entity_id is None:
                     continue
 
-                if entity_id.startswith('sensor.'):
+                if entity_id.startswith(tuple('{}.'.format(
+                        domain) for domain in CONTINUOUS_DOMAINS)):
                     last_sensor_event[entity_id] = event
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
@@ -224,12 +225,12 @@ def humanify(events):
                 domain = to_state.domain
 
                 # Skip all but the last sensor state
-                if domain == 'sensor' and \
+                if domain in CONTINUOUS_DOMAINS and \
                    event != last_sensor_event[to_state.entity_id]:
                     continue
 
                 # Don't show continuous sensor value changes in the logbook
-                if domain == 'sensor' and \
+                if domain in CONTINUOUS_DOMAINS and \
                    to_state.attributes.get('unit_of_measurement'):
                     continue
 

@@ -27,7 +27,7 @@ CLASS_MAPPING = {
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Zigbee Home Automation binary sensors."""
+    """Set up the Zigbee Home Automation binary sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
@@ -55,12 +55,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):
-    """ZHA Binary Sensor."""
+    """THe ZHA Binary Sensor."""
 
     _domain = DOMAIN
 
     def __init__(self, device_class, **kwargs):
-        """Initialize ZHA binary sensor."""
+        """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_class = device_class
         from bellows.zigbee.zcl.clusters.security import IasZone

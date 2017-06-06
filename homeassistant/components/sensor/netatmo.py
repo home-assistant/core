@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available Netatmo weather sensors."""
+    """Set up the available Netatmo weather sensors."""
     netatmo = get_component('netatmo')
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
@@ -109,9 +109,8 @@ class NetAtmoSensor(Entity):
         module_id = self.netatmo_data.\
             station_data.moduleByName(module=module_name)['_id']
         self.module_id = module_id[1]
-        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(self._name,
-                                                                  module_id,
-                                                                  self.type)
+        self._unique_id = "Netatmo Sensor {0} - {1} ({2})".format(
+            self._name, module_id, self.type)
         self.update()
 
     @property
@@ -307,7 +306,7 @@ class NetAtmoData(object):
         self.station_data = lnetatmo.WeatherStationData(self.auth)
 
         if self.station is not None:
-            self.data = self.station_data.lastData(station=self.station,
-                                                   exclude=3600)
+            self.data = self.station_data.lastData(
+                station=self.station, exclude=3600)
         else:
             self.data = self.station_data.lastData(exclude=3600)

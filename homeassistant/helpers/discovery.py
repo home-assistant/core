@@ -19,7 +19,7 @@ ATTR_PLATFORM = 'platform'
 
 
 def listen(hass, service, callback):
-    """Setup listener for discovery of specific service.
+    """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
     """
@@ -29,7 +29,7 @@ def listen(hass, service, callback):
 
 @core.callback
 def async_listen(hass, service, callback):
-    """Setup listener for discovery of specific service.
+    """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
     """

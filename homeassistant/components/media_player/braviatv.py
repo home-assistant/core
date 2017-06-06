@@ -76,7 +76,7 @@ def _config_from_file(filename, config=None):
             with open(filename, 'w') as fdesc:
                 fdesc.write(json.dumps(new_config))
         except IOError as error:
-            _LOGGER.error('Saving config file failed: %s', error)
+            _LOGGER.error("Saving config file failed: %s", error)
             return False
         return True
     else:
@@ -88,7 +88,7 @@ def _config_from_file(filename, config=None):
             except ValueError as error:
                 return {}
             except IOError as error:
-                _LOGGER.error('Reading config file failed: %s', error)
+                _LOGGER.error("Reading config file failed: %s", error)
                 # This won't work yet
                 return False
         else:
@@ -135,13 +135,13 @@ def setup_bravia(config, pin, hass, add_devices):
             request_id = _CONFIGURING.pop(host)
             configurator = get_component('configurator')
             configurator.request_done(request_id)
-            _LOGGER.info('Discovery configuration done!')
+            _LOGGER.info("Discovery configuration done")
 
         # Save config
         if not _config_from_file(
                 hass.config.path(BRAVIA_CONFIG_FILE),
                 {host: {'pin': pin, 'host': host, 'mac': mac}}):
-            _LOGGER.error('failed to save config file')
+            _LOGGER.error("Failed to save configuration file")
 
         add_devices([BraviaTVDevice(host, mac, name, pin)])
 
@@ -160,7 +160,7 @@ def request_configuration(config, hass, add_devices):
         return
 
     def bravia_configuration_callback(data):
-        """Callback after user enter PIN."""
+        """Handle the entry of user PIN."""
         from braviarc import braviarc
 
         pin = data.get('pin')

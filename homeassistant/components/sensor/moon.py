@@ -15,8 +15,6 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['astral==1.4']
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Moon'
@@ -34,7 +32,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     async_add_devices([MoonSensor(name)], True)
-    return True
 
 
 class MoonSensor(Entity):

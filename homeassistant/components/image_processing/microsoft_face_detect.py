@@ -1,7 +1,7 @@
 """
-Component that will help set the microsoft face detect processing.
+Component that will help set the Microsoft face detect processing.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/image_processing.microsoft_face_detect/
 """
 import asyncio
@@ -21,8 +21,6 @@ import homeassistant.helpers.config_validation as cv
 DEPENDENCIES = ['microsoft_face']
 
 _LOGGER = logging.getLogger(__name__)
-
-EVENT_IDENTIFY_FACE = 'detect_face'
 
 SUPPORTED_ATTRIBUTES = [
     ATTR_AGE,
@@ -50,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the microsoft face detection platform."""
+    """Set up the Microsoft Face detection platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     attributes = config[CONF_ATTRIBUTES]
 
@@ -64,10 +62,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
-    """Microsoft face api entity for identify."""
+    """Microsoft Face API entity for identify."""
 
     def __init__(self, camera_entity, api, attributes, name=None):
-        """Initialize openalpr local api."""
+        """Initialize Microsoft Face."""
         super().__init__()
 
         self._api = api

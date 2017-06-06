@@ -58,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the InfluxDB component."""
+    """Set up the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
 
     conf = config[DOMAIN]

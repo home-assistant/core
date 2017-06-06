@@ -42,11 +42,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the departure sensor."""
+    """Set up the departure sensor."""
     import vasttrafik
     planner = vasttrafik.JournyPlanner(
-        config.get(CONF_KEY),
-        config.get(CONF_SECRET))
+        config.get(CONF_KEY), config.get(CONF_SECRET))
     sensors = []
     for departure in config.get(CONF_DEPARTURES):
         sensors.append(
@@ -104,7 +103,7 @@ class VasttrafikDepartureSensor(Entity):
         """Return the next departure time."""
         if not self._departureboard:
             _LOGGER.warning(
-                'No departures from "%s" heading "%s"',
+                "No departures from %s heading %s",
                 self._departure['name'],
                 self._heading['name'] if self._heading else 'ANY')
             return
@@ -121,5 +120,5 @@ class VasttrafikDepartureSensor(Entity):
                 direction=self._heading['id'] if self._heading else None,
                 date=datetime.now()+self._delay)
         except self._vasttrafik.Error:
-            _LOGGER.warning('Unable to read departure board, updating token')
+            _LOGGER.warning("Unable to read departure board, updating token")
             self._planner.update_token()

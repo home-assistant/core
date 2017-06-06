@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Yamaha platform."""
+    """Set up the Yamaha platform."""
     import rxv
     # keep track of configured receivers so that we don't end up
     # discovering a receiver dynamically that we have static config
@@ -241,7 +241,7 @@ class YamahaDevice(MediaPlayerDevice):
             function()
         except rxv.exceptions.ResponseException:
             _LOGGER.warning(
-                'Failed to execute %s on %s', function_text, self._name)
+                "Failed to execute %s on %s", function_text, self._name)
 
     def select_source(self, source):
         """Select input source."""

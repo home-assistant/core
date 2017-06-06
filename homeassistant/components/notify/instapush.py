@@ -48,7 +48,7 @@ def get_service(hass, config, discovery_info=None):
             '{}{}'.format(_RESOURCE, 'events/list'), headers=headers,
             timeout=DEFAULT_TIMEOUT).json()
     except ValueError:
-        _LOGGER.error('Unexpected answer from Instapush API')
+        _LOGGER.error("Unexpected answer from Instapush API")
         return None
 
     if 'error' in response:

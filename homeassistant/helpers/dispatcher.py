@@ -1,4 +1,4 @@
-"""Helpers for hass dispatcher & internal component / platform."""
+"""Helpers for Home Assistant dispatcher & internal component/platform."""
 import logging
 
 from homeassistant.core import callback

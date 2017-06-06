@@ -63,7 +63,7 @@ def toggle(hass, entity_id):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up input boolean."""
+    """Set up an input boolean."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
@@ -140,7 +140,7 @@ class InputBoolean(ToggleEntity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity about to be added to hass."""
+        """Call when entity about to be added to hass."""
         # If not None, we got an initial value.
         if self._state is not None:
             return

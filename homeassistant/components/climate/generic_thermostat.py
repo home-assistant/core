@@ -14,7 +14,8 @@ from homeassistant.components import switch
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE)
+    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
+    CONF_NAME)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -27,7 +28,6 @@ DEPENDENCIES = ['switch', 'sensor']
 DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = 'Generic Thermostat'
 
-CONF_NAME = 'name'
 CONF_HEATER = 'heater'
 CONF_SENSOR = 'target_sensor'
 CONF_MIN_TEMP = 'min_temp'
@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the generic thermostat."""
+    """Set up the generic thermostat platform."""
     name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
     sensor_entity_id = config.get(CONF_SENSOR)
@@ -74,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class GenericThermostat(ClimateDevice):
-    """Representation of a GenericThermostat device."""
+    """Representation of a Generic Thermostat device."""
 
     def __init__(self, hass, name, heater_entity_id, sensor_entity_id,
                  min_temp, max_temp, target_temp, ac_mode, min_cycle_duration,
@@ -110,7 +110,7 @@ class GenericThermostat(ClimateDevice):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
@@ -175,7 +175,7 @@ class GenericThermostat(ClimateDevice):
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
-        """Called when temperature changes."""
+        """Handle temperature changes."""
         if new_state is None:
             return
 
@@ -185,14 +185,14 @@ class GenericThermostat(ClimateDevice):
 
     @callback
     def _async_switch_changed(self, entity_id, old_state, new_state):
-        """Called when heater switch changes state."""
+        """Handle heater switch state changes."""
         if new_state is None:
             return
         self.hass.async_add_job(self.async_update_ha_state())
 
     @callback
     def _async_keep_alive(self, time):
-        """Called at constant intervals for keep-alive purposes."""
+        """Call at constant intervals for keep-alive purposes."""
         if self.current_operation in [STATE_COOL, STATE_HEAT]:
             switch.async_turn_on(self.hass, self.heater_entity_id)
         else:

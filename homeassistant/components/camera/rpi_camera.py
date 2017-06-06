@@ -62,7 +62,7 @@ def kill_raspistill(*args):
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Raspberry Camera."""
+    """Set up the Raspberry Camera."""
     if shutil.which("raspistill") is None:
         _LOGGER.error("'raspistill' was not found")
         return False

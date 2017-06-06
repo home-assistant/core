@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ["pyhomematic==0.1.25"]
+REQUIREMENTS = ['pyhomematic==0.1.27']
 
 DOMAIN = 'homematic'
 
@@ -42,9 +42,12 @@ ATTR_NAME = 'name'
 ATTR_ADDRESS = 'address'
 ATTR_VALUE = 'value'
 ATTR_PROXY = 'proxy'
+ATTR_ERRORCODE = 'error'
+ATTR_MESSAGE = 'message'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
+EVENT_ERROR = 'homematic.error'
 
 SERVICE_VIRTUALKEY = 'virtualkey'
 SERVICE_RECONNECT = 'reconnect'
@@ -215,7 +218,7 @@ def virtualkey(hass, address, channel, param, proxy=None):
 
 
 def set_var_value(hass, entity_id, value):
-    """Change value of homematic system variable."""
+    """Change value of a Homematic system variable."""
     data = {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
@@ -225,7 +228,7 @@ def set_var_value(hass, entity_id, value):
 
 
 def set_dev_value(hass, address, channel, param, value, proxy=None):
-    """Send virtual keypress to homematic controlller."""
+    """Send virtual keypress to the Homematic controlller."""
     data = {
         ATTR_ADDRESS: address,
         ATTR_CHANNEL: channel,
@@ -296,7 +299,7 @@ def setup(hass, config):
         entity_hubs.append(HMHub(
             hass, hub_data[CONF_NAME], hub_data[CONF_VARIABLES]))
 
-    # Regeister homematic services
+    # Register Homematic services
     descriptions = load_yaml_config_file(
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
 
@@ -389,7 +392,7 @@ def setup(hass, config):
 
 
 def _system_callback_handler(hass, config, src, *args):
-    """Callback handler."""
+    """Handle the callback."""
     if src == 'newDevices':
         _LOGGER.debug("newDevices with: %s", args)
         # pylint: disable=unused-variable
@@ -446,6 +449,14 @@ def _system_callback_handler(hass, config, src, *args):
                     discovery.load_platform(hass, component_name, DOMAIN, {
                         ATTR_DISCOVER_DEVICES: found_devices
                     }, config)
+
+    elif src == 'error':
+        _LOGGER.debug("Error: %s", args)
+        (interface_id, errorcode, message) = args
+        hass.bus.fire(EVENT_ERROR, {
+            ATTR_ERRORCODE: errorcode,
+            ATTR_MESSAGE: message
+        })
 
 
 def _get_devices(hass, discovery_type, keys, proxy):
@@ -544,19 +555,19 @@ def _hm_event_handler(hass, proxy, device, caller, attribute, value):
 
     # keypress event
     if attribute in HM_PRESS_EVENTS:
-        hass.add_job(hass.bus.async_fire(EVENT_KEYPRESS, {
+        hass.bus.fire(EVENT_KEYPRESS, {
             ATTR_NAME: hmdevice.NAME,
             ATTR_PARAM: attribute,
             ATTR_CHANNEL: channel
-        }))
+        })
         return
 
     # impulse event
     if attribute in HM_IMPULSE_EVENTS:
-        hass.add_job(hass.bus.async_fire(EVENT_KEYPRESS, {
+        hass.bus.fire(EVENT_IMPULSE, {
             ATTR_NAME: hmdevice.NAME,
             ATTR_CHANNEL: channel
-        }))
+        })
         return
 
     _LOGGER.warning("Event is unknown and not forwarded")
@@ -566,6 +577,8 @@ def _device_from_servicecall(hass, service):
     """Extract homematic device from service call."""
     address = service.data.get(ATTR_ADDRESS)
     proxy = service.data.get(ATTR_PROXY)
+    if address == 'BIDCOS-RF':
+        address = 'BidCoS-RF'
 
     if proxy:
         return hass.data[DATA_HOMEMATIC].devices[proxy].get(address)

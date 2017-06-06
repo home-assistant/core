@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the heatmiser thermostat."""
+    """Set up the heatmiser thermostat."""
     from heatmiserV3 import heatmiser, connection
 
     ipaddress = config.get(CONF_IPADDRESS)

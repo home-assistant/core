@@ -17,6 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = ['modbus']
 
 CONF_COUNT = 'count'

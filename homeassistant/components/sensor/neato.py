@@ -32,12 +32,12 @@ ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Neato sensor platform."""
+    """Set up the Neato sensor platform."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SENSOR_TYPES:
             dev.append(NeatoConnectedSensor(hass, robot, type_name))
-    _LOGGER.debug('Adding sensors %s', dev)
+    _LOGGER.debug("Adding sensors %s", dev)
     add_devices(dev)
 
 
@@ -56,7 +56,7 @@ class NeatoConnectedSensor(Entity):
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.HTTPError) as ex:
             self._state = None
-            _LOGGER.warning('Neato connection error: %s', ex)
+            _LOGGER.warning("Neato connection error: %s", ex)
         self._mapdata = hass.data[NEATO_MAP_DATA]
         self.clean_time_start = None
         self.clean_time_stop = None
@@ -78,7 +78,7 @@ class NeatoConnectedSensor(Entity):
                 requests.exceptions.HTTPError) as ex:
             self._state = None
             self._status_state = 'Offline'
-            _LOGGER.warning('Neato connection error: %s', ex)
+            _LOGGER.warning("Neato connection error: %s", ex)
             return
         if not self._state:
             return

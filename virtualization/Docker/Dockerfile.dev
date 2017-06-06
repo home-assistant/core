@@ -2,14 +2,13 @@
 # Based on the production Dockerfile, but with development additions.
 # Keep this file as close as possible to the production Dockerfile, so the environments match.
 
-FROM python:3.5
+FROM python:3.6
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
 # Uncomment any of the following lines to disable the installation.
 #ENV INSTALL_TELLSTICK no
 #ENV INSTALL_OPENALPR no
 #ENV INSTALL_FFMPEG no
-#ENV INSTALL_OPENZWAVE no
 #ENV INSTALL_LIBCEC no
 #ENV INSTALL_PHANTOMJS no
 #ENV INSTALL_COAP_CLIENT no
@@ -38,11 +37,11 @@ RUN curl -sL https://deb.nodesource.com/setup_7.x | bash - && \
 RUN pip3 install --no-cache-dir tox
 
 # Copy over everything required to run tox
-COPY requirements_test.txt setup.cfg setup.py tox.ini ./
+COPY requirements_test_all.txt setup.cfg setup.py tox.ini ./
 COPY homeassistant/const.py homeassistant/const.py
 
 # Prefetch dependencies for tox
-RUN tox -e py35 --notest
+RUN tox -e py36 --notest
 
 # END: Development additions
 

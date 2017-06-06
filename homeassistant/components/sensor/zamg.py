@@ -157,6 +157,7 @@ class ZamgData(object):
             response = requests.get(
                 cls.API_URL, headers=cls.API_HEADERS, timeout=15)
             response.raise_for_status()
+            response.encoding = 'UTF8'
             return csv.DictReader(response.text.splitlines(),
                                   delimiter=';', quotechar='"')
         except Exception:  # pylint:disable=broad-except
@@ -185,7 +186,7 @@ class ZamgData(object):
                              .format(self._station_id))
 
     def get_data(self, variable):
-        """Generic accessor for data."""
+        """Get the data."""
         return self.data.get(variable)
 
 
@@ -231,7 +232,7 @@ def closest_station(lat, lon, cache_dir):
     stations = zamg_stations(cache_dir)
 
     def comparable_dist(zamg_id):
-        """A fast key function for psudeo-distance from lat/lon."""
+        """Calculater psudeo-distance from lat/lon."""
         station_lat, station_lon = stations[zamg_id]
         return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
 

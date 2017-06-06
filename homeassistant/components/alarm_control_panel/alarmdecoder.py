@@ -25,7 +25,7 @@ DEPENDENCIES = ['alarmdecoder']
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Perform the setup for AlarmDecoder alarm panels."""
+    """Set up for AlarmDecoder alarm panels."""
     _LOGGER.debug("AlarmDecoderAlarmPanel: setup")
 
     device = AlarmDecoderAlarmPanel("Alarm Panel", hass)
@@ -44,7 +44,7 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
         self._name = name
         self._state = STATE_UNKNOWN
 
-        _LOGGER.debug("AlarmDecoderAlarm: Setting up panel")
+        _LOGGER.debug("Setting up panel")
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -78,12 +78,12 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return False
 
     @property
     def code_format(self):
-        """Regex for code format or None if no code is required."""
+        """Return the regex for code format or None if no code is required."""
         return '^\\d{4,6}$'
 
     @property
@@ -94,26 +94,23 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
         """Send disarm command."""
-        _LOGGER.debug("AlarmDecoderAlarm::alarm_disarm: %s", code)
+        _LOGGER.debug("alarm_disarm: %s", code)
         if code:
-            _LOGGER.debug("AlarmDecoderAlarm::alarm_disarm: sending %s1",
-                          str(code))
+            _LOGGER.debug("alarm_disarm: sending %s1", str(code))
             self.hass.data[DATA_AD].send("{!s}1".format(code))
 
     @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
-        _LOGGER.debug("AlarmDecoderAlarm::alarm_arm_away: %s", code)
+        _LOGGER.debug("alarm_arm_away: %s", code)
         if code:
-            _LOGGER.debug("AlarmDecoderAlarm::alarm_arm_away: sending %s2",
-                          str(code))
+            _LOGGER.debug("alarm_arm_away: sending %s2", str(code))
             self.hass.data[DATA_AD].send("{!s}2".format(code))
 
     @asyncio.coroutine
     def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
-        _LOGGER.debug("AlarmDecoderAlarm::alarm_arm_home: %s", code)
+        _LOGGER.debug("alarm_arm_home: %s", code)
         if code:
-            _LOGGER.debug("AlarmDecoderAlarm::alarm_arm_home: sending %s3",
-                          str(code))
+            _LOGGER.debug("alarm_arm_home: sending %s3", str(code))
             self.hass.data[DATA_AD].send("{!s}3".format(code))

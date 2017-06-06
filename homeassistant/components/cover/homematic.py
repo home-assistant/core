@@ -3,11 +3,7 @@ The homematic cover platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.homematic/
-
-Important: For this platform to work the homematic component has to be
-properly configured.
 """
-
 import logging
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION
@@ -19,7 +15,7 @@ DEPENDENCIES = ['homematic']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the platform."""
+    """Set up the platform."""
     if discovery_info is None:
         return
 
@@ -33,7 +29,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HMCover(HMDevice, CoverDevice):
-    """Represents a Homematic Cover in Home Assistant."""
+    """Representation a Homematic Cover."""
 
     @property
     def current_cover_position(self):

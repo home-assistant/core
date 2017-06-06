@@ -158,7 +158,7 @@ def do_authentication(hass, config):
 
 
 def setup(hass, config):
-    """Setup the platform."""
+    """Set up the Google platform."""
     if DATA_INDEX not in hass.data:
         hass.data[DATA_INDEX] = {}
 
@@ -174,7 +174,7 @@ def setup(hass, config):
 
 
 def setup_services(hass, track_new_found_calendars, calendar_service):
-    """Setup service listeners."""
+    """Set up the service listeners."""
     def _found_calendar(call):
         """Check if we know about a calendar and generate PLATFORM_DISCOVER."""
         calendar = get_calendar_info(hass, call.data)
@@ -214,7 +214,7 @@ def setup_services(hass, track_new_found_calendars, calendar_service):
 
 def do_setup(hass, config):
     """Run the setup after we have everything configured."""
-    # load calendars the user has configured
+    # Load calendars the user has configured
     hass.data[DATA_INDEX] = load_config(hass.config.path(YAML_DEVICES))
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
@@ -228,16 +228,16 @@ def do_setup(hass, config):
     for calendar in hass.data[DATA_INDEX].values():
         discovery.load_platform(hass, 'calendar', DOMAIN, calendar)
 
-    # look for any new calendars
+    # Look for any new calendars
     hass.services.call(DOMAIN, SERVICE_SCAN_CALENDARS, None)
     return True
 
 
 class GoogleCalendarService(object):
-    """Calendar service interface to google."""
+    """Calendar service interface to Google."""
 
     def __init__(self, token_file):
-        """We just need the token_file."""
+        """Init the Google Calendar service."""
         self.token_file = token_file
 
     def get(self):
@@ -247,8 +247,8 @@ class GoogleCalendarService(object):
         from googleapiclient import discovery as google_discovery
         credentials = Storage(self.token_file).get()
         http = credentials.authorize(httplib2.Http())
-        service = google_discovery.build('calendar', 'v3', http=http,
-                                         cache_discovery=False)
+        service = google_discovery.build(
+            'calendar', 'v3', http=http, cache_discovery=False)
         return service
 
 
@@ -259,8 +259,8 @@ def get_calendar_info(hass, calendar):
         CONF_ENTITIES: [{
             CONF_TRACK: calendar['track'],
             CONF_NAME: calendar['summary'],
-            CONF_DEVICE_ID: generate_entity_id('{}', calendar['summary'],
-                                               hass=hass),
+            CONF_DEVICE_ID: generate_entity_id(
+                '{}', calendar['summary'], hass=hass),
         }]
     })
     return calendar_info
@@ -278,7 +278,7 @@ def load_config(path):
                                       DEVICE_SCHEMA(calendar)})
                 except VoluptuousError as exception:
                     # keep going
-                    _LOGGER.warning('Calendar Invalid Data: %s', exception)
+                    _LOGGER.warning("Calendar Invalid Data: %s", exception)
     except FileNotFoundError:
         # When YAML file could not be loaded/did not contain a dict
         return {}

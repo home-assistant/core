@@ -1,9 +1,11 @@
 """The tests for the Demo Media player platform."""
+import datetime
 import socket
 import unittest
 import soco.snapshot
 from unittest import mock
 import soco
+from soco import alarms
 
 from homeassistant.setup import setup_component
 from homeassistant.components.media_player import sonos, DOMAIN
@@ -47,10 +49,6 @@ class SoCoMock():
         self.ip_address = ip
         self.is_visible = True
         self.avTransport = AvTransportMock()
-
-    def clear_sleep_timer(self):
-        """Clear the sleep timer."""
-        return
 
     def get_sonos_favorites(self):
         """Get favorites list from sonos."""
@@ -310,6 +308,36 @@ class TestSonosMediaPlayer(unittest.TestCase):
 
         device.set_sleep_timer(None)
         set_sleep_timerMock.assert_called_once_with(None)
+
+    @mock.patch('soco.SoCo', new=SoCoMock)
+    @mock.patch('soco.alarms.Alarm')
+    @mock.patch('socket.create_connection', side_effect=socket.error())
+    def test_update_alarm(self, soco_mock, alarm_mock, *args):
+        """Ensuring soco methods called for sonos_set_sleep_timer service."""
+        sonos.setup_platform(self.hass, {}, fake_add_device, {
+            'host': '192.0.2.1'
+        })
+        device = self.hass.data[sonos.DATA_SONOS][-1]
+        device.hass = self.hass
+        alarm1 = alarms.Alarm(soco_mock)
+        alarm1.configure_mock(_alarm_id="1", start_time=None, enabled=False,
+                              include_linked_zones=False, volume=100)
+        with mock.patch('soco.alarms.get_alarms', return_value=[alarm1]):
+            attrs = {
+                'time': datetime.time(12, 00),
+                'enabled': True,
+                'include_linked_zones': True,
+                'volume': 0.30,
+            }
+            device.update_alarm(alarm_id=2)
+            alarm1.save.assert_not_called()
+            device.update_alarm(alarm_id=1, **attrs)
+            self.assertEqual(alarm1.enabled, attrs['enabled'])
+            self.assertEqual(alarm1.start_time, attrs['time'])
+            self.assertEqual(alarm1.include_linked_zones,
+                             attrs['include_linked_zones'])
+            self.assertEqual(alarm1.volume, 30)
+            alarm1.save.assert_called_once_with()
 
     @mock.patch('soco.SoCo', new=SoCoMock)
     @mock.patch('socket.create_connection', side_effect=socket.error())

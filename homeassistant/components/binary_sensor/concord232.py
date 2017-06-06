@@ -67,8 +67,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if zone['number'] not in exclude:
             sensors.append(
                 Concord232ZoneSensor(
-                    hass, client, zone, zone_types.get(zone['number'],
-                                                       get_opening_type(zone)))
+                    hass, client, zone, zone_types.get(
+                        zone['number'], get_opening_type(zone))
+                )
             )
 
         add_devices(sensors)
@@ -77,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def get_opening_type(zone):
-    """Helper function to try to guess sensor type from name."""
+    """Return the result of the type guessing from name."""
     if 'MOTION' in zone['name']:
         return 'motion'
     if 'KEY' in zone['name']:
@@ -123,7 +124,7 @@ class Concord232ZoneSensor(BinarySensorDevice):
         return bool(self._zone['state'] == 'Normal')
 
     def update(self):
-        """"Get updated stats from API."""
+        """Get updated stats from API."""
         last_update = datetime.datetime.now() - self._client.last_zone_update
         _LOGGER.debug("Zone: %s ", self._zone)
         if last_update > datetime.timedelta(seconds=1):

@@ -20,7 +20,6 @@ from homeassistant.util import distance as util_distance
 from homeassistant.util import location as util_location
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=12)  # opensky public limit is 10 seconds
@@ -51,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Open Sky platform."""
+    """Set up the Open Sky platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     add_devices([OpenSkySensor(
@@ -132,10 +131,10 @@ class OpenSkySensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement."""
+        """Return the unit of measurement."""
         return 'flights'
 
     @property
     def icon(self):
-        """Icon."""
+        """Return the icon."""
         return 'mdi:airplane'

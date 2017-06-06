@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({
 
 @asyncio.coroutine
 def async_setup_scanner(hass, config, async_see, discovery_info=None):
-    """Setup the MQTT tracker."""
+    """Set up the MQTT tracker."""
     devices = config[CONF_DEVICES]
     qos = config[CONF_QOS]
 
@@ -35,7 +35,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
 
     @callback
     def async_tracker_message_received(topic, payload, qos):
-        """MQTT message received."""
+        """Handle received MQTT message."""
         hass.async_add_job(
             async_see(dev_id=dev_id_lookup[topic], location_name=payload))
 

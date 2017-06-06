@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
-    """Setup Volvo tracker."""
+    """Set up the Volvo tracker."""
     if discovery_info is None:
         return
 
@@ -24,7 +24,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     dev_id = 'volvo_' + slugify(host_name)
 
     def see_vehicle(vehicle):
-        """Callback for reporting vehicle position."""
+        """Handle the reporting of the vehicle position."""
         see(dev_id=dev_id,
             host_name=host_name,
             gps=(vehicle.position['latitude'],

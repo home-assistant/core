@@ -55,3 +55,59 @@ unlock:
     code:
       description: An optional code to unlock the lock with
       example: 1234
+
+wink_set_lock_vacation_mode:
+  description: Set vacation mode for all or specified locks. Disables all user codes.
+
+  fields:
+    entity_id:
+      description: Name of lock to unlock
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false. 
+      example: true
+
+wink_set_lock_alarm_mode:
+  description: Set alarm mode for all or specified locks.
+
+  fields:
+    entity_id:
+      description: Name of lock to unlock
+      example: 'lock.front_door'
+    mode:
+      description: One of tamper, activity, or forced_entry 
+      example: tamper
+
+wink_set_lock_alarm_sensitivity:
+  description: Set alarm sensitivity for all or specified locks.
+
+  fields:
+    entity_id:
+      description: Name of lock to unlock
+      example: 'lock.front_door'
+    sensitivity:
+      description: One of low, medium_low, medium, medium_high, high 
+      example: medium
+
+wink_set_lock_alarm_state:
+  description: Set alarm state.
+
+  fields:
+    entity_id:
+      description: Name of lock to unlock
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false. 
+      example: true
+
+wink_set_lock_beeper_state:
+  description: Set beeper state.
+
+  fields:
+    entity_id:
+      description: Name of lock to unlock
+      example: 'lock.front_door'
+    enabled:
+      description: enable or disable. true or false. 
+      example: true
+
