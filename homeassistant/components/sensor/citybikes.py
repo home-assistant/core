@@ -16,7 +16,7 @@ from homeassistant.const import (
     LENGTH_METERS, LENGTH_FEET)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import (
-    Throttle, slugify, location, distance)
+    Throttle, location, distance)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-citybikes==0.1.3']
@@ -29,7 +29,7 @@ CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
 CONF_STATIONS_LIST = 'stations'
 ATTR_STATION_ID = 'id'
-ATTR_STATION_UID = 'id'
+ATTR_STATION_UID = 'uid'
 ATTR_STATION_NAME = 'name'
 ATTR_EXTRA = 'extra'
 ATTR_EMPTY_SLOTS = 'empty_slots'
@@ -97,7 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     poller = CityBikesNetworkPoller(network)
 
     add_devices(CityBikesStationSensor(poller, station,
-                                       config.get(CONF_NAME, DOMAIN))
+                                       config.get(CONF_NAME, network['id']))
                 for station in _filter_stations(network, radius, latitude,
                                                 longitude, stations_list))
 
@@ -134,8 +134,8 @@ class CityBikesStationSensor(Entity):
 
     def _update(self, station):
         self._id = station[ATTR_STATION_ID]
-        self._uid = station[ATTR_EXTRA]['uid'] if ATTR_EXTRA in station \
-            and 'uid' in station[ATTR_EXTRA] \
+        self._uid = station[ATTR_EXTRA][ATTR_STATION_UID] if \
+            ATTR_EXTRA in station and ATTR_STATION_UID in station[ATTR_EXTRA] \
             else None
         self._latitude = station[ATTR_LATITUDE]
         self._longitude = station[ATTR_LONGITUDE]
@@ -143,8 +143,8 @@ class CityBikesStationSensor(Entity):
         self._free_bikes = station[ATTR_FREE_BIKES]
         self._timestamp = station[ATTR_TIMESTAMP]
         self._friendly_name = station[ATTR_STATION_NAME]
-        self._name = slugify("{}_{}".format(self._base_name,
-                                            station[ATTR_STATION_NAME]))
+        self._name = "{} {}".format(self._base_name,
+                                    station[ATTR_STATION_NAME])
 
     @property
     def name(self):
