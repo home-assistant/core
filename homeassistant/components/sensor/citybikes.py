@@ -15,8 +15,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME,
     LENGTH_METERS, LENGTH_FEET)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import (
-    Throttle, location, distance)
+from homeassistant.util import Throttle, location, distance
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-citybikes==0.1.3']
