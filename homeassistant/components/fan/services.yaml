@@ -58,7 +58,29 @@ set_direction:
   fields:
     entity_id:
       description: Name(s) of the entities to toggle
-      exampl: 'fan.living_room'
+      example: 'fan.living_room'
     direction:
       description: The direction to rotate
       example: 'left'
+
+set_auto_mode:
+  description: Set the fan in auto mode
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to enable/disable auto mode
+      example: 'fan.living_room'
+    auto_mode:
+      description: Auto mode status
+      example: true
+
+set_night_mode:
+  description: Set the fan in night mode
+
+  fields:
+    entity_id:
+      description: Name(s) of the entities to enable/disable night mode
+      example: 'fan.living_room'
+    night_mode:
+      description: Auto mode status
+      example: true

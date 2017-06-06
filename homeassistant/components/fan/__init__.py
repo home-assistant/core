@@ -37,10 +37,14 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
+SUPPORT_NIGHT_MODE = 8
+SUPPORT_AUTO_MODE = 16
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 SERVICE_SET_DIRECTION = 'set_direction'
+SERVICE_NIGHT_MODE = 'set_night_mode'
+SERVICE_AUTO_MODE = 'set_auto_mode'
 
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
@@ -54,12 +58,16 @@ ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
+ATTR_NIGHT_MODE = 'night_mode'
+ATTR_AUTO_MODE = 'auto_mode'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
+    'is_night_mode': ATTR_NIGHT_MODE,
+    'is_auto_mode': ATTR_AUTO_MODE
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -79,6 +87,16 @@ FAN_TURN_OFF_SCHEMA = vol.Schema({
 FAN_OSCILLATE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_OSCILLATING): cv.boolean
+})  # type: dict
+
+FAN_NIGHT_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_NIGHT_MODE): cv.boolean
+})  # type: dict
+
+FAN_AUTO_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AUTO_MODE): cv.boolean
 })  # type: dict
 
 FAN_TOGGLE_SCHEMA = vol.Schema({
@@ -114,6 +132,14 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_DIRECTION: {
         'method': 'async_set_direction',
         'schema': FAN_SET_DIRECTION_SCHEMA,
+    },
+    SERVICE_NIGHT_MODE: {
+        'method': 'async_night_mode',
+        'schema': FAN_NIGHT_MODE_SCHEMA,
+    },
+    SERVICE_AUTO_MODE: {
+        'method': 'async_auto_mode',
+        'schema': FAN_AUTO_MODE_SCHEMA,
     },
 }
 
@@ -187,6 +213,30 @@ def set_direction(hass, entity_id: str=None, direction: str=None) -> None:
     }
 
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
+
+
+def set_auto_mode(hass, entity_id: str=None, auto_mode: bool=False) -> None:
+    """Set auto mode for all or specified fan."""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_AUTO_MODE, auto_mode),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_AUTO_MODE, data)
+
+
+def set_night_mode(hass, entity_id: str=None, night_mode: bool=False) -> None:
+    """Set night mode for all or specified fan."""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_NIGHT_MODE, night_mode),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_NIGHT_MODE, data)
 
 
 @asyncio.coroutine
@@ -290,6 +340,28 @@ class FanEntity(ToggleEntity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
+
+    def night_mode(self: ToggleEntity, night_mode: bool) -> None:
+        """Turn fan in night mode."""
+        pass
+
+    def async_night_mode(self: ToggleEntity, night_mode: bool):
+        """Turn fan in night mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.night_mode, night_mode)
+
+    def auto_mode(self: ToggleEntity, auto_mode: bool) -> None:
+        """Turn fan in auto mode."""
+        pass
+
+    def async_auto_mode(self: ToggleEntity, auto_mode: bool):
+        """Turn fan in auto mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.auto_mode, auto_mode)
 
     @property
     def is_on(self):
