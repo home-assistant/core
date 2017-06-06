@@ -61,7 +61,7 @@ class TradfriGroup(Light):
         self._group = light
         self._name = light.name
 
-        self._async_refresh(light)
+        self._refresh(light)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -103,10 +103,10 @@ class TradfriGroup(Light):
     def async_turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
         if ATTR_BRIGHTNESS in kwargs:
-            yield from self._api(
-                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS]))
+            self.hass.async_add_job(self._api(
+                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])))
         else:
-            yield from self._api(self._group.set_state(1))
+            self.hass.async_add_job(self._api(self._group.set_state(1)))
 
     @callback
     def _async_start_observe(self, err=None):
@@ -114,22 +114,20 @@ class TradfriGroup(Light):
         if err:
             _LOGGER.info("Observation failed for {}".format(self._name), err)
 
-        cmd = self._group.observe(callback=self._async_observe_update,
+        cmd = self._group.observe(callback=self._observe_update,
                                   err_callback=self._async_start_observe,
                                   duration=0)
         observe_task = self._api(cmd)
         self.hass.async_add_job(observe_task)
 
-    @callback
-    def _async_refresh(self, group):
+    def _refresh(self, group):
         """Refresh the light data."""
         self._group = group
         self._name = group.name
 
-    @callback
-    def _async_observe_update(self, tradfri_device):
+    def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
-        self._async_refresh(tradfri_device)
+        self._refresh(tradfri_device)
 
         self.hass.async_add_job(self.async_update_ha_state())
 
@@ -145,10 +143,10 @@ class TradfriLight(Light):
         self._light_data = None
         self._name = None
         self._rgb_color = None
-        self._features = None
+        self._features = SUPPORT_BRIGHTNESS
         self._ok_temps = None
 
-        self._async_refresh(light)
+        self._refresh(light)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -218,14 +216,16 @@ class TradfriLight(Light):
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
         if ATTR_BRIGHTNESS in kwargs:
-            yield from self._api(
-                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS]))
+            self.hass.async_add_job(self._api(
+                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS])))
         else:
-            yield from self._api(self._light_control.set_state(True))
+            self.hass.async_add_job(self._api(
+                self._light_control.set_state(True)))
 
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
-            yield from self._api(self._light.light_control.set_hex_color(
-                color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR])))
+            self.hass.async_add_job(self._api(
+                self._light.light_control.set_hex_color(
+                    color_util.color_rgb_to_hex(*kwargs[ATTR_RGB_COLOR]))))
 
         elif ATTR_COLOR_TEMP in kwargs and \
                 self._light_data.hex_color is not None and self._ok_temps:
@@ -233,8 +233,8 @@ class TradfriLight(Light):
                 kwargs[ATTR_COLOR_TEMP])
             # find closest allowed kelvin temp from user input
             kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
-            yield from self._api(
-                self._light_control.set_hex_color(self._ok_temps[kelvin]))
+            self.hass.async_add_job(self._api(
+                self._light_control.set_hex_color(self._ok_temps[kelvin])))
 
     @callback
     def _async_start_observe(self, err=None):
@@ -242,14 +242,13 @@ class TradfriLight(Light):
         if err:
             _LOGGER.info("Observation failed for {}".format(self._name), err)
 
-        cmd = self._light.observe(callback=self._async_observe_update,
+        cmd = self._light.observe(callback=self._observe_update,
                                   err_callback=self._async_start_observe,
                                   duration=0)
         observe_task = self._api(cmd)
         self.hass.async_add_job(observe_task)
 
-    @callback
-    def _async_refresh(self, light):
+    def _refresh(self, light):
         """Refresh the light data."""
         self._light = light
 
@@ -269,10 +268,9 @@ class TradfriLight(Light):
         self._ok_temps = ALLOWED_TEMPERATURES.get(
             self._light.device_info.manufacturer)
 
-    @callback
-    def _async_observe_update(self, tradfri_device):
+    def _observe_update(self, tradfri_device):
         """Receive new state data for this light."""
-        self._async_refresh(tradfri_device)
+        self._refresh(tradfri_device)
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
