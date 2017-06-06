@@ -8,12 +8,6 @@ import asyncio
 import logging
 
 from homeassistant.core import callback
-
-try:
-    from asyncio import ensure_future
-except ImportError:
-    from asyncio import async as ensure_future
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
@@ -120,12 +114,10 @@ class TradfriGroup(Light):
         if err:
             _LOGGER.info("Observation failed for {}".format(self._name), err)
 
-        observe_command = self._group.observe(callback=
-                                              self._async_observe_update,
-                                              err_callback=
-                                              self._async_start_observe,
-                                              duration=0)
-        observe_task = self._api(observe_command)
+        cmd = self._group.observe(callback=self._async_observe_update,
+                                  err_callback=self._async_start_observe,
+                                  duration=0)
+        observe_task = self._api(cmd)
         self.hass.async_add_job(observe_task)
 
     @callback
@@ -137,7 +129,7 @@ class TradfriGroup(Light):
     @callback
     def _async_observe_update(self, tradfri_device):
         """Receive new state data for this light."""
-        self._refresh(tradfri_device)
+        self._async_refresh(tradfri_device)
 
         self.hass.async_add_job(self.async_update_ha_state())
 
@@ -250,12 +242,10 @@ class TradfriLight(Light):
         if err:
             _LOGGER.info("Observation failed for {}".format(self._name), err)
 
-        observe_command = self._light.observe(callback=
-                                              self._async_observe_update,
-                                              err_callback=
-                                              self._async_start_observe,
-                                              duration=0)
-        observe_task = self._api(observe_command)
+        cmd = self._light.observe(callback=self._async_observe_update,
+                                  err_callback=self._async_start_observe,
+                                  duration=0)
+        observe_task = self._api(cmd)
         self.hass.async_add_job(observe_task)
 
     @callback
