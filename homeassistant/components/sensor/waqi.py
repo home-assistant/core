@@ -32,7 +32,7 @@ ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 CONF_LOCATIONS = 'locations'
 CONF_STATIONS = 'stations'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPES = {
     'aqi': ['AQI', '0-300+', 'mdi:cloud']
@@ -63,8 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                (waqi_sensor.station_name in station_filter):
                 dev.append(WaqiSensor(WaqiData(station, token), station))
 
-    print("#### Locations", locations)
-    print("### Stations", station_filter)
     add_devices(dev, True)
 
 
