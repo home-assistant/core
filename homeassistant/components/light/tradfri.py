@@ -7,6 +7,8 @@ https://home-assistant.io/components/light.tradfri/
 import asyncio
 import logging
 
+from homeassistant.core import callback
+
 try:
     from asyncio import ensure_future
 except ImportError:
@@ -46,32 +48,31 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     devices_commands = yield from api(devices_command)
     devices = yield from api(*devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
-    add_devices(TradfriLight(light, api, hass) for light in lights)
+    add_devices(TradfriLight(light, api) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
     if allow_tradfri_groups:
         groups_command = gateway.get_groups()
         groups_commands = yield from api(groups_command)
         groups = yield from api(*groups_commands)
-        add_devices(TradfriGroup(group, api, hass) for group in groups)
+        add_devices(TradfriGroup(group, api) for group in groups)
 
 
 class TradfriGroup(Light):
     """The platform class required by hass."""
 
-    def __init__(self, light, api, hass):
+    def __init__(self, light, api):
         """Initialize a Group."""
-        self._hass = hass
         self._api = api
         self._group = light
         self._name = light.name
 
-        self._refresh(light)
+        self._async_refresh(light)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start thread when added to hass."""
-        self._start_observe()
+        self._async_start_observe()
 
     @property
     def should_poll(self):
@@ -113,35 +114,39 @@ class TradfriGroup(Light):
         else:
             yield from self._api(self._group.set_state(1))
 
-    def _start_observe(self, err=None):
+    @callback
+    def _async_start_observe(self, err=None):
         """Start observation of light."""
         if err:
             _LOGGER.info("Observation failed for {}".format(self._name), err)
 
-        observe_command = self._group.observe(callback=self._observe_update,
-                                              err_callback=self._start_observe,
+        observe_command = self._group.observe(callback=
+                                              self._async_observe_update,
+                                              err_callback=
+                                              self._async_start_observe,
                                               duration=0)
         observe_task = self._api(observe_command)
-        ensure_future(observe_task, loop=self._hass.loop)
+        self.hass.async_add_job(observe_task)
 
-    def _refresh(self, group):
+    @callback
+    def _async_refresh(self, group):
         """Refresh the light data."""
         self._group = group
         self._name = group.name
 
-    def _observe_update(self, tradfri_device):
+    @callback
+    def _async_observe_update(self, tradfri_device):
         """Receive new state data for this light."""
         self._refresh(tradfri_device)
 
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
 
 
 class TradfriLight(Light):
-    """The platform class required by Home Asisstant."""
+    """The platform class required by Home Assistant."""
 
-    def __init__(self, light, api, hass):
+    def __init__(self, light, api):
         """Initialize a Light."""
-        self._hass = hass
         self._api = api
         self._light = None
         self._light_control = None
@@ -151,12 +156,12 @@ class TradfriLight(Light):
         self._features = None
         self._ok_temps = None
 
-        self._refresh(light)
+        self._async_refresh(light)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start thread when added to hass."""
-        self._start_observe()
+        self._async_start_observe()
 
     @property
     def should_poll(self):
@@ -239,18 +244,22 @@ class TradfriLight(Light):
             yield from self._api(
                 self._light_control.set_hex_color(self._ok_temps[kelvin]))
 
-    def _start_observe(self, err=None):
+    @callback
+    def _async_start_observe(self, err=None):
         """Start observation of light."""
         if err:
             _LOGGER.info("Observation failed for {}".format(self._name), err)
 
-        observe_command = self._light.observe(callback=self._observe_update,
-                                              err_callback=self._start_observe,
+        observe_command = self._light.observe(callback=
+                                              self._async_observe_update,
+                                              err_callback=
+                                              self._async_start_observe,
                                               duration=0)
         observe_task = self._api(observe_command)
-        ensure_future(observe_task, loop=self._hass.loop)
+        self.hass.async_add_job(observe_task)
 
-    def _refresh(self, light):
+    @callback
+    def _async_refresh(self, light):
         """Refresh the light data."""
         self._light = light
 
@@ -270,9 +279,10 @@ class TradfriLight(Light):
         self._ok_temps = ALLOWED_TEMPERATURES.get(
             self._light.device_info.manufacturer)
 
-    def _observe_update(self, tradfri_device):
+    @callback
+    def _async_observe_update(self, tradfri_device):
         """Receive new state data for this light."""
-        self._refresh(tradfri_device)
+        self._async_refresh(tradfri_device)
 
         # Handle Hue lights paired with the gateway
         # hex_color is 0 when bulb is unreachable
@@ -280,4 +290,4 @@ class TradfriLight(Light):
             self._rgb_color = color_util.rgb_hex_to_rgb_list(
                 self._light_data.hex_color)
 
-        self.schedule_update_ha_state()
+        self.hass.async_add_job(self.async_update_ha_state())
