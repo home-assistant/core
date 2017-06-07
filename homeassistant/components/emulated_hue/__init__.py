@@ -23,6 +23,7 @@ from .hue_api import (
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
+DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
 
