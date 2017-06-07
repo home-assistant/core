@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the NAD platform."""
     from nad_receiver import NADReceiverTCP
-    add_devices([NAD_TCP(
+    add_devices([NAD_tcp(
         NADReceiverTCP(config.get(CONF_HOST)),
         config.get(CONF_NAME),
         config.get(CONF_MIN_VOLUME),
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )])
 
 
-class NAD_TCP(MediaPlayerDevice):
+class NAD_tcp(MediaPlayerDevice):
     """Representation of a NAD D 7050 device."""
 
     def __init__(self, d7050, name, min_volume, max_volume, volume_step):
