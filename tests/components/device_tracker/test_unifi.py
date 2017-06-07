@@ -1,6 +1,5 @@
 """The tests for the Unifi WAP device tracker platform."""
 from unittest import mock
-import urllib
 from pyunifi.controller import APIError
 
 import pytest
