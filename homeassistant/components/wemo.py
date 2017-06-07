@@ -78,6 +78,14 @@ def setup(hass, config):
 
     discovery.listen(hass, SERVICE_WEMO, discovery_dispatch)
 
+    hass.add_job(wemo_startup_scan, hass, config)
+    return True
+
+
+def wemo_startup_scan(hass, config):
+    """Run device discovery once the component has been initialized."""
+    import pywemo
+
     _LOGGER.info("Scanning for WeMo devices.")
     devices = [(device.host, device) for device in pywemo.discover_devices()]
 
@@ -104,4 +112,3 @@ def setup(hass, config):
         }
 
         discovery.discover(hass, SERVICE_WEMO, discovery_info)
-    return True
