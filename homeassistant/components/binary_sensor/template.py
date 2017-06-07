@@ -130,7 +130,12 @@ class BinarySensorTemplate(BinarySensorDevice):
     def async_update(self):
         """Update the state from the template."""
         try:
-            self._state = self._template.async_render().lower() == 'true'
+            render = self._template.async_render()
+            if not isinstance(render, bool):
+                _LOGGER.warning('Could not render template %s, '
+                                'result value is not binary.', self._name)
+                return
+            self._state = render
         except TemplateError as ex:
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):

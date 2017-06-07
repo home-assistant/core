@@ -298,7 +298,12 @@ def async_template(hass, value_template, variables=None):
         _LOGGER.error("Error during template condition: %s", ex)
         return False
 
-    return value.lower() == 'true'
+    if not isinstance(value, bool):
+        _LOGGER.error('Could not render condition template, '
+                      'result value is not binary.')
+        return False
+
+    return value
 
 
 def async_template_from_config(config, config_validation=True):

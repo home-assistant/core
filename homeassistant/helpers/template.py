@@ -1,4 +1,5 @@
 """Template helper methods for rendering strings with Home Assistant data."""
+import ast
 from datetime import datetime
 import json
 import logging
@@ -98,9 +99,16 @@ class Template(object):
             kwargs.update(variables)
 
         try:
-            return self._compiled.render(kwargs).strip()
+            rendered = self._compiled.render(kwargs).strip()
+            return ast.literal_eval(rendered)
         except jinja2.TemplateError as err:
             raise TemplateError(err)
+        except (ValueError, SyntaxError) as err:
+            # Even if Ast gives us an error,
+            # the rendered template is actually still a valid string
+            if rendered.lower() == 'true' or rendered.lower() == 'false':
+                return rendered.lower() == 'true'
+            return rendered
 
     def render_with_possible_json_value(self, value, error_value=_SENTINEL):
         """Render template with value exposed.

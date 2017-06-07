@@ -23,7 +23,7 @@ from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
-_VALID_STATES = [STATE_ON, STATE_OFF, 'true', 'false']
+_VALID_STATES = [STATE_ON, STATE_OFF, True, False]
 
 ON_ACTION = 'turn_on'
 OFF_ACTION = 'turn_off'
@@ -153,14 +153,14 @@ class SwitchTemplate(SwitchDevice):
     def async_update(self):
         """Update the state from the template."""
         try:
-            state = self._template.async_render().lower()
+            state = self._template.async_render()
 
             if state in _VALID_STATES:
-                self._state = state in ('true', STATE_ON)
+                self._state = state in (True, STATE_ON)
             else:
                 _LOGGER.error(
                     'Received invalid switch is_on state: %s. Expected: %s',
-                    state, ', '.join(_VALID_STATES))
+                    state, ', '.join(str(vst) for vst in _VALID_STATES))
                 self._state = None
 
         except TemplateError as ex:

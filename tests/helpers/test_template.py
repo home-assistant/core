@@ -72,13 +72,13 @@ class TestHelpersTemplate(unittest.TestCase):
         self.hass.states.set('sensor.temperature', '12')
 
         self.assertEqual(
-            '12.0',
+            12.0,
             template.Template(
                 '{{ float(states.sensor.temperature.state) }}',
                 self.hass).render())
 
         self.assertEqual(
-            'True',
+            True,
             template.Template(
                 '{{ float(states.sensor.temperature.state) > 11 }}',
                 self.hass).render())
@@ -88,13 +88,13 @@ class TestHelpersTemplate(unittest.TestCase):
         self.hass.states.set('sensor.temperature', 12.78)
 
         self.assertEqual(
-            '12.8',
+            12.8,
             template.Template(
                 '{{ states.sensor.temperature.state | round(1) }}',
                 self.hass).render())
 
         self.assertEqual(
-            '128',
+            128,
             template.Template(
                 '{{ states.sensor.temperature.state | multiply(10) | round }}',
                 self.hass).render())
@@ -102,7 +102,7 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_rounding_value_get_original_value_on_error(self):
         """Test rounding value get original value on error."""
         self.assertEqual(
-            'None',
+            None,
             template.Template('{{ None | round }}', self.hass).render())
 
         self.assertEqual(
@@ -113,8 +113,8 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_multiply(self):
         """Test multiply."""
         tests = {
-            None: 'None',
-            10: '100',
+            None: None,
+            10: 100,
             '"abcd"': 'abcd'
         }
 
@@ -136,27 +136,27 @@ class TestHelpersTemplate(unittest.TestCase):
             ('2016-10-19', '%Y-%m-%d', None),
             ('2016', '%Y', None),
             ('15:22:05', '%H:%M:%S', None),
-            ('1469119144', '%Y', '1469119144'),
+            ('1469119144', '%Y', 1469119144),
             ('invalid', '%Y', 'invalid')
         ]
 
         for inp, fmt, expected in tests:
             if expected is None:
-                expected = datetime.strptime(inp, fmt)
+                expected = str(datetime.strptime(inp, fmt))
 
             temp = '{{ strptime(\'%s\', \'%s\') }}' % (inp, fmt)
 
             self.assertEqual(
-                str(expected),
+                expected,
                 template.Template(temp, self.hass).render())
 
     def test_timestamp_custom(self):
         """Test the timestamps to custom filter."""
         now = dt_util.utcnow()
         tests = [
-            (None, None, None, 'None'),
+            (None, None, None, None),
             (1469119144, None, True, '2016-07-21 16:39:04'),
-            (1469119144, '%Y', True, '2016'),
+            (1469119144, '%Y', True, 2016),
             (1469119144, 'invalid', True, 'invalid'),
             (dt_util.as_timestamp(now), None, False,
                 now.strftime('%Y-%m-%d %H:%M:%S'))
@@ -178,7 +178,7 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_timestamp_local(self):
         """Test the timestamps to local filter."""
         tests = {
-            None: 'None',
+            None: None,
             1469119144: '2016-07-21 16:39:04',
         }
 
@@ -191,14 +191,14 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_min(self):
         """Test the min filter."""
         self.assertEqual(
-            '1',
+            1,
             template.Template('{{ [1, 2, 3] | min }}',
                               self.hass).render())
 
     def test_max(self):
         """Test the max filter."""
         self.assertEqual(
-            '3',
+            3,
             template.Template('{{ [1, 2, 3] | max }}',
                               self.hass).render())
 
@@ -206,7 +206,7 @@ class TestHelpersTemplate(unittest.TestCase):
         """Test the timestamps to local filter."""
         now = dt_util.utcnow()
         tests = {
-            None: 'None',
+            None: None,
             1469119144: '2016-07-21 16:39:04',
             dt_util.as_timestamp(now):
                 now.strftime('%Y-%m-%d %H:%M:%S')
@@ -220,17 +220,17 @@ class TestHelpersTemplate(unittest.TestCase):
 
     def test_as_timestamp(self):
         """Test the as_timestamp function."""
-        self.assertEqual("None",
+        self.assertEqual(None,
                          template.Template('{{ as_timestamp("invalid") }}',
                                            self.hass).render())
         self.hass.mock = None
-        self.assertEqual("None",
+        self.assertEqual(None,
                          template.Template('{{ as_timestamp(states.mock) }}',
                                            self.hass).render())
 
         tpl = '{{ as_timestamp(strptime("2024-02-03T09:10:24+0000", ' \
             '"%Y-%m-%dT%H:%M:%S%z")) }}'
-        self.assertEqual("1706951424.0",
+        self.assertEqual(1706951424.0,
                          template.Template(tpl, self.hass).render())
 
     @patch.object(random, 'choice')
@@ -245,13 +245,13 @@ class TestHelpersTemplate(unittest.TestCase):
     def test_passing_vars_as_keywords(self):
         """Test passing variables as keywords."""
         self.assertEqual(
-            '127',
+            127,
             template.Template('{{ hello }}', self.hass).render(hello=127))
 
     def test_passing_vars_as_vars(self):
         """Test passing variables as variables."""
         self.assertEqual(
-            '127',
+            127,
             template.Template('{{ hello }}', self.hass).render({'hello': 127}))
 
     def test_render_with_possible_json_value_with_valid_json(self):
@@ -327,7 +327,7 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template("""
 {{ is_state("test.noobject", "available") }}
             """, self.hass)
-        self.assertEqual('False', tpl.render())
+        self.assertEqual(False, tpl.render())
 
     def test_is_state_attr(self):
         """Test is_state_attr method."""
@@ -340,7 +340,7 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template("""
 {{ is_state_attr("test.noobject", "mode", "on") }}
                 """, self.hass)
-        self.assertEqual('False', tpl.render())
+        self.assertEqual(False, tpl.render())
 
     def test_states_function(self):
         """Test using states as a function."""
@@ -381,7 +381,7 @@ class TestHelpersTemplate(unittest.TestCase):
         })
         tpl = template.Template('{{ distance(states.test.object) | round }}',
                                 self.hass)
-        self.assertEqual('187', tpl.render())
+        self.assertEqual(187, tpl.render())
 
     def test_distance_function_with_2_states(self):
         """Test distance function with 2 states."""
@@ -396,20 +396,20 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template(
             '{{ distance(states.test.object, states.test.object_2) | round }}',
             self.hass)
-        self.assertEqual('187', tpl.render())
+        self.assertEqual(187, tpl.render())
 
     def test_distance_function_with_1_coord(self):
         """Test distance function with 1 coord."""
         tpl = template.Template(
             '{{ distance("32.87336", "-117.22943") | round }}', self.hass)
         self.assertEqual(
-            '187',
+            187,
             tpl.render())
 
     def test_distance_function_with_2_coords(self):
         """Test distance function with 2 coords."""
         self.assertEqual(
-            '187',
+            187,
             template.Template(
                 '{{ distance("32.87336", "-117.22943", %s, %s) | round }}'
                 % (self.hass.config.latitude, self.hass.config.longitude),
@@ -424,12 +424,12 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template(
             '{{ distance("32.87336", "-117.22943", states.test.object_2) '
             '| round }}', self.hass)
-        self.assertEqual('187', tpl.render())
+        self.assertEqual(187, tpl.render())
 
         tpl2 = template.Template(
             '{{ distance(states.test.object_2, "32.87336", "-117.22943") '
             '| round }}', self.hass)
-        self.assertEqual('187', tpl2.render())
+        self.assertEqual(187, tpl2.render())
 
     def test_distance_function_return_None_if_invalid_state(self):
         """Test distance function return None if invalid state."""
@@ -439,18 +439,18 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template('{{ distance(states.test.object_2) | round }}',
                                 self.hass)
         self.assertEqual(
-            'None',
+            None,
             tpl.render())
 
     def test_distance_function_return_None_if_invalid_coord(self):
         """Test distance function return None if invalid coord."""
         self.assertEqual(
-            'None',
+            None,
             template.Template(
                 '{{ distance("123", "abc") }}', self.hass).render())
 
         self.assertEqual(
-            'None',
+            None,
             template.Template('{{ distance("123") }}', self.hass).render())
 
         self.hass.states.set('test.object_2', 'happy', {
@@ -460,7 +460,7 @@ class TestHelpersTemplate(unittest.TestCase):
         tpl = template.Template('{{ distance("123", states.test_object_2) }}',
                                 self.hass)
         self.assertEqual(
-            'None',
+            None,
             tpl.render())
 
     def test_closest_function_home_vs_domain(self):
@@ -620,7 +620,7 @@ class TestHelpersTemplate(unittest.TestCase):
 
         for state in ('states.zone.non_existing', '"zone.non_existing"'):
             self.assertEqual(
-                'None',
+                None,
                 template.Template('{{ closest(%s, states) }}' % state,
                                   self.hass).render())
 
@@ -632,7 +632,7 @@ class TestHelpersTemplate(unittest.TestCase):
         })
 
         self.assertEqual(
-            'None',
+            None,
             template.Template(
                 '{{ closest(states.test_domain.closest_home, '
                 'states) }}', self.hass).render())
@@ -645,14 +645,14 @@ class TestHelpersTemplate(unittest.TestCase):
         })
 
         self.assertEqual(
-            'None',
+            None,
             template.Template('{{ closest("invalid", "coord", states) }}',
                               self.hass).render())
 
     def test_closest_function_no_location_states(self):
         """Test closest function without location states."""
         self.assertEqual(
-            'None',
+            None,
             template.Template('{{ closest(states) }}', self.hass).render())
 
     def test_extract_entities_none_exclude_stuff(self):

@@ -413,7 +413,7 @@ SERVICE_SCHEMA = vol.All(vol.Schema({
     vol.Exclusive('service', 'service name'): service,
     vol.Exclusive('service_template', 'service name'): template,
     vol.Optional('data'): dict,
-    vol.Optional('data_template'): {match_all: template_complex},
+    vol.Optional('data_template'): template_complex,
     vol.Optional(CONF_ENTITY_ID): entity_ids,
 }), has_at_least_one_key('service', 'service_template'))
 
