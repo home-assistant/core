@@ -155,8 +155,8 @@ def async_setup(hass, config):
 
             if not network_id:
                 # Autodetect network from location
-                network_id = yield from _get_closest_network_id(hass,
-                    latitude, longitude)
+                network_id = yield from _get_closest_network_id(hass, latitude,
+                                                                longitude)
 
                 if not network_id:
                     # Autodetection failed - try again later
@@ -174,18 +174,18 @@ def async_setup(hass, config):
                     event.async_track_point_in_utc_time(
                         hass, async_update_single_network,
                         dt.utcnow() + SCAN_INTERVAL)
-                
+
                 yield from async_update_single_network(None)
                 networks[network_id] = network
-            
+
             if CONF_STATIONS_LIST in location_config:
                 networks[network_id].start_monitoring_stations(
                     *location_config.get(CONF_STATIONS_LIST))
             else:
                 radius = location_config.get(CONF_RADIUS)
                 networks[network_id].start_monitoring_area(latitude, longitude,
-                    radius)
-        
+                                                           radius)
+
         yield from async_setup_single_network(None)
 
     return True
