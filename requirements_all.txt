@@ -698,6 +698,9 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.sensor.ripple
+python-ripple-api==0.0.1
+
 # homeassistant.components.media_player.roku
 python-roku==3.1.3
 
