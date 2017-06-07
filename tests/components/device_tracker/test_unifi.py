@@ -99,7 +99,6 @@ def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
             CONF_PLATFORM: unifi.DOMAIN,
             CONF_USERNAME: 'foo',
             CONF_PASSWORD: 'password',
-            CONF_VERIFY_SSL: False
         }
     }
     mock_ctrl.side_effect = APIError(

@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
-import urllib
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
