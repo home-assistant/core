@@ -144,7 +144,7 @@ datapoint==0.4.3
 # decora==0.4
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.4.2
+denonavr==0.4.3
 
 # homeassistant.components.media_player.directv
 directpy==0.1

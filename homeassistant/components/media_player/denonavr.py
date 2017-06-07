@@ -19,11 +19,12 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.4.2']
+REQUIREMENTS = ['denonavr==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
+CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
@@ -37,6 +38,7 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SHOW_ALL_SOURCES, default=False): cv.boolean,
 })
 
 
@@ -56,11 +58,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
+        show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)
             receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name)))
+                DenonDevice(denonavr.DenonAVR(host, name, show_all_sources)))
             _LOGGER.info("Denon receiver at host %s initialized", host)
     # 2. option: discovery using netdisco
     if discovery_info is not None:
