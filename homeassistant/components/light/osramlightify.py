@@ -157,6 +157,16 @@ class Luminary(Light):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            self._brightness = kwargs[ATTR_BRIGHTNESS]
+            _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
+                          self._name, self._brightness)
+            self._luminary.set_luminance(
+                int(self._brightness / 2.55),
+                transition)
+        else:
+            self._luminary.set_onoff(1)
+
         if ATTR_TRANSITION in kwargs:
             transition = int(kwargs[ATTR_TRANSITION] * 10)
             _LOGGER.debug("turn_on requested transition time for light: "
@@ -188,16 +198,6 @@ class Luminary(Light):
             _LOGGER.debug("turn_on requested set_temperature for light: "
                           "%s: %s", self._name, kelvin)
             self._luminary.set_temperature(kelvin, transition)
-
-        if ATTR_BRIGHTNESS in kwargs:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
-            _LOGGER.debug("turn_on requested brightness for light: %s is: %s ",
-                          self._name, self._brightness)
-            self._luminary.set_luminance(
-                int(self._brightness / 2.55),
-                transition)
-        else:
-            self._luminary.set_onoff(1)
 
         if ATTR_EFFECT in kwargs:
             effect = kwargs.get(ATTR_EFFECT)
