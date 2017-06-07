@@ -14,12 +14,11 @@ import async_timeout
 
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME,
-    LENGTH_METERS, LENGTH_FEET)
+    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import event
-from homeassistant.util import location, distance, slugify, dt
+from homeassistant.util import location, slugify, dt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -75,8 +74,8 @@ NETWORK_SCHEMA = vol.Schema({
             vol.Required('location'): vol.Schema({
                 vol.Optional('city'): cv.string,
                 vol.Optional('country'): cv.string,
-                vol.Required('latitude'): vol.Coerce(float),
-                vol.Required('longitude'): vol.Coerce(float),
+                vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+                vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
                 }),
             }, extra=vol.ALLOW_EXTRA),
         ],
@@ -88,8 +87,8 @@ STATIONS_SCHEMA = vol.Schema({
             vol.Schema({
                 vol.Required('free_bikes'): cv.positive_int,
                 vol.Required('empty_slots'): cv.positive_int,
-                vol.Required('latitude'): vol.Coerce(float),
-                vol.Required('longitude'): vol.Coerce(float),
+                vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+                vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
                 vol.Required('id'): cv.string,
                 vol.Required('name'): cv.string,
                 vol.Required('timestamp'): cv.string,
@@ -100,6 +99,7 @@ STATIONS_SCHEMA = vol.Schema({
             ]
         }, extra=vol.ALLOW_EXTRA)
     })
+
 
 @asyncio.coroutine
 def _get_closest_network_id(hass, latitude, longitude):
@@ -114,12 +114,12 @@ def _get_closest_network_id(hass, latitude, longitude):
         network = res['networks'][0]
         result = network['id']
         minimum_dist = location.distance(latitude, longitude,
-                                         network['location']['latitude'],
-                                         network['location']['longitude'])
+                                         network['location'][ATTR_LATITUDE],
+                                         network['location'][ATTR_LONGITUDE])
         for network in res['networks'][1:]:
             dist = location.distance(latitude, longitude,
-                                     network['location']['latitude'],
-                                     network['location']['longitude'])
+                                     network['location'][ATTR_LATITUDE],
+                                     network['location'][ATTR_LONGITUDE])
             if dist < minimum_dist:
                 minimum_dist = dist
                 result = network['id']
@@ -135,6 +135,7 @@ def _get_closest_network_id(hass, latitude, longitude):
         _LOGGER.error("Received unexpected JSON from CityBikes API endpoint: "
                       " {}".format(err))
         return None
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -233,7 +234,7 @@ class CityBikesNetwork(Entity):
         for station in self._stations_data:
             for latitude, longitude, radius in self._monitored_areas:
                 dist = location.distance(latitude, longitude,
-                    station.get('latitude'), station.get('longitude'))
+                    station.get(ATTR_LATITUDE), station.get(ATTR_LONGITUDE))
                 if dist < radius:
                     self._add_station_entity_if_necessary(station)
             
