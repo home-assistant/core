@@ -898,6 +898,7 @@ xmltodict==0.11.0
 yahoo-finance==1.4.0
 
 # homeassistant.components.sensor.yweather
+# homeassistant.components.weather.yweather
 yahooweather==0.8
 
 # homeassistant.components.light.yeelight
