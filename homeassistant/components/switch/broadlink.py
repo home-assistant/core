@@ -156,8 +156,18 @@ class BroadlinkRMSwitch(SwitchDevice):
         """Initialize the switch."""
         self._name = friendly_name
         self._state = False
-        self._command_on = b64decode(command_on) if command_on else None
-        self._command_off = b64decode(command_off) if command_off else None
+        if len(command_on) % 4 == 0:
+            self._command_on = b64decode(command_on) if command_on else None
+        else:
+            _LOGGER.error("""Failed to set command_on for %(friendly_name)s because the padding seems to be incorrect. 
+            Please ensure that the base64 encoded string is padded with '=' characters to a length divisible by 4."""
+                          % locals())
+        if len(command_off) % 4 == 0:
+            self._command_off = b64decode(command_off) if command_off else None
+        else:
+            _LOGGER.error("""Failed to set command_off for %(friendly_name)s because the padding seems to be incorrect. 
+            Please ensure that the base64 encoded string is padded with '=' characters to a length divisible by 4."""
+                          % locals())
         self._device = device
 
     @property
