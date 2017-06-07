@@ -149,9 +149,9 @@ def async_setup(hass, config):
             network_id = location_config.get(CONF_NETWORK)
 
             latitude = location_config.get(CONF_LATITUDE,
-                hass.config.latitude)
+                                           hass.config.latitude)
             longitude = location_config.get(CONF_LONGITUDE,
-                hass.config.longitude)
+                                            hass.config.longitude)
 
             if not network_id:
                 # Autodetect network from location
@@ -167,12 +167,14 @@ def async_setup(hass, config):
 
             if network_id not in networks:
                 network = CityBikesNetwork(hass, network_id)
+                
                 @asyncio.coroutine
                 def async_update_single_network(now):
                     yield from network.async_update_ha_state(True)
                     event.async_track_point_in_utc_time(
                         hass, async_update_single_network,
                         dt.utcnow() + SCAN_INTERVAL)
+                
                 yield from async_update_single_network(None)
                 networks[network_id] = network
             
