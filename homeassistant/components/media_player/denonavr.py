@@ -54,11 +54,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         cache = hass.data[KEY_DENON_CACHE] = set()
 
     # Start assignment of host and name
+    show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
     # 1. option: manual setting
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if host not in cache:
             cache.add(host)
             receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name)))
+                DenonDevice(denonavr.DenonAVR(host, name, show_all_sources)))
             _LOGGER.info("Denon receiver at host %s initialized", host)
     # 3. option: discovery using denonavr library
     if config.get(CONF_HOST) is None and discovery_info is None:
@@ -88,7 +88,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if host not in cache:
                     cache.add(host)
                     receivers.append(
-                        DenonDevice(denonavr.DenonAVR(host, name)))
+                        DenonDevice(
+                            denonavr.DenonAVR(host, name, show_all_sources)))
                     _LOGGER.info("Denon receiver at host %s initialized", host)
 
     # Add all freshly discovered receivers
