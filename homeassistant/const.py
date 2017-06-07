@@ -355,6 +355,8 @@ SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
 
 SERVICE_SELECT_OPTION = 'select_option'
 
+SERVICE_SET_OPTION = 'set_option'
+
 # #### API / REMOTE ####
 SERVER_PORT = 8123
 
