@@ -1,5 +1,5 @@
 """
-Support for NAD D 7050 digital amplifier.
+Support for NAD digital amplifiers which can be remote controlled via tcp/ip.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.nadtcp/
@@ -20,7 +20,7 @@ REQUIREMENTS = ['https://github.com/joopert/nad_receiver/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'NAD TCP'
+DEFAULT_NAME = 'NAD receiver'
 DEFAULT_MIN_VOLUME = -60
 DEFAULT_MAX_VOLUME = -10
 DEFAULT_VOLUME_STEP = 4
@@ -55,12 +55,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class NAD_tcp(MediaPlayerDevice):
-    """Representation of a NAD D 7050 device."""
+    """Representation of a NAD Digital amplifier."""
 
-    def __init__(self, d7050, name, min_volume, max_volume, volume_step):
+    def __init__(self, nad_device, name, min_volume, max_volume, volume_step):
         """Initialize the amplifier."""
         self._name = name
-        self.d7050 = d7050
+        self.nad_device = nad_device
         self._min_vol = (min_volume + 90) * 2  # from dB to nad vol (0-200)
         self._max_vol = (max_volume + 90) * 2  # from dB to nad vol (0-200)
         self._volume_step = volume_step
@@ -69,7 +69,7 @@ class NAD_tcp(MediaPlayerDevice):
         self._nad_volume = None
         self._volume = None
         self._source = None
-        self._source_list = d7050.available_sources()
+        self._source_list = self.nad_device.available_sources()
 
         self.update()
 
@@ -85,7 +85,7 @@ class NAD_tcp(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        nad_status = self.d7050.status()
+        nad_status = self.nad_device.status()
 
         if nad_status is None:
             return
@@ -127,37 +127,37 @@ class NAD_tcp(MediaPlayerDevice):
 
     def turn_off(self):
         """Turn the media player off."""
-        self.d7050.power_off()
+        self.nad_device.power_off()
 
     def turn_on(self):
         """Turn the media player on."""
-        self.d7050.power_on()
+        self.nad_device.power_on()
 
     def volume_up(self):
         """Step volume up in the configured increments."""
-        self.d7050.set_volume(self._nad_volume + 2 * self._volume_step)
+        self.nad_device.set_volume(self._nad_volume + 2 * self._volume_step)
 
     def volume_down(self):
         """Step volume down in the configured increments."""
-        self.d7050.set_volume(self._nad_volume - 2 * self._volume_step)
+        self.nad_device.set_volume(self._nad_volume - 2 * self._volume_step)
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         nad_volume_to_set = \
             int(round(volume * (self._max_vol - self._min_vol) +
                       self._min_vol))
-        self.d7050.set_volume(nad_volume_to_set)
+        self.nad_device.set_volume(nad_volume_to_set)
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
         if mute:
-            self.d7050.mute()
+            self.nad_device.mute()
         else:
-            self.d7050.unmute()
+            self.nad_device.unmute()
 
     def select_source(self, source):
         """Select input source."""
-        self.d7050.select_source(source)
+        self.nad_device.select_source(source)
 
     @property
     def source(self):
@@ -167,7 +167,7 @@ class NAD_tcp(MediaPlayerDevice):
     @property
     def source_list(self):
         """List of available input sources."""
-        return self.d7050.available_sources()
+        return self.nad_device.available_sources()
 
     @property
     def volume_level(self):
