@@ -38,9 +38,10 @@ AVAILABLE_COMPONENTS = []  # type: List[str]
 # Dict of loaded components mapped name => module
 _COMPONENT_CACHE = {}  # type: Dict[str, ModuleType]
 
+#define logger
 _LOGGER = logging.getLogger(__name__)
 
-
+# prepare function
 def prepare(hass: 'HomeAssistant'):
     """Prepare the loading of components.
 
@@ -84,7 +85,7 @@ def prepare(hass: 'HomeAssistant'):
 
     PREPARED = True
 
-
+#set component function
 def set_component(comp_name: str, component: ModuleType) -> None:
     """Set a component in the cache.
 
