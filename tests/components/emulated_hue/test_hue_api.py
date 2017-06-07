@@ -12,8 +12,9 @@ from homeassistant.components import (
 )
 from homeassistant.const import STATE_ON, STATE_OFF
 from homeassistant.components.emulated_hue.hue_api import (
-    HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView,
-    HueAllLightsStateView, HueOneLightStateView, HueOneLightChangeView)
+    HUE_API_STATE_ON, HUE_API_STATE_BRI, HUE_API_STATE_XY, HUE_API_STATE_CT,
+    HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
+    HueOneLightChangeView)
 from homeassistant.components.emulated_hue import Config
 
 from tests.common import get_test_instance_port
@@ -393,6 +394,28 @@ def test_proper_put_state_request(hue_client):
 
     assert result.status == 400
 
+    # Test proper xy value parsing
+    result = yield from hue_client.put(
+        '/api/username/lights/{}/state'.format(
+            'light.ceiling_lights'),
+        data=json.dumps({
+            HUE_API_STATE_ON: True,
+            HUE_API_STATE_XY: 'Hello world!'
+        }))
+
+    assert result.status == 400
+
+    # Test proper ct value parsing
+    result = yield from hue_client.put(
+        '/api/username/lights/{}/state'.format(
+            'light.ceiling_lights'),
+        data=json.dumps({
+            HUE_API_STATE_ON: True,
+            HUE_API_STATE_CT: 'Hello world!'
+        }))
+
+    assert result.status == 400
+
 
 # pylint: disable=invalid-name
 def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
@@ -409,20 +432,21 @@ def perform_put_test_on_ceiling_lights(hass_hue, hue_client,
 
     # Go through the API to turn it on
     office_result = yield from perform_put_light_state(
-        hass_hue, hue_client,
-        'light.ceiling_lights', True, 56, content_type)
+        hass_hue, hue_client, 'light.ceiling_lights', True, 56, ct=400,
+        content_type=content_type)
 
     assert office_result.status == 200
     assert 'application/json' in office_result.headers['content-type']
 
     office_result_json = yield from office_result.json()
 
-    assert len(office_result_json) == 2
+    assert len(office_result_json) == 3
 
     # Check to make sure the state changed
     ceiling_lights = hass_hue.states.get('light.ceiling_lights')
     assert ceiling_lights.state == STATE_ON
     assert ceiling_lights.attributes[light.ATTR_BRIGHTNESS] == 56
+    assert ceiling_lights.attributes[light.ATTR_COLOR_TEMP] == 400
 
 
 @asyncio.coroutine
@@ -442,7 +466,8 @@ def perform_get_light_state(client, entity_id, expected_status):
 
 @asyncio.coroutine
 def perform_put_light_state(hass_hue, client, entity_id, is_on,
-                            brightness=None, content_type='application/json'):
+                            brightness=None, color=None, ct=None,
+                            content_type='application/json'):
     """Test the setting of a light state."""
     req_headers = {'Content-Type': content_type}
 
@@ -450,6 +475,10 @@ def perform_put_light_state(hass_hue, client, entity_id, is_on,
 
     if brightness is not None:
         data[HUE_API_STATE_BRI] = brightness
+    if color is not None:
+        data[HUE_API_STATE_XY] = color
+    if ct is not None:
+        data[HUE_API_STATE_CT] = ct
 
     result = yield from client.put(
         '/api/username/lights/{}/state'.format(entity_id), headers=req_headers,
