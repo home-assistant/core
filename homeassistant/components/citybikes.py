@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util import location, dt, slugify
@@ -103,7 +104,6 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def _get_closest_network_id(hass, latitude, longitude):
     try:
-        dist = -1
         session = async_get_clientsession(hass)
         with async_timeout.timeout(5, loop=hass.loop):
             req = yield from session.get(DEFAULT_ENDPOINT.format(
