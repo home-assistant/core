@@ -387,7 +387,7 @@ netdisco==1.0.1
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
 
-# homeassistant.components.opencv
+# homeassistant.components.image_processing.opencv
 numpy==1.12.0
 
 # homeassistant.components.google
@@ -398,9 +398,6 @@ oemthermostat==1.1
 
 # homeassistant.components.media_player.onkyo
 onkyo-eiscp==1.1
-
-# homeassistant.components.opencv
-# opencv-python==3.2.0.6
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
