@@ -16,11 +16,10 @@ from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_compoonent import EntityComponent
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
-from homeassistant.util import location, slugify, dt
+from homeassistant.util import location, dt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,7 +205,7 @@ class CityBikesNetwork:
                     uri=STATIONS_URI.format(uid=self._network_id)))
 
             json_response = yield from req.json()
-            network = STATIONS_RESPONSE_SCHEMA(response)
+            network = STATIONS_RESPONSE_SCHEMA(json_response)
             self._stations_data = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
 
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -232,8 +231,9 @@ class CityBikesNetwork:
             station_id = station[ATTR_ID]
 
             if station_id in self._monitored_stations or \
-                ATTR_EXTRA in station and ATTR_UID in station[ATTR_EXTRA] and \
-                station[ATTR_EXTRA][ATTR_UID] in self._monitored_stations:
+                    ATTR_EXTRA in station and \
+                    ATTR_UID in station[ATTR_EXTRA] and \
+                    station[ATTR_EXTRA][ATTR_UID] in self._monitored_stations:
                 self._add_station_entity_if_necessary(station)
 
             if station_id in self._stations:
