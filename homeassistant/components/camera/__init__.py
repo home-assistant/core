@@ -12,13 +12,16 @@ from datetime import timedelta
 import logging
 import hashlib
 from random import SystemRandom
+import os
 
 import aiohttp
 from aiohttp import web
 import async_timeout
+import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
@@ -26,6 +29,8 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.event import async_track_time_interval
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (SERVICE_ARM, SERVICE_DISARM, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +48,30 @@ ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
 _RND = SystemRandom()
 
+CAMERA_SERVICE_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
 
+def arm(hass, entity_id=None):
+    """Arm all"""
+    hass.add_job(async_arm, hass, entity_id)
+
+@callback
+def async_arm(hass, entity_id=None):
+    """Arm all the cameras"""
+    data =  {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_ARM, data))
+
+def disarm(hass, entity_id=None):
+    """Disarm all"""
+    hass.add_job(async_disarm, hass, entity_id)
+
+@callback
+def async_disarm(hass, entity_id=None):
+    """Disarm all the cameras"""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISARM, data))
+   
 @asyncio.coroutine
 def async_get_image(hass, entity_id, timeout=10):
     """Fetch a image from a camera entity."""
@@ -92,6 +120,47 @@ def async_setup(hass, config):
             hass.async_add_job(entity.async_update_ha_state())
 
     async_track_time_interval(hass, update_tokens, TOKEN_CHANGE_INTERVAL)
+
+    @asyncio.coroutine
+    def async_handle_camera_service(service):
+        """Handle calls to the camera services."""
+        target_cameras = component.async_extract_from_service(service)
+
+        for camera in target_cameras:
+            try:
+                if service.service == SERVICE_ARM:
+                    yield from camera.async_arm()
+                elif service.service == SERVICE_DISARM:
+                    yield from camera.async_disarm()
+            except AttributeError as e:
+                pass
+
+        update_tasks = []
+        for camera in target_cameras:
+            if not camera.should_poll:
+                continue
+
+            update_coro = hass.async_add_job(
+                camera.async_update_ha_state(True))
+            if hasattr(camera, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
+
+        if update_tasks:
+            yield from asyncio.wait(update_tasks, loop=hass.loop)
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_ARM, async_handle_camera_service,
+        descriptions.get(SERVICE_ARM), schema=CAMERA_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_DISARM, async_handle_camera_service,
+        descriptions.get(SERVICE_DISARM), schema=CAMERA_SERVICE_SCHEMA)
+
     return True
 
 
@@ -123,6 +192,16 @@ class Camera(Entity):
     def brand(self):
         """Return the camera brand."""
         return None
+
+    @property
+    def status(self):
+        """Return the camera status."""
+        try:
+            status = self._status
+        except AttributeError as e:
+            status = None
+
+        return status
 
     @property
     def model(self):
@@ -211,6 +290,9 @@ class Camera(Entity):
 
         if self.brand:
             attr['brand'] = self.brand
+
+        if self.status:
+            attr['status'] = self.status
 
         return attr
 

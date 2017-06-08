@@ -27,7 +27,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.string,
 })
 
-
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
@@ -40,6 +39,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         cameras.append(ArloCam(hass, camera, config))
 
     async_add_devices(cameras, True)
+
     return True
 
 
@@ -49,9 +49,11 @@ class ArloCam(Camera):
     def __init__(self, hass, camera, device_info):
         """Initialize an Arlo camera."""
         super().__init__()
-
+        self._parent = hass
         self._camera = camera
+        self._base_stn = hass.data['arlo'].base_stations[0]
         self._name = self._camera.name
+        self._status = "Disarmed"
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
 
@@ -90,3 +92,22 @@ class ArloCam(Camera):
     def brand(self):
         """Camera brand."""
         return DEFAULT_BRAND
+
+    @property
+    def status(self):
+        """Camera Status."""
+        return self._status
+
+    @asyncio.coroutine
+    def async_arm(self):
+        """Camera arm."""
+        self._base_stn.mode = "armed"
+        self._status = "Armed"
+        self.hass.async_add_job(self.async_update_ha_state())
+
+    @asyncio.coroutine
+    def async_disarm(self):
+        """Camera disarm."""
+        self._base_stn.mode = "disarmed"
+        self._status = "Disarmed"
+        self.hass.async_add_job(self.async_update_ha_state())
