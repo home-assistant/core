@@ -75,7 +75,11 @@ class EmailReader(object):
         """Login and setup the connection."""
         import imaplib
         try:
-            self.connection = imaplib.IMAP4_SSL(self._server, self._port)
+            if self._port == DEFAULT_PORT:
+                self.connection = imaplib.IMAP4_SSL(self._server, self._port)
+            else:
+                self.connection = imaplib.IMAP4(self._server, self._port)
+                self.connection.starttls()
             self.connection.login(self._user, self._password)
             return True
         except imaplib.IMAP4.error:
