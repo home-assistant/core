@@ -21,6 +21,7 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA)
 import homeassistant.components.modbus as modbus
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -29,82 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 _LOGGER = logging.getLogger(__name__)
-
-REGMAP_INPUT = {
-    'GWYVer':                   {'addr':   0, 'value': 0},
-    'CUHWType':                 {'addr':   1, 'value': 0},
-    'CUSWRev':                  {'addr':   2, 'value': 0},
-    'CPASWRev':                 {'addr':   3, 'value': 0},
-    'CPB1SWRev':                {'addr':   4, 'value': 0},
-    'CBPS2WRev':                {'addr':   5, 'value': 0},
-    'Time1H':                   {'addr':   6, 'value': 0},
-    'Time1L':                   {'addr':   7, 'value': 0},
-    'FilterTimer':              {'addr':   8, 'value': 0},
-    'SupplyAirTemp':            {'addr':   9, 'value': 0},
-    'ExtractAirTemp':           {'addr':  10, 'value': 0},
-    'OutdoorAirTemp':           {'addr':  11, 'value': 0},
-    'ReturnWaterTemp':          {'addr':  12, 'value': 0},
-    'Cooling':                  {'addr':  13, 'value': 0},
-    'HeatExchanger':            {'addr':  14, 'value': 0},
-    'Heating':                  {'addr':  15, 'value': 0},
-    'RegulationFanSpeed':       {'addr':  16, 'value': 0},
-    'OperTime':                 {'addr':  17, 'value': 0},
-    'FilterResetNo':            {'addr':  18, 'value': 0},
-    'SupplyAirAlarm':           {'addr':  19, 'value': 0},
-    'ExtractAirAlarm':          {'addr':  20, 'value': 0},
-    'OutsideAirAlarm':          {'addr':  21, 'value': 0},
-    'ReturnWaterAlarm':         {'addr':  22, 'value': 0},
-    'FireThermostatAlarm':      {'addr':  23, 'value': 0},
-    'FireSmokeAlarm':           {'addr':  24, 'value': 0},
-    'FreezeProtectionAlarm':    {'addr':  25, 'value': 0},
-    'RotorAlarm':               {'addr':  26, 'value': 0},
-    'ReplaceFilterAlarm':       {'addr':  27, 'value': 0},
-    'HeatingBatteryActive':     {'addr':  28, 'value': 0},
-    'SchActive':                {'addr':  29, 'value': 0},
-    'SP0TimeH':                 {'addr':  30, 'value': 0},
-    'SP0TimeL':                 {'addr':  31, 'value': 0},
-    'SP1TimeH':                 {'addr':  32, 'value': 0},
-    'SP1TimeL':                 {'addr':  33, 'value': 0},
-    'SP2TimeH':                 {'addr':  34, 'value': 0},
-    'SP2TimeL':                 {'addr':  35, 'value': 0},
-    'SP3TimeH':                 {'addr':  36, 'value': 0},
-    'SP3TimeL':                 {'addr':  37, 'value': 0},
-    'VVX1TimeH':                {'addr':  38, 'value': 0},
-    'VVX1TimeL':                {'addr':  39, 'value': 0},
-    'EV1TimeH':                 {'addr':  40, 'value': 0},
-    'EV1TimeL':                 {'addr':  41, 'value': 0},
-    'OperTimeH':                {'addr':  42, 'value': 0},
-    'OperTimeL':                {'addr':  43, 'value': 0},
-    'FilterTimeH':              {'addr':  44, 'value': 0},
-    'FilterTimeL':              {'addr':  45, 'value': 0},
-    'FilterAlarmPeriod':        {'addr':  46, 'value': 0},
-    'ActualSetAirTemperature':  {'addr':  47, 'value': 0},
-    'ActualSetAirSpeed':        {'addr':  48, 'value': 0}
-}
-REGMAP_HOLDING = {
-    'SupplyAirSpeed1':          {'addr':  0, 'value': 0},
-    'SupplyAirSpeed2':          {'addr':  1, 'value': 0},
-    'SupplyAirSpeed3':          {'addr':  2, 'value': 0},
-    'SupplyAirSpeed4':          {'addr':  3, 'value': 0},
-    'ExtractAirSpeed1':         {'addr':  4, 'value': 0},
-    'ExtractAirSpeed2':         {'addr':  5, 'value': 0},
-    'ExtractAirSpeed3':         {'addr':  6, 'value': 0},
-    'ExtractAirSpeed4':         {'addr':  7, 'value': 0},
-    'SetAirTemperature':        {'addr':  8, 'value': 0},
-    'SupplyAirMinTemp':         {'addr':  9, 'value': 0},
-    'SupplyAirMaxTemp':         {'addr': 10, 'value': 0},
-    'CoolingOutdoorAirMinTemp': {'addr': 11, 'value': 0},
-    'ForcedVentSpeed':          {'addr': 12, 'value': 0},
-    'ForcedVentTime':           {'addr': 13, 'value': 0},
-    'AirRegulationType':        {'addr': 14, 'value': 0},
-    'CoolingActive':            {'addr': 15, 'value': 0},
-    'ForcedVentilation':        {'addr': 16, 'value': 0},
-    'SetAirSpeed':              {'addr': 17, 'value': 0},
-    'TimeH':                    {'addr': 18, 'value': 0},
-    'TimeL':                    {'addr': 19, 'value': 0},
-    'Unknown1':                 {'addr': 20, 'value': 0},
-    'FireSmokeMode':            {'addr': 21, 'value': 0}
-}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -119,9 +44,8 @@ class Flexit(ClimateDevice):
 
     def __init__(self, modbus_slave, name):
         """Initialize the unit."""
+        from pyflexit import pyflexit
         self._name = name
-        self._input_regs = REGMAP_INPUT
-        self._holding_regs = REGMAP_HOLDING
         self._slave = modbus_slave
         self._target_temperature = None
         self._current_temperature = None
@@ -136,68 +60,30 @@ class Flexit(ClimateDevice):
         self._heating = None
         self._cooling = None
         self._alarm = False
+        self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
 
     def update(self):
-        """Read registers from unit and update states."""
-        _LOGGER.debug('update() for %s called', self._name)
+        """Update unit attributes."""
+        if not self.unit.update():
+            _LOGGER.warning("Modbus read failed")
 
-        try:
-            result_input = modbus.HUB.read_input_registers(
-                unit=self._slave,
-                address=0,
-                count=len(self._input_regs)).registers
-            result_holding = modbus.HUB.read_holding_registers(
-                unit=self._slave,
-                address=0,
-                count=len(self._holding_regs)).registers
-        except AttributeError:
-            # The unit does not reply reliably
-            _LOGGER.warning('modbus read was unsuccessful for %s', self._name)
-        else:
-            for k in self._holding_regs:
-                self._holding_regs[k]['value'] = \
-                    result_holding[self._holding_regs[k]['addr']]
-            for k in self._input_regs:
-                self._input_regs[k]['value'] = \
-                    result_input[self._input_regs[k]['addr']]
-
-        self._target_temperature = \
-            (self._input_regs['ActualSetAirTemperature']['value'] / 10.0)
-        # Temperature directly after heat recovery and heater
-        self._current_temperature = \
-            (self._input_regs['SupplyAirTemp']['value'] / 10.0)
-        self._current_fan_mode = \
-            (self._fan_list[
-                self._input_regs['ActualSetAirSpeed']['value']])
-        # Hours since last filter reset
-        self._filter_hours = \
-            self._input_regs['FilterTimer']['value']
+        self._target_temperature = self.unit.get_target_temp
+        self._current_temperature = self.unit.get_temp
+        self._current_fan_mode =\
+            self._fan_list[self.unit.get_fan_speed]
+        self._filter_hours = self.unit.get_filter_hours
         # Mechanical heat recovery, 0-100%
-        self._heat_recovery = \
-            self._input_regs['HeatExchanger']['value']
+        self._heat_recovery = self.unit.get_heat_recovery
         # Heater active 0-100%
-        self._heating = \
-            self._input_regs['Heating']['value']
+        self._heating = self.unit.get_heating
         # Cooling active 0-100%
-        self._cooling = \
-            self._input_regs['Cooling']['value']
+        self._cooling = self.unit.get_cooling
         # Filter alarm 0/1
-        self._filter_alarm = \
-            bool(self._input_regs['ReplaceFilterAlarm']['value'])
+        self._filter_alarm = self.unit.get_filter_alarm
         # Heater enabled or not. Does not mean it's necessarily heating
-        self._heater_enabled = \
-            bool(self._input_regs['HeatingBatteryActive']['value'])
+        self._heater_enabled = self.unit.get_heater_enabled
         # Current operation mode
-        if self._heating:
-            self._current_operation = 'Heating'
-        elif self._cooling:
-            self._current_operation = 'Cooling'
-        elif self._heat_recovery:
-            self._current_operation = 'Recovering'
-        elif self._input_regs['ActualSetAirSpeed']['value']:
-            self._current_operation = 'Fan Only'
-        else:
-            self._current_operation = 'Off'
+        self._current_operation = self.unit.get_operation
 
     @property
     def device_state_attributes(self):
@@ -255,20 +141,8 @@ class Flexit(ClimateDevice):
         """Set new target temperature."""
         if kwargs.get(ATTR_TEMPERATURE) is not None:
             self._target_temperature = kwargs.get(ATTR_TEMPERATURE)
-
-        modbus.HUB.write_register(
-            unit=self._slave,
-            address=(self._holding_regs['SetAirTemperature']['addr']),
-            value=round(self._target_temperature * 10.0))
-        _LOGGER.debug("Setting temperature for %s to %f",
-                      self._name, self._target_temperature)
-        self.schedule_update_ha_state()
+        self.unit.set_temp(self._target_temperature)
 
     def set_fan_mode(self, fan):
         """Set new fan mode."""
-        modbus.HUB.write_register(
-            unit=self._slave,
-            address=(self._holding_regs['SetAirSpeed']['addr']),
-            value=self._fan_list.index(fan))
-        self._current_fan_mode = self._fan_list.index(fan)
-        self.schedule_update_ha_state()
+        self.unit.set_fan_speed(fan)
