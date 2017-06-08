@@ -31,18 +31,42 @@ CONF_VIEW = 'view'
 CONF_CONTROL = 'control'
 
 ATTR_AUTO = 'auto'
+ATTR_CONTROL = 'control'
+ATTR_ENTITIES = 'entities'
+ATTR_ICON = 'icon'
+ATTR_NAME = 'name'
 ATTR_ORDER = 'order'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
-ATTR_CONTROL = 'control'
 
 SERVICE_SET_VISIBILITY = 'set_visibility'
+SERVICE_CREATE = 'create'
+SERVICE_DELETE = 'delete'
+SERVICE_UPDATE_TRACKED_ENTITY = 'update_tracked_entity'
+
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_VISIBLE): cv.boolean
 })
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
+
+CREATE_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Optional(ATTR_VIEW): cv.boolean,
+    vol.Optional(ATTR_ICON): cv.string,
+    vol.Optional(CONF_CONTROL): cv.string,
+    vol.Optional(CONF_ENTITIES): cv.entity_ids,
+})
+
+CREATE_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string,
+})
+
+UPDATE_TRACKED_ENTITY = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(CONF_ENTITIES): cv.entity_ids,
+})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -170,6 +194,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def async_setup(hass, config):
     """Set up all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    service_groups = []
 
     yield from _async_process_config(hass, config, component)
 
@@ -186,6 +211,10 @@ def async_setup(hass, config):
             return
         yield from _async_process_config(hass, conf, component)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_RELOAD, reload_service_handler,
+        descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
+
     @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
@@ -199,9 +228,6 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
         descriptions[DOMAIN][SERVICE_SET_VISIBILITY],
         schema=SET_VISIBILITY_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_RELOAD, reload_service_handler,
-        descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
 
     return True
 
