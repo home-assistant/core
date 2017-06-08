@@ -18,7 +18,6 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util import location, dt, slugify
