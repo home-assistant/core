@@ -24,6 +24,7 @@ REQUIREMENTS = ['denonavr==0.4.3']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
+DEFAULT_SHOW_SOURCES = False
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 KEY_DENON_CACHE = 'denonavr_hosts'
 
@@ -38,7 +39,7 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_SHOW_ALL_SOURCES, default=False): cv.boolean,
+    vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES): cv.boolean,
 })
 
 
