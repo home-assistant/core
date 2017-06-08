@@ -52,25 +52,29 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
+
 def arm(hass, entity_id=None):
     """Arm all"""
     hass.add_job(async_arm, hass, entity_id)
 
+
 @callback
 def async_arm(hass, entity_id=None):
     """Arm all the cameras"""
-    data =  {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_ARM, data))
 
 def disarm(hass, entity_id=None):
     """Disarm all"""
     hass.add_job(async_disarm, hass, entity_id)
 
+
 @callback
 def async_disarm(hass, entity_id=None):
     """Disarm all the cameras"""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISARM, data))
+
 
 @asyncio.coroutine
 def async_get_image(hass, entity_id, timeout=10):
