@@ -1,0 +1,17 @@
+# Describes the format for available camera services
+
+arm:
+  description: Arm a camera with motion detection
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to arm.
+      example: 'camera.living_room_camera'
+
+disarm:
+  description: Disarm a camera disabling motion detection
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off
+      example: 'camera.living_room_camera'
