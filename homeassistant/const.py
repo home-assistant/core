@@ -315,6 +315,9 @@ ATTR_DEVICE_CLASS = 'device_class'
 SERVICE_HOMEASSISTANT_STOP = 'stop'
 SERVICE_HOMEASSISTANT_RESTART = 'restart'
 
+SERVICE_ARM = 'arm'
+SERVICE_DISARM = 'disarm'
+
 SERVICE_TURN_ON = 'turn_on'
 SERVICE_TURN_OFF = 'turn_off'
 SERVICE_TOGGLE = 'toggle'
