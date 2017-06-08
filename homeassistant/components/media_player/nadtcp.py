@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the NAD platform."""
     from nad_receiver import NADReceiverTCP
-    add_devices([NAD_tcp(
+    add_devices([NADtcp(
         NADReceiverTCP(config.get(CONF_HOST)),
         config.get(CONF_NAME),
         config.get(CONF_MIN_VOLUME),
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )])
 
 
-class NAD_tcp(MediaPlayerDevice):
+class NADtcp(MediaPlayerDevice):
     """Representation of a NAD Digital amplifier."""
 
     def __init__(self, nad_device, name, min_volume, max_volume, volume_step):
@@ -85,8 +85,10 @@ class NAD_tcp(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        nad_status = self.nad_device.status()
-
+        try:
+            nad_status = self.nad_device.status()
+        except OSError:
+            return
         if nad_status is None:
             return
 
@@ -178,4 +180,3 @@ class NAD_tcp(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
