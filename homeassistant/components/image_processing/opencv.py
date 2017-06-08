@@ -85,7 +85,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the OpenCV image processing platform."""
     try:
         # Verify opencv python package is preinstalled
-        import cv2  # pylint: disable=unused-import
+        # pylint: disable=unused-import,unused-variable
+        import cv2  # noqa
     except ImportError:
         _LOGGER.error("No opencv library found! " +
                       "Install or compile for your system " +
