@@ -90,6 +90,7 @@ CONF_DISCOVERY = 'discovery'
 CONF_DISPLAY_OPTIONS = 'display_options'
 CONF_DOMAIN = 'domain'
 CONF_DOMAINS = 'domains'
+CONF_DURATION = 'duration'
 CONF_EFFECT = 'effect'
 CONF_ELEVATION = 'elevation'
 CONF_EMAIL = 'email'
@@ -198,6 +199,8 @@ STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
+STATE_RUNNING = 'running'
+STATE_STOPPED = 'stopped'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
@@ -354,6 +357,10 @@ SERVICE_STOP_COVER = 'stop_cover'
 SERVICE_STOP_COVER_TILT = 'stop_cover_tilt'
 
 SERVICE_SELECT_OPTION = 'select_option'
+
+SERVICE_TIMER_START = 'timer_start'
+SERVICE_TIMER_RESTART = 'timer_restart'
+SERVICE_TIMER_CANCEL = 'timer_cancel'
 
 # #### API / REMOTE ####
 SERVER_PORT = 8123
