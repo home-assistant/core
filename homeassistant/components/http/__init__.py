@@ -51,7 +51,7 @@ CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
-# TLS configuation follows the best-practice guidelines specified here:
+# TLS configuration follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
 # Intermediate guidelines are followed.
 SSL_VERSION = ssl.PROTOCOL_SSLv23
@@ -339,7 +339,7 @@ class HomeAssistantWSGI(object):
 
     @asyncio.coroutine
     def stop(self):
-        """Stop the wsgi server."""
+        """Stop the WSGI server."""
         if self.server:
             self.server.close()
             yield from self.server.wait_closed()

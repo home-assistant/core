@@ -125,7 +125,7 @@ def async_aiohttp_proxy_stream(hass, request, stream, content_type,
 @callback
 # pylint: disable=invalid-name
 def _async_register_clientsession_shutdown(hass, clientsession):
-    """Register ClientSession close on homeassistant shutdown.
+    """Register ClientSession close on Home Assistant shutdown.
 
     This method must be run in the event loop.
     """
