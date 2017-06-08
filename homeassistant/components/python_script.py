@@ -34,12 +34,17 @@ def execute(hass, name, data):
     from RestrictedPython.Guards import safe_builtins, full_write_guard
 
     filename = '{}.py'.format(name)
-    try:
-        with open(hass.config.path(FOLDER, filename)) as fil:
-            compiled = compile_restricted_exec(fil.read(), filename=filename)
-    except SyntaxError as err:
-        _LOGGER.error('Error loading script: %s', err)
+    with open(hass.config.path(FOLDER, filename)) as fil:
+        compiled = compile_restricted_exec(fil.read(), filename=filename)
+
+    if compiled.errors:
+        _LOGGER.error('Error loading script: %s',
+                      ', '.join(compiled.errors))
         return
+
+    if compiled.warnings:
+        _LOGGER.warning('Warning loading script: %s',
+                        ', '.join(compiled.warnings))
 
     restricted_globals = {
         '__builtins__': safe_builtins,
