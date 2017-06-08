@@ -14,7 +14,7 @@ import async_timeout
 
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import event
@@ -32,11 +32,14 @@ DOMAIN = 'citybikes'
 CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
 CONF_STATIONS_LIST = 'stations'
-ATTR_NETWORK_ID = 'id'
-ATTR_STATION_ID = 'id'
-ATTR_STATION_UID = 'uid'
-ATTR_STATION_NAME = 'name'
+ATTR_NETWORKS_LIST = 'networks'
+ATTR_NETWORK = 'network'
+ATTR_STATIONS_LIST = 'stations'
+ATTR_ID = 'id'
+ATTR_UID = 'uid'
+ATTR_NAME = 'name'
 ATTR_EXTRA = 'extra'
+ATTR_TIMESTAMP = 'timestamp'
 ATTR_EMPTY_SLOTS = 'empty_slots'
 ATTR_FREE_BIKES = 'free_bikes'
 ATTR_TIMESTAMP = 'timestamp'
@@ -64,40 +67,35 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 NETWORK_SCHEMA = vol.Schema({
-    vol.Required('networks'): [
-        vol.Schema({
-            vol.Optional('company'): vol.All(
-                cv.ensure_list, [cv.string]),
-            vol.Required('href'): cv.string,
-            vol.Required('id'): cv.string,
-            vol.Required('name'): cv.string,
-            vol.Required('location'): vol.Schema({
-                vol.Optional('city'): cv.string,
-                vol.Optional('country'): cv.string,
-                vol.Required(ATTR_LATITUDE): vol.Coerce(float),
-                vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
-                }),
-            }, extra=vol.ALLOW_EXTRA),
-        ],
+    vol.Required(ATTR_ID): cv.string,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_LOCATION): vol.Schema({
+        vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+        vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+        }, extra=vol.REMOVE_EXTRA),
+    }, extra=vol.REMOVE_EXTRA)
+
+NETWORKS_RESPONSE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NETWORKS_LIST): [NETWORK_SCHEMA],
     })
 
-STATIONS_SCHEMA = vol.Schema({
-    vol.Required('network'): vol.Schema({
-        vol.Required('stations'): [
-            vol.Schema({
-                vol.Required('free_bikes'): cv.positive_int,
-                vol.Required('empty_slots'): cv.positive_int,
-                vol.Required(ATTR_LATITUDE): vol.Coerce(float),
-                vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
-                vol.Required('id'): cv.string,
-                vol.Required('name'): cv.string,
-                vol.Required('timestamp'): cv.string,
-                vol.Optional('extra'): vol.Schema({
-                    vol.Optional('uid'): cv.string
-                    }, extra=vol.ALLOW_EXTRA)
-                }, extra=vol.ALLOW_EXTRA)
-            ]
-        }, extra=vol.ALLOW_EXTRA)
+STATION_SCHEMA = vol.Schema({
+    vol.Required(ATTR_FREE_BIKES): cv.positive_int,
+    vol.Required(ATTR_EMPTY_SLOTS): cv.positive_int,
+    vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+    vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+    vol.Required(ATTR_ID): cv.string,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_TIMESTAMP): cv.string,
+    vol.Optional(ATTR_EXTRA): vol.Schema({
+        vol.Optional(ATTR_UID): cv.string
+        }, extra=vol.REMOVE_EXTRA)
+    }, extra=vol.REMOVE_EXTRA)
+
+STATIONS_RESPONSE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NETWORK): vol.Schema({
+        vol.Required(ATTR_STATIONS): [STATION_SCHEMA]
+        }, extra=vol.REMOVE_EXTRA)
     })
 
 
@@ -110,19 +108,19 @@ def _get_closest_network_id(hass, latitude, longitude):
             req = yield from session.get(DEFAULT_ENDPOINT.format(
                 uri=NETWORKS_URI))
         res = yield from req.json()
-        res = NETWORK_SCHEMA(res)
-        network = res['networks'][0]
-        result = network['id']
+        res = NETWORKS_RESPONSE_SCHEMA(res)
+        network = res[ATTR_NETWORKS_LIST][0]
+        result = network[ATTR_ID]
         minimum_dist = location.distance(latitude, longitude,
-                                         network['location'][ATTR_LATITUDE],
-                                         network['location'][ATTR_LONGITUDE])
-        for network in res['networks'][1:]:
+                                         network[ATTR_LOCATION][ATTR_LATITUDE],
+                                         network[ATTR_LOCATION][ATTR_LONGITUDE])
+        for network in res[ATTR_NETWORKS_LIST][1:]:
             dist = location.distance(latitude, longitude,
-                                     network['location'][ATTR_LATITUDE],
-                                     network['location'][ATTR_LONGITUDE])
+                                     network[ATTR_LOCATION][ATTR_LATITUDE],
+                                     network[ATTR_LOCATION][ATTR_LONGITUDE])
             if dist < minimum_dist:
                 minimum_dist = dist
-                result = network['id']
+                result = network[ATTR_ID]
 
         return result
     except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -218,9 +216,9 @@ class CityBikesNetwork(Entity):
             with async_timeout.timeout(5, loop=self.hass.loop):
                 req = yield from session.get(DEFAULT_ENDPOINT.format(
                     uri=STATIONS_URI.format(uid=self._network_id)))
-            res = yield from req.json()
-            res = STATIONS_SCHEMA(res)
-            self._stations_data = res.get('network').get('stations')
+            response = yield from req.json()
+            response = STATIONS_RESPONSE_SCHEMA(response)
+            self._stations_data = response[ATTR_NETWORK][ATTR_STATIONS_LIST]
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Could not connect to CityBikes API endpoint")
         except ValueError:
@@ -240,11 +238,11 @@ class CityBikesNetwork(Entity):
                 if dist < radius:
                     self._add_station_entity_if_necessary(station)
             
-            station_id = station.get('id')
+            station_id = station[ATTR_ID]
             
             if station_id in self._monitored_stations or \
-                'extra' in station and 'uid' in station.get('extra') and \
-                station.get('extra').get('uid') in self._monitored_stations:
+                ATTR_EXTRA in station and ATTR_UID in station[ATTR_EXTRA] and \
+                station[ATTR_EXTRA][ATTR_UID] in self._monitored_stations:
                 self._add_station_entity_if_necessary(station)
             
             if station_id in self._stations:
@@ -252,9 +250,9 @@ class CityBikesNetwork(Entity):
 
     def _add_station_entity_if_necessary(self, station):
         entity_id = CityBikesStation.make_entity_id(self.entity_id,
-            station.get('id'))
+            station[ATTR_ID])
         if not self.hass.states.get(entity_id):
-            self._stations[station.get('id')] = CityBikesStation(self.hass,
+            self._stations[station[ATTR_ID]] = CityBikesStation(self.hass,
                 self._network_id, station)
 
     def start_monitoring_area(self, latitude, longitude, radius):
@@ -285,12 +283,12 @@ class CityBikesStation(Entity):
 
     @property
     def name(self):
-        return self._station_data.get('name')
+        return self._station_data[ATTR_NAME]
 
     @property
     def entity_id(self):
         return CityBikesStation.make_entity_id(self._network_id,
-            self._station_data.get('id'))
+            self._station_data[ATTR_ID]
 
     @property
     def state(self):
