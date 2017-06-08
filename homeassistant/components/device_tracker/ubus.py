@@ -145,32 +145,34 @@ class UbusDeviceScanner(DeviceScanner):
             except requests.exceptions.Timeout:
                 return
 
-            if res.status_code == 200:
-                response = res.json()
+            if res.status_code != 200:
+                return
+            response = res.json()
 
-                if rpcmethod == "call":
-                    error = response.get("error", None)
-                    if error is not None:
-                        error_code = error["code"]
-                        error_message = error["message"]
-                        have_session_id = self.session_id != _NULL_SESSION_ID
-                        access_denied = error_code == _ERROR_ACCESS_DENIED
-                        if access_denied and have_session_id:
-                            _LOGGER.info(
-                                "Session has expired, requesting new session")
-                            self._get_new_session_id()
-                            # Retry the request with the new session id
-                            continue
-                        else:
-                            _LOGGER.error("Request failed %d: %s",
-                                          error_code, error_message)
-                            return
-                    try:
-                        return response["result"][1]
-                    except IndexError:
-                        return
+            if rpcmethod != "call":
+                return response["result"]
+            error = response.get("error", None)
+            if error is not None:
+                error_code = error["code"]
+                error_message = error["message"]
+                have_session_id = self.session_id != _NULL_SESSION_ID
+                access_denied = error_code == _ERROR_ACCESS_DENIED
+                if access_denied and have_session_id:
+                    _LOGGER.info(
+                        "Session has expired, requesting new session")
+                    self._get_new_session_id()
+                    # Retry the request with the new session id
+                    continue
                 else:
-                    return response["result"]
+                    _LOGGER.error("Request failed %d: %s",
+                                  error_code, error_message)
+                    return
+            try:
+                return response["result"][1]
+            except IndexError:
+                # Indicates a blank response from the server
+                return
+
 
     def _get_new_session_id(self):
         """Get a new authentication token (aka session id)."""
