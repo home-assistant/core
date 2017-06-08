@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.coinmarketcap/
 """
 import logging
 from datetime import timedelta
-import json
 from urllib.error import HTTPError
 
 import voluptuous as vol
@@ -16,7 +15,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_CURRENCY
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['coinmarketcap==2.0.1']
+REQUIREMENTS = ['coinmarketcap==3.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,8 +102,7 @@ class CoinMarketCapSensor(Entity):
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
-        self._ticker = json.loads(
-            self.data.ticker.decode('utf-8').strip('\n '))[0]
+        self._ticker = self.data.ticker[0]
 
 
 class CoinMarketCapData(object):
@@ -118,5 +116,4 @@ class CoinMarketCapData(object):
     def update(self):
         """Get the latest data from blockchain.info."""
         from coinmarketcap import Market
-
-        self.ticker = Market().ticker(self.currency)
+        self.ticker = Market().ticker(self.currency, limit=1)
