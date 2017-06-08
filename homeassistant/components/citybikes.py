@@ -94,7 +94,7 @@ STATION_SCHEMA = vol.Schema({
 
 STATIONS_RESPONSE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NETWORK): vol.Schema({
-        vol.Required(ATTR_STATIONS): [STATION_SCHEMA]
+        vol.Required(ATTR_STATIONS_LIST): [STATION_SCHEMA]
         }, extra=vol.REMOVE_EXTRA)
     })
 
@@ -111,9 +111,10 @@ def _get_closest_network_id(hass, latitude, longitude):
         res = NETWORKS_RESPONSE_SCHEMA(res)
         network = res[ATTR_NETWORKS_LIST][0]
         result = network[ATTR_ID]
-        minimum_dist = location.distance(latitude, longitude,
-                                         network[ATTR_LOCATION][ATTR_LATITUDE],
-                                         network[ATTR_LOCATION][ATTR_LONGITUDE])
+        minimum_dist = location.distance(
+            latitude, longitude,
+            network[ATTR_LOCATION][ATTR_LATITUDE],
+            network[ATTR_LOCATION][ATTR_LONGITUDE])
         for network in res[ATTR_NETWORKS_LIST][1:]:
             dist = location.distance(latitude, longitude,
                                      network[ATTR_LOCATION][ATTR_LATITUDE],
@@ -159,13 +160,13 @@ def async_setup(hass, config):
                 if not network_id:
                     # Autodetection failed - try again later
                     one_minute_later = dt.utcnow() + timedelta(minutes=1)
-                    event.async_track_point_in_utc_time(hass,
-                        async_setup_single_network, one_minute_later)
+                    event.async_track_point_in_utc_time(
+                        hass, async_setup_single_network, one_minute_later)
                     return
 
             if network_id not in networks:
                 network = CityBikesNetwork(hass, network_id)
-                
+
                 @asyncio.coroutine
                 def async_update_single_network(now):
                     yield from network.async_update_ha_state(True)
@@ -200,7 +201,7 @@ class CityBikesNetwork(Entity):
         self._stations = {}
         self._monitored_areas = set()
         self._monitored_stations = set()
-    
+
     @property
     def name(self):
         return self._network_id
@@ -234,26 +235,27 @@ class CityBikesNetwork(Entity):
         for station in self._stations_data:
             for latitude, longitude, radius in self._monitored_areas:
                 dist = location.distance(latitude, longitude,
-                    station.get(ATTR_LATITUDE), station.get(ATTR_LONGITUDE))
+                                         station.get(ATTR_LATITUDE),
+                                         station.get(ATTR_LONGITUDE))
                 if dist < radius:
                     self._add_station_entity_if_necessary(station)
-            
+
             station_id = station[ATTR_ID]
-            
+
             if station_id in self._monitored_stations or \
                 ATTR_EXTRA in station and ATTR_UID in station[ATTR_EXTRA] and \
                 station[ATTR_EXTRA][ATTR_UID] in self._monitored_stations:
                 self._add_station_entity_if_necessary(station)
-            
+
             if station_id in self._stations:
                 yield from self._stations[station_id].async_update_data(station)
 
     def _add_station_entity_if_necessary(self, station):
         entity_id = CityBikesStation.make_entity_id(self.entity_id,
-            station[ATTR_ID])
+                                                    station[ATTR_ID])
         if not self.hass.states.get(entity_id):
-            self._stations[station[ATTR_ID]] = CityBikesStation(self.hass,
-                self._network_id, station)
+            self._stations[station[ATTR_ID]] = CityBikesStation(
+                self.hass, self._network_id, station)
 
     def start_monitoring_area(self, latitude, longitude, radius):
         """Start monitoring stations in an area."""
@@ -287,8 +289,8 @@ class CityBikesStation(Entity):
 
     @property
     def entity_id(self):
-        return CityBikesStation.make_entity_id(self._network_id,
-            self._station_data[ATTR_ID]
+        return CityBikesStation.make_entity_id(
+            self._network_id, self._station_data[ATTR_ID])
 
     @property
     def state(self):
@@ -297,8 +299,8 @@ class CityBikesStation(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return dict({ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION},
-            **self._station_data)
+        return dict(
+            {ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION}, **self._station_data)
 
     @property
     def unit_of_measurement(self):
@@ -309,7 +311,7 @@ class CityBikesStation(Entity):
     def icon(self):
         """Return the icon."""
         return 'mdi:bike'
-    
+
     @asyncio.coroutine
     def async_update_data(self, station_data):
         self._station_data = station_data
