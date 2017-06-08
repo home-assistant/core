@@ -71,7 +71,7 @@ def async_disarm(hass, entity_id=None):
     """Disarm all the cameras"""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISARM, data))
-   
+
 @asyncio.coroutine
 def async_get_image(hass, entity_id, timeout=10):
     """Fetch a image from a camera entity."""
