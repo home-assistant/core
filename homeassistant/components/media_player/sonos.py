@@ -524,7 +524,7 @@ class SonosDevice(MediaPlayerDevice):
             support_previous_track = False
             support_next_track = False
             support_play = False
-            support_stop = False
+            support_stop = True
             support_pause = False
 
             if is_playing_tv:
@@ -925,8 +925,8 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error
     def turn_off(self):
         """Turn off media player."""
-        if self._support_pause:
-            self.media_pause()
+        if self._support_stop:
+            self.media_stop()
 
     @soco_error
     @soco_filter_upnperror(UPNP_ERRORS_TO_IGNORE)

@@ -444,6 +444,7 @@ omit =
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/qnap.py
     homeassistant/components/sensor/radarr.py
+    homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
@@ -505,6 +506,7 @@ omit =
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
+    homeassistant/components/weather/yweather.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py

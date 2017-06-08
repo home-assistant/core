@@ -121,7 +121,7 @@ buienradar==0.4
 ciscosparkapi==0.4.2
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==2.0.1
+coinmarketcap==3.0.1
 
 # homeassistant.scripts.check_config
 colorlog>2.1,<3
@@ -144,7 +144,7 @@ datapoint==0.4.3
 # decora==0.4
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.4.2
+denonavr==0.4.3
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -380,7 +380,7 @@ myusps==1.1.1
 
 # homeassistant.components.media_player.nad
 # homeassistant.components.media_player.nadtcp
-nad_receiver==0.0.5
+nad_receiver==0.0.6
 
 # homeassistant.components.discovery
 netdisco==1.0.1
@@ -388,7 +388,7 @@ netdisco==1.0.1
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
 
-# homeassistant.components.opencv
+# homeassistant.components.image_processing.opencv
 numpy==1.12.0
 
 # homeassistant.components.google
@@ -399,9 +399,6 @@ oemthermostat==1.1
 
 # homeassistant.components.media_player.onkyo
 onkyo-eiscp==1.1
-
-# homeassistant.components.opencv
-# opencv-python==3.2.0.6
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
@@ -552,7 +549,7 @@ pyharmony==1.0.16
 pyhik==0.1.2
 
 # homeassistant.components.homematic
-pyhomematic==0.1.27
+pyhomematic==0.1.28
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==1.1.0
@@ -699,6 +696,9 @@ python-nmap==0.6.1
 # homeassistant.components.notify.pushover
 python-pushover==0.2
 
+# homeassistant.components.sensor.ripple
+python-ripple-api==0.0.1
+
 # homeassistant.components.media_player.roku
 python-roku==3.1.3
 
@@ -733,7 +733,7 @@ pyunifi==2.12
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.31
+pyvera==0.2.32
 
 # homeassistant.components.notify.html5
 pywebpush==1.0.4
@@ -896,6 +896,7 @@ xmltodict==0.11.0
 yahoo-finance==1.4.0
 
 # homeassistant.components.sensor.yweather
+# homeassistant.components.weather.yweather
 yahooweather==0.8
 
 # homeassistant.components.light.yeelight
