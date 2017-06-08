@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     entities = []
-    if config.get(CONF_CLASSIFIER, None) is None:
+    if config[CONF_CLASSIFIER] is None:
         dest_path = hass.config.path(DEFAULT_CLASSIFIER_PATH)
         _get_default_classifier(dest_path)
         config[CONF_CLASSIFIER] = {
