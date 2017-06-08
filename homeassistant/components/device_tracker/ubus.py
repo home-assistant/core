@@ -173,7 +173,6 @@ class UbusDeviceScanner(DeviceScanner):
                 # Indicates a blank response from the server
                 return
 
-
     def _get_new_session_id(self):
         """Get a new authentication token (aka session id)."""
         self.session_id = _NULL_SESSION_ID
