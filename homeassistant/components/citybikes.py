@@ -16,8 +16,10 @@ from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.entity_compoonent import EntityComponent
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers import event
+from homeassistant.helpers.event import (
+    async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util import location, slugify, dt
 import homeassistant.helpers.config_validation as cv
 
@@ -27,7 +29,7 @@ DEFAULT_ENDPOINT = 'https://api.citybik.es/{uri}'
 NETWORKS_URI = 'v2/networks'
 STATIONS_URI = 'v2/networks/{uid}?fields=network.stations'
 
-SCAN_INTERVAL = timedelta(seconds=15)  # Timely, and doesn't suffocate the API
+SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 DOMAIN = 'citybikes'
 CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
@@ -146,35 +148,26 @@ def async_setup(hass, config):
         def async_setup_single_network(now):
             """Set up a single CityBikes network."""
             network_id = location_config.get(CONF_NETWORK)
-
             latitude = location_config.get(CONF_LATITUDE,
                                            hass.config.latitude)
             longitude = location_config.get(CONF_LONGITUDE,
                                             hass.config.longitude)
-
             if not network_id:
                 # Autodetect network from location
-                network_id = yield from _get_closest_network_id(hass, latitude,
+                network_id = yield from _get_closest_network_id(hass,
+                                                                latitude,
                                                                 longitude)
-
                 if not network_id:
                     # Autodetection failed - try again later
                     one_minute_later = dt.utcnow() + timedelta(minutes=1)
-                    event.async_track_point_in_utc_time(
-                        hass, async_setup_single_network, one_minute_later)
+                    async_track_point_in_utc_time(hass,
+                                                  async_setup_single_network,
+                                                  one_minute_later)
                     return
 
             if network_id not in networks:
                 network = CityBikesNetwork(hass, network_id)
-
-                @asyncio.coroutine
-                def async_update_single_network(now):
-                    yield from network.async_update_ha_state(True)
-                    event.async_track_point_in_utc_time(
-                        hass, async_update_single_network,
-                        dt.utcnow() + SCAN_INTERVAL)
-
-                yield from async_update_single_network(None)
+                yield from network.async_update(dt.utcnow())
                 networks[network_id] = network
 
             if CONF_STATIONS_LIST in location_config:
@@ -185,12 +178,12 @@ def async_setup(hass, config):
                 networks[network_id].start_monitoring_area(latitude, longitude,
                                                            radius)
 
-        yield from async_setup_single_network(None)
+        yield from async_setup_single_network(dt.utcnow())
 
     return True
 
 
-class CityBikesNetwork(Entity):
+class CityBikesNetwork:
     """Representation of a bike sharing network."""
 
     def __init__(self, hass, network_id):
@@ -201,25 +194,21 @@ class CityBikesNetwork(Entity):
         self._stations = {}
         self._monitored_areas = set()
         self._monitored_stations = set()
-
-    @property
-    def name(self):
-        return self._network_id
-
-    @property
-    def entity_id(self):
-        return "{}.{}".format(DOMAIN, slugify(self.name))
+        async_track_time_interval(self.hass, self.async_update, SCAN_INTERVAL)
 
     @asyncio.coroutine
     def _fetch_stations(self):
         try:
             session = async_get_clientsession(self.hass)
+
             with async_timeout.timeout(5, loop=self.hass.loop):
                 req = yield from session.get(DEFAULT_ENDPOINT.format(
                     uri=STATIONS_URI.format(uid=self._network_id)))
-            response = yield from req.json()
-            response = STATIONS_RESPONSE_SCHEMA(response)
-            self._stations_data = response[ATTR_NETWORK][ATTR_STATIONS_LIST]
+
+            json_response = yield from req.json()
+            network = STATIONS_RESPONSE_SCHEMA(response)
+            self._stations_data = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
+
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Could not connect to CityBikes API endpoint")
         except ValueError:
@@ -230,7 +219,7 @@ class CityBikesNetwork(Entity):
                           " endpoint: {}".format(err))
 
     @asyncio.coroutine
-    def async_update(self):
+    def async_update(self, now):
         yield from self._fetch_stations()
         for station in self._stations_data:
             for latitude, longitude, radius in self._monitored_areas:
