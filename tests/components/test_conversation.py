@@ -118,9 +118,9 @@ class TestConversation(unittest.TestCase):
         self.assertTrue(mock_logger.called)
         self.assertFalse(mock_call.called)
 
+
 class TestConfiguration(unittest.TestCase):
     """Test the conversation configuration component."""
-
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
@@ -133,21 +133,21 @@ class TestConfiguration(unittest.TestCase):
         with assert_setup_component(2):
             self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
                 'input_boolean': {
-                    'notify_home' : {
+                    'notify_home': {
                         'name': 'Notify when someone arrives home',
                         'initial': 'off',
                         }
                     },
                 conversation.DOMAIN: {
                     'test_1': {
-                        'keywords' : 'switch boolean',
-                        'action' : {
+                        'keywords': 'switch boolean',
+                        'action': {
                             'service': 'input_boolean.toggle'
                             }
                         },
                     'test_2': {
-                        'keywords' : 'please test',
-                        'action' : {
+                        'keywords': 'please test',
+                        'action': {
                             'service': 'input_boolean.toggle'
                             }
                         }

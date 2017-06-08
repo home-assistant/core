@@ -54,10 +54,8 @@ def setup(hass, config):
         name)
         for name, attrs in config.items()}
 
-
     def process(service):
         """Parse text into commands."""
-
         # if actually configured
         if choices:
             text = service.data[ATTR_TEXT]
