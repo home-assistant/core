@@ -20,7 +20,7 @@ REQUIREMENTS = ['https://github.com/joopert/nad_receiver/archive/'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'NAD receiver'
+DEFAULT_NAME = 'NAD amplifier'
 DEFAULT_MIN_VOLUME = -60
 DEFAULT_MAX_VOLUME = -10
 DEFAULT_VOLUME_STEP = 4
