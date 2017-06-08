@@ -19,7 +19,9 @@ def setup(hass, config):
 
     def service_handler(call):
         """Handle python script service calls."""
-        execute(hass, call.service, call.data)
+        filename = '{}.py'.format(call.service)
+        with open(hass.config.path(FOLDER, filename)) as fil:
+            execute(hass, filename, fil.read(), call.data)
 
     for fil in glob.iglob(os.path.join(path, '*.py')):
         name = os.path.splitext(os.path.basename(fil))[0]
@@ -28,44 +30,43 @@ def setup(hass, config):
     return True
 
 
-def execute(hass, name, data):
+def execute(hass, filename, source, data):
     """Execute a script."""
     from RestrictedPython import compile_restricted_exec
     from RestrictedPython.Guards import safe_builtins, full_write_guard
 
-    filename = '{}.py'.format(name)
-    with open(hass.config.path(FOLDER, filename)) as fil:
-        compiled = compile_restricted_exec(fil.read(), filename=filename)
+    compiled = compile_restricted_exec(source, filename=filename)
 
     if compiled.errors:
-        _LOGGER.error('Error loading script: %s',
+        _LOGGER.error('Error loading script %s: %s', filename,
                       ', '.join(compiled.errors))
         return
 
     if compiled.warnings:
-        _LOGGER.warning('Warning loading script: %s',
+        _LOGGER.warning('Warning loading script %s: %s', filename,
                         ', '.join(compiled.warnings))
 
     restricted_globals = {
         '__builtins__': safe_builtins,
-        '_print_': Printer,
+        '_print_': StubPrinter,
         '_getattr_': getattr,
         '_write_': full_write_guard,
     }
     local = {
         'hass': hass,
         'data': data,
+        'logger': logging.getLogger('{}.{}'.format(__name__, filename))
     }
 
     try:
-        _LOGGER.info('Executing %s: %s', name, data)
+        _LOGGER.info('Executing %s: %s', filename, data)
         # pylint: disable=exec-used
         exec(compiled.code, restricted_globals, local)
     except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception('Error executing script: %s', err)
+        _LOGGER.exception('Error executing script %s: %s', filename, err)
 
 
-class Printer:
+class StubPrinter:
     """Class to handle printing inside scripts."""
 
     def __init__(self, _getattr_):
@@ -75,4 +76,5 @@ class Printer:
     def _call_print(self, *objects, **kwargs):
         """Print text."""
         # pylint: disable=no-self-use
-        print(*objects, **kwargs)
+        _LOGGER.warning(
+            "Don't print inside scripts. Use logger.info() instead.")
