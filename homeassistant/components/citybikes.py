@@ -20,7 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
-from homeassistant.util import location, dt
+from homeassistant.util import location, dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -269,7 +269,7 @@ class CityBikesStation(Entity):
     @staticmethod
     def make_entity_id(network_id, station_id):
         """Generate an entity ID."""
-        return "{}.{}_{}".format(DOMAIN, network_id, station_id)
+        return "{}.{}_{}".format(DOMAIN, slugify(network_id), station_id)
 
     def __init__(self, hass, network_id, station_data):
         """Initialize the Station entity."""
