@@ -137,7 +137,7 @@ def async_setup(hass, config):
                     yield from camera.async_arm()
                 elif service.service == SERVICE_DISARM:
                     yield from camera.async_disarm()
-            except AttributeError as e:
+            except AttributeError:
                 pass
 
         update_tasks = []
@@ -203,7 +203,7 @@ class Camera(Entity):
         """Return the camera status."""
         try:
             status = self._status
-        except AttributeError as e:
+        except AttributeError:
             status = None
 
         return status
