@@ -10,10 +10,13 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.lock import LockDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_EMAIL, CONF_PASSWORD, STATE_LOCKED, STATE_UNLOCKED)
+    ATTR_BATTERY_LEVEL, CONF_EMAIL, CONF_PASSWORD,
+    STATE_LOCKED, STATE_UNLOCKED)
 from homeassistant.helpers.typing import ConfigType
 
-REQUIREMENTS = ['pysesame==0.0.2']
+REQUIREMENTS = ['pysesame==0.1.0']
+
+ATTR_DEVICE_ID = 'device_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
@@ -37,18 +40,21 @@ def setup_platform(hass, config: ConfigType,
 class SesameDevice(LockDevice):
     """Representation of a Sesame device."""
 
-    device_id = None
     _sesame = None
 
     def __init__(self, sesame: object) -> None:
         """Initialize the Sesame device."""
-        self.device_id = sesame.device_id
         self._sesame = sesame
 
     @property
     def name(self) -> str:
         """Return the name of the device."""
         return self._sesame.nickname
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._sesame.api_enabled
 
     @property
     def is_locked(self) -> bool:
@@ -73,3 +79,11 @@ class SesameDevice(LockDevice):
     def update(self) -> None:
         """Update the internal state of the device."""
         self._sesame.update_state()
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return the state attributes."""
+        attributes = {}
+        attributes[ATTR_DEVICE_ID] = self._sesame.device_id
+        attributes[ATTR_BATTERY_LEVEL] = self._sesame.battery
+        return attributes
