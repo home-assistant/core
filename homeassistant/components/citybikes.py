@@ -15,12 +15,12 @@ import async_timeout
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util import location, dt
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,15 +108,15 @@ def _get_closest_network_id(hass, latitude, longitude):
         with async_timeout.timeout(5, loop=hass.loop):
             req = yield from session.get(DEFAULT_ENDPOINT.format(
                 uri=NETWORKS_URI))
-        res = yield from req.json()
-        res = NETWORKS_RESPONSE_SCHEMA(res)
-        network = res[ATTR_NETWORKS_LIST][0]
+        json_response = yield from req.json()
+        networks = NETWORKS_RESPONSE_SCHEMA(json_response)
+        network = networks[ATTR_NETWORKS_LIST][0]
         result = network[ATTR_ID]
         minimum_dist = location.distance(
             latitude, longitude,
             network[ATTR_LOCATION][ATTR_LATITUDE],
             network[ATTR_LOCATION][ATTR_LONGITUDE])
-        for network in res[ATTR_NETWORKS_LIST][1:]:
+        for network in networks[ATTR_NETWORKS_LIST][1:]:
             dist = location.distance(latitude, longitude,
                                      network[ATTR_LOCATION][ATTR_LATITUDE],
                                      network[ATTR_LOCATION][ATTR_LONGITUDE])
@@ -219,6 +219,11 @@ class CityBikesNetwork:
 
     @asyncio.coroutine
     def async_update(self, now):
+        """Update the bike sharing network.
+
+        The state of the network is updated, followed by an update of all the
+        associated station entities.
+        """
         yield from self._fetch_stations()
         for station in self._stations_data:
             for latitude, longitude, radius in self._monitored_areas:
@@ -237,10 +242,11 @@ class CityBikesNetwork:
                 self._add_station_entity_if_necessary(station)
 
             if station_id in self._stations:
-                yield from self._stations[station_id].async_update_data(station)
+                yield from self._stations[station_id].async_update_data(
+                    station)
 
     def _add_station_entity_if_necessary(self, station):
-        entity_id = CityBikesStation.make_entity_id(self.entity_id,
+        entity_id = CityBikesStation.make_entity_id(self._network_id,
                                                     station[ATTR_ID])
         if not self.hass.states.get(entity_id):
             self._stations[station[ATTR_ID]] = CityBikesStation(
@@ -249,10 +255,12 @@ class CityBikesNetwork:
     def start_monitoring_area(self, latitude, longitude, radius):
         """Start monitoring stations in an area."""
         self._monitored_areas.update([(latitude, longitude, radius)])
+        self.hass.async_add_job(self.async_update(dt.utcnow()))
 
     def start_monitoring_stations(self, *stations):
         """Start monitoring specific stations."""
         self._monitored_stations.update(stations)
+        self.hass.async_add_job(self.async_update(dt.utcnow()))
 
 
 class CityBikesStation(Entity):
@@ -260,6 +268,7 @@ class CityBikesStation(Entity):
 
     @staticmethod
     def make_entity_id(network_id, station_id):
+        """Generate an entity ID."""
         return "{}.{}_{}".format(DOMAIN, network_id, station_id)
 
     def __init__(self, hass, network_id, station_data):
@@ -270,19 +279,23 @@ class CityBikesStation(Entity):
 
     @property
     def should_poll(self):
+        """Indicate whether HASS should poll the station for state updates."""
         return False
 
     @property
     def name(self):
+        """Return the name of the station."""
         return self._station_data[ATTR_NAME]
 
     @property
     def entity_id(self):
+        """Return the entity ID of the station."""
         return CityBikesStation.make_entity_id(
             self._network_id, self._station_data[ATTR_ID])
 
     @property
     def state(self):
+        """Return the state of the station."""
         return self._station_data.get(ATTR_FREE_BIKES)
 
     @property
@@ -303,5 +316,6 @@ class CityBikesStation(Entity):
 
     @asyncio.coroutine
     def async_update_data(self, station_data):
+        """Update the internal data state of the station."""
         self._station_data = station_data
         yield from self.async_update_ha_state()
