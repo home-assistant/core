@@ -13,9 +13,9 @@ import voluptuous as vol
 import homeassistant.components.history as history
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_TYPE,
+    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_TYPE, CONF_FRIENDLY_NAME,
     EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
@@ -69,6 +69,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DURATION, default=None): cv.time_period,
     vol.Optional(CONF_TYPE, default=CONF_TYPE_TIME): vol.In(CONF_TYPE_KEYS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_FRIENDLY_NAME): cv.string,
 }), exactly_two_period_keys)
 
 
@@ -82,13 +83,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     duration = config.get(CONF_DURATION)
     sensor_type = config.get(CONF_TYPE)
     name = config.get(CONF_NAME)
+    friendly_name = config.get(CONF_FRIENDLY_NAME)
 
     for template in [start, end]:
         if template is not None:
             template.hass = hass
 
     add_devices([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                    duration, sensor_type, name)])
+                                    duration, sensor_type, name,
+                                    friendly_name)])
 
     return True
 
@@ -98,7 +101,7 @@ class HistoryStatsSensor(Entity):
 
     def __init__(
             self, hass, entity_id, entity_state, start, end, duration,
-            sensor_type, name):
+            sensor_type, name, friendly_name):
         """Initialize the HistoryStats sensor."""
         self._hass = hass
 
@@ -108,7 +111,8 @@ class HistoryStatsSensor(Entity):
         self._start = start
         self._end = end
         self._type = sensor_type
-        self._name = name
+        self._name = friendly_name
+        self.entity_id = ENTITY_ID_FORMAT.format(name)
         self._unit_of_measurement = UNITS[sensor_type]
 
         self._period = (datetime.datetime.now(), datetime.datetime.now())
