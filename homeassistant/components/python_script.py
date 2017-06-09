@@ -3,10 +3,16 @@ import glob
 import os
 import logging
 
+import voluptuous as vol
+
 DOMAIN = 'python_script'
 REQUIREMENTS = ['restrictedpython==4.0a2']
 FOLDER = 'python_scripts'
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({})
+}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -77,4 +83,4 @@ class StubPrinter:
         """Print text."""
         # pylint: disable=no-self-use
         _LOGGER.warning(
-            "Don't print inside scripts. Use logger.info() instead.")
+            "Don't use print() inside scripts. Use logger.info() instead.")
