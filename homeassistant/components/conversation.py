@@ -62,10 +62,10 @@ def setup(hass, config):
             match = fuzzyExtract.extractOne(text, choices.keys())
             scorelimit = 60  # arbitrary value
             logging.info(
-                    'matched up text %s and found %s',
-                    text,
-                    [match[0] if match[1] > scorelimit else 'nothing']
-                            )
+                'matched up text %s and found %s',
+                text,
+                [match[0] if match[1] > scorelimit else 'nothing']
+                )
             if match[1] > scorelimit:
                 choices[match[0]].run()  # run respective script
                 return
