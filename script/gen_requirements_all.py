@@ -65,6 +65,7 @@ TEST_REQUIREMENTS = (
     'gTTS-token',
     'pywebpush',
     'PyJWT',
+    'restrictedpython',
 )
 
 IGNORE_PACKAGES = (
