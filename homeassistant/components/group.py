@@ -20,6 +20,7 @@ from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import slugify
 from homeassistant.util.async import run_coroutine_threadsafe
 
 DOMAIN = 'group'
@@ -36,6 +37,7 @@ ATTR_ENTITIES = 'entities'
 ATTR_ICON = 'icon'
 ATTR_NAME = 'name'
 ATTR_ORDER = 'order'
+ATTR_USER_DEFINED = 'user_defined'
 ATTR_VIEW = 'view'
 ATTR_VISIBLE = 'visible'
 
@@ -56,14 +58,15 @@ CREATE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_VIEW): cv.boolean,
     vol.Optional(ATTR_ICON): cv.string,
     vol.Optional(CONF_CONTROL): cv.string,
+    vol.Optional(ATTR_USER_DEFINED, default=True): cv.boolean,
     vol.Optional(CONF_ENTITIES): cv.entity_ids,
 })
 
-CREATE_SERVICE_SCHEMA = vol.Schema({
+DELETE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
 })
 
-UPDATE_TRACKED_ENTITY = vol.Schema({
+UPDATE_TRACKED_ENTITY_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(CONF_ENTITIES): cv.entity_ids,
 })
@@ -204,7 +207,7 @@ def async_setup(hass, config):
     )
 
     @asyncio.coroutine
-    def reload_service_handler(service_call):
+    def reload_service_handler(service):
         """Remove all groups and load new ones from config."""
         conf = yield from component.async_prepare_reload()
         if conf is None:
@@ -216,8 +219,58 @@ def async_setup(hass, config):
         descriptions[DOMAIN][SERVICE_RELOAD], schema=RELOAD_SERVICE_SCHEMA)
 
     @asyncio.coroutine
+    def groups_service_handler(service):
+        """Handle dynamic group service functions."""
+        object_id = slugify(service.data[ATTR_NAME])
+
+        if service.service == SERVICE_CREATE:
+            if object_id in service_groups:
+                _LOGGER.warning("Group '%s' already exists!", object_id)
+                return
+
+            new_group = yield from Group.async_create_group(
+                hass, service.data[ATTR_NAME],
+                object_id=object_id,
+                entity_ids=service.data.get(ATTR_ENTITIES),
+                user_defined=service.data.get(ATTR_USER_DEFINED),
+                icon=service.data.get(ATTR_ICON),
+                view=service.data.get(ATTR_VIEW),
+                control=service.data.get(ATTR_CONTROL)
+            )
+
+            service_groups[object_id] = new_group
+            return
+
+        if object_id not in service_groups:
+            _LOGGER.warning("Group '%s' not exists!", object_id)
+            return
+
+        if service.service == SERVICE_DELETE:
+            del_group = service_groups.pop(object_id)
+            yield from del_group.async_stop()
+
+        if service.service == SERVICE_UPDATE_TRACKED_ENTITY:
+            yield from service_groups[object_id].\
+                async_update_tracked_entity_ids(service.data[ATTR_ENTITIES])
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_CREATE, groups_service_handler,
+        descriptions[DOMAIN][SERVICE_CREATE], schema=CREATE_SERVICE_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_DELETE, groups_service_handler,
+        descriptions[DOMAIN][SERVICE_DELETE], schema=DELETE_SERVICE_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_UPDATE_TRACKED_ENTITY, groups_service_handler,
+        descriptions[DOMAIN][SERVICE_UPDATE_TRACKED_ENTITY],
+        schema=UPDATE_TRACKED_ENTITY_SERVICE_SCHEMA)
+
+    @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
+        _LOGGER.warning("'group.set_visibility' is dedicated and will be remove "
+                        "in future. Move to new dynamic groups.")
         visible = service.data.get(ATTR_VISIBLE)
         tasks = [group.async_set_visible(visible) for group
                  in component.async_extract_from_service(service,
