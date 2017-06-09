@@ -44,7 +44,9 @@ ATTR_VISIBLE = 'visible'
 SERVICE_SET_VISIBILITY = 'set_visibility'
 SERVICE_CREATE = 'create'
 SERVICE_DELETE = 'delete'
-SERVICE_UPDATE_TRACKED_ENTITY = 'update_tracked_entity'
+SERVICE_UPDATE_TRACKED_ENTITIES = 'update_tracked_entities'
+
+CONTROL_TYPES = vol.In(['hidden'])
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -57,7 +59,7 @@ CREATE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Optional(ATTR_VIEW): cv.boolean,
     vol.Optional(ATTR_ICON): cv.string,
-    vol.Optional(CONF_CONTROL): cv.string,
+    vol.Optional(CONF_CONTROL): CONTROL_TYPES,
     vol.Optional(ATTR_USER_DEFINED, default=True): cv.boolean,
     vol.Optional(CONF_ENTITIES): cv.entity_ids,
 })
@@ -66,7 +68,7 @@ DELETE_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
 })
 
-UPDATE_TRACKED_ENTITY_SERVICE_SCHEMA = vol.Schema({
+UPDATE_TRACKED_ENTITIES_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(CONF_ENTITIES): cv.entity_ids,
 })
@@ -87,7 +89,7 @@ GROUP_SCHEMA = vol.Schema({
     CONF_VIEW: cv.boolean,
     CONF_NAME: cv.string,
     CONF_ICON: cv.icon,
-    CONF_CONTROL: cv.string,
+    CONF_CONTROL: CONTROL_TYPES,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -126,16 +128,69 @@ def reload(hass):
     hass.add_job(async_reload, hass)
 
 
-@asyncio.coroutine
+@callback
 def async_reload(hass):
     """Reload the automation from config."""
-    yield from hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_RELOAD))
 
 
 def set_visibility(hass, entity_id=None, visible=True):
     """Hide or shows a group."""
     data = {ATTR_ENTITY_ID: entity_id, ATTR_VISIBLE: visible}
     hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
+
+
+def create(hass, name, entity_ids=None, user_defined=True, icon=None,
+           view=False, control=None):
+    """Create a new dynamic group."""
+    hass.add_job(
+        async_create, hass, name, entity_ids, user_defined, icon,
+        view, control)
+
+
+@callback
+def async_create(hass, name, entity_ids=None, user_defined=True, icon=None,
+                 view=False, control=None):
+    """Create a new dynamic group."""
+    data = {
+        key: value for key, value in [
+            (ATTR_NAME, name),
+            (ATTR_ENTITIES, entity_ids),
+            (ATTR_USER_DEFINED, user_defined),
+            (ATTR_ICON, icon),
+            (ATTR_VIEW, view),
+            (ATTR_CONTROL, control),
+        ] if value is not None
+    }
+
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
+
+
+def delete(hass, name):
+    """Delete a dynamic group."""
+    hass.add_job(async_delete, hass, name)
+
+
+@callback
+def async_delete(hass, name):
+    """Delete a dynamic group."""
+    data = {ATTR_NAME: name}
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DELETE, data))
+
+
+def update_tracked_entities(hass, name, entity_ids):
+    """Update tracked entities a dynamic group."""
+    hass.add_job(async_update_tracked_entities, hass, name, entity_ids)
+
+
+@callback
+def async_update_tracked_entities(hass, name, entity_ids):
+    """Update tracked entities a dynamic group."""
+    data = {ATTR_NAME: name, ATTR_ENTITIES: entity_ids}
+
+    hass.async_add_job(hass.services.async_call(
+        DOMAIN, SERVICE_UPDATE_TRACKED_ENTITIES, data
+    ))
 
 
 def expand_entity_ids(hass, entity_ids):
@@ -249,7 +304,7 @@ def async_setup(hass, config):
             del_group = service_groups.pop(object_id)
             yield from del_group.async_stop()
 
-        if service.service == SERVICE_UPDATE_TRACKED_ENTITY:
+        if service.service == SERVICE_UPDATE_TRACKED_ENTITIES:
             yield from service_groups[object_id].\
                 async_update_tracked_entity_ids(service.data[ATTR_ENTITIES])
 
@@ -262,9 +317,9 @@ def async_setup(hass, config):
         descriptions[DOMAIN][SERVICE_DELETE], schema=DELETE_SERVICE_SCHEMA)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_UPDATE_TRACKED_ENTITY, groups_service_handler,
-        descriptions[DOMAIN][SERVICE_UPDATE_TRACKED_ENTITY],
-        schema=UPDATE_TRACKED_ENTITY_SERVICE_SCHEMA)
+        DOMAIN, SERVICE_UPDATE_TRACKED_ENTITIES, groups_service_handler,
+        descriptions[DOMAIN][SERVICE_UPDATE_TRACKED_ENTITIES],
+        schema=UPDATE_TRACKED_ENTITIES_SERVICE_SCHEMA)
 
     @asyncio.coroutine
     def visibility_service_handler(service):
