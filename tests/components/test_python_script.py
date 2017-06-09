@@ -28,7 +28,7 @@ def test_setup(hass):
                mock_open(read_data='fake source'), create=True), \
             patch('homeassistant.components.python_script.execute') as mock_ex:
         yield from hass.services.async_call(
-            'python_script', 'hello', { 'some': 'data' }, blocking=True)
+            'python_script', 'hello', {'some': 'data'}, blocking=True)
 
     assert len(mock_ex.mock_calls) == 1
     hass, script, source, data = mock_ex.mock_calls[0][1]
@@ -36,7 +36,7 @@ def test_setup(hass):
     assert hass is hass
     assert script == 'hello.py'
     assert source == 'fake source'
-    assert data == { 'some': 'data' }
+    assert data == {'some': 'data'}
 
 
 @asyncio.coroutine
@@ -49,6 +49,7 @@ def test_setup_fails_on_no_dir(hass, caplog):
     assert not res
     assert 'Folder python_scripts not found in config folder' in caplog.text
 
+
 @asyncio.coroutine
 def test_execute_with_data(hass, caplog):
     """Test executing a script."""
@@ -57,7 +58,7 @@ def test_execute_with_data(hass, caplog):
 hass.states.set('test.entity', data.get('name', 'not set'))
     """
 
-    hass.async_add_job(execute, hass, 'test.py', source, { 'name': 'paulus' })
+    hass.async_add_job(execute, hass, 'test.py', source, {'name': 'paulus'})
     yield from hass.async_block_till_done()
 
     assert hass.states.is_state('test.entity', 'paulus')
