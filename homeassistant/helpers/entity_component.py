@@ -151,8 +151,10 @@ class EntityComponent(object):
                     entity_platform.async_schedule_add_entities, discovery_info
                 )
             else:
-                task = self.hass.async_add_job(
-                    platform.setup_platform, self.hass, platform_config,
+                # This should not be replaced with hass.async_add_job because
+                # we don't want to track this task in case it blocks startup.
+                task = self.hass.loop.run_in_executor(
+                    None, platform.setup_platform, self.hass, platform_config,
                     entity_platform.schedule_add_entities, discovery_info
                 )
             yield from asyncio.wait_for(
