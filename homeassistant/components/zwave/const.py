@@ -332,47 +332,32 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/Alarm.cpp#L49
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L49  # noqa  # pylint:disable=line-too-long
 # See also:
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/Alarm.cpp#L278
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L275  # noqa  # pylint:disable=line-too-long
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L278  # noqa  # pylint:disable=line-too-long
 INDEX_ALARM_TYPE = 0
 INDEX_ALARM_LEVEL = 1
 INDEX_ALARM_ACCESS_CONTROL = 9
 
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/DoorLock.cpp#L77
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/DoorLock.cpp#L77  # noqa  # pylint:disable=line-too-long
 INDEX_DOOR_LOCK_LOCK = 0
 
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/Meter.cpp#L114
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Meter.cpp#L114  # noqa  # pylint:disable=line-too-long
 # See also:
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/Meter.cpp#L279
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Meter.cpp#L279  # noqa  # pylint:disable=line-too-long
 INDEX_METER_POWER = 8
 INDEX_METER_RESET = 33
 
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/SensorMultilevel.cpp#L50
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/SensorMultilevel.cpp#L50  # noqa  # pylint:disable=line-too-long
 INDEX_SENSOR_MULTILEVEL_TEMPERATURE = 1
 INDEX_SENSOR_MULTILEVEL_POWER = 4
 
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/Color.cpp#L109
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Color.cpp#L109  # noqa  # pylint:disable=line-too-long
 INDEX_SWITCH_COLOR_COLOR = 0
 INDEX_SWITCH_COLOR_CHANNELS = 2
 
-# https://github.com/OpenZWave/open-zwave/blob
-# /67f180eb565f0054f517ff395c71ecd706f6a837
-# /cpp/src/command_classes/SwitchMultilevel.cpp#L54
+# https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/SwitchMultilevel.cpp#L54  # noqa  # pylint:disable=line-too-long
 INDEX_SWITCH_MULTILEVEL_LEVEL = 0
 INDEX_SWITCH_MULTILEVEL_BRIGHT = 1
 INDEX_SWITCH_MULTILEVEL_DIM = 2
