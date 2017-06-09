@@ -324,8 +324,8 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def visibility_service_handler(service):
         """Change visibility of a group."""
-        _LOGGER.warning("'group.set_visibility' is dedicated and will be remove "
-                        "in future. Move to new dynamic groups.")
+        _LOGGER.warning("'group.set_visibility' is dedicated and will "
+                        "be remove in future. Move to new dynamic groups.")
         visible = service.data.get(ATTR_VISIBLE)
         tasks = [group.async_set_visible(visible) for group
                  in component.async_extract_from_service(service,
