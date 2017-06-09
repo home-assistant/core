@@ -379,6 +379,7 @@ mutagen==1.37.0
 myusps==1.1.1
 
 # homeassistant.components.media_player.nad
+# homeassistant.components.media_player.nadtcp
 nad_receiver==0.0.6
 
 # homeassistant.components.discovery
