@@ -68,8 +68,8 @@ class ONVIFCamera(Camera):
         device_url = self._base_url + 'onvif/device_service'
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
-        media = ONVIFService(device_url, self._username, 
-                            self._password, wsdl + 'media.wsdl')
+        media = ONVIFService(device_url, self._username,
+                             self._password, wsdl + 'media.wsdl')
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("Using the following URL for %s: %s",
                       self._name, self._input)
