@@ -125,8 +125,7 @@ class RokuDevice(MediaPlayerDevice):
         """Return the name of the device."""
         if self.device_info.userdevicename:
             return self.device_info.userdevicename
-        else:
-            return "roku_" + self.roku.device_info.sernum
+        return "Roku {}".format(self.device_info.sernum)
 
     @property
     def state(self):
@@ -158,8 +157,7 @@ class RokuDevice(MediaPlayerDevice):
             return None
         elif self.current_app.name == "Roku":
             return None
-        else:
-            return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_VIDEO
 
     @property
     def media_image_url(self):
