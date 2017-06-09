@@ -77,6 +77,9 @@ omit =
     homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
 
+    homeassistant/components/mailgun.py
+    homeassistant/components/*/mailgun.py
+
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
 
@@ -347,7 +350,6 @@ omit =
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
-    homeassistant/components/notify/mailgun.py
     homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nfandroidtv.py
