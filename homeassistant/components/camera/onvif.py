@@ -20,11 +20,11 @@ from homeassistant.helpers.aiohttp_client import (
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['onvif-py3==0.1.3', 
-    'suds-py3==1.3.3.0', 
-    'http://github.com/tgaugry/suds-passworddigest-py3'
-    '/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip'
-    '#suds-passworddigest-py3==0.1.2a']
+REQUIREMENTS = ['onvif-py3==0.1.3',
+                'suds-py3==1.3.3.0',
+                'http://github.com/tgaugry/suds-passworddigest-py3'
+                '/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip'
+                '#suds-passworddigest-py3==0.1.2a']
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
@@ -67,19 +67,19 @@ class ONVIFCamera(Camera):
         device_url = self._base_url + 'onvif/device_service'
         self._username = config.get(CONF_USERNAME)
         self._password = config.get(CONF_PASSWORD)
-        media = ONVIFService(device_url,self._username, 
-            self._password, wsdl + 'media.wsdl')
+        media = ONVIFService(device_url, self._username, 
+                            self._password, wsdl + 'media.wsdl')
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("Using the following URL for %s: %s",
-                       self._name, self._input)
+                      self._name, self._input)
         _LOGGER.debug("Using the base URL for %s: %s",
-                       self._name, self._base_url)
+                      self._name, self._base_url)
         _LOGGER.debug("Using the device URL for %s: %s",
-                       self._name, device_url)
+                      self._name, device_url)
         _LOGGER.debug("WSDL for %s: %s",
-                       self._name, wsdl)
+                      self._name, wsdl)
         _LOGGER.debug("Login details for %s: %s %s",
-                       self._name, self._username, self._password)
+                      self._name, self._username, self._password)
 
     @asyncio.coroutine
     def async_camera_image(self):
