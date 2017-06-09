@@ -6,9 +6,9 @@ https://home-assistant.io/components/influxdb/
 """
 import logging
 
-import voluptuous as vol
-
 import re
+
+import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_STATE_CHANGED, STATE_UNAVAILABLE, STATE_UNKNOWN, CONF_HOST,
