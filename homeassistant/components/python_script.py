@@ -11,7 +11,7 @@ FOLDER = 'python_scripts'
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({})
+    DOMAIN: vol.Schema(dict)
 }, extra=vol.ALLOW_EXTRA)
 
 
