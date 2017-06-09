@@ -89,8 +89,8 @@ class HMSensor(HMDevice):
         return HM_ICON_HA_CAST.get(self._state, None)
 
     def _init_data_struct(self):
-        """Generate a data dictoinary (self._data) from metadata."""
+        """Generate a data dictionary (self._data) from metadata."""
         if self._state:
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correctly init sensor %s", self._name)
+            _LOGGER.critical("Can't correctly initialize sensor %s", self._name)
