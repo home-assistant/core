@@ -61,7 +61,7 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _init_data_struct(self):
-        """Generate the data dictionary (self._data) from the HomeMatic metadata."""
+        """Generate the data dictionary (self._data) from metadata."""
         # Add state to data struct
         if self._state:
             self._data.update({self._state: STATE_UNKNOWN})

@@ -93,4 +93,4 @@ class HMSensor(HMDevice):
         if self._state:
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correctly initialize sensor %s", self._name)
+            _LOGGER.critical("Can't initialize sensor %s", self._name)
