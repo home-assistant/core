@@ -20,6 +20,7 @@ DISCOVERY_DEVICE = 'device'
 
 DATA_DEVICES = 'zwave_devices'
 DATA_NETWORK = 'zwave_network'
+DATA_ENTITY_VALUES = 'zwave_entity_values'
 
 SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"
@@ -38,6 +39,7 @@ SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
+SERVICE_RENAME_VALUE = "rename_value"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
 SERVICE_RESET_NODE_METERS = "reset_node_meters"
