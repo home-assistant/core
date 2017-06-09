@@ -403,7 +403,7 @@ onkyo-eiscp==1.1
 openevsewifi==0.4
 
 # homeassistant.components.media_player.openhome
-openhomedevice==0.4.0
+openhomedevice==0.4.2
 
 # homeassistant.components.switch.orvibo
 orvibo==1.1.1
