@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_PORT = 5222
 DEVICES = []
-CONFIGS = []
+CONF_DEVICE_CACHE = 'device_cache'
 
 SERVICE_SYNC = 'harmony_sync'
 
@@ -48,8 +48,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = None
     activity = None
 
+    if CONF_DEVICE_CACHE not in hass.data:
+        hass.data[CONF_DEVICE_CACHE] = []
+
     if discovery_info:
-        override = next(c for c in CONFIGS
+        override = next(c for c in hass.data[CONF_DEVICE_CACHE]
                         if c.get(CONF_NAME) == discovery_info.get(CONF_NAME))
 
         port = DEFAULT_PORT
@@ -73,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         )
         activity = config.get(ATTR_ACTIVITY)
     else:
-        CONFIGS.append(config)
+        hass.data[CONF_DEVICE_CACHE].append(config)
         return
 
     name, address, port = host
