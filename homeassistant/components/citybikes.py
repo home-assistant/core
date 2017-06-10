@@ -12,13 +12,13 @@ import voluptuous as vol
 
 from datetime import timedelta
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
+    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, EVENT_TIME_CHANGED,
+    ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_NOW)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import (
-    async_track_time_interval, async_track_point_in_utc_time)
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import location, dt, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -142,24 +142,48 @@ def async_setup(hass, config):
 
     for location_config in config.get(DOMAIN):
         @asyncio.coroutine
-        def async_setup_single_network(now):
+        def async_setup_single_network(config):
             """Set up a single CityBikes network."""
-            network_id = location_config.get(CONF_NETWORK)
-            latitude = location_config.get(CONF_LATITUDE,
-                                           hass.config.latitude)
-            longitude = location_config.get(CONF_LONGITUDE,
-                                            hass.config.longitude)
+            network_id = config.get(CONF_NETWORK)
+            latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+            longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
             if not network_id:
                 # Autodetect network from location
                 network_id = yield from _get_closest_network_id(hass,
                                                                 latitude,
                                                                 longitude)
                 if not network_id:
-                    # Autodetection failed - try again later
-                    one_minute_later = dt.utcnow() + timedelta(minutes=1)
-                    async_track_point_in_utc_time(hass,
-                                                  async_setup_single_network,
-                                                  one_minute_later)
+                    # Autodetection failed - try again later.
+                    #
+                    # Since this function must receive the `config` variable,
+                    # we can't use the standard track_point_in_time helpers,
+                    # as they pass the current time as the one and only
+                    # argument. So this is a copy of the
+                    # `async_track_point_in_utc_time` helper function, that
+                    # passes `config` as the argument, instead.
+                    later_time = dt.utcnow() + SCAN_INTERVAL
+
+                    @callback
+                    def listener(event):
+                        """Listen for matching time_changed events."""
+                        now = event.data[ATTR_NOW]
+
+                        if now < later_time or hasattr(listener, 'run'):
+                            return
+
+                        # Set variable so that we will never run twice.
+                        # Because the event bus might have to wait till a
+                        # thread comes available to execute this listener it
+                        # might occur that the listener gets lined up twice to
+                        # be executed. This will make sure the second time it
+                        # does nothing.
+                        listener.run = True
+                        async_unsub()
+
+                        hass.async_run_job(async_setup_single_network, config)
+
+                    async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED,
+                                                        listener)
                     return
 
             if network_id not in networks:
@@ -167,15 +191,15 @@ def async_setup(hass, config):
                 yield from network.async_update(dt.utcnow())
                 networks[network_id] = network
 
-            if CONF_STATIONS_LIST in location_config:
+            if CONF_STATIONS_LIST in config:
                 networks[network_id].start_monitoring_stations(
-                    *location_config.get(CONF_STATIONS_LIST))
+                    *config.get(CONF_STATIONS_LIST))
             else:
-                radius = location_config.get(CONF_RADIUS)
+                radius = config.get(CONF_RADIUS)
                 networks[network_id].start_monitoring_area(latitude, longitude,
                                                            radius)
 
-        yield from async_setup_single_network(dt.utcnow())
+        yield from async_setup_single_network(location_config)
 
     return True
 
