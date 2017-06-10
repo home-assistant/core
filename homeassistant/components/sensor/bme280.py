@@ -94,17 +94,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("ImportError: %s", exc)
         return False
 
-    sensor = BME280(
-        bus, i2c_address,
-        osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
-        osrs_p=config.get(CONF_OVERSAMPLING_PRES),
-        osrs_h=config.get(CONF_OVERSAMPLING_HUM),
-        mode=config.get(CONF_OPERATION_MODE),
-        t_sb=config.get(CONF_T_STANDBY),
-        filter_mode=config.get(CONF_FILTER_MODE),
-        delta_temp=config.get(CONF_DELTA_TEMP)
+    sensor = yield from hass.async_add_job(
+        BME280, bus, i2c_address,
+        config.get(CONF_OVERSAMPLING_TEMP),
+        config.get(CONF_OVERSAMPLING_PRES),
+        config.get(CONF_OVERSAMPLING_HUM),
+        config.get(CONF_OPERATION_MODE),
+        config.get(CONF_T_STANDBY),
+        config.get(CONF_FILTER_MODE),
+        config.get(CONF_DELTA_TEMP)
     )
-    if not sensor.detected:
+    if not sensor.ok:
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
@@ -132,7 +132,7 @@ class BME280:
                  filter_mode=DEFAULT_FILTER_MODE,
                  delta_temp=DEFAULT_DELTA_TEMP,
                  spi3w_en=0):  # 3-wire SPI Disable):
-        """Initialize the sensor."""
+        """Initialize the sensor handler."""
         # Sensor location
         self._bus = bus
         self._i2c_add = int(i2c_address, 0)
@@ -154,19 +154,12 @@ class BME280:
         self._temp_fine = None
 
         # Sensor data
+        self._ok = False
         self._temperature = None
         self._humidity = None
         self._pressure = None
 
-        try:
-            self.update(True)
-            self.detected = True
-            _LOGGER.debug(
-                'Created BME280 sensor with oversampling: %sxT, '
-                '%sxP %sxH, mode %s, standby %s, filter %s',
-                osrs_t, osrs_p, osrs_h, mode, t_sb, filter_mode)
-        except OSError as exc:
-            _LOGGER.warning("OSError trying to write data in i2c bus: %s", exc)
+        self.update(True)
 
     def _compensate_temperature(self, adc_t):
         """Compensate temperature.
@@ -326,7 +319,7 @@ class BME280:
     def update(self, first_reading=False):
         """Read raw data and update compensated variables."""
         try:
-            if first_reading:
+            if first_reading or not self._ok:
                 self._bus.write_byte_data(self._i2c_add, 0xF2,
                                           self.ctrl_hum_reg)
                 self._bus.write_byte_data(self._i2c_add, 0xF5, self.config_reg)
@@ -348,11 +341,28 @@ class BME280:
         temp_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
         hum_raw = (data[6] << 8) | data[7]
 
-        self._temperature = self._compensate_temperature(temp_raw)
+        self._ok = False
+        temperature = self._compensate_temperature(temp_raw)
+        if (temperature >= -20) and (temperature < 80):
+            self._temperature = temperature
+            self._ok = True
         if self._with_humidity:
-            self._humidity = self._compensate_humidity(hum_raw)
+            humidity = self._compensate_humidity(hum_raw)
+            if (humidity >= 0) and (humidity <= 100):
+                self._humidity = humidity
+            else:
+                self._ok = False
         if self._with_pressure:
-            self._pressure = self._compensate_pressure(pres_raw)
+            pressure = self._compensate_pressure(pres_raw)
+            if pressure > 100:
+                self._pressure = pressure
+            else:
+                self._ok = False
+
+    @property
+    def ok(self):
+        """Return sensor ok state."""
+        return self._ok
 
     @property
     def temperature(self):
@@ -402,18 +412,15 @@ class BME280Sensor(Entity):
     def async_update(self):
         """Get the latest data from the BME280 and update the states."""
         yield from self.hass.async_add_job(self.bme280_client.update)
-        if self.type == SENSOR_TEMP and self.bme280_client.temperature:
-            temperature = round(self.bme280_client.temperature, 2)
-            if (temperature >= -20) and (temperature < 80):
-                self._state = temperature
+        if self.bme280_client.ok:
+            if self.type == SENSOR_TEMP:
+                temperature = round(self.bme280_client.temperature, 2)
                 if self.temp_unit == TEMP_FAHRENHEIT:
-                    self._state = round(celsius_to_fahrenheit(temperature), 1)
-        elif self.type == SENSOR_HUMID and self.bme280_client.humidity:
-            humidity = round(self.bme280_client.humidity, 2)
-            if (humidity >= 0) and (humidity <= 100):
-                self._state = humidity
-        elif self.type == SENSOR_PRESS and self.bme280_client.pressure:
-            pressure = round(self.bme280_client.pressure, 2)
-            self._state = pressure
+                    temperature = round(celsius_to_fahrenheit(temperature), 1)
+                self._state = temperature
+            elif self.type == SENSOR_HUMID:
+                self._state = round(self.bme280_client.humidity, 2)
+            elif self.type == SENSOR_PRESS:
+                self._state = round(self.bme280_client.pressure, 2)
         else:
-            _LOGGER.warning("Bad Update of sensor.%s", self.name)
+            _LOGGER.warning("Bad update of sensor.%s", self.name)
