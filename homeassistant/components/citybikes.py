@@ -5,13 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/citybikes/
 """
 import logging
-import voluptuous as vol
-from datetime import timedelta
-
 import asyncio
 import aiohttp
 import async_timeout
+import voluptuous as vol
 
+from datetime import timedelta
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
@@ -132,7 +131,7 @@ def _get_closest_network_id(hass, latitude, longitude):
         return None
     except vol.Invalid as err:
         _LOGGER.error("Received unexpected JSON from CityBikes API endpoint: "
-                      " {}".format(err))
+                      " %s", err)
         return None
 
 
@@ -214,7 +213,7 @@ class CityBikesNetwork:
                           " endpoint")
         except vol.Invalid as err:
             _LOGGER.error("Received unexpected JSON from CityBikes API"
-                          " endpoint: {}".format(err))
+                          " endpoint: %s", err)
 
     @asyncio.coroutine
     def async_update(self, now):
@@ -230,7 +229,7 @@ class CityBikesNetwork:
                                          station.get(ATTR_LATITUDE),
                                          station.get(ATTR_LONGITUDE))
                 if dist < radius:
-                    self._add_station_entity_if_necessary(station)
+                    self._add_station_entity(station)
 
             station_id = station[ATTR_ID]
 
@@ -238,13 +237,13 @@ class CityBikesNetwork:
                     ATTR_EXTRA in station and \
                     ATTR_UID in station[ATTR_EXTRA] and \
                     station[ATTR_EXTRA][ATTR_UID] in self._monitored_stations:
-                self._add_station_entity_if_necessary(station)
+                self._add_station_entity(station)
 
             if station_id in self._stations:
                 yield from self._stations[station_id].async_update_data(
                     station)
 
-    def _add_station_entity_if_necessary(self, station):
+    def _add_station_entity(self, station):
         entity_id = CityBikesStation.make_entity_id(self._network_id,
                                                     station[ATTR_ID])
         if not self.hass.states.get(entity_id):
