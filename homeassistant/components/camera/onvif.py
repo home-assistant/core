@@ -10,8 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-                                CONF_NAME, CONF_USERNAME,
-                                CONF_PASSWORD, CONF_PORT)
+    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
     DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
