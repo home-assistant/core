@@ -72,9 +72,9 @@ def async_setup(hass, config):
         yield from shiftr_mqtt.async_publish(topic, _state, 0, False)
 
         if state.attributes:
-            for k, v in state.attributes.items():
+            for attribute, data in state.attributes.items():
                 yield from shiftr_mqtt.async_publish(
-                    '/{}/{}'.format(topic, k), str(v), 0, False)
+                    '/{}/{}'.format(topic, attribute), str(data), 0, False)
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, async_shiftr_event_listener)
 
