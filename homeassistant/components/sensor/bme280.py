@@ -104,7 +104,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_FILTER_MODE),
         config.get(CONF_DELTA_TEMP)
     )
-    if not sensor.ok:
+    if not sensor.sample_ok:
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
@@ -360,7 +360,7 @@ class BME280:
                 self._ok = False
 
     @property
-    def ok(self):
+    def sample_ok(self):
         """Return sensor ok state."""
         return self._ok
 
@@ -412,7 +412,7 @@ class BME280Sensor(Entity):
     def async_update(self):
         """Get the latest data from the BME280 and update the states."""
         yield from self.hass.async_add_job(self.bme280_client.update)
-        if self.bme280_client.ok:
+        if self.bme280_client.sample_ok:
             if self.type == SENSOR_TEMP:
                 temperature = round(self.bme280_client.temperature, 2)
                 if self.temp_unit == TEMP_FAHRENHEIT:
