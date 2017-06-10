@@ -5,12 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/citybikes/
 """
 import logging
+from datetime import timedelta
+
 import asyncio
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from datetime import timedelta
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, EVENT_TIME_CHANGED,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_NOW)
