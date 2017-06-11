@@ -70,11 +70,7 @@ def async_create(hass, message, title=None, notification_id=None):
 @callback
 def async_dismiss(hass, notification_id):
     """Remove a notification."""
-    data = {
-        key: value for key, value in [
-            (ATTR_NOTIFICATION_ID, notification_id),
-        ]
-    }
+    data = {ATTR_NOTIFICATION_ID: notification_id}
 
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
