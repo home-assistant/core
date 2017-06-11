@@ -9,6 +9,10 @@ lifx_set_state:
     '...':
       description: All turn_on parameters can be used to specify a color
 
+    infrared:
+      description: Automatic infrared level (0..255) when light brightness is low
+      example: 255
+
     transition:
       description: Duration in seconds it takes to get to the final state
       example: 10
