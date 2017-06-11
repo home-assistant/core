@@ -265,6 +265,13 @@ def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
 
 
 # pylint: disable=invalid-sequence-index
+def color_hsv_to_RGB(iH: int, iS: int, iV: int) -> Tuple[int, int, int]:
+    """Convert an hsv color into its rgb representation."""
+    fRGB = colorsys.hsv_to_rgb(iH/65536, iS/255, iV/255)
+    return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
+
+
+# pylint: disable=invalid-sequence-index
 def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
     """Convert an xy color to its hs representation."""
     h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
