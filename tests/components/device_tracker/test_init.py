@@ -496,10 +496,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         }
 
     def test_seen_online_event_fired(self):
-        """Tests the firing of the EVENT_DEVICE_SEEN_ONLINE event.
+        """Test the firing of the EVENT_DEVICE_SEEN_ONLINE event.
 
         Verifies that the device tracker fires the event each time
-        a device is seen, including the initial time."""
+        a device is seen, including the initial time.
+        """
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN,
                                    TEST_PLATFORM)
@@ -530,10 +531,11 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         }
 
     def test_seen_online_event_not_fired(self):
-        """Tests the firing of the EVENT_DEVICE_SEEN_ONLINE event.
+        """Test the firing of the EVENT_DEVICE_SEEN_ONLINE event.
 
         Verifies that the device tracker does not fire the event when
-        the source is not a ROUTER."""
+        the source is not a ROUTER.
+        """
         with assert_setup_component(1, device_tracker.DOMAIN):
             assert setup_component(self.hass, device_tracker.DOMAIN,
                                    TEST_PLATFORM)
