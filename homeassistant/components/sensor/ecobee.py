@@ -9,12 +9,13 @@ from homeassistant.const import TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['ecobee']
+
+ECOBEE_CONFIG_FILE = 'ecobee.conf'
+
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
     'humidity': ['Humidity', '%']
 }
-
-ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -31,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 dev.append(EcobeeSensor(sensor['name'], item['type'], index))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class EcobeeSensor(Entity):
@@ -39,13 +40,12 @@ class EcobeeSensor(Entity):
 
     def __init__(self, sensor_name, sensor_type, sensor_index):
         """Initialize the sensor."""
-        self._name = sensor_name + ' ' + SENSOR_TYPES[sensor_type][0]
+        self._name = '{} {}'.format(sensor_name, SENSOR_TYPES[sensor_type][0])
         self.sensor_name = sensor_name
         self.type = sensor_type
         self.index = sensor_index
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):

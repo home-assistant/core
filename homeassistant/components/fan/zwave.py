@@ -36,7 +36,11 @@ SPEED_TO_VALUE = {
 
 
 def get_device(values, **kwargs):
+<<<<<<< HEAD
     """Create zwave entity device."""
+=======
+    """Create Z-Wave entity device."""
+>>>>>>> home-assistant/dev
     return ZwaveFan(values)
 
 

@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_VALUE_TEMPLATE,
-    CONTENT_TYPE_TEXT_PLAIN)
+    CONTENT_TYPE_TEXT_PLAIN, ATTR_DATE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,6 @@ CONF_SENDERS = 'senders'
 
 ATTR_FROM = 'from'
 ATTR_BODY = 'body'
-ATTR_DATE = 'date'
 ATTR_SUBJECT = 'subject'
 
 DEFAULT_PORT = 993
@@ -59,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
-class EmailReader:
+class EmailReader(object):
     """A class to read emails from an IMAP server."""
 
     def __init__(self, user, password, server, port):
