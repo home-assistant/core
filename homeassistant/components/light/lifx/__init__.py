@@ -34,7 +34,7 @@ from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.7']
+REQUIREMENTS = ['aiolifx==0.4.8']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -46,6 +46,7 @@ CONF_SERVER = 'server'
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_HSBK = 'hsbk'
+ATTR_INFRARED = 'infrared'
 ATTR_POWER = 'power'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,6 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
+    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
     ATTR_POWER: cv.boolean,
 })
 
@@ -362,6 +364,9 @@ class LIFXLight(Light):
         if ATTR_EFFECT in kwargs:
             yield from lifx_effects.default_effect(self, **kwargs)
             return
+
+        if ATTR_INFRARED in kwargs:
+            self.device.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
 
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
