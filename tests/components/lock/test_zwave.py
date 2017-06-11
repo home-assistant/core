@@ -171,10 +171,10 @@ def test_lock_alarm_level(mock_openzwave):
 @asyncio.coroutine
 def test_lock_set_usercode_service(hass, mock_openzwave):
     """Test the zwave lock set_usercode service."""
-    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
-    value0 = MockValue(data=None, node=node, index=0)
-    value1 = MockValue(data=None, node=node, index=1)
+    value0 = MockValue(data='          ', node=node, index=0)
+    value1 = MockValue(data='          ', node=node, index=1)
     yield from zwave.async_setup_platform(
         hass, {}, MagicMock())
 
@@ -202,7 +202,7 @@ def test_lock_set_usercode_service(hass, mock_openzwave):
     yield from hass.services.async_call(
         zwave.DOMAIN, zwave.SERVICE_SET_USERCODE, {
             const.ATTR_NODE_ID: node.node_id,
-            zwave.ATTR_USERCODE: '12345',
+            zwave.ATTR_USERCODE: '123',
             zwave.ATTR_CODE_SLOT: 1,
             })
     yield from hass.async_block_till_done()
@@ -213,7 +213,7 @@ def test_lock_set_usercode_service(hass, mock_openzwave):
 @asyncio.coroutine
 def test_lock_get_usercode_service(hass, mock_openzwave):
     """Test the zwave lock get_usercode service."""
-    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data='1234', node=node, index=1)
@@ -242,7 +242,7 @@ def test_lock_get_usercode_service(hass, mock_openzwave):
 @asyncio.coroutine
 def test_lock_clear_usercode_service(hass, mock_openzwave):
     """Test the zwave lock clear_usercode service."""
-    mock_network = hass.data[zwave.zwave.ZWAVE_NETWORK] = MagicMock()
+    mock_network = hass.data[zwave.zwave.DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=12)
     value0 = MockValue(data=None, node=node, index=0)
     value1 = MockValue(data='123', node=node, index=1)

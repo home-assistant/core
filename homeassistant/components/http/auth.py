@@ -37,8 +37,8 @@ def auth_middleware(app, handler):
             # A valid auth header has been set
             authenticated = True
 
-        elif (DATA_API_PASSWORD in request.GET and
-              validate_password(request, request.GET[DATA_API_PASSWORD])):
+        elif (DATA_API_PASSWORD in request.query and
+              validate_password(request, request.query[DATA_API_PASSWORD])):
             authenticated = True
 
         elif is_trusted_ip(request):

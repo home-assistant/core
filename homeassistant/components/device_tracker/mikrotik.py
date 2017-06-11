@@ -60,13 +60,20 @@ class MikrotikScanner(DeviceScanner):
         self.success_init = False
         self.client = None
 
+        self.wireless_exist = None
         self.success_init = self.connect_to_device()
 
         if self.success_init:
-            _LOGGER.info("Start polling Mikrotik router...")
+            _LOGGER.info(
+                "Start polling Mikrotik (%s) router...",
+                self.host
+            )
             self._update_info()
         else:
-            _LOGGER.error("Connection to Mikrotik failed")
+            _LOGGER.error(
+                "Connection to Mikrotik (%s) failed",
+                self.host
+            )
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
@@ -87,6 +94,16 @@ class MikrotikScanner(DeviceScanner):
                              routerboard_info[0].get('model', 'Router'),
                              self.host)
                 self.connected = True
+                self.wireless_exist = self.client(
+                    cmd='/interface/wireless/getall'
+                )
+                if not self.wireless_exist:
+                    _LOGGER.info(
+                        'Mikrotik %s: Wireless adapters not found. Try to '
+                        'use DHCP lease table as presence tracker source. '
+                        'Please decrease lease time as much as possible.',
+                        self.host
+                    )
 
         except (librouteros.exceptions.TrapError,
                 librouteros.exceptions.ConnectionError) as api_error:
@@ -108,24 +125,39 @@ class MikrotikScanner(DeviceScanner):
     def _update_info(self):
         """Retrieve latest information from the Mikrotik box."""
         with self.lock:
-            _LOGGER.info("Loading wireless device from Mikrotik...")
+            if self.wireless_exist:
+                devices_tracker = 'wireless'
+            else:
+                devices_tracker = 'ip'
 
-            wireless_clients = self.client(
-                cmd='/interface/wireless/registration-table/getall'
+            _LOGGER.info(
+                "Loading %s devices from Mikrotik (%s) ...",
+                devices_tracker,
+                self.host
             )
-            device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
 
-            if device_names is None or wireless_clients is None:
+            device_names = self.client(cmd='/ip/dhcp-server/lease/getall')
+            if self.wireless_exist:
+                devices = self.client(
+                    cmd='/interface/wireless/registration-table/getall'
+                )
+            else:
+                devices = device_names
+
+            if device_names is None and devices is None:
                 return False
 
             mac_names = {device.get('mac-address'): device.get('host-name')
                          for device in device_names
                          if device.get('mac-address')}
 
-            self.last_results = {
-                device.get('mac-address'):
-                    mac_names.get(device.get('mac-address'))
-                for device in wireless_clients
-            }
+            if self.wireless_exist:
+                self.last_results = {
+                    device.get('mac-address'):
+                        mac_names.get(device.get('mac-address'))
+                    for device in devices
+                }
+            else:
+                self.last_results = mac_names
 
             return True

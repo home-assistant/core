@@ -18,6 +18,10 @@ NETWORK_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
 
+DATA_DEVICES = 'zwave_devices'
+DATA_NETWORK = 'zwave_network'
+DATA_ENTITY_VALUES = 'zwave_entity_values'
+
 SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"
 SERVICE_ADD_NODE_SECURE = "add_node_secure"
@@ -35,8 +39,10 @@ SERVICE_SET_WAKEUP = "set_wakeup"
 SERVICE_STOP_NETWORK = "stop_network"
 SERVICE_START_NETWORK = "start_network"
 SERVICE_RENAME_NODE = "rename_node"
+SERVICE_RENAME_VALUE = "rename_value"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
+SERVICE_RESET_NODE_METERS = "reset_node_meters"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -329,3 +335,5 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 DISC_WRITEONLY = "writeonly"
+
+METER_RESET_INDEX = 33

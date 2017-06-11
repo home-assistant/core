@@ -12,7 +12,7 @@ from homeassistant import util, setup
 from homeassistant.util import location
 from homeassistant.components import mqtt
 
-from tests.common import async_test_home_assistant, mock_coro
+from tests.common import async_test_home_assistant, mock_coro, INSTANCES
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
 
@@ -50,8 +50,12 @@ def verify_cleanup():
     """Verify that the test has cleaned up resources correctly."""
     yield
 
-    from tests import common
-    assert common.INST_COUNT < 2
+    if len(INSTANCES) >= 2:
+        count = len(INSTANCES)
+        for inst in INSTANCES:
+            inst.stop()
+        pytest.exit("Detected non stopped instances "
+                    "({}), aborting test run".format(count))
 
 
 @pytest.fixture

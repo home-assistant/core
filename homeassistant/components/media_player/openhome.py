@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 
-REQUIREMENTS = ['openhomedevice==0.2.1']
+REQUIREMENTS = ['openhomedevice==0.4.2']
 
 SUPPORT_OPENHOME = SUPPORT_SELECT_SOURCE | \
     SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
@@ -60,7 +60,6 @@ class OpenhomeDevice(MediaPlayerDevice):
         self._track_information = {}
         self._in_standby = None
         self._transport_state = None
-        self._track_information = None
         self._volume_level = None
         self._volume_muted = None
         self._supported_features = SUPPORT_OPENHOME
@@ -92,7 +91,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
         if self._source["type"] == "Radio":
             self._supported_features |= SUPPORT_STOP | SUPPORT_PLAY
-        if self._source["type"] == "Playlist":
+        if self._source["type"] in ("Playlist", "Cloud"):
             self._supported_features |= SUPPORT_PREVIOUS_TRACK | \
                 SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY
 
@@ -173,27 +172,29 @@ class OpenhomeDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._track_information["albumArt"]
+        return self._track_information.get('albumArtwork')
 
     @property
     def media_artist(self):
         """Artist of current playing media, music track only."""
-        return self._track_information["artist"]
+        artists = self._track_information.get('artist')
+        if artists:
+            return artists[0]
 
     @property
     def media_album_name(self):
         """Album name of current playing media, music track only."""
-        return self._track_information["album"]
+        return self._track_information.get('albumTitle')
 
     @property
     def media_title(self):
         """Title of current playing media."""
-        return self._track_information["title"]
+        return self._track_information.get('title')
 
     @property
     def source(self):
         """Name of the current input source."""
-        return self._source["name"]
+        return self._source.get('name')
 
     @property
     def volume_level(self):

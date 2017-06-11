@@ -82,7 +82,8 @@ _TRIGGER_SCHEMA = vol.All(
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
 PLATFORM_SCHEMA = vol.Schema({
-    CONF_ID: cv.string,
+    # str on purpose
+    CONF_ID: str,
     CONF_ALIAS: cv.string,
     vol.Optional(CONF_INITIAL_STATE): cv.boolean,
     vol.Optional(CONF_HIDE_ENTITY, default=DEFAULT_HIDE_ENTITY): cv.boolean,
@@ -155,13 +156,10 @@ def async_setup(hass, config):
     component = EntityComponent(_LOGGER, DOMAIN, hass,
                                 group_name=GROUP_NAME_ALL_AUTOMATIONS)
 
-    success = yield from _async_process_config(hass, config, component)
+    yield from _async_process_config(hass, config, component)
 
-    if not success:
-        return False
-
-    descriptions = yield from hass.loop.run_in_executor(
-        None, conf_util.load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        conf_util.load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml')
     )
 
@@ -416,8 +414,6 @@ def _async_process_config(hass, config, component):
 
     if entities:
         yield from component.async_add_entities(entities)
-
-    return len(entities) > 0
 
 
 def _async_get_action(hass, config, name):
