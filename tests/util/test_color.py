@@ -56,6 +56,23 @@ class TestColorUtil(unittest.TestCase):
         self.assertEqual((0, 255, 255),
                          color_util.color_RGB_to_hsv(255, 0, 0))
 
+    def test_color_hsv_to_RGB(self):
+        """Test color_RGB_to_hsv."""
+        self.assertEqual((0, 0, 0),
+                         color_util.color_hsv_to_RGB(0, 0, 0))
+
+        self.assertEqual((255, 255, 255),
+                         color_util.color_hsv_to_RGB(0, 0, 255))
+
+        self.assertEqual((0, 0, 255),
+                         color_util.color_hsv_to_RGB(43690, 255, 255))
+
+        self.assertEqual((0, 255, 0),
+                         color_util.color_hsv_to_RGB(21845, 255, 255))
+
+        self.assertEqual((255, 0, 0),
+                         color_util.color_hsv_to_RGB(0, 255, 255))
+
     def test_color_xy_to_hs(self):
         """Test color_xy_to_hs."""
         self.assertEqual((8609, 255),
