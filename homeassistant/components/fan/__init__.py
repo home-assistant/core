@@ -139,11 +139,7 @@ def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
 
 def turn_off(hass, entity_id: str=None) -> None:
     """Turn all or specified fan off."""
-    data = {
-        key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-        ] if value is not None
-    }
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
