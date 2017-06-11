@@ -103,7 +103,7 @@ def is_on(hass: HomeAssistantType, entity_id: str=None):
 def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
         host_name: str=None, location_name: str=None,
         gps: GPSType=None, gps_accuracy=None,
-        battery=None, attributes: dict=None):
+        battery=None, attributes: dict=None, source_type: str=None):
     """Call service to notify you see device."""
     data = {key: value for key, value in
             ((ATTR_MAC, mac),
@@ -112,7 +112,8 @@ def see(hass: HomeAssistantType, mac: str=None, dev_id: str=None,
              (ATTR_LOCATION_NAME, location_name),
              (ATTR_GPS, gps),
              (ATTR_GPS_ACCURACY, gps_accuracy),
-             (ATTR_BATTERY, battery)) if value is not None}
+             (ATTR_BATTERY, battery),
+             (ATTR_SOURCE_TYPE, source_type)) if value is not None}
     if attributes:
         data[ATTR_ATTRIBUTES] = attributes
     hass.services.call(DOMAIN, SERVICE_SEE, data)
@@ -208,7 +209,8 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
         """Service to see a device."""
         args = {key: value for key, value in call.data.items() if key in
                 (ATTR_MAC, ATTR_DEV_ID, ATTR_HOST_NAME, ATTR_LOCATION_NAME,
-                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES)}
+                 ATTR_GPS, ATTR_GPS_ACCURACY, ATTR_BATTERY, ATTR_ATTRIBUTES,
+                 ATTR_SOURCE_TYPE)}
         yield from tracker.async_see(**args)
 
     descriptions = yield from hass.async_add_job(
