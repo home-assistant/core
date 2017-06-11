@@ -218,8 +218,7 @@ def async_setup(hass, config: dict):
             if not fan.should_poll:
                 continue
 
-            update_coro = hass.async_add_job(
-                fan.async_update_ha_state(True))
+            update_coro = hass.async_add_job(fan.async_update_ha_state(True))
             if hasattr(fan, 'async_update'):
                 update_tasks.append(update_coro)
             else:
@@ -229,8 +228,8 @@ def async_setup(hass, config: dict):
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for fan service calls.
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     for service_name in SERVICE_TO_METHOD:
@@ -256,7 +255,7 @@ class FanEntity(ToggleEntity):
         """
         if speed is SPEED_OFF:
             return self.async_turn_off()
-        return self.hass.loop.run_in_executor(None, self.set_speed, speed)
+        return self.hass.async_add_job(self.set_speed, speed)
 
     def set_direction(self: ToggleEntity, direction: str) -> None:
         """Set the direction of the fan."""
@@ -267,8 +266,7 @@ class FanEntity(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.set_direction, direction)
+        return self.hass.async_add_job(self.set_direction, direction)
 
     def turn_on(self: ToggleEntity, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
@@ -281,8 +279,8 @@ class FanEntity(ToggleEntity):
         """
         if speed is SPEED_OFF:
             return self.async_turn_off()
-        return self.hass.loop.run_in_executor(
-            None, ft.partial(self.turn_on, speed, **kwargs))
+        return self.hass.async_add_job(
+            ft.partial(self.turn_on, speed, **kwargs))
 
     def oscillate(self: ToggleEntity, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -293,8 +291,7 @@ class FanEntity(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(
-            None, self.oscillate, oscillating)
+        return self.hass.async_add_job(self.oscillate, oscillating)
 
     @property
     def is_on(self):

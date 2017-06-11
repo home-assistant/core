@@ -103,8 +103,8 @@ class GenericCamera(Camera):
                     _LOGGER.error("Error getting camera image: %s", error)
                     return self._last_image
 
-            self._last_image = yield from self.hass.loop.run_in_executor(
-                None, fetch)
+            self._last_image = yield from self.hass.async_add_job(
+                fetch)
         # async
         else:
             try:

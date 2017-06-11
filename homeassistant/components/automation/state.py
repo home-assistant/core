@@ -45,6 +45,7 @@ def async_trigger(hass, config, action):
     time_delta = config.get(CONF_FOR)
     async_remove_state_for_cancel = None
     async_remove_state_for_listener = None
+    match_all = (from_state == MATCH_ALL and to_state == MATCH_ALL)
 
     @callback
     def clear_listener():
@@ -77,8 +78,8 @@ def async_trigger(hass, config, action):
             })
 
         # Ignore changes to state attributes if from/to is in use
-        match_all = (from_state == MATCH_ALL and to_state == MATCH_ALL)
-        if not match_all and from_s.last_changed == to_s.last_changed:
+        if (not match_all and from_s is not None and to_s is not None and
+                from_s.last_changed == to_s.last_changed):
             return
 
         if time_delta is None:

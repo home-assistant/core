@@ -10,7 +10,7 @@ DATA_DISPATCHER = 'dispatcher'
 
 
 def dispatcher_connect(hass, signal, target):
-    """Connect a callable function to a singal."""
+    """Connect a callable function to a signal."""
     async_unsub = run_callback_threadsafe(
         hass.loop, async_dispatcher_connect, hass, signal, target).result()
 
@@ -23,7 +23,7 @@ def dispatcher_connect(hass, signal, target):
 
 @callback
 def async_dispatcher_connect(hass, signal, target):
-    """Connect a callable function to a singal.
+    """Connect a callable function to a signal.
 
     This method must be run in the event loop.
     """

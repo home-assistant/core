@@ -144,7 +144,10 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
         response = res.json()
 
         if rpcmethod == "call":
-            return response["result"][1]
+            try:
+                return response["result"][1]
+            except IndexError:
+                return
         else:
             return response["result"]
 

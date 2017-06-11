@@ -134,8 +134,8 @@ class LogbookView(HomeAssistantView):
         end_day = start_day + timedelta(days=1)
         hass = request.app['hass']
 
-        events = yield from hass.loop.run_in_executor(
-            None, _get_events, hass, start_day, end_day)
+        events = yield from hass.async_add_job(
+            _get_events, hass, start_day, end_day)
         events = _exclude_events(events, self.config)
         return self.json(humanify(events))
 

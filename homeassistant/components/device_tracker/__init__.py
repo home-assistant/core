@@ -35,7 +35,8 @@ from homeassistant.util.yaml import dump
 from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_MAC,
-    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID)
+    DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID,
+    CONF_ICON, ATTR_ICON)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -381,6 +382,7 @@ class Device(Entity):
     battery = None  # type: str
     attributes = None  # type: dict
     vendor = None  # type: str
+    icon = None  # type: str
 
     # Track if the last update of this device was HOME.
     last_update_home = False
@@ -388,7 +390,7 @@ class Device(Entity):
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str=None,
-                 picture: str=None, gravatar: str=None,
+                 picture: str=None, gravatar: str=None, icon: str=None,
                  hide_if_away: bool=False, vendor: str=None) -> None:
         """Initialize a device."""
         self.hass = hass
@@ -413,6 +415,8 @@ class Device(Entity):
             self.config_picture = get_gravatar_for_email(gravatar)
         else:
             self.config_picture = picture
+
+        self.icon = icon
 
         self.away_hide = hide_if_away
         self.vendor = vendor
@@ -637,6 +641,8 @@ def async_load_config(path: str, hass: HomeAssistantType,
     """
     dev_schema = vol.Schema({
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ICON, default=False):
+            vol.Any(None, cv.icon),
         vol.Optional('track', default=False): cv.boolean,
         vol.Optional(CONF_MAC, default=None):
             vol.Any(None, vol.All(cv.string, vol.Upper)),
@@ -728,6 +734,7 @@ def update_config(path: str, dev_id: str, device: Device):
         device = {device.dev_id: {
             ATTR_NAME: device.name,
             ATTR_MAC: device.mac,
+            ATTR_ICON: device.icon,
             'picture': device.config_picture,
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide,

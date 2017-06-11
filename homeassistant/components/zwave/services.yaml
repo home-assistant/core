@@ -108,3 +108,24 @@ rename_node:
     name:
       description: New Name
       example: 'kitchen'
+
+rename_value:
+  description: Set the name of a node value. Value IDs can be queried from /api/zwave/values/{node_id}
+  fields:
+    node_id:
+      description: ID of the node to rename.
+      example: 10
+    value_id:
+      description: ID of the value to rename.
+      example: 72037594255792737
+    name:
+      description: New Name
+      example: 'Luminosity'
+
+reset_node_meters:
+  description: Resets the meter counters of a node.
+  fields:
+    node_id:
+      description: Node id of the device to reset meters for. (integer)
+    instance:
+      description: (Optional) Instance of association. Defaults to instance 1.

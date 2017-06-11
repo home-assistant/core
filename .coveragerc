@@ -20,6 +20,9 @@ omit =
     homeassistant/components/android_ip_webcam.py
     homeassistant/components/*/android_ip_webcam.py
 
+    homeassistant/components/arlo.py
+    homeassistant/components/*/arlo.py
+
     homeassistant/components/axis.py
     homeassistant/components/*/axis.py
 
@@ -62,6 +65,9 @@ omit =
     homeassistant/components/isy994.py
     homeassistant/components/*/isy994.py
 
+    homeassistant/components/juicenet.py
+    homeassistant/components/*/juicenet.py
+
     homeassistant/components/kira.py
     homeassistant/components/*/kira.py
 
@@ -88,6 +94,9 @@ omit =
 
     homeassistant/components/qwikswitch.py
     homeassistant/components/*/qwikswitch.py
+
+    homeassistant/components/rachio.py
+    homeassistant/components/*/rachio.py
 
     homeassistant/components/raspihats.py
     homeassistant/components/*/raspihats.py
@@ -191,6 +200,7 @@ omit =
     homeassistant/components/binary_sensor/pilight.py
     homeassistant/components/binary_sensor/ping.py
     homeassistant/components/binary_sensor/rest.py
+    homeassistant/components/binary_sensor/tapsaff.py
     homeassistant/components/browser.py
     homeassistant/components/camera/amcrest.py
     homeassistant/components/camera/bloomsky.py
@@ -280,6 +290,7 @@ omit =
     homeassistant/components/lirc.py
     homeassistant/components/lock/nuki.py
     homeassistant/components/lock/lockitron.py
+    homeassistant/components/lock/sesame.py
     homeassistant/components/media_player/anthemav.py
     homeassistant/components/media_player/apple_tv.py
     homeassistant/components/media_player/aquostv.py
@@ -304,6 +315,7 @@ omit =
     homeassistant/components/media_player/mpchc.py
     homeassistant/components/media_player/mpd.py
     homeassistant/components/media_player/nad.py
+    homeassistant/components/media_player/nadtcp.py
     homeassistant/components/media_player/onkyo.py
     homeassistant/components/media_player/openhome.py
     homeassistant/components/media_player/panasonic_viera.py
@@ -364,8 +376,10 @@ omit =
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py
     homeassistant/components/sensor/bitcoin.py
+    homeassistant/components/sensor/blockchain.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
+    homeassistant/components/sensor/buienradar.py
     homeassistant/components/sensor/dublin_bus_transport.py
     homeassistant/components/sensor/coinmarketcap.py
     homeassistant/components/sensor/cert_expiry.py
@@ -385,6 +399,7 @@ omit =
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
     homeassistant/components/sensor/envirophat.py
+    homeassistant/components/sensor/etherscan.py
     homeassistant/components/sensor/fastdotcom.py
     homeassistant/components/sensor/fedex.py
     homeassistant/components/sensor/fido.py
@@ -429,6 +444,8 @@ omit =
     homeassistant/components/sensor/pushbullet.py
     homeassistant/components/sensor/pvoutput.py
     homeassistant/components/sensor/qnap.py
+    homeassistant/components/sensor/radarr.py
+    homeassistant/components/sensor/ripple.py
     homeassistant/components/sensor/sabnzbd.py
     homeassistant/components/sensor/scrape.py
     homeassistant/components/sensor/sensehat.py
@@ -458,6 +475,7 @@ omit =
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
+    homeassistant/components/spc.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py
     homeassistant/components/switch/arest.py
@@ -486,8 +504,10 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
     homeassistant/components/weather/bom.py
+    homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
+    homeassistant/components/weather/yweather.py
     homeassistant/components/weather/zamg.py
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py

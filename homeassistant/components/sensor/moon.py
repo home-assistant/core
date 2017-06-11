@@ -32,7 +32,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
 
     async_add_devices([MoonSensor(name)], True)
-    return True
 
 
 class MoonSensor(Entity):
