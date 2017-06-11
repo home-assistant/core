@@ -19,7 +19,11 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
+<<<<<<< HEAD
+REQUIREMENTS = ['pysnmp==4.3.6']
+=======
 REQUIREMENTS = ['pysnmp==4.3.7']
+>>>>>>> home-assistant/dev
 
 CONF_COMMUNITY = 'community'
 CONF_AUTHKEY = 'authkey'

@@ -150,7 +150,12 @@ SERVICE_MAP = {
 }
 
 
+<<<<<<< HEAD
+def load_data(url=None, filepath=None,
+              username=None, password=None,
+=======
 def load_data(url=None, filepath=None, username=None, password=None,
+>>>>>>> home-assistant/dev
               authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
@@ -172,7 +177,10 @@ def load_data(url=None, filepath=None, username=None, password=None,
                     data = io.BytesIO(req.content)
                     if data.read():
                         data.seek(0)
+<<<<<<< HEAD
+=======
                         data.name = url
+>>>>>>> home-assistant/dev
                         return data
                     _LOGGER.warning("Empty data (retry #%s) in %s).",
                                     retry_num + 1, url)
@@ -194,8 +202,15 @@ def load_data(url=None, filepath=None, username=None, password=None,
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Telegram bot component."""
+<<<<<<< HEAD
+    conf = config[DOMAIN]
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file,
+        os.path.join(os.path.dirname(__file__), 'services.yaml'))
+=======
     if not config[DOMAIN]:
         return False
+>>>>>>> home-assistant/dev
 
     p_config = config[DOMAIN][0]
     descriptions = yield from hass.async_add_job(
@@ -207,8 +222,55 @@ def async_setup(hass, config):
     platform = yield from async_prepare_setup_platform(
         hass, config, DOMAIN, p_type)
 
+<<<<<<< HEAD
+        @asyncio.coroutine
+        def async_send_telegram_message(service):
+            """Handle sending Telegram Bot message service calls."""
+            def _render_template_attr(data, attribute):
+                attribute_templ = data.get(attribute)
+                if attribute_templ:
+                    if any([isinstance(attribute_templ, vtype)
+                            for vtype in [float, int, str]]):
+                        data[attribute] = attribute_templ
+                    else:
+                        attribute_templ.hass = hass
+                        try:
+                            data[attribute] = attribute_templ.async_render()
+                        except TemplateError as exc:
+                            _LOGGER.error(
+                                "TemplateError in %s: %s -> %s",
+                                attribute, attribute_templ.template, exc)
+                            data[attribute] = attribute_templ.template
+
+            msgtype = service.service
+            kwargs = dict(service.data)
+            for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
+                              ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
+                _render_template_attr(kwargs, attribute)
+            _LOGGER.debug("NEW telegram_message %s: %s", msgtype, kwargs)
+
+            if msgtype == SERVICE_SEND_MESSAGE:
+                yield from hass.async_add_job(
+                    partial(notify_service.send_message, **kwargs))
+            elif msgtype == SERVICE_SEND_PHOTO:
+                yield from hass.async_add_job(
+                    partial(notify_service.send_file, True, **kwargs))
+            elif msgtype == SERVICE_SEND_DOCUMENT:
+                yield from hass.async_add_job(
+                    partial(notify_service.send_file, False, **kwargs))
+            elif msgtype == SERVICE_SEND_LOCATION:
+                yield from hass.async_add_job(
+                    partial(notify_service.send_location, **kwargs))
+            elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
+                yield from hass.async_add_job(
+                    partial(notify_service.answer_callback_query, **kwargs))
+            else:
+                yield from hass.async_add_job(
+                    partial(notify_service.edit_message, msgtype, **kwargs))
+=======
     if platform is None:
         return
+>>>>>>> home-assistant/dev
 
     _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
     try:
@@ -490,10 +552,17 @@ class TelegramNotificationService:
         )
         if file_content:
             for chat_id in self._get_target_chat_ids(target):
+<<<<<<< HEAD
+                _LOGGER.debug("send file to chat_id %s. Caption: %s.",
+                              chat_id, caption)
+                self._send_msg(func_send, "Error sending file",
+                               chat_id, io.BytesIO(file_content.read()),
+=======
                 _LOGGER.debug("Send file to chat ID %s. Caption: %s.",
                               chat_id, caption)
                 self._send_msg(func_send, "Error sending file",
                                chat_id, file_content,
+>>>>>>> home-assistant/dev
                                caption=caption, **params)
                 file_content.seek(0)
         else:
@@ -543,10 +612,16 @@ class BaseTelegramBotEntity:
 
         data = {
             ATTR_USER_ID: msg_data['from']['id'],
+<<<<<<< HEAD
+            ATTR_FROM_FIRST: msg_data['from']['first_name'],
+            ATTR_FROM_LAST: msg_data['from']['last_name']
+        }
+=======
             ATTR_FROM_FIRST: msg_data['from']['first_name']
         }
         if 'last_name' in msg_data['from']:
             data[ATTR_FROM_LAST] = msg_data['from']['last_name']
+>>>>>>> home-assistant/dev
         if 'chat' in msg_data:
             data[ATTR_CHAT_ID] = msg_data['chat']['id']
 

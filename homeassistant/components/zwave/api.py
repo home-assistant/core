@@ -8,6 +8,8 @@ from . import const
 
 _LOGGER = logging.getLogger(__name__)
 
+<<<<<<< HEAD
+=======
 
 class ZWaveNodeValueView(HomeAssistantView):
     """View to return the node values."""
@@ -34,6 +36,7 @@ class ZWaveNodeValueView(HomeAssistantView):
             }
         return self.json(values_data)
 
+>>>>>>> home-assistant/dev
 
 class ZWaveNodeGroupView(HomeAssistantView):
     """View to return the nodes group configuration."""

@@ -20,7 +20,10 @@ DISCOVERY_DEVICE = 'device'
 
 DATA_DEVICES = 'zwave_devices'
 DATA_NETWORK = 'zwave_network'
+<<<<<<< HEAD
+=======
 DATA_ENTITY_VALUES = 'zwave_entity_values'
+>>>>>>> home-assistant/dev
 
 SERVICE_CHANGE_ASSOCIATION = "change_association"
 SERVICE_ADD_NODE = "add_node"

@@ -30,7 +30,11 @@ from homeassistant.components.frontend import register_built_in_panel
 
 from . import api
 from . import const
+<<<<<<< HEAD
+from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK
+=======
 from .const import DOMAIN, DATA_DEVICES, DATA_NETWORK, DATA_ENTITY_VALUES
+>>>>>>> home-assistant/dev
 from .node_entity import ZWaveBaseEntity, ZWaveNodeEntity
 from . import workaround
 from .discovery_schemas import DISCOVERY_SCHEMAS
@@ -266,7 +270,10 @@ def setup(hass, config):
 
     network = hass.data[DATA_NETWORK] = ZWaveNetwork(options, autostart=False)
     hass.data[DATA_DEVICES] = {}
+<<<<<<< HEAD
+=======
     hass.data[DATA_ENTITY_VALUES] = []
+>>>>>>> home-assistant/dev
 
     if use_debug:  # pragma: no cover
         def log_all(signal, value=None):
