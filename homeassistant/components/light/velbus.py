@@ -1,12 +1,13 @@
 """
 Support for Velbus lights.
 
-For more details about this platform, please refer to the documentation at XXX
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/velbus/
 """
 import asyncio
 import logging
-import velbus
 
+from homeassistant.const import CONF_NAME
 from homeassistant.components.light import Light
 from homeassistant.components.velbus import (VELBUS_MESSAGE)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -16,9 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,  # noqa: D401
+def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
-    """Setup Lights."""
+    """Set up Lights."""
     controller = hass.data['VelbusController']
     lights = []
     for light in discovery_info:
@@ -37,7 +38,7 @@ class VelbusLight(Light):
 
     def __init__(self, hass, light, controller):
         """Initialize a Velbus light."""
-        self._name = light['name']
+        self._name = light[CONF_NAME]
         self._module = light['module']
         self._channel = light['channel']
         self._state = False
@@ -53,6 +54,7 @@ class VelbusLight(Light):
 
     @callback
     def _on_message(self, message):
+        import velbus
         if isinstance(message, velbus.RelayStatusMessage) and \
            message.address == self._module and \
            message.channel == self._channel:
@@ -76,6 +78,7 @@ class VelbusLight(Light):
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""
+        import velbus
         message = velbus.SwitchRelayOnMessage()
         message.set_defaults(self._module)
         message.relay_channels = [self._channel]
@@ -83,6 +86,7 @@ class VelbusLight(Light):
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
+        import velbus
         message = velbus.SwitchRelayOffMessage()
         message.set_defaults(self._module)
         message.relay_channels = [self._channel]
@@ -90,6 +94,7 @@ class VelbusLight(Light):
 
     def get_status(self):
         """Retrieve current status."""
+        import velbus
         message = velbus.ModuleStatusRequestMessage()
         message.set_defaults(self._module)
         message.channels = [self._channel]
