@@ -63,6 +63,7 @@ CONF_AWAY_HIDE = 'hide_if_away'
 DEFAULT_AWAY_HIDE = False
 
 EVENT_NEW_DEVICE = 'device_tracker_new_device'
+EVENT_DEVICE_SEEN_ONLINE = 'device_tracker_seen_online'
 
 SERVICE_SEE = 'see'
 
@@ -483,6 +484,12 @@ class Device(Entity):
             self._attributes.update(attributes)
 
         self.gps = None
+
+        if source_type == SOURCE_TYPE_ROUTER:
+            self.hass.bus.async_fire(EVENT_DEVICE_SEEN_ONLINE, {
+                ATTR_DEV_ID: self.dev_id,
+                ATTR_MAC: self.mac
+            })
 
         if gps is not None:
             try:
