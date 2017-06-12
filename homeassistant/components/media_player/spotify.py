@@ -161,16 +161,16 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         player_devices = self._player.devices()
         if player_devices is not None:
             devices = player_devices.get('devices')
-        if devices is not None:
-            old_devices = self._devices
-            self._devices = {self._aliases.get(device.get('id'),
-                                               device.get('name')):
-                             device.get('id')
-                             for device in devices}
-            device_diff = {name: id for name, id in self._devices.items()
-                           if old_devices.get(name, None) is None}
-            if len(device_diff) > 0:
-                _LOGGER.info("New Devices: %s", str(device_diff))
+            if devices is not None:
+                old_devices = self._devices
+                self._devices = {self._aliases.get(device.get('id'),
+                                                   device.get('name')):
+                                 device.get('id')
+                                 for device in devices}
+                device_diff = {name: id for name, id in self._devices.items()
+                               if old_devices.get(name, None) is None}
+                if len(device_diff) > 0:
+                    _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
         if current is None:
