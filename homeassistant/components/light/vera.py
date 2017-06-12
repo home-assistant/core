@@ -16,8 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['vera']
 
-SUPPORT_VERA = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,11 +48,14 @@ class VeraLight(VeraDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_VERA
+        if self.vera_device.get_color() is None:
+            return SUPPORT_BRIGHTNESS
+        else:
+            return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_RGB_COLOR in kwargs and self.vera_device.is_dimmable:
+        if ATTR_RGB_COLOR in kwargs and self.vera_device.get_color():
             self.vera_device.set_color(kwargs[ATTR_RGB_COLOR])
         elif ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
             self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
