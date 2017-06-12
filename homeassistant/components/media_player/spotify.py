@@ -311,6 +311,6 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     def supported_features(self):
         """Return the media player features that are supported."""
         if self._user is not None and self._user['product'] == 'premium':
-          return SUPPORT_SPOTIFY
+            return SUPPORT_SPOTIFY
         else:
-          return None
+            return None
