@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkAC(climate, hass, temp_unit)])
 
 
-# pylint: disable=abstract-method,too-many-public-methods, too-many-branches
+# pylint: disable=abstract-method
 class WinkThermostat(WinkDevice, ClimateDevice):
     """Representation of a Wink thermostat."""
 
