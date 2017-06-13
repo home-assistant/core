@@ -2,6 +2,7 @@
 import unittest
 from unittest import mock
 
+from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import dyson
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
@@ -248,7 +249,7 @@ class DysonTest(unittest.TestCase):
         """Test supported features."""
         device = _get_device_on()
         component = dyson.DysonPureCoolLinkDevice(self.hass, device)
-        self.assertEqual(component.supported_features, 27)
+        self.assertEqual(component.supported_features, 3)
 
     def test_on_message(self):
         """Test when message is received."""
@@ -258,3 +259,21 @@ class DysonTest(unittest.TestCase):
         component.schedule_update_ha_state = mock.Mock()
         component.on_message("Message")
         component.schedule_update_ha_state.assert_called_with()
+
+    def test_service_set_night_mode(self):
+        """Test set night mode service."""
+        dyson_device = mock.MagicMock()
+        self.hass.data[DYSON_DEVICES] = []
+        dyson_device.entity_id = 'fan.living_room'
+        self.hass.data[dyson.DYSON_FAN_DEVICES] = [dyson_device]
+        dyson.setup_platform(self.hass, None, mock.MagicMock())
+
+        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+                                {"entity_id": "fan.bed_room",
+                                 "night_mode": True}, True)
+        assert not dyson_device.night_mode.called
+
+        self.hass.services.call(dyson.DOMAIN, dyson.SERVICE_SET_NIGHT_MODE,
+                                {"entity_id": "fan.living_room",
+                                 "night_mode": True}, True)
+        dyson_device.night_mode.assert_called_with(True)

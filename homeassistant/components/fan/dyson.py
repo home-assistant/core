@@ -1,37 +1,68 @@
 """Support for Dyson Pure Cool link fan."""
 import logging
+from os import path
+import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (FanEntity, SUPPORT_OSCILLATE,
                                           SUPPORT_SET_SPEED,
-                                          SUPPORT_NIGHT_MODE,
-                                          SUPPORT_AUTO_MODE)
+                                          DOMAIN)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.dyson import DYSON_DEVICES
+from homeassistant.config import load_yaml_config_file
 
 DEPENDENCIES = ['dyson']
-REQUIREMENTS = ['libpurecoollink==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
+
+
+DYSON_FAN_DEVICES = "dyson_fan_devices"
+SERVICE_SET_NIGHT_MODE = 'dyson_set_night_mode'
+
+DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
+    vol.Required('entity_id'): cv.entity_id,
+    vol.Required('night_mode'): cv.boolean
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Dyson fan components."""
     _LOGGER.info("Creating new Dyson fans")
-    devices = []
+    if DYSON_FAN_DEVICES not in hass.data:
+        hass.data[DYSON_FAN_DEVICES] = []
+
     # Get Dyson Devices from parent component
     for device in hass.data[DYSON_DEVICES]:
-        devices.append(DysonPureCoolLinkDevice(hass, device))
-    add_devices(devices)
+        dyson_entity = DysonPureCoolLinkDevice(hass, device)
+        hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+
+    add_devices(hass.data[DYSON_FAN_DEVICES])
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+
+    def service_handle(service):
+        """Handle dyson services."""
+        entity_id = service.data.get('entity_id')
+        night_mode = service.data.get('night_mode')
+        fan_device = next([fan for fan in hass.data[DYSON_FAN_DEVICES] if
+                           fan.entity_id == entity_id].__iter__(), None)
+        if fan_device is None:
+            _LOGGER.warning("Unable to find Dyson fan device %s",
+                            str(entity_id))
+            return
+
+        if service.service == SERVICE_SET_NIGHT_MODE:
+            fan_device.night_mode(night_mode)
+
+    # Register dyson service(s)
+    hass.services.register(DOMAIN, SERVICE_SET_NIGHT_MODE,
+                           service_handle,
+                           descriptions.get(SERVICE_SET_NIGHT_MODE),
+                           schema=DYSON_SET_NIGHT_MODE_SCHEMA)
 
 
 class DysonPureCoolLinkDevice(FanEntity):
     """Representation of a Dyson fan."""
-
-    def on_message(self, message):
-        """Called when new messages received from the fan."""
-        _LOGGER.debug("Message received for fan device %s : %s", self.name,
-                      message)
-        if self.hass and self.entity_id:
-            self.schedule_update_ha_state()
 
     def __init__(self, hass, device):
         """Initialize the fan."""
@@ -39,6 +70,13 @@ class DysonPureCoolLinkDevice(FanEntity):
         self.hass = hass
         self._device = device
         self._device.add_message_listener(self.on_message)
+
+    def on_message(self, message):
+        """Called when new messages received from the fan."""
+        _LOGGER.debug("Message received for fan device %s : %s", self.name,
+                      message)
+        if self.entity_id:
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -172,5 +210,4 @@ class DysonPureCoolLinkDevice(FanEntity):
     @property
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
-        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED | SUPPORT_NIGHT_MODE \
-            | SUPPORT_AUTO_MODE
+        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED

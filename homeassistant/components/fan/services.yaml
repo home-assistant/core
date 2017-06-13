@@ -63,18 +63,7 @@ set_direction:
       description: The direction to rotate
       example: 'left'
 
-set_auto_mode:
-  description: Set the fan in auto mode
-
-  fields:
-    entity_id:
-      description: Name(s) of the entities to enable/disable auto mode
-      example: 'fan.living_room'
-    auto_mode:
-      description: Auto mode status
-      example: true
-
-set_night_mode:
+dyson_set_night_mode:
   description: Set the fan in night mode
 
   fields:
@@ -82,5 +71,5 @@ set_night_mode:
       description: Name(s) of the entities to enable/disable night mode
       example: 'fan.living_room'
     night_mode:
-      description: Auto mode status
+      description: Night mode status
       example: true
