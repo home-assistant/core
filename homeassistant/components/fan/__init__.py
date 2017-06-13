@@ -73,7 +73,7 @@ FAN_TURN_ON_SCHEMA = vol.Schema({
 })  # type: dict
 
 FAN_TURN_OFF_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids
 })  # type: dict
 
 FAN_OSCILLATE_SCHEMA = vol.Schema({
@@ -139,9 +139,7 @@ def turn_on(hass, entity_id: str=None, speed: str=None) -> None:
 
 def turn_off(hass, entity_id: str=None) -> None:
     """Turn all or specified fan off."""
-    data = {
-        ATTR_ENTITY_ID: entity_id,
-    }
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
 
