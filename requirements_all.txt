@@ -288,9 +288,6 @@ https://github.com/jamespcole/home-assistant-nzb-clients/archive/616cad591540925
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
-# homeassistant.components.switch.rachio
-https://github.com/rfverbruggen/rachiopy/archive/989bd28ef5353be62e0eabb93b3339f74bc7ee44.zip#rachiopy==0.1.1
-
 # homeassistant.components.switch.edimax
 https://github.com/rkabadi/pyedimax/archive/365301ce3ff26129a7910c501ead09ea625f3700.zip#pyedimax==0.1
 
@@ -745,6 +742,9 @@ pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
 qnapstats==0.2.4
+
+# homeassistant.components.switch.rachio
+rachiopy==0.1.1
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
