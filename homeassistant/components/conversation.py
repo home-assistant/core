@@ -20,7 +20,7 @@ from homeassistant.helpers import script
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
 
 ATTR_TEXT = 'text'
-
+ATTR_SENTENCE = 'sentence'
 DOMAIN = 'conversation'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
@@ -33,7 +33,7 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
     cv.string: vol.Schema({
-        vol.Required('keywords'): cv.string,
+        vol.Required(ATTR_SENTENCE): cv.string,
         vol.Required('action'): cv.SCRIPT_SCHEMA,
     })
 })}, extra=vol.ALLOW_EXTRA)
@@ -46,9 +46,8 @@ def setup(hass, config):
 
     logger = logging.getLogger(__name__)
     config = config.get(DOMAIN, {})
-    # Right way to do this-- taken from updater.py
 
-    choices = {attrs['keywords']: script.Script(
+    choices = {attrs[ATTR_SENTENCE]: script.Script(
         hass,
         attrs['action'],
         name)
