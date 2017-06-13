@@ -133,21 +133,9 @@ class TestConfiguration(unittest.TestCase):
         ).result())
         with assert_setup_component(2):
             self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
-                'input_boolean': {
-                    'notify_home': {
-                        'name': 'Notify when someone arrives home',
-                        'initial': 'off',
-                        }
-                    },
                 conversation.DOMAIN: {
-                    'test_1': {
-                        'keywords': 'switch boolean',
-                        'action': {
-                            'service': 'input_boolean.toggle'
-                            }
-                        },
                     'test_2': {
-                        'keywords': 'please test',
+                        'sentence': 'please test',
                         'action': {
                             'service': 'input_boolean.toggle'
                             }
