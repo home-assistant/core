@@ -32,7 +32,7 @@ CONF_CONTROL = 'control'
 
 ATTR_AUTO = 'auto'
 ATTR_CONTROL = 'control'
-ATTR_DELTEA = 'delta'
+ATTR_DELTA = 'delta'
 ATTR_ENTITIES = 'entities'
 ATTR_ICON = 'icon'
 ATTR_NAME = 'name'
@@ -54,7 +54,7 @@ SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
 
 RELOAD_SERVICE_SCHEMA = vol.Schema({})
 
-SEE_SERVICE_SCHEMA = vol.Schema({
+SET_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_OBJECT_ID): cv.slug,
     vol.Optional(ATTR_NAME): cv.string,
     vol.Optional(ATTR_VIEW, default=False): cv.boolean,
@@ -136,20 +136,21 @@ def set_visibility(hass, entity_id=None, visible=True):
     hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
 
 
-def set(hass, name, entity_ids=None, visible=True, icon=None, view=False,
-        control=None):
+def set(hass, object_id, name=None, entity_ids=None, visible=True, icon=None,
+        view=False, control=None):
     """Create a new user group."""
     hass.add_job(
-        async_create, hass, name, entity_ids, user_defined, icon,
-        view, control)
+        async_set, hass, object_id, name, entity_ids, visible, icon, view,
+        control)
 
 
 @callback
-def async_set(hass, name, entity_ids=None, visible=True, icon=None, view=False,
-              control=None):
+def async_set(hass, object_id, name=None, entity_ids=None, visible=True,
+              icon=None, view=False, control=None):
     """Create a new user group."""
     data = {
         key: value for key, value in [
+            (ATTR_OBJECT_ID, object_id),
             (ATTR_NAME, name),
             (ATTR_ENTITIES, entity_ids),
             (ATTR_VISIBLE, visible),
@@ -164,13 +165,13 @@ def async_set(hass, name, entity_ids=None, visible=True, icon=None, view=False,
 
 def remove(hass, name):
     """Remove a user group."""
-    hass.add_job(async_delete, hass, name)
+    hass.add_job(async_remove, hass, name)
 
 
 @callback
-def async_remove(hass, name):
-    """REmove a user group."""
-    data = {ATTR_NAME: name}
+def async_remove(hass, object_id):
+    """Remove a user group."""
+    data = {ATTR_OBJECT_ID: object_id}
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_REMOVE, data))
 
 
@@ -292,19 +293,19 @@ def async_setup(hass, config):
                 entity_ids = service.data[ATTR_ENTITIES]
                 yield from group.async_update_tracked_entity_ids(entity_ids)
 
-            if ATTR_VISIBLE in service_data:
+            if ATTR_VISIBLE in service.data:
                 group.visible = service.data[ATTR_VISIBLE]
                 need_update = True
 
-            if ATTR_ICON in service_data:
+            if ATTR_ICON in service.data:
                 group.icon = service.data[ATTR_ICON]
                 need_update = True
 
-            if ATTR_CONTROL in service_data:
+            if ATTR_CONTROL in service.data:
                 group.control = service.data[ATTR_CONTROL]
                 need_update = True
 
-            if ATTR_VIEW in service_data:
+            if ATTR_VIEW in service.data:
                 group.control = service.data[ATTR_VIEW]
                 need_update = True
 
