@@ -495,6 +495,68 @@ class TestComponentsDeviceTracker(unittest.TestCase):
             'host_name': 'hello',
         }
 
+    def test_seen_online_event_fired(self):
+        """Test the firing of the EVENT_DEVICE_SEEN_ONLINE event.
+
+        Verifies that the device tracker fires the event each time
+        a device is seen, including the initial time.
+        """
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN,
+                                   TEST_PLATFORM)
+        test_events = []
+
+        @callback
+        def listener(event):
+            """Helper method that will verify our event got called."""
+            test_events.append(event)
+
+        self.hass.bus.listen("device_tracker_seen_online", listener)
+
+        device_tracker.see(self.hass, 'mac_1', host_name='hello',
+                           source_type=device_tracker.SOURCE_TYPE_ROUTER)
+        device_tracker.see(self.hass, 'mac_1', host_name='hello',
+                           source_type=device_tracker.SOURCE_TYPE_ROUTER)
+
+        self.hass.block_till_done()
+
+        assert len(test_events) == 2
+
+        # Assert we can serialize the event
+        json.dumps(test_events[0].as_dict(), cls=JSONEncoder)
+
+        assert test_events[0].data == {
+            'dev_id': 'hello',
+            'mac': 'MAC_1',
+        }
+
+    def test_seen_online_event_not_fired(self):
+        """Test the firing of the EVENT_DEVICE_SEEN_ONLINE event.
+
+        Verifies that the device tracker does not fire the event when
+        the source is not a ROUTER.
+        """
+        with assert_setup_component(1, device_tracker.DOMAIN):
+            assert setup_component(self.hass, device_tracker.DOMAIN,
+                                   TEST_PLATFORM)
+        test_events = []
+
+        @callback
+        def listener(event):
+            """Helper method that will verify our event got called."""
+            test_events.append(event)
+
+        self.hass.bus.listen("device_tracker_seen_online", listener)
+
+        device_tracker.see(self.hass, 'mac_1', host_name='hello',
+                           source_type=device_tracker.SOURCE_TYPE_GPS)
+        device_tracker.see(self.hass, 'mac_1', host_name='hello',
+                           source_type=device_tracker.SOURCE_TYPE_GPS)
+
+        self.hass.block_till_done()
+
+        assert len(test_events) == 0
+
     # pylint: disable=invalid-name
     def test_not_write_duplicate_yaml_keys(self):
         """Test that the device tracker will not generate invalid YAML."""
