@@ -56,6 +56,18 @@ class TestDemoFan(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
+    def test_turn_off_without_entity_id(self):
+        """Test turning off all fans."""
+        self.assertEqual(STATE_OFF, self.get_entity().state)
+
+        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        self.hass.block_till_done()
+        self.assertNotEqual(STATE_OFF, self.get_entity().state)
+
+        fan.turn_off(self.hass)
+        self.hass.block_till_done()
+        self.assertEqual(STATE_OFF, self.get_entity().state)
+
     def test_set_direction(self):
         """Test setting the direction of the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
