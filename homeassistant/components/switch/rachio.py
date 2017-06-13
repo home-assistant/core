@@ -29,8 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
-# noinspection PyUnresolvedLocal
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the component."""
     # Get options
@@ -144,7 +142,6 @@ class RachioIro(object):
             self.update(no_throttle=True)
             return [z for z in self._zones if z.is_enabled]
 
-    # noinspection PyUnusedLocal
     @util.Throttle(MIN_UPDATE_INTERVAL, MIN_FORCED_UPDATE_INTERVAL)
     def update(self, **kwargs):
         """Pull updated device info from the Rachio API."""
