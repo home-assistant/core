@@ -45,7 +45,7 @@ SERVICE_SET_VISIBILITY = 'set_visibility'
 SERVICE_SET = 'set'
 SERVICE_REMOVE = 'remove'
 
-CONTROL_TYPES = vol.In(['hidden'])
+CONTROL_TYPES = vol.In(['hidden', None])
 
 SET_VISIBILITY_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -61,8 +61,8 @@ SEE_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ICON): cv.string,
     vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
     vol.Optional(ATTR_VISIBLE, default=True): cv.boolean,
-    vol.Optional(ATTR_ENTITIES): cv.entity_ids,
-    vol.Optional(ATTR_DELTA): cv.entity_ids,
+    vol.Exclusive(ATTR_ENTITIES, 'entities'): cv.entity_ids,
+    vol.Exclusive(ATTR_DELTA, 'entities'): cv.entity_ids,
 })
 
 REMOVE_SERVICE_SCHEMA = vol.Schema({
@@ -280,6 +280,7 @@ def async_setup(hass, config):
 
         # update group
         if service.service == SERVICE_SET:
+            need_update = False
             group = service_groups[object_id]
 
             if ATTR_DELTA in service.data:
@@ -287,9 +288,28 @@ def async_setup(hass, config):
                 entity_ids = set(group.tracking).symmetric_difference(delta)
                 yield from group.async_update_tracked_entity_ids(entity_ids)
 
-            if ATTR_ENTITIES in service.data
+            if ATTR_ENTITIES in service.data:
                 entity_ids = service.data[ATTR_ENTITIES]
                 yield from group.async_update_tracked_entity_ids(entity_ids)
+
+            if ATTR_VISIBLE in service_data:
+                group.visible = service.data[ATTR_VISIBLE]
+                need_update = True
+
+            if ATTR_ICON in service_data:
+                group.icon = service.data[ATTR_ICON]
+                need_update = True
+
+            if ATTR_CONTROL in service_data:
+                group.control = service.data[ATTR_CONTROL]
+                need_update = True
+
+            if ATTR_VIEW in service_data:
+                group.control = service.data[ATTR_VIEW]
+                need_update = True
+
+            if need_update:
+                yield from group.async_update_ha_state()
 
             return
 
@@ -314,10 +334,15 @@ def async_setup(hass, config):
     def visibility_service_handler(service):
         """Change visibility of a group."""
         visible = service.data.get(ATTR_VISIBLE)
-        tasks = [group.async_set_visible(visible) for group
-                 in component.async_extract_from_service(service,
-                                                         expand_group=False)]
-        yield from asyncio.wait(tasks, loop=hass.loop)
+
+        tasks = []
+        for group in component.async_extract_from_service(service,
+                                                          expand_group=False):
+            group.visible = visible
+            tasks.append(group.async_update_ha_state())
+
+        if tasks:
+            yield from asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_VISIBILITY, visibility_service_handler,
@@ -361,17 +386,17 @@ class Group(Entity):
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
-        self._order = order
-        self._icon = icon
-        self._view = view
+        self.icon = icon
+        self.view = view
         self.tracking = []
         self.group_on = None
         self.group_off = None
+        self.visible = visible
+        self.control = control
+        self._user_defined = user_defined
+        self._order = order
         self._assumed_state = False
         self._async_unsub_state_changed = None
-        self._visible = visible
-        self._user_defined = user_defined
-        self._control = control
 
     @staticmethod
     def create_group(hass, name, entity_ids=None, visible=True, icon=None,
@@ -430,13 +455,6 @@ class Group(Entity):
     def icon(self):
         """Return the icon of the group."""
         return self._icon
-
-    @asyncio.coroutine
-    def async_set_visible(self, visible):
-        """Change visibility of the group."""
-        if self._visible != visible:
-            self._visible = visible
-            yield from self.async_update_ha_state()
 
     @property
     def hidden(self):
