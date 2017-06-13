@@ -4,13 +4,13 @@ from collections import OrderedDict
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_HOME, STATE_UNKNOWN, ATTR_ICON, ATTR_HIDDEN,
-    ATTR_ASSUMED_STATE, STATE_NOT_HOME, )
+    ATTR_ASSUMED_STATE, STATE_NOT_HOME)
 import homeassistant.components.group as group
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, assert_setup_component
 
 
 class TestComponentsGroup(unittest.TestCase):
@@ -380,3 +380,15 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
+
+
+@asyncio.coroutine
+def test_service_group_services(hass):
+    """Check if service are available."""
+    with assert_setup_component(1, 'group'):
+        yield from async_setup_component(hass, 'group', {
+            'group': {}
+        })
+
+    assert hass.has_service('group', group.SERVICE_SET)
+    assert hass.has_service('group', group.SERVICE_REMOVE)
