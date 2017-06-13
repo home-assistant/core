@@ -70,6 +70,8 @@ class ONVIFCamera(Camera):
         media = ONVIFService(device_url, self._username,
                              self._password, wsdl + 'media.wsdl')
         self._input = media.GetStreamUri().Uri
+        _LOGGER.info("ONVIF Camera Using the following URL for %s: %s",
+                    self._name, self._input)
 
     @asyncio.coroutine
     def async_camera_image(self):
