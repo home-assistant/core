@@ -33,7 +33,7 @@ SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
-SCOPE = 'user-read-playback-state user-modify-playback-state'
+SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 AUTH_CALLBACK_PATH = '/api/spotify'
 AUTH_CALLBACK_NAME = 'api:spotify'
@@ -135,6 +135,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._volume = None
         self._shuffle = False
         self._player = None
+        self._user = None
         self._aliases = aliases
         self._token_info = self._oauth.get_cached_token()
 
@@ -153,6 +154,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if self._player is None or token_refreshed:
             self._player = \
                 spotipy.Spotify(auth=self._token_info.get('access_token'))
+            self._user = self._player.me()
 
     def update(self):
         """Update state and attributes."""
@@ -308,4 +310,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return the media player features that are supported."""
-        return SUPPORT_SPOTIFY
+        if self._user is not None and self._user['product'] == 'premium':
+            return SUPPORT_SPOTIFY
+        else:
+            return None
