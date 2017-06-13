@@ -53,7 +53,7 @@ def _get_image_url(hass, monitor, mode):
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ZoneMinder cameras."""
     cameras = []
-    monitors = zoneminder.get_state('api/monitors.json')
+    monitors = zoneminder.get_state(hass, 'api/monitors.json')
     if not monitors:
         _LOGGER.warning("Could not fetch monitors from ZoneMinder")
         return
@@ -98,7 +98,11 @@ class ZoneMinderCamera(MjpegCamera):
     def update(self):
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
+        if not zoneminder.alarm_status_supported(self.hass):
+            return
+
         status_response = zoneminder.get_state(
+            self.hass,
             'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
         )
 

@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     switches = []
 
-    monitors = zoneminder.get_state('api/monitors.json')
+    monitors = zoneminder.get_state(hass, 'api/monitors.json')
     for i in monitors['monitors']:
         switches.append(
             ZMSwitchMonitors(
@@ -65,6 +65,7 @@ class ZMSwitchMonitors(SwitchDevice):
     def update(self):
         """Update the switch value."""
         monitor = zoneminder.get_state(
+            self.hass,
             'api/monitors/%i.json' % self._monitor_id
         )
         current_state = monitor['monitor']['Monitor']['Function']
@@ -78,6 +79,7 @@ class ZMSwitchMonitors(SwitchDevice):
     def turn_on(self):
         """Turn the entity on."""
         zoneminder.change_state(
+            self.hass,
             'api/monitors/%i.json' % self._monitor_id,
             {'Monitor[Function]': self._on_state}
         )
@@ -85,6 +87,7 @@ class ZMSwitchMonitors(SwitchDevice):
     def turn_off(self):
         """Turn the entity off."""
         zoneminder.change_state(
+            self.hass,
             'api/monitors/%i.json' % self._monitor_id,
             {'Monitor[Function]': self._off_state}
         )
