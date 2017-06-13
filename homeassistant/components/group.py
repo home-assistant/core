@@ -136,17 +136,17 @@ def set_visibility(hass, entity_id=None, visible=True):
     hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
 
 
-def set(hass, object_id, name=None, entity_ids=None, visible=True, icon=None,
-        view=False, control=None):
+def set_group(hass, object_id, name=None, entity_ids=None, visible=True,
+              icon=None, view=False, control=None):
     """Create a new user group."""
     hass.add_job(
-        async_set, hass, object_id, name, entity_ids, visible, icon, view,
-        control)
+        async_set_group, hass, object_id, name, entity_ids, visible, icon,
+        view, control)
 
 
 @callback
-def async_set(hass, object_id, name=None, entity_ids=None, visible=True,
-              icon=None, view=False, control=None):
+def async_set_group(hass, object_id, name=None, entity_ids=None, visible=True,
+                    icon=None, view=False, control=None):
     """Create a new user group."""
     data = {
         key: value for key, value in [
@@ -282,7 +282,7 @@ def async_setup(hass, config):
         # update group
         if service.service == SERVICE_SET:
             need_update = False
-            group = service_groups[object_id]
+            group = service_groups[ATTR_OBJECT_ID]
 
             if ATTR_DELTA in service.data:
                 delta = service.data[ATTR_DELTA]
@@ -387,7 +387,7 @@ class Group(Entity):
         self.hass = hass
         self._name = name
         self._state = STATE_UNKNOWN
-        self.icon = icon
+        self._icon = icon
         self.view = view
         self.tracking = []
         self.group_on = None
@@ -447,6 +447,11 @@ class Group(Entity):
         """Return the name of the group."""
         return self._name
 
+    @name.setter
+    def name(self, value):
+        """Set Group name."""
+        self._name = value
+
     @property
     def state(self):
         """Return the state of the group."""
@@ -457,11 +462,16 @@ class Group(Entity):
         """Return the icon of the group."""
         return self._icon
 
+    @icon.setter
+    def icon(self, value):
+        """Set Icon for group."""
+        self._icon = value
+
     @property
     def hidden(self):
         """If group should be hidden or not."""
         # Visibility from set_visibility service overrides
-        if self._visible or self._view:
+        if self.visible or self.view:
             return False
         return True
 
@@ -474,10 +484,10 @@ class Group(Entity):
         }
         if not self._user_defined:
             data[ATTR_AUTO] = True
-        if self._view:
+        if self.view:
             data[ATTR_VIEW] = True
-        if self._control:
-            data[ATTR_CONTROL] = self._control
+        if self.control:
+            data[ATTR_CONTROL] = self.control
         return data
 
     @property
