@@ -125,23 +125,17 @@ class TestConfiguration(unittest.TestCase):
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
-        self.ent_id = 'input_boolean.kitchen_lights'
         self.hass = get_test_home_assistant()
-        self.hass.states.set(self.ent_id, 'on')
-        self.assertTrue(run_coroutine_threadsafe(
-            core_components.async_setup(self.hass, {}), self.hass.loop
-        ).result())
-        with assert_setup_component(2):
-            self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
-                conversation.DOMAIN: {
-                    'test_2': {
-                        'sentence': 'please test',
-                        'action': {
-                            'service': 'input_boolean.toggle'
-                            }
-                        }
+        self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
+            conversation.DOMAIN: {
+                'test_2': {
+                    'sentence': 'please test',
+                    'action': {
+                        'service': 'input_boolean.toggle'
                     }
-            }))
+                }
+            }
+        }))
 
     # pylint: disable=invalid-name
     def tearDown(self):
