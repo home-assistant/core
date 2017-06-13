@@ -129,7 +129,7 @@ class TestConfiguration(unittest.TestCase):
         self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
             conversation.DOMAIN: {
                 'test_2': {
-                    'sentence': 'please test',
+                    'sentence': 'switch boolean',
                     'action': {
                         'service': 'input_boolean.toggle'
                     }
