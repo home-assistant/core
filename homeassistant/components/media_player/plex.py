@@ -134,7 +134,6 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    # pylint: disable=too-many-branches
     def update_devices():
         """Update the devices objects."""
         try:
@@ -231,11 +230,9 @@ def request_configuration(host, hass, config, add_devices_callback):
         }])
 
 
-# pylint: disable=too-many-instance-attributes, too-many-public-methods
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, config, device, session, plex_sessions,
                  update_devices, update_sessions):
         """Initialize the Plex device."""
@@ -299,7 +296,6 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
-    # pylint: disable=too-many-branches, too-many-statements
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh
