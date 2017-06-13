@@ -16,8 +16,8 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['https://github.com/wmalgadey/PyTado/archive/'
-                '0.2.0.zip#'
-                'PyTado==0.2.0']
+                '0.2.1.zip#'
+                'PyTado==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
