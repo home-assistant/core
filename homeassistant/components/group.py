@@ -234,7 +234,7 @@ def get_entity_ids(hass, entity_id, domain_filter=None):
 def async_setup(hass, config):
     """Set up all groups found definded in the configuration."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
-    service_groups = []
+    service_groups = {}
 
     yield from _async_process_config(hass, config, component)
 
@@ -281,11 +281,11 @@ def async_setup(hass, config):
 
         # update group
         if service.service == SERVICE_SET:
+            group = service_groups[object_id]
             need_update = False
-            group = service_groups[ATTR_OBJECT_ID]
 
             if ATTR_DELTA in service.data:
-                delta = service.data[ATTR_DELTA]
+                delta = set(service.data[ATTR_DELTA])
                 entity_ids = set(group.tracking).symmetric_difference(delta)
                 yield from group.async_update_tracked_entity_ids(entity_ids)
 
