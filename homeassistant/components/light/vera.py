@@ -30,6 +30,7 @@ class VeraLight(VeraDevice, Light):
     def __init__(self, vera_device, controller):
         """Initialize the light."""
         self._state = False
+        self._has_color = False
         VeraDevice.__init__(self, vera_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
@@ -42,20 +43,20 @@ class VeraLight(VeraDevice, Light):
     @property
     def rgb_color(self):
         """Return the color of the light."""
-        if self.vera_device.is_dimmable:
+        if self._has_color:
             return self.vera_device.get_color()
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self.vera_device.get_color() is None:
-            return SUPPORT_BRIGHTNESS
-        else:
+        if self._has_color:
             return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+        else:
+            return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_RGB_COLOR in kwargs and self.vera_device.get_color():
+        if ATTR_RGB_COLOR in kwargs and self._has_color:
             self.vera_device.set_color(kwargs[ATTR_RGB_COLOR])
         elif ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
             self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
@@ -79,3 +80,4 @@ class VeraLight(VeraDevice, Light):
     def update(self):
         """Call to update state."""
         self._state = self.vera_device.is_switched_on()
+        self._has_color = (self.vera_device.get_color() is not None)
