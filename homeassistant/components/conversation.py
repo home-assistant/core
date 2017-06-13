@@ -14,11 +14,13 @@ from homeassistant import core
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import script
+
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.0']
 
 ATTR_TEXT = 'text'
-
+ATTR_SENTENCE = 'sentence'
 DOMAIN = 'conversation'
 
 REGEX_TURN_COMMAND = re.compile(r'turn (?P<name>(?: |\w)+) (?P<command>\w+)')
@@ -29,9 +31,12 @@ SERVICE_PROCESS_SCHEMA = vol.Schema({
     vol.Required(ATTR_TEXT): vol.All(cv.string, vol.Lower),
 })
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
-}, extra=vol.ALLOW_EXTRA)
+CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
+    cv.string: vol.Schema({
+        vol.Required(ATTR_SENTENCE): cv.string,
+        vol.Required('action'): cv.SCRIPT_SCHEMA,
+    })
+})}, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
@@ -40,9 +45,30 @@ def setup(hass, config):
     from fuzzywuzzy import process as fuzzyExtract
 
     logger = logging.getLogger(__name__)
+    config = config.get(DOMAIN, {})
+
+    choices = {attrs[ATTR_SENTENCE]: script.Script(
+        hass,
+        attrs['action'],
+        name)
+               for name, attrs in config.items()}
 
     def process(service):
         """Parse text into commands."""
+        # if actually configured
+        if choices:
+            text = service.data[ATTR_TEXT]
+            match = fuzzyExtract.extractOne(text, choices.keys())
+            scorelimit = 60  # arbitrary value
+            logging.info(
+                'matched up text %s and found %s',
+                text,
+                [match[0] if match[1] > scorelimit else 'nothing']
+                )
+            if match[1] > scorelimit:
+                choices[match[0]].run()  # run respective script
+                return
+
         text = service.data[ATTR_TEXT]
         match = REGEX_TURN_COMMAND.match(text)
 
