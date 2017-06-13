@@ -1,5 +1,6 @@
 """Support for Dyson Pure Cool link fan."""
 import logging
+import asyncio
 from os import path
 import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
@@ -69,14 +70,18 @@ class DysonPureCoolLinkDevice(FanEntity):
         _LOGGER.info("Creating device %s", device.name)
         self.hass = hass
         self._device = device
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
         self._device.add_message_listener(self.on_message)
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
         _LOGGER.debug("Message received for fan device %s : %s", self.name,
                       message)
-        if self.entity_id:
-            self.schedule_update_ha_state()
+
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self):

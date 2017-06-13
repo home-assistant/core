@@ -56,10 +56,12 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(mocked_devices.call_count, 1)
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 0)
 
+    @mock.patch('homeassistant.helpers.discovery.load_platform')
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_available()])
     @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
-    def test_dyson_custom_conf(self, mocked_login, mocked_devices):
+    def test_dyson_custom_conf(self, mocked_login, mocked_devices,
+                               mocked_discovery):
         """Test device connection using custom configuration."""
         dyson.setup(self.hass, {dyson.DOMAIN: {
             dyson.CONF_USERNAME: "email",
@@ -75,6 +77,7 @@ class DysonTest(unittest.TestCase):
         self.assertEqual(mocked_login.call_count, 1)
         self.assertEqual(mocked_devices.call_count, 1)
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
+        self.assertEqual(mocked_discovery.call_count, 2)
 
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_dyson_account_device_not_available()])

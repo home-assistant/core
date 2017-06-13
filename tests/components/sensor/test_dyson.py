@@ -2,6 +2,7 @@
 import unittest
 from unittest import mock
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.sensor import dyson
 from tests.common import get_test_home_assistant
 
@@ -57,7 +58,7 @@ class DysonTest(unittest.TestCase):
                                              _get_device_without_state())
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
-        self.assertIsNone(sensor.state)
+        self.assertEqual(sensor.state, STATE_UNKNOWN)
         self.assertEqual(sensor.unit_of_measurement, "hours")
         self.assertEqual(sensor.name, "Device_name filter life")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")

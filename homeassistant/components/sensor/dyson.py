@@ -1,6 +1,8 @@
 """Support for Dyson Pure Cool Link Sensors."""
 import logging
+import asyncio
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.components.dyson import DYSON_DEVICES
 
 from homeassistant.helpers.entity import Entity
@@ -25,23 +27,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DysonFilterLifeSensor(Entity):
     """Representation of Dyson filter life sensor (in hours)."""
 
-    def on_message(self, message):
-        """Called when new messages received from the fan."""
-        _LOGGER.debug("Message received for %s device: %s", self.name,
-                      message)
-        if self.hass and self.entity_id:
-            # Prevent refreshing if not needed
-            if self._old_value is None or self._old_value != self.state:
-                self._old_value = self.state
-                self.schedule_update_ha_state()
-
     def __init__(self, hass, device):
         """Create a new Dyson filter life sensor."""
         self.hass = hass
         self._device = device
         self._name = "{} filter life".format(self._device.name)
-        self._device.add_message_listener(self.on_message)
         self._old_value = None
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self._device.add_message_listener(self.on_message)
+
+    def on_message(self, message):
+        """Called when new messages received from the fan."""
+        _LOGGER.debug("Message received for %s device: %s", self.name,
+                      message)
+        # Prevent refreshing if not needed
+        if self._old_value is None or self._old_value != self.state:
+            self._old_value = self.state
+            self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
@@ -54,7 +59,7 @@ class DysonFilterLifeSensor(Entity):
         if self._device.state:
             return self._device.state.filter_life
         else:
-            return None
+            return STATE_UNKNOWN
 
     @property
     def name(self):
