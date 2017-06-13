@@ -246,18 +246,19 @@ class DeviceTracker(object):
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
             battery: str=None, attributes: dict=None,
-            source_type: str=SOURCE_TYPE_GPS):
+            source_type: str=SOURCE_TYPE_GPS, picture: str=None):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           gps_accuracy, battery, attributes, source_type)
+                           gps_accuracy, battery, attributes, source_type,
+                           picture)
         )
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
                   gps_accuracy=None, battery: str=None, attributes: dict=None,
-                  source_type: str=SOURCE_TYPE_GPS):
+                  source_type: str=SOURCE_TYPE_GPS, picture: str=None):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -285,7 +286,8 @@ class DeviceTracker(object):
         dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
         device = Device(
             self.hass, self.consider_home, self.track_new,
-            dev_id, mac, (host_name or dev_id).replace('_', ' '))
+            dev_id, mac, (host_name or dev_id).replace('_', ' '),
+            picture=picture)
         self.devices[dev_id] = device
         if mac is not None:
             self.mac_to_dev[mac] = device
