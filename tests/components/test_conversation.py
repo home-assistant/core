@@ -121,6 +121,7 @@ class TestConversation(unittest.TestCase):
 
 class TestConfiguration(unittest.TestCase):
     """Test the conversation configuration component."""
+
     # pylint: disable=invalid-name
     def setUp(self):
         """Setup things to be run when tests are started."""
