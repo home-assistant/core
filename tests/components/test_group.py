@@ -406,7 +406,7 @@ def test_service_group_set_group_remove_group(hass):
     group.async_set_group(hass, 'user_test_group', name="Test")
     yield from hass.async_block_till_done()
 
-    group_state = self.hass.states.get('group.user_test_group')
+    group_state = hass.states.get('group.user_test_group')
     assert group_state
     assert not group_state.attributes[group.ATTR_VIEW]
     assert group_state.attributes[group.ATTR_AUTO]
@@ -416,7 +416,7 @@ def test_service_group_set_group_remove_group(hass):
     group.async_set_group(hass, 'user_test_group', view=True, visible=False)
     yield from hass.async_block_till_done()
 
-    group_state = self.hass.states.get('group.user_test_group')
+    group_state = hass.states.get('group.user_test_group')
     assert group_state
     assert group_state.attributes[group.ATTR_VIEW]
     assert group_state.attributes[group.ATTR_AUTO]
@@ -428,7 +428,7 @@ def test_service_group_set_group_remove_group(hass):
         control="hidden")
     yield from hass.async_block_till_done()
 
-    group_state = self.hass.states.get('group.user_test_group')
+    group_state = hass.states.get('group.user_test_group')
     assert group_state
     assert group_state.attributes[group.ATTR_VIEW]
     assert group_state.attributes[group.ATTR_AUTO]
@@ -440,5 +440,5 @@ def test_service_group_set_group_remove_group(hass):
     group.async_remove(hass, 'user_test_group')
     yield from hass.async_block_till_done()
 
-    group_state = self.hass.states.get('group.user_test_group')
+    group_state = hass.states.get('group.user_test_group')
     assert group_state is None
