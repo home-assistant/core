@@ -533,7 +533,7 @@ def setup(hass, config):
         for value in (
                 node.get_values(class_id=const.COMMAND_CLASS_METER)
                 .values()):
-            if value.index != const.METER_RESET_INDEX:
+            if value.index != const.INDEX_METER_RESET:
                 continue
             if value.instance != instance:
                 continue
