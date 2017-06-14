@@ -306,7 +306,7 @@ def async_setup(hass, config):
                 need_update = True
 
             if ATTR_VIEW in service.data:
-                group.control = service.data[ATTR_VIEW]
+                group.view = service.data[ATTR_VIEW]
                 need_update = True
 
             if need_update:
