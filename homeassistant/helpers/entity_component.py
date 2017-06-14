@@ -14,6 +14,7 @@ from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.service import extract_entity_ids
+from homeassistant.util import slugify
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
@@ -37,8 +38,6 @@ class EntityComponent(object):
         self.group_name = group_name
 
         self.entities = {}
-        self.group = None
-
         self.config = None
 
         self._platforms = {
@@ -236,15 +235,13 @@ class EntityComponent(object):
 
         This method must be run in the event loop.
         """
-        if self.group is None and self.group_name is not None:
+        if self.group_name is not None:
+            ids = sorted(self.entities, key=lambda x: self.entities[x].name)
             group = get_component('group')
-            self.group = yield from group.Group.async_create_group(
-                self.hass, self.group_name,
-                sorted(self.entities, key=lambda x: self.entities[x].name),
-                user_defined=False)
-        elif self.group is not None:
-            yield from self.group.async_update_tracked_entity_ids(
-                sorted(self.entities, key=lambda x: self.entities[x].name))
+            group.async_set_group(
+                self.hass, slugify(self.group_name), name=self.group_name,
+                visible=False, entity_ids=ids
+            )
 
     def reset(self):
         """Remove entities and reset the entity component to initial values."""
@@ -268,9 +265,9 @@ class EntityComponent(object):
         self.entities = {}
         self.config = None
 
-        if self.group is not None:
-            yield from self.group.async_stop()
-            self.group = None
+        if self.group_name is not None:
+            group = get_component('group')
+            group.async_remove(self.hass, slugify(self.group_name))
 
     def prepare_reload(self):
         """Prepare reloading this entity component."""
