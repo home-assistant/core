@@ -685,6 +685,18 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
         self.assertTrue(wayp == new_wayp)
 
 
+def mock_cipher():
+    """Return a dummy pickle-based cipher."""
+    def mock_decrypt(ciphertext, key):
+        """Decrypt/unpickle."""
+        import pickle
+        (mkey, plaintext) = pickle.loads(ciphertext)
+        if key != mkey:
+            raise ValueError()
+        return plaintext
+    return (len(TEST_SECRET_KEY), mock_decrypt)
+
+
 class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     """Test the OwnTrack sensor."""
 
@@ -698,18 +710,6 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     def teardown_method(self, method):
         """Tear down resources."""
         self.hass.stop()
-
-    @staticmethod
-    def mock_cipher():
-        """Return a dummy pickle-based cipher."""
-        def mock_decrypt(ciphertext, key):
-            """Decrypt/unpickle."""
-            import pickle
-            (mkey, plaintext) = pickle.loads(ciphertext)
-            if key != mkey:
-                raise ValueError()
-            return plaintext
-        return (len(TEST_SECRET_KEY), mock_decrypt)
 
     @patch('homeassistant.components.device_tracker.owntracks.get_cipher',
            mock_cipher)
