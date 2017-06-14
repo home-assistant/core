@@ -122,15 +122,10 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
-    try:
-        conf = config.get(DOMAIN, [])
-    except vol.Invalid as ex:
-        async_log_exception(ex, DOMAIN, config, hass)
-        return False
-    else:
-        conf = conf[0] if conf else {}
-        consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
-        track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+    conf = config.get(DOMAIN, [])
+    conf = conf[0] if conf else {}
+    consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
+    track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
