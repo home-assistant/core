@@ -37,12 +37,13 @@ class DysonFilterLifeSensor(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
-        self._device.add_message_listener(self.on_message)
+        self.hass.async_add_job(
+            self._device.add_message_listener(self.on_message))
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
-        _LOGGER.debug("Message received for %s device: %s", self.name,
-                      message)
+        _LOGGER.debug(
+            "Message received for %s device: %s", self.name, message)
         # Prevent refreshing if not needed
         if self._old_value is None or self._old_value != self.state:
             self._old_value = self.state
