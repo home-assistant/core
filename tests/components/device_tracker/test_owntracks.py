@@ -2,8 +2,8 @@
 import asyncio
 import json
 import os
-import unittest
 from collections import defaultdict
+import unittest
 from unittest.mock import patch
 
 from tests.common import (assert_setup_component, fire_mqtt_message,
