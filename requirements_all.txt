@@ -341,6 +341,9 @@ knxip==0.3.3
 # homeassistant.components.device_tracker.owntracks
 libnacl==1.5.0
 
+# homeassistant.components.dyson
+libpurecoollink==0.1.5
+
 # homeassistant.components.device_tracker.mikrotik
 librouteros==1.0.2
 
