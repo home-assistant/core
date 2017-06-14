@@ -30,7 +30,6 @@ class VeraLight(VeraDevice, Light):
     def __init__(self, vera_device, controller):
         """Initialize the light."""
         self._state = False
-        self._has_color = False
         self._color = None
         self._brightness = None
         VeraDevice.__init__(self, vera_device, controller)
