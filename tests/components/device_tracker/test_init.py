@@ -662,7 +662,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
                                 device_tracker.CONF_CONSIDER_HOME: -1}})
 
     def test_picture_and_icon_on_see_discovery(self):
-        """Test that picture and icon are added to config when provided in initial see."""
+        """Test that picture and icon are set in initial see."""
         tracker = device_tracker.DeviceTracker(
             self.hass, timedelta(seconds=60), False, [])
         tracker.see(dev_id=11, picture='pic_url', icon='mdi:icon')
@@ -672,6 +672,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
         assert len(config) == 1
         assert config[0].icon == 'mdi:icon'
         assert config[0].entity_picture == 'pic_url'
+
 
 @asyncio.coroutine
 def test_async_added_to_hass(hass):
@@ -702,9 +703,10 @@ def test_async_added_to_hass(hass):
         atr = state.attributes.get(key)
         assert atr == val, "{}={} expected: {}".format(key, atr, val)
 
+
 @asyncio.coroutine
 def test_bad_platform(hass):
-    "Test bad platform."
+    """Test bad platform."""
     config = {
         'device_tracer': {
             'platform': 'bad_platform'
