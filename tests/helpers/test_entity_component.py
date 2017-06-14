@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
 from homeassistant.helpers import entity_component
+from homeassistant.setup import setup_component
 
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
