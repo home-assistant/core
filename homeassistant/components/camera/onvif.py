@@ -10,10 +10,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
+    CONF_NAME, CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import (
-    DATA_FFMPEG, CONF_INPUT, CONF_EXTRA_ARGUMENTS)
+    DATA_FFMPEG)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
@@ -30,10 +30,11 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
+DEFAULT_FFMPEG_ARGUMENTS= '-q:v 2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_INPUT): cv.string,
-    vol.Optional(CONF_EXTRA_ARGUMENTS): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -44,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a ONVIF camera."""
-    if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_INPUT)):
+    if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
     async_add_devices([ONVIFCamera(hass, config)])
 
@@ -57,31 +58,27 @@ class ONVIFCamera(Camera):
         from onvif import ONVIFService
         super().__init__()
 
-        self._manager = hass.data[DATA_FFMPEG]
         self._name = config.get(CONF_NAME)
-        self._input = config.get(CONF_INPUT)
-        self._extra_arguments = config.get(CONF_EXTRA_ARGUMENTS)
-        port = config.get(CONF_PORT)
-        wsdl = hass.config.config_dir + '/deps/onvif/wsdl/'
-        self._base_url = 'http://{}:{}/'.format(self._input, port)
-        device_url = self._base_url + 'onvif/device_service'
-        self._username = config.get(CONF_USERNAME)
-        self._password = config.get(CONF_PASSWORD)
-        media = ONVIFService(device_url, self._username,
-                             self._password, wsdl + 'media.wsdl')
+        self._ffmpeg_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
+        media = ONVIFService('http://{}:{}/'.format(config.get(CONF_HOST), 
+                                                    config.get(CONF_PORT))
+                             + 'onvif/device_service',
+                             config.get(CONF_USERNAME),
+                             config.get(CONF_PASSWORD), hass.config.config_dir
+                             + '/deps/onvif/wsdl/media.wsdl')
         self._input = media.GetStreamUri().Uri
-        _LOGGER.info("ONVIF Camera Using the following URL for %s: %s",
-                     self._name, self._input)
+        _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
+                      self._name, self._input)
 
     @asyncio.coroutine
     def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
-        ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
+        ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
         image = yield from ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
-            extra_cmd=self._extra_arguments)
+            extra_cmd=self._ffmpeg_arguments)
         return image
 
     @asyncio.coroutine
@@ -89,9 +86,9 @@ class ONVIFCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
-        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
+        stream = CameraMjpeg(self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
         yield from stream.open_camera(
-            self._input, extra_cmd=self._extra_arguments)
+            self._input, extra_cmd=self._ffmpeg_arguments)
 
         yield from async_aiohttp_proxy_stream(
             self.hass, request, stream,
