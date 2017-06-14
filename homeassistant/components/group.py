@@ -265,9 +265,9 @@ def async_setup(hass, config):
             entity_ids = service.data.get(ATTR_ENTITIES) or \
                 service.data.get(ATTR_DELTA) or None
 
-            extra_arg = {name: service.data[name] for name, value in [
+            extra_arg = {attr: service.data[attr] for attr in (
                 ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
-            ] if service.data[name] is not None}
+            ) if service.data[attr] is not None}
 
             new_group = yield from Group.async_create_group(
                 hass, service.data.get(ATTR_NAME, object_id),
