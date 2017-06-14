@@ -299,8 +299,8 @@ class DeviceTracker(object):
             ATTR_HOST_NAME: device.host_name,
         })
 
-        # During init, we ignore the group
-        self.group.async_set_group(
+        # update group
+        group.async_set_group(
             self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
             name=GROUP_NAME_ALL_DEVICES, delta=[device.entity_id])
 
@@ -323,17 +323,6 @@ class DeviceTracker(object):
             yield from self.hass.async_add_job(
                 update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
-
-    @asyncio.coroutine
-    def async_setup_group(self):
-        """Initialize group for all tracked devices.
-
-        This method is a coroutine.
-        """
-        entity_ids = (dev.entity_id for dev in self.devices.values()
-                      if dev.track)
-        self.group = yield from group.Group.async_create_group(
-            self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
 
     @callback
     def async_update_stale(self, now: dt_util.dt.datetime):
