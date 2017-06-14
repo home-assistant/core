@@ -386,7 +386,7 @@ class TestComponentsGroup(unittest.TestCase):
 @asyncio.coroutine
 def test_service_group_services(hass):
     """Check if service are available."""
-    with assert_setup_component(1, 'group'):
+    with assert_setup_component(0, 'group'):
         yield from async_setup_component(hass, 'group', {
             'group': {}
         })
@@ -398,7 +398,7 @@ def test_service_group_services(hass):
 @asyncio.coroutine
 def test_service_group_set_group_remove_group(hass):
     """Check if service are available."""
-    with assert_setup_component(1, 'group'):
+    with assert_setup_component(0, 'group'):
         yield from async_setup_component(hass, 'group', {
             'group': {}
         })
