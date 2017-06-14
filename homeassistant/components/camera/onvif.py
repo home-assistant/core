@@ -30,11 +30,9 @@ DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
 DEFAULT_USERNAME = 'admin'
 DEFAULT_PASSWORD = '888888'
-DEFAULT_FFMPEG_ARGUMENTS = '-q:v 2'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_FFMPEG_ARGUMENTS, default=DEFAULT_FFMPEG_ARGUMENTS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
@@ -59,7 +57,7 @@ class ONVIFCamera(Camera):
         super().__init__()
 
         self._name = config.get(CONF_NAME)
-        self._ffmpeg_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
+        self._ffmpeg_arguments = '-q:v 2'
         media = ONVIFService('http://{}:{}/'.format(config.get(CONF_HOST),
                                                     config.get(CONF_PORT))
                              + 'onvif/device_service',
