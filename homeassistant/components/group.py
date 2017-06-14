@@ -294,6 +294,10 @@ def async_setup(hass, config):
                 entity_ids = service.data[ATTR_ENTITIES]
                 yield from group.async_update_tracked_entity_ids(entity_ids)
 
+            if ATTR_NAME in service.data:
+                group.name = service.data[ATTR_NAME]
+                need_update = True
+
             if ATTR_VISIBLE in service.data:
                 group.visible = service.data[ATTR_VISIBLE]
                 need_update = True
