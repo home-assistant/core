@@ -4,6 +4,8 @@
 # Stop on errors
 set -e
 
+python3 -m pip install cython
+
 mkdir -p /usr/src/build
 cd /usr/src/build
 

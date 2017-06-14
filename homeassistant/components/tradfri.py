@@ -121,9 +121,9 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
         return False
 
     gateway = Gateway()
-    gateway_id_cmd = gateway.get_gateway_info()
-    yield from api(gateway_id_cmd)
-    gateway_id = gateway_id_cmd.result.id
+    gateway_info_cmd = gateway.get_gateway_info()
+    gateway_info_result = yield from api(gateway_info_cmd)
+    gateway_id = gateway_info_result.id
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
 
