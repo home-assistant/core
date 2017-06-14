@@ -400,21 +400,21 @@ class Group(Entity):
         self._async_unsub_state_changed = None
 
     @staticmethod
-    def create_group(hass, name, entity_ids=None, visible=True, icon=None,
-                     view=False, control=None, object_id=None,
-                     user_defined=True):
+    def create_group(hass, name, entity_ids=None, user_defined=True,
+                     visible=True, icon=None, view=False, control=None,
+                     object_id=None):
         """Initialize a group."""
         return run_coroutine_threadsafe(
             Group.async_create_group(
-                hass, name, entity_ids, visible, icon, view, control,
-                object_id, user_defined),
+                hass, name, entity_ids, user_defined, visible, icon, view,
+                control, object_id),
             hass.loop).result()
 
     @staticmethod
     @asyncio.coroutine
-    def async_create_group(hass, name, entity_ids=None, visible=True,
-                           icon=None, view=False, control=None,
-                           object_id=None, user_defined=True):
+    def async_create_group(hass, name, entity_ids=None, user_defined=True,
+                           visible=True, icon=None, view=False, control=None,
+                           object_id=None):
         """Initialize a group.
 
         This method must be run in the event loop.
