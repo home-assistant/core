@@ -120,7 +120,10 @@ class TestInfluxDB(unittest.TestCase):
             attrs = {
                 'unit_of_measurement': 'foobars',
                 'longitude': '1.1',
-                'latitude': '2.2'
+                'latitude': '2.2',
+                'battery_level': '99%',
+                'temperature': '20c',
+                'last_seen': 'Last seen 23 minutes ago'
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', object_id='entity', attributes=attrs)
@@ -136,7 +139,12 @@ class TestInfluxDB(unittest.TestCase):
                     'fields': {
                         'state': out,
                         'longitude': 1.1,
-                        'latitude': 2.2
+                        'latitude': 2.2,
+                        'battery_level_str': '99%',
+                        'battery_level': 99.0,
+                        'temperature_str': '20c',
+                        'temperature': 20.0,
+                        'last_seen_str': 'Last seen 23 minutes ago'
                     },
                 }]
 
@@ -151,7 +159,12 @@ class TestInfluxDB(unittest.TestCase):
                     'fields': {
                         'value': out,
                         'longitude': 1.1,
-                        'latitude': 2.2
+                        'latitude': 2.2,
+                        'battery_level_str': '99%',
+                        'battery_level': 99.0,
+                        'temperature_str': '20c',
+                        'temperature': 20.0,
+                        'last_seen_str': 'Last seen 23 minutes ago'
                     },
                 }]
             self.handler_method(event)

@@ -539,6 +539,9 @@ pyenvisalink==2.1
 # homeassistant.components.sensor.fido
 pyfido==1.0.1
 
+# homeassistant.components.climate.flexit
+pyflexit==0.3
+
 # homeassistant.components.ifttt
 pyfttt==0.3
 
@@ -700,7 +703,7 @@ python-nmap==0.6.1
 python-pushover==0.2
 
 # homeassistant.components.sensor.ripple
-python-ripple-api==0.0.1
+python-ripple-api==0.0.2
 
 # homeassistant.components.media_player.roku
 python-roku==3.1.3

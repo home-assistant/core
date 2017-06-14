@@ -13,7 +13,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-ripple-api==0.0.1']
+REQUIREMENTS = ['python-ripple-api==0.0.2']
 
 CONF_ADDRESS = 'address'
 CONF_ATTRIBUTION = "Data provided by ripple.com"
