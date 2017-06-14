@@ -11,6 +11,8 @@ import os
 
 import voluptuous as vol
 
+from typing import List, Iterable
+
 from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
@@ -151,6 +153,15 @@ def async_setup(hass, config):
     return True
 
 
+def delay_generator(repeat: List[int]) -> Iterable[timedelta]:
+    """Generator of timedeltas for getting next notify delay."""
+    for val in repeat:
+        last_val = timedelta(minutes=val)
+        yield last_val
+    while 1:
+        yield last_val
+
+
 class Alert(ToggleEntity):
     """Representation of an alert."""
 
@@ -163,9 +174,7 @@ class Alert(ToggleEntity):
         self._skip_first = skip_first
         self._notifiers = notifiers
         self._can_ack = can_ack
-
-        self._delay = [timedelta(minutes=val) for val in repeat]
-        self._next_delay = 0
+        self._repeat = repeat
 
         self._firing = False
         self._ack = False
@@ -214,7 +223,7 @@ class Alert(ToggleEntity):
         _LOGGER.debug("Beginning Alert: %s", self._name)
         self._ack = False
         self._firing = True
-        self._next_delay = 0
+        self._delay = delay_generator(self._repeat)
 
         if not self._skip_first:
             yield from self._notify()
@@ -235,11 +244,10 @@ class Alert(ToggleEntity):
     @asyncio.coroutine
     def _schedule_notify(self):
         """Schedule a notification."""
-        delay = self._delay[self._next_delay]
+        delay = next(self._delay)
         next_msg = datetime.now() + delay
         self._cancel = \
             event.async_track_point_in_time(self.hass, self._notify, next_msg)
-        self._next_delay = min(self._next_delay + 1, len(self._delay) - 1)
 
     @asyncio.coroutine
     def _notify(self, *args):
