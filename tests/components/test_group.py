@@ -391,8 +391,8 @@ def test_service_group_services(hass):
             'group': {}
         })
 
-    assert hass.has_service('group', group.SERVICE_SET)
-    assert hass.has_service('group', group.SERVICE_REMOVE)
+    assert hass.services.has_service('group', group.SERVICE_SET)
+    assert hass.services.has_service('group', group.SERVICE_REMOVE)
 
 
 @asyncio.coroutine
@@ -408,9 +408,7 @@ def test_service_group_set_group_remove_group(hass):
 
     group_state = hass.states.get('group.user_test_group')
     assert group_state
-    assert not group_state.attributes[group.ATTR_VIEW]
     assert group_state.attributes[group.ATTR_AUTO]
-    assert not group_state.attributes['hidden']
     assert group_state.attributes[group.ATTR_NAME] == "Test"
 
     group.async_set_group(hass, 'user_test_group', view=True, visible=False)
