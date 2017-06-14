@@ -13,6 +13,7 @@ from homeassistant.components.fan import (
     ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.loader import get_component
 import homeassistant.util as util
 
 _CONFIGURING = {}
@@ -27,6 +28,78 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 SUPPORT_INSTEON_LOCAL = SUPPORT_SET_SPEED
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Insteon local fan platform."""
+    insteonhub = hass.data['insteon_local']
+
+    conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
+    if len(conf_fans):
+        for device_id in conf_fans:
+            setup_fan(device_id, conf_fans[device_id], insteonhub, hass,
+                      add_devices)
+
+    else:
+        linked = insteonhub.get_linked()
+
+        for device_id in linked:
+            if (linked[device_id]['cat_type'] == 'dimmer' and
+                    linked[device_id]['sku'] == '2475F' and
+                    device_id not in conf_fans):
+                request_configuration(device_id,
+                                      insteonhub,
+                                      linked[device_id]['model_name'] + ' ' +
+                                      linked[device_id]['sku'],
+                                      hass, add_devices)
+
+
+def request_configuration(device_id, insteonhub, model, hass,
+                          add_devices_callback):
+    """Request configuration steps from the user."""
+    configurator = get_component('configurator')
+
+    # We got an error if this method is called while we are configuring
+    if device_id in _CONFIGURING:
+        configurator.notify_errors(
+            _CONFIGURING[device_id], 'Failed to register, please try again.')
+
+        return
+
+    def insteon_fan_config_callback(data):
+        """The actions to do when our configuration callback is called."""
+        setup_fan(device_id, data.get('name'), insteonhub, hass,
+                  add_devices_callback)
+
+    _CONFIGURING[device_id] = configurator.request_config(
+        hass, 'Insteon  ' + model + ' addr: ' + device_id,
+        insteon_fan_config_callback,
+        description=('Enter a name for ' + model + ' Fan addr: ' + device_id),
+        entity_picture='/static/images/config_insteon.png',
+        submit_caption='Confirm',
+        fields=[{'id': 'name', 'name': 'Name', 'type': ''}]
+    )
+
+
+def setup_fan(device_id, name, insteonhub, hass, add_devices_callback):
+    """Set up the fan."""
+    if device_id in _CONFIGURING:
+        request_id = _CONFIGURING.pop(device_id)
+        configurator = get_component('configurator')
+        configurator.request_done(request_id)
+        _LOGGER.info("Device configuration done!")
+
+    conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
+    if device_id not in conf_fans:
+        conf_fans[device_id] = name
+
+    if not config_from_file(
+            hass.config.path(INSTEON_LOCAL_FANS_CONF),
+            conf_fans):
+        _LOGGER.error("Failed to save configuration file")
+
+    device = insteonhub.fan(device_id)
+    add_devices_callback([InsteonLocalFanDevice(device, name)])
 
 
 def config_from_file(filename, config=None):
@@ -54,21 +127,13 @@ def config_from_file(filename, config=None):
             return {}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Insteon local fan platform."""
-    insteonhub = hass.data['insteon_local']
-
-    conf_fans = config_from_file(hass.config.path(INSTEON_LOCAL_FANS_CONF))
-    for device_id in conf_fans:
-        add_devices(InsteonLocalFanDevice(insteonhub.fan(device_id)))
-
-
 class InsteonLocalFanDevice(FanEntity):
     """An abstract Class for an Insteon node."""
 
-    def __init__(self, node):
+    def __init__(self, node, name):
         """Initialize the device."""
         self.node = node
+        self.node.deviceName = name
         self._speed = SPEED_OFF
 
     @property
