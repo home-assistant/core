@@ -15,29 +15,31 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 
-# Unifi package doesn't list urllib3 as a requirement
-REQUIREMENTS = ['pyunifi==2.0']
+REQUIREMENTS = ['pyunifi==2.12']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
+
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default='localhost'): cv.string,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SITE_ID, default='default'): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PORT, default=8443): cv.port,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
 })
 
 
 def get_scanner(hass, config):
-    """Setup Unifi device_tracker."""
+    """Set up the Unifi device_tracker."""
     from pyunifi.controller import Controller
 
     host = config[DOMAIN].get(CONF_HOST)
@@ -52,7 +54,7 @@ def get_scanner(hass, config):
         ctrl = Controller(host, username, password, port, version='v4',
                           site_id=site_id, ssl_verify=verify_ssl)
     except urllib.error.HTTPError as ex:
-        _LOGGER.error('Failed to connect to Unifi: %s', ex)
+        _LOGGER.error("Failed to connect to Unifi: %s", ex)
         persistent_notification.create(
             hass, 'Failed to connect to Unifi. '
             'Error: {}<br />'
@@ -78,7 +80,7 @@ class UnifiScanner(DeviceScanner):
         try:
             clients = self._controller.get_clients()
         except urllib.error.HTTPError as ex:
-            _LOGGER.error('Failed to scan clients: %s', ex)
+            _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 
         self._clients = {client['mac']: client for client in clients}
@@ -96,5 +98,5 @@ class UnifiScanner(DeviceScanner):
         """
         client = self._clients.get(mac, {})
         name = client.get('name') or client.get('hostname')
-        _LOGGER.debug('Device %s name %s', mac, name)
+        _LOGGER.debug("Device %s name %s", mac, name)
         return name

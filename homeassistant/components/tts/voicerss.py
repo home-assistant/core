@@ -16,7 +16,6 @@ from homeassistant.components.tts import Provider, PLATFORM_SCHEMA, CONF_LANG
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-
 _LOGGER = logging.getLogger(__name__)
 
 VOICERSS_API_URL = "https://api.voicerss.org/"
@@ -106,12 +105,12 @@ class VoiceRSSProvider(Provider):
 
     @property
     def default_language(self):
-        """Default language."""
+        """Return the default language."""
         return self._lang
 
     @property
     def supported_languages(self):
-        """List of supported languages."""
+        """Return list of supported languages."""
         return SUPPORT_LANGUAGES
 
     @asyncio.coroutine

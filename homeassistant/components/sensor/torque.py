@@ -48,7 +48,7 @@ def convert_pid(value):
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Torque platform."""
+    """Set up the Torque platform."""
     vehicle = config.get(CONF_NAME)
     email = config.get(CONF_EMAIL)
     sensors = {}
@@ -75,7 +75,7 @@ class TorqueReceiveDataView(HomeAssistantView):
     def get(self, request):
         """Handle Torque data request."""
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         if self.email is not None and self.email != data[SENSOR_EMAIL_FIELD]:
             return

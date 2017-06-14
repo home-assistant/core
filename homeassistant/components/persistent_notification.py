@@ -17,18 +17,25 @@ from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.util import slugify
 from homeassistant.config import load_yaml_config_file
 
+ATTR_MESSAGE = 'message'
+ATTR_NOTIFICATION_ID = 'notification_id'
+ATTR_TITLE = 'title'
+
 DOMAIN = 'persistent_notification'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SERVICE_CREATE = 'create'
-ATTR_TITLE = 'title'
-ATTR_MESSAGE = 'message'
-ATTR_NOTIFICATION_ID = 'notification_id'
+SERVICE_DISMISS = 'dismiss'
 
 SCHEMA_SERVICE_CREATE = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
     vol.Optional(ATTR_TITLE): cv.template,
     vol.Optional(ATTR_NOTIFICATION_ID): cv.string,
+})
+
+SCHEMA_SERVICE_DISMISS = vol.Schema({
+    vol.Required(ATTR_NOTIFICATION_ID): cv.string,
 })
 
 
@@ -39,6 +46,11 @@ _LOGGER = logging.getLogger(__name__)
 def create(hass, message, title=None, notification_id=None):
     """Generate a notification."""
     hass.add_job(async_create, hass, message, title, notification_id)
+
+
+def dismiss(hass, notification_id):
+    """Remove a notification."""
+    hass.add_job(async_dismiss, hass, notification_id)
 
 
 @callback
@@ -55,9 +67,17 @@ def async_create(hass, message, title=None, notification_id=None):
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
 
 
+@callback
+def async_dismiss(hass, notification_id):
+    """Remove a notification."""
+    data = {ATTR_NOTIFICATION_ID: notification_id}
+
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the persistent notification component."""
+    """Set up the persistent notification component."""
     @callback
     def create_service(call):
         """Handle a create notification service call."""
@@ -90,12 +110,25 @@ def async_setup(hass, config):
 
         hass.states.async_set(entity_id, message, attr)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    @callback
+    def dismiss_service(call):
+        """Handle the dismiss notification service call."""
+        notification_id = call.data.get(ATTR_NOTIFICATION_ID)
+        entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
+
+        hass.states.async_remove(entity_id)
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml')
     )
+
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
                                  descriptions[DOMAIN][SERVICE_CREATE],
                                  SCHEMA_SERVICE_CREATE)
+
+    hass.services.async_register(DOMAIN, SERVICE_DISMISS, dismiss_service,
+                                 descriptions[DOMAIN][SERVICE_DISMISS],
+                                 SCHEMA_SERVICE_DISMISS)
 
     return True

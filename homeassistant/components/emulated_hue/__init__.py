@@ -53,11 +53,9 @@ DEFAULT_TYPE = TYPE_GOOGLE
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST_IP): cv.string,
-        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
         vol.Optional(CONF_ADVERTISE_IP): cv.string,
-        vol.Optional(CONF_ADVERTISE_PORT):
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=65535)),
+        vol.Optional(CONF_ADVERTISE_PORT): cv.port,
         vol.Optional(CONF_UPNP_BIND_MULTICAST): cv.boolean,
         vol.Optional(CONF_OFF_MAPS_TO_ON_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
@@ -111,8 +109,8 @@ def setup(hass, yaml_config):
         """Start the emulated hue bridge."""
         upnp_listener.start()
         yield from server.start()
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   stop_emulated_hue_bridge)
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
@@ -120,7 +118,7 @@ def setup(hass, yaml_config):
 
 
 class Config(object):
-    """Holds configuration variables for the emulated hue bridge."""
+    """Hold configuration variables for the emulated hue bridge."""
 
     def __init__(self, hass, conf):
         """Initialize the instance."""
@@ -130,8 +128,8 @@ class Config(object):
         self.cached_states = {}
 
         if self.type == TYPE_ALEXA:
-            _LOGGER.warning('Alexa type is deprecated and will be removed in a'
-                            ' future version')
+            _LOGGER.warning("Alexa type is deprecated and will be removed in a"
+                            "future version")
 
         # Get the IP address that will be passed to the Echo during discovery
         self.host_ip_addr = conf.get(CONF_HOST_IP)
@@ -150,8 +148,8 @@ class Config(object):
                 self.listen_port)
 
         if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning('When targetting Google Home, listening port has '
-                            'to be port 80')
+            _LOGGER.warning("When targetting Google Home, listening port has "
+                            "to be port 80")
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)
@@ -236,7 +234,7 @@ class Config(object):
         return is_default_exposed or explicit_expose
 
     def _load_numbers_json(self):
-        """Helper method to load numbers json."""
+        """Set up helper method to load numbers json."""
         try:
             with open(self.hass.config.path(NUMBERS_FILE),
                       encoding='utf-8') as fil:
@@ -245,15 +243,15 @@ class Config(object):
             # OSError if file not found or unaccessible/no permissions
             # ValueError if could not parse JSON
             if not isinstance(err, FileNotFoundError):
-                _LOGGER.warning('Failed to open %s: %s', NUMBERS_FILE, err)
+                _LOGGER.warning("Failed to open %s: %s", NUMBERS_FILE, err)
             return {}
 
     def _save_numbers_json(self):
-        """Helper method to save numbers json."""
+        """Set up helper method to save numbers json."""
         try:
             with open(self.hass.config.path(NUMBERS_FILE), 'w',
                       encoding='utf-8') as fil:
                 fil.write(json.dumps(self.numbers))
         except OSError as err:
             # OSError if file write permissions
-            _LOGGER.warning('Failed to write %s: %s', NUMBERS_FILE, err)
+            _LOGGER.warning("Failed to write %s: %s", NUMBERS_FILE, err)

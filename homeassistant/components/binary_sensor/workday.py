@@ -11,10 +11,9 @@ import datetime
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, STATE_UNKNOWN, CONF_NAME, WEEKDAYS)
+from homeassistant.const import CONF_NAME, WEEKDAYS
 import homeassistant.util.dt as dt_util
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,15 +65,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     obj_holidays = getattr(holidays, country)(years=year)
 
     if province:
-        if province not in obj_holidays.PROVINCES and \
-                        province not in obj_holidays.STATES:
+        # 'state' and 'prov' are not interchangeable, so need to make
+        # sure we use the right one
+        if (hasattr(obj_holidays, "PROVINCES") and
+                province in obj_holidays.PROVINCES):
+            obj_holidays = getattr(holidays, country)(prov=province,
+                                                      years=year)
+        elif (hasattr(obj_holidays, "STATES") and
+              province in obj_holidays.STATES):
+            obj_holidays = getattr(holidays, country)(state=province,
+                                                      years=year)
+        else:
             _LOGGER.error("There is no province/state %s in country %s",
                           province, country)
             return False
-        else:
-            year = datetime.datetime.now().year
-            obj_holidays = getattr(holidays, country)(prov=province,
-                                                      years=year)
 
     _LOGGER.debug("Found the following holidays for your configuration:")
     for date, name in sorted(obj_holidays.items()):
@@ -92,7 +96,7 @@ def day_to_string(day):
         return None
 
 
-class IsWorkdaySensor(Entity):
+class IsWorkdaySensor(BinarySensorDevice):
     """Implementation of a Workday sensor."""
 
     def __init__(self, obj_holidays, workdays, excludes, name):
@@ -101,7 +105,7 @@ class IsWorkdaySensor(Entity):
         self._obj_holidays = obj_holidays
         self._workdays = workdays
         self._excludes = excludes
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def name(self):
@@ -109,7 +113,7 @@ class IsWorkdaySensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def is_on(self):
         """Return the state of the device."""
         return self._state
 
@@ -135,14 +139,14 @@ class IsWorkdaySensor(Entity):
     def async_update(self):
         """Get date and look whether it is a holiday."""
         # Default is no workday
-        self._state = STATE_OFF
+        self._state = False
 
         # Get iso day of the week (1 = Monday, 7 = Sunday)
         day = datetime.datetime.today().isoweekday() - 1
         day_of_week = day_to_string(day)
 
         if self.is_include(day_of_week, dt_util.now()):
-            self._state = STATE_ON
+            self._state = True
 
         if self.is_exclude(day_of_week, dt_util.now()):
-            self._state = STATE_OFF
+            self._state = False

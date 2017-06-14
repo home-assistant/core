@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Transmission switch."""
+    """Set up the Transmission switch."""
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
 

@@ -4,187 +4,85 @@ Telegram platform for notify component.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.telegram/
 """
-import io
 import logging
-import urllib
 
-import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
-    ATTR_TITLE, ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
-from homeassistant.const import (
-    CONF_API_KEY, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
+    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, ATTR_TARGET,
+    PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import ATTR_LOCATION
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
+DOMAIN = 'telegram_bot'
+DEPENDENCIES = [DOMAIN]
 
-ATTR_PHOTO = 'photo'
 ATTR_KEYBOARD = 'keyboard'
+ATTR_INLINE_KEYBOARD = 'inline_keyboard'
+ATTR_PHOTO = 'photo'
 ATTR_DOCUMENT = 'document'
-ATTR_CAPTION = 'caption'
-ATTR_URL = 'url'
-ATTR_FILE = 'file'
-ATTR_USERNAME = 'username'
-ATTR_PASSWORD = 'password'
 
 CONF_CHAT_ID = 'chat_id'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_CHAT_ID): cv.string,
+    vol.Required(CONF_CHAT_ID): vol.Coerce(int),
 })
 
 
 def get_service(hass, config, discovery_info=None):
     """Get the Telegram notification service."""
-    import telegram
-
-    try:
-        chat_id = config.get(CONF_CHAT_ID)
-        api_key = config.get(CONF_API_KEY)
-        bot = telegram.Bot(token=api_key)
-        username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is '%s'", username)
-    except urllib.error.HTTPError:
-        _LOGGER.error("Please check your access token")
-        return None
-
-    return TelegramNotificationService(api_key, chat_id)
-
-
-def load_data(url=None, file=None, username=None, password=None):
-    """Load photo/document into ByteIO/File container from a source."""
-    try:
-        if url is not None:
-            # load photo from url
-            if username is not None and password is not None:
-                req = requests.get(url, auth=(username, password), timeout=15)
-            else:
-                req = requests.get(url, timeout=15)
-            return io.BytesIO(req.content)
-
-        elif file is not None:
-            # load photo from file
-            return open(file, "rb")
-        else:
-            _LOGGER.warning("Can't load photo no photo found in params!")
-
-    except OSError as error:
-        _LOGGER.error("Can't load photo into ByteIO: %s", error)
-
-    return None
+    chat_id = config.get(CONF_CHAT_ID)
+    return TelegramNotificationService(hass, chat_id)
 
 
 class TelegramNotificationService(BaseNotificationService):
     """Implement the notification service for Telegram."""
 
-    def __init__(self, api_key, chat_id):
+    def __init__(self, hass, chat_id):
         """Initialize the service."""
-        import telegram
-
-        self._api_key = api_key
         self._chat_id = chat_id
-        self.bot = telegram.Bot(token=self._api_key)
+        self.hass = hass
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        import telegram
-
-        title = kwargs.get(ATTR_TITLE)
+        service_data = dict(target=kwargs.get(ATTR_TARGET, self._chat_id))
+        if ATTR_TITLE in kwargs:
+            service_data.update({ATTR_TITLE: kwargs.get(ATTR_TITLE)})
+        if message:
+            service_data.update({ATTR_MESSAGE: message})
         data = kwargs.get(ATTR_DATA)
 
-        # exists data for send a photo/location
+        # Get keyboard info
+        if data is not None and ATTR_KEYBOARD in data:
+            keys = data.get(ATTR_KEYBOARD)
+            keys = keys if isinstance(keys, list) else [keys]
+            service_data.update(keyboard=keys)
+        elif data is not None and ATTR_INLINE_KEYBOARD in data:
+            keys = data.get(ATTR_INLINE_KEYBOARD)
+            keys = keys if isinstance(keys, list) else [keys]
+            service_data.update(inline_keyboard=keys)
+
+        # Send a photo, a document or a location
         if data is not None and ATTR_PHOTO in data:
             photos = data.get(ATTR_PHOTO, None)
             photos = photos if isinstance(photos, list) else [photos]
-
             for photo_data in photos:
-                self.send_photo(photo_data)
+                service_data.update(photo_data)
+                self.hass.services.call(
+                    DOMAIN, 'send_photo', service_data=service_data)
             return
         elif data is not None and ATTR_LOCATION in data:
-            return self.send_location(data.get(ATTR_LOCATION))
+            service_data.update(data.get(ATTR_LOCATION))
+            return self.hass.services.call(
+                DOMAIN, 'send_location', service_data=service_data)
         elif data is not None and ATTR_DOCUMENT in data:
-            return self.send_document(data.get(ATTR_DOCUMENT))
-        elif data is not None and ATTR_KEYBOARD in data:
-            keys = data.get(ATTR_KEYBOARD)
-            keys = keys if isinstance(keys, list) else [keys]
-            return self.send_keyboard(message, keys)
+            service_data.update(data.get(ATTR_DOCUMENT))
+            return self.hass.services.call(
+                DOMAIN, 'send_document', service_data=service_data)
 
-        if title:
-            text = '{} {}'.format(title, message)
-        else:
-            text = message
-
-        parse_mode = telegram.parsemode.ParseMode.MARKDOWN
-
-        # send message
-        try:
-            self.bot.sendMessage(chat_id=self._chat_id,
-                                 text=text,
-                                 parse_mode=parse_mode)
-        except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending message")
-
-    def send_keyboard(self, message, keys):
-        """Display keyboard."""
-        import telegram
-
-        keyboard = telegram.ReplyKeyboardMarkup([
-            [key.strip() for key in row.split(",")] for row in keys])
-        try:
-            self.bot.sendMessage(chat_id=self._chat_id, text=message,
-                                 reply_markup=keyboard)
-        except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending message")
-
-    def send_photo(self, data):
-        """Send a photo."""
-        import telegram
-        caption = data.get(ATTR_CAPTION)
-
-        # send photo
-        try:
-            photo = load_data(
-                url=data.get(ATTR_URL),
-                file=data.get(ATTR_FILE),
-                username=data.get(ATTR_USERNAME),
-                password=data.get(ATTR_PASSWORD),
-            )
-            self.bot.sendPhoto(chat_id=self._chat_id,
-                               photo=photo, caption=caption)
-        except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending photo")
-
-    def send_document(self, data):
-        """Send a document."""
-        import telegram
-        caption = data.get(ATTR_CAPTION)
-
-        # send photo
-        try:
-            document = load_data(
-                url=data.get(ATTR_URL),
-                file=data.get(ATTR_FILE),
-                username=data.get(ATTR_USERNAME),
-                password=data.get(ATTR_PASSWORD),
-            )
-            self.bot.sendDocument(chat_id=self._chat_id,
-                                  document=document, caption=caption)
-        except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending document")
-
-    def send_location(self, gps):
-        """Send a location."""
-        import telegram
-        latitude = float(gps.get(ATTR_LATITUDE, 0.0))
-        longitude = float(gps.get(ATTR_LONGITUDE, 0.0))
-
-        # send location
-        try:
-            self.bot.sendLocation(chat_id=self._chat_id,
-                                  latitude=latitude, longitude=longitude)
-        except telegram.error.TelegramError:
-            _LOGGER.exception("Error sending location")
+        # Send message
+        _LOGGER.debug('TELEGRAM NOTIFIER calling %s.send_message with %s',
+                      DOMAIN, service_data)
+        return self.hass.services.call(
+            DOMAIN, 'send_message', service_data=service_data)

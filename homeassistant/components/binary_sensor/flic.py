@@ -1,4 +1,9 @@
-"""Contains functionality to use flic buttons as a binary sensor."""
+"""
+Support to use flic buttons as a binary sensor.
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/binary_sensor.flic/
+"""
 import logging
 import threading
 
@@ -11,39 +16,40 @@ from homeassistant.const import (
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 
-
 REQUIREMENTS = ['https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 3
 
-CLICK_TYPE_SINGLE = "single"
-CLICK_TYPE_DOUBLE = "double"
-CLICK_TYPE_HOLD = "hold"
+CLICK_TYPE_SINGLE = 'single'
+CLICK_TYPE_DOUBLE = 'double'
+CLICK_TYPE_HOLD = 'hold'
 CLICK_TYPES = [CLICK_TYPE_SINGLE, CLICK_TYPE_DOUBLE, CLICK_TYPE_HOLD]
 
-CONF_IGNORED_CLICK_TYPES = "ignored_click_types"
+CONF_IGNORED_CLICK_TYPES = 'ignored_click_types'
 
-EVENT_NAME = "flic_click"
-EVENT_DATA_NAME = "button_name"
-EVENT_DATA_ADDRESS = "button_address"
-EVENT_DATA_TYPE = "click_type"
-EVENT_DATA_QUEUED_TIME = "queued_time"
+DEFAULT_HOST = 'localhost'
+DEFAULT_PORT = 5551
 
-# Validation of the user's configuration
+EVENT_NAME = 'flic_click'
+EVENT_DATA_NAME = 'button_name'
+EVENT_DATA_ADDRESS = 'button_address'
+EVENT_DATA_TYPE = 'click_type'
+EVENT_DATA_QUEUED_TIME = 'queued_time'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST, default='localhost'): cv.string,
-    vol.Optional(CONF_PORT, default=5551): cv.port,
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_DISCOVERY, default=True): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_IGNORED_CLICK_TYPES): vol.All(cv.ensure_list,
-                                                    [vol.In(CLICK_TYPES)])
+    vol.Optional(CONF_IGNORED_CLICK_TYPES):
+        vol.All(cv.ensure_list, [vol.In(CLICK_TYPES)])
 })
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the flic platform."""
+    """Set up the flic platform."""
     import pyflic
 
     # Initialize flic client responsible for
@@ -55,11 +61,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         client = pyflic.FlicClient(host, port)
     except ConnectionRefusedError:
-        _LOGGER.error("Failed to connect to flic server.")
+        _LOGGER.error("Failed to connect to flic server")
         return
 
     def new_button_callback(address):
-        """Setup newly verified button as device in home assistant."""
+        """Set up newly verified button as device in Home Assistant."""
         setup_button(hass, config, add_entities, client, address)
 
     client.on_new_verified_button = new_button_callback
@@ -74,7 +80,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def get_info_callback(items):
         """Add entities for already verified buttons."""
-        addresses = items["bd_addr_of_verified_buttons"] or []
+        addresses = items['bd_addr_of_verified_buttons'] or []
         for address in addresses:
             setup_button(hass, config, add_entities, client, address)
 
@@ -83,7 +89,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 
 def start_scanning(config, add_entities, client):
-    """Start a new flic client for scanning & connceting to new buttons."""
+    """Start a new flic client for scanning and connecting to new buttons."""
     import pyflic
 
     scan_wizard = pyflic.ScanWizard()
@@ -91,10 +97,10 @@ def start_scanning(config, add_entities, client):
     def scan_completed_callback(scan_wizard, result, address, name):
         """Restart scan wizard to constantly check for new buttons."""
         if result == pyflic.ScanWizardResult.WizardSuccess:
-            _LOGGER.info("Found new button (%s)", address)
+            _LOGGER.info("Found new button %s", address)
         elif result != pyflic.ScanWizardResult.WizardFailedTimeout:
-            _LOGGER.warning("Failed to connect to button (%s). Reason: %s",
-                            address, result)
+            _LOGGER.warning(
+                "Failed to connect to button %s. Reason: %s", address, result)
 
         # Restart scan wizard
         start_scanning(config, add_entities, client)
@@ -104,11 +110,11 @@ def start_scanning(config, add_entities, client):
 
 
 def setup_button(hass, config, add_entities, client, address):
-    """Setup single button device."""
+    """Set up a single button device."""
     timeout = config.get(CONF_TIMEOUT)
     ignored_click_types = config.get(CONF_IGNORED_CLICK_TYPES)
     button = FlicButton(hass, client, address, timeout, ignored_click_types)
-    _LOGGER.info("Connected to button (%s)", address)
+    _LOGGER.info("Connected to button %s", address)
 
     add_entities([button])
 
@@ -161,7 +167,7 @@ class FlicButton(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return "flic_%s" % self.address.replace(":", "")
+        return 'flic_{}'.format(self.address.replace(':', ''))
 
     @property
     def address(self):
@@ -181,21 +187,21 @@ class FlicButton(BinarySensorDevice):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes."""
-        return {"address": self.address}
+        return {'address': self.address}
 
     def _queued_event_check(self, click_type, time_diff):
         """Generate a log message and returns true if timeout exceeded."""
         time_string = "{:d} {}".format(
-            time_diff, "second" if time_diff == 1 else "seconds")
+            time_diff, 'second' if time_diff == 1 else 'seconds')
 
         if time_diff > self._timeout:
             _LOGGER.warning(
-                "Queued %s dropped for %s. Time in queue was %s.",
+                "Queued %s dropped for %s. Time in queue was %s",
                 click_type, self.address, time_string)
             return True
         else:
             _LOGGER.info(
-                "Queued %s allowed for %s. Time in queue was %s.",
+                "Queued %s allowed for %s. Time in queue was %s",
                 click_type, self.address, time_string)
             return False
 
@@ -227,8 +233,8 @@ class FlicButton(BinarySensorDevice):
             EVENT_DATA_TYPE: hass_click_type
         })
 
-    def _connection_status_changed(self, channel,
-                                   connection_status, disconnect_reason):
+    def _connection_status_changed(
+            self, channel, connection_status, disconnect_reason):
         """Remove device, if button disconnects."""
         import pyflic
 

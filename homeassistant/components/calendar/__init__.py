@@ -7,12 +7,10 @@ https://home-assistant.io/components/calendar/
 import asyncio
 import logging
 from datetime import timedelta
-
 import re
 
-from homeassistant.components.google import (CONF_OFFSET,
-                                             CONF_DEVICE_ID,
-                                             CONF_NAME)
+from homeassistant.components.google import (
+    CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.helpers.entity import Entity, generate_entity_id
@@ -22,16 +20,18 @@ from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=60)
 DOMAIN = 'calendar'
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
+
+SCAN_INTERVAL = timedelta(seconds=60)
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
-        logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
+        _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
     yield from component.async_setup(config)
     return True
@@ -55,9 +55,8 @@ class CalendarEventDevice(Entity):
         self._name = data.get(CONF_NAME)
         self.dev_id = data.get(CONF_DEVICE_ID)
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
-        self.entity_id = generate_entity_id(ENTITY_ID_FORMAT,
-                                            self.dev_id,
-                                            hass=hass)
+        self.entity_id = generate_entity_id(
+            ENTITY_ID_FORMAT, self.dev_id, hass=hass)
 
         self._cal_data = {
             'all_day': False,
@@ -87,7 +86,7 @@ class CalendarEventDevice(Entity):
 
     @property
     def device_state_attributes(self):
-        """State Attributes for HA."""
+        """Return the device state attributes."""
         start = self._cal_data.get('start', None)
         end = self._cal_data.get('end', None)
         start = start.strftime(DATE_STR_FORMAT) if start is not None else None

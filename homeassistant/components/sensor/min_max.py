@@ -34,8 +34,6 @@ ATTR_TO_PROPERTY = [
 CONF_ENTITY_IDS = 'entity_ids'
 CONF_ROUND_DIGITS = 'round_digits'
 
-DEFAULT_NAME = 'Min/Max/Avg Sensor'
-
 ICON = 'mdi:calculator'
 
 SENSOR_TYPES = {
@@ -47,7 +45,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TYPE, default=SENSOR_TYPES[ATTR_MAX_VALUE]):
         vol.All(cv.string, vol.In(SENSOR_TYPES.values())),
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_ENTITY_IDS): cv.entity_ids,
     vol.Optional(CONF_ROUND_DIGITS, default=2): vol.Coerce(int),
 })
@@ -67,6 +65,39 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
+def calc_min(sensor_values):
+    """Calculate min value, honoring unknown states."""
+    val = STATE_UNKNOWN
+    for sval in sensor_values:
+        if sval != STATE_UNKNOWN:
+            if val == STATE_UNKNOWN or val > sval:
+                val = sval
+    return val
+
+
+def calc_max(sensor_values):
+    """Calculate max value, honoring unknown states."""
+    val = STATE_UNKNOWN
+    for sval in sensor_values:
+        if sval != STATE_UNKNOWN:
+            if val == STATE_UNKNOWN or val < sval:
+                val = sval
+    return val
+
+
+def calc_mean(sensor_values, round_digits):
+    """Calculate mean value, honoring unknown states."""
+    val = 0
+    count = 0
+    for sval in sensor_values:
+        if sval != STATE_UNKNOWN:
+            val += sval
+            count += 1
+    if count == 0:
+        return STATE_UNKNOWN
+    return round(val/count, round_digits)
+
+
 class MinMaxSensor(Entity):
     """Representation of a min/max sensor."""
 
@@ -76,10 +107,15 @@ class MinMaxSensor(Entity):
         self._entity_ids = entity_ids
         self._sensor_type = sensor_type
         self._round_digits = round_digits
-        self._name = '{} {}'.format(
-            name, next(v for k, v in SENSOR_TYPES.items()
-                       if self._sensor_type == v))
+
+        if name:
+            self._name = name
+        else:
+            self._name = '{} sensor'.format(
+                next(v for k, v in SENSOR_TYPES.items()
+                     if self._sensor_type == v)).capitalize()
         self._unit_of_measurement = None
+        self._unit_of_measurement_mismatch = False
         self.min_value = self.max_value = self.mean = STATE_UNKNOWN
         self.count_sensors = len(self._entity_ids)
         self.states = {}
@@ -87,8 +123,10 @@ class MinMaxSensor(Entity):
         @callback
         # pylint: disable=invalid-name
         def async_min_max_sensor_state_listener(entity, old_state, new_state):
-            """Called when the sensor changes state."""
+            """Handle the sensor state changes."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:
+                self.states[entity] = STATE_UNKNOWN
+                hass.async_add_job(self.async_update_ha_state, True)
                 return
 
             if self._unit_of_measurement is None:
@@ -97,8 +135,11 @@ class MinMaxSensor(Entity):
 
             if self._unit_of_measurement != new_state.attributes.get(
                     ATTR_UNIT_OF_MEASUREMENT):
-                _LOGGER.warning("Units of measurement do not match")
-                return
+                _LOGGER.warning(
+                    "Units of measurement do not match for entity %s",
+                    self.entity_id)
+                self._unit_of_measurement_mismatch = True
+
             try:
                 self.states[entity] = float(new_state.state)
             except ValueError:
@@ -118,12 +159,16 @@ class MinMaxSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
+        if self._unit_of_measurement_mismatch:
+            return STATE_UNKNOWN
         return getattr(self, next(
             k for k, v in SENSOR_TYPES.items() if self._sensor_type == v))
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
+        if self._unit_of_measurement_mismatch:
+            return "ERR"
         return self._unit_of_measurement
 
     @property
@@ -150,10 +195,6 @@ class MinMaxSensor(Entity):
         """Get the latest data and updates the states."""
         sensor_values = [self.states[k] for k in self._entity_ids
                          if k in self.states]
-        if len(sensor_values) == self.count_sensors:
-            self.min_value = min(sensor_values)
-            self.max_value = max(sensor_values)
-            self.mean = round(sum(sensor_values) / self.count_sensors,
-                              self._round_digits)
-        else:
-            self.min_value = self.max_value = self.mean = STATE_UNKNOWN
+        self.min_value = calc_min(sensor_values)
+        self.max_value = calc_max(sensor_values)
+        self.mean = calc_mean(sensor_values, self._round_digits)

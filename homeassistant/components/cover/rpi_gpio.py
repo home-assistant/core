@@ -1,5 +1,5 @@
 """
-Support for building a Raspberry Pi cover in HA.
+Support for controlling a Raspberry Pi cover.
 
 Instructions for building the controller can be found here
 https://github.com/andrewshilliday/garage-door-controller
@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the RPi cover platform."""
+    """Set up the RPi cover platform."""
     relay_time = config.get(CONF_RELAY_TIME)
     state_pull_mode = config.get(CONF_STATE_PULL_MODE)
     covers = []

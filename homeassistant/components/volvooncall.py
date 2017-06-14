@@ -26,6 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_UPDATE_INTERVAL = 'update_interval'
 MIN_UPDATE_INTERVAL = timedelta(minutes=1)
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
+CONF_SERVICE_URL = 'service_url'
 
 RESOURCES = {'position': ('device_tracker',),
              'lock': ('lock', 'Lock'),
@@ -51,16 +52,19 @@ CONFIG_SCHEMA = vol.Schema({
             {cv.slug: cv.string}),
         vol.Optional(CONF_RESOURCES): vol.All(
             cv.ensure_list, [vol.In(RESOURCES)]),
+        vol.Optional(CONF_SERVICE_URL): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """Setup the VOC component."""
+    """Set up the Volvo On Call component."""
+    from volvooncall import DEFAULT_SERVICE_URL
     from volvooncall import Connection
     connection = Connection(
         config[DOMAIN].get(CONF_USERNAME),
-        config[DOMAIN].get(CONF_PASSWORD))
+        config[DOMAIN].get(CONF_PASSWORD),
+        config[DOMAIN].get(CONF_SERVICE_URL, DEFAULT_SERVICE_URL))
 
     interval = config[DOMAIN].get(CONF_UPDATE_INTERVAL)
 
@@ -79,14 +83,11 @@ def setup(hass, config):
         for attr, (component, *_) in RESOURCES.items():
             if (getattr(vehicle, attr + '_supported', True) and
                     attr in config[DOMAIN].get(CONF_RESOURCES, [attr])):
-                discovery.load_platform(hass,
-                                        component,
-                                        DOMAIN,
-                                        (vehicle.vin, attr),
-                                        config)
+                discovery.load_platform(
+                    hass, component, DOMAIN, (vehicle.vin, attr), config)
 
     def update_vehicle(vehicle):
-        """Updated information on vehicle received."""
+        """Revieve updated information on vehicle."""
         state.vehicles[vehicle.vin] = vehicle
         if vehicle.vin not in state.entities:
             discover_vehicle(vehicle)
@@ -101,7 +102,7 @@ def setup(hass, config):
         """Update status from the online service."""
         try:
             if not connection.update():
-                _LOGGER.warning('Could not query server')
+                _LOGGER.warning("Could not query server")
                 return False
 
             for vehicle in connection.vehicles:
@@ -111,7 +112,7 @@ def setup(hass, config):
         finally:
             track_point_in_utc_time(hass, update, utcnow() + interval)
 
-    _LOGGER.info('Logging in to service')
+    _LOGGER.info("Logging in to service")
     return update(utcnow())
 
 
@@ -154,7 +155,7 @@ class VolvoEntity(Entity):
 
     @property
     def should_poll(self):
-        """Polling is not needed."""
+        """Return the polling state."""
         return False
 
     @property

@@ -27,7 +27,7 @@ SUPPORT_DEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT |
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the demo light platform."""
+    """Set up the demo light platform."""
     add_devices_callback([
         DemoLight("Bed Light", False, True, effect_list=LIGHT_EFFECT_LIST,
                   effect=LIGHT_EFFECT_LIST[0]),

@@ -4,13 +4,17 @@ Component for interacting with a Lutron RadioRA 2 system.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/lutron/
 """
+import asyncio
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['https://github.com/thecynic/pylutron/archive/v0.1.0.zip#'
-                'pylutron==0.1.0']
+REQUIREMENTS = ['pylutron==0.1.0']
 
 DOMAIN = 'lutron'
 
@@ -19,9 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 LUTRON_CONTROLLER = 'lutron_controller'
 LUTRON_DEVICES = 'lutron_devices'
 
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_USERNAME): cv.string,
+    })
+}, extra=vol.ALLOW_EXTRA)
+
 
 def setup(hass, base_config):
-    """Setup the Lutron component."""
+    """Set up the Lutron component."""
     from pylutron import Lutron
 
     hass.data[LUTRON_CONTROLLER] = None
@@ -29,13 +41,11 @@ def setup(hass, base_config):
 
     config = base_config.get(DOMAIN)
     hass.data[LUTRON_CONTROLLER] = Lutron(
-        config['lutron_host'],
-        config['lutron_user'],
-        config['lutron_password']
-    )
+        config[CONF_HOST], config[CONF_USERNAME], config[CONF_USERNAME])
+
     hass.data[LUTRON_CONTROLLER].load_xml_db()
     hass.data[LUTRON_CONTROLLER].connect()
-    _LOGGER.info("Connected to Main Repeater at %s", config['lutron_host'])
+    _LOGGER.info("Connected to main repeater at %s", config[CONF_HOST])
 
     # Sort our devices into types
     for area in hass.data[LUTRON_CONTROLLER].areas:
@@ -50,25 +60,28 @@ def setup(hass, base_config):
 class LutronDevice(Entity):
     """Representation of a Lutron device entity."""
 
-    def __init__(self, hass, area_name, lutron_device, controller):
+    def __init__(self, area_name, lutron_device, controller):
         """Initialize the device."""
         self._lutron_device = lutron_device
         self._controller = controller
         self._area_name = area_name
 
-        self.hass = hass
-        self.object_id = '{} {}'.format(area_name, lutron_device.name)
-
-        self._controller.subscribe(self._lutron_device, self._update_callback)
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.async_add_job(
+            self._controller.subscribe, self._lutron_device,
+            self._update_callback
+        )
 
     def _update_callback(self, _device):
-        """Callback invoked by pylutron when the device state changes."""
+        """Run when invoked by pylutron when the device state changes."""
         self.schedule_update_ha_state()
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._lutron_device.name
+        return "{} {}".format(self._area_name, self._lutron_device.name)
 
     @property
     def should_poll(self):

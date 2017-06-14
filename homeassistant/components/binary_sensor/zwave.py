@@ -20,7 +20,7 @@ DEPENDENCIES = []
 
 
 def get_device(values, **kwargs):
-    """Create zwave entity device."""
+    """Create Z-Wave entity device."""
     device_mapping = workaround.get_device_mapping(values.primary)
     if device_mapping == workaround.WORKAROUND_NO_OFF_EVENT:
         # Default the multiplier to 4
@@ -45,12 +45,12 @@ class ZWaveBinarySensor(BinarySensorDevice, zwave.ZWaveDeviceEntity):
         self._state = self.values.primary.data
 
     def update_properties(self):
-        """Callback on data changes for node values."""
+        """Handle data changes for node values."""
         self._state = self.values.primary.data
 
     @property
     def is_on(self):
-        """Return True if the binary sensor is on."""
+        """Return true if the binary sensor is on."""
         return self._state
 
     @property
@@ -69,7 +69,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
         self.invalidate_after = None
 
     def update_properties(self):
-        """Called when a value for this entity's node has changed."""
+        """Handle value changes for this entity's node."""
         self._state = self.values.primary.data
         # only allow this value to be true for re_arm secs
         if not self.hass:
@@ -83,7 +83,7 @@ class ZWaveTriggerSensor(ZWaveBinarySensor):
 
     @property
     def is_on(self):
-        """Return True if movement has happened within the rearm time."""
+        """Return true if movement has happened within the rearm time."""
         return self._state and \
             (self.invalidate_after is None or
              self.invalidate_after > dt_util.utcnow())

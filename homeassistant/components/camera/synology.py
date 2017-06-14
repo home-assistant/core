@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a Synology IP Camera."""
+    """Set up a Synology IP Camera."""
     verify_ssl = config.get(CONF_VERIFY_SSL)
     timeout = config.get(CONF_TIMEOUT)
     websession_init = async_get_clientsession(hass, verify_ssl)
@@ -140,16 +140,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             snapshot_path = camera['snapshot_path']
 
             device = SynologyCamera(
-                hass,
-                websession,
-                config,
-                camera_id,
-                camera['name'],
-                snapshot_path,
-                streaming_path,
-                camera_path,
-                auth_path,
-                timeout
+                hass, websession, config, camera_id, camera['name'],
+                snapshot_path, streaming_path, camera_path, auth_path, timeout
             )
             devices.append(device)
 

@@ -7,9 +7,6 @@ from typing import Tuple
 
 _LOGGER = logging.getLogger(__name__)
 
-HASS_COLOR_MAX = 500  # mireds (inverted)
-HASS_COLOR_MIN = 154
-
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
@@ -183,7 +180,7 @@ def color_name_to_rgb(color_name):
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
-# pylint: disable=invalid-name
+# pylint: disable=invalid-name, invalid-sequence-index
 def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
     if iR + iG + iB == 0:
@@ -219,6 +216,7 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
 
 # Converted to Python from Obj-C, original source from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
+# pylint: disable=invalid-sequence-index
 def color_xy_brightness_to_RGB(vX: float, vY: float,
                                ibrightness: int) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
@@ -259,18 +257,28 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     return (ir, ig, ib)
 
 
+# pylint: disable=invalid-sequence-index
 def color_RGB_to_hsv(iR: int, iG: int, iB: int) -> Tuple[int, int, int]:
     """Convert an rgb color to its hsv representation."""
     fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
     return (int(fHSV[0]*65536), int(fHSV[1]*255), int(fHSV[2]*255))
 
 
-def color_xy_brightness_to_hsv(vX: float, vY: float,
-                               ibrightness: int) -> Tuple[int, int, int]:
-    """Convert an xy brightness color to its hsv representation."""
-    return color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, ibrightness))
+# pylint: disable=invalid-sequence-index
+def color_hsv_to_RGB(iH: int, iS: int, iV: int) -> Tuple[int, int, int]:
+    """Convert an hsv color into its rgb representation."""
+    fRGB = colorsys.hsv_to_rgb(iH/65536, iS/255, iV/255)
+    return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
 
 
+# pylint: disable=invalid-sequence-index
+def color_xy_to_hs(vX: float, vY: float) -> Tuple[int, int]:
+    """Convert an xy color to its hs representation."""
+    h, s, _ = color_RGB_to_hsv(*color_xy_brightness_to_RGB(vX, vY, 255))
+    return (h, s)
+
+
+# pylint: disable=invalid-sequence-index
 def _match_max_scale(input_colors: Tuple[int, ...],
                      output_colors: Tuple[int, ...]) -> Tuple[int, ...]:
     """Match the maximum value of the output to the input."""
@@ -303,6 +311,11 @@ def color_rgbw_to_rgb(r, g, b, w):
     # Match the output maximum value to the input. This ensures the the
     # output doesn't overflow.
     return _match_max_scale((r, g, b, w), rgb)
+
+
+def color_rgb_to_hex(r, g, b):
+    """Return a RGB color from a hex color string."""
+    return '{0:02x}{1:02x}{2:02x}'.format(r, g, b)
 
 
 def rgb_hex_to_rgb_list(hex_string):

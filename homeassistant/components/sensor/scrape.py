@@ -16,7 +16,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.5.3']
+REQUIREMENTS = ['beautifulsoup4==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([
         ScrapeSensor(hass, rest, name, select, value_template, unit)
-    ])
+    ], True)
 
 
 class ScrapeSensor(Entity):
@@ -71,7 +71,6 @@ class ScrapeSensor(Entity):
         self._select = select
         self._value_template = value_template
         self._unit_of_measurement = unit
-        self.update()
 
     @property
     def name(self):

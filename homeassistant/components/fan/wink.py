@@ -4,6 +4,7 @@ Support for Wink fans.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.wink/
 """
+import asyncio
 import logging
 
 from homeassistant.components.fan import (FanEntity, SPEED_HIGH,
@@ -12,14 +13,16 @@ from homeassistant.components.fan import (FanEntity, SPEED_HIGH,
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.wink import WinkDevice, DOMAIN
 
+DEPENDENCIES = ['wink']
+
 _LOGGER = logging.getLogger(__name__)
 
-SPEED_LOWEST = "lowest"
-SPEED_AUTO = "auto"
+SPEED_LOWEST = 'lowest'
+SPEED_AUTO = 'auto'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Set up the Wink platform."""
     import pywink
 
     for fan in pywink.get_fans():
@@ -33,6 +36,11 @@ class WinkFanDevice(WinkDevice, FanEntity):
     def __init__(self, wink, hass):
         """Initialize the fan."""
         super().__init__(wink, hass)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['fan'].append(self)
 
     def set_direction(self: ToggleEntity, direction: str) -> None:
         """Set the direction of the fan."""

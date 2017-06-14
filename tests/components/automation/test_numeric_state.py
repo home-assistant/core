@@ -102,6 +102,29 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_if_not_below_fires_on_entity_change_to_equal(self):
+        """"Test the firing with changed entity."""
+        self.hass.states.set('test.entity', 11)
+        self.hass.block_till_done()
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'below': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        # 10 is not below 10 so this should not fire again
+        self.hass.states.set('test.entity', 10)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
     def test_if_fires_on_entity_change_above(self):
         """"Test the firing with changed entity."""
         assert setup_component(self.hass, automation.DOMAIN, {
@@ -166,6 +189,30 @@ class TestAutomationNumericState(unittest.TestCase):
 
         # 11 is above 10 so this should fire again
         self.hass.states.set('test.entity', 12)
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_if_not_above_fires_on_entity_change_to_equal(self):
+        """"Test the firing with changed entity."""
+        # set initial state
+        self.hass.states.set('test.entity', 9)
+        self.hass.block_till_done()
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'numeric_state',
+                    'entity_id': 'test.entity',
+                    'above': 10,
+                },
+                'action': {
+                    'service': 'test.automation'
+                }
+            }
+        })
+
+        # 10 is not above 10 so this should not fire again
+        self.hass.states.set('test.entity', 10)
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
@@ -494,7 +541,6 @@ class TestAutomationNumericState(unittest.TestCase):
     def test_if_action(self):
         """"Test if action."""
         entity_id = 'domain.test_entity'
-        test_state = 10
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -504,8 +550,8 @@ class TestAutomationNumericState(unittest.TestCase):
                 'condition': {
                     'condition': 'numeric_state',
                     'entity_id': entity_id,
-                    'above': test_state,
-                    'below': test_state + 2
+                    'above': 8,
+                    'below': 12,
                 },
                 'action': {
                     'service': 'test.automation'
@@ -513,19 +559,19 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         })
 
-        self.hass.states.set(entity_id, test_state)
+        self.hass.states.set(entity_id, 10)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        self.hass.states.set(entity_id, test_state - 1)
+        self.hass.states.set(entity_id, 8)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
 
-        self.hass.states.set(entity_id, test_state + 1)
+        self.hass.states.set(entity_id, 9)
         self.hass.bus.fire('test_event')
         self.hass.block_till_done()
 

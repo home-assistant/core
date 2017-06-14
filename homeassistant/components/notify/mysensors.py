@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/notify.mysensors/
 """
 from homeassistant.components import mysensors
-from homeassistant.components.notify import (ATTR_TARGET,
-                                             BaseNotificationService)
+from homeassistant.components.notify import (
+    ATTR_TARGET, BaseNotificationService)
 
 
 def get_service(hass, config, discovery_info=None):

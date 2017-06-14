@@ -119,7 +119,7 @@ def devices_from_config(domain_config, hass=None):
 
         # Register entity (and aliasses) to listen to incoming rflink events
 
-        # device id and normal aliasses respond to normal and group command
+        # Device id and normal aliasses respond to normal and group command
         hass.data[DATA_ENTITY_LOOKUP][
             EVENT_KEY_COMMAND][device_id].append(device)
         if config[CONF_GROUP]:
@@ -188,7 +188,7 @@ class DimmableRflinkLight(SwitchableRflinkDevice, Light):
             # rflink only support 16 brightness levels
             self._brightness = int(kwargs[ATTR_BRIGHTNESS] / 17) * 17
 
-        # turn on light at the requested dim level
+        # Turn on light at the requested dim level
         yield from self._async_handle_command('dim', self._brightness)
 
     @property

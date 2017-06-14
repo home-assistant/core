@@ -20,12 +20,15 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_NVR = 'nvr'
 CONF_KEY = 'key'
+CONF_PASSWORD = 'password'
 
+DEFAULT_PASSWORD = 'ubnt'
 DEFAULT_PORT = 7080
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NVR): cv.string,
     vol.Required(CONF_KEY): cv.string,
+    vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
@@ -34,6 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Discover cameras on a Unifi NVR."""
     addr = config[CONF_NVR]
     key = config[CONF_KEY]
+    password = config[CONF_PASSWORD]
     port = config[CONF_PORT]
 
     from uvcclient import nvr
@@ -41,13 +45,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         cameras = nvrconn.index()
     except nvr.NotAuthorized:
-        _LOGGER.error('Authorization failure while connecting to NVR')
+        _LOGGER.error("Authorization failure while connecting to NVR")
         return False
     except nvr.NvrError:
-        _LOGGER.error('NVR refuses to talk to me')
+        _LOGGER.error("NVR refuses to talk to me")
         return False
     except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error('Unable to connect to NVR: %s', str(ex))
+        _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         return False
 
     identifier = nvrconn.server_version >= (3, 2, 0) and 'id' or 'uuid'
@@ -59,7 +63,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([UnifiVideoCamera(nvrconn,
                                   camera[identifier],
-                                  camera['name'])
+                                  camera['name'],
+                                  password)
                  for camera in cameras])
     return True
 
@@ -67,12 +72,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class UnifiVideoCamera(Camera):
     """A Ubiquiti Unifi Video Camera."""
 
-    def __init__(self, nvr, uuid, name):
+    def __init__(self, nvr, uuid, name, password):
         """Initialize an Unifi camera."""
         super(UnifiVideoCamera, self).__init__()
         self._nvr = nvr
         self._uuid = uuid
         self._name = name
+        self._password = password
         self.is_streaming = False
         self._connect_addr = None
         self._camera = None
@@ -102,20 +108,12 @@ class UnifiVideoCamera(Camera):
     def _login(self):
         """Login to the camera."""
         from uvcclient import camera as uvc_camera
-        from uvcclient import store as uvc_store
 
         caminfo = self._nvr.get_camera(self._uuid)
         if self._connect_addr:
             addrs = [self._connect_addr]
         else:
             addrs = [caminfo['host'], caminfo['internalHost']]
-
-        store = uvc_store.get_info_store()
-        password = store.get_camera_password(self._uuid)
-        if password is None:
-            _LOGGER.debug('Logging into camera %(name)s with default password',
-                          dict(name=self._name))
-            password = 'ubnt'
 
         if self._nvr.server_version >= (3, 2, 0):
             client_cls = uvc_camera.UVCCameraClientV320
@@ -125,11 +123,10 @@ class UnifiVideoCamera(Camera):
         camera = None
         for addr in addrs:
             try:
-                camera = client_cls(addr,
-                                    caminfo['username'],
-                                    password)
+                camera = client_cls(
+                    addr, caminfo['username'], self._password)
                 camera.login()
-                _LOGGER.debug('Logged into UVC camera %(name)s via %(addr)s',
+                _LOGGER.debug("Logged into UVC camera %(name)s via %(addr)s",
                               dict(name=self._name, addr=addr))
                 self._connect_addr = addr
                 break
@@ -140,7 +137,7 @@ class UnifiVideoCamera(Camera):
             except uvc_camera.CameraAuthError:
                 pass
         if not self._connect_addr:
-            _LOGGER.error('Unable to login to camera')
+            _LOGGER.error("Unable to login to camera")
             return None
 
         self._camera = camera
@@ -157,14 +154,14 @@ class UnifiVideoCamera(Camera):
             try:
                 return self._camera.get_snapshot()
             except uvc_camera.CameraConnectError:
-                _LOGGER.error('Unable to contact camera')
+                _LOGGER.error("Unable to contact camera")
             except uvc_camera.CameraAuthError:
                 if retry:
                     self._login()
                     return _get_image(retry=False)
                 else:
-                    _LOGGER.error('Unable to log into camera, unable '
-                                  'to get snapshot')
+                    _LOGGER.error(
+                        "Unable to log into camera, unable to get snapshot")
                     raise
 
         return _get_image()

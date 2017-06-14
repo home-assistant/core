@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Verisure platform."""
+    """Set up the Verisure platform."""
     alarms = []
     if int(hub.config.get(CONF_ALARM, 1)):
         hub.update_alarms()
@@ -29,10 +29,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class VerisureAlarm(alarm.AlarmControlPanel):
-    """Represent a Verisure alarm status."""
+    """Representation of a Verisure alarm status."""
 
     def __init__(self, device_id):
-        """Initalize the Verisure alarm panel."""
+        """Initialize the Verisure alarm panel."""
         self._id = device_id
         self._state = STATE_UNKNOWN
         self._digits = hub.config.get(CONF_CODE_DIGITS)
@@ -55,12 +55,12 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """The code format as regex."""
+        """Return the code format as regex."""
         return '^\\d{%s}$' % self._digits
 
     @property
     def changed_by(self):
-        """Last change triggered by."""
+        """Return the last change triggered by."""
         return self._changed_by
 
     def update(self):
@@ -75,24 +75,23 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             self._state = STATE_ALARM_ARMED_AWAY
         elif hub.alarm_status[self._id].status != 'pending':
             _LOGGER.error(
-                'Unknown alarm state %s',
-                hub.alarm_status[self._id].status)
+                "Unknown alarm state %s", hub.alarm_status[self._id].status)
         self._changed_by = hub.alarm_status[self._id].name
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         hub.my_pages.alarm.set(code, 'DISARMED')
-        _LOGGER.info('verisure alarm disarming')
+        _LOGGER.info("Verisure alarm disarming")
         hub.my_pages.alarm.wait_while_pending()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         hub.my_pages.alarm.set(code, 'ARMED_HOME')
-        _LOGGER.info('verisure alarm arming home')
+        _LOGGER.info("Verisure alarm arming home")
         hub.my_pages.alarm.wait_while_pending()
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         hub.my_pages.alarm.set(code, 'ARMED_AWAY')
-        _LOGGER.info('verisure alarm arming away')
+        _LOGGER.info("Verisure alarm arming away")
         hub.my_pages.alarm.wait_while_pending()

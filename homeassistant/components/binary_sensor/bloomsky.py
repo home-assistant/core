@@ -18,7 +18,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['bloomsky']
 
-# These are the available sensors mapped to binary_sensor class
 SENSOR_TYPES = {
     'Rain': 'moisture',
     'Night': None,
@@ -31,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available BloomSky weather binary sensors."""
+    """Set up the available BloomSky weather binary sensors."""
     bloomsky = get_component('bloomsky')
     # Default needed in case of discovery
     sensors = config.get(CONF_MONITORED_CONDITIONS, SENSOR_TYPES)
@@ -42,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BloomSkySensor(BinarySensorDevice):
-    """Represent a single binary sensor in a BloomSky device."""
+    """Representation of a single binary sensor in a BloomSky device."""
 
     def __init__(self, bs, device, sensor_name):
         """Initialize a BloomSky binary sensor."""
@@ -55,7 +54,7 @@ class BloomSkySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the BloomSky device and this sensor."""
+        """Return the name of the BloomSky device and this sensor."""
         return self._name
 
     @property

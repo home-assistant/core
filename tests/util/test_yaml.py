@@ -385,3 +385,11 @@ class TestSecrets(unittest.TestCase):
         load_yaml(self._yaml_path, 'api_password: !secret pw')
         assert mock_error.call_count == 1, \
             "Expected an error about logger: value"
+
+
+def test_representing_yaml_loaded_data():
+    """Test we can represent YAML loaded data."""
+    files = {YAML_CONFIG_FILE: 'key: [1, "2", 3]'}
+    with patch_yaml_files(files):
+        data = load_yaml_config_file(YAML_CONFIG_FILE)
+    assert yaml.dump(data) == "key:\n- 1\n- '2'\n- 3\n"

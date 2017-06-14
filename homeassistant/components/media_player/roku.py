@@ -17,9 +17,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 
-REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.3.zip'
-    '#roku==3.1.3']
+REQUIREMENTS = ['python-roku==3.1.3']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
@@ -39,15 +37,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Roku platform."""
+    """Set up the Roku platform."""
     hosts = []
 
-    if discovery_info and discovery_info in KNOWN_HOSTS:
-        return
+    if discovery_info:
+        host = discovery_info.get("host")
 
-    if discovery_info is not None:
-        _LOGGER.debug('Discovered Roku: %s', discovery_info[0])
-        hosts.append(discovery_info[0])
+        if host in KNOWN_HOSTS:
+            return
+
+        _LOGGER.debug("Discovered Roku: %s", host)
+        hosts.append(discovery_info.get("host"))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
@@ -125,8 +125,7 @@ class RokuDevice(MediaPlayerDevice):
         """Return the name of the device."""
         if self.device_info.userdevicename:
             return self.device_info.userdevicename
-        else:
-            return "roku_" + self.roku.device_info.sernum
+        return "Roku {}".format(self.device_info.sernum)
 
     @property
     def state(self):
@@ -158,8 +157,7 @@ class RokuDevice(MediaPlayerDevice):
             return None
         elif self.current_app.name == "Roku":
             return None
-        else:
-            return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_VIDEO
 
     @property
     def media_image_url(self):
@@ -173,9 +171,8 @@ class RokuDevice(MediaPlayerDevice):
         elif self.current_app.id is None:
             return None
 
-        return 'http://{0}:{1}/query/icon/{2}'.format(self.ip_address,
-                                                      DEFAULT_PORT,
-                                                      self.current_app.id)
+        return 'http://{0}:{1}/query/icon/{2}'.format(
+            self.ip_address, DEFAULT_PORT, self.current_app.id)
 
     @property
     def app_name(self):

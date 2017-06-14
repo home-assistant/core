@@ -1,5 +1,5 @@
 """
-Support for Homematic binary sensors.
+Support for HomeMatic binary sensors.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematic/
@@ -14,22 +14,22 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematic']
 
 SENSOR_TYPES_CLASS = {
-    "Remote": None,
-    "ShutterContact": "opening",
-    "MaxShutterContact": "opening",
-    "IPShutterContact": "opening",
-    "Smoke": "smoke",
-    "SmokeV2": "smoke",
-    "Motion": "motion",
-    "MotionV2": "motion",
-    "RemoteMotion": None,
-    "WeatherSensor": None,
-    "TiltSensor": None,
+    'Remote': None,
+    'ShutterContact': 'opening',
+    'MaxShutterContact': 'opening',
+    'IPShutterContact': 'opening',
+    'Smoke': 'smoke',
+    'SmokeV2': 'smoke',
+    'Motion': 'motion',
+    'MotionV2': 'motion',
+    'RemoteMotion': None,
+    'WeatherSensor': None,
+    'TiltSensor': None,
 }
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Homematic binary sensor platform."""
+    """Set up the HomeMatic binary sensor platform."""
     if discovery_info is None:
         return
 
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HMBinarySensor(HMDevice, BinarySensorDevice):
-    """Representation of a binary Homematic device."""
+    """Representation of a binary HomeMatic device."""
 
     @property
     def is_on(self):
@@ -54,16 +54,14 @@ class HMBinarySensor(HMDevice, BinarySensorDevice):
 
     @property
     def device_class(self):
-        """Return the class of this sensor, from DEVICE_CLASSES."""
-        # If state is MOTION (RemoteMotion works only)
-        if self._state == "MOTION":
-            return "motion"
+        """Return the class of this sensor from DEVICE_CLASSES."""
+        # If state is MOTION (Only RemoteMotion working)
+        if self._state == 'MOTION':
+            return 'motion'
         return SENSOR_TYPES_CLASS.get(self._hmdevice.__class__.__name__, None)
 
     def _init_data_struct(self):
-        """Generate a data struct (self._data) from the Homematic metadata."""
-        # add state to data struct
+        """Generate the data dictionary (self._data) from metadata."""
+        # Add state to data struct
         if self._state:
-            _LOGGER.debug("%s init datastruct with main node '%s'", self._name,
-                          self._state)
             self._data.update({self._state: STATE_UNKNOWN})

@@ -26,12 +26,12 @@ SUPPORT_WEMO = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_RGB_COLOR |
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup WeMo bridges and register connected lights."""
+    """Set up the WeMo bridges and register connected lights."""
     import pywemo.discovery as discovery
 
     if discovery_info is not None:
-        location = discovery_info[2]
-        mac = discovery_info[3]
+        location = discovery_info['ssdp_description']
+        mac = discovery_info['mac_address']
         device = discovery.device_from_description(location, mac)
 
         if device:
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def setup_bridge(bridge, add_devices):
-    """Setup a WeMo link."""
+    """Set up a WeMo link."""
     lights = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
@@ -64,7 +64,7 @@ class WemoLight(Light):
     """Representation of a WeMo light."""
 
     def __init__(self, device, update_lights):
-        """Initialize the light."""
+        """Initialize the WeMo light."""
         self.light_id = device.name
         self.device = device
         self.update_lights = update_lights
@@ -97,7 +97,7 @@ class WemoLight(Light):
 
     @property
     def is_on(self):
-        """True if device is on."""
+        """Return true if device is on."""
         return self.device.state['onoff'] != 0
 
     @property

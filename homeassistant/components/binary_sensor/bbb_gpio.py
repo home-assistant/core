@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Beaglebone Black GPIO devices."""
+    """Set up the Beaglebone Black GPIO devices."""
     pins = config.get(CONF_PINS)
 
     binary_sensors = []
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BBBGPIOBinarySensor(BinarySensorDevice):
-    """Represent a binary sensor that uses Beaglebone Black GPIO."""
+    """Representation of a binary sensor that uses Beaglebone Black GPIO."""
 
     def __init__(self, pin, params):
         """Initialize the Beaglebone Black binary sensor."""

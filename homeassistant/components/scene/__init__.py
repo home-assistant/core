@@ -68,7 +68,7 @@ def activate(hass, entity_id=None):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup scenes."""
+    """Set up the scenes."""
     logger = logging.getLogger(__name__)
     component = EntityComponent(logger, DOMAIN, hass)
 
@@ -112,4 +112,4 @@ class Scene(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.loop.run_in_executor(None, self.activate)
+        return self.hass.async_add_job(self.activate)

@@ -160,7 +160,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         os.makedirs(gtfs_dir)
 
     if not os.path.exists(os.path.join(gtfs_dir, data)):
-        _LOGGER.error("The given GTFS data file/folder was not found!")
+        _LOGGER.error("The given GTFS data file/folder was not found")
         return False
 
     import pygtfs
@@ -222,8 +222,8 @@ class GTFSDepartureSensor(Entity):
     def update(self):
         """Get the latest data from GTFS and update the states."""
         with self.lock:
-            self._departure = get_next_departure(self._pygtfs, self.origin,
-                                                 self.destination)
+            self._departure = get_next_departure(
+                self._pygtfs, self.origin, self.destination)
             if not self._departure:
                 self._state = 0
                 self._attributes = {'Info': 'No more departures today'}

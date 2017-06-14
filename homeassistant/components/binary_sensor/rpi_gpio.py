@@ -41,10 +41,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Raspberry PI GPIO devices."""
-    pull_mode = config.get('pull_mode', DEFAULT_PULL_MODE)
-    bouncetime = config.get('bouncetime', DEFAULT_BOUNCETIME)
-    invert_logic = config.get('invert_logic', DEFAULT_INVERT_LOGIC)
+    """Set up the Raspberry PI GPIO devices."""
+    pull_mode = config.get(CONF_PULL_MODE)
+    bouncetime = config.get(CONF_BOUNCETIME)
+    invert_logic = config.get(CONF_INVERT_LOGIC)
 
     binary_sensors = []
     ports = config.get('ports')

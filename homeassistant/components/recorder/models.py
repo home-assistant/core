@@ -1,11 +1,11 @@
 """Models for SQLAlchemy."""
-
 import json
 from datetime import datetime
 import logging
 
-from sqlalchemy import (Boolean, Column, DateTime, ForeignKey, Index, Integer,
-                        String, Text, distinct)
+from sqlalchemy import (
+    Boolean, Column, DateTime, ForeignKey, Index, Integer, String, Text,
+    distinct)
 from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util

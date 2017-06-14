@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SABnzbd sensors."""
+    """Set up the SABnzbd sensors."""
     from pysabnzbd import SabnzbdApi, SabnzbdApiException
 
     host = config.get(CONF_HOST)

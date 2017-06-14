@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the LIFX platform."""
+    """Set up the LIFX platform."""
     server_addr = config.get(CONF_SERVER)
     broadcast_addr = config.get(CONF_BROADCAST)
 
@@ -121,7 +121,7 @@ class LIFX(object):
 
     # pylint: disable=unused-argument
     def poll(self, now):
-        """Polling for the light."""
+        """Set up polling for the light."""
         self.probe()
 
     def probe(self, address=None):

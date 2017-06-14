@@ -33,7 +33,7 @@ class TestAutomation(unittest.TestCase):
     def test_service_data_not_a_dict(self):
         """Test service data not dict."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'event',

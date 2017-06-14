@@ -16,7 +16,7 @@ DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for sensors."""
+    """Set up the MySensors platform for sensors."""
     # Only act if loaded via mysensors by discovery event.
     # Otherwise gateway is not setup.
     if discovery_info is None:

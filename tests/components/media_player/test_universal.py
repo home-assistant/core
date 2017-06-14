@@ -30,6 +30,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         self._source = None
         self._tracks = 12
         self._media_image_url = None
+        self._shuffle = False
 
         self.service_calls = {
             'turn_on': mock_service(
@@ -67,6 +68,9 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
             'clear_playlist': mock_service(
                 hass, media_player.DOMAIN,
                 media_player.SERVICE_CLEAR_PLAYLIST),
+            'shuffle_set': mock_service(
+                hass, media_player.DOMAIN,
+                media_player.SERVICE_SHUFFLE_SET),
         }
 
     @property
@@ -99,6 +103,11 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
         """Image url of current playing media."""
         return self._media_image_url
 
+    @property
+    def shuffle(self):
+        """Return true if the media player is shuffling."""
+        return self._shuffle
+
     def turn_on(self):
         """Mock turn_on function."""
         self._state = STATE_UNKNOWN
@@ -130,6 +139,10 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
     def clear_playlist(self):
         """Clear players playlist."""
         self._tracks = 0
+
+    def set_shuffle(self, shuffle):
+        """Clear players playlist."""
+        self._shuffle = shuffle
 
 
 class TestMediaPlayer(unittest.TestCase):
@@ -164,6 +177,9 @@ class TestMediaPlayer(unittest.TestCase):
         self.mock_source_id = input_select.ENTITY_ID_FORMAT.format('source')
         self.hass.states.set(self.mock_source_id, 'dvd')
 
+        self.mock_shuffle_switch_id = switch.ENTITY_ID_FORMAT.format('shuffle')
+        self.hass.states.set(self.mock_shuffle_switch_id, STATE_OFF)
+
         self.config_children_only = {
             'name': 'test', 'platform': 'universal',
             'children': [media_player.ENTITY_ID_FORMAT.format('mock1'),
@@ -178,7 +194,8 @@ class TestMediaPlayer(unittest.TestCase):
                 'volume_level': self.mock_volume_id,
                 'source': self.mock_source_id,
                 'source_list': self.mock_source_list_id,
-                'state': self.mock_state_switch_id
+                'state': self.mock_state_switch_id,
+                'shuffle': self.mock_shuffle_switch_id
             }
         }
 
@@ -541,6 +558,7 @@ class TestMediaPlayer(unittest.TestCase):
         config['commands']['volume_mute'] = 'test'
         config['commands']['volume_set'] = 'test'
         config['commands']['select_source'] = 'test'
+        config['commands']['shuffle_set'] = 'test'
 
         ump = universal.UniversalMediaPlayer(self.hass, **config)
         ump.entity_id = media_player.ENTITY_ID_FORMAT.format(config['name'])
@@ -553,7 +571,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         check_flags = universal.SUPPORT_TURN_ON | universal.SUPPORT_TURN_OFF \
             | universal.SUPPORT_VOLUME_STEP | universal.SUPPORT_VOLUME_MUTE \
-            | universal.SUPPORT_SELECT_SOURCE
+            | universal.SUPPORT_SELECT_SOURCE | universal.SUPPORT_SHUFFLE_SET
 
         self.assertEqual(check_flags, ump.supported_features)
 
@@ -673,6 +691,11 @@ class TestMediaPlayer(unittest.TestCase):
             self.hass.loop).result()
         self.assertEqual(
             1, len(self.mock_mp_2.service_calls['clear_playlist']))
+
+        run_coroutine_threadsafe(
+            ump.async_set_shuffle(True),
+            self.hass.loop).result()
+        self.assertEqual(1, len(self.mock_mp_2.service_calls['shuffle_set']))
 
     def test_service_call_to_command(self):
         """Test service call to command."""

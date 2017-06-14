@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup template binary sensors."""
+    """Set up template binary sensors."""
     sensors = []
 
     for device, device_config in config[CONF_SENSORS].items():
@@ -57,15 +57,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         sensors.append(
             BinarySensorTemplate(
-                hass,
-                device,
-                friendly_name,
-                device_class,
-                value_template,
+                hass, device, friendly_name, device_class, value_template,
                 entity_ids)
             )
     if not sensors:
-        _LOGGER.error('No sensors added')
+        _LOGGER.error("No sensors added")
         return False
 
     async_add_devices(sensors, True)
@@ -79,8 +75,8 @@ class BinarySensorTemplate(BinarySensorDevice):
                  value_template, entity_ids):
         """Initialize the Template binary sensor."""
         self.hass = hass
-        self.entity_id = async_generate_entity_id(ENTITY_ID_FORMAT, device,
-                                                  hass=hass)
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, device, hass=hass)
         self._name = friendly_name
         self._device_class = device_class
         self._template = value_template
@@ -96,7 +92,7 @@ class BinarySensorTemplate(BinarySensorDevice):
 
         @callback
         def template_bsensor_state_listener(entity, old_state, new_state):
-            """Called when the target device changes state."""
+            """Handle the target device state changes."""
             self.hass.async_add_job(self.async_update_ha_state(True))
 
         @callback
@@ -139,8 +135,8 @@ class BinarySensorTemplate(BinarySensorDevice):
             if ex.args and ex.args[0].startswith(
                     "UndefinedError: 'None' has no attribute"):
                 # Common during HA startup - so just a warning
-                _LOGGER.warning('Could not render template %s,'
-                                ' the state is unknown.', self._name)
+                _LOGGER.warning("Could not render template %s, "
+                                "the state is unknown", self._name)
                 return
-            _LOGGER.error('Could not render template %s: %s', self._name, ex)
+            _LOGGER.error("Could not render template %s: %s", self._name, ex)
             self._state = False

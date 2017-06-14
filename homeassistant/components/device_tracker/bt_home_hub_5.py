@@ -21,12 +21,10 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
-MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
-
 _LOGGER = logging.getLogger(__name__)
-
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
+
+MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
@@ -46,7 +44,7 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialise the scanner."""
-        _LOGGER.info('Initialising BT Home Hub 5')
+        _LOGGER.info("Initialising BT Home Hub 5")
         self.host = config.get(CONF_HOST, '192.168.1.254')
 
         self.lock = threading.Lock()
@@ -87,12 +85,12 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
             return False
 
         with self.lock:
-            _LOGGER.info('Scanning')
+            _LOGGER.info("Scanning")
 
             data = _get_homehub_data(self.url)
 
             if not data:
-                _LOGGER.warning('Error scanning devices')
+                _LOGGER.warning("Error scanning devices")
                 return False
 
             self.last_results = data
