@@ -30,6 +30,7 @@ DEPENDENCIES = ['mqtt']
 
 CONF_BRIGHTNESS_COMMAND_TOPIC = 'brightness_command_topic'
 CONF_BRIGHTNESS_SCALE = 'brightness_scale'
+CONF_BRIGHTNESS_SCALE_INVERTED = 'brightness_scale_inverted'
 CONF_BRIGHTNESS_STATE_TOPIC = 'brightness_state_topic'
 CONF_BRIGHTNESS_VALUE_TEMPLATE = 'brightness_value_template'
 CONF_COLOR_TEMP_COMMAND_TOPIC = 'color_temp_command_topic'
@@ -52,6 +53,7 @@ CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
+DEFAULT_BRIGHTNESS_SCALE_INVERTED = False
 DEFAULT_NAME = 'MQTT Light'
 DEFAULT_OPTIMISTIC = False
 DEFAULT_PAYLOAD_OFF = 'OFF'
@@ -62,6 +64,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BRIGHTNESS_COMMAND_TOPIC): mqtt.valid_publish_topic,
     vol.Optional(CONF_BRIGHTNESS_SCALE, default=DEFAULT_BRIGHTNESS_SCALE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
+    vol.Optional(CONF_BRIGHTNESS_SCALE_INVERTED,
+                 default=DEFAULT_BRIGHTNESS_SCALE_INVERTED): cv.boolean,
     vol.Optional(CONF_BRIGHTNESS_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_BRIGHTNESS_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_COLOR_TEMP_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -137,16 +141,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         },
         config.get(CONF_OPTIMISTIC),
         config.get(CONF_BRIGHTNESS_SCALE),
+        config.get(CONF_BRIGHTNESS_SCALE_INVERTED),
         config.get(CONF_WHITE_VALUE_SCALE),
     )])
 
 
 class MqttLight(Light):
+
     """Representation of a MQTT light."""
 
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
-                 white_value_scale):
+                 brightness_scale_inverted, white_value_scale):
         """Initialize MQTT light."""
         self._name = name
         self._effect_list = effect_list
@@ -169,6 +175,7 @@ class MqttLight(Light):
         self._optimistic_xy = \
             optimistic or topic[CONF_XY_STATE_TOPIC] is None
         self._brightness_scale = brightness_scale
+        self._brightness_scale_inverted = brightness_scale_inverted
         self._white_value_scale = white_value_scale
         self._state = False
         self._brightness = None
@@ -228,7 +235,10 @@ class MqttLight(Light):
         def brightness_received(topic, payload, qos):
             """Handle new MQTT messages for the brightness."""
             device_value = float(templates[CONF_BRIGHTNESS](payload))
-            percent_bright = device_value / self._brightness_scale
+            percent_bright = (self._brightness_scale_inverted and
+                              self._brightness_scale -
+                              device_value or device_value
+                              ) / self._brightness_scale
             self._brightness = int(percent_bright * 255)
             self.hass.async_add_job(self.async_update_ha_state())
 
@@ -409,7 +419,8 @@ class MqttLight(Light):
         if ATTR_BRIGHTNESS in kwargs and \
            self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
             percent_bright = float(kwargs[ATTR_BRIGHTNESS]) / 255
-            device_brightness = int(percent_bright * self._brightness_scale)
+            device_brightness = int((self._brightness_scale_inverted and 1.0
+                                     - percent_bright or percent_bright) * self._brightness_scale)
             mqtt.async_publish(
                 self.hass, self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC],
                 device_brightness, self._qos, self._retain)
