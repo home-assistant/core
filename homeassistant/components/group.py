@@ -137,11 +137,11 @@ def set_visibility(hass, entity_id=None, visible=True):
 
 
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
-              icon=None, view=None, control=None):
+              icon=None, view=None, control=None, delta=None):
     """Create a new user group."""
     hass.add_job(
         async_set_group, hass, object_id, name, entity_ids, visible, icon,
-        view, control)
+        view, control, delta)
 
 
 @callback
@@ -157,6 +157,7 @@ def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
             (ATTR_ICON, icon),
             (ATTR_VIEW, view),
             (ATTR_CONTROL, control),
+            (ATTR_DELTA, delta),
         ] if value is not None
     }
 

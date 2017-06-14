@@ -229,7 +229,7 @@ class EntityComponent(object):
         run_callback_threadsafe(
             self.hass.loop, self.async_update_group).result()
 
-    @asyncio.coroutine
+    @callback
     def async_update_group(self):
         """Set up and/or update component group.
 
@@ -370,7 +370,7 @@ class EntityPlatform(object):
         tasks = [async_process_entity(entity) for entity in new_entities]
 
         yield from asyncio.wait(tasks, loop=self.component.hass.loop)
-        yield from self.component.async_update_group()
+        self.component.async_update_group()
 
         if self._async_unsub_polling is not None or \
            not any(entity.should_poll for entity

@@ -41,7 +41,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'device_tracker'
-DEPENDENCIES = ['zone']
+DEPENDENCIES = ['zone', 'group']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
@@ -180,8 +180,6 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
 
-    yield from tracker.async_setup_group()
-
     @callback
     def async_device_tracker_discovered(service, info):
         """Handle the discovery of device tracker platforms."""
@@ -233,7 +231,6 @@ class DeviceTracker(object):
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
         self.track_new = track_new
-        self.group = None  # type: group.Group
         self._is_updating = asyncio.Lock(loop=hass.loop)
 
         for dev in devices:
@@ -303,9 +300,9 @@ class DeviceTracker(object):
         })
 
         # During init, we ignore the group
-        if self.group is not None:
-            yield from self.group.async_update_tracked_entity_ids(
-                list(self.group.tracking) + [device.entity_id])
+        self.group.async_set_group(
+            self.hass, slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+            name=GROUP_NAME_ALL_DEVICES, delta=[device.entity_id])
 
         # lookup mac vendor string to be stored in config
         yield from device.set_vendor_for_mac()
