@@ -57,10 +57,10 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 SET_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_OBJECT_ID): cv.slug,
     vol.Optional(ATTR_NAME): cv.string,
-    vol.Optional(ATTR_VIEW, default=False): cv.boolean,
+    vol.Optional(ATTR_VIEW): cv.boolean,
     vol.Optional(ATTR_ICON): cv.string,
     vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
-    vol.Optional(ATTR_VISIBLE, default=True): cv.boolean,
+    vol.Optional(ATTR_VISIBLE): cv.boolean,
     vol.Exclusive(ATTR_ENTITIES, 'entities'): cv.entity_ids,
     vol.Exclusive(ATTR_DELTA, 'entities'): cv.entity_ids,
 })
@@ -136,8 +136,8 @@ def set_visibility(hass, entity_id=None, visible=True):
     hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
 
 
-def set_group(hass, object_id, name=None, entity_ids=None, visible=True,
-              icon=None, view=False, control=None):
+def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
+              icon=None, view=None, control=None):
     """Create a new user group."""
     hass.add_job(
         async_set_group, hass, object_id, name, entity_ids, visible, icon,
@@ -145,8 +145,8 @@ def set_group(hass, object_id, name=None, entity_ids=None, visible=True,
 
 
 @callback
-def async_set_group(hass, object_id, name=None, entity_ids=None, visible=True,
-                    icon=None, view=False, control=None):
+def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
+                    icon=None, view=None, control=None):
     """Create a new user group."""
     data = {
         key: value for key, value in [
@@ -265,15 +265,16 @@ def async_setup(hass, config):
             entity_ids = service.data.get(ATTR_ENTITIES) or \
                 service.data.get(ATTR_DELTA) or None
 
+            extra_arg = {name: service.data[name] for name, value in [
+                ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
+            ] if service.data[name] is not None}
+
             new_group = yield from Group.async_create_group(
                 hass, service.data.get(ATTR_NAME, object_id),
                 object_id=object_id,
                 entity_ids=entity_ids,
-                visible=service.data.get(ATTR_VISIBLE),
-                icon=service.data.get(ATTR_ICON),
-                view=service.data.get(ATTR_VIEW),
-                control=service.data.get(ATTR_CONTROL),
-                user_defined=False
+                user_defined=False,
+                **extra_arg
             )
 
             service_groups[object_id] = new_group
