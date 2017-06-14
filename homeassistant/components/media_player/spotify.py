@@ -33,7 +33,7 @@ SUPPORT_SPOTIFY = SUPPORT_VOLUME_SET | SUPPORT_PAUSE | SUPPORT_PLAY |\
     SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE |\
     SUPPORT_PLAY_MEDIA | SUPPORT_SHUFFLE_SET
 
-SCOPE = 'user-read-playback-state user-modify-playback-state'
+SCOPE = 'user-read-playback-state user-modify-playback-state user-read-private'
 DEFAULT_CACHE_PATH = '.spotify-token-cache'
 AUTH_CALLBACK_PATH = '/api/spotify'
 AUTH_CALLBACK_NAME = 'api:spotify'
@@ -135,6 +135,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         self._volume = None
         self._shuffle = False
         self._player = None
+        self._user = None
         self._aliases = aliases
         self._token_info = self._oauth.get_cached_token()
 
@@ -153,6 +154,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         if self._player is None or token_refreshed:
             self._player = \
                 spotipy.Spotify(auth=self._token_info.get('access_token'))
+            self._user = self._player.me()
 
     def update(self):
         """Update state and attributes."""
@@ -161,16 +163,16 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
         player_devices = self._player.devices()
         if player_devices is not None:
             devices = player_devices.get('devices')
-        if devices is not None:
-            old_devices = self._devices
-            self._devices = {self._aliases.get(device.get('id'),
-                                               device.get('name')):
-                             device.get('id')
-                             for device in devices}
-            device_diff = {name: id for name, id in self._devices.items()
-                           if old_devices.get(name, None) is None}
-            if len(device_diff) > 0:
-                _LOGGER.info("New Devices: %s", str(device_diff))
+            if devices is not None:
+                old_devices = self._devices
+                self._devices = {self._aliases.get(device.get('id'),
+                                                   device.get('name')):
+                                 device.get('id')
+                                 for device in devices}
+                device_diff = {name: id for name, id in self._devices.items()
+                               if old_devices.get(name, None) is None}
+                if len(device_diff) > 0:
+                    _LOGGER.info("New Devices: %s", str(device_diff))
         # Current playback state
         current = self._player.current_playback()
         if current is None:
@@ -308,4 +310,7 @@ class SpotifyMediaPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return the media player features that are supported."""
-        return SUPPORT_SPOTIFY
+        if self._user is not None and self._user['product'] == 'premium':
+            return SUPPORT_SPOTIFY
+        else:
+            return None
