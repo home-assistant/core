@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
     if disc_info is None:
         return
 
-    if not any([data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]]):
+    if not any(data[CONF_TRACK] for data in disc_info[CONF_ENTITIES]):
         return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))

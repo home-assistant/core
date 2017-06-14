@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME)
-from homeassistant.helpers import discovery
+# from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['insteon_hub==0.4.5']
@@ -36,20 +36,19 @@ def setup(hass, config):
     _LOGGER.warning("Component disabled at request from Insteon. "
                     "For more information: https://goo.gl/zLJaic")
     return False
-    # pylint: disable=unreachable
-    import insteon
+    # import insteon
 
-    username = config[DOMAIN][CONF_USERNAME]
-    password = config[DOMAIN][CONF_PASSWORD]
-    api_key = config[DOMAIN][CONF_API_KEY]
+    # username = config[DOMAIN][CONF_USERNAME]
+    # password = config[DOMAIN][CONF_PASSWORD]
+    # api_key = config[DOMAIN][CONF_API_KEY]
 
-    global INSTEON
-    INSTEON = insteon.Insteon(username, password, api_key)
+    # global INSTEON
+    # INSTEON = insteon.Insteon(username, password, api_key)
 
-    if INSTEON is None:
-        _LOGGER.error("Could not connect to Insteon service")
-        return False
+    # if INSTEON is None:
+    #    _LOGGER.error("Could not connect to Insteon service")
+    #    return False
 
-    discovery.load_platform(hass, 'light', DOMAIN, {}, config)
+    # discovery.load_platform(hass, 'light', DOMAIN, {}, config)
 
-    return True
+    # return True
