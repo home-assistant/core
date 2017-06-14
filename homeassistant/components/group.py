@@ -146,7 +146,7 @@ def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
 
 @callback
 def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
-                    icon=None, view=None, control=None):
+                    icon=None, view=None, control=None, delta=None):
     """Create a new user group."""
     data = {
         key: value for key, value in [

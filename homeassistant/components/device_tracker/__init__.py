@@ -301,7 +301,7 @@ class DeviceTracker(object):
 
         # During init, we ignore the group
         self.group.async_set_group(
-            self.hass, slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+            self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
             name=GROUP_NAME_ALL_DEVICES, delta=[device.entity_id])
 
         # lookup mac vendor string to be stored in config
