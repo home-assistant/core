@@ -470,7 +470,6 @@ class Group(Entity):
     @property
     def hidden(self):
         """If group should be hidden or not."""
-        # Visibility from set_visibility service overrides
         if self.visible or self.view:
             return False
         return True
