@@ -23,4 +23,7 @@ git clone --depth 1 https://github.com/auerswal/ssocr.git /usr/local/src/ssocr
 
   # Install the binaries/libraries to your local system (prefix is /usr/local)
   make install
+
+  # Cleanup
+  make clean
 )
