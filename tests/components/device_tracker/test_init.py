@@ -708,8 +708,9 @@ def test_async_added_to_hass(hass):
 def test_bad_platform(hass):
     """Test bad platform."""
     config = {
-        'device_tracer': {
+        'device_tracker': [{
             'platform': 'bad_platform'
-        }
+        }]
     }
-    yield from device_tracker.async_setup(hass, config)
+    with assert_setup_component(0, device_tracker.DOMAIN):
+        assert (yield from device_tracker.async_setup(hass, config))
