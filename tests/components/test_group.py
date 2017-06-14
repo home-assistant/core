@@ -1,5 +1,6 @@
 """The tests for the Group components."""
 # pylint: disable=protected-access
+import asyncio
 from collections import OrderedDict
 import unittest
 from unittest.mock import patch
@@ -392,3 +393,52 @@ def test_service_group_services(hass):
 
     assert hass.has_service('group', group.SERVICE_SET)
     assert hass.has_service('group', group.SERVICE_REMOVE)
+
+
+@asyncio.coroutine
+def test_service_group_set_group_remove_group(hass):
+    """Check if service are available."""
+    with assert_setup_component(1, 'group'):
+        yield from async_setup_component(hass, 'group', {
+            'group': {}
+        })
+
+    group.async_set_group(hass, 'user_test_group', name="Test")
+    yield from hass.async_block_till_done()
+
+    group_state = self.hass.states.get('group.user_test_group')
+    assert group_state
+    assert not group_state.attributes[group.ATTR_VIEW]
+    assert group_state.attributes[group.ATTR_AUTO]
+    assert not group_state.attributes['hidden']
+    assert group_state.attributes[group.ATTR_NAME] == "Test"
+
+    group.async_set_group(hass, 'user_test_group', view=True, visible=False)
+    yield from hass.async_block_till_done()
+
+    group_state = self.hass.states.get('group.user_test_group')
+    assert group_state
+    assert group_state.attributes[group.ATTR_VIEW]
+    assert group_state.attributes[group.ATTR_AUTO]
+    assert group_state.attributes['hidden']
+    assert group_state.attributes[group.ATTR_NAME] == "Test"
+
+    group.async_set_group(
+        hass, 'user_test_group', icon="mdi:camera", name="Test2",
+        control="hidden")
+    yield from hass.async_block_till_done()
+
+    group_state = self.hass.states.get('group.user_test_group')
+    assert group_state
+    assert group_state.attributes[group.ATTR_VIEW]
+    assert group_state.attributes[group.ATTR_AUTO]
+    assert group_state.attributes['hidden']
+    assert group_state.attributes[group.ATTR_NAME] == "Test2"
+    assert group_state.attributes['icon'] == "mdi:camera"
+    assert group_state.attributes[group.ATTR_CONTROL] == "hidden"
+
+    group.async_remove(hass, 'user_test_group')
+    yield from hass.async_block_till_done()
+
+    group_state = self.hass.states.get('group.user_test_group')
+    assert group_state is None
