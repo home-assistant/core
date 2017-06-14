@@ -335,8 +335,8 @@ class DeviceTracker(object):
 
         This method must be run in the event loop.
         """
-        entity_ids = (dev.entity_id for dev in self.devices.values()
-                      if dev.track)
+        entity_ids = [dev.entity_id for dev in self.devices.values()
+                      if dev.track]
 
         self.group = get_component('group')
         self.group.async_set_group(
