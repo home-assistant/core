@@ -17,8 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.loader import get_component
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['https://github.com/ggravlingen/pytradfri/archive/'
-                'cb273aca8b1c6899a0361231f03b0ad695b769be.zip#pytradfri==2.0']
+REQUIREMENTS = ['pytradfri==2.0']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
@@ -116,15 +115,15 @@ def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     from pytradfri.api.aiocoap_api import api_factory
 
     try:
-        api = yield from api_factory(host, key)
+        api = yield from api_factory(host, key, loop=hass.loop)
         hass.data[KEY_API] = api
     except RequestError:
         return False
 
     gateway = Gateway()
     gateway_id_cmd = gateway.get_gateway_info()
-    gateway_id_result = yield from api(gateway_id_cmd)
-    gateway_id = gateway_id_result.id
+    yield from api(gateway_id_cmd)
+    gateway_id = gateway_id_cmd.result.id
     hass.data.setdefault(KEY_GATEWAY, {})
     gateways = hass.data[KEY_GATEWAY]
 
