@@ -119,7 +119,12 @@ class TradfriGroup(Light):
                                   err_callback=self._async_start_observe,
                                   duration=0)
         observe_task = self._api(cmd)
-        self.hass.async_add_job(observe_task)
+        try:
+            yield from observe_task()
+        except:
+            _LOGGER.info("Observation failed, trying again.")
+            asyncio.sleep(5)
+            self._async_start_observe()
 
     def _refresh(self, group):
         """Refresh the light data."""
@@ -248,7 +253,12 @@ class TradfriLight(Light):
                                   err_callback=self._async_start_observe,
                                   duration=0)
         observe_task = self._api(cmd)
-        self.hass.async_add_job(observe_task)
+        try:
+            yield from observe_task()
+        except:
+            _LOGGER.info("Observation failed, trying again.")
+            asyncio.sleep(5)
+            self._async_start_observe()
 
     def _refresh(self, light):
         """Refresh the light data."""
