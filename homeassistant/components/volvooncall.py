@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_point_in_utc_time
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.dt import utcnow
 import voluptuous as vol
 
@@ -100,7 +100,7 @@ def setup(hass, config):
         for entity in state.entities[vehicle.vin]:
             entity.schedule_update_ha_state()
 
-        async_dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
+        dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
 
     def update(now):
         """Update status from the online service."""
