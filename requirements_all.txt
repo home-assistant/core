@@ -921,4 +921,4 @@ yeelightsunflower==0.0.8
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.19.0
+zeroconf==0.19.1
