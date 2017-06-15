@@ -63,7 +63,7 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        assert setup_component(self.hass, 'group' {'group': {}})
+        assert setup_component(self.hass, 'group', {'group': {}})
         assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
