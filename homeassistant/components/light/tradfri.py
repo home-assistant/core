@@ -96,8 +96,7 @@ class TradfriGroup(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Instruct the group lights to turn off."""
-        result = yield from self._api(self._group.set_state(0))
-        return result
+        self.hass.async_add_job(self._api(self._group.set_state(0)))
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -204,8 +203,8 @@ class TradfriLight(Light):
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        result = yield from self._api(self._light_control.set_state(False))
-        return result
+        self.hass.async_add_job(self._api(
+            self._light_control.set_state(False)))
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -237,11 +236,11 @@ class TradfriLight(Light):
                 self._light_control.set_hex_color(self._ok_temps[kelvin])))
 
     @callback
-    def _async_start_observe(self, err=None):
+    def _async_start_observe(self, exc=None):
         """Start observation of light."""
         if err:
             _LOGGER.info("Observation failed for %s", self._name,
-                         exc_info=err)
+                         exc_info=exc)
 
         cmd = self._light.observe(callback=self._observe_update,
                                   err_callback=self._async_start_observe,

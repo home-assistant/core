@@ -112,12 +112,17 @@ def async_setup(hass, config):
 def _setup_gateway(hass, hass_config, host, key, allow_tradfri_groups):
     """Create a gateway."""
     from pytradfri import Gateway, RequestError
-    from pytradfri.api.aiocoap_api import api_factory
+    try:
+        from pytradfri.api.aiocoap_api import api_factory
+    except ImportError:
+        _LOGGER.exception("Looks like something isn't installed!")
+        return False
 
     try:
         api = yield from api_factory(host, key, loop=hass.loop)
         hass.data[KEY_API] = api
     except RequestError:
+        _LOGGER.exception("Tradfri setup failed.")
         return False
 
     gateway = Gateway()
