@@ -20,7 +20,6 @@ class TestScriptComponent(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        mock_component(self.hass, 'group')
 
     # pylint: disable=invalid-name
     def tearDown(self):
@@ -63,7 +62,6 @@ class TestScriptComponent(unittest.TestCase):
 
         self.hass.bus.listen(event, record_event)
 
-        assert setup_component(self.hass, 'group', {'group': {}})
         assert setup_component(self.hass, 'script', {
             'script': {
                 'test': {
