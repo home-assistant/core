@@ -7,7 +7,7 @@ from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from homeassistant.components import script
 
-from tests.common import get_test_home_assistant, mock_component
+from tests.common import get_test_home_assistant
 
 
 ENTITY_ID = 'script.test'
