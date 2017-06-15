@@ -40,6 +40,7 @@ class ZWaveBaseEntity(Entity):
     def __init__(self):
         """Initialize the base Z-Wave class."""
         self._update_scheduled = False
+        self._old_entity_id = None
 
     def maybe_schedule_update(self):
         """Maybe schedule state update.
@@ -86,9 +87,10 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._name = node_name(self.node)
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
+        self._old_entity_id = "{}.{}_{}".format(
+            DOMAIN, slugify(self._name), self.node_id)
         if not new_entity_ids:
-            self.entity_id = "{}.{}_{}".format(
-                DOMAIN, slugify(self._name), self.node_id)
+            self.entity_id = self._old_entity_id
         self._attributes = {}
         self.wakeup_interval = None
         self.location = None
@@ -208,6 +210,7 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
             ATTR_NODE_NAME: self._name,
             ATTR_MANUFACTURER_NAME: self._manufacturer_name,
             ATTR_PRODUCT_NAME: self._product_name,
+            'old_entity_id': self._old_entity_id,
         }
         attrs.update(self._attributes)
         if self.battery_level is not None:
