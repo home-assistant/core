@@ -74,11 +74,12 @@ def create_climate_device(tado, hass, zone, name, zone_id):
     ac_mode = capabilities['type'] == 'AIR_CONDITIONING'
 
     if ac_mode:
-        min_temp = float(capabilities['HEAT']['temperatures']['celsius']['min'])
-        max_temp = float(capabilities['HEAT']['temperatures']['celsius']['max'])        
+        temperatures = capabilities['HEAT']['temperatures']
     else:
-        min_temp = float(capabilities['temperatures']['celsius']['min'])
-        max_temp = float(capabilities['temperatures']['celsius']['max'])
+        temperatures = capabilities['temperatures']
+
+    min_temp = float(temperatures['celsius']['min'])
+    max_temp = float(temperatures['celsius']['max'])
 
     data_id = 'zone {} {}'.format(name, zone_id)
     device = TadoClimate(tado,
@@ -290,7 +291,7 @@ class TadoClimate(ClimateDevice):
             if 'overlay' in data:
                 overlay_data = data['overlay']
                 overlay = overlay_data is not None
-            
+
             if overlay:
                 termination = overlay_data['termination']['type']
 
