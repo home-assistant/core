@@ -296,7 +296,7 @@ class TestSetup:
             MockPlatform(platform_schema=platform_schema,
                          setup_platform=mock_setup))
 
-        with assert_setup_component(0):
+        with assert_setup_component(0, 'switch'):
             assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'platform_a',
