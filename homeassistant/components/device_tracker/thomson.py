@@ -18,7 +18,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +87,7 @@ class ThomsonDeviceScanner(DeviceScanner):
             return False
 
         with self.lock:
-            _LOGGER.info('Checking ARP')
+            _LOGGER.info("Checking ARP")
             data = self.get_thomson_data()
             if not data:
                 return False
@@ -112,11 +111,11 @@ class ThomsonDeviceScanner(DeviceScanner):
             devices_result = telnet.read_until(b'=>').split(b'\r\n')
             telnet.write('exit\r\n'.encode('ascii'))
         except EOFError:
-            _LOGGER.exception('Unexpected response from router')
+            _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
-            _LOGGER.exception('Connection refused by router,'
-                              ' is telnet enabled?')
+            _LOGGER.exception(
+                "Connection refused by router. Telnet enabled?")
             return
 
         devices = {}

@@ -1,13 +1,15 @@
 """The tests for the discovery component."""
 import asyncio
+import os
+from unittest.mock import patch, MagicMock
 
-from unittest.mock import patch
+import pytest
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
 
-from tests.common import mock_coro, fire_time_changed
+from tests.common import mock_coro, async_fire_time_changed
 
 # One might consider to "mock" services, but it's easy enough to just use
 # what is already available.
@@ -33,6 +35,15 @@ IGNORE_CONFIG = {
 }
 
 
+@pytest.fixture(autouse=True)
+def netdisco_mock():
+    """Mock netdisco."""
+    with patch.dict('sys.modules', {
+        'netdisco.discovery': MagicMock(),
+    }):
+        yield
+
+
 @asyncio.coroutine
 def mock_discovery(hass, discoveries, config=BASE_CONFIG):
     """Helper to mock discoveries."""
@@ -46,7 +57,7 @@ def mock_discovery(hass, discoveries, config=BASE_CONFIG):
                   return_value=mock_coro()) as mock_discover, \
             patch('homeassistant.components.discovery.async_load_platform',
                   return_value=mock_coro()) as mock_platform:
-        fire_time_changed(hass, utcnow())
+        async_fire_time_changed(hass, utcnow())
         # Work around an issue where our loop.call_soon not get caught
         yield from hass.async_block_till_done()
         yield from hass.async_block_till_done()
@@ -128,3 +139,18 @@ def test_discover_duplicates(hass):
     mock_discover.assert_called_with(
         hass, SERVICE_NO_PLATFORM, SERVICE_INFO,
         SERVICE_NO_PLATFORM_COMPONENT, BASE_CONFIG)
+
+
+@asyncio.coroutine
+def test_load_component_hassio(hass):
+    """Test load hassio component."""
+    def discover(netdisco):
+        """Fake discovery."""
+        return []
+
+    with patch.dict(os.environ, {'HASSIO': "FAKE_HASSIO"}), \
+            patch('homeassistant.components.hassio.async_setup',
+                  return_value=mock_coro(return_value=True)) as mock_hassio:
+        yield from mock_discovery(hass, discover)
+
+    assert mock_hassio.called

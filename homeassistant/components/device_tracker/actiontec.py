@@ -19,7 +19,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +43,7 @@ def get_scanner(hass, config):
     return scanner if scanner.success_init else None
 
 
-Device = namedtuple("Device", ["mac", "ip", "last_update"])
+Device = namedtuple('Device', ['mac', 'ip', 'last_update'])
 
 
 class ActiontecDeviceScanner(DeviceScanner):
@@ -59,7 +58,7 @@ class ActiontecDeviceScanner(DeviceScanner):
         self.last_results = []
         data = self.get_actiontec_data()
         self.success_init = data is not None
-        _LOGGER.info("actiontec scanner initialized")
+        _LOGGER.info("canner initialized")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -93,7 +92,7 @@ class ActiontecDeviceScanner(DeviceScanner):
             self.last_results = [Device(data['mac'], name, now)
                                  for name, data in actiontec_data.items()
                                  if data['timevalid'] > -60]
-            _LOGGER.info("actiontec scan successful")
+            _LOGGER.info("Scan successful")
             return True
 
     def get_actiontec_data(self):
@@ -115,8 +114,7 @@ class ActiontecDeviceScanner(DeviceScanner):
             _LOGGER.exception("Unexpected response from router")
             return
         except ConnectionRefusedError:
-            _LOGGER.exception("Connection refused by router," +
-                              " is telnet enabled?")
+            _LOGGER.exception("Connection refused by router. Telnet enabled?")
             return None
 
         devices = {}

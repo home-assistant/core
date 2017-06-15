@@ -1,0 +1,98 @@
+lifx_set_state:
+  description: Set a color/brightness and possibliy turn the light on/off
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to set a state on
+      example: 'light.garage'
+
+    '...':
+      description: All turn_on parameters can be used to specify a color
+
+    infrared:
+      description: Automatic infrared level (0..255) when light brightness is low
+      example: 255
+
+    transition:
+      description: Duration in seconds it takes to get to the final state
+      example: 10
+
+    power:
+      description: Turn the light on (True) or off (False). Leave out to keep the power as it is.
+      example: True
+
+
+lifx_effect_breathe:
+  description: Deprecated, use lifx_effect_pulse
+
+lifx_effect_pulse:
+  description: Run a flash effect by changing to a color and back.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to run the effect on
+      example: 'light.kitchen'
+
+    mode:
+      description: 'Decides how colors are changed. Possible values: blink, breathe, ping, strobe, solid'
+      example: strobe
+
+    brightness:
+      description: Number between 0..255 indicating brightness of the temporary color
+      example: 120
+
+    color_name:
+      description: A human readable color name
+      example: 'red'
+
+    rgb_color:
+      description: The temporary color in RGB-format
+      example: '[255, 100, 100]'
+
+    period:
+      description: Duration of the effect in seconds (default 1.0)
+      example: 3
+
+    cycles:
+      description: Number of times the effect should run (default 1.0)
+      example: 2
+
+    power_on:
+      description: Powered off lights are temporarily turned on during the effect (default True)
+      example: False
+
+lifx_effect_colorloop:
+  description: Run an effect with looping colors.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to run the effect on
+      example: 'light.disco1, light.disco2, light.disco3'
+
+    brightness:
+      description: Number between 0 and 255 indicating brightness of the effect. Leave this out to maintain the current brightness of each participating light
+      example: 120
+
+    period:
+      description: Duration (in seconds) between color changes (default 60)
+      example: 180
+
+    change:
+      description: Hue movement per period, in degrees on a color wheel (ranges from 0 to 360, default 20)
+      example: 45
+
+    spread:
+      description: Maximum hue difference between participating lights, in degrees on a color wheel (ranges from 0 to 360, default 30)
+      example: 0
+
+    power_on:
+      description: Powered off lights are temporarily turned on during the effect (default True)
+      example: False
+
+lifx_effect_stop:
+  description: Stop a running effect.
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to stop effects on. Leave out to stop effects everywhere.
+      example: 'light.bedroom'

@@ -11,7 +11,7 @@ from homeassistant.components.camera import Camera
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo camera platform."""
+    """Set up the Demo camera platform."""
     add_devices([
         DemoCamera('Demo camera')
     ])
@@ -29,8 +29,8 @@ class DemoCamera(Camera):
         """Return a faked still image response."""
         now = dt_util.utcnow()
 
-        image_path = os.path.join(os.path.dirname(__file__),
-                                  'demo_{}.jpg'.format(now.second % 4))
+        image_path = os.path.join(
+            os.path.dirname(__file__), 'demo_{}.jpg'.format(now.second % 4))
         with open(image_path, 'rb') as file:
             return file.read()
 

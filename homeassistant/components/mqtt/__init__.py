@@ -10,6 +10,7 @@ import os
 import socket
 import time
 import ssl
+import re
 import requests.certs
 
 import voluptuous as vol
@@ -28,7 +29,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
-REQUIREMENTS = ['paho-mqtt==1.2.1']
+REQUIREMENTS = ['paho-mqtt==1.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -101,7 +102,7 @@ def valid_discovery_topic(value):
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
-                      'the mqtt broker config'
+                      'the MQTT broker configuration'
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
@@ -125,9 +126,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION,
-                     default=DEFAULT_TLS_PROTOCOL): vol.Any('auto', '1.0',
-                                                            '1.1', '1.2'),
+        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL):
+            vol.Any('auto', '1.0', '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
@@ -201,7 +201,8 @@ def publish_template(hass, topic, payload_template, qos=None, retain=None):
 
 
 @asyncio.coroutine
-def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
+                    encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     @callback
     def async_mqtt_topic_subscriber(dp_topic, dp_payload, dp_qos):
@@ -209,7 +210,20 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
         if not _match_topic(topic, dp_topic):
             return
 
-        hass.async_run_job(msg_callback, dp_topic, dp_payload, dp_qos)
+        if encoding is not None:
+            try:
+                payload = dp_payload.decode(encoding)
+                _LOGGER.debug("Received message on %s: %s", dp_topic, payload)
+            except (AttributeError, UnicodeDecodeError):
+                _LOGGER.error("Illegal payload encoding %s from "
+                              "MQTT topic: %s, Payload: %s",
+                              encoding, dp_topic, dp_payload)
+                return
+        else:
+            _LOGGER.debug("Received binary message on %s", dp_topic)
+            payload = dp_payload
+
+        hass.async_run_job(msg_callback, dp_topic, payload, dp_qos)
 
     async_remove = async_dispatcher_connect(
         hass, SIGNAL_MQTT_MESSAGE_RECEIVED, async_mqtt_topic_subscriber)
@@ -218,11 +232,11 @@ def async_subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
     return async_remove
 
 
-def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS):
+def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
+              encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     async_remove = run_coroutine_threadsafe(
-        async_subscribe(hass, topic, msg_callback, qos),
-        hass.loop
+        async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
     def remove():
@@ -372,22 +386,22 @@ def async_setup(hass, config):
         payload_template = call.data.get(ATTR_PAYLOAD_TEMPLATE)
         qos = call.data[ATTR_QOS]
         retain = call.data[ATTR_RETAIN]
-        try:
-            if payload_template is not None:
+        if payload_template is not None:
+            try:
                 payload = \
                     template.Template(payload_template, hass).async_render()
-        except template.jinja2.TemplateError as exc:
-            _LOGGER.error(
-                "Unable to publish to '%s': rendering payload template of "
-                "'%s' failed because %s",
-                msg_topic, payload_template, exc)
-            return
+            except template.jinja2.TemplateError as exc:
+                _LOGGER.error(
+                    "Unable to publish to '%s': rendering payload template of "
+                    "'%s' failed because %s",
+                    msg_topic, payload_template, exc)
+                return
 
         yield from hass.data[DATA_MQTT].async_publish(
             msg_topic, payload, qos, retain)
 
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
@@ -460,8 +474,8 @@ class MQTT(object):
         This method must be run in the event loop and returns a coroutine.
         """
         with (yield from self._paho_lock):
-            yield from self.hass.loop.run_in_executor(
-                None, self._mqttc.publish, topic, payload, qos, retain)
+            yield from self.hass.async_add_job(
+                self._mqttc.publish, topic, payload, qos, retain)
 
     @asyncio.coroutine
     def async_connect(self):
@@ -469,8 +483,8 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result = yield from self.hass.loop.run_in_executor(
-            None, self._mqttc.connect, self.broker, self.port, self.keepalive)
+        result = yield from self.hass.async_add_job(
+            self._mqttc.connect, self.broker, self.port, self.keepalive)
 
         if result != 0:
             import paho.mqtt.client as mqtt
@@ -490,7 +504,7 @@ class MQTT(object):
             self._mqttc.disconnect()
             self._mqttc.loop_stop()
 
-        return self.hass.loop.run_in_executor(None, stop)
+        return self.hass.async_add_job(stop)
 
     @asyncio.coroutine
     def async_subscribe(self, topic, qos):
@@ -505,8 +519,8 @@ class MQTT(object):
             if topic in self.topics:
                 return
 
-            result, mid = yield from self.hass.loop.run_in_executor(
-                None, self._mqttc.subscribe, topic, qos)
+            result, mid = yield from self.hass.async_add_job(
+                self._mqttc.subscribe, topic, qos)
 
             _raise_on_error(result)
             self.progress[mid] = topic
@@ -518,8 +532,8 @@ class MQTT(object):
 
         This method is a coroutine.
         """
-        result, mid = yield from self.hass.loop.run_in_executor(
-            None, self._mqttc.unsubscribe, topic)
+        result, mid = yield from self.hass.async_add_job(
+            self._mqttc.unsubscribe, topic)
 
         _raise_on_error(result)
         self.progress[mid] = topic
@@ -564,18 +578,10 @@ class MQTT(object):
 
     def _mqtt_on_message(self, _mqttc, _userdata, msg):
         """Message received callback."""
-        try:
-            payload = msg.payload.decode('utf-8')
-        except (AttributeError, UnicodeDecodeError):
-            _LOGGER.error("Illegal utf-8 unicode payload from "
-                          "MQTT topic: %s, Payload: %s", msg.topic,
-                          msg.payload)
-        else:
-            _LOGGER.info("Received message on %s: %s", msg.topic, payload)
-            dispatcher_send(
-                self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, payload,
-                msg.qos
-            )
+        dispatcher_send(
+            self.hass, SIGNAL_MQTT_MESSAGE_RECEIVED, msg.topic, msg.payload,
+            msg.qos
+        )
 
     def _mqtt_on_unsubscribe(self, _mqttc, _userdata, mid, granted_qos):
         """Unsubscribe successful callback."""
@@ -630,12 +636,20 @@ def _raise_on_error(result):
 
 def _match_topic(subscription, topic):
     """Test if topic matches subscription."""
+    reg_ex_parts = []
+    suffix = ""
     if subscription.endswith('#'):
-        return (subscription[:-2] == topic or
-                topic.startswith(subscription[:-1]))
-
+        subscription = subscription[:-2]
+        suffix = "(.*)"
     sub_parts = subscription.split('/')
-    topic_parts = topic.split('/')
+    for sub_part in sub_parts:
+        if sub_part == "+":
+            reg_ex_parts.append(r"([^\/]+)")
+        else:
+            reg_ex_parts.append(sub_part)
 
-    return (len(sub_parts) == len(topic_parts) and
-            all(a == b for a, b in zip(sub_parts, topic_parts) if a != '+'))
+    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
+
+    reg = re.compile(reg_ex)
+
+    return reg.match(topic) is not None

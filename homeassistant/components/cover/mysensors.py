@@ -11,11 +11,12 @@ from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.const import STATE_ON, STATE_OFF
 
 _LOGGER = logging.getLogger(__name__)
+
 DEPENDENCIES = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the mysensors platform for covers."""
+    """Set up the MySensors platform for covers."""
     if discovery_info is None:
         return
 

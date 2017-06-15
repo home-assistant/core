@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup MoldIndicator sensor."""
+    """Set up MoldIndicator sensor."""
     name = config.get(CONF_NAME, DEFAULT_NAME)
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
     outdoor_temp_sensor = config.get(CONF_OUTDOOR_TEMP)
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([MoldIndicator(
         hass, name, indoor_temp_sensor, outdoor_temp_sensor,
-        indoor_humidity_sensor, calib_factor)])
+        indoor_humidity_sensor, calib_factor)], True)
 
 
 class MoldIndicator(Entity):
@@ -94,8 +94,6 @@ class MoldIndicator(Entity):
         if indoor_hum:
             self._indoor_hum = MoldIndicator._update_hum_sensor(indoor_hum)
 
-        self.update()
-
     @staticmethod
     def _update_temp_sensor(state):
         """Parse temperature sensor value."""
@@ -113,9 +111,8 @@ class MoldIndicator(Entity):
         elif unit == TEMP_CELSIUS:
             return temp
         else:
-            _LOGGER.error("Temp sensor has unsupported unit: %s"
-                          " (allowed: %s, %s)",
-                          unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+            _LOGGER.error("Temp sensor has unsupported unit: %s (allowed: %s, "
+                          "%s)", unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
         return None
 
@@ -151,7 +148,7 @@ class MoldIndicator(Entity):
         self._calc_moldindicator()
 
     def _sensor_changed(self, entity_id, old_state, new_state):
-        """Called when sensor values change."""
+        """Handle sensor state changes."""
         if new_state is None:
             return
 
@@ -167,7 +164,7 @@ class MoldIndicator(Entity):
 
     def _calc_dewpoint(self):
         """Calculate the dewpoint for the indoor air."""
-        # use magnus approximation to calculate the dew point
+        # Use magnus approximation to calculate the dew point
         alpha = MAGNUS_K2 * self._indoor_temp / (MAGNUS_K3 + self._indoor_temp)
         beta = MAGNUS_K2 * MAGNUS_K3 / (MAGNUS_K3 + self._indoor_temp)
 
@@ -215,11 +212,11 @@ class MoldIndicator(Entity):
         else:
             self._state = '{0:d}'.format(int(crit_humidity))
 
-        _LOGGER.debug('Mold indicator humidity: %s ', self._state)
+        _LOGGER.debug("Mold indicator humidity: %s", self._state)
 
     @property
     def should_poll(self):
-        """Polling needed."""
+        """Return the polling state."""
         return False
 
     @property

@@ -20,7 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['rflink==0.0.31']
+REQUIREMENTS = ['rflink==0.0.34']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -371,7 +371,7 @@ class RflinkCommand(RflinkDevice):
             # Rflink protocol/transport handles asynchronous writing of buffer
             # to serial/tcp device. Does not wait for command send
             # confirmation.
-            self.hass.loop.run_in_executor(None, ft.partial(
+            self.hass.async_add_job(ft.partial(
                 self._protocol.send_command, self._device_id, cmd))
 
         if repetitions > 1:

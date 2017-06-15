@@ -95,7 +95,7 @@ class UPCDeviceScanner(DeviceScanner):
 
     @asyncio.coroutine
     def async_get_device_name(self, device):
-        """The firmware doesn't save the name of the wireless device."""
+        """Ge the firmware doesn't save the name of the wireless device."""
         return None
 
     @asyncio.coroutine
@@ -118,7 +118,7 @@ class UPCDeviceScanner(DeviceScanner):
                 'Password': self.password,
             })
 
-            # successfull?
+            # Successful?
             return data is not None
 
         except (asyncio.TimeoutError, aiohttp.ClientError):

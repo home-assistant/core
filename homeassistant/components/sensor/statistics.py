@@ -21,9 +21,11 @@ from homeassistant.helpers.event import async_track_state_change
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_MIN_VALUE = 'min_value'
-ATTR_MAX_VALUE = 'max_value'
+ATTR_AVERAGE_CHANGE = 'average_change'
+ATTR_CHANGE = 'change'
 ATTR_COUNT = 'count'
+ATTR_MAX_VALUE = 'max_value'
+ATTR_MIN_VALUE = 'min_value'
 ATTR_MEAN = 'mean'
 ATTR_MEDIAN = 'median'
 ATTR_VARIANCE = 'variance'
@@ -76,11 +78,12 @@ class StatisticsSensor(Entity):
             self.states = deque(maxlen=self._sampling_size)
         self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
+        self.average_change = self.change = 0
 
         @callback
         # pylint: disable=invalid-name
         def async_stats_sensor_state_listener(entity, old_state, new_state):
-            """Called when the sensor changes state."""
+            """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
                 ATTR_UNIT_OF_MEASUREMENT)
 
@@ -130,6 +133,8 @@ class StatisticsSensor(Entity):
                 ATTR_STANDARD_DEVIATION: self.stdev,
                 ATTR_TOTAL: self.total,
                 ATTR_VARIANCE: self.variance,
+                ATTR_CHANGE: self.change,
+                ATTR_AVERAGE_CHANGE: self.average_change,
             }
 
     @property
@@ -154,5 +159,10 @@ class StatisticsSensor(Entity):
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)
                 self.max = max(self.states)
+                self.change = self.states[-1] - self.states[0]
+                self.average_change = self.change
+                if len(self.states) > 1:
+                    self.average_change /= len(self.states) - 1
             else:
                 self.min = self.max = self.total = STATE_UNKNOWN
+                self.average_change = self.change = STATE_UNKNOWN

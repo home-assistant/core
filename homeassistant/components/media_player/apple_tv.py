@@ -45,13 +45,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Apple TV platform."""
+    """Set up the Apple TV platform."""
     import pyatv
 
     if discovery_info is not None:
         name = discovery_info['name']
         host = discovery_info['host']
-        login_id = discovery_info['hsgid']
+        login_id = discovery_info['properties']['hG']
         start_off = False
     else:
         name = config.get(CONF_NAME)
@@ -95,12 +95,13 @@ class AppleTvDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to HASS."""
+        """Handle when an entity is about to be added to Home Assistant."""
         if not self._is_off:
             self._atv.push_updater.start()
 
     @callback
     def _set_power_off(self, is_off):
+        """Set the power to off."""
         self._playing = None
         self._artwork_hash = None
         self._is_off = is_off
@@ -145,6 +146,8 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
+        self._playing = playing
+
         if self.state == STATE_IDLE:
             self._artwork_hash = None
         elif self._has_playing_media_changed(playing):
@@ -153,7 +156,6 @@ class AppleTvDevice(MediaPlayerDevice):
             self._artwork_hash = hashlib.md5(
                 base.encode('utf-8')).hexdigest()
 
-        self._playing = playing
         self.hass.async_add_job(self.async_update_ha_state())
 
     def _has_playing_media_changed(self, new_playing):

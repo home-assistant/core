@@ -4,6 +4,7 @@ Support for Wink switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.wink/
 """
+import asyncio
 
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.helpers.entity import ToggleEntity
@@ -12,7 +13,7 @@ DEPENDENCIES = ['wink']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink platform."""
+    """Set up the Wink platform."""
     import pywink
 
     for switch in pywink.get_switches():
@@ -39,6 +40,11 @@ class WinkToggleDevice(WinkDevice, ToggleEntity):
     def __init__(self, wink, hass):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['switch'].append(self)
 
     @property
     def is_on(self):

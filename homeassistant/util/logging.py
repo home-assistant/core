@@ -73,7 +73,7 @@ class AsyncHandler(object):
             self.loop.call_soon_threadsafe(self._queue.put_nowait, record)
 
     def __repr__(self):
-        """String name of this."""
+        """Return the string names."""
         return str(self.handler)
 
     def _process(self):

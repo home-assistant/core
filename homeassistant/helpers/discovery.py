@@ -1,7 +1,7 @@
 """Helper methods to help with platform discovery.
 
 There are two different types of discoveries that can be fired/listened for.
- - listen/discover is for services. These are targetted at a component.
+ - listen/discover is for services. These are targeted at a component.
  - listen_platform/discover_platform is for platforms. These are used by
    components to allow discovery of their platforms.
 """
@@ -19,7 +19,7 @@ ATTR_PLATFORM = 'platform'
 
 
 def listen(hass, service, callback):
-    """Setup listener for discovery of specific service.
+    """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
     """
@@ -29,7 +29,7 @@ def listen(hass, service, callback):
 
 @core.callback
 def async_listen(hass, service, callback):
-    """Setup listener for discovery of specific service.
+    """Set up listener for discovery of specific service.
 
     Service can be a string or a list/tuple.
     """

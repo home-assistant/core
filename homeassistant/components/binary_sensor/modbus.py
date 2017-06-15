@@ -16,9 +16,9 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['modbus']
 
-CONF_COIL = "coil"
-CONF_COILS = "coils"
-CONF_SLAVE = "slave"
+CONF_COIL = 'coil'
+CONF_COILS = 'coils'
+CONF_SLAVE = 'slave'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COILS): [{
@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Modbus binary sensors."""
+    """Set up the Modbus binary sensors."""
     sensors = []
     for coil in config.get(CONF_COILS):
         sensors.append(ModbusCoilSensor(

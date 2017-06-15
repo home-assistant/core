@@ -36,7 +36,7 @@ IGNORE_DOMAINS = ('zone', 'scene',)
 
 
 def last_recorder_run(hass):
-    """Retireve the last closed recorder run from the DB."""
+    """Retrieve the last closed recorder run from the database."""
     from homeassistant.components.recorder.models import RecorderRuns
 
     with session_scope(hass=hass) as session:
@@ -174,7 +174,7 @@ def get_state(hass, utc_point_in_time, entity_id, run=None):
 
 # pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup the history hooks."""
+    """Set up the history hooks."""
     filters = Filters()
     exclude = config[DOMAIN].get(CONF_EXCLUDE)
     if exclude:
@@ -223,7 +223,7 @@ class HistoryPeriodView(HomeAssistantView):
         if start_time > now:
             return self.json([])
 
-        end_time = request.GET.get('end_time')
+        end_time = request.query.get('end_time')
         if end_time:
             end_time = dt_util.as_utc(
                 dt_util.parse_datetime(end_time))
@@ -231,11 +231,11 @@ class HistoryPeriodView(HomeAssistantView):
                 return self.json_message('Invalid end_time', HTTP_BAD_REQUEST)
         else:
             end_time = start_time + one_day
-        entity_id = request.GET.get('filter_entity_id')
+        entity_id = request.query.get('filter_entity_id')
 
-        result = yield from request.app['hass'].loop.run_in_executor(
-            None, get_significant_states, request.app['hass'], start_time,
-            end_time, entity_id, self.filters)
+        result = yield from request.app['hass'].async_add_job(
+            get_significant_states, request.app['hass'], start_time, end_time,
+            entity_id, self.filters)
         result = result.values()
         if _LOGGER.isEnabledFor(logging.DEBUG):
             elapsed = time.perf_counter() - timer_start

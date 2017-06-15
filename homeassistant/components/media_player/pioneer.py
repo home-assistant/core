@@ -40,11 +40,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Pioneer platform."""
-    pioneer = PioneerDevice(config.get(CONF_NAME),
-                            config.get(CONF_HOST),
-                            config.get(CONF_PORT),
-                            config.get(CONF_TIMEOUT))
+    """Set up the Pioneer platform."""
+    pioneer = PioneerDevice(
+        config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
+        config.get(CONF_TIMEOUT))
 
     if pioneer.update():
         add_devices([pioneer])
@@ -126,9 +125,8 @@ class PioneerDevice(MediaPlayerDevice):
         # Build the source name dictionaries if necessary
         if not self._source_name_to_number:
             for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(telnet,
-                                             "?RGB" + str(i).zfill(2),
-                                             "RGB")
+                result = self.telnet_request(
+                    telnet, "?RGB" + str(i).zfill(2), "RGB")
 
                 if not result:
                     continue

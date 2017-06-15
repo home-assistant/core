@@ -13,7 +13,7 @@ ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Ecobee sensors."""
+    """Set up the Ecobee sensors."""
     if discovery_info is None:
         return
     data = ecobee.NETWORK

@@ -25,7 +25,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.frontend import add_manifest_json_key
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['pywebpush==0.6.1', 'PyJWT==1.4.2']
+REQUIREMENTS = ['pywebpush==1.0.4', 'PyJWT==1.5.0']
 
 DEPENDENCIES = ['frontend']
 
@@ -48,6 +48,7 @@ ATTR_ENDPOINT = 'endpoint'
 ATTR_KEYS = 'keys'
 ATTR_AUTH = 'auth'
 ATTR_P256DH = 'p256dh'
+ATTR_EXPIRATIONTIME = 'expirationTime'
 
 ATTR_TAG = 'tag'
 ATTR_ACTION = 'action'
@@ -71,7 +72,9 @@ SUBSCRIPTION_SCHEMA = vol.All(dict,
                               vol.Schema({
                                   # pylint: disable=no-value-for-parameter
                                   vol.Required(ATTR_ENDPOINT): vol.Url(),
-                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA
+                                  vol.Required(ATTR_KEYS): KEYS_SCHEMA,
+                                  vol.Optional(ATTR_EXPIRATIONTIME):
+                                      vol.Any(None, cv.positive_int)
                                   }))
 
 REGISTER_SCHEMA = vol.Schema({
@@ -89,12 +92,10 @@ CALLBACK_EVENT_PAYLOAD_SCHEMA = vol.Schema({
 
 NOTIFY_CALLBACK_EVENT = 'html5_notification'
 
-# badge and timestamp are Chrome specific (not in official spec)
-
-HTML5_SHOWNOTIFICATION_PARAMETERS = ('actions', 'badge', 'body', 'dir',
-                                     'icon', 'lang', 'renotify',
-                                     'requireInteraction', 'tag', 'timestamp',
-                                     'vibrate')
+# Badge and timestamp are Chrome specific (not in official spec)
+HTML5_SHOWNOTIFICATION_PARAMETERS = (
+    'actions', 'badge', 'body', 'dir', 'icon', 'lang', 'renotify',
+    'requireInteraction', 'tag', 'timestamp', 'vibrate')
 
 
 def get_service(hass, config, discovery_info=None):
@@ -114,10 +115,10 @@ def get_service(hass, config, discovery_info=None):
     gcm_sender_id = config.get(ATTR_GCM_SENDER_ID)
 
     if gcm_sender_id is not None:
-        add_manifest_json_key(ATTR_GCM_SENDER_ID,
-                              config.get(ATTR_GCM_SENDER_ID))
+        add_manifest_json_key(
+            ATTR_GCM_SENDER_ID, config.get(ATTR_GCM_SENDER_ID))
 
-    return HTML5NotificationService(gcm_api_key, registrations)
+    return HTML5NotificationService(gcm_api_key, registrations, json_path)
 
 
 def _load_config(filename):
@@ -135,7 +136,7 @@ def _load_config(filename):
 
         return json.loads(inp)
     except (IOError, ValueError) as error:
-        _LOGGER.error('Reading config file %s failed: %s', filename, error)
+        _LOGGER.error("Reading config file %s failed: %s", filename, error)
         return None
 
 
@@ -157,7 +158,7 @@ def _save_config(filename, config):
             fdesc.write(json.dumps(
                 config, cls=JSONBytesDecoder, indent=4, sort_keys=True))
     except (IOError, TypeError) as error:
-        _LOGGER.error('Saving config file failed: %s', error)
+        _LOGGER.error("Saving config file failed: %s", error)
         return False
     return True
 
@@ -184,17 +185,16 @@ class HTML5PushRegistrationView(HomeAssistantView):
         try:
             data = REGISTER_SCHEMA(data)
         except vol.Invalid as ex:
-            return self.json_message(humanize_error(data, ex),
-                                     HTTP_BAD_REQUEST)
+            return self.json_message(
+                humanize_error(data, ex), HTTP_BAD_REQUEST)
 
-        name = ensure_unique_string('unnamed device',
-                                    self.registrations.keys())
+        name = ensure_unique_string('unnamed device', self.registrations)
 
         self.registrations[name] = data
 
         if not _save_config(self.json_path, self.registrations):
-            return self.json_message('Error saving registration.',
-                                     HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber registered.')
 
@@ -223,8 +223,8 @@ class HTML5PushRegistrationView(HomeAssistantView):
 
         if not _save_config(self.json_path, self.registrations):
             self.registrations[found] = reg
-            return self.json_message('Error saving registration.',
-                                     HTTP_INTERNAL_SERVER_ERROR)
+            return self.json_message(
+                'Error saving registration.', HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json_message('Push notification subscriber unregistered.')
 
@@ -249,7 +249,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         # 2a. If decode is successful, return the payload.
         # 2b. If decode is unsuccessful, return a 401.
 
-        target_check = jwt.decode(token, verify=False)
+        target_check = jwt.decode(token, options={'verify_signature': False})
         if target_check[ATTR_TARGET] in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target[ATTR_SUBSCRIPTION][ATTR_KEYS][ATTR_AUTH]
@@ -317,7 +317,7 @@ class HTML5PushCallbackView(HomeAssistantView):
         try:
             event_payload = CALLBACK_EVENT_PAYLOAD_SCHEMA(event_payload)
         except vol.Invalid as ex:
-            _LOGGER.warning('Callback event payload is not valid! %s',
+            _LOGGER.warning("Callback event payload is not valid: %s",
                             humanize_error(event_payload, ex))
 
         event_name = '{}.{}'.format(NOTIFY_CALLBACK_EVENT,
@@ -330,10 +330,11 @@ class HTML5PushCallbackView(HomeAssistantView):
 class HTML5NotificationService(BaseNotificationService):
     """Implement the notification service for HTML5."""
 
-    def __init__(self, gcm_key, registrations):
+    def __init__(self, gcm_key, registrations, json_path):
         """Initialize the service."""
         self._gcm_key = gcm_key
         self.registrations = registrations
+        self.registrations_json_path = json_path
 
     @property
     def targets(self):
@@ -386,11 +387,11 @@ class HTML5NotificationService(BaseNotificationService):
         if not targets:
             targets = self.registrations.keys()
 
-        for target in targets:
+        for target in list(targets):
             info = self.registrations.get(target)
             if info is None:
-                _LOGGER.error('%s is not a valid HTML5 push notification'
-                              ' target!', target)
+                _LOGGER.error("%s is not a valid HTML5 push notification"
+                              " target", target)
                 continue
 
             jwt_exp = (datetime.datetime.fromtimestamp(timestamp) +
@@ -402,5 +403,16 @@ class HTML5NotificationService(BaseNotificationService):
             jwt_token = jwt.encode(jwt_claims, jwt_secret).decode('utf-8')
             payload[ATTR_DATA][ATTR_JWT] = jwt_token
 
-            WebPusher(info[ATTR_SUBSCRIPTION]).send(
+            response = WebPusher(info[ATTR_SUBSCRIPTION]).send(
                 json.dumps(payload), gcm_key=self._gcm_key, ttl='86400')
+
+            # pylint: disable=no-member
+            if response.status_code == 410:
+                _LOGGER.info("Notification channel has expired")
+                reg = self.registrations.pop(target)
+                if not _save_config(self.registrations_json_path,
+                                    self.registrations):
+                    self.registrations[target] = reg
+                    _LOGGER.error("Error saving registration.")
+                else:
+                    _LOGGER.info("Configuration saved")

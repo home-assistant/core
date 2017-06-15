@@ -1,10 +1,12 @@
-"""Template helper methods for rendering strings with HA data."""
+"""Template helper methods for rendering strings with Home Assistant data."""
 from datetime import datetime
 import json
 import logging
+import random
 import re
 
 import jinja2
+from jinja2 import contextfilter
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 
 from homeassistant.const import (
@@ -54,7 +56,7 @@ class Template(object):
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
-        """Instantiate a Template."""
+        """Instantiate a template."""
         if not isinstance(template, str):
             raise TypeError('Expected template to be a string')
 
@@ -131,7 +133,7 @@ class Template(object):
         try:
             return self._compiled.render(variables).strip()
         except jinja2.TemplateError as ex:
-            _LOGGER.error('Error parsing value: %s (value: %s, template: %s)',
+            _LOGGER.error("Error parsing value: %s (value: %s, template: %s)",
                           ex, value, self.template)
             return value if error_value is _SENTINEL else error_value
 
@@ -238,11 +240,11 @@ class LocationMethods(object):
             point_state = self._resolve_state(args[0])
 
             if point_state is None:
-                _LOGGER.warning('Closest:Unable to find state %s', args[0])
+                _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
             elif not loc_helper.has_location(point_state):
                 _LOGGER.warning(
-                    'Closest:State does not contain valid location: %s',
+                    "Closest:State does not contain valid location: %s",
                     point_state)
                 return None
 
@@ -257,7 +259,7 @@ class LocationMethods(object):
 
             if latitude is None or longitude is None:
                 _LOGGER.warning(
-                    'Closest:Received invalid coordinates: %s, %s',
+                    "Closest:Received invalid coordinates: %s, %s",
                     args[0], args[1])
                 return None
 
@@ -297,7 +299,7 @@ class LocationMethods(object):
 
                 if latitude is None or longitude is None:
                     _LOGGER.warning(
-                        'Distance:State does not contains a location: %s',
+                        "Distance:State does not contains a location: %s",
                         value)
                     return None
 
@@ -305,7 +307,7 @@ class LocationMethods(object):
                 # We expect this and next value to be lat&lng
                 if not to_process:
                     _LOGGER.warning(
-                        'Distance:Expected latitude and longitude, got %s',
+                        "Distance:Expected latitude and longitude, got %s",
                         value)
                     return None
 
@@ -314,8 +316,8 @@ class LocationMethods(object):
                 longitude = convert(value_2, float)
 
                 if latitude is None or longitude is None:
-                    _LOGGER.warning('Distance:Unable to process latitude and '
-                                    'longitude: %s, %s', value, value_2)
+                    _LOGGER.warning("Distance:Unable to process latitude and "
+                                    "longitude: %s, %s", value, value_2)
                     return None
 
             locations.append((latitude, longitude))
@@ -336,7 +338,7 @@ class LocationMethods(object):
 
 
 def forgiving_round(value, precision=0):
-    """Rounding filter that accepts strings."""
+    """Round accepted strings."""
     try:
         value = round(float(value), precision)
         return int(value) if precision == 0 else value
@@ -418,6 +420,16 @@ def forgiving_float(value):
         return value
 
 
+@contextfilter
+def random_every_time(context, values):
+    """Choose a random value.
+
+    Unlike Jinja's random filter,
+    this is context-dependent to avoid caching the chosen value.
+    """
+    return random.choice(values)
+
+
 class TemplateEnvironment(ImmutableSandboxedEnvironment):
     """The Home Assistant template environment."""
 
@@ -435,6 +447,7 @@ ENV.filters['timestamp_utc'] = timestamp_utc
 ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
+ENV.filters['random'] = random_every_time
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow

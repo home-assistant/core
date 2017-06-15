@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup Hikvision binary sensor devices."""
+    """Set up the Hikvision binary sensor devices."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -77,16 +77,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     customize = config.get(CONF_CUSTOMIZE)
 
     if config.get(CONF_SSL):
-        protocol = "https"
+        protocol = 'https'
     else:
-        protocol = "http"
+        protocol = 'http'
 
     url = '{}://{}'.format(protocol, host)
 
     data = HikvisionData(hass, url, port, name, username, password)
 
     if data.sensors is None:
-        _LOGGER.error('Hikvision event stream has no data, unable to setup.')
+        _LOGGER.error("Hikvision event stream has no data, unable to setup")
         return False
 
     entities = []
@@ -104,7 +104,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ignore = custom.get(CONF_IGNORED)
             delay = custom.get(CONF_DELAY)
 
-            _LOGGER.debug('Entity: %s - %s, Options - Ignore: %s, Delay: %s',
+            _LOGGER.debug("Entity: %s - %s, Options - Ignore: %s, Delay: %s",
                           data.name, sensor_name, ignore, delay)
             if not ignore:
                 entities.append(HikvisionBinarySensor(
@@ -126,8 +126,8 @@ class HikvisionData(object):
         self._password = password
 
         # Establish camera
-        self.camdata = HikCamera(self._url, self._port,
-                                 self._username, self._password)
+        self.camdata = HikCamera(
+            self._url, self._port, self._username, self._password)
 
         if self._name is None:
             self._name = self.camdata.get_name
@@ -251,7 +251,7 @@ class HikvisionBinarySensor(BinarySensorDevice):
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
-                _LOGGER.debug('%s Called delayed (%ssec) update.',
+                _LOGGER.debug("%s Called delayed (%ssec) update",
                               self._name, self._delay)
                 self.schedule_update_ha_state()
                 self._timer = None

@@ -4,62 +4,197 @@ Support for interacting with Snapcast clients.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.snapcast/
 """
+import asyncio
 import logging
+from os import path
 import socket
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_SELECT_SOURCE,
-    SUPPORT_PLAY, PLATFORM_SCHEMA, MediaPlayerDevice)
+    PLATFORM_SCHEMA, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST, CONF_PORT)
+    STATE_ON, STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, CONF_HOST,
+    CONF_PORT, ATTR_ENTITY_ID)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.config import load_yaml_config_file
 
-REQUIREMENTS = ['snapcast==1.2.2']
+REQUIREMENTS = ['snapcast==2.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'snapcast'
 
-SUPPORT_SNAPCAST = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+SERVICE_SNAPSHOT = 'snapcast_snapshot'
+SERVICE_RESTORE = 'snapcast_restore'
 
+SUPPORT_SNAPCAST_CLIENT = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET
+SUPPORT_SNAPCAST_GROUP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
+    SUPPORT_SELECT_SOURCE
+
+GROUP_PREFIX = 'snapcast_group_'
+GROUP_SUFFIX = 'Snapcast Group'
+CLIENT_PREFIX = 'snapcast_client_'
+CLIENT_SUFFIX = 'Snapcast Client'
+
+SERVICE_SCHEMA = vol.Schema({
+    ATTR_ENTITY_ID: cv.entity_ids,
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_PORT): cv.port,
+    vol.Optional(CONF_PORT): cv.port
 })
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the Snapcast platform."""
     import snapcast.control
+    from snapcast.control.server import CONTROL_PORT
     host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT, snapcast.control.CONTROL_PORT)
+    port = config.get(CONF_PORT, CONTROL_PORT)
+
+    @asyncio.coroutine
+    def _handle_service(service):
+        """Handle services."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+        devices = [device for device in hass.data[DOMAIN]
+                   if device.entity_id in entity_ids]
+        for device in devices:
+            if service.service == SERVICE_SNAPSHOT:
+                device.snapshot()
+            elif service.service == SERVICE_RESTORE:
+                yield from device.async_restore()
+
+    descriptions = load_yaml_config_file(
+        path.join(path.dirname(__file__), 'services.yaml'))
+    hass.services.async_register(
+        DOMAIN, SERVICE_SNAPSHOT, _handle_service,
+        descriptions.get(SERVICE_SNAPSHOT), schema=SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_RESTORE, _handle_service,
+        descriptions.get(SERVICE_RESTORE), schema=SERVICE_SCHEMA)
 
     try:
-        server = snapcast.control.Snapserver(host, port)
+        server = yield from snapcast.control.create_server(
+            hass.loop, host, port)
     except socket.gaierror:
         _LOGGER.error('Could not connect to Snapcast server at %s:%d',
                       host, port)
         return False
+    groups = [SnapcastGroupDevice(group) for group in server.groups]
+    clients = [SnapcastClientDevice(client) for client in server.clients]
+    devices = groups + clients
+    hass.data[DOMAIN] = devices
+    async_add_devices(devices)
+    return True
 
-    add_devices([SnapcastDevice(client) for client in server.clients])
+
+class SnapcastGroupDevice(MediaPlayerDevice):
+    """Representation of a Snapcast group device."""
+
+    def __init__(self, group):
+        """Initialize the Snapcast group device."""
+        group.set_callback(self.schedule_update_ha_state)
+        self._group = group
+
+    @property
+    def state(self):
+        """Return the state of the player."""
+        return {
+            'idle': STATE_IDLE,
+            'playing': STATE_PLAYING,
+            'unknown': STATE_UNKNOWN,
+        }.get(self._group.stream_status, STATE_UNKNOWN)
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return '{}{}'.format(GROUP_PREFIX, self._group.identifier)
+
+    @property
+    def source(self):
+        """Return the current input source."""
+        return self._group.stream
+
+    @property
+    def volume_level(self):
+        """Return the volume level."""
+        return self._group.volume / 100
+
+    @property
+    def is_volume_muted(self):
+        """Volume muted."""
+        return self._group.muted
+
+    @property
+    def supported_features(self):
+        """Flag media player features that are supported."""
+        return SUPPORT_SNAPCAST_GROUP
+
+    @property
+    def source_list(self):
+        """List of available input sources."""
+        return list(self._group.streams_by_name().keys())
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        name = '{} {}'.format(self._group.friendly_name, GROUP_SUFFIX)
+        return {
+            'friendly_name': name
+        }
+
+    @property
+    def should_poll(self):
+        """Do not poll for state."""
+        return False
+
+    @asyncio.coroutine
+    def async_select_source(self, source):
+        """Set input source."""
+        streams = self._group.streams_by_name()
+        if source in streams:
+            yield from self._group.set_stream(streams[source].identifier)
+            self.hass.async_add_job(self.async_update_ha_state())
+
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
+        """Send the mute command."""
+        yield from self._group.set_muted(mute)
+        self.hass.async_add_job(self.async_update_ha_state())
+
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
+        """Set the volume level."""
+        yield from self._group.set_volume(round(volume * 100))
+        self.hass.async_add_job(self.async_update_ha_state())
+
+    def snapshot(self):
+        """Snapshot the group state."""
+        self._group.snapshot()
+
+    @asyncio.coroutine
+    def async_restore(self):
+        """Restore the group state."""
+        yield from self._group.restore()
 
 
-class SnapcastDevice(MediaPlayerDevice):
+class SnapcastClientDevice(MediaPlayerDevice):
     """Representation of a Snapcast client device."""
 
     def __init__(self, client):
-        """Initialize the Snapcast device."""
+        """Initialize the Snapcast client device."""
+        client.set_callback(self.schedule_update_ha_state)
         self._client = client
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self._client.identifier
+        return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
 
     @property
     def volume_level(self):
@@ -74,39 +209,45 @@ class SnapcastDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_SNAPCAST
+        return SUPPORT_SNAPCAST_CLIENT
 
     @property
     def state(self):
         """Return the state of the player."""
-        if not self._client.connected:
-            return STATE_OFF
+        if self._client.connected:
+            return STATE_ON
+        return STATE_OFF
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        name = '{} {}'.format(self._client.friendly_name, CLIENT_SUFFIX)
         return {
-            'idle': STATE_IDLE,
-            'playing': STATE_PLAYING,
-            'unknown': STATE_UNKNOWN,
-        }.get(self._client.stream.status, STATE_UNKNOWN)
+            'friendly_name': name
+        }
 
     @property
-    def source(self):
-        """Return the current input source."""
-        return self._client.stream.name
+    def should_poll(self):
+        """Do not poll for state."""
+        return False
 
-    @property
-    def source_list(self):
-        """List of available input sources."""
-        return list(self._client.streams_by_name().keys())
-
-    def mute_volume(self, mute):
+    @asyncio.coroutine
+    def async_mute_volume(self, mute):
         """Send the mute command."""
-        self._client.muted = mute
+        yield from self._client.set_muted(mute)
+        self.hass.async_add_job(self.async_update_ha_state())
 
-    def set_volume_level(self, volume):
+    @asyncio.coroutine
+    def async_set_volume_level(self, volume):
         """Set the volume level."""
-        self._client.volume = round(volume * 100)
+        yield from self._client.set_volume(round(volume * 100))
+        self.hass.async_add_job(self.async_update_ha_state())
 
-    def select_source(self, source):
-        """Set input source."""
-        streams = self._client.streams_by_name()
-        if source in streams:
-            self._client.stream = streams[source].identifier
+    def snapshot(self):
+        """Snapshot the client state."""
+        self._client.snapshot()
+
+    @asyncio.coroutine
+    def async_restore(self):
+        """Restore the client state."""
+        yield from self._client.restore()

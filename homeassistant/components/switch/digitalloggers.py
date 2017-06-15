@@ -1,15 +1,8 @@
 """
 Support for Digital Loggers DIN III Relays.
 
-Support for Digital Loggers DIN III Relays and possibly other items
-through Dwight Hubbard's, python-dlipower.
-
-For more details about python-dlipower, please see
-https://github.com/dwighthubbard/python-dlipower
-
-Custom ports are NOT supported due to a limitation of the dlipower
-library, not the digital loggers switch
-
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.digitalloggers/
 """
 import logging
 from datetime import timedelta
@@ -22,8 +15,10 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-
 REQUIREMENTS = ['dlipower==0.7.165']
+
+_LOGGER = logging.getLogger(__name__)
+
 
 CONF_CYCLETIME = 'cycletime'
 
@@ -35,8 +30,6 @@ DEFAULT_CYCLETIME = 2
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
 
-_LOGGER = logging.getLogger(__name__)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -46,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
     vol.Optional(CONF_CYCLETIME, default=DEFAULT_CYCLETIME):
         vol.All(vol.Coerce(int), vol.Range(min=1, max=600)),
-
 })
 
 
@@ -103,7 +95,7 @@ class DINRelay(SwitchDevice):
 
     @property
     def should_poll(self):
-        """Polling is needed."""
+        """Return the polling state."""
         return True
 
     def turn_on(self, **kwargs):

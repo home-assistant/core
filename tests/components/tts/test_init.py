@@ -4,6 +4,7 @@ import os
 import shutil
 from unittest.mock import patch, PropertyMock
 
+import pytest
 import requests
 
 import homeassistant.components.http as http
@@ -17,6 +18,14 @@ from homeassistant.setup import setup_component
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component,
     mock_service)
+
+
+@pytest.fixture(autouse=True)
+def mutagen_mock():
+    """Mock writing tags."""
+    with patch('homeassistant.components.tts.SpeechManager.write_tags',
+               side_effect=lambda *args: args[1]):
+        yield
 
 
 class TestTTS(object):

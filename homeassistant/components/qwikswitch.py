@@ -123,7 +123,7 @@ class QSLight(QSToggleEntity, Light):
 
 
 def setup(hass, config):
-    """Setup the QSUSB component."""
+    """Set up the QSUSB component."""
     from pyqwikswitch import (
         QSUsb, CMD_BUTTONS, QS_NAME, QS_ID, QS_CMD, PQS_VALUE, PQS_TYPE,
         QSType)
@@ -165,13 +165,13 @@ def setup(hass, config):
 
     # Load platforms
     for comp_name in ('switch', 'light'):
-        if len(QSUSB[comp_name]) > 0:
+        if QSUSB[comp_name]:
             load_platform(hass, comp_name, 'qwikswitch', {}, config)
 
     def qs_callback(item):
         """Typically a button press or update signal."""
         if qsusb is None:  # Shutting down
-            _LOGGER.info("Done")
+            _LOGGER.info("Botton press or updating signal done")
             return
 
         # If button pressed, fire a hass event

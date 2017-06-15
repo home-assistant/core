@@ -19,9 +19,6 @@ calls = []
 
 NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
-# 2016-10-10T19:51:42+00:00
-STATIC_TIME = datetime.datetime.utcfromtimestamp(1476129102)
-
 
 @pytest.fixture
 def alexa_client(loop, hass, test_client):
@@ -39,17 +36,14 @@ def alexa_client(loop, hass, test_client):
             "flash_briefings": {
                 "weather": [
                     {"title": "Weekly forecast",
-                     "text": "This week it will be sunny.",
-                     "date": "2016-10-09T19:51:42.0Z"},
+                     "text": "This week it will be sunny."},
                     {"title": "Current conditions",
-                     "text": "Currently it is 80 degrees fahrenheit.",
-                     "date": STATIC_TIME}
+                     "text": "Currently it is 80 degrees fahrenheit."}
                 ],
                 "news_audio": {
                     "title": "NPR",
                     "audio": NPR_NEWS_MP3_URL,
                     "display_url": "https://npr.org",
-                    "date": STATIC_TIME,
                     "uid": "uuid"
                 }
             },
@@ -436,16 +430,8 @@ def test_flash_briefing_date_from_str(alexa_client):
     req = yield from _flash_briefing_req(alexa_client, "weather")
     assert req.status == 200
     data = yield from req.json()
-    assert data[0].get(alexa.ATTR_UPDATE_DATE) == "2016-10-09T19:51:42.0Z"
-
-
-@asyncio.coroutine
-def test_flash_briefing_date_from_datetime(alexa_client):
-    """Test the response has a valid date from a datetime object."""
-    req = yield from _flash_briefing_req(alexa_client, "weather")
-    assert req.status == 200
-    data = yield from req.json()
-    assert data[1].get(alexa.ATTR_UPDATE_DATE) == '2016-10-10T19:51:42.0Z'
+    assert isinstance(datetime.datetime.strptime(data[0].get(
+        alexa.ATTR_UPDATE_DATE), alexa.DATE_FORMAT), datetime.datetime)
 
 
 @asyncio.coroutine
@@ -463,4 +449,8 @@ def test_flash_briefing_valid(alexa_client):
     req = yield from _flash_briefing_req(alexa_client, "news_audio")
     assert req.status == 200
     json = yield from req.json()
+    assert isinstance(datetime.datetime.strptime(json[0].get(
+        alexa.ATTR_UPDATE_DATE), alexa.DATE_FORMAT), datetime.datetime)
+    json[0].pop(alexa.ATTR_UPDATE_DATE)
+    data[0].pop(alexa.ATTR_UPDATE_DATE)
     assert json == data

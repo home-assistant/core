@@ -14,9 +14,9 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
-REQUIREMENTS = ['pyRFXtrx==0.17.0']
+REQUIREMENTS = ['pyRFXtrx==0.18.0']
 
-DOMAIN = "rfxtrx"
+DOMAIN = 'rfxtrx'
 
 DEFAULT_SIGNAL_REPETITIONS = 1
 
@@ -126,10 +126,10 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the RFXtrx component."""
+    """Set up the RFXtrx component."""
     # Declare the Handle event
     def handle_receive(event):
-        """Callback all subscribers for RFXtrx gateway."""
+        """Handle revieved messgaes from RFXtrx gateway."""
         # Log RFXCOM event
         if not event.device.id_string:
             return
@@ -191,7 +191,7 @@ def get_rfx_object(packetid):
     return obj
 
 
-def get_devices_from_config(config, device):
+def get_devices_from_config(config, device, hass):
     """Read rfxtrx configuration."""
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
 
@@ -209,12 +209,13 @@ def get_devices_from_config(config, device):
 
         new_device = device(entity_info[ATTR_NAME], event, datas,
                             signal_repetitions)
+        new_device.hass = hass
         RFX_DEVICES[device_id] = new_device
         devices.append(new_device)
     return devices
 
 
-def get_new_device(event, config, device):
+def get_new_device(event, config, device, hass):
     """Add entity if not exist and the automatic_add is True."""
     device_id = slugify(event.device.id_string.lower())
     if device_id in RFX_DEVICES:
@@ -235,6 +236,7 @@ def get_new_device(event, config, device):
     signal_repetitions = config[CONF_SIGNAL_REPETITIONS]
     new_device = device(pkt_id, event, datas,
                         signal_repetitions)
+    new_device.hass = hass
     RFX_DEVICES[device_id] = new_device
     return new_device
 

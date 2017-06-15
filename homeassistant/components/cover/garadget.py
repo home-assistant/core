@@ -1,73 +1,68 @@
 """
-Platform for the garadget cover component.
+Platform for the Garadget cover component.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/garadget/
 """
 import logging
 
+import requests
 import voluptuous as vol
 
-import requests
-
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.const import CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD,\
-    CONF_ACCESS_TOKEN, CONF_NAME, STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN,\
-    CONF_COVERS
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_DEVICE, CONF_USERNAME, CONF_PASSWORD, CONF_ACCESS_TOKEN, CONF_NAME,
+    STATE_UNKNOWN, STATE_CLOSED, STATE_OPEN, CONF_COVERS)
+
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_AVAILABLE = "available"
+ATTR_SENSOR_STRENGTH = "sensor reflection rate"
+ATTR_SIGNAL_STRENGTH = "wifi signal strength (dB)"
+ATTR_TIME_IN_STATE = "time in state"
 
 DEFAULT_NAME = 'Garadget'
 
-ATTR_SIGNAL_STRENGTH = "wifi signal strength (dB)"
-ATTR_TIME_IN_STATE = "time in state"
-ATTR_SENSOR_STRENGTH = "sensor reflection rate"
-ATTR_AVAILABLE = "available"
-
-STATE_OPENING = "opening"
-STATE_CLOSING = "closing"
-STATE_STOPPED = "stopped"
-STATE_OFFLINE = "offline"
+STATE_CLOSING = 'closing'
+STATE_OFFLINE = 'offline'
+STATE_OPENING = 'opening'
+STATE_STOPPED = 'stopped'
 
 STATES_MAP = {
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
-    "stopped": STATE_STOPPED
+    'open': STATE_OPEN,
+    'opening': STATE_OPENING,
+    'closed': STATE_CLOSED,
+    'closing': STATE_CLOSING,
+    'stopped': STATE_STOPPED
 }
 
-
-# Validation of the user's configuration
 COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_DEVICE): cv.string,
-    vol.Optional(CONF_USERNAME): cv.string,
-    vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_ACCESS_TOKEN): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_DEVICE): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_USERNAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COVERS): vol.Schema({cv.slug: COVER_SCHEMA}),
 })
 
-_LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Demo covers."""
+    """Set up the Garadget covers."""
     covers = []
-    devices = config.get(CONF_COVERS, {})
-
-    _LOGGER.debug(devices)
+    devices = config.get(CONF_COVERS)
 
     for device_id, device_config in devices.items():
         args = {
-            "name": device_config.get(CONF_NAME),
-            "device_id": device_config.get(CONF_DEVICE, device_id),
-            "username": device_config.get(CONF_USERNAME),
-            "password": device_config.get(CONF_PASSWORD),
-            "access_token": device_config.get(CONF_ACCESS_TOKEN)
+            'name': device_config.get(CONF_NAME),
+            'device_id': device_config.get(CONF_DEVICE, device_id),
+            'username': device_config.get(CONF_USERNAME),
+            'password': device_config.get(CONF_PASSWORD),
+            'access_token': device_config.get(CONF_ACCESS_TOKEN)
         }
 
         covers.append(GaradgetCover(hass, args))
@@ -76,9 +71,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class GaradgetCover(CoverDevice):
-    """Representation of a demo cover."""
+    """Representation of a Garadget cover."""
 
-    # pylint: disable=no-self-use, too-many-instance-attributes
+    # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.particle_url = 'https://api.particle.io'
@@ -100,21 +95,20 @@ class GaradgetCover(CoverDevice):
             self.access_token = self.get_token()
             self._obtained_token = True
 
-        # Lets try to get the configured name if not provided.
         try:
             if self._name is None:
-                doorconfig = self._get_variable("doorConfig")
-                if doorconfig["nme"] is not None:
-                    self._name = doorconfig["nme"]
+                doorconfig = self._get_variable('doorConfig')
+                if doorconfig['nme'] is not None:
+                    self._name = doorconfig['nme']
             self.update()
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error('Unable to connect to server: %(reason)s',
-                          dict(reason=ex))
+            _LOGGER.error(
+                "Unable to connect to server: %(reason)s", dict(reason=ex))
             self._state = STATE_OFFLINE
             self._available = False
             self._name = DEFAULT_NAME
         except KeyError as ex:
-            _LOGGER.warning('Garadget device %(device)s seems to be offline',
+            _LOGGER.warning("Garadget device %(device)s seems to be offline",
                             dict(device=self.device_id))
             self._name = DEFAULT_NAME
             self._state = STATE_OFFLINE
@@ -181,18 +175,20 @@ class GaradgetCover(CoverDevice):
             'password': self._password
         }
         url = '{}/oauth/token'.format(self.particle_url)
-        ret = requests.post(url,
-                            auth=('particle', 'particle'),
-                            data=args)
+        ret = requests.post(
+            url, auth=('particle', 'particle'), data=args, timeout=10)
 
-        return ret.json()['access_token']
+        try:
+            return ret.json()['access_token']
+        except KeyError:
+            _LOGGER.error("Unable to retrieve access token")
 
     def remove_token(self):
         """Remove authorization token from API."""
-        ret = requests.delete('{}/v1/access_tokens/{}'.format(
-            self.particle_url,
-            self.access_token),
-                              auth=(self._username, self._password))
+        url = '{}/v1/access_tokens/{}'.format(
+            self.particle_url, self.access_token)
+        ret = requests.delete(
+            url, auth=(self._username, self._password), timeout=10)
         return ret.text
 
     def _start_watcher(self, command):
@@ -208,41 +204,41 @@ class GaradgetCover(CoverDevice):
 
     def close_cover(self):
         """Close the cover."""
-        if self._state not in ["close", "closing"]:
-            ret = self._put_command("setState", "close")
+        if self._state not in ['close', 'closing']:
+            ret = self._put_command('setState', 'close')
             self._start_watcher('close')
             return ret.get('return_value') == 1
 
     def open_cover(self):
         """Open the cover."""
-        if self._state not in ["open", "opening"]:
-            ret = self._put_command("setState", "open")
+        if self._state not in ['open', 'opening']:
+            ret = self._put_command('setState', 'open')
             self._start_watcher('open')
             return ret.get('return_value') == 1
 
     def stop_cover(self):
         """Stop the door where it is."""
-        if self._state not in ["stopped"]:
-            ret = self._put_command("setState", "stop")
+        if self._state not in ['stopped']:
+            ret = self._put_command('setState', 'stop')
             self._start_watcher('stop')
             return ret['return_value'] == 1
 
     def update(self):
         """Get updated status from API."""
         try:
-            status = self._get_variable("doorStatus")
+            status = self._get_variable('doorStatus')
             _LOGGER.debug("Current Status: %s", status['status'])
             self._state = STATES_MAP.get(status['status'], STATE_UNKNOWN)
             self.time_in_state = status['time']
             self.signal = status['signal']
             self.sensor = status['sensor']
-            self._availble = True
+            self._available = True
         except requests.exceptions.ConnectionError as ex:
-            _LOGGER.error('Unable to connect to server: %(reason)s',
-                          dict(reason=ex))
+            _LOGGER.error(
+                "Unable to connect to server: %(reason)s", dict(reason=ex))
             self._state = STATE_OFFLINE
         except KeyError as ex:
-            _LOGGER.warning('Garadget device %(device)s seems to be offline',
+            _LOGGER.warning("Garadget device %(device)s seems to be offline",
                             dict(device=self.device_id))
             self._state = STATE_OFFLINE
 
@@ -254,12 +250,8 @@ class GaradgetCover(CoverDevice):
     def _get_variable(self, var):
         """Get latest status."""
         url = '{}/v1/devices/{}/{}?access_token={}'.format(
-            self.particle_url,
-            self.device_id,
-            var,
-            self.access_token,
-            )
-        ret = requests.get(url)
+            self.particle_url, self.device_id, var, self.access_token)
+        ret = requests.get(url, timeout=10)
         result = {}
         for pairs in ret.json()['result'].split('|'):
             key = pairs.split('=')
@@ -272,8 +264,6 @@ class GaradgetCover(CoverDevice):
         if arg:
             params['command'] = arg
         url = '{}/v1/devices/{}/{}'.format(
-            self.particle_url,
-            self.device_id,
-            func)
-        ret = requests.post(url, data=params)
+            self.particle_url, self.device_id, func)
+        ret = requests.post(url, data=params, timeout=10)
         return ret.json()

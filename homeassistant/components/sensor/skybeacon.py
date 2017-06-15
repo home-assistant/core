@@ -16,7 +16,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_MAC, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP)
 
-REQUIREMENTS = ['pygatt==3.0.0']
+REQUIREMENTS = ['pygatt==3.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ CONNECT_TIMEOUT = 30
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the sensor."""
+    """Set up the Skybeacon sensor."""
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
     _LOGGER.debug("Setting up...")
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class SkybeaconHumid(Entity):
-    """Representation of a humidity sensor."""
+    """Representation of a Skybeacon humidity sensor."""
 
     def __init__(self, name, mon):
         """Initialize a sensor."""
@@ -89,7 +89,7 @@ class SkybeaconHumid(Entity):
 
 
 class SkybeaconTemp(Entity):
-    """Representation of a temperature sensor."""
+    """Representation of a Skybeacon temperature sensor."""
 
     def __init__(self, name, mon):
         """Initialize a sensor."""
@@ -146,9 +146,9 @@ class Monitor(threading.Thread):
         while True:
             try:
                 _LOGGER.info("Connecting to %s", self.name)
-                # we need concurrent connect, so lets not reset the device
+                # We need concurrent connect, so lets not reset the device
                 adapter.start(reset_on_start=False)
-                # seems only one connection can be initiated at a time
+                # Seems only one connection can be initiated at a time
                 with CONNECT_LOCK:
                     device = adapter.connect(self.mac,
                                              CONNECT_TIMEOUT,
@@ -157,7 +157,7 @@ class Monitor(threading.Thread):
                     # HACK: inject handle mapping collected offline
                     # pylint: disable=protected-access
                     device._characteristics[UUID(BLE_TEMP_UUID)] = cached_char
-                # magic: writing this makes device happy
+                # Magic: writing this makes device happy
                 device.char_write_handle(0x1b, bytearray([255]), False)
                 device.subscribe(BLE_TEMP_UUID, self._update)
                 _LOGGER.info("Subscribed to %s", self.name)

@@ -9,13 +9,11 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_NAME, STATE_ON, STATE_OFF, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import CONF_NAME, CONF_MONITORED_CONDITIONS
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,22 +36,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the available OctoPrint binary sensors."""
+    """Set up the available OctoPrint binary sensors."""
     octoprint = get_component('octoprint')
     name = config.get(CONF_NAME)
-    monitored_conditions = config.get(CONF_MONITORED_CONDITIONS,
-                                      SENSOR_TYPES.keys())
+    monitored_conditions = config.get(
+        CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
 
     devices = []
     for octo_type in monitored_conditions:
-        new_sensor = OctoPrintBinarySensor(octoprint.OCTOPRINT,
-                                           octo_type,
-                                           SENSOR_TYPES[octo_type][2],
-                                           name,
-                                           SENSOR_TYPES[octo_type][3],
-                                           SENSOR_TYPES[octo_type][0],
-                                           SENSOR_TYPES[octo_type][1],
-                                           'flags')
+        new_sensor = OctoPrintBinarySensor(
+            octoprint.OCTOPRINT, octo_type, SENSOR_TYPES[octo_type][2],
+            name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
+            SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
     add_devices(devices)
 
@@ -86,17 +80,9 @@ class OctoPrintBinarySensor(BinarySensorDevice):
         return self._name
 
     @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self.is_on
-
-    @property
     def is_on(self):
         """Return true if binary sensor is on."""
-        if self._state:
-            return STATE_ON
-        else:
-            return STATE_OFF
+        return bool(self._state)
 
     @property
     def device_class(self):
@@ -106,10 +92,9 @@ class OctoPrintBinarySensor(BinarySensorDevice):
     def update(self):
         """Update state of sensor."""
         try:
-            self._state = self.api.update(self.sensor_type,
-                                          self.api_endpoint,
-                                          self.api_group,
-                                          self.api_tool)
+            self._state = self.api.update(
+                self.sensor_type, self.api_endpoint, self.api_group,
+                self.api_tool)
         except requests.exceptions.ConnectionError:
             # Error calling the api, already logged in api.update()
             return

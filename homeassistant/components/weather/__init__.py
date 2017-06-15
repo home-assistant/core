@@ -22,21 +22,22 @@ DOMAIN = 'weather'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_CONDITION_CLASS = 'condition_class'
+ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TIME = 'datetime'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
 ATTR_WEATHER_HUMIDITY = 'humidity'
 ATTR_WEATHER_OZONE = 'ozone'
 ATTR_WEATHER_PRESSURE = 'pressure'
 ATTR_WEATHER_TEMPERATURE = 'temperature'
+ATTR_WEATHER_VISIBILITY = 'visibility'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
-ATTR_FORECAST = 'forecast'
-ATTR_FORECAST_TEMP = 'temperature'
-ATTR_FORECAST_TIME = 'datetime'
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the weather component."""
+    """Set up the weather component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from component.async_setup(config)
@@ -45,7 +46,7 @@ def async_setup(hass, config):
 
 # pylint: disable=no-member, no-self-use
 class WeatherEntity(Entity):
-    """ABC for a weather data."""
+    """ABC for weather data."""
 
     @property
     def temperature(self):
@@ -88,6 +89,11 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def visibility(self):
+        """Return the visibility."""
+        return None
+
+    @property
     def forecast(self):
         """Return the forecast."""
         return None
@@ -115,6 +121,10 @@ class WeatherEntity(Entity):
         wind_speed = self.wind_speed
         if wind_speed is not None:
             data[ATTR_WEATHER_WIND_SPEED] = wind_speed
+
+        visibility = self.visibility
+        if visibility is not None:
+            data[ATTR_WEATHER_VISIBILITY] = visibility
 
         attribution = self.attribution
         if attribution is not None:

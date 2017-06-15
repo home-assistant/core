@@ -4,6 +4,8 @@ Support for Wink thermostats.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.wink/
 """
+import asyncio
+
 from homeassistant.components.wink import WinkDevice, DOMAIN
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, ClimateDevice,
@@ -30,7 +32,7 @@ ATTR_OCCUPIED = "occupied"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Wink thermostat."""
+    """Set up the Wink thermostat."""
     import pywink
     temp_unit = hass.config.units.temperature_unit
     for climate in pywink.get_thermostats():
@@ -43,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkAC(climate, hass, temp_unit)])
 
 
-# pylint: disable=abstract-method,too-many-public-methods, too-many-branches
+# pylint: disable=abstract-method
 class WinkThermostat(WinkDevice, ClimateDevice):
     """Representation of a Wink thermostat."""
 
@@ -51,6 +53,11 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Initialize the Wink device."""
         super().__init__(wink, hass)
         self._config_temp_unit = temp_unit
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Callback when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['climate'].append(self)
 
     @property
     def temperature_unit(self):
@@ -449,7 +456,7 @@ class WinkAC(WinkDevice, ClimateDevice):
 
     @property
     def fan_list(self):
-        """List of available fan modes."""
+        """Return a list of available fan modes."""
         return [SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
     def set_fan_mode(self, mode):

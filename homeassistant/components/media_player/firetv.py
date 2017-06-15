@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the FireTV platform."""
+    """Set up the FireTV platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -52,13 +52,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(DEVICE_LIST_URL.format(host, port)).json()
         if device_id in response[CONF_DEVICES].keys():
             add_devices([FireTVDevice(host, port, device_id, name)])
-            _LOGGER.info('Device %s accessible and ready for control',
+            _LOGGER.info("Device %s accessible and ready for control",
                          device_id)
         else:
-            _LOGGER.warning('Device %s is not registered with firetv-server',
+            _LOGGER.warning("Device %s is not registered with firetv-server",
                             device_id)
     except requests.exceptions.RequestException:
-        _LOGGER.error('Could not connect to firetv-server at %s', host)
+        _LOGGER.error("Could not connect to firetv-server at %s", host)
 
 
 class FireTV(object):
@@ -88,7 +88,7 @@ class FireTV(object):
             return response.get('state', STATE_UNKNOWN)
         except requests.exceptions.RequestException:
             _LOGGER.error(
-                'Could not retrieve device state for %s', self.device_id)
+                "Could not retrieve device state for %s", self.device_id)
             return STATE_UNKNOWN
 
     def action(self, action_id):
@@ -98,7 +98,7 @@ class FireTV(object):
                 self.host, self.port, self.device_id, action_id), timeout=10)
         except requests.exceptions.RequestException:
             _LOGGER.error(
-                'Action request for %s was not accepted for device %s',
+                "Action request for %s was not accepted for device %s",
                 action_id, self.device_id)
 
 

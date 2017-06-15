@@ -7,13 +7,13 @@ https://home-assistant.io/components/emoncms_history/
 import logging
 from datetime import timedelta
 
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_API_KEY, CONF_WHITELIST, CONF_URL, STATE_UNKNOWN, STATE_UNAVAILABLE,
     CONF_SCAN_INTERVAL)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import state as state_helper
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.util import dt as dt_util
@@ -50,14 +50,13 @@ def setup(hass, config):
                 timeout=5)
 
         except requests.exceptions.RequestException:
-            _LOGGER.error("Error saving data '%s' to '%s'",
-                          payload, fullurl)
+            _LOGGER.error("Error saving data '%s' to '%s'", payload, fullurl)
 
         else:
             if req.status_code != 200:
-                _LOGGER.error("Error saving data '%s' to '%s'" +
-                              "(http status code = %d)", payload,
-                              fullurl, req.status_code)
+                _LOGGER.error(
+                    "Error saving data %s to %s (http status code = %d)",
+                    payload, fullurl, req.status_code)
 
     def update_emoncms(time):
         """Send whitelisted entities states reguarly to Emoncms."""
@@ -71,12 +70,11 @@ def setup(hass, config):
                 continue
 
             try:
-                payload_dict[entity_id] = state_helper.state_as_number(
-                    state)
+                payload_dict[entity_id] = state_helper.state_as_number(state)
             except ValueError:
                 continue
 
-        if len(payload_dict) > 0:
+        if payload_dict:
             payload = "{%s}" % ",".join("{}:{}".format(key, val)
                                         for key, val in
                                         payload_dict.items())

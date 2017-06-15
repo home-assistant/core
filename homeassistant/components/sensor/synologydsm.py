@@ -4,7 +4,6 @@ Support for Synology NAS Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.synologydsm/
 """
-
 import logging
 from datetime import timedelta
 
@@ -86,7 +85,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the Synology NAS Sensor."""
+    """Set up the Synology NAS Sensor."""
     # pylint: disable=too-many-locals
     def run_setup(event):
         """Wait until HASS is fully initialized before creating.
@@ -139,7 +138,7 @@ class SynoApi():
 
     # pylint: disable=too-many-arguments, bare-except
     def __init__(self, host, port, username, password, temp_unit):
-        """Constructor of the API wrapper class."""
+        """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
         self.temp_unit = temp_unit
 

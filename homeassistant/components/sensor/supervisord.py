@@ -25,12 +25,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Supervisord platform."""
+    """Set up the Supervisord platform."""
     url = config.get(CONF_URL)
     try:
         supervisor_server = xmlrpc.client.ServerProxy(url)
     except ConnectionRefusedError:
-        _LOGGER.error('Could not connect to Supervisord')
+        _LOGGER.error("Could not connect to Supervisord")
         return False
 
     processes = supervisor_server.supervisor.getAllProcessInfo()
