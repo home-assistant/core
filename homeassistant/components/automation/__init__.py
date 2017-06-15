@@ -29,6 +29,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.frontend import register_built_in_panel
 
 DOMAIN = 'automation'
+DEPENDENCIES = ['group']
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 GROUP_NAME_ALL_AUTOMATIONS = 'all automations'
