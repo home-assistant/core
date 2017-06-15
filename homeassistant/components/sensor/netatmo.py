@@ -90,8 +90,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     if variable in SENSOR_TYPES.keys():
                         dev.append(NetAtmoSensor(data, module_name, variable))
                     else:
-                        _LOGGER.warning("Ignoring unknown var %s for mod %s", \
-                                        (variable, module_name))
+                        _LOGGER.warning("Ignoring unknown var %s for mod %s",
+                                        variable, module_name)
     except lnetatmo.NoDevice:
         return None
 
