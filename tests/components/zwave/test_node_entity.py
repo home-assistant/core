@@ -172,6 +172,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
+             'old_entity_id': 'zwave.mock_node_567',
              'product_name': 'Test Product'},
             self.entity.device_state_attributes)
 
@@ -230,6 +231,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
+             'old_entity_id': 'zwave.mock_node_567',
              'product_name': 'Test Product',
              'query_stage': 'Dynamic',
              'is_awake': True,
