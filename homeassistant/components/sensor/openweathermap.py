@@ -23,6 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_ATTRIBUTION = "Data provided by OpenWeatherMap"
 CONF_FORECAST = 'forecast'
+CONF_LANGUAGE = 'language'
 
 DEFAULT_NAME = 'OWM'
 
@@ -45,7 +46,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_FORECAST, default=False): cv.boolean
+    vol.Optional(CONF_FORECAST, default=False): cv.boolean,
+    vol.Optional(CONF_LANGUAGE, default=None): cv.string,
 })
 
 
@@ -61,8 +63,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config.get(CONF_NAME)
     forecast = config.get(CONF_FORECAST)
+    language = config.get(CONF_LANGUAGE)
+    if isinstance(language, str):
+        language = language.lower()[:2]
 
-    owm = OWM(config.get(CONF_API_KEY))
+    owm = OWM(API_key=config.get(CONF_API_KEY), language=language)
 
     if not owm:
         _LOGGER.error("Unable to connect to OpenWeatherMap")
