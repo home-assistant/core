@@ -802,10 +802,10 @@ class ZWaveDeviceEntityValues():
             self._workaround_ignore = True
             return
 
-        device._old_entity_id = "{}.{}".format(
+        device.old_entity_id = "{}.{}".format(
             component, object_id(self.primary))
         if not self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
-            device.entity_id = device._old_entity_id
+            device.entity_id = device.old_entity_id
 
         self._entity = device
 
@@ -899,7 +899,9 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
         """Return the device specific state attributes."""
         attrs = {
             const.ATTR_NODE_ID: self.node_id,
-            'old_entity_id': self._old_entity_id,
+            const.ATTR_VALUE_INDEX: self.values.primary.index,
+            const.ATTR_VALUE_INSTANCE: self.values.primary.instance,
+            'old_entity_id': self.old_entity_id,
         }
 
         if self.power_consumption is not None:
