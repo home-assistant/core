@@ -183,7 +183,10 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from OpenWeatherMap."""
-        obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        try:
+            obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        except TypeError:
+            obs = None
         if obs is None:
             _LOGGER.warning("Failed to fetch data from OpenWeatherMap")
             return
@@ -191,6 +194,9 @@ class WeatherData(object):
         self.data = obs.get_weather()
 
         if self.forecast == 1:
-            obs = self.owm.three_hours_forecast_at_coords(
-                self.latitude, self.longitude)
-            self.fc_data = obs.get_forecast()
+            try:
+                obs = self.owm.three_hours_forecast_at_coords(
+                    self.latitude, self.longitude)
+                self.fc_data = obs.get_forecast()
+            except TypeError:
+                _LOGGER.warning("Failed to fetch forecast from OpenWeatherMap")
