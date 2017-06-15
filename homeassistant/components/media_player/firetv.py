@@ -15,7 +15,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_SSL, CONF_NAME, CONF_DEVICE, CONF_DEVICES)
+    STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_SSL, CONF_NAME, CONF_DEVICE,
+    CONF_DEVICES)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -53,7 +54,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_id = config.get(CONF_DEVICE)
 
     try:
-        response = requests.get(DEVICE_LIST_URL.format(proto, host, port)).json()
+        response = requests.get(
+            DEVICE_LIST_URL.format(proto, host, port)).json()
         if device_id in response[CONF_DEVICES].keys():
             add_devices([FireTVDevice(proto, host, port, device_id, name)])
             _LOGGER.info("Device %s accessible and ready for control",
@@ -89,7 +91,8 @@ class FireTV(object):
         try:
             response = requests.get(
                 DEVICE_STATE_URL.format(
-                    self.proto, self.host, self.port, self.device_id), timeout=10).json()
+                    self.proto, self.host, self.port, self.device_id
+                    ), timeout=10).json()
             return response.get('state', STATE_UNKNOWN)
         except requests.exceptions.RequestException:
             _LOGGER.error(
@@ -100,7 +103,8 @@ class FireTV(object):
         """Perform an action on the device."""
         try:
             requests.get(DEVICE_ACTION_URL.format(
-                self.proto, self.host, self.port, self.device_id, action_id), timeout=10)
+                self.proto, self.host, self.port, self.device_id, action_id
+                ), timeout=10)
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 "Action request for %s was not accepted for device %s",
