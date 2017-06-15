@@ -22,7 +22,7 @@ DOMAIN = 'splunk'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8088
 DEFAULT_SSL = False
-DEFAULT_NAME= 'HASS'
+DEFAULT_NAME = 'HASS'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
