@@ -742,7 +742,7 @@ pyunifi==2.12
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.32
+pyvera==0.2.33
 
 # homeassistant.components.notify.html5
 pywebpush==1.0.4
