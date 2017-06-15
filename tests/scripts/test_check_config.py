@@ -110,7 +110,8 @@ class TestCheckConfig(unittest.TestCase):
                     'discovery_prefix': 'homeassistant',
                     'tls_version': 'auto',
                 },
-                 'light': []},
+                 'light': [],
+                 'group': None},
                 res['components']
             )
             self.assertDictEqual(
