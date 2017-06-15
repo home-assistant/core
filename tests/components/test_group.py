@@ -422,7 +422,7 @@ def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes[group.ATTR_AUTO]
     assert group_state.attributes['hidden']
     assert group_state.attributes['friendly_name'] == "Test"
-    assert group_state.attributes['entity_id'] == ['test.entity_bla1']
+    assert list(group_state.attributes['entity_id']) == ['test.entity_bla1']
 
     group.async_set_group(
         hass, 'user_test_group', icon="mdi:camera", name="Test2",
@@ -437,7 +437,7 @@ def test_service_group_set_group_remove_group(hass):
     assert group_state.attributes['friendly_name'] == "Test2"
     assert group_state.attributes['icon'] == "mdi:camera"
     assert group_state.attributes[group.ATTR_CONTROL] == "hidden"
-    assert group_state.attributes['entity_id'] == [
+    assert list(group_state.attributes['entity_id']) == [
         'test.entity_bla1', 'test.entity_id2']
 
     group.async_remove(hass, 'user_test_group')
