@@ -43,7 +43,7 @@ def test_node_event_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
 
     assert len(mock_receivers) == 1
 
@@ -86,7 +86,7 @@ def test_scene_activated(hass, mock_openzwave):
     node = mock_zwave.MockNode(node_id=11)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
-        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave)
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
 
     assert len(mock_receivers) == 1
 
@@ -131,7 +131,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.node.manufacturer_name = 'Test Manufacturer'
         self.node.product_name = 'Test Product'
         self.entity = node_entity.ZWaveNodeEntity(self.node,
-                                                  self.zwave_network)
+                                                  self.zwave_network, True)
 
     def test_network_node_changed_from_value(self):
         """Test for network_node_changed."""
