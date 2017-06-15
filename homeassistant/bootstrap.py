@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ERROR_LOG_FILENAME = 'home-assistant.log'
 FIRST_INIT_COMPONENT = set((
-    'group', 'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
+    'recorder', 'mqtt', 'mqtt_eventstream', 'logger', 'introduction',
     'frontend', 'history'))
 
 
