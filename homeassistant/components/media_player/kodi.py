@@ -762,9 +762,9 @@ class KodiDevice(MediaPlayerDevice):
                 _LOGGER.error("Run API method %s.Playlist.Add(%s) error: %s",
                               self.entity_id, media_type, result)
             except jsonrpc_base.jsonrpc.TransportError:
-                _LOGGER.info("TransportError trying to add playlist",
+                _LOGGER.info("TransportError trying to add playlist to %s",
                              self.entity_id)
-                _LOGGER.debug("TransportError trying to add playlist",
+                _LOGGER.debug("TransportError trying to add playlist to %s",
                               self.entity_id, exc_info=True)
         else:
             _LOGGER.warning("No media detected for Playlist.Add")
