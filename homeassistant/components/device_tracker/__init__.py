@@ -307,7 +307,7 @@ class DeviceTracker(object):
         if self.group and self.track_new:
             self.group.async_set_group(
                 self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
-                name=GROUP_NAME_ALL_DEVICES, delta=[device.entity_id])
+                name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
 
         # lookup mac vendor string to be stored in config
         yield from device.set_vendor_for_mac()

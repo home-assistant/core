@@ -30,9 +30,9 @@ CONF_ENTITIES = 'entities'
 CONF_VIEW = 'view'
 CONF_CONTROL = 'control'
 
+ATTR_ADD_ENTITIES = 'add_entities'
 ATTR_AUTO = 'auto'
 ATTR_CONTROL = 'control'
-ATTR_DELTA = 'delta'
 ATTR_ENTITIES = 'entities'
 ATTR_ICON = 'icon'
 ATTR_NAME = 'name'
@@ -62,7 +62,7 @@ SET_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_CONTROL): CONTROL_TYPES,
     vol.Optional(ATTR_VISIBLE): cv.boolean,
     vol.Exclusive(ATTR_ENTITIES, 'entities'): cv.entity_ids,
-    vol.Exclusive(ATTR_DELTA, 'entities'): cv.entity_ids,
+    vol.Exclusive(ATTR_ADD_ENTITIES, 'entities'): cv.entity_ids,
 })
 
 REMOVE_SERVICE_SCHEMA = vol.Schema({
@@ -137,16 +137,16 @@ def set_visibility(hass, entity_id=None, visible=True):
 
 
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
-              icon=None, view=None, control=None, delta=None):
+              icon=None, view=None, control=None, add=None):
     """Create a new user group."""
     hass.add_job(
         async_set_group, hass, object_id, name, entity_ids, visible, icon,
-        view, control, delta)
+        view, control, add)
 
 
 @callback
 def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
-                    icon=None, view=None, control=None, delta=None):
+                    icon=None, view=None, control=None, add=None):
     """Create a new user group."""
     data = {
         key: value for key, value in [
@@ -157,7 +157,7 @@ def async_set_group(hass, object_id, name=None, entity_ids=None, visible=None,
             (ATTR_ICON, icon),
             (ATTR_VIEW, view),
             (ATTR_CONTROL, control),
-            (ATTR_DELTA, delta),
+            (ATTR_ADD_ENTITIES, add),
         ] if value is not None
     }
 
@@ -264,7 +264,7 @@ def async_setup(hass, config):
         # new group
         if service.service == SERVICE_SET and object_id not in service_groups:
             entity_ids = service.data.get(ATTR_ENTITIES) or \
-                service.data.get(ATTR_DELTA) or None
+                service.data.get(ATTR_ADD_ENTITIES) or None
 
             extra_arg = {attr: service.data[attr] for attr in (
                 ATTR_VISIBLE, ATTR_ICON, ATTR_VIEW, ATTR_CONTROL
@@ -286,9 +286,9 @@ def async_setup(hass, config):
             group = service_groups[object_id]
             need_update = False
 
-            if ATTR_DELTA in service.data:
-                delta = set(service.data[ATTR_DELTA])
-                entity_ids = set(group.tracking).symmetric_difference(delta)
+            if ATTR_ADD_ENTITIES in service.data:
+                delta = service.data[ATTR_ADD_ENTITIES]
+                entity_ids = set(group.tracking) + set(delta)
                 yield from group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_ENTITIES in service.data:
