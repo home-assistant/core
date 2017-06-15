@@ -42,7 +42,6 @@ foursquare:
 group:
   reload:
     description: "Reload group configuration."
-    fields:
 
   set_visibility:
     description: Hide or show a group
