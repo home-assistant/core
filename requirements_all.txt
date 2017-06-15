@@ -307,7 +307,7 @@ https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5
 
 # homeassistant.components.tado
-https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
+https://github.com/wmalgadey/PyTado/archive/0.2.1.zip#PyTado==0.2.1
 
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
