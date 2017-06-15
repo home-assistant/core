@@ -87,7 +87,7 @@ group:
         description: List of all members in the group. Not compatible with 'delta'
         example: domain.entity_id1, domain.entity_id2
 
-      delta:
+      add_entities:
         description: List of members they will change on group listening.
         example: domain.entity_id1, domain.entity_id2
 
