@@ -59,13 +59,13 @@ class ONVIFCamera(Camera):
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = '-q:v 2'
         media = ONVIFService('http://{}:{}/onvif/device_service'.format(
-                             config.get(CONF_HOST),
-                             config.get(CONF_PORT)),
+            config.get(CONF_HOST),
+            config.get(CONF_PORT)),
                              config.get(CONF_USERNAME),
                              config.get(CONF_PASSWORD),
                              '{}/deps/onvif/wsdl/media.wsdl'.format(
-                             hass.config.config_dir)
-                             )
+                                 hass.config.config_dir)
+                            )
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
