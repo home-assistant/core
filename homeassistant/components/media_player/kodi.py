@@ -765,7 +765,7 @@ class KodiDevice(MediaPlayerDevice):
                 _LOGGER.info("TransportError trying to add playlist",
                              self.entity_id)
                 _LOGGER.debug("TransportError trying to add playlist",
-                              self.entity_id, exc_info = True)
+                              self.entity_id, exc_info=True)
         else:
             _LOGGER.warning("No media detected for Playlist.Add")
 
