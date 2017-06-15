@@ -244,7 +244,7 @@ class TestTemplateSwitch:
 
     def test_no_switches_does_not_create(self):
         """Test if there are no switches no creation."""
-        with assert_setup_component(0):
+        with assert_setup_component(0, 'switch'):
             assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template'

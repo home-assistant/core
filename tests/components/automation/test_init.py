@@ -456,7 +456,7 @@ class TestAutomation(unittest.TestCase):
 
     def test_reload_config_when_invalid_config(self):
         """Test the reload config service handling invalid config."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, automation.DOMAIN):
             assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'alias': 'hello',
