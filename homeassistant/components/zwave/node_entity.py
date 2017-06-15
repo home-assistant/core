@@ -4,10 +4,11 @@ import logging
 from homeassistant.core import callback
 from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_WAKEUP, ATTR_ENTITY_ID
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import slugify
 
 from .const import (
     ATTR_NODE_ID, COMMAND_CLASS_WAKE_UP, ATTR_SCENE_ID, ATTR_BASIC_LEVEL,
-    EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED)
+    EVENT_NODE_EVENT, EVENT_SCENE_ACTIVATED, DOMAIN)
 from .util import node_name
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +74,7 @@ def sub_status(status, stage):
 class ZWaveNodeEntity(ZWaveBaseEntity):
     """Representation of a Z-Wave node."""
 
-    def __init__(self, node, network):
+    def __init__(self, node, network, new_entity_ids):
         """Initialize node."""
         # pylint: disable=import-error
         super().__init__()
@@ -85,6 +86,9 @@ class ZWaveNodeEntity(ZWaveBaseEntity):
         self._name = node_name(self.node)
         self._product_name = node.product_name
         self._manufacturer_name = node.manufacturer_name
+        if not new_entity_ids:
+            self.entity_id = "{}.{}_{}".format(
+                DOMAIN, slugify(self._name), self.node_id)
         self._attributes = {}
         self.wakeup_interval = None
         self.location = None

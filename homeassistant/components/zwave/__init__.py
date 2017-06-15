@@ -22,7 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers.event import track_time_change
-from homeassistant.util import convert
+from homeassistant.util import convert, slugify
 import homeassistant.config as conf_util
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
@@ -56,6 +56,7 @@ CONF_DEVICE_CONFIG = 'device_config'
 CONF_DEVICE_CONFIG_GLOB = 'device_config_glob'
 CONF_DEVICE_CONFIG_DOMAIN = 'device_config_domain'
 CONF_NETWORK_KEY = 'network_key'
+CONF_NEW_ENTITY_IDS = 'new_entity_ids'
 
 ATTR_POWER = 'power_consumption'
 
@@ -150,6 +151,7 @@ CONFIG_SCHEMA = vol.Schema({
             cv.positive_int,
         vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
             cv.string,
+        vol.Optional(CONF_NEW_ENTITY_IDS, default=False): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -164,6 +166,27 @@ def _obj_to_dict(obj):
 def _value_name(value):
     """Return the name of the value."""
     return '{} {}'.format(node_name(value.node), value.label).strip()
+
+
+def _node_object_id(node):
+    """Return the object_id of the node."""
+    node_object_id = '{}_{}'.format(slugify(node_name(node)), node.node_id)
+    return node_object_id
+
+
+def object_id(value):
+    """Return the object_id of the device value.
+
+    The object_id contains node_id and value instance id
+    to not collide with other entity_ids.
+    """
+    _object_id = "{}_{}_{}".format(slugify(_value_name(value)),
+                                   value.node.node_id, value.index)
+
+    # Add the instance id if there is more than one instance for the value
+    if value.instance > 1:
+        return '{}_{}'.format(_object_id, value.instance)
+    return _object_id
 
 
 def nice_print_node(node):
@@ -230,6 +253,13 @@ def setup(hass, config):
         config[DOMAIN][CONF_DEVICE_CONFIG],
         config[DOMAIN][CONF_DEVICE_CONFIG_DOMAIN],
         config[DOMAIN][CONF_DEVICE_CONFIG_GLOB])
+    new_entity_ids = config[DOMAIN][CONF_NEW_ENTITY_IDS]
+    if not new_entity_ids:
+        _LOGGER.warning(
+            "ZWave entity_ids will soon be changing. To opt in to new "
+            "entity_ids now, set `new_entity_ids: true` under zwave in your "
+            "configuration.yaml. See the following blog post for details: "
+            "")
 
     # Setup options
     options = ZWaveOption(
@@ -291,9 +321,12 @@ def setup(hass, config):
 
     def node_added(node):
         """Handle a new node on the network."""
-        entity = ZWaveNodeEntity(node, network)
+        entity = ZWaveNodeEntity(node, network, new_entity_ids)
         name = node_name(node)
-        generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
+        if new_entity_ids:
+            generated_id = generate_entity_id(DOMAIN + '.{}', name, [])
+        else:
+            generated_id = entity.entity_id
         node_config = device_config.get(generated_id)
         if node_config.get(CONF_IGNORED):
             _LOGGER.info(
@@ -730,7 +763,11 @@ class ZWaveDeviceEntityValues():
             component = workaround_component
 
         value_name = _value_name(self.primary)
-        generated_id = generate_entity_id(component + '.{}', value_name, [])
+        if self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
+            generated_id = generate_entity_id(
+                component + '.{}', value_name, [])
+        else:
+            generated_id = "{}.{}".format(component, object_id(self.primary))
         node_config = self._device_config.get(generated_id)
 
         # Configure node
@@ -764,6 +801,10 @@ class ZWaveDeviceEntityValues():
             # No entity will be created for this value
             self._workaround_ignore = True
             return
+
+        if not self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
+            device.entity_id = "{}.{}".format(
+                component, object_id(self.primary))
 
         self._entity = device
 
