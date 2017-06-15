@@ -10,14 +10,20 @@ from urllib.parse import urlsplit
 import voluptuous as vol
 
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['api']
 DOMAIN = 'upnp'
 
+CONF_ENABLE_PORT_MAPPING = 'port_mapping'
+DEFAULT_PORT_MAPPING = 'true'
+
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({}),
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 
@@ -40,13 +46,15 @@ def setup(hass, config):
     host = base_url.hostname
     external_port = internal_port = base_url.port
 
-    upnp.addportmapping(
-        external_port, 'TCP', host, internal_port, 'Home Assistant', '')
+    port_mapping = config[DOMAIN].get(CONF_ENABLE_PORT_MAPPING, DEFAULT_PORT_MAPPING)
+    if port_mapping: 
+        upnp.addportmapping(
+            external_port, 'TCP', host, internal_port, 'Home Assistant', '')
 
-    def deregister_port(event):
-        """De-register the UPnP port mapping."""
-        upnp.deleteportmapping(hass.config.api.port, 'TCP')
+        def deregister_port(event):
+            """De-register the UPnP port mapping."""
+            upnp.deleteportmapping(hass.config.api.port, 'TCP')
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 
     return True
