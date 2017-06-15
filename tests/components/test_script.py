@@ -74,7 +74,8 @@ class TestScriptComponent(unittest.TestCase):
                         'event': event,
                     }]
                 }
-            }
+            },
+            'group': {},
         })
 
         script.turn_on(self.hass, ENTITY_ID)
