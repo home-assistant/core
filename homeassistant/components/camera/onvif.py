@@ -58,14 +58,13 @@ class ONVIFCamera(Camera):
 
         self._name = config.get(CONF_NAME)
         self._ffmpeg_arguments = '-q:v 2'
-        media = ONVIFService('http://{}:{}/onvif/device_service'.format(
-            config.get(CONF_HOST),
-            config.get(CONF_PORT)),
-                             config.get(CONF_USERNAME),
-                             config.get(CONF_PASSWORD),
-                             '{}/deps/onvif/wsdl/media.wsdl'.format(
-                                 hass.config.config_dir)
-                            )
+        media = ONVIFService(
+            'http://{}:{}/onvif/device_service'.format(
+                config.get(CONF_HOST), config.get(CONF_PORT)),
+            config.get(CONF_USERNAME),
+            config.get(CONF_PASSWORD),
+            '{}/deps/onvif/wsdl/media.wsdl'.format(hass.config.config_dir)
+        )
         self._input = media.GetStreamUri().Uri
         _LOGGER.debug("ONVIF Camera Using the following URL for %s: %s",
                       self._name, self._input)
@@ -74,8 +73,8 @@ class ONVIFCamera(Camera):
     def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
-        ffmpeg = ImageFrame(self.hass.data[DATA_FFMPEG].binary,
-                            loop=self.hass.loop)
+        ffmpeg = ImageFrame(
+            self.hass.data[DATA_FFMPEG].binary, loop=self.hass.loop)
 
         image = yield from ffmpeg.get_image(
             self._input, output_format=IMAGE_JPEG,
