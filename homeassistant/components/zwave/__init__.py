@@ -259,7 +259,7 @@ def setup(hass, config):
             "ZWave entity_ids will soon be changing. To opt in to new "
             "entity_ids now, set `new_entity_ids: true` under zwave in your "
             "configuration.yaml. See the following blog post for details: "
-            "")
+            "https://home-assistant.io/blog/2017/06/15/zwave-entity-ids/")
 
     # Setup options
     options = ZWaveOption(
