@@ -16,8 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['vera']
 
-SUPPORT_VERA = SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -32,29 +30,32 @@ class VeraLight(VeraDevice, Light):
     def __init__(self, vera_device, controller):
         """Initialize the light."""
         self._state = False
+        self._color = None
+        self._brightness = None
         VeraDevice.__init__(self, vera_device, controller)
         self.entity_id = ENTITY_ID_FORMAT.format(self.vera_id)
 
     @property
     def brightness(self):
         """Return the brightness of the light."""
-        if self.vera_device.is_dimmable:
-            return self.vera_device.get_brightness()
+        return self._brightness
 
     @property
     def rgb_color(self):
         """Return the color of the light."""
-        if self.vera_device.is_dimmable:
-            return self.vera_device.get_color()
+        return self._color
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_VERA
+        if self._color:
+            return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+        else:
+            return SUPPORT_BRIGHTNESS
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_RGB_COLOR in kwargs and self.vera_device.is_dimmable:
+        if ATTR_RGB_COLOR in kwargs and self._color:
             self.vera_device.set_color(kwargs[ATTR_RGB_COLOR])
         elif ATTR_BRIGHTNESS in kwargs and self.vera_device.is_dimmable:
             self.vera_device.set_brightness(kwargs[ATTR_BRIGHTNESS])
@@ -78,3 +79,5 @@ class VeraLight(VeraDevice, Light):
     def update(self):
         """Call to update state."""
         self._state = self.vera_device.is_switched_on()
+        self._brightness = self.vera_device.get_brightness()
+        self._color = self.vera_device.get_color()
