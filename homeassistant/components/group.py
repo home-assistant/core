@@ -288,7 +288,7 @@ def async_setup(hass, config):
 
             if ATTR_ADD_ENTITIES in service.data:
                 delta = service.data[ATTR_ADD_ENTITIES]
-                entity_ids = set(group.tracking) + set(delta)
+                entity_ids = set(group.tracking) | set(delta)
                 yield from group.async_update_tracked_entity_ids(entity_ids)
 
             if ATTR_ENTITIES in service.data:
