@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.util import slugify
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    dispatcher_connect, dispatcher_send)
 from homeassistant.components.volvooncall import (
     DATA_KEY, SIGNAL_VEHICLE_SEEN)
 
@@ -33,7 +33,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
                  vehicle.position['longitude']),
             icon='mdi:car')
 
-    async_dispatcher_connect(hass, SIGNAL_VEHICLE_SEEN, see_vehicle)
-    async_dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
+    dispatcher_connect(hass, SIGNAL_VEHICLE_SEEN, see_vehicle)
+    dispatcher_send(hass, SIGNAL_VEHICLE_SEEN, vehicle)
 
     return True
