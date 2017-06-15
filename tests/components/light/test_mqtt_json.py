@@ -104,7 +104,7 @@ class TestLightMQTTJSON(unittest.TestCase):
     def test_fail_setup_if_no_command_topic(self): \
             # pylint: disable=invalid-name
         """Test if setup fails with no command topic."""
-        with assert_setup_component(0):
+        with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_json',
