@@ -108,11 +108,11 @@ class TradfriGroup(Light):
             self.hass.async_add_job(self._api(self._group.set_state(1)))
 
     @callback
-    def _async_start_observe(self, err=None):
+    def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        if err:
+        if exc:
             _LOGGER.info("Observation failed for %s", self._name,
-                         exc_info=err)
+                         exc_info=exc)
 
         cmd = self._group.observe(callback=self._observe_update,
                                   err_callback=self._async_start_observe,
@@ -238,7 +238,7 @@ class TradfriLight(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
-        if err:
+        if exc:
             _LOGGER.info("Observation failed for %s", self._name,
                          exc_info=exc)
 
