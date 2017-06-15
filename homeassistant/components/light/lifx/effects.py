@@ -22,8 +22,17 @@ SERVICE_EFFECT_STOP = 'lifx_effect_stop'
 ATTR_POWER_ON = 'power_on'
 ATTR_PERIOD = 'period'
 ATTR_CYCLES = 'cycles'
+ATTR_MODE = 'mode'
 ATTR_SPREAD = 'spread'
 ATTR_CHANGE = 'change'
+
+MODE_BLINK = 'blink'
+MODE_BREATHE = 'breathe'
+MODE_PING = 'ping'
+MODE_STROBE = 'strobe'
+MODE_SOLID = 'solid'
+
+MODES = [MODE_BLINK, MODE_BREATHE, MODE_PING, MODE_STROBE, MODE_SOLID]
 
 # aiolifx waveform modes
 WAVEFORM_SINE = 1
@@ -44,13 +53,13 @@ LIFX_EFFECT_BREATHE_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
                             vol.Coerce(tuple)),
     ATTR_COLOR_TEMP: vol.All(vol.Coerce(int), vol.Range(min=1)),
     ATTR_KELVIN: vol.All(vol.Coerce(int), vol.Range(min=0)),
-    vol.Optional(ATTR_PERIOD, default=1.0):
-        vol.All(vol.Coerce(float), vol.Range(min=0.05)),
-    vol.Optional(ATTR_CYCLES, default=1.0):
-        vol.All(vol.Coerce(float), vol.Range(min=1)),
+    ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
+    ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
 })
 
-LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA
+LIFX_EFFECT_PULSE_SCHEMA = LIFX_EFFECT_BREATHE_SCHEMA.extend({
+    vol.Optional(ATTR_MODE, default=MODE_BLINK): vol.In(MODES),
+})
 
 LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
     ATTR_BRIGHTNESS: VALID_BRIGHTNESS,
@@ -217,14 +226,13 @@ class LIFXEffect(object):
         return [random.randint(0, 65535), 65535, 0, NEUTRAL_WHITE]
 
 
-class LIFXEffectBreathe(LIFXEffect):
-    """Representation of a breathe effect."""
+class LIFXEffectPulse(LIFXEffect):
+    """Representation of a pulse effect."""
 
     def __init__(self, hass, lights):
-        """Initialize the breathe effect."""
-        super(LIFXEffectBreathe, self).__init__(hass, lights)
-        self.name = SERVICE_EFFECT_BREATHE
-        self.waveform = WAVEFORM_SINE
+        """Initialize the pulse effect."""
+        super().__init__(hass, lights)
+        self.name = SERVICE_EFFECT_PULSE
 
     @asyncio.coroutine
     def async_play(self, **kwargs):
@@ -235,13 +243,42 @@ class LIFXEffectBreathe(LIFXEffect):
     @asyncio.coroutine
     def async_light_play(self, light, **kwargs):
         """Play a light effect on the bulb."""
-        period = kwargs[ATTR_PERIOD]
-        cycles = kwargs[ATTR_CYCLES]
         hsbk, color_changed = light.find_hsbk(**kwargs)
+
+        if kwargs[ATTR_MODE] == MODE_STROBE:
+            # Strobe must flash from a dark color
+            light.device.set_color([0, 0, 0, NEUTRAL_WHITE])
+            yield from asyncio.sleep(0.1)
+            default_period = 0.1
+            default_cycles = 10
+        else:
+            default_period = 1.0
+            default_cycles = 1
+
+        period = kwargs.get(ATTR_PERIOD, default_period)
+        cycles = kwargs.get(ATTR_CYCLES, default_cycles)
+
+        # Breathe has a special waveform
+        if kwargs[ATTR_MODE] == MODE_BREATHE:
+            waveform = WAVEFORM_SINE
+        else:
+            waveform = WAVEFORM_PULSE
+
+        # Ping and solid have special duty cycles
+        if kwargs[ATTR_MODE] == MODE_PING:
+            ping_duration = int(5000 - min(2500, 300*period))
+            duty_cycle = 2**15 - ping_duration
+        elif kwargs[ATTR_MODE] == MODE_SOLID:
+            duty_cycle = -2**15
+        else:
+            duty_cycle = 0
 
         # Set default effect color based on current setting
         if not color_changed:
-            if light.lifxwhite or hsbk[1] < 65536/2:
+            if kwargs[ATTR_MODE] == MODE_STROBE:
+                # Strobe: cold white
+                hsbk = [hsbk[0], 0, 65535, 5600]
+            elif light.lifxwhite or hsbk[1] < 65536/2:
                 # White: toggle brightness
                 hsbk[2] = 65535 if hsbk[2] < 65536/2 else 0
             else:
@@ -254,8 +291,8 @@ class LIFXEffectBreathe(LIFXEffect):
             'color': hsbk,
             'period': int(period*1000),
             'cycles': cycles,
-            'duty_cycle': 0,
-            'waveform': self.waveform,
+            'duty_cycle': duty_cycle,
+            'waveform': waveform,
         }
         light.device.set_waveform(args)
 
@@ -269,14 +306,21 @@ class LIFXEffectBreathe(LIFXEffect):
         return [hsbk[0], hsbk[1], 0, hsbk[2]]
 
 
-class LIFXEffectPulse(LIFXEffectBreathe):
-    """Representation of a pulse effect."""
+class LIFXEffectBreathe(LIFXEffectPulse):
+    """Representation of a breathe effect."""
 
     def __init__(self, hass, lights):
-        """Initialize the pulse effect."""
-        super(LIFXEffectPulse, self).__init__(hass, lights)
-        self.name = SERVICE_EFFECT_PULSE
-        self.waveform = WAVEFORM_PULSE
+        """Initialize the breathe effect."""
+        super().__init__(hass, lights)
+        self.name = SERVICE_EFFECT_BREATHE
+        _LOGGER.warning("'lifx_effect_breathe' is deprecated. Please use "
+                        "'lifx_effect_pulse' with 'mode: breathe'")
+
+    @asyncio.coroutine
+    def async_perform(self, **kwargs):
+        """Prepare all lights for the effect."""
+        kwargs[ATTR_MODE] = MODE_BREATHE
+        yield from super().async_perform(**kwargs)
 
 
 class LIFXEffectColorloop(LIFXEffect):
@@ -284,7 +328,7 @@ class LIFXEffectColorloop(LIFXEffect):
 
     def __init__(self, hass, lights):
         """Initialize the colorloop effect."""
-        super(LIFXEffectColorloop, self).__init__(hass, lights)
+        super().__init__(hass, lights)
         self.name = SERVICE_EFFECT_COLORLOOP
 
     @asyncio.coroutine
@@ -335,7 +379,7 @@ class LIFXEffectStop(LIFXEffect):
 
     def __init__(self, hass, lights):
         """Initialize the stop effect."""
-        super(LIFXEffectStop, self).__init__(hass, lights)
+        super().__init__(hass, lights)
         self.name = SERVICE_EFFECT_STOP
 
     @asyncio.coroutine
