@@ -81,10 +81,10 @@ class HTU21D:
     def __init__(self, bus):
         """Initialize the sensor handler."""
         self._bus = bus
-        self.ok = self._soft_reset()
+        self._ok = self._soft_reset()
         self.temperature = -255
         self.humidity = -255
-        if self.ok:
+        if self._ok:
             self.update()
 
     def _soft_reset(self) -> bool:
@@ -99,7 +99,7 @@ class HTU21D:
     @property
     def detected(self) -> bool:
         """Sensor is working ok."""
-        return self.ok
+        return self._ok
 
     @staticmethod
     def _calc_temp(sensor_temp) -> float:
@@ -135,13 +135,13 @@ class HTU21D:
         if remainder == 0:
             return True
         else:
-            _LOGGER.error('Bad CRC: remainder=%s', remainder)
+            _LOGGER.error("Bad CRC: remainder=%s", remainder)
             return False
 
     @property
     def valid_measurement(self) -> bool:
         """Return True for a valid measurement data."""
-        return self.ok and self.temperature > -100 and self.humidity > -1
+        return self._ok and self.temperature > -100 and self.humidity > -1
 
     @property
     def dew_point_temperature(self) -> float:
@@ -149,9 +149,10 @@ class HTU21D:
         if self.valid_measurement:
             coef_a, coef_b, coef_c = 8.1332, 1762.39, 235.66
             part_press = 10 ** (coef_a - coef_b / (self.temperature + coef_c))
-            dp = - coef_c
-            dp -= coef_b / (log10(self.humidity * part_press / 100.) - coef_a)
-            return dp
+            dewp = - coef_c
+            dewp -= (coef_b /
+                     (log10(self.humidity * part_press / 100.) - coef_a))
+            return dewp
         return -255
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -168,7 +169,7 @@ class HTU21D:
             buf_h = self._bus.read_i2c_block_data(
                 I2C_ADDRESS, CMD_READ_HUM_HOLD, 3)
         except OSError as exc:
-            self.ok = False
+            self._ok = False
             _LOGGER.error("Bad reading: %s", exc)
             return
 
@@ -188,9 +189,9 @@ class HTU21D:
                 self.humidity = -255
         else:
             self.temperature = -255
-        _LOGGER.debug("HTU21D values: {:.2f} ºC, {:.2f} %. Dew point: {:.2f}"
-                      .format(self.temperature, self.humidity,
-                              self.dew_point_temperature))
+        _LOGGER.debug("HTU21D values: %.2f ºC, %.2f %%. Dew point: %.2f",
+                      self.temperature, self.humidity,
+                      self.dew_point_temperature)
 
 
 class HTU21DSensor(Entity):
