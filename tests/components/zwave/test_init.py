@@ -442,6 +442,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_discovery(self, discovery, get_platform):
         """Test the creation of a new entity."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         values = zwave.ZWaveDeviceEntityValues(
             hass=self.hass,
             schema=self.mock_schema,
@@ -501,6 +506,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_existing_values(self, discovery, get_platform):
         """Test the loading of already discovered values."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         self.node.values = {
             self.primary.value_id: self.primary,
             self.secondary.value_id: self.secondary,
@@ -564,6 +574,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_entity_workaround_component(self, discovery, get_platform):
         """Test ignore workaround."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         self.node.manufacturer_id = '010f'
         self.node.product_type = '0b00'
         self.primary.command_class = const.COMMAND_CLASS_SENSOR_ALARM
@@ -671,6 +686,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'discovery')
     def test_config_polling_intensity(self, discovery, get_platform):
         """Test polling intensity."""
+        mock_platform = MagicMock()
+        get_platform.return_value = mock_platform
+        mock_device = MagicMock()
+        mock_device.name = 'test_device'
+        mock_platform.get_device.return_value = mock_device
         self.node.values = {
             self.primary.value_id: self.primary,
             self.secondary.value_id: self.secondary,
