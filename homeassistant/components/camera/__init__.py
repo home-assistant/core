@@ -65,8 +65,8 @@ def en_motion_detection(hass, entity_id=None):
 def async_en_motion_detection(hass, entity_id=None):
     """Enable motion detection on given Entities."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, \
-                        SERVICE_EN_MOTION, data))
+    hass.async_add_job(hass.services.async_call(
+                       DOMAIN,SERVICE_EN_MOTION,data))
 
 
 def disen_motion_detection(hass, entity_id=None):
@@ -78,8 +78,8 @@ def disen_motion_detection(hass, entity_id=None):
 def async_disen_motion_detection(hass, entity_id=None):
     """Disable motion detection on given Entitiess."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, \
-                        SERVICE_DISEN_MOTION, data))
+    hass.async_add_job(hass.services.async_call(
+                       DOMAIN,SERVICE_DISEN_MOTION,data))
 
 
 @asyncio.coroutine
