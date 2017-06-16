@@ -292,7 +292,7 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.Bowl', 'light.Ceiling', 'sensor.no_exist'])
 
         state = self.hass.states.get(test_group.entity_id)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         self.hass.states.set('light.Bowl', STATE_ON, {
             ATTR_ASSUMED_STATE: True
