@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = vol.All(
 MONITORED_NETWORKS = {}
 
 
-def _filter_stations(network, radius, latitude, longitude, stations_list):
+def _filter_stations(network, radius, latitude, longitude, stations):
     if radius > 0:
         for station, dist in network.stations.near(latitude, longitude):
             # 'dist' is in weird units, let's calculate again
@@ -72,12 +72,12 @@ def _filter_stations(network, radius, latitude, longitude, stations_list):
             yield station
     else:
         for station in network.stations:
-            if station['id'] in stations_list:
+            if station[ATTR_STATION_ID] in stations:
                 yield station
                 continue
-            if 'extra' in station:
-                if 'uid' in station['extra']:
-                    if str(station['extra']['uid']) in stations_list:
+            if ATTR_EXTRA in station:
+                if ATTR_STATION_UID in station[ATTR_EXTRA]:
+                    if str(station[ATTR_EXTRA][ATTR_STATION_UID]) in stations:
                         yield station
 
 
