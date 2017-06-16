@@ -35,8 +35,8 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_EN_MOTION = 'enable_motion_detection'
 SERVICE_DISEN_MOTION = 'disable_motion_detection'
-MOTION_ENABLED = "Enabled"
-MOTION_DISABLED = "Disabled"
+MOTION_ENABLED = 'Enabled'
+MOTION_DISABLED = 'Disabled'
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -205,8 +205,8 @@ class Camera(Entity):
     @property
     def get_motion_detection_status(self):
         """Return the camera motion detection status."""
-        if hasattr(self, '_motion_status'):
-            status = self._motion_status
+        if hasattr(self, 'get_motion_detection_status'):
+            status = self.get_motion_detection_status
         else:
             status = None
 
