@@ -18,7 +18,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle, location, distance
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-citybikes==0.1.3']
+REQUIREMENTS = ['https://github.com/aronsky/python-citybikes'
+                '/archive/2b9af9c424b169bcfcabe4a3c1ef54ff7841f00b.zip'
+                '#python-citybikes==0.1.3-async']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,9 +87,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     network_uid = config.get(CONF_NETWORK)
     if not network_uid:
-        network = Client().networks.near(latitude, longitude)[0][0]
+        network = Client(loop=hass.loop).networks.near(latitude, longitude)[0][0]
     else:
-        network = Network(Client(), uid=network_uid)
+        network = Network(Client(loop=hass.loop), uid=network_uid)
 
     stations_list = config.get(CONF_STATIONS_LIST, [])
     radius = config.get(CONF_RADIUS, 0)
