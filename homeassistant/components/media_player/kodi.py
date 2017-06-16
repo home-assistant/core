@@ -705,10 +705,8 @@ class KodiDevice(MediaPlayerDevice):
                           self.entity_id, method, kwargs, result)
         except jsonrpc_base.jsonrpc.TransportError:
             result = None
-            _LOGGER.info("TransportError trying to run API method %s.%s(%s)",
-                         self.entity_id, method, kwargs)
-            _LOGGER.debug("TransportError trying to run API method %s.%s(%s)",
-                          self.entity_id, method, kwargs, exc_info=True)
+            _LOGGER.warning("TransportError trying to run API method "
+                            "%s.%s(%s)", self.entity_id, method, kwargs)
 
         if isinstance(result, dict):
             event_data = {'entity_id': self.entity_id,
@@ -762,10 +760,8 @@ class KodiDevice(MediaPlayerDevice):
                 _LOGGER.error("Run API method %s.Playlist.Add(%s) error: %s",
                               self.entity_id, media_type, result)
             except jsonrpc_base.jsonrpc.TransportError:
-                _LOGGER.info("TransportError trying to add playlist to %s",
-                             self.entity_id)
-                _LOGGER.debug("TransportError trying to add playlist to %s",
-                              self.entity_id, exc_info=True)
+                _LOGGER.warning("TransportError trying to add playlist to %s",
+                                self.entity_id)
         else:
             _LOGGER.warning("No media detected for Playlist.Add")
 
