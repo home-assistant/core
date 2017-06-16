@@ -646,7 +646,7 @@ def _match_topic(subscription, topic):
         if sub_part == "+":
             reg_ex_parts.append(r"([^\/]+)")
         else:
-            reg_ex_parts.append(sub_part)
+            reg_ex_parts.append(re.escape(sub_part))
 
     reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
 
