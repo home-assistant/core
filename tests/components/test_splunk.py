@@ -28,6 +28,7 @@ class TestSplunk(unittest.TestCase):
                 'port': 123,
                 'token': 'secret',
                 'ssl': 'False',
+                'name': 'hostname',
             }
         }
 
@@ -96,6 +97,7 @@ class TestSplunk(unittest.TestCase):
                 'attributes': {},
                 'time': '12345',
                 'value': out,
+                'host': 'HASS',
             }]
 
             payload = {'host': 'http://host:8088/services/collector/event',
