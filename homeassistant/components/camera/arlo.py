@@ -9,8 +9,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.arlo import (DEFAULT_BRAND, ARLO_MODE_ARMED, ARLO_MODE_DISARMED)
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA, MOTION_ENABLED, MOTION_DISABLED)
+from homeassistant.components.arlo import DEFAULT_BRAND
+from homeassistant.components.arlo import (ARLO_MODE_ARMED, ARLO_MODE_DISARMED)
+from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.components.camera import (MOTION_ENABLED, MOTION_DISABLED)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)

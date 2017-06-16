@@ -6,8 +6,10 @@ https://home-assistant.io/components/demo/
 """
 import os
 import logging
+import asyncio
 import homeassistant.util.dt as dt_util
 from homeassistant.components.camera import Camera
+from homeassistant.components.camera import (MOTION_ENABLED, MOTION_DISABLED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,6 +67,6 @@ class DemoCamera(Camera):
     def async_update(self):
         """Perform the I/O operation with camera."""
         if self._motion_status == MOTION_ENABLED:
-            _LOGGER.info("Add the code to enable Motion detection for this camera platform")
+            _LOGGER.info("Enable Motion detection for this camera here")
         else:
-            _LOGGER.info("Add the code to disable Motion detection for this camera platform")
+            _LOGGER.info("Disable Motion detection for this camera here")
