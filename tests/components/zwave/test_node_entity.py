@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch, MagicMock
 import tests.mock.zwave as mock_zwave
 import pytest
-from homeassistant.components.zwave import node_entity
+from homeassistant.components.zwave import node_entity, const
+from homeassistant.const import ATTR_ENTITY_ID
 
 
 @asyncio.coroutine
@@ -30,6 +31,92 @@ def test_maybe_schedule_update(hass, mock_openzwave):
         assert len(mock_call_later.mock_calls) == 2
 
 
+@asyncio.coroutine
+def test_node_event_activated(hass, mock_openzwave):
+    """Test Node event activated event."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == mock_zwave.MockNetwork.SIGNAL_NODE_EVENT:
+            mock_receivers.append(receiver)
+
+    node = mock_zwave.MockNode(node_id=11)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+
+    assert len(mock_receivers) == 1
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(const.EVENT_NODE_EVENT, listener)
+
+    # Test event before entity added to hass
+    value = 234
+    hass.async_add_job(mock_receivers[0], node, value)
+    yield from hass.async_block_till_done()
+    assert len(events) == 0
+
+    # Add entity to hass
+    entity.hass = hass
+    entity.entity_id = 'zwave.mock_node'
+
+    value = 234
+    hass.async_add_job(mock_receivers[0], node, value)
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
+    assert events[0].data[const.ATTR_NODE_ID] == 11
+    assert events[0].data[const.ATTR_BASIC_LEVEL] == value
+
+
+@asyncio.coroutine
+def test_scene_activated(hass, mock_openzwave):
+    """Test scene activated event."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == mock_zwave.MockNetwork.SIGNAL_SCENE_EVENT:
+            mock_receivers.append(receiver)
+
+    node = mock_zwave.MockNode(node_id=11)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        entity = node_entity.ZWaveNodeEntity(node, mock_openzwave, True)
+
+    assert len(mock_receivers) == 1
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(const.EVENT_SCENE_ACTIVATED, listener)
+
+    # Test event before entity added to hass
+    scene_id = 123
+    hass.async_add_job(mock_receivers[0], node, scene_id)
+    yield from hass.async_block_till_done()
+    assert len(events) == 0
+
+    # Add entity to hass
+    entity.hass = hass
+    entity.entity_id = 'zwave.mock_node'
+
+    scene_id = 123
+    hass.async_add_job(mock_receivers[0], node, scene_id)
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data[ATTR_ENTITY_ID] == "zwave.mock_node"
+    assert events[0].data[const.ATTR_NODE_ID] == 11
+    assert events[0].data[const.ATTR_SCENE_ID] == scene_id
+
+
 @pytest.mark.usefixtures('mock_openzwave')
 class TestZWaveNodeEntity(unittest.TestCase):
     """Class to test ZWaveNodeEntity."""
@@ -44,7 +131,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
         self.node.manufacturer_name = 'Test Manufacturer'
         self.node.product_name = 'Test Product'
         self.entity = node_entity.ZWaveNodeEntity(self.node,
-                                                  self.zwave_network)
+                                                  self.zwave_network, True)
 
     def test_network_node_changed_from_value(self):
         """Test for network_node_changed."""
@@ -85,6 +172,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
+             'old_entity_id': 'zwave.mock_node_567',
+             'new_entity_id': 'zwave.mock_node',
              'product_name': 'Test Product'},
             self.entity.device_state_attributes)
 
@@ -143,6 +232,8 @@ class TestZWaveNodeEntity(unittest.TestCase):
             {'node_id': self.node.node_id,
              'node_name': 'Mock Node',
              'manufacturer_name': 'Test Manufacturer',
+             'old_entity_id': 'zwave.mock_node_567',
+             'new_entity_id': 'zwave.mock_node',
              'product_name': 'Test Product',
              'query_stage': 'Dynamic',
              'is_awake': True,
