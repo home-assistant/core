@@ -1,5 +1,6 @@
 """
 Support to send data to an Splunk instance.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/splunk/
 """
