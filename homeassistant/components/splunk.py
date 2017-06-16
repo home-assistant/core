@@ -1,6 +1,5 @@
 """
 Support to send data to an Splunk instance.
-
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/splunk/
 """
@@ -11,7 +10,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, EVENT_STATE_CHANGED)
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
 
@@ -22,6 +21,7 @@ DOMAIN = 'splunk'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8088
 DEFAULT_SSL = False
+DEFAULT_NAME = 'HASS'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -29,6 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -40,6 +41,7 @@ def setup(hass, config):
     port = conf.get(CONF_PORT)
     token = conf.get(CONF_TOKEN)
     use_ssl = conf.get(CONF_SSL)
+    name = conf.get(CONF_NAME)
 
     if use_ssl:
         uri_scheme = 'https://'
@@ -69,6 +71,7 @@ def setup(hass, config):
                 'attributes': dict(state.attributes),
                 'time': str(event.time_fired),
                 'value': _state,
+                'host': name,
             }
         ]
 
@@ -85,3 +88,4 @@ def setup(hass, config):
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
     return True
+
