@@ -112,7 +112,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
-    sensor_handler = BME280Handler(sensor)
+    sensor_handler = yield from hass.async_add_job(BME280Handler, sensor)
+
     dev = []
     try:
         for variable in config[CONF_MONITORED_CONDITIONS]:
