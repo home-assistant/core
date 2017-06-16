@@ -10,6 +10,7 @@ INSTALL_FFMPEG="${INSTALL_FFMPEG:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
 INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_COAP_CLIENT="${INSTALL_COAP_CLIENT:-yes}"
+INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 
 # Required debian packages for running hass or components
 PACKAGES=(
@@ -60,6 +61,10 @@ fi
 
 if [ "$INSTALL_COAP_CLIENT" == "yes" ]; then
   virtualization/Docker/scripts/coap_client
+fi
+
+if [ "$INSTALL_SSOCR" == "yes" ]; then
+  virtualization/Docker/scripts/ssocr
 fi
 
 # Remove packages
