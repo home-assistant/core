@@ -57,6 +57,9 @@ PLATFORM_SCHEMA = vol.All(
     }))
 
 
+MONITORED_NETWORKS = {}
+
+
 def _filter_stations(network, radius, latitude, longitude, stations_list):
     if radius > 0:
         for station, dist in network.stations.near(latitude, longitude):
@@ -83,6 +86,7 @@ def _filter_stations(network, radius, latitude, longitude, stations_list):
 def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the CityBikes platform."""
     from citybikes import Client, Network
+    global MONITORED_NETWORKS
 
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -92,8 +96,14 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
     yield from client.networks.async_request()
     if not network_uid:
         network = client.networks.near(latitude, longitude)[0][0]
-    else:
+        MONITORED_NETWORKS[network['id']] = network_uid
+    elif network_uid not in MONITORED_NETWORKS:
         network = Network(client, uid=network_uid)
+        MONITORED_NETWORKS[network_uid] = network
+    else:
+        network = MONITORED_NETWORKS[network_uid]
+
+    yield from network.async_request()
 
     stations_list = config.get(CONF_STATIONS_LIST, [])
     radius = config.get(CONF_RADIUS, 0)
@@ -114,18 +124,19 @@ class CityBikesNetworkPoller(object):
         """Initialize the poller."""
         self._network = network
 
+    @asyncio.coroutine
     def get(self, station_id, update=True):
         """Return the station with the given id."""
         if update:
-            self._update()
+            yield from self._update()
         for station in self._network.stations:
             if station[ATTR_STATION_ID] == station_id:
                 return station
 
-    @Throttle(SCAN_INTERVAL)
+    @asyncio.coroutine
     def _update(self):
         """Update the state of the network."""
-        self._network.request()
+        yield from self._network.async_request()
 
 
 class CityBikesStationSensor(Entity):
@@ -161,9 +172,11 @@ class CityBikesStationSensor(Entity):
         """Return the state of the sensor."""
         return self._free_bikes
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Update device state."""
-        self._update(self._poller.get(self._id))
+        data = yield from self._poller.get(self._id)
+        self._update(data)
 
     @property
     def device_state_attributes(self):
