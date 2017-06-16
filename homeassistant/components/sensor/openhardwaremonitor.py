@@ -1,13 +1,10 @@
-"""
-Support for Open Hardware Monitor Sensor Platform.
-"""
+"""Support for Open Hardware Monitor Sensor Platform."""
 
 from threading import Timer
 from datetime import timedelta
 import logging
-import json
 
-import urllib.request
+import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -33,6 +30,18 @@ OHM_MAX = 'Max'
 OHM_CHILDREN = 'Children'
 OHM_NAME = 'Text'
 
+ATTR_COMPUTER_NAME = 'computer_name'
+ATTR_DEVICE_NAME = 'device_name'
+ATTR_SPEC_NAME = 'spec_name'
+ATTR_VALUE_NAME = 'value_name'
+
+ATTRIBUTES = [
+    ATTR_COMPUTER_NAME,
+    ATTR_DEVICE_NAME,
+    ATTR_SPEC_NAME,
+    ATTR_VALUE_NAME
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=8085): cv.port
@@ -41,33 +50,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Open Hardware Monitor platform."""
-    # update_json(config, add_devices)
-
     data = OpenHardwareMonitorData(config)
-    add_devices(data.devices)
+    add_devices(data.devices, True)
 
 
 class OpenHardwareMonitorDevice(Entity):
     """Device used to display information from OpenHardwareMonitor."""
 
-    def __init__(self, data, name, path, obj, attributes):
-        """Initialize a OpenHardwareMonitor sensor."""
+    def __init__(self, data, name, path, unit_of_measurement):
+        """Initialize an OpenHardwareMonitor sensor."""
         self._name = name
         self._data = data
+        self.path = path
+        self.attributes = {}
+        self._unit_of_measurement = unit_of_measurement
 
-        self._path = path
-        self._obj = obj
-        self._attributes = attributes
-
-        self._state = None
-        self._min = None
-        self._max = None
-
-        parts = obj[OHM_VALUE].split(' ')
-        self._state = parts[0]
-        self._unit_of_measurement = parts[1]
-        self._min = self._obj[OHM_MIN].split(' ')[0]
-        self._max = self._obj[OHM_MAX].split(' ')[0]
+        self.value = None
 
     @property
     def name(self):
@@ -82,26 +80,17 @@ class OpenHardwareMonitorDevice(Entity):
     @property
     def state(self):
         """Return the state of the device."""
-        return self._state
+        return self.value
 
     @property
     def state_attributes(self):
         """Return the state attributes of the sun."""
-        result = self._attributes.copy()
-        result.update({
-            STATE_MIN_VALUE: self._min,
-            STATE_MAX_VALUE: self._max
-        })
-        return result
+        return self.attributes
 
     def update(self):
         """Update the device from a new JSON object."""
         self._data.update()
-        self._obj = self._data.update_object(self._path)
-
-        self._state = self._obj[OHM_VALUE].split(' ')[0]
-        self._min = self._obj[OHM_MIN].split(' ')[0]
-        self._max = self._obj[OHM_MAX].split(' ')[0]
+        self._data.update_device(self)
 
 
 class OpenHardwareMonitorData(object):
@@ -124,19 +113,15 @@ class OpenHardwareMonitorData(object):
 
     def refresh(self):
         """Download and parse JSON from OHM."""
-        host = self._config.get(CONF_HOST)
-        port = self._config.get(CONF_PORT)
-        data_url = "http://%s:%d/data.json" % (host, port)
-        _LOGGER.info("Download from %s", data_url)
+        data_url = "http://%s:%d/data.json" % (
+            self._config.get(CONF_HOST),
+            self._config.get(CONF_PORT))
 
         try:
-            with urllib.request.urlopen(data_url) as url:
-                self._data = json.loads(url.read().decode())
-        except urllib.error.URLError:
-            _LOGGER.error("URLError: Is OpenHardwareMonitor running?")
-        except ConnectionRefusedError:
-            _LOGGER.error(
-                "Connection refused, is OpenHardwareMonitor running?")
+            response = requests.get(data_url)
+            self._data = response.json()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("ConnectionError: Is OpenHardwareMonitor running?")
 
     def schedule_retry(self):
         """Schedule a retry in 30 seconds."""
@@ -145,7 +130,7 @@ class OpenHardwareMonitorData(object):
         timer.start()
 
     def initialize(self):
-        """Initial parsing of the sensors and adding of deviced."""
+        """Initial parsing of the sensors and adding of devices."""
         self.refresh()
 
         if self._data is None:
@@ -153,60 +138,64 @@ class OpenHardwareMonitorData(object):
             return
 
         computer_count = len(self._data[OHM_CHILDREN])
-        _LOGGER.info("Detected %d PC(s)", computer_count)
 
-        if computer_count > 0:
-            for computer_index in range(0, computer_count):
-                computer = self._data[OHM_CHILDREN][computer_index]
-                computer_name = computer[OHM_NAME]
+        for computer_index in range(0, computer_count):
+            computer = self._data[OHM_CHILDREN][computer_index]
+            computer_name = computer[OHM_NAME]
 
-                devices = computer[OHM_CHILDREN]
-                for device_index in range(0, len(devices)):
-                    device = devices[device_index]
-                    device_name = device[OHM_NAME]
+            devices = computer[OHM_CHILDREN]
+            for device_index in range(0, len(devices)):
+                device = devices[device_index]
+                device_name = device[OHM_NAME]
 
-                    specs = device[OHM_CHILDREN]
-                    for spec_index in range(0, len(specs)):
-                        spec = specs[spec_index]
-                        spec_name = spec[OHM_NAME]
+                specs = device[OHM_CHILDREN]
+                for spec_index in range(0, len(specs)):
+                    spec = specs[spec_index]
+                    spec_name = spec[OHM_NAME]
 
-                        values = spec[OHM_CHILDREN]
-                        for value_index in range(0, len(values)):
-                            value = values[value_index]
-                            value_name = value[OHM_NAME]
+                    values = spec[OHM_CHILDREN]
+                    for value_index in range(0, len(values)):
+                        value = values[value_index]
+                        value_name = value[OHM_NAME]
 
-                            path = []
-                            path.append(computer_index)
-                            path.append(device_index)
-                            path.append(spec_index)
-                            path.append(value_index)
+                        path = []
+                        path.append(computer_index)
+                        path.append(device_index)
+                        path.append(spec_index)
+                        path.append(value_index)
 
-                            attributes = {
-                                "computer_name": computer_name,
-                                "device_name": device_name,
-                                "spec_name": spec_name,
-                                "value_name": value_name
-                            }
+                        unit_of_measurement = value[OHM_VALUE].split(' ')[1]
+                        dev = OpenHardwareMonitorDevice(
+                            self,
+                            "%s_%s_%s_%s" % (
+                                computer_name,
+                                device_name,
+                                spec_name,
+                                value_name),
+                            path, unit_of_measurement)
 
-                            dev = OpenHardwareMonitorDevice(
-                                self,
-                                "%s_%s_%s_%s" % (
-                                    computer_name,
-                                    device_name,
-                                    spec_name,
-                                    value_name),
-                                path, value, attributes)
+                        self.devices.append(dev)
 
-                            self.devices.append(dev)
-
-    def update_object(self, path):
-        """Get the object by specified path."""
+    def update_device(self, device):
+        """Update ."""
         array = self._data[OHM_CHILDREN]
 
-        for path_index in range(0, len(path)):
-            path_number = path[path_index]
+        attributes = {}
+        for path_index in range(0, len(device.path)):
+            path_number = device.path[path_index]
+            values = array[path_number]
 
-            if path_index == len(path) - 1:
-                return array[path_number]
+            attributes.update({
+                ATTRIBUTES[path_index]: values[OHM_NAME]
+            })
+
+            if path_index == len(device.path) - 1:
+                device.value = values[OHM_VALUE].split(' ')[0]
+                attributes.update({
+                    STATE_MIN_VALUE: values[OHM_MIN].split(' ')[0],
+                    STATE_MAX_VALUE: values[OHM_MAX].split(' ')[0]
+                })
+                device.attributes = attributes
+                return
             else:
                 array = array[path_number][OHM_CHILDREN]
