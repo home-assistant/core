@@ -10,11 +10,12 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.components.mqtt as mqtt
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, EVENT_STATE_CHANGED,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import state as state_helper
+
+REQUIREMENTS = ['paho-mqtt==1.2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Initialize the Shiftr.io MQTT consumer."""
+    import paho.mqtt.client as mqtt
     conf = config[DOMAIN]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
@@ -41,22 +43,15 @@ def async_setup(hass, config):
     port = 1883
     keepalive = 600
 
-    shiftr_mqtt = mqtt.MQTT(
-        hass, SHIFTR_BROKER, port, client_id, keepalive, username,
-        password, certificate=None, client_key=None, client_cert=None,
-        tls_insecure=False, protocol='3.1.1', will_message=None,
-        birth_message=None, tls_version=1.2)
+    mqttc = mqtt.Client(client_id, protocol=mqtt.MQTTv311)
+    mqttc.username_pw_set(username, password=password)
+    mqttc.connect(SHIFTR_BROKER, port=port, keepalive=keepalive)
 
-    success = yield from shiftr_mqtt.async_connect()
-    if not success:
-        return False
-
-    @asyncio.coroutine
-    def async_stop_shiftr(event):
+    def stop_shiftr(event):
         """Stop the Shiftr.io MQTT component."""
-        yield from shiftr_mqtt.async_disconnect()
+        mqttc.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_shiftr)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_shiftr)
 
     @asyncio.coroutine
     def async_shiftr_event_listener(event):
@@ -69,12 +64,16 @@ def async_setup(hass, config):
         except ValueError:
             _state = state.state
 
-        yield from shiftr_mqtt.async_publish(topic, _state, 0, False)
+        try:
+            yield from mqttc.publish(topic, _state, qos=0, retain=False)
 
-        if state.attributes:
-            for attribute, data in state.attributes.items():
-                yield from shiftr_mqtt.async_publish(
-                    '/{}/{}'.format(topic, attribute), str(data), 0, False)
+            if state.attributes:
+                for attribute, data in state.attributes.items():
+                    yield from mqttc.publish(
+                        '/{}/{}'.format(topic, attribute), str(data), qos=0,
+                        retain=False)
+        except RuntimeError:
+            pass
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, async_shiftr_event_listener)
 
