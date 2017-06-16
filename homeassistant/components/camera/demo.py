@@ -13,6 +13,7 @@ from homeassistant.components.camera import (MOTION_ENABLED, MOTION_DISABLED)
 
 _LOGGER = logging.getLogger(__name__)
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo camera platform."""
     add_devices([
@@ -28,7 +29,7 @@ class DemoCamera(Camera):
         super().__init__()
         self._parent = hass
         self._name = name
-        self._motion_status = "Disarmed"
+        self._motion_status = MOTION_DISABLED
 
     def camera_image(self):
         """Return a faked still image response."""
