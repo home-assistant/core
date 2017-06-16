@@ -60,10 +60,10 @@ def async_setup(hass, config):
         return False
 
     unit = config[DOMAIN].get(CONF_UNITS)
-    discovery.load_platform(hass, 'sensor', DOMAIN, {'unit': unit }, config)
+    discovery.load_platform(hass, 'sensor', DOMAIN, {'unit': unit}, config)
 
     port_mapping = config[DOMAIN].get(CONF_ENABLE_PORT_MAPPING)
-    if port_mapping: 
+    if port_mapping:
         base_url = urlsplit(hass.config.api.base_url)
         host = base_url.hostname
         external_port = internal_port = base_url.port
@@ -78,4 +78,3 @@ def async_setup(hass, config):
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 
     return True
-
