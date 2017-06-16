@@ -22,6 +22,8 @@ CONF_ATTRIBUTION = 'Data provided by arlo.netgear.com'
 DOMAIN = 'arlo'
 
 DEFAULT_BRAND = 'Netgear Arlo'
+ARLO_MODE_ARMED = 'armed'
+ARLO_MODE_DISARMED = 'disarmed'
 
 NOTIFICATION_ID = 'arlo_notification'
 NOTIFICATION_TITLE = 'Arlo Camera Setup'

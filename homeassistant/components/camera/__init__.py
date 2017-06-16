@@ -20,7 +20,7 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_PICTURE
+from homeassistant.const import (ATTR_ENTITY_ID, ATTR_ENTITY_PICTURE)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -30,10 +30,13 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.components.http import HomeAssistantView, KEY_AUTHENTICATED
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (SERVICE_ARM, SERVICE_DISARM, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
+SERVICE_EN_MOTION = 'enable_motion_detection'
+SERVICE_DISEN_MOTION = 'disable_motion_detection'
+MOTION_ENABLED = "Enabled"
+MOTION_DISABLED = "Disabled"
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -53,28 +56,28 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def arm(hass, entity_id=None):
-    """Arm all."""
-    hass.add_job(async_arm, hass, entity_id)
+def en_motion_detection(hass, entity_id=None):
+    """Enable Motion Detection."""
+    hass.add_job(async_en_motion_detection, hass, entity_id)
 
 
 @callback
-def async_arm(hass, entity_id=None):
-    """Arm all the cameras."""
+def async_en_motion_detection(hass, entity_id=None):
+    """Enable motion detection on given Entities."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_ARM, data))
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_EN_MOTION, data))
 
 
-def disarm(hass, entity_id=None):
-    """Disarm all."""
-    hass.add_job(async_disarm, hass, entity_id)
+def disen_motion_detection(hass, entity_id=None):
+    """Disable Motion Detection."""
+    hass.add_job(async_disen_motion_detection, hass, entity_id)
 
 
 @callback
-def async_disarm(hass, entity_id=None):
-    """Disarm all the cameras."""
+def async_disen_motion_detection(hass, entity_id=None):
+    """Disable motion detection on given Entitiess."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISARM, data))
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISEN_MOTION, data))
 
 
 @asyncio.coroutine
@@ -132,13 +135,10 @@ def async_setup(hass, config):
         target_cameras = component.async_extract_from_service(service)
 
         for camera in target_cameras:
-            try:
-                if service.service == SERVICE_ARM:
-                    yield from camera.async_arm()
-                elif service.service == SERVICE_DISARM:
-                    yield from camera.async_disarm()
-            except AttributeError:
-                pass
+            if service.service == SERVICE_EN_MOTION and hasattr(camera, 'async_enable_motion_detect'):
+                yield from camera.async_enable_motion_detect()
+            elif service.service == SERVICE_DISEN_MOTION and hasattr(camera, 'async_disable_motion_detect'):
+                yield from camera.async_disable_motion_detect()
 
         update_tasks = []
         for camera in target_cameras:
@@ -160,11 +160,11 @@ def async_setup(hass, config):
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_ARM, async_handle_camera_service,
-        descriptions.get(SERVICE_ARM), schema=CAMERA_SERVICE_SCHEMA)
+        DOMAIN, SERVICE_EN_MOTION, async_handle_camera_service,
+        descriptions.get(SERVICE_EN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
-        DOMAIN, SERVICE_DISARM, async_handle_camera_service,
-        descriptions.get(SERVICE_DISARM), schema=CAMERA_SERVICE_SCHEMA)
+        DOMAIN, SERVICE_DISEN_MOTION, async_handle_camera_service,
+        descriptions.get(SERVICE_DISEN_MOTION), schema=CAMERA_SERVICE_SCHEMA)
 
     return True
 
@@ -199,11 +199,11 @@ class Camera(Entity):
         return None
 
     @property
-    def status(self):
-        """Return the camera status."""
-        try:
-            status = self._status
-        except AttributeError:
+    def get_motion_detection_status(self):
+        """Return the camera motion detection status."""
+        if hasattr(self, '_motion_status'):
+            status = self._motion_status
+        else:
             status = None
 
         return status
@@ -296,8 +296,8 @@ class Camera(Entity):
         if self.brand:
             attr['brand'] = self.brand
 
-        if self.status:
-            attr['status'] = self.status
+        if self.get_motion_detection_status:
+            attr['motion_detection'] = self.get_motion_detection_status
 
         return attr
 

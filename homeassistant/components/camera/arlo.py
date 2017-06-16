@@ -9,9 +9,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.arlo import DEFAULT_BRAND
-
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.components.arlo import (DEFAULT_BRAND, ARLO_MODE_ARMED, ARLO_MODE_DISARMED)
+from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA, MOTION_ENABLED, MOTION_DISABLED)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
@@ -54,7 +53,7 @@ class ArloCam(Camera):
         self._camera = camera
         self._base_stn = hass.data['arlo'].base_stations[0]
         self._name = self._camera.name
-        self._status = "Disarmed"
+        self._motion_status = MOTION_DISABLED
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
 
@@ -95,20 +94,28 @@ class ArloCam(Camera):
         return DEFAULT_BRAND
 
     @property
-    def status(self):
-        """Camera Status."""
-        return self._status
+    def get_motion_detection_status(self):
+        """Camera Motion Detection Status."""
+        return self._motion_status
 
     @asyncio.coroutine
-    def async_arm(self):
+    def async_enable_motion_detect(self):
         """Camera arm."""
-        self._base_stn.mode = "armed"
-        self._status = "Armed"
+        self._motion_status = MOTION_ENABLED
         self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update())
 
     @asyncio.coroutine
-    def async_disarm(self):
+    def async_disable_motion_detect(self):
         """Camera disarm."""
-        self._base_stn.mode = "disarmed"
-        self._status = "Disarmed"
+        self._motion_status = MOTION_DISABLED
         self.hass.async_add_job(self.async_update_ha_state())
+        self.hass.async_add_job(self.async_update())
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Perform the I/O operation with camera."""
+        if self._motion_status == MOTION_ENABLED:
+            self._base_stn.mode = ARLO_MODE_ARMED
+        else:
+            self._base_stn.mode = ARLO_MODE_DISARMED
