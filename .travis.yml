@@ -1,13 +1,15 @@
 sudo: false
+addons:
+  apt:
+    packages:
+      - libudev-dev
 matrix:
   fast_finish: true
   include:
     - python: "3.4.2"
-      env: TOXENV=py34
-    - python: "3.4.2"
-      env: TOXENV=requirements
-    - python: "3.4.2"
       env: TOXENV=lint
+    - python: "3.4.2"
+      env: TOXENV=py34
     # - python: "3.5"
     #   env: TOXENV=typing
     - python: "3.5"
@@ -16,6 +18,8 @@ matrix:
       env: TOXENV=py36
     - python: "3.6-dev"
       env: TOXENV=py36
+    - python: "3.4.2"
+      env: TOXENV=requirements
   # allow_failures:
   #   - python: "3.5"
   #     env: TOXENV=typing
@@ -25,5 +29,5 @@ cache:
     - $HOME/.cache/pip
 install: pip install -U tox coveralls
 language: python
-script: tox
+script: travis_wait tox
 after_success: coveralls

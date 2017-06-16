@@ -9,11 +9,10 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['yahoo-finance==1.4.0']
 
@@ -31,7 +30,7 @@ DEFAULT_SYMBOL = 'YHOO'
 
 ICON = 'mdi:currency-usd'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SYMBOLS, default=[DEFAULT_SYMBOL]):
@@ -53,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         data = YahooFinanceData(symbol)
         dev.append(YahooFinanceSensor(data, symbol))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class YahooFinanceSensor(Entity):
@@ -66,7 +65,6 @@ class YahooFinanceSensor(Entity):
         self._symbol = symbol
         self._state = None
         self._unit_of_measurement = None
-        self.update()
 
     @property
     def name(self):
@@ -120,7 +118,6 @@ class YahooFinanceData(object):
         self.prev_close = None
         self.stock = Share(self._symbol)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data and updates the states."""
         self.stock.refresh()

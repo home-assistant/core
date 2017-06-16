@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_date
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['upsmychoice==1.0.1']
+REQUIREMENTS = ['upsmychoice==1.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +40,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the UPS platform."""
+    """Set up the UPS platform."""
     import upsmychoice
     try:
         cookie = hass.config.path(COOKIE)
-        session = upsmychoice.get_session(config.get(CONF_USERNAME),
-                                          config.get(CONF_PASSWORD),
-                                          cookie_path=cookie)
+        session = upsmychoice.get_session(
+            config.get(CONF_USERNAME), config.get(CONF_PASSWORD),
+            cookie_path=cookie)
     except upsmychoice.UPSError:
-        _LOGGER.exception('Could not connect to UPS My Choice')
+        _LOGGER.exception("Could not connect to UPS My Choice")
         return False
 
     add_devices([UPSSensor(session, config.get(CONF_NAME),

@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mystrom==0.3.6']
+REQUIREMENTS = ['python-mystrom==0.3.8']
 
 DEFAULT_NAME = 'myStrom Switch'
 

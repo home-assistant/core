@@ -9,12 +9,11 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_TEMPERATURE, STATE_UNKNOWN)
-from homeassistant.helpers import config_validation as cv
+    ATTR_ATTRIBUTION, ATTR_TIME, ATTR_TEMPERATURE, STATE_UNKNOWN, CONF_TOKEN)
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['pwaqi==3.0']
 
@@ -28,14 +27,12 @@ ATTR_PM10 = 'pm_10'
 ATTR_PM2_5 = 'pm_2_5'
 ATTR_PRESSURE = 'pressure'
 ATTR_SULFUR_DIOXIDE = 'sulfur_dioxide'
-ATTR_TIME = 'time'
 ATTRIBUTION = 'Data provided by the World Air Quality Index project'
 
 CONF_LOCATIONS = 'locations'
 CONF_STATIONS = 'stations'
-CONF_API_TOKEN = 'token'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SENSOR_TYPES = {
     'aqi': ['AQI', '0-300+', 'mdi:cloud']
@@ -43,7 +40,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATIONS): cv.ensure_list,
-    vol.Required(CONF_API_TOKEN): cv.string,
+    vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_LOCATIONS): cv.ensure_list,
 })
 
@@ -52,10 +49,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the requested World Air Quality Index locations."""
     import pwaqi
 
-    dev = []
-    token = config.get(CONF_API_TOKEN)
+    token = config.get(CONF_TOKEN)
     station_filter = config.get(CONF_STATIONS)
-    for location_name in config.get(CONF_LOCATIONS):
+    locations = config.get(CONF_LOCATIONS)
+
+    dev = []
+    for location_name in locations:
         station_ids = pwaqi.findStationCodesByCity(location_name, token)
         _LOGGER.info("The following stations were returned: %s", station_ids)
         for station in station_ids:
@@ -64,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                (waqi_sensor.station_name in station_filter):
                 dev.append(WaqiSensor(WaqiData(station, token), station))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class WaqiSensor(Entity):
@@ -75,7 +74,6 @@ class WaqiSensor(Entity):
         self.data = data
         self._station_id = station_id
         self._details = None
-        self.update()
 
     @property
     def name(self):
@@ -157,7 +155,6 @@ class WaqiData(object):
         self._token = token
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the data from World Air Quality Index and updates the states."""
         import pwaqi

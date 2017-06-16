@@ -45,11 +45,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     device = None
 
-    _LOGGER.info('Provisioning Anthem AVR device at %s:%d', host, port)
+    _LOGGER.info("Provisioning Anthem AVR device at %s:%d", host, port)
 
     def async_anthemav_update_callback(message):
         """Receive notification from transport that new data exists."""
-        _LOGGER.info('Received update calback from AVR: %s', message)
+        _LOGGER.info("Received update calback from AVR: %s", message)
         hass.async_add_job(device.async_update_ha_state())
 
     avr = yield from anthemav.Connection.create(
@@ -58,9 +58,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     device = AnthemAVR(avr, name)
 
-    _LOGGER.debug('dump_devicedata: '+device.dump_avrdata)
-    _LOGGER.debug('dump_conndata: '+avr.dump_conndata)
-    _LOGGER.debug('dump_rawdata: '+avr.protocol.dump_rawdata)
+    _LOGGER.debug("dump_devicedata: %s", device.dump_avrdata)
+    _LOGGER.debug("dump_conndata: %s", avr.dump_conndata)
+    _LOGGER.debug("dump_rawdata: %s", avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
     async_add_devices([device])
@@ -70,7 +70,7 @@ class AnthemAVR(MediaPlayerDevice):
     """Entity reading values from Anthem AVR protocol."""
 
     def __init__(self, avr, name):
-        """"Initialize entity with transport."""
+        """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
         self._name = name
@@ -163,7 +163,8 @@ class AnthemAVR(MediaPlayerDevice):
 
     def _update_avr(self, propname, value):
         """Update a property in the AVR."""
-        _LOGGER.info('Sending command to AVR: set '+propname+' to '+str(value))
+        _LOGGER.info(
+            "Sending command to AVR: set %s to %s", propname, str(value))
         setattr(self.avr.protocol, propname, value)
 
     @property

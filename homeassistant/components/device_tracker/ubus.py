@@ -70,9 +70,9 @@ class UbusDeviceScanner(DeviceScanner):
         """Return the name of the given device or None if we don't know."""
         with self.lock:
             if self.leasefile is None:
-                result = _req_json_rpc(self.url, self.session_id,
-                                       'call', 'uci', 'get',
-                                       config="dhcp", type="dnsmasq")
+                result = _req_json_rpc(
+                    self.url, self.session_id, 'call', 'uci', 'get',
+                    config="dhcp", type="dnsmasq")
                 if result:
                     values = result["values"].values()
                     self.leasefile = next(iter(values))["leasefile"]
@@ -80,9 +80,9 @@ class UbusDeviceScanner(DeviceScanner):
                     return
 
             if self.mac2name is None:
-                result = _req_json_rpc(self.url, self.session_id,
-                                       'call', 'file', 'read',
-                                       path=self.leasefile)
+                result = _req_json_rpc(
+                    self.url, self.session_id, 'call', 'file', 'read',
+                    path=self.leasefile)
                 if result:
                     self.mac2name = dict()
                     for line in result["data"].splitlines():
@@ -107,15 +107,15 @@ class UbusDeviceScanner(DeviceScanner):
             _LOGGER.info("Checking ARP")
 
             if not self.hostapd:
-                hostapd = _req_json_rpc(self.url, self.session_id,
-                                        'list', 'hostapd.*', '')
+                hostapd = _req_json_rpc(
+                    self.url, self.session_id, 'list', 'hostapd.*', '')
                 self.hostapd.extend(hostapd.keys())
 
             self.last_results = []
             results = 0
             for hostapd in self.hostapd:
-                result = _req_json_rpc(self.url, self.session_id,
-                                       'call', hostapd, 'get_clients')
+                result = _req_json_rpc(
+                    self.url, self.session_id, 'call', hostapd, 'get_clients')
 
                 if result:
                     results = results + 1
@@ -144,7 +144,10 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
         response = res.json()
 
         if rpcmethod == "call":
-            return response["result"][1]
+            try:
+                return response["result"][1]
+            except IndexError:
+                return
         else:
             return response["result"]
 

@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the DNS IP sensor."""
+    """Set up the DNS IP sensor."""
     hostname = config.get(CONF_HOSTNAME)
     ipv6 = config.get(CONF_IPV6)
     if ipv6:

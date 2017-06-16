@@ -17,7 +17,6 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 from homeassistant.util import Throttle
 
-# Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)

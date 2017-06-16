@@ -4,77 +4,92 @@ Support for Powerview scenes from a Powerview hub.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene.hunterdouglas_powerview/
 """
+import asyncio
 import logging
 
+import voluptuous as vol
+
 from homeassistant.components.scene import Scene, DOMAIN
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.const import CONF_PLATFORM
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import async_generate_entity_id
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = [
-    'https://github.com/sander76/powerviewApi/archive'
-    '/246e782d60d5c0addcc98d7899a0186f9d5640b0.zip#powerviewApi==0.3.15'
-]
+REQUIREMENTS = ['aiopvapi==1.4']
 
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 HUB_ADDRESS = 'address'
 
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_PLATFORM): 'hunterdouglas_powerview',
+    vol.Required(HUB_ADDRESS): cv.string,
+})
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the powerview scenes stored in a Powerview hub."""
-    from powerview_api import powerview
+SCENE_DATA = 'sceneData'
+ROOM_DATA = 'roomData'
+SCENE_NAME = 'name'
+ROOM_NAME = 'name'
+SCENE_ID = 'id'
+ROOM_ID = 'id'
+ROOM_ID_IN_SCENE = 'roomId'
+STATE_ATTRIBUTE_ROOM_NAME = 'roomName'
+
+
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up home assistant scene entries."""
+    from aiopvapi.hub import Hub
 
     hub_address = config.get(HUB_ADDRESS)
+    websession = async_get_clientsession(hass)
 
-    _pv = powerview.PowerView(hub_address)
-    try:
-        _scenes = _pv.get_scenes()
-        _rooms = _pv.get_rooms()
-    except ConnectionError:
-        _LOGGER.exception("error connecting to powerview "
-                          "hub with ip address: %s", hub_address)
-        return False
-    add_devices(PowerViewScene(hass, scene, _rooms, _pv)
-                for scene in _scenes['sceneData'])
+    _hub = Hub(hub_address, hass.loop, websession)
+    _scenes = yield from _hub.scenes.get_scenes()
+    _rooms = yield from _hub.rooms.get_rooms()
 
-    return True
+    if not _scenes or not _rooms:
+        return
+    pvscenes = (PowerViewScene(hass, _scene, _rooms, _hub)
+                for _scene in _scenes[SCENE_DATA])
+    async_add_devices(pvscenes)
 
 
 class PowerViewScene(Scene):
     """Representation of a Powerview scene."""
 
-    def __init__(self, hass, scene_data, room_data, pv_instance):
+    def __init__(self, hass, scene_data, room_data, hub):
         """Initialize the scene."""
-        self.pv_instance = pv_instance
+        self.hub = hub
         self.hass = hass
-        self.scene_data = scene_data
-        self._sync_room_data(room_data)
-        self.entity_id_format = DOMAIN + '.{}'
-        self.entity_id = generate_entity_id(self.entity_id_format,
-                                            str(self.scene_data["id"]),
-                                            hass=hass)
+        self._sync_room_data(room_data, scene_data)
+        self._name = scene_data[SCENE_NAME]
+        self._scene_id = scene_data[SCENE_ID]
+        self.entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, str(scene_data[SCENE_ID]), hass=hass)
 
-    def _sync_room_data(self, room_data):
+    def _sync_room_data(self, room_data, scene_data):
         """Sync the room data."""
-        room = next((room for room in room_data["roomData"]
-                     if room["id"] == self.scene_data["roomId"]), None)
-        if room is not None:
-            self.scene_data["roomName"] = room["name"]
+        room = next((room for room in room_data[ROOM_DATA]
+                     if room[ROOM_ID] == scene_data[ROOM_ID_IN_SCENE]), {})
+
+        self._room_name = room.get(ROOM_NAME, '')
 
     @property
     def name(self):
         """Return the name of the scene."""
-        return str(self.scene_data["name"])
+        return self._name
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {"roomName": self.scene_data["roomName"]}
+        return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
     def icon(self):
         """Icon to use in the frontend."""
         return 'mdi:blinds'
 
-    def activate(self):
-        """Activate the scene. Tries to get entities into requested state."""
-        self.pv_instance.activate_scene(self.scene_data["id"])
+    def async_activate(self):
+        """Activate scene. Try to get entities into requested state."""
+        yield from self.hub.scenes.activate_scene(self._scene_id)

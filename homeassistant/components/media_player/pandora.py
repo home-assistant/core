@@ -4,7 +4,6 @@ Component for controlling Pandora stations through the pianobar client.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/media_player.pandora/
 """
-
 import logging
 import re
 import os
@@ -46,12 +45,12 @@ STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the media player pandora platform."""
+    """Set up the Pandora media player platform."""
     if not _pianobar_exists():
         return False
     pandora = PandoraMediaPlayer('Pandora')
 
-    # make sure we end the pandora subprocess on exit in case user doesn't
+    # Make sure we end the pandora subprocess on exit in case user doesn't
     # power it down.
     def _stop_pianobar(_event):
         pandora.turn_off()
@@ -64,7 +63,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     """A media player that uses the Pianobar interface to Pandora."""
 
     def __init__(self, name):
-        """Initialize the demo device."""
+        """Initialize the Pandora device."""
         MediaPlayerDevice.__init__(self)
         self._name = name
         self._player_state = STATE_OFF
@@ -79,7 +78,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     @property
     def should_poll(self):
-        """Should be polled for current state."""
+        """Return the polling state."""
         return True
 
     @property
@@ -98,7 +97,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         if self._player_state != STATE_OFF:
             return
         self._pianobar = pexpect.spawn('pianobar')
-        _LOGGER.info('Started pianobar subprocess')
+        _LOGGER.info("Started pianobar subprocess")
         mode = self._pianobar.expect(['Receiving new playlist',
                                       'Select station:',
                                       'Email:'])
@@ -106,10 +105,10 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             # station list was presented. dismiss it.
             self._pianobar.sendcontrol('m')
         elif mode == 2:
-            _LOGGER.warning('The pianobar client is not configured to log in. '
-                            'Please create a config file for it as described '
-                            'at https://home-assistant.io'
-                            '/components/media_player.pandora/')
+            _LOGGER.warning(
+                "The pianobar client is not configured to log in. "
+                "Please create a config file for it as described at "
+                "https://home-assistant.io/components/media_player.pandora/")
             # pass through the email/password prompts to quit cleanly
             self._pianobar.sendcontrol('m')
             self._pianobar.sendcontrol('m')
@@ -126,16 +125,16 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         """Turn the media player off."""
         import pexpect
         if self._pianobar is None:
-            _LOGGER.info('Pianobar subprocess already stopped')
+            _LOGGER.info("Pianobar subprocess already stopped")
             return
         self._pianobar.send('q')
         try:
-            _LOGGER.info('Stopped Pianobar subprocess')
+            _LOGGER.debug("Stopped Pianobar subprocess")
             self._pianobar.terminate()
         except pexpect.exceptions.TIMEOUT:
             # kill the process group
             os.killpg(os.getpgid(self._pianobar.pid), signal.SIGTERM)
-            _LOGGER.info('Killed Pianobar subprocess')
+            _LOGGER.debug("Killed Pianobar subprocess")
         self._pianobar = None
         self._player_state = STATE_OFF
         self.schedule_update_ha_state()
@@ -203,9 +202,9 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         try:
             station_index = self._stations.index(source)
         except ValueError:
-            _LOGGER.warning('Station `%s` is not in list', source)
+            _LOGGER.warning("Station %s is not in list", source)
             return
-        _LOGGER.info('Setting station %s, %d', source, station_index)
+        _LOGGER.debug("Setting station %s, %d", source, station_index)
         self._send_station_list_command()
         self._pianobar.sendline('{}'.format(station_index))
         self._pianobar.expect('\r\n')
@@ -243,7 +242,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
                                                'Select station',
                                                'Receiving new playlist'])
         except pexpect.exceptions.EOF:
-            _LOGGER.info('Pianobar process already exited.')
+            _LOGGER.info("Pianobar process already exited")
             return None
 
         self._log_match()
@@ -252,12 +251,12 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             response = None
         elif match_idx == 2:
             # stuck on a station selection dialog. Clear it.
-            _LOGGER.warning('On unexpected station list page.')
+            _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol('m')  # press enter
             self._pianobar.sendcontrol('m')  # do it again b/c an 'i' got in
             response = self.update_playing_status()
         elif match_idx == 3:
-            _LOGGER.debug('Received new playlist list.')
+            _LOGGER.debug("Received new playlist list")
             response = self.update_playing_status()
         else:
             response = self._pianobar.before.decode('utf-8')
@@ -268,9 +267,9 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         station_match = re.search(STATION_PATTERN, response)
         if station_match:
             self._station = station_match.group(1)
-            _LOGGER.debug('Got station as: %s', self._station)
+            _LOGGER.debug("Got station as: %s", self._station)
         else:
-            _LOGGER.warning('No station match. ')
+            _LOGGER.warning("No station match")
 
     def _update_current_song(self, response):
         """Update info about current song."""
@@ -278,9 +277,9 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         if song_match:
             (self._media_title, self._media_artist,
              self._media_album) = song_match.groups()
-            _LOGGER.debug('Got song as: %s', self._media_title)
+            _LOGGER.debug("Got song as: %s", self._media_title)
         else:
-            _LOGGER.warning('No song match.')
+            _LOGGER.warning("No song match")
 
     @util.Throttle(MIN_TIME_BETWEEN_UPDATES)
     def _update_song_position(self):
@@ -305,7 +304,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
 
     def _log_match(self):
         """Log grabbed values from console."""
-        _LOGGER.debug('Before: %s\nMatch: %s\nAfter: %s',
+        _LOGGER.debug("Before: %s\nMatch: %s\nAfter: %s",
                       repr(self._pianobar.before),
                       repr(self._pianobar.match),
                       repr(self._pianobar.after))
@@ -313,10 +312,10 @@ class PandoraMediaPlayer(MediaPlayerDevice):
     def _send_pianobar_command(self, service_cmd):
         """Send a command to Pianobar."""
         command = CMD_MAP.get(service_cmd)
-        _LOGGER.debug('Sending pinaobar command %s for %s',
-                      command, service_cmd)
+        _LOGGER.debug(
+            "Sending pinaobar command %s for %s", command, service_cmd)
         if command is None:
-            _LOGGER.info('Command %s not supported yet', service_cmd)
+            _LOGGER.info("Command %s not supported yet", service_cmd)
         self._clear_buffer()
         self._pianobar.sendline(command)
 
@@ -324,16 +323,16 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         """List defined Pandora stations."""
         self._send_station_list_command()
         station_lines = self._pianobar.before.decode('utf-8')
-        _LOGGER.debug('Getting stations: %s', station_lines)
+        _LOGGER.debug("Getting stations: %s", station_lines)
         self._stations = []
         for line in station_lines.split('\r\n'):
             match = re.search(r'\d+\).....(.+)', line)
             if match:
                 station = match.group(1).strip()
-                _LOGGER.debug('Found station %s', station)
+                _LOGGER.debug("Found station %s", station)
                 self._stations.append(station)
             else:
-                _LOGGER.debug('No station match on `%s`', line)
+                _LOGGER.debug("No station match on %s", line)
         self._pianobar.sendcontrol('m')  # press enter with blank line
         self._pianobar.sendcontrol('m')  # do it twice in case an 'i' got in
 
@@ -360,9 +359,8 @@ def _pianobar_exists():
     if pianobar_exe:
         return True
     else:
-        _LOGGER.warning('The Pandora component depends on the Pianobar '
-                        'client, which cannot be found. Please install '
-                        'using instructions at'
-                        'https://home-assistant.io'
-                        '/components/media_player.pandora/')
+        _LOGGER.warning(
+            "The Pandora component depends on the Pianobar client, which "
+            "cannot be found. Please install using instructions at "
+            "https://home-assistant.io/components/media_player.pandora/")
         return False

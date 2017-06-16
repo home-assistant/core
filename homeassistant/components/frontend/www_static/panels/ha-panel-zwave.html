@@ -1,0 +1,728 @@
+<html><head><meta charset="UTF-8"></head><body><div hidden="" by-vulcanize=""><style>[hidden]{display:none!important}</style><style is="custom-style">:root{--layout:{display:-ms-flexbox;display:-webkit-flex;display:flex};--layout-inline:{display:-ms-inline-flexbox;display:-webkit-inline-flex;display:inline-flex};--layout-horizontal:{@apply(--layout);-ms-flex-direction:row;-webkit-flex-direction:row;flex-direction:row};--layout-horizontal-reverse:{@apply(--layout);-ms-flex-direction:row-reverse;-webkit-flex-direction:row-reverse;flex-direction:row-reverse};--layout-vertical:{@apply(--layout);-ms-flex-direction:column;-webkit-flex-direction:column;flex-direction:column};--layout-vertical-reverse:{@apply(--layout);-ms-flex-direction:column-reverse;-webkit-flex-direction:column-reverse;flex-direction:column-reverse};--layout-wrap:{-ms-flex-wrap:wrap;-webkit-flex-wrap:wrap;flex-wrap:wrap};--layout-no-wrap:{-ms-flex-wrap:nowrap;-webkit-flex-wrap:nowrap;flex-wrap:nowrap};--layout-wrap-reverse:{-ms-flex-wrap:wrap-reverse;-webkit-flex-wrap:wrap-reverse;flex-wrap:wrap-reverse};--layout-flex-auto:{-ms-flex:1 1 auto;-webkit-flex:1 1 auto;flex:1 1 auto};--layout-flex-none:{-ms-flex:none;-webkit-flex:none;flex:none};--layout-flex:{-ms-flex:1 1 .000000001px;-webkit-flex:1;flex:1;-webkit-flex-basis:.000000001px;flex-basis:.000000001px};--layout-flex-2:{-ms-flex:2;-webkit-flex:2;flex:2};--layout-flex-3:{-ms-flex:3;-webkit-flex:3;flex:3};--layout-flex-4:{-ms-flex:4;-webkit-flex:4;flex:4};--layout-flex-5:{-ms-flex:5;-webkit-flex:5;flex:5};--layout-flex-6:{-ms-flex:6;-webkit-flex:6;flex:6};--layout-flex-7:{-ms-flex:7;-webkit-flex:7;flex:7};--layout-flex-8:{-ms-flex:8;-webkit-flex:8;flex:8};--layout-flex-9:{-ms-flex:9;-webkit-flex:9;flex:9};--layout-flex-10:{-ms-flex:10;-webkit-flex:10;flex:10};--layout-flex-11:{-ms-flex:11;-webkit-flex:11;flex:11};--layout-flex-12:{-ms-flex:12;-webkit-flex:12;flex:12};--layout-start:{-ms-flex-align:start;-webkit-align-items:flex-start;align-items:flex-start};--layout-center:{-ms-flex-align:center;-webkit-align-items:center;align-items:center};--layout-end:{-ms-flex-align:end;-webkit-align-items:flex-end;align-items:flex-end};--layout-baseline:{-ms-flex-align:baseline;-webkit-align-items:baseline;align-items:baseline};--layout-start-justified:{-ms-flex-pack:start;-webkit-justify-content:flex-start;justify-content:flex-start};--layout-center-justified:{-ms-flex-pack:center;-webkit-justify-content:center;justify-content:center};--layout-end-justified:{-ms-flex-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end};--layout-around-justified:{-ms-flex-pack:distribute;-webkit-justify-content:space-around;justify-content:space-around};--layout-justified:{-ms-flex-pack:justify;-webkit-justify-content:space-between;justify-content:space-between};--layout-center-center:{@apply(--layout-center);@apply(--layout-center-justified)};--layout-self-start:{-ms-align-self:flex-start;-webkit-align-self:flex-start;align-self:flex-start};--layout-self-center:{-ms-align-self:center;-webkit-align-self:center;align-self:center};--layout-self-end:{-ms-align-self:flex-end;-webkit-align-self:flex-end;align-self:flex-end};--layout-self-stretch:{-ms-align-self:stretch;-webkit-align-self:stretch;align-self:stretch};--layout-self-baseline:{-ms-align-self:baseline;-webkit-align-self:baseline;align-self:baseline};--layout-start-aligned:{-ms-flex-line-pack:start;-ms-align-content:flex-start;-webkit-align-content:flex-start;align-content:flex-start};--layout-end-aligned:{-ms-flex-line-pack:end;-ms-align-content:flex-end;-webkit-align-content:flex-end;align-content:flex-end};--layout-center-aligned:{-ms-flex-line-pack:center;-ms-align-content:center;-webkit-align-content:center;align-content:center};--layout-between-aligned:{-ms-flex-line-pack:justify;-ms-align-content:space-between;-webkit-align-content:space-between;align-content:space-between};--layout-around-aligned:{-ms-flex-line-pack:distribute;-ms-align-content:space-around;-webkit-align-content:space-around;align-content:space-around};--layout-block:{display:block};--layout-invisible:{visibility:hidden!important};--layout-relative:{position:relative};--layout-fit:{position:absolute;top:0;right:0;bottom:0;left:0};--layout-scroll:{-webkit-overflow-scrolling:touch;overflow:auto};--layout-fullbleed:{margin:0;height:100vh};--layout-fixed-top:{position:fixed;top:0;left:0;right:0};--layout-fixed-right:{position:fixed;top:0;right:0;bottom:0};--layout-fixed-bottom:{position:fixed;right:0;bottom:0;left:0};--layout-fixed-left:{position:fixed;top:0;bottom:0;left:0};}</style><dom-module id="iron-image" assetpath="../../bower_components/iron-image/"><template><style>:host{display:inline-block;overflow:hidden;position:relative}#sizedImgDiv{@apply(--layout-fit);display:none}#img{display:block;width:var(--iron-image-width,auto);height:var(--iron-image-height,auto)}:host([sizing]) #sizedImgDiv{display:block}:host([sizing]) #img{display:none}#placeholder{@apply(--layout-fit);background-color:inherit;opacity:1;@apply(--iron-image-placeholder)}#placeholder.faded-out{transition:opacity .5s linear;opacity:0}</style><div id="sizedImgDiv" role="img" hidden$="[[_computeImgDivHidden(sizing)]]" aria-hidden$="[[_computeImgDivARIAHidden(alt)]]" aria-label$="[[_computeImgDivARIALabel(alt, src)]]"></div><img id="img" alt$="[[alt]]" hidden$="[[_computeImgHidden(sizing)]]"><div id="placeholder" hidden$="[[_computePlaceholderHidden(preload, fade, loading, loaded)]]" class$="[[_computePlaceholderClassName(preload, fade, loading, loaded)]]"></div></template><script>Polymer({is:"iron-image",properties:{src:{observer:"_srcChanged",type:String,value:""},alt:{type:String,value:null},preventLoad:{type:Boolean,value:!1,observer:"_preventLoadChanged"},sizing:{type:String,value:null,reflectToAttribute:!0},position:{type:String,value:"center"},preload:{type:Boolean,value:!1},placeholder:{type:String,value:null,observer:"_placeholderChanged"},fade:{type:Boolean,value:!1},loaded:{notify:!0,readOnly:!0,type:Boolean,value:!1},loading:{notify:!0,readOnly:!0,type:Boolean,value:!1},error:{notify:!0,readOnly:!0,type:Boolean,value:!1},width:{observer:"_widthChanged",type:Number,value:null},height:{observer:"_heightChanged",type:Number,value:null}},observers:["_transformChanged(sizing, position)"],ready:function(){var e=this.$.img;e.onload=function(){this.$.img.src===this._resolveSrc(this.src)&&(this._setLoading(!1),this._setLoaded(!0),this._setError(!1))}.bind(this),e.onerror=function(){this.$.img.src===this._resolveSrc(this.src)&&(this._reset(),this._setLoading(!1),this._setLoaded(!1),this._setError(!0))}.bind(this),this._resolvedSrc=""},_load:function(e){e?this.$.img.src=e:this.$.img.removeAttribute("src"),this.$.sizedImgDiv.style.backgroundImage=e?'url("'+e+'")':"",this._setLoading(!!e),this._setLoaded(!1),this._setError(!1)},_reset:function(){this.$.img.removeAttribute("src"),this.$.sizedImgDiv.style.backgroundImage="",this._setLoading(!1),this._setLoaded(!1),this._setError(!1)},_computePlaceholderHidden:function(){return!this.preload||!this.fade&&!this.loading&&this.loaded},_computePlaceholderClassName:function(){return this.preload&&this.fade&&!this.loading&&this.loaded?"faded-out":""},_computeImgDivHidden:function(){return!this.sizing},_computeImgDivARIAHidden:function(){return""===this.alt?"true":void 0},_computeImgDivARIALabel:function(){if(null!==this.alt)return this.alt;if(""===this.src)return"";var e=new URL(this._resolveSrc(this.src)).pathname.split("/");return e[e.length-1]},_computeImgHidden:function(){return!!this.sizing},_widthChanged:function(){this.style.width=isNaN(this.width)?this.width:this.width+"px"},_heightChanged:function(){this.style.height=isNaN(this.height)?this.height:this.height+"px"},_preventLoadChanged:function(){this.preventLoad||this.loaded||(this._reset(),this._load(this.src))},_srcChanged:function(e,t){var i=this._resolveSrc(e);i!==this._resolvedSrc&&(this._resolvedSrc=i,this._reset(),this.preventLoad||this._load(e))},_placeholderChanged:function(){this.$.placeholder.style.backgroundImage=this.placeholder?'url("'+this.placeholder+'")':""},_transformChanged:function(){var e=this.$.sizedImgDiv.style,t=this.$.placeholder.style;e.backgroundSize=t.backgroundSize=this.sizing,e.backgroundPosition=t.backgroundPosition=this.sizing?this.position:"",e.backgroundRepeat=t.backgroundRepeat=this.sizing?"no-repeat":""},_resolveSrc:function(e){var t=this.ownerDocument.baseURI;return new URL(Polymer.ResolveUrl.resolveUrl(e,t),t).href}})</script></dom-module><style is="custom-style">:root{--google-red-100:#f4c7c3;--google-red-300:#e67c73;--google-red-500:#db4437;--google-red-700:#c53929;--google-blue-100:#c6dafc;--google-blue-300:#7baaf7;--google-blue-500:#4285f4;--google-blue-700:#3367d6;--google-green-100:#b7e1cd;--google-green-300:#57bb8a;--google-green-500:#0f9d58;--google-green-700:#0b8043;--google-yellow-100:#fce8b2;--google-yellow-300:#f7cb4d;--google-yellow-500:#f4b400;--google-yellow-700:#f09300;--google-grey-100:#f5f5f5;--google-grey-300:#e0e0e0;--google-grey-500:#9e9e9e;--google-grey-700:#616161;--paper-red-50:#ffebee;--paper-red-100:#ffcdd2;--paper-red-200:#ef9a9a;--paper-red-300:#e57373;--paper-red-400:#ef5350;--paper-red-500:#f44336;--paper-red-600:#e53935;--paper-red-700:#d32f2f;--paper-red-800:#c62828;--paper-red-900:#b71c1c;--paper-red-a100:#ff8a80;--paper-red-a200:#ff5252;--paper-red-a400:#ff1744;--paper-red-a700:#d50000;--paper-pink-50:#fce4ec;--paper-pink-100:#f8bbd0;--paper-pink-200:#f48fb1;--paper-pink-300:#f06292;--paper-pink-400:#ec407a;--paper-pink-500:#e91e63;--paper-pink-600:#d81b60;--paper-pink-700:#c2185b;--paper-pink-800:#ad1457;--paper-pink-900:#880e4f;--paper-pink-a100:#ff80ab;--paper-pink-a200:#ff4081;--paper-pink-a400:#f50057;--paper-pink-a700:#c51162;--paper-purple-50:#f3e5f5;--paper-purple-100:#e1bee7;--paper-purple-200:#ce93d8;--paper-purple-300:#ba68c8;--paper-purple-400:#ab47bc;--paper-purple-500:#9c27b0;--paper-purple-600:#8e24aa;--paper-purple-700:#7b1fa2;--paper-purple-800:#6a1b9a;--paper-purple-900:#4a148c;--paper-purple-a100:#ea80fc;--paper-purple-a200:#e040fb;--paper-purple-a400:#d500f9;--paper-purple-a700:#aa00ff;--paper-deep-purple-50:#ede7f6;--paper-deep-purple-100:#d1c4e9;--paper-deep-purple-200:#b39ddb;--paper-deep-purple-300:#9575cd;--paper-deep-purple-400:#7e57c2;--paper-deep-purple-500:#673ab7;--paper-deep-purple-600:#5e35b1;--paper-deep-purple-700:#512da8;--paper-deep-purple-800:#4527a0;--paper-deep-purple-900:#311b92;--paper-deep-purple-a100:#b388ff;--paper-deep-purple-a200:#7c4dff;--paper-deep-purple-a400:#651fff;--paper-deep-purple-a700:#6200ea;--paper-indigo-50:#e8eaf6;--paper-indigo-100:#c5cae9;--paper-indigo-200:#9fa8da;--paper-indigo-300:#7986cb;--paper-indigo-400:#5c6bc0;--paper-indigo-500:#3f51b5;--paper-indigo-600:#3949ab;--paper-indigo-700:#303f9f;--paper-indigo-800:#283593;--paper-indigo-900:#1a237e;--paper-indigo-a100:#8c9eff;--paper-indigo-a200:#536dfe;--paper-indigo-a400:#3d5afe;--paper-indigo-a700:#304ffe;--paper-blue-50:#e3f2fd;--paper-blue-100:#bbdefb;--paper-blue-200:#90caf9;--paper-blue-300:#64b5f6;--paper-blue-400:#42a5f5;--paper-blue-500:#2196f3;--paper-blue-600:#1e88e5;--paper-blue-700:#1976d2;--paper-blue-800:#1565c0;--paper-blue-900:#0d47a1;--paper-blue-a100:#82b1ff;--paper-blue-a200:#448aff;--paper-blue-a400:#2979ff;--paper-blue-a700:#2962ff;--paper-light-blue-50:#e1f5fe;--paper-light-blue-100:#b3e5fc;--paper-light-blue-200:#81d4fa;--paper-light-blue-300:#4fc3f7;--paper-light-blue-400:#29b6f6;--paper-light-blue-500:#03a9f4;--paper-light-blue-600:#039be5;--paper-light-blue-700:#0288d1;--paper-light-blue-800:#0277bd;--paper-light-blue-900:#01579b;--paper-light-blue-a100:#80d8ff;--paper-light-blue-a200:#40c4ff;--paper-light-blue-a400:#00b0ff;--paper-light-blue-a700:#0091ea;--paper-cyan-50:#e0f7fa;--paper-cyan-100:#b2ebf2;--paper-cyan-200:#80deea;--paper-cyan-300:#4dd0e1;--paper-cyan-400:#26c6da;--paper-cyan-500:#00bcd4;--paper-cyan-600:#00acc1;--paper-cyan-700:#0097a7;--paper-cyan-800:#00838f;--paper-cyan-900:#006064;--paper-cyan-a100:#84ffff;--paper-cyan-a200:#18ffff;--paper-cyan-a400:#00e5ff;--paper-cyan-a700:#00b8d4;--paper-teal-50:#e0f2f1;--paper-teal-100:#b2dfdb;--paper-teal-200:#80cbc4;--paper-teal-300:#4db6ac;--paper-teal-400:#26a69a;--paper-teal-500:#009688;--paper-teal-600:#00897b;--paper-teal-700:#00796b;--paper-teal-800:#00695c;--paper-teal-900:#004d40;--paper-teal-a100:#a7ffeb;--paper-teal-a200:#64ffda;--paper-teal-a400:#1de9b6;--paper-teal-a700:#00bfa5;--paper-green-50:#e8f5e9;--paper-green-100:#c8e6c9;--paper-green-200:#a5d6a7;--paper-green-300:#81c784;--paper-green-400:#66bb6a;--paper-green-500:#4caf50;--paper-green-600:#43a047;--paper-green-700:#388e3c;--paper-green-800:#2e7d32;--paper-green-900:#1b5e20;--paper-green-a100:#b9f6ca;--paper-green-a200:#69f0ae;--paper-green-a400:#00e676;--paper-green-a700:#00c853;--paper-light-green-50:#f1f8e9;--paper-light-green-100:#dcedc8;--paper-light-green-200:#c5e1a5;--paper-light-green-300:#aed581;--paper-light-green-400:#9ccc65;--paper-light-green-500:#8bc34a;--paper-light-green-600:#7cb342;--paper-light-green-700:#689f38;--paper-light-green-800:#558b2f;--paper-light-green-900:#33691e;--paper-light-green-a100:#ccff90;--paper-light-green-a200:#b2ff59;--paper-light-green-a400:#76ff03;--paper-light-green-a700:#64dd17;--paper-lime-50:#f9fbe7;--paper-lime-100:#f0f4c3;--paper-lime-200:#e6ee9c;--paper-lime-300:#dce775;--paper-lime-400:#d4e157;--paper-lime-500:#cddc39;--paper-lime-600:#c0ca33;--paper-lime-700:#afb42b;--paper-lime-800:#9e9d24;--paper-lime-900:#827717;--paper-lime-a100:#f4ff81;--paper-lime-a200:#eeff41;--paper-lime-a400:#c6ff00;--paper-lime-a700:#aeea00;--paper-yellow-50:#fffde7;--paper-yellow-100:#fff9c4;--paper-yellow-200:#fff59d;--paper-yellow-300:#fff176;--paper-yellow-400:#ffee58;--paper-yellow-500:#ffeb3b;--paper-yellow-600:#fdd835;--paper-yellow-700:#fbc02d;--paper-yellow-800:#f9a825;--paper-yellow-900:#f57f17;--paper-yellow-a100:#ffff8d;--paper-yellow-a200:#ffff00;--paper-yellow-a400:#ffea00;--paper-yellow-a700:#ffd600;--paper-amber-50:#fff8e1;--paper-amber-100:#ffecb3;--paper-amber-200:#ffe082;--paper-amber-300:#ffd54f;--paper-amber-400:#ffca28;--paper-amber-500:#ffc107;--paper-amber-600:#ffb300;--paper-amber-700:#ffa000;--paper-amber-800:#ff8f00;--paper-amber-900:#ff6f00;--paper-amber-a100:#ffe57f;--paper-amber-a200:#ffd740;--paper-amber-a400:#ffc400;--paper-amber-a700:#ffab00;--paper-orange-50:#fff3e0;--paper-orange-100:#ffe0b2;--paper-orange-200:#ffcc80;--paper-orange-300:#ffb74d;--paper-orange-400:#ffa726;--paper-orange-500:#ff9800;--paper-orange-600:#fb8c00;--paper-orange-700:#f57c00;--paper-orange-800:#ef6c00;--paper-orange-900:#e65100;--paper-orange-a100:#ffd180;--paper-orange-a200:#ffab40;--paper-orange-a400:#ff9100;--paper-orange-a700:#ff6500;--paper-deep-orange-50:#fbe9e7;--paper-deep-orange-100:#ffccbc;--paper-deep-orange-200:#ffab91;--paper-deep-orange-300:#ff8a65;--paper-deep-orange-400:#ff7043;--paper-deep-orange-500:#ff5722;--paper-deep-orange-600:#f4511e;--paper-deep-orange-700:#e64a19;--paper-deep-orange-800:#d84315;--paper-deep-orange-900:#bf360c;--paper-deep-orange-a100:#ff9e80;--paper-deep-orange-a200:#ff6e40;--paper-deep-orange-a400:#ff3d00;--paper-deep-orange-a700:#dd2c00;--paper-brown-50:#efebe9;--paper-brown-100:#d7ccc8;--paper-brown-200:#bcaaa4;--paper-brown-300:#a1887f;--paper-brown-400:#8d6e63;--paper-brown-500:#795548;--paper-brown-600:#6d4c41;--paper-brown-700:#5d4037;--paper-brown-800:#4e342e;--paper-brown-900:#3e2723;--paper-grey-50:#fafafa;--paper-grey-100:#f5f5f5;--paper-grey-200:#eeeeee;--paper-grey-300:#e0e0e0;--paper-grey-400:#bdbdbd;--paper-grey-500:#9e9e9e;--paper-grey-600:#757575;--paper-grey-700:#616161;--paper-grey-800:#424242;--paper-grey-900:#212121;--paper-blue-grey-50:#eceff1;--paper-blue-grey-100:#cfd8dc;--paper-blue-grey-200:#b0bec5;--paper-blue-grey-300:#90a4ae;--paper-blue-grey-400:#78909c;--paper-blue-grey-500:#607d8b;--paper-blue-grey-600:#546e7a;--paper-blue-grey-700:#455a64;--paper-blue-grey-800:#37474f;--paper-blue-grey-900:#263238;--dark-divider-opacity:0.12;--dark-disabled-opacity:0.38;--dark-secondary-opacity:0.54;--dark-primary-opacity:0.87;--light-divider-opacity:0.12;--light-disabled-opacity:0.3;--light-secondary-opacity:0.7;--light-primary-opacity:1.0}</style><style is="custom-style">:root{--primary-text-color:var(--light-theme-text-color);--primary-background-color:var(--light-theme-background-color);--secondary-text-color:var(--light-theme-secondary-color);--disabled-text-color:var(--light-theme-disabled-color);--divider-color:var(--light-theme-divider-color);--error-color:var(--paper-deep-orange-a700);--primary-color:var(--paper-indigo-500);--light-primary-color:var(--paper-indigo-100);--dark-primary-color:var(--paper-indigo-700);--accent-color:var(--paper-pink-a200);--light-accent-color:var(--paper-pink-a100);--dark-accent-color:var(--paper-pink-a400);--light-theme-background-color:#ffffff;--light-theme-base-color:#000000;--light-theme-text-color:var(--paper-grey-900);--light-theme-secondary-color:#737373;--light-theme-disabled-color:#9b9b9b;--light-theme-divider-color:#dbdbdb;--dark-theme-background-color:var(--paper-grey-900);--dark-theme-base-color:#ffffff;--dark-theme-text-color:#ffffff;--dark-theme-secondary-color:#bcbcbc;--dark-theme-disabled-color:#646464;--dark-theme-divider-color:#3c3c3c;--text-primary-color:var(--dark-theme-text-color);--default-primary-color:var(--primary-color)}</style><dom-module id="paper-card" assetpath="../../bower_components/paper-card/"><template><style include="paper-material">:host{display:inline-block;position:relative;box-sizing:border-box;background-color:var(--paper-card-background-color,--primary-background-color);border-radius:2px;@apply(--paper-font-common-base);@apply(--paper-card)}[hidden]{display:none!important}.header{position:relative;border-top-left-radius:inherit;border-top-right-radius:inherit;overflow:hidden;@apply(--paper-card-header)}.header iron-image{display:block;width:100%;--iron-image-width:100%;pointer-events:none;@apply(--paper-card-header-image)}.header .title-text{padding:16px;font-size:24px;font-weight:400;color:var(--paper-card-header-color,#000);@apply(--paper-card-header-text)}.header .title-text.over-image{position:absolute;bottom:0;@apply(--paper-card-header-image-text)}:host ::content .card-content{padding:16px;position:relative;@apply(--paper-card-content)}:host ::content .card-actions{border-top:1px solid #e8e8e8;padding:5px 16px;position:relative;@apply(--paper-card-actions)}</style><div class="header"><iron-image hidden$="[[!image]]" aria-hidden$="[[_isHidden(image)]]" src="[[image]]" alt="[[alt]]" placeholder="[[placeholderImage]]" preload="[[preloadImage]]" fade="[[fadeImage]]"></iron-image><div hidden$="[[!heading]]" class$="title-text [[_computeHeadingClass(image)]]">[[heading]]</div></div><content></content></template><script>Polymer({is:"paper-card",properties:{heading:{type:String,value:"",observer:"_headingChanged"},image:{type:String,value:""},alt:{type:String},preloadImage:{type:Boolean,value:!1},fadeImage:{type:Boolean,value:!1},placeholderImage:{type:String,value:null},elevation:{type:Number,value:1,reflectToAttribute:!0},animatedShadow:{type:Boolean,value:!1},animated:{type:Boolean,reflectToAttribute:!0,readOnly:!0,computed:"_computeAnimated(animatedShadow)"}},_isHidden:function(e){return e?"false":"true"},_headingChanged:function(e){var t=this.getAttribute("heading"),a=this.getAttribute("aria-label");"string"==typeof a&&a!==t||this.setAttribute("aria-label",e)},_computeHeadingClass:function(e){return e?" over-image":""},_computeAnimated:function(e){return e}})</script></dom-module><script>Polymer.IronSelection=function(e){this.selection=[],this.selectCallback=e},Polymer.IronSelection.prototype={get:function(){return this.multi?this.selection.slice():this.selection[0]},clear:function(e){this.selection.slice().forEach(function(t){(!e||e.indexOf(t)<0)&&this.setItemSelected(t,!1)},this)},isSelected:function(e){return this.selection.indexOf(e)>=0},setItemSelected:function(e,t){if(null!=e&&t!==this.isSelected(e)){if(t)this.selection.push(e);else{var i=this.selection.indexOf(e);i>=0&&this.selection.splice(i,1)}this.selectCallback&&this.selectCallback(e,t)}},select:function(e){this.multi?this.toggle(e):this.get()!==e&&(this.setItemSelected(this.get(),!1),this.setItemSelected(e,!0))},toggle:function(e){this.setItemSelected(e,!this.isSelected(e))}}</script><script>Polymer.IronSelectableBehavior={properties:{attrForSelected:{type:String,value:null},selected:{type:String,notify:!0},selectedItem:{type:Object,readOnly:!0,notify:!0},activateEvent:{type:String,value:"tap",observer:"_activateEventChanged"},selectable:String,selectedClass:{type:String,value:"iron-selected"},selectedAttribute:{type:String,value:null},fallbackSelection:{type:String,value:null},items:{type:Array,readOnly:!0,notify:!0,value:function(){return[]}},_excludedLocalNames:{type:Object,value:function(){return{template:1}}}},observers:["_updateAttrForSelected(attrForSelected)","_updateSelected(selected)","_checkFallback(fallbackSelection)"],created:function(){this._bindFilterItem=this._filterItem.bind(this),this._selection=new Polymer.IronSelection(this._applySelection.bind(this))},attached:function(){this._observer=this._observeItems(this),this._updateItems(),this._shouldUpdateSelection||this._updateSelected(),this._addListener(this.activateEvent)},detached:function(){this._observer&&Polymer.dom(this).unobserveNodes(this._observer),this._removeListener(this.activateEvent)},indexOf:function(e){return this.items.indexOf(e)},select:function(e){this.selected=e},selectPrevious:function(){var e=this.items.length,t=(Number(this._valueToIndex(this.selected))-1+e)%e;this.selected=this._indexToValue(t)},selectNext:function(){var e=(Number(this._valueToIndex(this.selected))+1)%this.items.length;this.selected=this._indexToValue(e)},selectIndex:function(e){this.select(this._indexToValue(e))},forceSynchronousItemUpdate:function(){this._updateItems()},get _shouldUpdateSelection(){return null!=this.selected},_checkFallback:function(){this._shouldUpdateSelection&&this._updateSelected()},_addListener:function(e){this.listen(this,e,"_activateHandler")},_removeListener:function(e){this.unlisten(this,e,"_activateHandler")},_activateEventChanged:function(e,t){this._removeListener(t),this._addListener(e)},_updateItems:function(){var e=Polymer.dom(this).queryDistributedElements(this.selectable||"*");e=Array.prototype.filter.call(e,this._bindFilterItem),this._setItems(e)},_updateAttrForSelected:function(){this._shouldUpdateSelection&&(this.selected=this._indexToValue(this.indexOf(this.selectedItem)))},_updateSelected:function(){this._selectSelected(this.selected)},_selectSelected:function(e){this._selection.select(this._valueToItem(this.selected)),this.fallbackSelection&&this.items.length&&void 0===this._selection.get()&&(this.selected=this.fallbackSelection)},_filterItem:function(e){return!this._excludedLocalNames[e.localName]},_valueToItem:function(e){return null==e?null:this.items[this._valueToIndex(e)]},_valueToIndex:function(e){if(!this.attrForSelected)return Number(e);for(var t,i=0;t=this.items[i];i++)if(this._valueForItem(t)==e)return i},_indexToValue:function(e){if(!this.attrForSelected)return e;var t=this.items[e];return t?this._valueForItem(t):void 0},_valueForItem:function(e){var t=e[Polymer.CaseMap.dashToCamelCase(this.attrForSelected)];return void 0!=t?t:e.getAttribute(this.attrForSelected)},_applySelection:function(e,t){this.selectedClass&&this.toggleClass(this.selectedClass,t,e),this.selectedAttribute&&this.toggleAttribute(this.selectedAttribute,t,e),this._selectionChange(),this.fire("iron-"+(t?"select":"deselect"),{item:e})},_selectionChange:function(){this._setSelectedItem(this._selection.get())},_observeItems:function(e){return Polymer.dom(e).observeNodes(function(e){this._updateItems(),this._shouldUpdateSelection&&this._updateSelected(),this.fire("iron-items-changed",e,{bubbles:!1,cancelable:!1})})},_activateHandler:function(e){for(var t=e.target,i=this.items;t&&t!=this;){var s=i.indexOf(t);if(s>=0){var n=this._indexToValue(s);return void this._itemActivate(n,t)}t=t.parentNode}},_itemActivate:function(e,t){this.fire("iron-activate",{selected:e,item:t},{cancelable:!0}).defaultPrevented||this.select(e)}}</script><script>Polymer.IronMultiSelectableBehaviorImpl={properties:{multi:{type:Boolean,value:!1,observer:"multiChanged"},selectedValues:{type:Array,notify:!0},selectedItems:{type:Array,readOnly:!0,notify:!0}},observers:["_updateSelected(selectedValues.splices)"],select:function(e){this.multi?this.selectedValues?this._toggleSelected(e):this.selectedValues=[e]:this.selected=e},multiChanged:function(e){this._selection.multi=e},get _shouldUpdateSelection(){return null!=this.selected||null!=this.selectedValues&&this.selectedValues.length},_updateAttrForSelected:function(){this.multi?this._shouldUpdateSelection&&(this.selectedValues=this.selectedItems.map(function(e){return this._indexToValue(this.indexOf(e))},this).filter(function(e){return null!=e},this)):Polymer.IronSelectableBehavior._updateAttrForSelected.apply(this)},_updateSelected:function(){this.multi?this._selectMulti(this.selectedValues):this._selectSelected(this.selected)},_selectMulti:function(e){if(e){var t=this._valuesToItems(e);this._selection.clear(t);for(var l=0;l<t.length;l++)this._selection.setItemSelected(t[l],!0);if(this.fallbackSelection&&this.items.length&&!this._selection.get().length){this._valueToItem(this.fallbackSelection)&&(this.selectedValues=[this.fallbackSelection])}}else this._selection.clear()},_selectionChange:function(){var e=this._selection.get();this.multi?this._setSelectedItems(e):(this._setSelectedItems([e]),this._setSelectedItem(e))},_toggleSelected:function(e){var t=this.selectedValues.indexOf(e);t<0?this.push("selectedValues",e):this.splice("selectedValues",t,1)},_valuesToItems:function(e){return null==e?null:e.map(function(e){return this._valueToItem(e)},this)}},Polymer.IronMultiSelectableBehavior=[Polymer.IronSelectableBehavior,Polymer.IronMultiSelectableBehaviorImpl]</script><script>Polymer.IronMenuBehaviorImpl={properties:{focusedItem:{observer:"_focusedItemChanged",readOnly:!0,type:Object},attrForItemTitle:{type:String},disabled:{type:Boolean,value:!1,observer:"_disabledChanged"}},_SEARCH_RESET_TIMEOUT_MS:1e3,_previousTabIndex:0,hostAttributes:{role:"menu"},observers:["_updateMultiselectable(multi)"],listeners:{focus:"_onFocus",keydown:"_onKeydown","iron-items-changed":"_onIronItemsChanged"},keyBindings:{up:"_onUpKey",down:"_onDownKey",esc:"_onEscKey","shift+tab:keydown":"_onShiftTabDown"},attached:function(){this._resetTabindices()},select:function(e){this._defaultFocusAsync&&(this.cancelAsync(this._defaultFocusAsync),this._defaultFocusAsync=null);var t=this._valueToItem(e);t&&t.hasAttribute("disabled")||(this._setFocusedItem(t),Polymer.IronMultiSelectableBehaviorImpl.select.apply(this,arguments))},_resetTabindices:function(){var e=this.multi?this.selectedItems&&this.selectedItems[0]:this.selectedItem;this.items.forEach(function(t){t.setAttribute("tabindex",t===e?"0":"-1")},this)},_updateMultiselectable:function(e){e?this.setAttribute("aria-multiselectable","true"):this.removeAttribute("aria-multiselectable")},_focusWithKeyboardEvent:function(e){this.cancelDebouncer("_clearSearchText");var t=this._searchText||"";t+=(e.key&&1==e.key.length?e.key:String.fromCharCode(e.keyCode)).toLocaleLowerCase();for(var i,s=t.length,o=0;i=this.items[o];o++)if(!i.hasAttribute("disabled")){var n=this.attrForItemTitle||"textContent",r=(i[n]||i.getAttribute(n)||"").trim();if(!(r.length<s)&&r.slice(0,s).toLocaleLowerCase()==t){this._setFocusedItem(i);break}}this._searchText=t,this.debounce("_clearSearchText",this._clearSearchText,this._SEARCH_RESET_TIMEOUT_MS)},_clearSearchText:function(){this._searchText=""},_focusPrevious:function(){for(var e=this.items.length,t=Number(this.indexOf(this.focusedItem)),i=1;i<e+1;i++){var s=this.items[(t-i+e)%e];if(!s.hasAttribute("disabled")){var o=Polymer.dom(s).getOwnerRoot()||document;if(this._setFocusedItem(s),Polymer.dom(o).activeElement==s)return}}},_focusNext:function(){for(var e=this.items.length,t=Number(this.indexOf(this.focusedItem)),i=1;i<e+1;i++){var s=this.items[(t+i)%e];if(!s.hasAttribute("disabled")){var o=Polymer.dom(s).getOwnerRoot()||document;if(this._setFocusedItem(s),Polymer.dom(o).activeElement==s)return}}},_applySelection:function(e,t){t?e.setAttribute("aria-selected","true"):e.removeAttribute("aria-selected"),Polymer.IronSelectableBehavior._applySelection.apply(this,arguments)},_focusedItemChanged:function(e,t){t&&t.setAttribute("tabindex","-1"),!e||e.hasAttribute("disabled")||this.disabled||(e.setAttribute("tabindex","0"),e.focus())},_onIronItemsChanged:function(e){e.detail.addedNodes.length&&this._resetTabindices()},_onShiftTabDown:function(e){var t=this.getAttribute("tabindex");Polymer.IronMenuBehaviorImpl._shiftTabPressed=!0,this._setFocusedItem(null),this.setAttribute("tabindex","-1"),this.async(function(){this.setAttribute("tabindex",t),Polymer.IronMenuBehaviorImpl._shiftTabPressed=!1},1)},_onFocus:function(e){if(!Polymer.IronMenuBehaviorImpl._shiftTabPressed){var t=Polymer.dom(e).rootTarget;(t===this||void 0===t.tabIndex||this.isLightDescendant(t))&&(this._defaultFocusAsync=this.async(function(){var e=this.multi?this.selectedItems&&this.selectedItems[0]:this.selectedItem;this._setFocusedItem(null),e?this._setFocusedItem(e):this.items[0]&&this._focusNext()}))}},_onUpKey:function(e){this._focusPrevious(),e.detail.keyboardEvent.preventDefault()},_onDownKey:function(e){this._focusNext(),e.detail.keyboardEvent.preventDefault()},_onEscKey:function(e){this.focusedItem.blur()},_onKeydown:function(e){this.keyboardEventMatchesKeys(e,"up down esc")||this._focusWithKeyboardEvent(e),e.stopPropagation()},_activateHandler:function(e){Polymer.IronSelectableBehavior._activateHandler.call(this,e),e.stopPropagation()},_disabledChanged:function(e){e?(this._previousTabIndex=this.hasAttribute("tabindex")?this.tabIndex:0,this.removeAttribute("tabindex")):this.hasAttribute("tabindex")||this.setAttribute("tabindex",this._previousTabIndex)}},Polymer.IronMenuBehaviorImpl._shiftTabPressed=!1,Polymer.IronMenuBehavior=[Polymer.IronMultiSelectableBehavior,Polymer.IronA11yKeysBehavior,Polymer.IronMenuBehaviorImpl]</script><dom-module id="paper-listbox" assetpath="../../bower_components/paper-listbox/"><template><style>:host{display:block;padding:8px 0;background:var(--paper-listbox-background-color,--primary-background-color);color:var(--paper-listbox-color,--primary-text-color);@apply(--paper-listbox)}</style><content></content></template><script>!function(){Polymer({is:"paper-listbox",behaviors:[Polymer.IronMenuBehavior],hostAttributes:{role:"listbox"}})}()</script></dom-module><dom-module id="ha-progress-button" assetpath="../../src/components/buttons/"><template><style>.container{position:relative;display:inline-block}paper-button{transition:all 1s}.success paper-button{color:#fff;background-color:var(--google-green-500);transition:none}.error paper-button{color:#fff;background-color:var(--google-red-500);transition:none}paper-button[disabled]{color:#c8c8c8}.progress{@apply(--layout);@apply(--layout-center-center);position:absolute;top:0;left:0;right:0;bottom:0}</style><div class="container" id="container"><paper-button id="button" disabled="[[computeDisabled(disabled, progress)]]" on-tap="buttonTapped"><slot></slot></paper-button><template is="dom-if" if="[[progress]]"><div class="progress"><paper-spinner active=""></paper-spinner></div></template></div></template></dom-module><script>Polymer({is:"ha-progress-button",properties:{hass:{type:Object},progress:{type:Boolean,value:!1},domain:{type:String},service:{type:String},serviceData:{type:Object,value:{}},disabled:{type:Boolean,value:!1}},tempClass:function(t){var e=this.$.container.classList;e.add(t),this.async(function(){e.remove(t)},1e3)},listeners:{tap:"buttonTapped"},buttonTapped:function(t){this.progress&&t.stopPropagation()},actionSuccess:function(){this.tempClass("success")},actionError:function(){this.tempClass("error")},computeDisabled:function(t,e){return t||e}})</script><dom-module id="ha-call-service-button" assetpath="../../src/components/buttons/"><template><ha-progress-button id="progress" progress="[[progress]]" on-tap="buttonTapped"><slot></slot></ha-progress-button></template></dom-module><script>Polymer({is:"ha-call-service-button",properties:{hass:{type:Object},progress:{type:Boolean,value:!1},domain:{type:String},service:{type:String},serviceData:{type:Object,value:{}}},buttonTapped:function(){this.progress=!0;var e=this,s={domain:this.domain,service:this.service,serviceData:this.serviceData};this.hass.callService(this.domain,this.service,this.serviceData).then(function(){e.progress=!1,e.$.progress.actionSuccess(),s.success=!0},function(){e.progress=!1,e.$.progress.actionError(),s.success=!1}).then(function(){e.fire("hass-service-called",s)})}})</script><dom-module id="ozw-log" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}</style><paper-card heading="OZW Log"><div class="help-text"><pre>[[ozwLogs]]</pre></div><div class="card-actions"><paper-button raised="" on-tap="refreshLog">Refresh</paper-button></div></paper-card></template></dom-module><script>Polymer({is:"ozw-log",properties:{hass:{type:Object},ozwLogs:{type:String,value:""}},refreshLog:function(){this.ozwLogs="Loading ozw log...",this.hass.callApi("GET","zwave/ozwlog").then(function(o){this.ozwLogs=o}.bind(this))}})</script><dom-module id="zwave-network" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.card-actions.warning ha-call-service-button{color:var(--google-red-500)}</style><paper-card heading="Z-Wave Network Management"><div class="card-content">Z-Wave Network controls.</div><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="add_node_secure">Add Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="remove_node">Remove Node</ha-call-service-button></div><div class="card-actions warning"><ha-call-service-button hass="[[hass]]" domain="zwave" service="cancel_command">Cancel Command</ha-call-service-button></div><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="heal_network">Heal Network</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="start_network">Start Network</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="stop_network">Stop Network</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="soft_reset">Soft Reset</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="test_network">Test Network</ha-call-service-button></div></paper-card></template></dom-module><script>Polymer({is:"zwave-network",properties:{hass:{type:Object}}})</script><dom-module id="zwave-node-information" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}.node-info{margin-left:16px;text-transform:capitalize}paper-card{display:block;margin:0 auto;max-width:600px}paper-button[toggles][active]{background:#d3d3d3}</style><div class="content"><paper-card heading="Node Information"><div class="card-actions"><paper-button toggles="" raised="" noink="" active="{{nodeInfoActive}}">Show</paper-button></div><template is="dom-if" if="{{nodeInfoActive}}"><template is="dom-repeat" items="[[selectedNodeAttrs]]" as="state"><div class="node-info"><span>[[state]]</span></div></template></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-node-information',
+
+  properties: {
+    nodes: {
+      type: Array,
+      observer: 'nodeChanged'
+    },
+
+    selectedNode: {
+      type: Number,
+      value: -1,
+      observer: 'nodeChanged'
+    },
+
+    selectedNodeAttrs: {
+      type: Array,
+    },
+
+    nodeInfoActive: {
+      type: Boolean,
+    },
+  },
+
+  nodeChanged: function (selectedNode) {
+    if (!this.nodes || selectedNode === -1) return;
+    var nodeAttrs = this.nodes[this.selectedNode].attributes;
+    var att = [];
+    Object.entries(nodeAttrs).forEach(([key, value]) => {
+      att.push(key + ': ' + value);
+    });
+    this.selectedNodeAttrs = att.sort();
+  },
+});</script><dom-module id="zwave-values" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node Values"><div class="device-picker"><paper-dropdown-menu label="Value" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedValue}}"><template is="dom-repeat" items="[[values]]" as="item"><paper-item>[[computeSelectCaption(item)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsValueSelected(selectedValue)]]"><div class="card-actions"><paper-input float-label="Value Name" type="text" value="{{newValueNameInput}}" placeholder="[[computeGetValueName(selectedValue)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_value" service-data="[[computeValueNameServiceData(newValueNameInput)]]">Rename Value</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-values',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+    },
+
+    values: {
+      type: Array,
+    },
+
+    selectedNode: {
+      type: Number,
+    },
+
+    selectedValue: {
+      type: Number,
+      value: -1,
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshValues(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  computeSelectCaption: function (item) {
+    return item.value.label + ' (Instance: ' + item.value.instance + ', Index: ' + item.value.index + ')';
+  },
+
+  computeGetValueName: function (selectedValue) {
+    return this.values[selectedValue].value.label;
+  },
+
+  computeIsValueSelected: function (selectedValue) {
+    return (!this.nodes || this.selectedNode === -1 || selectedValue === -1);
+  },
+
+  refreshValues: function (selectedNode) {
+    var valueData = [];
+    this.hass.callApi('GET', 'zwave/values/' + this.nodes[selectedNode].attributes.node_id).then(function (values) {
+      Object.entries(values).forEach(([key, value]) => {
+        valueData.push({ key, value });
+      });
+      this.values = valueData;
+      this.selectedValueChanged(this.selectedValue);
+    }.bind(this));
+  },
+
+  computeValueNameServiceData: function (newValueNameInput) {
+    if (!this.selectedNode === -1 || this.selectedValue === -1) return -1;
+    return {
+      node_id: this.nodes[this.selectedNode].attributes.node_id,
+      value_id: this.values[this.selectedValue].key,
+      name: newValueNameInput,
+    };
+  },
+});</script><dom-module id="zwave-groups" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node group associations"><div class="device-picker"><paper-dropdown-menu label="Node to control" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedTargetNode}}"><template is="dom-repeat" items="[[nodes]]" as="state"><paper-item>[[computeSelectCaption(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsTargetNodeSelected(selectedTargetNode)]]"><div class="device-picker"><paper-dropdown-menu label="Group" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedGroup}}"><template is="dom-repeat" items="[[groups]]" as="state"><paper-item>[[computeSelectCaptionGroup(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><template is="dom-if" if="[[!computeIsGroupSelected(selectedGroup)]]"><div class="help-text"><span>Other Nodes in this group:</span><template is="dom-repeat" items="[[otherGroupNodes]]" as="state"><span>[[state]]</span></template></div><div class="help-text"><span>Max Associations:</span> <span>[[maxAssociations]]</span></div><div class="card-actions"><template is="dom-if" if="[[!noAssociationsLeft]]"><ha-call-service-button hass="[[hass]]" domain="zwave" service="change_association" service-data="[[computeAssocServiceData(selectedGroup, &quot;add&quot;)]]">Add To Group</ha-call-service-button></template><ha-call-service-button hass="[[hass]]" domain="zwave" service="change_association" service-data="[[computeAssocServiceData(selectedGroup, &quot;remove&quot;)]]">Remove From Group</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-groups',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+    },
+
+    groups: {
+      type: Array,
+    },
+
+    selectedNode: {
+      type: Number,
+    },
+
+    selectedTargetNode: {
+      type: Number,
+      value: -1
+    },
+
+    selectedGroup: {
+      type: Number,
+      value: -1,
+      observer: 'selectedGroupChanged'
+    },
+
+    otherGroupNodes: {
+      type: Array,
+      value: -1,
+      computed: 'computeOtherGroupNodes(selectedGroup)'
+    },
+
+    maxAssociations: {
+      type: String,
+      value: '',
+      computed: 'computeMaxAssociations(selectedGroup)'
+    },
+
+    noAssociationsLeft: {
+      type: Boolean,
+      value: true,
+      computed: 'computeAssociationsLeft(selectedGroup)'
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshGroups(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  computeAssociationsLeft: function (selectedGroup) {
+    if (selectedGroup === -1) return true;
+    return (this.maxAssociations === this.otherGroupNodes.length);
+  },
+
+  computeMaxAssociations: function (selectedGroup) {
+    if (selectedGroup === -1) return -1;
+    var maxAssociations = this.groups[selectedGroup].value.max_associations;
+    if (!maxAssociations) return ['None'];
+    return maxAssociations;
+  },
+
+  computeOtherGroupNodes: function (selectedGroup) {
+    if (selectedGroup === -1) return -1;
+    var associations = Object.values(this.groups[selectedGroup].value.associations);
+    if (!associations.length) return ['None'];
+    return associations;
+  },
+
+  computeSelectCaption: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj) + ' (Node:' +
+      stateObj.attributes.node_id + ' ' +
+      stateObj.attributes.query_stage + ')';
+  },
+
+  computeSelectCaptionGroup: function (stateObj) {
+    return (stateObj.key + ': ' + stateObj.value.label);
+  },
+
+  computeIsTargetNodeSelected: function (selectedTargetNode) {
+    return (!this.nodes || selectedTargetNode === -1);
+  },
+
+  computeIsGroupSelected: function (selectedGroup) {
+    return (!this.nodes || this.selectedNode === -1 || selectedGroup === -1);
+  },
+
+  computeAssocServiceData: function (selectedGroup, type) {
+    if (!this.groups === -1 || selectedGroup === -1 || this.selectedNode === -1) return -1;
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      association: type,
+      target_node_id: this.nodes[this.selectedTargetNode].attributes.node_id,
+      group: this.groups[selectedGroup].key };
+  },
+
+  refreshGroups: function (selectedNode) {
+    var groupData = [];
+    this.hass.callApi('GET', 'zwave/groups/' + this.nodes[selectedNode].attributes.node_id).then(function (groups) {
+      Object.entries(groups).forEach(([key, value]) => {
+        groupData.push({ key, value });
+      });
+      this.groups = groupData;
+      this.selectedGroupChanged(this.selectedGroup);
+    }.bind(this));
+  },
+
+  selectedGroupChanged: function (selectedGroup) {
+    if (this.selectedGroup === -1 || selectedGroup === -1) return;
+    this.maxAssociations = this.groups[selectedGroup].value.max_associations;
+    this.otherGroupNodes = Object.values(this.groups[selectedGroup].value.associations);
+  },
+});</script><dom-module id="zwave-node-config" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node config options"><template is="dom-if" if="[[wakeupNode]]"><div class="card-actions"><paper-input float-label="Wakeup Interval" type="number" value="{{wakeupInput}}" placeholder="[[computeGetWakeupValue(selectedNode)]]"><div suffix="">seconds</div></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="set_wakeup" service-data="[[computeWakeupServiceData(wakeupInput)]]">Set Wakeup</ha-call-service-button></div></template><div class="device-picker"><paper-dropdown-menu label="Config parameter" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedConfigParameter}}"><template is="dom-repeat" items="[[config]]" as="state"><paper-item>[[computeSelectCaptionConfigParameter(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'List')]]"><div class="device-picker"><paper-dropdown-menu label="Config value" class="flex" placeholder="{{loadedConfigValue}}"><paper-listbox class="dropdown-content" selected="{{selectedConfigValue}}"><template is="dom-repeat" items="[[selectedConfigParameterValues]]" as="state"><paper-item>[[state]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'Byte Short Int')]]"><div class="card-actions"><paper-input label="{{selectedConfigParameterNumValues}}" type="number" value="{{selectedConfigValue}}" max="{{configParameterMax}}" min="{{configParameterMin}}"></paper-input></div></template><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'Bool Button')]]"><div class="device-picker"><paper-dropdown-menu label="Config value" class="flex" placeholder="{{loadedConfigValue}}"><paper-listbox class="dropdown-content" selected="{{selectedConfigValue}}"><template is="dom-repeat" items="[[selectedConfigParameterValues]]" as="state"><paper-item>[[state]]</paper-item></template></paper-listbox></paper-dropdown-menu></div></template><div class="help-text"><span>[[configValueHelpText]]</span></div><template is="dom-if" if="[[isConfigParameterSelected(selectedConfigParameter, 'Bool Button Byte Short Int List')]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="set_config_parameter" service-data="[[computeSetConfigParameterServiceData(selectedConfigValue)]]">Set Config Parameter</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-node-config',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+      observer: 'nodesChanged'
+    },
+
+    selectedNode: {
+      type: Number,
+      value: -1,
+      observer: 'nodesChanged'
+    },
+
+    config: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedConfigParameter: {
+      type: Number,
+      value: -1,
+      observer: 'selectedConfigParameterChanged'
+    },
+
+    configParameterMax: {
+      type: Number,
+      value: -1
+    },
+
+    configParameterMin: {
+      type: Number,
+      value: -1
+    },
+
+    configValueHelpText: {
+      type: String,
+      value: '',
+      computed: 'computeConfigValueHelp(selectedConfigParameter)'
+    },
+
+    selectedConfigParameterType: {
+      type: String,
+      value: ''
+    },
+
+    selectedConfigValue: {
+      type: Number,
+      value: -1,
+      observer: 'computeSetConfigParameterServiceData'
+    },
+
+    selectedConfigParameterValues: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    selectedConfigParameterNumValues: {
+      type: String,
+      value: ''
+    },
+
+    loadedConfigValue: {
+      type: Number,
+      value: -1
+    },
+
+    wakeupInput: {
+      type: Number,
+    },
+
+    wakeupNode: {
+      type: Boolean,
+      value: false,
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshConfig(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  nodesChanged: function () {
+    if (!this.nodes) return;
+    this.wakeupNode = (this.nodes[this.selectedNode].attributes.wake_up_interval === 0 ||
+      this.nodes[this.selectedNode].attributes.wake_up_interval);
+    if (this.wakeupNode) {
+      if (this.nodes[this.selectedNode].attributes.wake_up_interval === 0) this.wakeupInput = '';
+      else this.wakeupInput = this.nodes[this.selectedNode].attributes.wake_up_interval;
+    }
+  },
+
+  computeGetWakeupValue: function (selectedNode) {
+    if (this.selectedNode === -1 ||
+      !this.nodes[selectedNode].attributes.wake_up_interval) return 'unknown';
+    return (this.nodes[selectedNode].attributes.wake_up_interval);
+  },
+
+  computeWakeupServiceData: function (wakeupInput) {
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      value: wakeupInput };
+  },
+
+  computeConfigValueHelp: function (selectedConfigParameter) {
+    if (selectedConfigParameter === -1) return '';
+    var helpText = this.config[selectedConfigParameter].value.help;
+    if (!helpText) return ['No helptext available'];
+    return helpText;
+  },
+
+  computeSetConfigParameterServiceData: function (selectedConfigValue) {
+    if (this.selectedNode === -1 || this.selectedConfigParameter === -1) return -1;
+    var valueData = null;
+    if (('Short Byte Int').includes(this.selectedConfigParameterType)) {
+      valueData = parseInt(selectedConfigValue, 10);
+    } if (('Bool Button').includes(this.selectedConfigParameterType)) {
+      valueData = this.selectedConfigParameterValues[selectedConfigValue];
+    } if (this.selectedConfigParameterType === 'List') {
+      valueData = this.selectedConfigParameterValues[selectedConfigValue];
+    }
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      parameter: this.config[this.selectedConfigParameter].key,
+      value: valueData };
+  },
+
+  selectedConfigParameterChanged: function (selectedConfigParameter) {
+    if (selectedConfigParameter === -1) return;
+    this.selectedConfigValue = -1;
+    this.loadedConfigValue = -1;
+    this.selectedConfigParameterValues = [];
+    this.selectedConfigParameterType = this.config[selectedConfigParameter].value.type;
+    this.configParameterMax = this.config[selectedConfigParameter].value.max;
+    this.configParameterMin = this.config[selectedConfigParameter].value.min;
+    this.loadedConfigValue = this.config[selectedConfigParameter].value.data;
+    this.configValueHelpText = this.config[selectedConfigParameter].value.help;
+    if (('Short Byte Int').includes(this.selectedConfigParameterType)) {
+      this.selectedConfigParameterNumValues = this.config[selectedConfigParameter].value.data_items;
+      this.selectedConfigValue = this.loadedConfigValue;
+    }
+    if (('Bool Button').includes(this.selectedConfigParameterType)) {
+      this.selectedConfigParameterValues = ['True', 'False'];
+      if (this.config[selectedConfigParameter].value.data) {
+        this.loadedConfigValue = 'True';
+      } else this.loadedConfigValue = 'False';
+    }
+    if (('List').includes(this.selectedConfigParameterType)) {
+      this.selectedConfigParameterValues = this.config[selectedConfigParameter].value.data_items;
+    }
+  },
+
+  isConfigParameterSelected: function (selectedConfigParameter, type) {
+    if (selectedConfigParameter === -1) return false;
+    if (this.config[selectedConfigParameter].value.type === type) return true;
+    if (type.includes(this.config[selectedConfigParameter].value.type)) return true;
+    return false;
+  },
+
+  computeSelectCaptionConfigParameter: function (stateObj) {
+    return (stateObj.key + ': ' + stateObj.value.label);
+  },
+
+  refreshConfig: function (selectedNode) {
+    var configData = [];
+    this.hass.callApi('GET', 'zwave/config/' + this.nodes[selectedNode].attributes.node_id).then(function (config) {
+      Object.entries(config).forEach(([key, value]) => {
+        configData.push({ key, value });
+      });
+      this.config = configData;
+      this.selectedConfigParameterChanged(this.selectedConfigParameter);
+    }.bind(this));
+  },
+});</script><dom-module id="zwave-usercodes" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}</style><div class="content"><paper-card heading="Node user codes"><div class="device-picker"><paper-dropdown-menu label="Code slot" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedUserCode}}"><template is="dom-repeat" items="[[userCodes]]" as="state"><paper-item>[[computeSelectCaptionUserCodes(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[isUserCodeSelected(selectedUserCode)]]"><div class="card-actions"><paper-input label="User code" type="number" value="{{selectedUserCodeValue}}" maxlength="{{userCodeMaxLen}}" min="0"></paper-input></div><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="lock" service="set_usercode" service-data="[[computeUserCodeServiceData(selectedUserCodeValue, &quot;Add&quot;)]]">Set Usercode</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="lock" service="clear_usercode" service-data="[[computeUserCodeServiceData(selectedUserCode, &quot;Delete&quot;)]]">Delete Usercode</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
+  is: 'zwave-usercodes',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    nodes: {
+      type: Array,
+    },
+
+    selectedNode: {
+      type: Number,
+    },
+
+    userCodes: {
+      type: Object,
+    },
+
+    userCodeMaxLen: {
+      type: Number,
+      value: 4
+    },
+
+    selectedUserCode: {
+      type: Number,
+      value: -1,
+      observer: 'selectedUserCodeChanged'
+    },
+
+    selectedUserCodeValue: {
+      type: Number,
+      value: -1
+    },
+  },
+
+  listeners: {
+    'hass-service-called': 'serviceCalled',
+  },
+  serviceCalled: function (ev) {
+    if (ev.detail.success) {
+      var foo = this;
+      setTimeout(function () {
+        foo.refreshUserCodes(foo.selectedNode);
+      }, 5000);
+    }
+  },
+
+  isUserCodeSelected: function (selectedUserCode) {
+    if (selectedUserCode === -1) return false;
+    return true;
+  },
+
+  computeSelectCaptionUserCodes: function (stateObj) {
+    return (stateObj.key + ': ' + stateObj.value.label);
+  },
+
+  selectedUserCodeChanged: function (selectedUserCode) {
+    if (this.selectedUserCode === -1 || selectedUserCode === -1) return;
+    var value = (parseInt((this.userCodes[selectedUserCode].value.code).trim()));
+    this.userCodeMaxLen = (this.userCodes[selectedUserCode].value.length);
+    if (isNaN(value)) this.selectedUserCodeValue = '';
+    else this.selectedUserCodeValue = value;
+  },
+
+  computeUserCodeServiceData: function (selectedUserCodeValue, type) {
+    if (this.selectedNode === -1 || !selectedUserCodeValue) return -1;
+    var serviceData = null;
+    var valueData = null;
+    if (type === 'Add') {
+      valueData = selectedUserCodeValue;
+      serviceData = { node_id: this.nodes[this.selectedNode].attributes.node_id,
+        code_slot: this.selectedUserCode,
+        usercode: valueData };
+    }
+    if (type === 'Delete') {
+      serviceData = { node_id: this.nodes[this.selectedNode].attributes.node_id,
+        code_slot: this.selectedUserCode };
+    }
+    return serviceData;
+  },
+
+  refreshUserCodes: function (selectedNode) {
+    this.selectedUserCodeValue = '';
+    var userCodes = [];
+    this.hass.callApi('GET', 'zwave/usercodes/' + this.nodes[selectedNode].attributes.node_id).then(function (usercodes) {
+      Object.entries(usercodes).forEach(([key, value]) => {
+        userCodes.push({ key, value });
+      });
+      this.userCodes = userCodes;
+      this.selectedUserCodeChanged(this.selectedUserCode);
+    }.bind(this));
+  },
+});</script></div><dom-module id="ha-panel-zwave"><template><style include="iron-flex ha-style">.content{margin-top:24px}.node-info{margin-left:16px;text-transform:capitalize}.help-text{padding-left:24px;padding-right:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}</style><app-header-layout has-scrolling-region=""><app-header fixed=""><app-toolbar><ha-menu-button narrow="[[narrow]]" show-menu="[[showMenu]]"></ha-menu-button><div main-title="">Z-Wave Manager</div></app-toolbar></app-header><div class="content"><zwave-network id="zwave-network" hass="[[hass]]"></zwave-network></div><div class="content"><paper-card heading="Z-Wave Node Management"><div class="card-content">Z-Wave Node controls.</div><div class="device-picker"><paper-dropdown-menu label="Nodes" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedNode}}"><template is="dom-repeat" items="[[nodes]]" as="state"><paper-item>[[computeSelectCaption(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="refresh_node" service-data="[[computeNodeServiceData(selectedNode)]]">Refresh Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="remove_failed_node" service-data="[[computeNodeServiceData(selectedNode)]]">Remove Failed Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="replace_failed_node" service-data="[[computeNodeServiceData(selectedNode)]]">Replace Failed Node</ha-call-service-button><ha-call-service-button hass="[[hass]]" domain="zwave" service="print_node" service-data="[[computeNodeServiceData(selectedNode)]]">Print Node</ha-call-service-button></div><div class="card-actions"><paper-input float-label="New node name" type="text" value="{{newNodeNameInput}}" placeholder="[[computeGetNodeName(selectedNode)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_node" service-data="[[computeNodeNameServiceData(newNodeNameInput)]]">Rename Node</ha-call-service-button></div><div class="device-picker"><paper-dropdown-menu label="Entities of this node" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedEntity}}"><template is="dom-repeat" items="[[entities]]" as="state"><paper-item>[[computeSelectCaptionEnt(state)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsEntitySelected(selectedEntity)]]"><div class="card-actions"><ha-call-service-button hass="[[hass]]" domain="zwave" service="refresh_entity" service-data="[[computeRefreshEntityServiceData(selectedEntity)]]">Refresh Entity</ha-call-service-button></div><div class="content"><div class="card-actions"><paper-button toggles="" raised="" noink="" active="{{entityInfoActive}}">Entity Attributes</paper-button></div><template is="dom-if" if="{{entityInfoActive}}"><template is="dom-repeat" items="[[selectedEntityAttrs]]" as="state"><div class="node-info"><span>[[state]]</span></div></template></template></div></template></template></paper-card></div><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-node-information id="zwave-node-information" nodes="[[nodes]]" selected-node="[[selectedNode]]"></zwave-node-information></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-values hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" values="[[values]]"></zwave-values></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-groups hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" groups="[[groups]]"></zwave-groups></template><template is="dom-if" if="[[!computeIsNodeSelected(selectedNode)]]"><zwave-node-config hass="[[hass]]" nodes="[[nodes]]" selected-node="[[selectedNode]]" config="[[config]]"></zwave-node-config></template><template is="dom-if" if="{{hasNodeUserCodes}}"><zwave-usercodes id="zwave-usercodes" hass="[[hass]]" nodes="[[nodes]]" user-codes="[[userCodes]]" selected-node="[[selectedNode]]"></zwave-usercodes></template><div class="content"><ozw-log id="ozw-log" hass="[[hass]]"></ozw-log></div></app-header-layout></template></dom-module><script>Polymer({
+  is: 'ha-panel-zwave',
+
+  properties: {
+    hass: {
+      type: Object,
+    },
+
+    narrow: {
+      type: Boolean,
+    },
+
+    showMenu: {
+      type: Boolean,
+      value: false,
+    },
+
+    nodes: {
+      type: Array,
+      computed: 'computeNodes(hass)'
+    },
+
+    selectedNode: {
+      type: Number,
+      value: -1,
+      observer: 'selectedNodeChanged'
+    },
+
+    config: {
+      type: Array,
+      value: function () {
+        return [];
+      }
+    },
+
+    entities: {
+      type: Array,
+      computed: 'computeEntities(selectedNode)',
+    },
+
+    entityInfoActive: {
+      type: Boolean,
+    },
+
+    selectedEntity: {
+      type: Number,
+      value: -1,
+      observers: ['computeIsEntitySelected',
+        'computeRefreshEntityServiceData']
+    },
+
+    selectedEntityAttrs: {
+      type: Array,
+      computed: 'computeSelectedEntityAttrs(selectedEntity)'
+    },
+
+    values: {
+      type: Array,
+    },
+
+    groups: {
+      type: Array,
+    },
+
+    newNodeNameInput: {
+      type: String,
+    },
+
+    userCodes: {
+      type: Array,
+      value: function () {
+        return [];
+      },
+    },
+
+    hasNodeUserCodes: {
+      type: Boolean,
+      value: false
+    },
+  },
+
+  computeNodes: function (hass) {
+    return Object.keys(hass.states)
+      .map(function (key) { return hass.states[key]; })
+      .filter(function (ent) {
+        return (!ent.attributes.hidden &&
+                (ent.entity_id).match('zwave[.]'));
+      })
+      .sort(function (entityA, entityB) {
+        if (entityA.entity_id < entityB.entity_id) {
+          return -1;
+        }
+        if (entityA.entity_id > entityB.entity_id) {
+          return 1;
+        }
+        return 0;
+      });
+  },
+
+  computeEntities: function (selectedNode) {
+    if (!this.nodes || selectedNode === -1) return -1;
+    var hass = this.hass;
+    var nodeid = this.nodes[this.selectedNode].attributes.node_id;
+    return Object.keys(hass.states)
+      .map(function (key) { return hass.states[key]; })
+      .filter(function (ent) {
+        if (ent.attributes.node_id === undefined) {
+          return false;
+        }
+        return (!ent.attributes.hidden &&
+                'node_id' in ent.attributes &&
+                ent.attributes.node_id === nodeid &&
+                (!(ent.entity_id).match('zwave[.]')));
+      })
+      .sort(function (entityA, entityB) {
+        if (entityA.entity_id < entityB.entity_id) {
+          return -1;
+        }
+        if (entityA.entity_id > entityB.entity_id) {
+          return 1;
+        }
+        return 0;
+      });
+  },
+
+  selectedNodeChanged: function (selectedNode) {
+    this.newNodeNameInput = '';
+
+    if (selectedNode === -1) return;
+    this.selectedConfigParameter = -1;
+    this.selectedConfigParameterValue = -1;
+    this.selectedGroup = -1;
+    var configData = [];
+    this.hass.callApi('GET', 'zwave/config/' + this.nodes[selectedNode].attributes.node_id).then(function (configs) {
+      Object.entries(configs).forEach(([key, value]) => {
+        configData.push({ key, value });
+      });
+      this.config = configData;
+    }.bind(this));
+    var valueData = [];
+    this.hass.callApi('GET', 'zwave/values/' + this.nodes[selectedNode].attributes.node_id).then(function (values) {
+      Object.entries(values).forEach(([key, value]) => {
+        valueData.push({ key, value });
+      });
+      this.values = valueData;
+    }.bind(this));
+    var groupData = [];
+    this.hass.callApi('GET', 'zwave/groups/' + this.nodes[selectedNode].attributes.node_id).then(function (groups) {
+      Object.entries(groups).forEach(([key, value]) => {
+        groupData.push({ key, value });
+      });
+      this.groups = groupData;
+    }.bind(this));
+    var userCodes = [];
+    this.hasNodeUserCodes = false;
+    this.notifyPath('hasNodeUserCodes');
+    this.hass.callApi('GET', 'zwave/usercodes/' + this.nodes[selectedNode].attributes.node_id).then(function (usercodes) {
+      Object.entries(usercodes).forEach(([key, value]) => {
+        userCodes.push({ key, value });
+      });
+      this.userCodes = userCodes;
+      if (Object.keys(userCodes).length === 0) {
+        this.hasNodeUserCodes = false;
+      } else {
+        this.hasNodeUserCodes = true;
+      }
+      this.notifyPath('hasNodeUserCodes');
+    }.bind(this));
+  },
+
+  computeSelectedEntityAttrs: function (selectedEntity) {
+    if (selectedEntity === -1) return 'No entity selected';
+    var entityAttrs = this.entities[selectedEntity].attributes;
+    var att = [];
+    Object.entries(entityAttrs).forEach(([key, value]) => {
+      att.push(key + ': ' + value);
+    });
+    return att.sort();
+  },
+
+  computeSelectCaption: function (stateObj) {
+    return window.hassUtil.computeStateName(stateObj) + ' (Node:' +
+      stateObj.attributes.node_id + ' ' +
+      stateObj.attributes.query_stage + ')';
+  },
+
+  computeSelectCaptionEnt: function (stateObj) {
+    return (window.hassUtil.computeDomain(stateObj) + '.'
+            + window.hassUtil.computeStateName(stateObj));
+  },
+
+  computeIsNodeSelected: function () {
+    return (!this.nodes || this.selectedNode === -1);
+  },
+
+  computeIsEntitySelected: function (selectedEntity) {
+    return (selectedEntity === -1);
+  },
+
+  computeNodeServiceData: function (selectedNode) {
+    return { node_id: this.nodes[selectedNode].attributes.node_id };
+  },
+
+  computeGetNodeName: function (selectedNode) {
+    if (this.selectedNode === -1 ||
+      !this.nodes[selectedNode].entity_id) return -1;
+    return this.nodes[selectedNode].attributes.node_name;
+  },
+
+  computeNodeNameServiceData: function (newNodeNameInput) {
+    return { node_id: this.nodes[this.selectedNode].attributes.node_id,
+      name: newNodeNameInput };
+  },
+
+  computeRefreshEntityServiceData: function (selectedEntity) {
+    if (selectedEntity === -1) return -1;
+    return { entity_id: this.entities[selectedEntity].entity_id };
+  },
+});</script></body></html>

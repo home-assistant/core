@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the MPC-HC platform."""
+    """Set up the MPC-HC platform."""
     name = config.get(CONF_NAME)
     url = '{}:{}'.format(config.get(CONF_HOST), config.get(CONF_PORT))
 
@@ -59,8 +59,8 @@ class MpcHcDevice(MediaPlayerDevice):
         self._player_variables = dict()
 
         try:
-            response = requests.get('{}/variables.html'.format(self._url),
-                                    data=None, timeout=3)
+            response = requests.get(
+                '{}/variables.html'.format(self._url), data=None, timeout=3)
 
             mpchc_variables = re.findall(r'<p id="(.+?)">(.+?)</p>',
                                          response.text)
@@ -102,24 +102,24 @@ class MpcHcDevice(MediaPlayerDevice):
 
     @property
     def media_title(self):
-        """Title of current playing media."""
+        """Return the title of current playing media."""
         return self._player_variables.get('file', None)
 
     @property
     def volume_level(self):
-        """Volume level of the media player (0..1)."""
+        """Return the volume level of the media player (0..1)."""
         return int(self._player_variables.get('volumelevel', 0)) / 100.0
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return boolean if volume is currently muted."""
         return self._player_variables.get('muted', '0') == '1'
 
     @property
     def media_duration(self):
-        """Duration of current playing media in seconds."""
-        duration = self._player_variables.get('durationstring',
-                                              "00:00:00").split(':')
+        """Return the duration of the current playing media in seconds."""
+        duration = self._player_variables.get(
+            'durationstring', "00:00:00").split(':')
         return \
             int(duration[0]) * 3600 + \
             int(duration[1]) * 60 + \

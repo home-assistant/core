@@ -50,7 +50,7 @@ def color(the_color, *args, reset=None):
     """Color helper."""
     from colorlog.escape_codes import escape_codes, parse_colors
     try:
-        if len(args) == 0:
+        if not args:
             assert reset is None, "You cannot reset if nothing being printed"
             return parse_colors(the_color)
         return parse_colors(the_color) + ' '.join(args) + \
@@ -106,7 +106,7 @@ def run(script_args: List) -> int:
             the_color = '' if yfn in res['yaml_files'] else 'red'
             print(color(the_color, '-', yfn))
 
-    if len(res['except']) > 0:
+    if res['except']:
         print(color('bold_white', 'Failed config'))
         for domain, config in res['except'].items():
             domain_info.append(domain)

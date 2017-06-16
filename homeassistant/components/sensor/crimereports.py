@@ -25,10 +25,13 @@ REQUIREMENTS = ['crimereports==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(minutes=30)
-DOMAIN = 'crimereports'
-EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
 CONF_RADIUS = 'radius'
+
+DOMAIN = 'crimereports'
+
+EVENT_INCIDENT = '{}_incident'.format(DOMAIN)
+
+SCAN_INTERVAL = timedelta(minutes=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
@@ -42,14 +45,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Crime Reports platform."""
+    """Set up the Crime Reports platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    add_devices([CrimeReportsSensor(hass, config.get(CONF_NAME),
-                                    latitude, longitude,
-                                    config.get(CONF_RADIUS),
-                                    config.get(CONF_INCLUDE),
-                                    config.get(CONF_EXCLUDE))], True)
+    name = config.get(CONF_NAME)
+    radius = config.get(CONF_RADIUS)
+    include = config.get(CONF_INCLUDE)
+    exclude = config.get(CONF_EXCLUDE)
+
+    add_devices([CrimeReportsSensor(
+        hass, name, latitude, longitude, radius, include, exclude)], True)
 
 
 class CrimeReportsSensor(Entity):
@@ -64,8 +69,8 @@ class CrimeReportsSensor(Entity):
         self._include = include
         self._exclude = exclude
         radius_kilometers = convert(radius, LENGTH_METERS, LENGTH_KILOMETERS)
-        self._crimereports = crimereports.CrimeReports((latitude, longitude),
-                                                       radius_kilometers)
+        self._crimereports = crimereports.CrimeReports(
+            (latitude, longitude), radius_kilometers)
         self._attributes = None
         self._state = None
         self._previous_incidents = set()
@@ -103,9 +108,8 @@ class CrimeReportsSensor(Entity):
         """Update device state."""
         import crimereports
         incident_counts = defaultdict(int)
-        incidents = self._crimereports.get_incidents(now().date(),
-                                                     include=self._include,
-                                                     exclude=self._exclude)
+        incidents = self._crimereports.get_incidents(
+            now().date(), include=self._include, exclude=self._exclude)
         fire_events = len(self._previous_incidents) > 0
         if len(incidents) < len(self._previous_incidents):
             self._previous_incidents = set()

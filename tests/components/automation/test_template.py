@@ -370,7 +370,7 @@ class TestAutomationTemplate(unittest.TestCase):
     def test_if_fires_on_change_with_bad_template(self):
         """Test for firing on change with bad template."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'template',

@@ -37,7 +37,7 @@ STATE_PLAY = 'Play'
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Steam platform."""
+    """Set up the Steam platform."""
     import steam as steamod
     steamod.api.key.set(config.get(CONF_API_KEY))
     add_devices(

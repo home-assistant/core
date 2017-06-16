@@ -15,24 +15,25 @@ reports=no
 # abstract-method - with intro of async there are always methods missing
 
 disable=
-  locally-disabled,
-  duplicate-code,
-  cyclic-import,
   abstract-class-little-used,
   abstract-class-not-used,
-  unused-argument,
+  abstract-method,
+  cyclic-import,
+  duplicate-code,
   global-statement,
+  locally-disabled,
+  not-context-manager,
   redefined-variable-type,
+  too-few-public-methods,
   too-many-arguments,
   too-many-branches,
   too-many-instance-attributes,
+  too-many-lines,
   too-many-locals,
   too-many-public-methods,
   too-many-return-statements,
   too-many-statements,
-  too-many-lines,
-  too-few-public-methods,
-  abstract-method
+  unused-argument
 
 [EXCEPTIONS]
 overgeneral-exceptions=Exception,HomeAssistantError

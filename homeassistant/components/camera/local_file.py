@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Camera."""
+    """Set up the Camera that works with local files."""
     file_path = config[CONF_FILE_PATH]
 
     # check filepath given is readable
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LocalFile(Camera):
-    """Local camera."""
+    """Representation of a local file camera."""
 
     def __init__(self, name, file_path):
         """Initialize Local File Camera component."""

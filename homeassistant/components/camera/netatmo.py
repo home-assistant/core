@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup access to Netatmo cameras."""
+    """Set up access to Netatmo cameras."""
     netatmo = get_component('netatmo')
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
@@ -55,7 +55,7 @@ class NetatmoCamera(Camera):
     """Representation of the images published from a Netatmo camera."""
 
     def __init__(self, data, camera_name, home, camera_type, verify_ssl):
-        """Setup for access to the Netatmo camera images."""
+        """Set up for access to the Netatmo camera images."""
         super(NetatmoCamera, self).__init__()
         self._data = data
         self._camera_name = camera_name
@@ -64,10 +64,10 @@ class NetatmoCamera(Camera):
             self._name = home + ' / ' + camera_name
         else:
             self._name = camera_name
-        camera_id = data.camera_data.cameraByName(camera=camera_name,
-                                                  home=home)['id']
-        self._unique_id = "Welcome_camera {0} - {1}".format(self._name,
-                                                            camera_id)
+        camera_id = data.camera_data.cameraByName(
+            camera=camera_name, home=home)['id']
+        self._unique_id = "Welcome_camera {0} - {1}".format(
+            self._name, camera_id)
         self._vpnurl, self._localurl = self._data.camera_data.cameraUrls(
             camera=camera_name
             )
@@ -83,13 +83,13 @@ class NetatmoCamera(Camera):
                 response = requests.get('{0}/live/snapshot_720.jpg'.format(
                     self._vpnurl), timeout=10, verify=self._verify_ssl)
             else:
-                _LOGGER.error('Welcome VPN url is None')
+                _LOGGER.error("Welcome VPN URL is None")
                 self._data.update()
                 (self._vpnurl, self._localurl) = \
                     self._data.camera_data.cameraUrls(camera=self._camera_name)
                 return None
         except requests.exceptions.RequestException as error:
-            _LOGGER.error('Welcome url changed: %s', error)
+            _LOGGER.error("Welcome URL changed: %s", error)
             self._data.update()
             (self._vpnurl, self._localurl) = \
                 self._data.camera_data.cameraUrls(camera=self._camera_name)
@@ -103,12 +103,12 @@ class NetatmoCamera(Camera):
 
     @property
     def brand(self):
-        """Camera brand."""
+        """Return the camera brand."""
         return "Netatmo"
 
     @property
     def model(self):
-        """Camera model."""
+        """Return the camera model."""
         if self._cameratype == "NOC":
             return "Presence"
         elif self._cameratype == "NACamera":

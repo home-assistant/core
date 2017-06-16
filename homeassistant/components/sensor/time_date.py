@@ -10,11 +10,13 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+from homeassistant.helpers.event import async_track_point_in_utc_time
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,27 +39,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup the Time and Date sensor."""
+    """Set up the Time and Date sensor."""
     if hass.config.time_zone is None:
         _LOGGER.error("Timezone is not set in Home Assistant configuration")
         return False
 
     devices = []
     for variable in config[CONF_DISPLAY_OPTIONS]:
-        devices.append(TimeDateSensor(variable))
+        device = TimeDateSensor(hass, variable)
+        async_track_point_in_utc_time(
+            hass, device.point_in_time_listener, device.get_next_interval())
+        devices.append(device)
 
     async_add_devices(devices, True)
-    return True
 
 
 class TimeDateSensor(Entity):
     """Implementation of a Time and Date sensor."""
 
-    def __init__(self, option_type):
+    def __init__(self, hass, option_type):
         """Initialize the sensor."""
         self._name = OPTION_TYPES[option_type]
         self.type = option_type
         self._state = None
+        self.hass = hass
+
+        self._update_internal_state(dt_util.utcnow())
 
     @property
     def name(self):
@@ -79,10 +86,22 @@ class TimeDateSensor(Entity):
         else:
             return 'mdi:clock'
 
-    @asyncio.coroutine
-    def async_update(self):
-        """Get the latest data and updates the states."""
-        time_date = dt_util.utcnow()
+    def get_next_interval(self, now=None):
+        """Compute next time an update should occur."""
+        if now is None:
+            now = dt_util.utcnow()
+        if self.type == 'date':
+            now = dt_util.start_of_local_day(now)
+            return now + timedelta(seconds=86400)
+        elif self.type == 'beat':
+            interval = 86.4
+        else:
+            interval = 60
+        timestamp = int(dt_util.as_timestamp(now))
+        delta = interval - (timestamp % interval)
+        return now + timedelta(seconds=delta)
+
+    def _update_internal_state(self, time_date):
         time = dt_util.as_local(time_date).strftime(TIME_STR_FORMAT)
         time_utc = time_date.strftime(TIME_STR_FORMAT)
         date = dt_util.as_local(time_date).date().isoformat()
@@ -106,3 +125,11 @@ class TimeDateSensor(Entity):
             self._state = time_utc
         elif self.type == 'beat':
             self._state = '@{0:03d}'.format(beat)
+
+    @callback
+    def point_in_time_listener(self, time_date):
+        """Get the latest data and update state."""
+        self._update_internal_state(time_date)
+        self.hass.async_add_job(self.async_update_ha_state())
+        async_track_point_in_utc_time(
+            self.hass, self.point_in_time_listener, self.get_next_interval())

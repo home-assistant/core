@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD, CONF_NAME,
-    CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF)
+    CONF_MONITORED_VARIABLES, CONF_VALUE_TEMPLATE, CONF_SENSOR_TYPE,
+    CONF_UNIT_OF_MEASUREMENT)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -26,7 +27,6 @@ DEFAULT_PORT = 443
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
-# Each sensor is defined as follows: 'Descriptive name', 'python-ilo function'
 SENSOR_TYPES = {
     'server_name': ['Server Name', 'get_server_name'],
     'server_fqdn': ['Server FQDN', 'get_server_fqdn'],
@@ -46,8 +46,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=['server_name']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
+        vol.All(cv.ensure_list, [vol.Schema({
+            vol.Required(CONF_NAME): cv.string,
+            vol.Required(CONF_SENSOR_TYPE):
+                vol.All(cv.string, vol.In(SENSOR_TYPES)),
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE, default=None): cv.template
+        })]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
@@ -61,7 +67,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     login = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_variables = config.get(CONF_MONITORED_VARIABLES)
-    name = config.get(CONF_NAME)
 
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data and confirm we can connect.
@@ -73,10 +78,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Initialize and add all of the sensors.
     devices = []
-    for ilo_type in monitored_variables:
-        new_device = HpIloSensor(hp_ilo_data=hp_ilo_data,
-                                 sensor_type=SENSOR_TYPES.get(ilo_type),
-                                 client_name=name)
+    for monitored_variable in monitored_variables:
+        new_device = HpIloSensor(
+            hass=hass,
+            hp_ilo_data=hp_ilo_data,
+            sensor_name='{} {}'.format(
+                config.get(CONF_NAME), monitored_variable[CONF_NAME]),
+            sensor_type=monitored_variable[CONF_SENSOR_TYPE],
+            sensor_value_template=monitored_variable[CONF_VALUE_TEMPLATE],
+            unit_of_measurement=monitored_variable[CONF_UNIT_OF_MEASUREMENT])
         devices.append(new_device)
 
     add_devices(devices)
@@ -85,15 +95,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class HpIloSensor(Entity):
     """Representation of a HP ILO sensor."""
 
-    def __init__(self, hp_ilo_data, sensor_type, client_name):
+    def __init__(self, hass, hp_ilo_data, sensor_type, sensor_name,
+                 sensor_value_template, unit_of_measurement):
         """Initialize the sensor."""
-        self._name = '{} {}'.format(client_name, sensor_type[0])
-        self._ilo_function = sensor_type[1]
-        self.client_name = client_name
+        self._hass = hass
+        self._name = sensor_name
+        self._unit_of_measurement = unit_of_measurement
+        self._ilo_function = SENSOR_TYPES[sensor_type][1]
         self.hp_ilo_data = hp_ilo_data
 
+        if sensor_value_template is not None:
+            sensor_value_template.hass = hass
+        self._sensor_value_template = sensor_value_template
+
         self._state = None
-        self._data = None
+        self._state_attributes = None
 
         self.update()
 
@@ -105,6 +121,11 @@ class HpIloSensor(Entity):
         return self._name
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of the sensor."""
+        return self._unit_of_measurement
+
+    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -112,7 +133,7 @@ class HpIloSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return self._data
+        return self._state_attributes
 
     def update(self):
         """Get the latest data from HP ILO and updates the states."""
@@ -122,23 +143,10 @@ class HpIloSensor(Entity):
         self.hp_ilo_data.update()
         ilo_data = getattr(self.hp_ilo_data.data, self._ilo_function)()
 
-        # Store the data received from the ILO API
-        if isinstance(ilo_data, dict):
-            self._data = ilo_data
-        else:
-            self._data = {'value': ilo_data}
+        if self._sensor_value_template is not None:
+            ilo_data = self._sensor_value_template.render(ilo_data=ilo_data)
 
-        # If the data received is an integer or string, store it as
-        # the sensor state
-        if isinstance(ilo_data, (str, bytes)):
-            states = [STATE_ON, STATE_OFF]
-            try:
-                index_element = states.index(str(ilo_data).lower())
-                self._state = states[index_element]
-            except ValueError:
-                self._state = ilo_data
-        elif isinstance(ilo_data, (int, float)):
-            self._state = ilo_data
+        self._state = ilo_data
 
 
 class HpIloData(object):
@@ -161,10 +169,9 @@ class HpIloData(object):
         import hpilo
 
         try:
-            self.data = hpilo.Ilo(hostname=self._host,
-                                  login=self._login,
-                                  password=self._password,
-                                  port=self._port)
+            self.data = hpilo.Ilo(
+                hostname=self._host, login=self._login,
+                password=self._password, port=self._port)
         except (hpilo.IloError, hpilo.IloCommunicationError,
                 hpilo.IloLoginFailed) as error:
             raise ValueError("Unable to init HP ILO, %s", error)

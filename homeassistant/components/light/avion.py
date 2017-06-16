@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['avion==0.5']
+REQUIREMENTS = ['avion==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 

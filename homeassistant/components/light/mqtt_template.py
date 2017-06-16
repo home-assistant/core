@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup a MQTT Template light."""
+    """Set up a MQTT Template light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
@@ -104,7 +104,7 @@ class MqttTemplate(Light):
 
     def __init__(self, hass, name, effect_list, topics, templates, optimistic,
                  qos, retain):
-        """Initialize MQTT Template light."""
+        """Initialize a MQTT Template light."""
         self._name = name
         self._effect_list = effect_list
         self._topics = topics
@@ -139,21 +139,19 @@ class MqttTemplate(Light):
             self._rgb = None
         self._effect = None
 
-        # init hass to template
         for tpl in self._templates.values():
             if tpl is not None:
                 tpl.hass = hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Subscribe mqtt events.
+        """Subscribe to MQTT events.
 
         This method is a coroutine.
         """
         @callback
         def state_received(topic, payload, qos):
-            """A new MQTT message has been received."""
-            # read state
+            """Handle new MQTT messages."""
             state = self._templates[CONF_STATE_TEMPLATE].\
                 async_render_with_possible_json_value(payload)
             if state == STATE_ON:
@@ -161,9 +159,8 @@ class MqttTemplate(Light):
             elif state == STATE_OFF:
                 self._state = False
             else:
-                _LOGGER.warning('Invalid state value received')
+                _LOGGER.warning("Invalid state value received")
 
-            # read brightness
             if self._brightness is not None:
                 try:
                     self._brightness = int(
@@ -171,9 +168,8 @@ class MqttTemplate(Light):
                         async_render_with_possible_json_value(payload)
                     )
                 except ValueError:
-                    _LOGGER.warning('Invalid brightness value received')
+                    _LOGGER.warning("Invalid brightness value received")
 
-            # read color temperature
             if self._color_temp is not None:
                 try:
                     self._color_temp = int(
@@ -181,9 +177,8 @@ class MqttTemplate(Light):
                         async_render_with_possible_json_value(payload)
                     )
                 except ValueError:
-                    _LOGGER.warning('Invalid color temperature value received')
+                    _LOGGER.warning("Invalid color temperature value received")
 
-            # read color
             if self._rgb is not None:
                 try:
                     self._rgb[0] = int(
@@ -196,9 +191,8 @@ class MqttTemplate(Light):
                         self._templates[CONF_BLUE_TEMPLATE].
                         async_render_with_possible_json_value(payload))
                 except ValueError:
-                    _LOGGER.warning('Invalid color value received')
+                    _LOGGER.warning("Invalid color value received")
 
-            # read white value
             if self._white_value is not None:
                 try:
                     self._white_value = int(
@@ -208,16 +202,14 @@ class MqttTemplate(Light):
                 except ValueError:
                     _LOGGER.warning('Invalid white value received')
 
-            # read effect
             if self._templates[CONF_EFFECT_TEMPLATE] is not None:
                 effect = self._templates[CONF_EFFECT_TEMPLATE].\
                     async_render_with_possible_json_value(payload)
 
-                # validate effect value
                 if effect in self._effect_list:
                     self._effect = effect
                 else:
-                    _LOGGER.warning('Unsupported effect value received')
+                    _LOGGER.warning("Unsupported effect value received")
 
             self.hass.async_add_job(self.async_update_ha_state())
 
@@ -285,26 +277,22 @@ class MqttTemplate(Light):
 
         This method is a coroutine.
         """
-        # state
         values = {'state': True}
         if self._optimistic:
             self._state = True
 
-        # brightness
         if ATTR_BRIGHTNESS in kwargs:
             values['brightness'] = int(kwargs[ATTR_BRIGHTNESS])
 
             if self._optimistic:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
 
-        # color_temp
         if ATTR_COLOR_TEMP in kwargs:
             values['color_temp'] = int(kwargs[ATTR_COLOR_TEMP])
 
             if self._optimistic:
                 self._color_temp = kwargs[ATTR_COLOR_TEMP]
 
-        # color
         if ATTR_RGB_COLOR in kwargs:
             values['red'] = kwargs[ATTR_RGB_COLOR][0]
             values['green'] = kwargs[ATTR_RGB_COLOR][1]
@@ -313,22 +301,18 @@ class MqttTemplate(Light):
             if self._optimistic:
                 self._rgb = kwargs[ATTR_RGB_COLOR]
 
-        # white value
         if ATTR_WHITE_VALUE in kwargs:
             values['white_value'] = int(kwargs[ATTR_WHITE_VALUE])
 
             if self._optimistic:
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
 
-        # effect
         if ATTR_EFFECT in kwargs:
             values['effect'] = kwargs.get(ATTR_EFFECT)
 
-        # flash
         if ATTR_FLASH in kwargs:
             values['flash'] = kwargs.get(ATTR_FLASH)
 
-        # transition
         if ATTR_TRANSITION in kwargs:
             values['transition'] = int(kwargs[ATTR_TRANSITION])
 
@@ -347,12 +331,10 @@ class MqttTemplate(Light):
 
         This method is a coroutine.
         """
-        # state
         values = {'state': False}
         if self._optimistic:
             self._state = False
 
-        # transition
         if ATTR_TRANSITION in kwargs:
             values['transition'] = int(kwargs[ATTR_TRANSITION])
 

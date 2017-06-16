@@ -1,4 +1,4 @@
-"""Starts home assistant."""
+"""Start Home Assistant."""
 from __future__ import print_function
 
 import argparse
@@ -10,6 +10,7 @@ import threading
 
 from typing import Optional, List
 
+from homeassistant import monkey_patch
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
@@ -17,7 +18,6 @@ from homeassistant.const import (
     REQUIRED_PYTHON_VER_WIN,
     RESTART_EXIT_CODE,
 )
-from homeassistant.util.async import run_callback_threadsafe
 
 
 def attempt_use_uvloop():
@@ -74,7 +74,7 @@ def monkey_patch_asyncio():
 
 
 def validate_python() -> None:
-    """Validate we're running the right Python version."""
+    """Validate that the right Python version is running."""
     if sys.platform == "win32" and \
        sys.version_info[:3] < REQUIRED_PYTHON_VER_WIN:
         print("Home Assistant requires at least Python {}.{}.{}".format(
@@ -215,7 +215,7 @@ def daemonize() -> None:
 
 
 def check_pid(pid_file: str) -> None:
-    """Check that HA is not already running."""
+    """Check that Home Assistant is not already running."""
     # Check pid file
     try:
         pid = int(open(pid_file, 'r').readline())
@@ -277,7 +277,7 @@ def cmdline() -> List[str]:
 
 def setup_and_run_hass(config_dir: str,
                        args: argparse.Namespace) -> Optional[int]:
-    """Setup HASS and run."""
+    """Set up HASS and run."""
     from homeassistant import bootstrap
 
     # Run a simple daemon runner process on Windows to handle restarts
@@ -310,6 +310,9 @@ def setup_and_run_hass(config_dir: str,
         return None
 
     if args.open_ui:
+        # Imported here to avoid importing asyncio before monkey patch
+        from homeassistant.util.async import run_callback_threadsafe
+
         def open_browser(event):
             """Open the webinterface in a browser."""
             if hass.config.api is not None:
@@ -326,7 +329,7 @@ def setup_and_run_hass(config_dir: str,
 
 
 def try_to_restart() -> None:
-    """Attempt to clean up state and start a new homeassistant instance."""
+    """Attempt to clean up state and start a new Home Assistant instance."""
     # Things should be mostly shut down already at this point, now just try
     # to clean up things that may have been left behind.
     sys.stderr.write('Home Assistant attempting to restart.\n')
@@ -358,11 +361,11 @@ def try_to_restart() -> None:
     else:
         os.closerange(3, max_fd)
 
-    # Now launch into a new instance of Home-Assistant. If this fails we
+    # Now launch into a new instance of Home Assistant. If this fails we
     # fall through and exit with error 100 (RESTART_EXIT_CODE) in which case
     # systemd will restart us when RestartForceExitStatus=100 is set in the
     # systemd.service file.
-    sys.stderr.write("Restarting Home-Assistant\n")
+    sys.stderr.write("Restarting Home Assistant\n")
     args = cmdline()
     os.execv(args[0], args)
 
@@ -370,6 +373,13 @@ def try_to_restart() -> None:
 def main() -> int:
     """Start Home Assistant."""
     validate_python()
+
+    if os.environ.get('HASS_MONKEYPATCH_ASYNCIO') == '1':
+        if sys.version_info[:3] >= (3, 6):
+            monkey_patch.disable_c_asyncio()
+        monkey_patch.patch_weakref_tasks()
+    elif sys.version_info[:3] < (3, 5, 3):
+        monkey_patch.patch_weakref_tasks()
 
     attempt_use_uvloop()
 

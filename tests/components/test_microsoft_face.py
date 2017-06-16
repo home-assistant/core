@@ -22,6 +22,8 @@ class TestMicrosoftFaceSetup(object):
             }
         }
 
+        self.endpoint_url = "https://westus.{0}".format(mf.FACE_API_URL)
+
     def teardown_method(self):
         """Stop everything that was started."""
         self.hass.stop()
@@ -30,7 +32,7 @@ class TestMicrosoftFaceSetup(object):
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_component(self, mock_update):
         """Setup component."""
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
     @patch('homeassistant.components.microsoft_face.'
@@ -44,7 +46,7 @@ class TestMicrosoftFaceSetup(object):
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_component_test_service(self, mock_update):
         """Setup component."""
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         assert self.hass.services.has_service(mf.DOMAIN, 'create_group')
@@ -57,19 +59,19 @@ class TestMicrosoftFaceSetup(object):
     def test_setup_component_test_entities(self, aioclient_mock):
         """Setup component."""
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups"),
+            self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group1/persons"),
+            self.endpoint_url.format("persongroups/test_group1/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group2/persons"),
+            self.endpoint_url.format("persongroups/test_group2/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
 
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         assert len(aioclient_mock.mock_calls) == 3
@@ -95,15 +97,15 @@ class TestMicrosoftFaceSetup(object):
     def test_service_groups(self, mock_update, aioclient_mock):
         """Setup component, test groups services."""
         aioclient_mock.put(
-            mf.FACE_API_URL.format("persongroups/service_group"),
+            self.endpoint_url.format("persongroups/service_group"),
             status=200, text="{}"
         )
         aioclient_mock.delete(
-            mf.FACE_API_URL.format("persongroups/service_group"),
+            self.endpoint_url.format("persongroups/service_group"),
             status=200, text="{}"
         )
 
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         mf.create_group(self.hass, 'Service Group')
@@ -123,29 +125,29 @@ class TestMicrosoftFaceSetup(object):
     def test_service_person(self, aioclient_mock):
         """Setup component, test person services."""
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups"),
+            self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group1/persons"),
+            self.endpoint_url.format("persongroups/test_group1/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group2/persons"),
+            self.endpoint_url.format("persongroups/test_group2/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
 
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         assert len(aioclient_mock.mock_calls) == 3
 
         aioclient_mock.post(
-            mf.FACE_API_URL.format("persongroups/test_group1/persons"),
+            self.endpoint_url.format("persongroups/test_group1/persons"),
             text=load_fixture('microsoft_face_create_person.json')
         )
         aioclient_mock.delete(
-            mf.FACE_API_URL.format(
+            self.endpoint_url.format(
                 "persongroups/test_group1/persons/"
                 "25985303-c537-4467-b41d-bdb45cd95ca1"),
             status=200, text="{}"
@@ -174,11 +176,11 @@ class TestMicrosoftFaceSetup(object):
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_service_train(self, mock_update, aioclient_mock):
         """Setup component, test train groups services."""
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         aioclient_mock.post(
-            mf.FACE_API_URL.format("persongroups/service_group/train"),
+            self.endpoint_url.format("persongroups/service_group/train"),
             status=200, text="{}"
         )
 
@@ -192,26 +194,26 @@ class TestMicrosoftFaceSetup(object):
     def test_service_face(self, camera_mock, aioclient_mock):
         """Setup component, test person face services."""
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups"),
+            self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group1/persons"),
+            self.endpoint_url.format("persongroups/test_group1/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
         aioclient_mock.get(
-            mf.FACE_API_URL.format("persongroups/test_group2/persons"),
+            self.endpoint_url.format("persongroups/test_group2/persons"),
             text=load_fixture('microsoft_face_persons.json')
         )
 
         self.config['camera'] = {'platform': 'demo'}
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         assert len(aioclient_mock.mock_calls) == 3
 
         aioclient_mock.post(
-            mf.FACE_API_URL.format(
+            self.endpoint_url.format(
                 "persongroups/test_group2/persons/"
                 "2ae4935b-9659-44c3-977f-61fac20d0538/persistedFaces"),
             status=200, text="{}"
@@ -229,11 +231,11 @@ class TestMicrosoftFaceSetup(object):
     def test_service_status_400(self, mock_update, aioclient_mock):
         """Setup component, test groups services with error."""
         aioclient_mock.put(
-            mf.FACE_API_URL.format("persongroups/service_group"),
+            self.endpoint_url.format("persongroups/service_group"),
             status=400, text="{'error': {'message': 'Error'}}"
         )
 
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         mf.create_group(self.hass, 'Service Group')
@@ -248,11 +250,11 @@ class TestMicrosoftFaceSetup(object):
     def test_service_status_timeout(self, mock_update, aioclient_mock):
         """Setup component, test groups services with timeout."""
         aioclient_mock.put(
-            mf.FACE_API_URL.format("persongroups/service_group"),
+            self.endpoint_url.format("persongroups/service_group"),
             status=400, exc=asyncio.TimeoutError()
         )
 
-        with assert_setup_component(2, mf.DOMAIN):
+        with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
         mf.create_group(self.hass, 'Service Group')

@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     conf_switches = config_from_file(hass.config.path(
         INSTEON_LOCAL_SWITCH_CONF))
-    if len(conf_switches):
+    if conf_switches:
         for device_id in conf_switches:
             setup_switch(
                 device_id, conf_switches[device_id], insteonhub, hass,
@@ -48,8 +48,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                       hass, add_devices)
 
 
-def request_configuration(device_id, insteonhub, model, hass,
-                          add_devices_callback):
+def request_configuration(
+        device_id, insteonhub, model, hass, add_devices_callback):
     """Request configuration steps from the user."""
     configurator = get_component('configurator')
 
@@ -61,7 +61,7 @@ def request_configuration(device_id, insteonhub, model, hass,
         return
 
     def insteon_switch_config_callback(data):
-        """The actions to do when our configuration callback is called."""
+        """Handle configuration changes."""
         setup_switch(device_id, data.get('name'), insteonhub, hass,
                      add_devices_callback)
 
@@ -81,7 +81,7 @@ def setup_switch(device_id, name, insteonhub, hass, add_devices_callback):
         request_id = _CONFIGURING.pop(device_id)
         configurator = get_component('configurator')
         configurator.request_done(request_id)
-        _LOGGER.info("Device configuration done!")
+        _LOGGER.info("Device configuration done")
 
     conf_switch = config_from_file(hass.config.path(INSTEON_LOCAL_SWITCH_CONF))
     if device_id not in conf_switch:

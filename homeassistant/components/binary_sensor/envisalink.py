@@ -15,13 +15,14 @@ from homeassistant.components.envisalink import (
     SIGNAL_ZONE_UPDATE)
 from homeassistant.const import ATTR_LAST_TRIP_TIME
 
-DEPENDENCIES = ['envisalink']
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['envisalink']
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Setup Envisalink binary sensor devices."""
+    """Set up the Envisalink binary sensor devices."""
     configured_zones = discovery_info['zones']
 
     devices = []

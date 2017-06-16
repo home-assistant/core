@@ -19,11 +19,13 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.3.1']
+REQUIREMENTS = ['denonavr==0.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
+DEFAULT_SHOW_SOURCES = False
+CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
@@ -37,11 +39,13 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
+        cv.boolean,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Denon platform."""
+    """Set up the Denon platform."""
     import denonavr
 
     # Initialize list with receivers to be started
@@ -52,6 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         cache = hass.data[KEY_DENON_CACHE] = set()
 
     # Start assignment of host and name
+    show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
     # 1. option: manual setting
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
@@ -60,17 +65,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if host not in cache:
             cache.add(host)
             receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name)))
+                DenonDevice(denonavr.DenonAVR(host, name, show_all_sources)))
             _LOGGER.info("Denon receiver at host %s initialized", host)
     # 2. option: discovery using netdisco
     if discovery_info is not None:
-        host = discovery_info[0]
-        name = discovery_info[1]
+        host = discovery_info.get('host')
+        name = discovery_info.get('name')
         # Check if host not in cache, append it and save for later starting
         if host not in cache:
             cache.add(host)
             receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name)))
+                DenonDevice(denonavr.DenonAVR(host, name, show_all_sources)))
             _LOGGER.info("Denon receiver at host %s initialized", host)
     # 3. option: discovery using denonavr library
     if config.get(CONF_HOST) is None and discovery_info is None:
@@ -85,7 +90,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if host not in cache:
                     cache.add(host)
                     receivers.append(
-                        DenonDevice(denonavr.DenonAVR(host, name)))
+                        DenonDevice(
+                            denonavr.DenonAVR(host, name, show_all_sources)))
                     _LOGGER.info("Denon receiver at host %s initialized", host)
 
     # Add all freshly discovered receivers
@@ -116,9 +122,7 @@ class DenonDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest status information from device."""
-        # Update denonavr
         self._receiver.update()
-        # Refresh own data
         self._name = self._receiver.name
         self._muted = self._receiver.muted
         self._volume = self._receiver.volume
@@ -146,7 +150,7 @@ class DenonDevice(MediaPlayerDevice):
 
     @property
     def is_volume_muted(self):
-        """Boolean if volume is currently muted."""
+        """Return boolean if volume is currently muted."""
         return self._muted
 
     @property
@@ -163,7 +167,7 @@ class DenonDevice(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        """List of available input sources."""
+        """Return a list of available input sources."""
         return self._source_list
 
     @property
