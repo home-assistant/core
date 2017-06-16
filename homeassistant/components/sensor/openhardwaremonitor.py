@@ -1,7 +1,5 @@
 """
 Support for Open Hardware Monitor Sensor Platform.
-
-(c) 2017 by Wim Haanstra
 """
 
 from threading import Timer
