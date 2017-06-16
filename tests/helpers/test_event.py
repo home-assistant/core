@@ -48,9 +48,11 @@ class TestEventHelpers(unittest.TestCase):
         after_birthday = datetime(1987, 7, 9, 12, 0, 0, tzinfo=dt_util.UTC)
 
         runs = []
+        COUNT = 3
 
-        track_point_in_utc_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+        for i in range(COUNT):
+            track_point_in_utc_time(
+                self.hass, lambda x, y: runs.append(y), birthday_paulus, i)
 
         self._send_time_changed(before_birthday)
         self.hass.block_till_done()
@@ -58,19 +60,22 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(birthday_paulus)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        self.assertEqual(COUNT, len(runs))
+        for i in range(COUNT):
+            self.assertEqual(i, runs[i])
 
         # A point in time tracker will only fire once, this should do nothing
         self._send_time_changed(birthday_paulus)
         self.hass.block_till_done()
-        self.assertEqual(1, len(runs))
+        self.assertEqual(COUNT, len(runs))
 
         track_point_in_time(
-            self.hass, lambda x: runs.append(1), birthday_paulus)
+            self.hass, lambda x: runs.append(x), birthday_paulus)
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        self.assertEqual(COUNT + 1, len(runs))
+        self.assertEqual(after_birthday, runs[-1])
 
         unsub = track_point_in_time(
             self.hass, lambda x: runs.append(1), birthday_paulus)
@@ -78,7 +83,8 @@ class TestEventHelpers(unittest.TestCase):
 
         self._send_time_changed(after_birthday)
         self.hass.block_till_done()
-        self.assertEqual(2, len(runs))
+        self.assertEqual(COUNT + 1, len(runs))
+        self.assertEqual(after_birthday, runs[-1])
 
     def test_track_time_change(self):
         """Test tracking time change."""
@@ -265,30 +271,51 @@ class TestEventHelpers(unittest.TestCase):
     def test_track_time_interval(self):
         """Test tracking time interval."""
         specific_runs = []
+        unsubs = []
+        COUNT = 3
 
         utc_now = dt_util.utcnow()
-        unsub = track_time_interval(
-            self.hass, lambda x: specific_runs.append(1),
-            timedelta(seconds=10)
-        )
+        for i in range(COUNT):
+            unsubs.append(track_time_interval(
+                self.hass, lambda x, y: specific_runs.append((x, y)),
+                timedelta(seconds=10), i
+            ))
 
-        self._send_time_changed(utc_now + timedelta(seconds=5))
+        time1 = utc_now + timedelta(seconds=5)
+        self._send_time_changed(time1)
         self.hass.block_till_done()
         self.assertEqual(0, len(specific_runs))
 
-        self._send_time_changed(utc_now + timedelta(seconds=13))
+        time2 = utc_now + timedelta(seconds=13)
+        self._send_time_changed(time2)
         self.hass.block_till_done()
-        self.assertEqual(1, len(specific_runs))
+        self.assertEqual(COUNT, len(specific_runs))
+        for i in range(COUNT):
+            self.assertEqual(time2, specific_runs[i][0])
+            self.assertEqual(i, specific_runs[i][1])
 
-        self._send_time_changed(utc_now + timedelta(minutes=20))
+        time3 = utc_now + timedelta(seconds=20)
+        self._send_time_changed(time3)
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(COUNT*2, len(specific_runs))
+        for i in range(COUNT):
+            self.assertEqual(time2, specific_runs[i][0])
+            self.assertEqual(time3, specific_runs[COUNT+i][0])
+            self.assertEqual(i, specific_runs[i][1])
+            self.assertEqual(i, specific_runs[COUNT+i][1])
 
-        unsub()
+        for unsub in unsubs:
+            unsub()
 
-        self._send_time_changed(utc_now + timedelta(seconds=30))
+        time4 = utc_now + timedelta(seconds=30)
+        self._send_time_changed(time4)
         self.hass.block_till_done()
-        self.assertEqual(2, len(specific_runs))
+        self.assertEqual(COUNT*2, len(specific_runs))
+        for i in range(COUNT):
+            self.assertEqual(time2, specific_runs[i][0])
+            self.assertEqual(time3, specific_runs[COUNT+i][0])
+            self.assertEqual(i, specific_runs[i][1])
+            self.assertEqual(i, specific_runs[COUNT+i][1])
 
     def test_track_sunrise(self):
         """Test track the sunrise."""

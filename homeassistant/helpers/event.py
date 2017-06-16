@@ -114,14 +114,14 @@ track_template = threaded_listener_factory(async_track_template)
 
 
 @callback
-def async_track_point_in_time(hass, action, point_in_time):
+def async_track_point_in_time(hass, action, point_in_time, *args):
     """Add a listener that fires once after a specific point in time."""
     utc_point_in_time = dt_util.as_utc(point_in_time)
 
     @callback
     def utc_converter(utc_now):
         """Convert passed in UTC now to local now."""
-        hass.async_run_job(action, dt_util.as_local(utc_now))
+        hass.async_run_job(action, dt_util.as_local(utc_now), *args)
 
     return async_track_point_in_utc_time(hass, utc_converter,
                                          utc_point_in_time)
@@ -131,7 +131,7 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 
 
 @callback
-def async_track_point_in_utc_time(hass, action, point_in_time):
+def async_track_point_in_utc_time(hass, action, point_in_time, *args):
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     point_in_time = dt_util.as_utc(point_in_time)
@@ -152,7 +152,7 @@ def async_track_point_in_utc_time(hass, action, point_in_time):
         point_in_time_listener.run = True
         async_unsub()
 
-        hass.async_run_job(action, now)
+        hass.async_run_job(action, now, *args)
 
     async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED,
                                         point_in_time_listener)
@@ -165,7 +165,7 @@ track_point_in_utc_time = threaded_listener_factory(
 
 
 @callback
-def async_track_time_interval(hass, action, interval):
+def async_track_time_interval(hass, action, interval, *args):
     """Add a listener that fires repetitively at every timedelta interval."""
     remove = None
 
@@ -179,7 +179,7 @@ def async_track_time_interval(hass, action, interval):
         nonlocal remove
         remove = async_track_point_in_utc_time(
             hass, interval_listener, next_interval())
-        hass.async_run_job(action, now)
+        hass.async_run_job(action, now, *args)
 
     remove = async_track_point_in_utc_time(
         hass, interval_listener, next_interval())
