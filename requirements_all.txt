@@ -309,6 +309,9 @@ https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
+# homeassistant.components.sensor.bme280
+i2csense==0.0.2
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==3.0.0
