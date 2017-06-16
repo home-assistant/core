@@ -249,6 +249,19 @@ class TestMQTT(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_subscribe_special_characters(self):
+        """Test the subscription to topics with special characters."""
+        topic = '/test-topic/$(.)[^]{-}'
+        payload = 'p4y.l[]a|> ?'
+
+        mqtt.subscribe(self.hass, topic, self.record_calls)
+
+        fire_mqtt_message(self.hass, topic, payload)
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(topic, self.calls[0][0])
+        self.assertEqual(payload, self.calls[0][1])
+
     def test_subscribe_binary_topic(self):
         """Test the subscription to a binary topic."""
         mqtt.subscribe(self.hass, 'test-topic', self.record_calls,
