@@ -804,6 +804,7 @@ class ZWaveDeviceEntityValues():
 
         device.old_entity_id = "{}.{}".format(
             component, object_id(self.primary))
+        device.new_entity_id = "{}.{}".format(component, slugify(device.name))
         if not self._zwave_config[DOMAIN][CONF_NEW_ENTITY_IDS]:
             device.entity_id = device.old_entity_id
 
@@ -902,6 +903,7 @@ class ZWaveDeviceEntity(ZWaveBaseEntity):
             const.ATTR_VALUE_INDEX: self.values.primary.index,
             const.ATTR_VALUE_INSTANCE: self.values.primary.instance,
             'old_entity_id': self.old_entity_id,
+            'new_entity_id': self.new_entity_id,
         }
 
         if self.power_consumption is not None:
