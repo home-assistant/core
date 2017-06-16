@@ -205,12 +205,7 @@ class Camera(Entity):
     @property
     def get_motion_detection_status(self):
         """Return the camera motion detection status."""
-        if hasattr(self, 'get_motion_detection_status'):
-            status = self.get_motion_detection_status
-        else:
-            status = None
-
-        return status
+        return None
 
     @property
     def model(self):
