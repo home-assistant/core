@@ -14,6 +14,8 @@ ATTR_BASIC_LEVEL = "basic_level"
 ATTR_CONFIG_PARAMETER = "parameter"
 ATTR_CONFIG_SIZE = "size"
 ATTR_CONFIG_VALUE = "value"
+ATTR_VALUE_INDEX = "value_index"
+ATTR_VALUE_INSTANCE = "value_instance"
 NETWORK_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
