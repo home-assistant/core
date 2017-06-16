@@ -277,7 +277,7 @@ class TestEventHelpers(unittest.TestCase):
         utc_now = dt_util.utcnow()
         for i in range(COUNT):
             unsubs.append(track_time_interval(
-                self.hass, lambda x, y: specific_runs.append((x,y)),
+                self.hass, lambda x, y: specific_runs.append((x, y)),
                 timedelta(seconds=10), i
             ))
 
