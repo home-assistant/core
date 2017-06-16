@@ -50,9 +50,6 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
-    homeassistant/components/insteon_hub.py
-    homeassistant/components/*/insteon_hub.py
-
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
@@ -211,6 +208,7 @@ omit =
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
+    homeassistant/components/camera/onvif.py
     homeassistant/components/camera/synology.py
     homeassistant/components/climate/eq3btsmart.py
     homeassistant/components/climate/flexit.py
