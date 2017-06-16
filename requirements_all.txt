@@ -398,7 +398,7 @@ netdisco==1.0.1
 neurio==0.3.1
 
 # homeassistant.components.image_processing.opencv
-numpy==1.12.0
+numpy==1.13.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
