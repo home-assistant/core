@@ -321,7 +321,7 @@ class Entity(object):
 
         value = getattr(self, name)
 
-        if value is None or value == '':
+        if value is None:
             return
 
         try:
