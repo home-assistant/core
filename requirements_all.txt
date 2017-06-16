@@ -267,6 +267,9 @@ hikvision==0.4
 # homeassistant.components.binary_sensor.workday
 holidays==0.8.1
 
+# homeassistant.components.camera.onvif
+http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
+
 # homeassistant.components.switch.rachio
 https://github.com/Klikini/rachiopy/archive/2c8996fcfa97a9f361a789e0c998797ed2805281.zip#rachiopy==0.1.1
 
@@ -405,6 +408,9 @@ oemthermostat==1.1
 
 # homeassistant.components.media_player.onkyo
 onkyo-eiscp==1.1
+
+# homeassistant.components.camera.onvif
+onvif-py3==0.1.3
 
 # homeassistant.components.sensor.openevse
 openevsewifi==0.4
@@ -832,6 +838,9 @@ statsd==3.2.1
 
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
+
+# homeassistant.components.camera.onvif
+suds-py3==1.3.3.0
 
 # homeassistant.components.binary_sensor.tapsaff
 tapsaff==0.1.3
