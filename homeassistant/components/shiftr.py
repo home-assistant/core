@@ -4,7 +4,6 @@ Support for Shiftr.io.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/shiftr/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -31,8 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Initialize the Shiftr.io MQTT consumer."""
     import paho.mqtt.client as mqtt
     conf = config[DOMAIN]
@@ -51,10 +49,9 @@ def async_setup(hass, config):
         """Stop the Shiftr.io MQTT component."""
         mqttc.disconnect()
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_shiftr)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_shiftr)
 
-    @asyncio.coroutine
-    def async_shiftr_event_listener(event):
+    def shiftr_event_listener(event):
         """Listen for new messages on the bus and sends them to Shiftr.io."""
         state = event.data.get('new_state')
         topic = state.entity_id.replace('.', '/')
@@ -65,16 +62,16 @@ def async_setup(hass, config):
             _state = state.state
 
         try:
-            yield from mqttc.publish(topic, _state, qos=0, retain=False)
+            mqttc.publish(topic, _state, qos=0, retain=False)
 
             if state.attributes:
                 for attribute, data in state.attributes.items():
-                    yield from mqttc.publish(
+                    mqttc.publish(
                         '/{}/{}'.format(topic, attribute), str(data), qos=0,
                         retain=False)
         except RuntimeError:
             pass
 
-    hass.bus.async_listen(EVENT_STATE_CHANGED, async_shiftr_event_listener)
+    hass.bus.listen(EVENT_STATE_CHANGED, shiftr_event_listener)
 
     return True
