@@ -96,7 +96,7 @@ CONFIG_SCHEMA = vol.Schema({
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
                 (STATE_OPEN, STATE_CLOSED), (STATE_LOCKED, STATE_UNLOCKED),
-                (STATE_OK, STATE_PROBLEM)]
+                (STATE_PROBLEM, STATE_OK)]
 
 
 def _get_group_on_off(state):
