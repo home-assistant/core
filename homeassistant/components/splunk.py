@@ -88,4 +88,3 @@ def setup(hass, config):
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
 
     return True
-
