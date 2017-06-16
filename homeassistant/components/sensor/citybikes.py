@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.citybikes/
 """
 import logging
+import asyncio
 from datetime import timedelta
 
 import voluptuous as vol
@@ -78,7 +79,8 @@ def _filter_stations(network, radius, latitude, longitude, stations_list):
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the CityBikes platform."""
     from citybikes import Client, Network
 
@@ -86,10 +88,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
 
     network_uid = config.get(CONF_NETWORK)
+    client = Client(loop=hass.loop)
+    yield from client.networks.async_request()
     if not network_uid:
-        network = Client(loop=hass.loop).networks.near(latitude, longitude)[0][0]
+        network = client.networks.near(latitude, longitude)[0][0]
     else:
-        network = Network(Client(loop=hass.loop), uid=network_uid)
+        network = Network(client, uid=network_uid)
 
     stations_list = config.get(CONF_STATIONS_LIST, [])
     radius = config.get(CONF_RADIUS, 0)
