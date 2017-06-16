@@ -120,4 +120,32 @@ raise Exception('boom')
     hass.async_add_job(execute, hass, 'test.py', source, {})
     yield from hass.async_block_till_done()
 
-    assert "Error executing script test.py" in caplog.text
+    assert "Error executing script: boom" in caplog.text
+
+
+@asyncio.coroutine
+def test_accessing_async_methods(hass, caplog):
+    """Test compile error logs error."""
+    caplog.set_level(logging.ERROR)
+    source = """
+hass.async_stop()
+    """
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert "Not allowed to access async methods" in caplog.text
+
+
+@asyncio.coroutine
+def test_accessing_forbidden_methods(hass, caplog):
+    """Test compile error logs error."""
+    caplog.set_level(logging.ERROR)
+    source = """
+hass.stop()
+    """
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert "Not allowed to access HomeAssistant.stop" in caplog.text
