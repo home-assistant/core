@@ -33,7 +33,9 @@ def async_setup_platform(hass, config, add_devices, discovery_info=None):
 
 class IGDSensor(Entity):
     """Representation of a UPnP IGD sensor."""
+    
     def __init__(self, upnp, sensor_type, unit=""):
+        """Initialize the IGD sensor."""
         self._upnp = upnp
         self.type = sensor_type
         self.unit = unit

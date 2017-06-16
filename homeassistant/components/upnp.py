@@ -1,6 +1,5 @@
 """
-This module will attempt to open a port in your router for Home Assistant.
-It will also keep the status of the IGD found.
+Will open a port in your router for Home Assistant and provide statistics.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/upnp/
