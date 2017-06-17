@@ -14,6 +14,7 @@ from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import (
     EntityComponent, DEFAULT_SCAN_INTERVAL, SLOW_SETUP_WARNING)
 from homeassistant.helpers import entity_component
+from homeassistant.setup import setup_component
 
 from homeassistant.helpers import discovery
 import homeassistant.util.dt as dt_util
@@ -76,13 +77,14 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     def test_setting_up_group(self):
         """Setup the setting of a group."""
+        setup_component(self.hass, 'group', {'group': {}})
         component = EntityComponent(_LOGGER, DOMAIN, self.hass,
                                     group_name='everyone')
 
         # No group after setup
         assert len(self.hass.states.entity_ids()) == 0
 
-        component.add_entities([EntityTest(name='hello')])
+        component.add_entities([EntityTest()])
 
         # group exists
         assert len(self.hass.states.entity_ids()) == 2
@@ -90,7 +92,8 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         group = self.hass.states.get('group.everyone')
 
-        assert group.attributes.get('entity_id') == ('test_domain.hello',)
+        assert group.attributes.get('entity_id') == \
+            ('test_domain.unnamed_device',)
 
         # group extended
         component.add_entities([EntityTest(name='goodbye')])
@@ -98,9 +101,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
         assert len(self.hass.states.entity_ids()) == 3
         group = self.hass.states.get('group.everyone')
 
-        # Sorted order
+        # Ordered in order of added to the group
         assert group.attributes.get('entity_id') == \
-            ('test_domain.goodbye', 'test_domain.hello')
+            ('test_domain.goodbye', 'test_domain.unnamed_device')
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""

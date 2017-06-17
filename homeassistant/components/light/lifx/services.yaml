@@ -9,6 +9,10 @@ lifx_set_state:
     '...':
       description: All turn_on parameters can be used to specify a color
 
+    infrared:
+      description: Automatic infrared level (0..255) when light brightness is low
+      example: 255
+
     transition:
       description: Duration in seconds it takes to get to the final state
       example: 10
@@ -19,36 +23,7 @@ lifx_set_state:
 
 
 lifx_effect_breathe:
-  description: Run a breathe effect by fading to a color and back.
-
-  fields:
-    entity_id:
-      description: Name(s) of entities to run the effect on
-      example: 'light.kitchen'
-
-    brightness:
-      description: Number between 0..255 indicating brightness when the effect peaks
-      example: 120
-
-    color_name:
-      description: A human readable color name
-      example: 'red'
-
-    rgb_color:
-      description: Color for the fade in RGB-format
-      example: '[255, 100, 100]'
-
-    period:
-      description: Duration of the effect in seconds (default 1.0)
-      example: 3
-
-    cycles:
-      description: Number of times the effect should run (default 1.0)
-      example: 2
-
-    power_on:
-      description: Powered off lights are temporarily turned on during the effect (default True)
-      example: False
+  description: Deprecated, use lifx_effect_pulse
 
 lifx_effect_pulse:
   description: Run a flash effect by changing to a color and back.
@@ -57,6 +32,10 @@ lifx_effect_pulse:
     entity_id:
       description: Name(s) of entities to run the effect on
       example: 'light.kitchen'
+
+    mode:
+      description: 'Decides how colors are changed. Possible values: blink, breathe, ping, strobe, solid'
+      example: strobe
 
     brightness:
       description: Number between 0..255 indicating brightness of the temporary color

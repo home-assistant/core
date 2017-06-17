@@ -31,7 +31,7 @@
     });
     this.selectedNodeAttrs = att.sort();
   },
-});</script><dom-module id="zwave-values" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node Values"><div class="device-picker"><paper-dropdown-menu label="Value" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedValue}}"><template is="dom-repeat" items="[[values]]" as="item"><paper-item>[[computeSelectCaption(item)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsValueSelected(selectedValue)]]"><paper-input float-label="Value Name" type="text" value="{{newValueNameInput}}" placeholder="[[computeGetValueName(selectedValue)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_value" service-data="[[computeValueNameServiceData(newValueNameInput)]]">Rename Value</ha-call-service-button></template></paper-card></div></template></dom-module><script>Polymer({
+});</script><dom-module id="zwave-values" assetpath="./"><template><style include="iron-flex ha-style">.content{margin-top:24px}paper-card{display:block;margin:0 auto;max-width:600px}.device-picker{@apply(--layout-horizontal);@apply(--layout-center-center);padding-left:24px;padding-right:24px;padding-bottom:24px}.help-text{padding-left:24px;padding-right:24px}</style><div class="content"><paper-card heading="Node Values"><div class="device-picker"><paper-dropdown-menu label="Value" class="flex"><paper-listbox class="dropdown-content" selected="{{selectedValue}}"><template is="dom-repeat" items="[[values]]" as="item"><paper-item>[[computeSelectCaption(item)]]</paper-item></template></paper-listbox></paper-dropdown-menu></div><template is="dom-if" if="[[!computeIsValueSelected(selectedValue)]]"><div class="card-actions"><paper-input float-label="Value Name" type="text" value="{{newValueNameInput}}" placeholder="[[computeGetValueName(selectedValue)]]"></paper-input><ha-call-service-button hass="[[hass]]" domain="zwave" service="rename_value" service-data="[[computeValueNameServiceData(newValueNameInput)]]">Rename Value</ha-call-service-button></div></template></paper-card></div></template></dom-module><script>Polymer({
   is: 'zwave-values',
 
   properties: {
@@ -71,7 +71,7 @@
   },
 
   computeSelectCaption: function (item) {
-    return item.value.label;
+    return item.value.label + ' (Instance: ' + item.value.instance + ', Index: ' + item.value.index + ')';
   },
 
   computeGetValueName: function (selectedValue) {

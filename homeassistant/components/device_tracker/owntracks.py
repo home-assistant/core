@@ -116,7 +116,6 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
                 "key for topic %s", topic)
             return None
 
-    # pylint: disable=too-many-return-statements
     def validate_payload(topic, payload, data_type):
         """Validate the OwnTracks payload."""
         try:

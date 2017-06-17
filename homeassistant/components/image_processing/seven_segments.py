@@ -20,7 +20,9 @@ from homeassistant.components.image_processing import (
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DIGITS = 'digits'
+CONF_EXTRA_ARGUMENTS = 'extra_arguments'
 CONF_HEIGHT = 'height'
+CONF_ROTATE = 'rotate'
 CONF_SSOCR_BIN = 'ssocr_bin'
 CONF_THRESHOLD = 'threshold'
 CONF_WIDTH = 'width'
@@ -30,10 +32,12 @@ CONF_Y_POS = 'y_position'
 DEFAULT_BINARY = 'ssocr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_EXTRA_ARGUMENTS, default=''): cv.string,
     vol.Optional(CONF_DIGITS, default=-1): cv.positive_int,
     vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
     vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
     vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
+    vol.Optional(CONF_ROTATE, default=0): cv.positive_int,
     vol.Optional(CONF_WIDTH, default=0): cv.positive_int,
     vol.Optional(CONF_X_POS, default=0): cv.string,
     vol.Optional(CONF_Y_POS, default=0): cv.positive_int,
@@ -65,14 +69,18 @@ class ImageProcessingSsocr(ImageProcessingEntity):
             self._name = "SevenSegement OCR {0}".format(
                 split_entity_id(camera_entity)[1])
         self._state = None
+
         self.filepath = os.path.join(self.hass.config.config_dir, 'ocr.png')
-        self._command = [
-            config[CONF_SSOCR_BIN], 'erosion', 'make_mono', 'crop',
-            str(config[CONF_X_POS]), str(config[CONF_Y_POS]),
-            str(config[CONF_WIDTH]), str(config[CONF_HEIGHT]), '-t',
-            str(config[CONF_THRESHOLD]), '-d', str(config[CONF_DIGITS]),
-            self.filepath
-        ]
+        crop = ['crop', str(config[CONF_X_POS]), str(config[CONF_Y_POS]),
+                str(config[CONF_WIDTH]), str(config[CONF_HEIGHT])]
+        digits = ['-d', str(config[CONF_DIGITS])]
+        rotate = ['rotate', str(config[CONF_ROTATE])]
+        threshold = ['-t', str(config[CONF_THRESHOLD])]
+        extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(' ')
+
+        self._command = [config[CONF_SSOCR_BIN]] + crop + digits + threshold +\
+            rotate + extra_arguments
+        self._command.append(self.filepath)
 
     @property
     def device_class(self):

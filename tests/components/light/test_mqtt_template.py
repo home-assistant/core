@@ -51,7 +51,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_setup_fails(self): \
             # pylint: disable=invalid-name
         """Test that setup fails with missing required configuration items."""
-        with assert_setup_component(0):
+        with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -63,7 +63,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_state_change_via_topic(self): \
             # pylint: disable=invalid-name
         """Test state change via topic."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -88,7 +88,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertIsNone(state.attributes.get('brightness'))
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('white_value'))
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'test_light_rgb', 'on')
         self.hass.block_till_done()
@@ -103,7 +103,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_state_brightness_color_effect_temp_white_change_via_topic(self): \
             # pylint: disable=invalid-name
         """Test state, bri, color, effect, color temp, white val change."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -141,7 +141,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('white_value'))
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light, full white
         fire_mqtt_message(self.hass, 'test_light_rgb',
@@ -205,7 +205,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_optimistic(self): \
             # pylint: disable=invalid-name
         """Test optimistic mode."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -278,7 +278,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_flash(self): \
             # pylint: disable=invalid-name
         """Test flash."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -321,7 +321,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
 
     def test_transition(self):
         """Test for transition time being sent when included."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -364,7 +364,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_invalid_values(self): \
             # pylint: disable=invalid-name
         """Test that invalid values are ignored."""
-        with assert_setup_component(1):
+        with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
                 light.DOMAIN: {
                     'platform': 'mqtt_template',
@@ -401,7 +401,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('effect'))
         self.assertIsNone(state.attributes.get('white_value'))
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light, full white
         fire_mqtt_message(self.hass, 'test_light_rgb',

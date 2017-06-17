@@ -42,7 +42,6 @@ foursquare:
 group:
   reload:
     description: "Reload group configuration."
-    fields:
 
   set_visibility:
     description: Hide or show a group
@@ -55,6 +54,50 @@ group:
       visible:
         description: True if group should be shown or False if it should be hidden.
         example: True
+
+  set:
+    description: Create/Update a user group
+
+    fields:
+      object_id:
+        description: Group id and part of entity id
+        example: 'test_group'
+
+      name:
+        description: Name of group
+        example: 'My test group'
+
+      view:
+        description: Boolean for if the group is a view
+        example: True
+
+      icon:
+        description: Name of icon for the group
+        example: 'mdi:camera'
+
+      control:
+        description: Value for control the group control
+        example: 'hidden'
+
+      visible:
+        description: If the group is visible on UI
+        example: True
+
+      entities:
+        description: List of all members in the group. Not compatible with 'delta'
+        example: domain.entity_id1, domain.entity_id2
+
+      add_entities:
+        description: List of members they will change on group listening.
+        example: domain.entity_id1, domain.entity_id2
+
+  remove:
+    description: Remove a user group
+
+    fields:
+      object_id:
+        description: Group id and part of entity id
+        example: 'test_group'
 
 persistent_notification:
   create:
@@ -71,6 +114,14 @@ persistent_notification:
 
       notification_id:
         description: Target ID of the notification, will replace a notification with the same Id. [Optional]
+        example: 1234
+        
+  dismiss:
+    description: Remove a notification from the frontend
+
+    fields:
+      notification_id:
+        description: Target ID of the notification, which should be removed. [Required]
         example: 1234
 
 homematic:

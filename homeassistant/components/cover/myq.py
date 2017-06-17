@@ -14,9 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.loader as loader
 
-REQUIREMENTS = [
-    'https://github.com/arraylabs/pymyq/archive/v0.0.8.zip'
-    '#pymyq==0.0.8']
+REQUIREMENTS = ['pymyq==0.0.8']
 
 _LOGGER = logging.getLogger(__name__)
 

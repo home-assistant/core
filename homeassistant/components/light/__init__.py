@@ -26,6 +26,7 @@ from homeassistant.helpers.restore_state import async_restore_state
 import homeassistant.util.color as color_util
 
 DOMAIN = "light"
+DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=30)
 
 GROUP_NAME_ALL_LIGHTS = 'all lights'
