@@ -161,7 +161,7 @@ class TestTemplateSwitch:
         self.hass.block_till_done()
 
         state = self.hass.states.get('switch.test_template_switch')
-        assert 'icon' not in state.attributes
+        assert state.attributes.get('icon') == ''
 
         state = self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.block_till_done()
