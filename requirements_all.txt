@@ -382,7 +382,7 @@ miflora==0.1.16
 mutagen==1.37.0
 
 # homeassistant.components.sensor.usps
-myusps==1.1.1
+myusps==1.1.2
 
 # homeassistant.components.media_player.nad
 # homeassistant.components.media_player.nadtcp
