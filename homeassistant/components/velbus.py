@@ -48,8 +48,8 @@ def async_setup(hass, config):
         connection = velbus.VelbusUSBConnection(device)
         controller = velbus.Controller(connection)
         hass.data['VelbusController'] = controller
-    except:
-        _LOGGER.error("Error setting up Velbus Controller")
+    except Exception as exc:
+        _LOGGER.error("Error setting up Velbus Controller " + str(exc))
 
     @callback
     def stop_velbus(event):
