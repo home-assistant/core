@@ -24,7 +24,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==6.0.1']
+REQUIREMENTS = ['python-telegram-bot==6.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -543,9 +543,10 @@ class BaseTelegramBotEntity:
 
         data = {
             ATTR_USER_ID: msg_data['from']['id'],
-            ATTR_FROM_FIRST: msg_data['from']['first_name'],
-            ATTR_FROM_LAST: msg_data['from']['last_name']
+            ATTR_FROM_FIRST: msg_data['from']['first_name']
         }
+        if 'last_name' in msg_data['from']:
+            data[ATTR_FROM_LAST] = msg_data['from']['last_name']
         if 'chat' in msg_data:
             data[ATTR_CHAT_ID] = msg_data['chat']['id']
 

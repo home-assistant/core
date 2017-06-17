@@ -4,7 +4,6 @@ Support for the LIFX platform that implements lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.lifx/
 """
-import colorsys
 import logging
 import asyncio
 import sys
@@ -24,8 +23,6 @@ from homeassistant.components.light import (
     SUPPORT_XY_COLOR, SUPPORT_TRANSITION, SUPPORT_EFFECT,
     preprocess_turn_on_alternatives)
 from homeassistant.config import load_yaml_config_file
-from homeassistant.util.color import (
-    color_temperature_mired_to_kelvin, color_temperature_kelvin_to_mired)
 from homeassistant import util
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -37,7 +34,7 @@ from . import effects as lifx_effects
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['aiolifx==0.4.7']
+REQUIREMENTS = ['aiolifx==0.4.8']
 
 UDP_BROADCAST_PORT = 56700
 
@@ -49,16 +46,15 @@ CONF_SERVER = 'server'
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_HSBK = 'hsbk'
+ATTR_INFRARED = 'infrared'
 ATTR_POWER = 'power'
-
-BYTE_MAX = 255
-SHORT_MAX = 65535
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
 })
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
+    ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
     ATTR_POWER: cv.boolean,
 })
 
@@ -200,15 +196,14 @@ class AwaitAioLIFX:
         return self.message
 
 
-def convert_rgb_to_hsv(rgb):
-    """Convert Home Assistant RGB values to HSV values."""
-    red, green, blue = [_ / BYTE_MAX for _ in rgb]
+def convert_8_to_16(value):
+    """Scale an 8 bit level into 16 bits."""
+    return (value << 8) | value
 
-    hue, saturation, brightness = colorsys.rgb_to_hsv(red, green, blue)
 
-    return [int(hue * SHORT_MAX),
-            int(saturation * SHORT_MAX),
-            int(brightness * SHORT_MAX)]
+def convert_16_to_8(value):
+    """Scale a 16 bit level into 8 bits."""
+    return value >> 8
 
 
 class LIFXLight(Light):
@@ -260,14 +255,14 @@ class LIFXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        brightness = int(self._bri / (BYTE_MAX + 1))
+        brightness = convert_16_to_8(self._bri)
         _LOGGER.debug("brightness: %d", brightness)
         return brightness
 
     @property
     def color_temp(self):
         """Return the color temperature."""
-        temperature = color_temperature_kelvin_to_mired(self._kel)
+        temperature = color_util.color_temperature_kelvin_to_mired(self._kel)
 
         _LOGGER.debug("color_temp: %d", temperature)
         return temperature
@@ -280,7 +275,7 @@ class LIFXLight(Light):
             kelvin = 6500
         else:
             kelvin = 9000
-        return math.floor(color_temperature_kelvin_to_mired(kelvin))
+        return math.floor(color_util.color_temperature_kelvin_to_mired(kelvin))
 
     @property
     def max_mireds(self):
@@ -290,7 +285,7 @@ class LIFXLight(Light):
             kelvin = 2700
         else:
             kelvin = 2500
-        return math.ceil(color_temperature_kelvin_to_mired(kelvin))
+        return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
 
     @property
     def is_on(self):
@@ -370,6 +365,9 @@ class LIFXLight(Light):
             yield from lifx_effects.default_effect(self, **kwargs)
             return
 
+        if ATTR_INFRARED in kwargs:
+            self.device.set_infrared(convert_8_to_16(kwargs[ATTR_INFRARED]))
+
         if ATTR_TRANSITION in kwargs:
             fade = int(kwargs[ATTR_TRANSITION] * 1000)
         else:
@@ -446,7 +444,9 @@ class LIFXLight(Light):
 
         if ATTR_RGB_COLOR in kwargs:
             hue, saturation, brightness = \
-                convert_rgb_to_hsv(kwargs[ATTR_RGB_COLOR])
+                color_util.color_RGB_to_hsv(*kwargs[ATTR_RGB_COLOR])
+            saturation = convert_8_to_16(saturation)
+            brightness = convert_8_to_16(brightness)
             changed_color = True
         else:
             hue = self._hue
@@ -455,12 +455,12 @@ class LIFXLight(Light):
 
         if ATTR_XY_COLOR in kwargs:
             hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
-            saturation = saturation * (BYTE_MAX + 1)
+            saturation = convert_8_to_16(saturation)
             changed_color = True
 
         # When color or temperature is set, use a default value for the other
         if ATTR_COLOR_TEMP in kwargs:
-            kelvin = int(color_temperature_mired_to_kelvin(
+            kelvin = int(color_util.color_temperature_mired_to_kelvin(
                 kwargs[ATTR_COLOR_TEMP]))
             if not changed_color:
                 saturation = 0
@@ -472,7 +472,7 @@ class LIFXLight(Light):
                 kelvin = self._kel
 
         if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS] * (BYTE_MAX + 1)
+            brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
             changed_color = True
         else:
             brightness = self._bri
@@ -491,12 +491,8 @@ class LIFXLight(Light):
         self._bri = bri
         self._kel = kel
 
-        red, green, blue = colorsys.hsv_to_rgb(
-            hue / SHORT_MAX, sat / SHORT_MAX, bri / SHORT_MAX)
-
-        red = int(red * BYTE_MAX)
-        green = int(green * BYTE_MAX)
-        blue = int(blue * BYTE_MAX)
+        red, green, blue = color_util.color_hsv_to_RGB(
+            hue, convert_16_to_8(sat), convert_16_to_8(bri))
 
         _LOGGER.debug("set_color: %d %d %d %d [%d %d %d]",
                       hue, sat, bri, kel, red, green, blue)

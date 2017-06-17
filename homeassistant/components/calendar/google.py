@@ -39,7 +39,6 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
-# pylint: disable=too-many-instance-attributes
 class GoogleCalendarEventDevice(CalendarEventDevice):
     """A calendar event device."""
 

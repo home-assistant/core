@@ -31,6 +31,8 @@ class ZWaveNodeValueView(HomeAssistantView):
 
             values_data[entity_values.primary.value_id] = {
                 'label': entity_values.primary.label,
+                'index': entity_values.primary.index,
+                'instance': entity_values.primary.instance,
             }
         return self.json(values_data)
 

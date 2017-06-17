@@ -27,6 +27,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
+from homeassistant.loader import get_component
 import homeassistant.util as util
 from homeassistant.util.async import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
@@ -41,7 +42,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'device_tracker'
-DEPENDENCIES = ['zone']
+DEPENDENCIES = ['zone', 'group']
 
 GROUP_NAME_ALL_DEVICES = 'all devices'
 ENTITY_ID_ALL_DEVICES = group.ENTITY_ID_FORMAT.format('all_devices')
@@ -122,15 +123,10 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Set up the device tracker."""
     yaml_path = hass.config.path(YAML_DEVICES)
 
-    try:
-        conf = config.get(DOMAIN, [])
-    except vol.Invalid as ex:
-        async_log_exception(ex, DOMAIN, config, hass)
-        return False
-    else:
-        conf = conf[0] if conf else {}
-        consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
-        track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
+    conf = config.get(DOMAIN, [])
+    conf = conf[0] if conf else {}
+    consider_home = conf.get(CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME)
+    track_new = conf.get(CONF_TRACK_NEW, DEFAULT_TRACK_NEW)
 
     devices = yield from async_load_config(yaml_path, hass, consider_home)
     tracker = DeviceTracker(hass, consider_home, track_new, devices)
@@ -180,7 +176,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     if setup_tasks:
         yield from asyncio.wait(setup_tasks, loop=hass.loop)
 
-    yield from tracker.async_setup_group()
+    tracker.async_setup_group()
 
     @callback
     def async_device_tracker_discovered(service, info):
@@ -233,7 +229,7 @@ class DeviceTracker(object):
         self.mac_to_dev = {dev.mac: dev for dev in devices if dev.mac}
         self.consider_home = consider_home
         self.track_new = track_new
-        self.group = None  # type: group.Group
+        self.group = None
         self._is_updating = asyncio.Lock(loop=hass.loop)
 
         for dev in devices:
@@ -246,18 +242,21 @@ class DeviceTracker(object):
     def see(self, mac: str=None, dev_id: str=None, host_name: str=None,
             location_name: str=None, gps: GPSType=None, gps_accuracy=None,
             battery: str=None, attributes: dict=None,
-            source_type: str=SOURCE_TYPE_GPS):
+            source_type: str=SOURCE_TYPE_GPS, picture: str=None,
+            icon: str=None):
         """Notify the device tracker that you see a device."""
         self.hass.add_job(
             self.async_see(mac, dev_id, host_name, location_name, gps,
-                           gps_accuracy, battery, attributes, source_type)
+                           gps_accuracy, battery, attributes, source_type,
+                           picture, icon)
         )
 
     @asyncio.coroutine
     def async_see(self, mac: str=None, dev_id: str=None, host_name: str=None,
                   location_name: str=None, gps: GPSType=None,
                   gps_accuracy=None, battery: str=None, attributes: dict=None,
-                  source_type: str=SOURCE_TYPE_GPS):
+                  source_type: str=SOURCE_TYPE_GPS, picture: str=None,
+                  icon: str=None):
         """Notify the device tracker that you see a device.
 
         This method is a coroutine.
@@ -285,7 +284,8 @@ class DeviceTracker(object):
         dev_id = util.ensure_unique_string(dev_id, self.devices.keys())
         device = Device(
             self.hass, self.consider_home, self.track_new,
-            dev_id, mac, (host_name or dev_id).replace('_', ' '))
+            dev_id, mac, (host_name or dev_id).replace('_', ' '),
+            picture=picture, icon=icon)
         self.devices[dev_id] = device
         if mac is not None:
             self.mac_to_dev[mac] = device
@@ -303,9 +303,10 @@ class DeviceTracker(object):
         })
 
         # During init, we ignore the group
-        if self.group is not None:
-            yield from self.group.async_update_tracked_entity_ids(
-                list(self.group.tracking) + [device.entity_id])
+        if self.group and self.track_new:
+            self.group.async_set_group(
+                self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+                name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
 
         # lookup mac vendor string to be stored in config
         yield from device.set_vendor_for_mac()
@@ -327,16 +328,19 @@ class DeviceTracker(object):
                 update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
 
-    @asyncio.coroutine
+    @callback
     def async_setup_group(self):
         """Initialize group for all tracked devices.
 
-        This method is a coroutine.
+        This method must be run in the event loop.
         """
-        entity_ids = (dev.entity_id for dev in self.devices.values()
-                      if dev.track)
-        self.group = yield from group.Group.async_create_group(
-            self.hass, GROUP_NAME_ALL_DEVICES, entity_ids, False)
+        entity_ids = [dev.entity_id for dev in self.devices.values()
+                      if dev.track]
+
+        self.group = get_component('group')
+        self.group.async_set_group(
+            self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+            name=GROUP_NAME_ALL_DEVICES, entity_ids=entity_ids)
 
     @callback
     def async_update_stale(self, now: dt_util.dt.datetime):
