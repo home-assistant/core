@@ -81,9 +81,6 @@ class HTU21DHandler:
     def update(self):
         """Read raw data and calculate temperature and humidity."""
         self.sensor.update()
-        _LOGGER.debug("HTU21D values: {:.2f} ºC, {:.2f} %. Dew point: {:.2f}"
-                      .format(self.sensor.temperature, self.sensor.humidity,
-                              self.sensor.dew_point_temperature))
 
 
 class HTU21DSensor(Entity):
