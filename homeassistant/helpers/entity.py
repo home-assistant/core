@@ -146,7 +146,7 @@ class Entity(object):
     @property
     def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
-        return False
+        return None
 
     @property
     def force_update(self) -> bool:
@@ -321,7 +321,7 @@ class Entity(object):
 
         value = getattr(self, name)
 
-        if not value:
+        if value is None:
             return
 
         try:

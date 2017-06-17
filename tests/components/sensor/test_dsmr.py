@@ -88,7 +88,7 @@ def test_default_setup(hass, mock_connection_factory):
     # tariff should be translated in human readable and have no unit
     power_tariff = hass.states.get('sensor.power_tariff')
     assert power_tariff.state == 'low'
-    assert power_tariff.attributes.get('unit_of_measurement') is None
+    assert power_tariff.attributes.get('unit_of_measurement') == ''
 
 
 @asyncio.coroutine
