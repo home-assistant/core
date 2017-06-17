@@ -13,7 +13,6 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 @pytest.fixture
 def mock_ctrl():
     """Mock pyunifi."""
-    module = mock.MagicMock()
     with mock.patch('pyunifi.controller.Controller') as mock_control:
         yield mock_control
 
