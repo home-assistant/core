@@ -199,6 +199,8 @@ STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
+STATE_OK = 'ok'
+STATE_PROBLEM = 'problem'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
