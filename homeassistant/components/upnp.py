@@ -14,7 +14,7 @@ from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['miniupnpc==2.0']
+REQUIREMENTS = ['miniupnpc==1.9']
 
 _LOGGER = logging.getLogger(__name__)
 
