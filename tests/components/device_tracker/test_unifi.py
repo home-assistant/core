@@ -1,6 +1,6 @@
 """The tests for the Unifi WAP device tracker platform."""
 from unittest import mock
-import urllib
+from pyunifi.controller import APIError
 
 import pytest
 import voluptuous as vol
@@ -13,11 +13,8 @@ from homeassistant.const import (CONF_HOST, CONF_USERNAME, CONF_PASSWORD,
 @pytest.fixture
 def mock_ctrl():
     """Mock pyunifi."""
-    module = mock.MagicMock()
-    with mock.patch.dict('sys.modules', {
-        'pyunifi.controller': module.controller,
-    }):
-        yield module.controller.Controller
+    with mock.patch('pyunifi.controller.Controller') as mock_control:
+        yield mock_control
 
 
 @pytest.fixture
@@ -100,7 +97,7 @@ def test_config_controller_failed(hass, mock_ctrl, mock_scanner):
             CONF_PASSWORD: 'password',
         }
     }
-    mock_ctrl.side_effect = urllib.error.HTTPError(
+    mock_ctrl.side_effect = APIError(
         '/', 500, 'foo', {}, None)
     result = unifi.get_scanner(hass, config)
     assert result is False
@@ -122,7 +119,7 @@ def test_scanner_update():
 def test_scanner_update_error():
     """Test the scanner update for error."""
     ctrl = mock.MagicMock()
-    ctrl.get_clients.side_effect = urllib.error.HTTPError(
+    ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
     unifi.UnifiScanner(ctrl)
 
