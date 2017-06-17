@@ -292,7 +292,7 @@ class TestComponentsGroup(unittest.TestCase):
             ['light.Bowl', 'light.Ceiling', 'sensor.no_exist'])
 
         state = self.hass.states.get(test_group.entity_id)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         self.hass.states.set('light.Bowl', STATE_ON, {
             ATTR_ASSUMED_STATE: True
@@ -306,7 +306,7 @@ class TestComponentsGroup(unittest.TestCase):
         self.hass.block_till_done()
 
         state = self.hass.states.get(test_group.entity_id)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
     def test_group_updated_after_device_tracker_zone_change(self):
         """Test group state when device tracker in group changes zone."""
