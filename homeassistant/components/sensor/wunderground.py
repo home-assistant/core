@@ -666,7 +666,7 @@ class WUndergroundSensor(Entity):
         try:
             val = val(self.rest)
         except (KeyError, IndexError) as err:
-            _LOGGER.error("Failed to parse response from WU API: %s", err)
+            _LOGGER.warning("Failed to parse response from WU API: %s", err)
             val = default
         except TypeError:
             pass  # val was not callable - keep original value
@@ -692,6 +692,9 @@ class WUndergroundSensor(Entity):
                 attrs[attr] = callback(self.rest)
             except TypeError:
                 attrs[attr] = callback
+            except (KeyError, IndexError) as err:
+                _LOGGER.warning("Failed to parse response from WU API: %s",
+                                err)
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs[ATTR_FRIENDLY_NAME] = self._cfg_expand("friendly_name")
