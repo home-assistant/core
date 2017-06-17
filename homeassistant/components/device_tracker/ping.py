@@ -57,7 +57,7 @@ class Host(object):
     def update(self, see):
         """Update device state by sending one or more ping messages."""
         failed = 0
-        while failed < self._count:  # check more times if host in unreachable
+        while failed < self._count:  # check more times if host is unreachable
             if self.ping():
                 see(dev_id=self.dev_id, source_type=SOURCE_TYPE_ROUTER)
                 return True

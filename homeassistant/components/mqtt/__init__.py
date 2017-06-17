@@ -102,7 +102,7 @@ def valid_discovery_topic(value):
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
-                      'the mqtt broker config'
+                      'the MQTT broker configuration'
 
 MQTT_WILL_BIRTH_SCHEMA = vol.Schema({
     vol.Required(ATTR_TOPIC): valid_publish_topic,
@@ -126,9 +126,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Inclusive(CONF_CLIENT_CERT, 'client_key_auth',
                       msg=CLIENT_KEY_AUTH_MSG): cv.isfile,
         vol.Optional(CONF_TLS_INSECURE): cv.boolean,
-        vol.Optional(CONF_TLS_VERSION,
-                     default=DEFAULT_TLS_PROTOCOL): vol.Any('auto', '1.0',
-                                                            '1.1', '1.2'),
+        vol.Optional(CONF_TLS_VERSION, default=DEFAULT_TLS_PROTOCOL):
+            vol.Any('auto', '1.0', '1.1', '1.2'),
         vol.Optional(CONF_PROTOCOL, default=DEFAULT_PROTOCOL):
             vol.All(cv.string, vol.In([PROTOCOL_31, PROTOCOL_311])),
         vol.Optional(CONF_EMBEDDED): HBMQTT_CONFIG_SCHEMA,
@@ -237,9 +236,7 @@ def subscribe(hass, topic, msg_callback, qos=DEFAULT_QOS,
               encoding='utf-8'):
     """Subscribe to an MQTT topic."""
     async_remove = run_coroutine_threadsafe(
-        async_subscribe(hass, topic, msg_callback,
-                        qos, encoding),
-        hass.loop
+        async_subscribe(hass, topic, msg_callback, qos, encoding), hass.loop
     ).result()
 
     def remove():
@@ -649,7 +646,7 @@ def _match_topic(subscription, topic):
         if sub_part == "+":
             reg_ex_parts.append(r"([^\/]+)")
         else:
-            reg_ex_parts.append(sub_part)
+            reg_ex_parts.append(re.escape(sub_part))
 
     reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
 

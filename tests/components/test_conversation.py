@@ -117,3 +117,46 @@ class TestConversation(unittest.TestCase):
             conversation.DOMAIN, 'process', event_data, True))
         self.assertTrue(mock_logger.called)
         self.assertFalse(mock_call.called)
+
+
+class TestConfiguration(unittest.TestCase):
+    """Test the conversation configuration component."""
+
+    # pylint: disable=invalid-name
+    def setUp(self):
+        """Setup things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        self.assertTrue(setup_component(self.hass, conversation.DOMAIN, {
+            conversation.DOMAIN: {
+                'test_2': {
+                    'sentence': 'switch boolean',
+                    'action': {
+                        'service': 'input_boolean.toggle'
+                    }
+                }
+            }
+        }))
+
+    # pylint: disable=invalid-name
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
+
+    def test_custom(self):
+        """Setup and perform good turn on requests."""
+        calls = []
+
+        @callback
+        def record_call(service):
+            """Recorder for a call."""
+            calls.append(service)
+
+        self.hass.services.register('input_boolean', 'toggle', record_call)
+
+        event_data = {conversation.ATTR_TEXT: 'switch boolean'}
+        self.assertTrue(self.hass.services.call(
+            conversation.DOMAIN, 'process', event_data, True))
+
+        call = calls[-1]
+        self.assertEqual('input_boolean', call.domain)
+        self.assertEqual('toggle', call.service)
