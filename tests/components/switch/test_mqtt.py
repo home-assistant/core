@@ -35,7 +35,7 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
-        self.assertIsNone(state.attributes.get(ATTR_ASSUMED_STATE))
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', '1')
         self.hass.block_till_done()
