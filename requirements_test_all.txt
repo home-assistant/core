@@ -72,6 +72,7 @@ libsoundtouch==0.3.0
 mficlient==0.3.0
 
 # homeassistant.components.mqtt
+# homeassistant.components.shiftr
 paho-mqtt==1.2.3
 
 # homeassistant.components.device_tracker.aruba
