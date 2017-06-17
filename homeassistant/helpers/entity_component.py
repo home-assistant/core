@@ -1,6 +1,5 @@
 """Helpers for components that manage entities."""
 import asyncio
-from collections import OrderedDict
 from datetime import timedelta
 
 from homeassistant import config as conf_util
@@ -38,7 +37,7 @@ class EntityComponent(object):
         self.scan_interval = scan_interval
         self.group_name = group_name
 
-        self.entities = OrderedDict()
+        self.entities = {}
         self.config = None
 
         self._platforms = {
@@ -239,10 +238,12 @@ class EntityComponent(object):
         This method must be run in the event loop.
         """
         if self.group_name is not None:
+            ids = sorted(self.entities,
+                         key=lambda x: self.entities[x].name or x)
             group = get_component('group')
             group.async_set_group(
                 self.hass, slugify(self.group_name), name=self.group_name,
-                visible=False, entity_ids=self.entities
+                visible=False, entity_ids=ids
             )
 
     def reset(self):
@@ -264,7 +265,7 @@ class EntityComponent(object):
         self._platforms = {
             'core': self._platforms['core']
         }
-        self.entities = OrderedDict()
+        self.entities = {}
         self.config = None
 
         if self.group_name is not None:

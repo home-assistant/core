@@ -103,7 +103,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
         # Ordered in order of added to the group
         assert group.attributes.get('entity_id') == \
-            ('test_domain.unnamed_device', 'test_domain.goodbye')
+            ('test_domain.goodbye', 'test_domain.unnamed_device')
 
     def test_polling_only_updates_entities_it_should_poll(self):
         """Test the polling of only updated entities."""
