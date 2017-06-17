@@ -62,6 +62,7 @@ def async_setup(hass, config):
     @callback
     def handle_message(message):
         """Dispatch Velbus message on event bus."""
+        _LOGGER.debug("Velbus message received " + message.to_json())
         async_dispatcher_send(hass, VELBUS_MESSAGE, message)
 
     controller.subscribe(handle_message)
