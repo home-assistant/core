@@ -109,7 +109,7 @@ class TestComponentsCore(unittest.TestCase):
         state = self.hass.states.get('test.entity')
         assert state is not None
         assert state.state == 'unknown'
-        assert state.attributes == {"assumed_state": False}
+        assert state.attributes == {}
 
         files = {
             config.YAML_CONFIG_FILE: yaml.dump({
