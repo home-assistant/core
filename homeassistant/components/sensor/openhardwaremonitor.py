@@ -177,7 +177,7 @@ class OpenHardwareMonitorData(object):
                         self.devices.append(dev)
 
     def update_device(self, device):
-        """Update ."""
+        """Update device."""
         array = self._data[OHM_CHILDREN]
 
         attributes = {}
