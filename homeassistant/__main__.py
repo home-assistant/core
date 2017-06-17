@@ -31,48 +31,6 @@ def attempt_use_uvloop():
         pass
 
 
-def monkey_patch_asyncio():
-    """Replace weakref.WeakSet to address Python 3 bug.
-
-    Under heavy threading operations that schedule calls into
-    the asyncio event loop, Task objects are created. Due to
-    a bug in Python, GC may have an issue when switching between
-    the threads and objects with __del__ (which various components
-    in HASS have).
-
-    This monkey-patch removes the weakref.Weakset, and replaces it
-    with an object that ignores the only call utilizing it (the
-    Task.__init__ which calls _all_tasks.add(self)). It also removes
-    the __del__ which could trigger the future objects __del__ at
-    unpredictable times.
-
-    The side-effect of this manipulation of the Task is that
-    Task.all_tasks() is no longer accurate, and there will be no
-    warning emitted if a Task is GC'd while in use.
-
-    On Python 3.6, after the bug is fixed, this monkey-patch can be
-    disabled.
-
-    See https://bugs.python.org/issue26617 for details of the Python
-    bug.
-    """
-    # pylint: disable=no-self-use, protected-access, bare-except
-    import asyncio.tasks
-
-    class IgnoreCalls:
-        """Ignore add calls."""
-
-        def add(self, other):
-            """No-op add."""
-            return
-
-    asyncio.tasks.Task._all_tasks = IgnoreCalls()
-    try:
-        del asyncio.tasks.Task.__del__
-    except:
-        pass
-
-
 def validate_python() -> None:
     """Validate that the right Python version is running."""
     if sys.platform == "win32" and \
@@ -374,17 +332,12 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    if os.environ.get('HASS_MONKEYPATCH_ASYNCIO') == '1':
-        if sys.version_info[:3] >= (3, 6):
+    if os.environ.get('HASS_NO_MONKEY') != '1':
+        if sys.version_info[:2] >= (3, 6):
             monkey_patch.disable_c_asyncio()
-        monkey_patch.patch_weakref_tasks()
-    elif sys.version_info[:3] < (3, 5, 3):
         monkey_patch.patch_weakref_tasks()
 
     attempt_use_uvloop()
-
-    if sys.version_info[:3] < (3, 5, 3):
-        monkey_patch_asyncio()
 
     args = get_arguments()
 
