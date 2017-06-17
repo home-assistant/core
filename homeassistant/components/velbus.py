@@ -44,12 +44,9 @@ def async_setup(hass, config):
     import velbus
     conf = config.get(DOMAIN)[0]
     device = conf.get('serial_port')
-    try:
-        connection = velbus.VelbusUSBConnection(device)
-        controller = velbus.Controller(connection)
-        hass.data['VelbusController'] = controller
-    except Exception as exc:
-        _LOGGER.error("Error setting up Velbus Controller " + str(exc))
+    connection = velbus.VelbusUSBConnection(device)
+    controller = velbus.Controller(connection)
+    hass.data['VelbusController'] = controller
 
     @callback
     def stop_velbus(event):
