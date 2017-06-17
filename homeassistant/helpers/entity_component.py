@@ -238,7 +238,8 @@ class EntityComponent(object):
         This method must be run in the event loop.
         """
         if self.group_name is not None:
-            ids = sorted(self.entities, key=lambda x: self.entities[x].name)
+            ids = sorted(self.entities,
+                         key=lambda x: self.entities[x].name or x)
             group = get_component('group')
             group.async_set_group(
                 self.hass, slugify(self.group_name), name=self.group_name,
