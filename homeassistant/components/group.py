@@ -14,7 +14,8 @@ from homeassistant import config as conf_util, core as ha
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_ICON, CONF_NAME, STATE_CLOSED, STATE_HOME,
     STATE_NOT_HOME, STATE_OFF, STATE_ON, STATE_OPEN, STATE_LOCKED,
-    STATE_UNLOCKED, STATE_UNKNOWN, ATTR_ASSUMED_STATE, SERVICE_RELOAD)
+    STATE_UNLOCKED, STATE_OK, STATE_PROBLEM, STATE_UNKNOWN,
+    ATTR_ASSUMED_STATE, SERVICE_RELOAD)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
@@ -94,7 +95,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 # List of ON/OFF state tuples for groupable states
 _GROUP_TYPES = [(STATE_ON, STATE_OFF), (STATE_HOME, STATE_NOT_HOME),
-                (STATE_OPEN, STATE_CLOSED), (STATE_LOCKED, STATE_UNLOCKED)]
+                (STATE_OPEN, STATE_CLOSED), (STATE_LOCKED, STATE_UNLOCKED),
+                (STATE_PROBLEM, STATE_OK)]
 
 
 def _get_group_on_off(state):
