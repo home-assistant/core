@@ -875,7 +875,7 @@ twilio==5.7.0
 uber_rides==0.4.1
 
 # homeassistant.components.sensor.ups
-upsmychoice==1.0.4
+upsmychoice==1.0.6
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.0
