@@ -58,7 +58,7 @@ class TestUPCConnect(object):
             content=b'successful'
         )
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'upc_connect',
@@ -84,7 +84,7 @@ class TestUPCConnect(object):
             status=404
         )
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'upc_connect',
@@ -114,7 +114,7 @@ class TestUPCConnect(object):
             exc=asyncio.TimeoutError()
         )
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'upc_connect',
@@ -143,7 +143,7 @@ class TestUPCConnect(object):
             content=b'successful',
         )
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'upc_connect',

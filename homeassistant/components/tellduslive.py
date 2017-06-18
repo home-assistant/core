@@ -126,7 +126,7 @@ class TelldusLiveClient(object):
             discovery.load_platform(
                 self._hass, component, DOMAIN, [device_id], self._config)
 
-        known_ids = set([entity.device_id for entity in self.entities])
+        known_ids = {entity.device_id for entity in self.entities}
         for device in self._client.devices:
             if device.device_id in known_ids:
                 continue

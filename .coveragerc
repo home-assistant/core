@@ -50,9 +50,6 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
-    homeassistant/components/insteon_hub.py
-    homeassistant/components/*/insteon_hub.py
-
     homeassistant/components/insteon_local.py
     homeassistant/components/*/insteon_local.py
 
@@ -76,6 +73,9 @@ omit =
 
     homeassistant/components/lutron_caseta.py
     homeassistant/components/*/lutron_caseta.py
+
+    homeassistant/components/mailgun.py
+    homeassistant/components/*/mailgun.py
 
     homeassistant/components/modbus.py
     homeassistant/components/*/modbus.py
@@ -208,8 +208,10 @@ omit =
     homeassistant/components/camera/foscam.py
     homeassistant/components/camera/mjpeg.py
     homeassistant/components/camera/rpi_camera.py
+    homeassistant/components/camera/onvif.py
     homeassistant/components/camera/synology.py
     homeassistant/components/climate/eq3btsmart.py
+    homeassistant/components/climate/flexit.py
     homeassistant/components/climate/heatmiser.py
     homeassistant/components/climate/homematic.py
     homeassistant/components/climate/knx.py
@@ -347,7 +349,6 @@ omit =
     homeassistant/components/notify/kodi.py
     homeassistant/components/notify/lannouncer.py
     homeassistant/components/notify/llamalab_automate.py
-    homeassistant/components/notify/mailgun.py
     homeassistant/components/notify/matrix.py
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/nfandroidtv.py
@@ -407,6 +408,7 @@ omit =
     homeassistant/components/sensor/fixer.py
     homeassistant/components/sensor/fritzbox_callmonitor.py
     homeassistant/components/sensor/fritzbox_netmonitor.py
+    homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
     homeassistant/components/sensor/gpsd.py
@@ -475,6 +477,7 @@ omit =
     homeassistant/components/sensor/xbox_live.py
     homeassistant/components/sensor/yweather.py
     homeassistant/components/sensor/zamg.py
+    homeassistant/components/shiftr.py
     homeassistant/components/spc.py
     homeassistant/components/switch/acer_projector.py
     homeassistant/components/switch/anel_pwrctrl.py

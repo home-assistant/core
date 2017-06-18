@@ -79,7 +79,7 @@ class TelegramPoll(BaseTelegramBotEntity):
     def get_updates(self, offset):
         """Bypass the default long polling method to enable asyncio."""
         resp = None
-        _json = []  # The actual value to be returned.
+        _json = {'result': [], 'ok': True}  # Empty result.
 
         if offset:
             self.post_data['offset'] = offset
@@ -89,9 +89,11 @@ class TelegramPoll(BaseTelegramBotEntity):
                     self.update_url, data=self.post_data,
                     headers={'connection': 'keep-alive'}
                 )
-            if resp.status != 200:
+            if resp.status == 200:
+                _json = yield from resp.json()
+            else:
                 _LOGGER.error("Error %s on %s", resp.status, self.update_url)
-            _json = yield from resp.json()
+
         except ValueError:
             _LOGGER.error("Error parsing Json message")
         except (asyncio.TimeoutError, ClientError):
@@ -106,9 +108,13 @@ class TelegramPoll(BaseTelegramBotEntity):
     def handle(self):
         """Receiving and processing incoming messages."""
         _updates = yield from self.get_updates(self.update_id)
-        for update in _updates['result']:
-            self.update_id = update['update_id'] + 1
-            self.process_message(update)
+        _updates = _updates.get('result')
+        if _updates is None:
+            _LOGGER.error("Incorrect result received.")
+        else:
+            for update in _updates:
+                self.update_id = update['update_id'] + 1
+                self.process_message(update)
 
     @asyncio.coroutine
     def check_incoming(self):

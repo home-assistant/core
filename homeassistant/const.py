@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 47
+MINOR_VERSION = 48
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -142,6 +142,7 @@ CONF_SENDER = 'sender'
 CONF_SENSOR_CLASS = 'sensor_class'
 CONF_SENSOR_TYPE = 'sensor_type'
 CONF_SENSORS = 'sensors'
+CONF_SLAVE = 'slave'
 CONF_SSL = 'ssl'
 CONF_STATE = 'state'
 CONF_STRUCTURE = 'structure'
@@ -198,6 +199,8 @@ STATE_ALARM_TRIGGERED = 'triggered'
 STATE_LOCKED = 'locked'
 STATE_UNLOCKED = 'unlocked'
 STATE_UNAVAILABLE = 'unavailable'
+STATE_OK = 'ok'
+STATE_PROBLEM = 'problem'
 
 # #### STATE AND EVENT ATTRIBUTES ####
 # Attribution
