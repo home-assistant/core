@@ -74,6 +74,19 @@ def test_correct_config_discovery(hass, mqtt_mock, caplog):
     assert state is not None
     assert state.name == 'Beer'
 
+@asyncio.coroutine
+def test_correct_config_discovery_incl_nodeid(hass, mqtt_mock, caplog):
+    """Test sending in correct JSON with optional node_id included."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/my_node_id/bla'
+                            '/config', '{ "name": "Beer" }')
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('binary_sensor.beer')
+
+    assert state is not None
+    assert state.name == 'Beer'
 
 @asyncio.coroutine
 def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
