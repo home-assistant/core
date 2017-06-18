@@ -149,8 +149,7 @@ class TestInfluxDB(unittest.TestCase):
                         'temperature': 20.0,
                         'last_seen_str': 'Last seen 23 minutes ago',
                         'updated_at_str': '2017-01-01 00:00:00',
-                        'multi_periods_str': '0.120.240.2023873',
-                        'multi_periods': 0.1202402023873
+                        'multi_periods_str': '0.120.240.2023873'
                     },
                 }]
 
@@ -172,8 +171,7 @@ class TestInfluxDB(unittest.TestCase):
                         'temperature': 20.0,
                         'last_seen_str': 'Last seen 23 minutes ago',
                         'updated_at_str': '2017-01-01 00:00:00',
-                        'multi_periods_str': '0.120.240.2023873',
-                        'multi_periods': 0.1202402023873
+                        'multi_periods_str': '0.120.240.2023873'
                     },
                 }]
             self.handler_method(event)
