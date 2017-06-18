@@ -1,6 +1,5 @@
 """
-Platform to control the ventilation mode of a Zehnder ComfoAir Q350/450/600
-ventilation unit.
+Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan.comfoconnect/
@@ -28,10 +27,7 @@ SPEED_MAPPING = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ComfoConnect fan platform.
-    :type hass: homeassistant.core.HomeAssistant
-    """
-
+    """Setup the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
     add_devices([
@@ -54,7 +50,6 @@ class ComfoConnectFan(FanEntity):
             SENSOR_FAN_SPEED_MODE
         )
 
-        self.hass = hass
         self._ccb = ccb
         self._name = name
 
@@ -63,12 +58,12 @@ class ComfoConnectFan(FanEntity):
 
         def _handle_update(var):
             if var == SENSOR_FAN_SPEED_MODE:
-                _LOGGER.debug('Dispatcher update for %s' % var)
+                _LOGGER.debug('Dispatcher update for %s.' % var)
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates
         dispatcher_connect(
-            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
+            hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
 
     @property
     def name(self):

@@ -1,5 +1,5 @@
 """
-Support for Zehnder ComfoConnect bridges.
+Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/comfoconnect/
@@ -56,9 +56,7 @@ DEVICE = None
 
 
 def setup(hass, config):
-    """Setup the ComfoConnect bridge.
-    :type hass: homeassistant.core.HomeAssistant
-    """
+    """Setup the ComfoConnect bridge."""
     from pycomfoconnect import (Bridge)
 
     conf = config[DOMAIN]
@@ -100,7 +98,6 @@ class ComfoConnectBridge(object):
 
     def __init__(self, hass, bridge, name, token, friendly_name, pin):
         """Initialize the ComfoConnect bridge."""
-
         from pycomfoconnect import (ComfoConnect)
 
         self.data = {}
@@ -115,19 +112,16 @@ class ComfoConnectBridge(object):
 
     def connect(self):
         """Connect with the bridge."""
-
         _LOGGER.debug('Connecting with bridge.')
         self.comfoconnect.connect(True)
 
     def disconnect(self):
         """Disconnect from the bridge."""
-
         _LOGGER.debug('Disconnecting from bridge.')
         self.comfoconnect.disconnect()
 
     def sensor_callback(self, var, value):
         """Callback function for sensor updates."""
-
         _LOGGER.debug('Got value from bridge: %d = %d', var, value)
 
         from pycomfoconnect import (
@@ -143,5 +137,4 @@ class ComfoConnectBridge(object):
 
     def subscribe_sensor(self, sensor_id):
         """Subscribe for the specified sensor."""
-
         self.comfoconnect.register_sensor(sensor_id)

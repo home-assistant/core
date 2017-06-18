@@ -1,5 +1,5 @@
 """
-Support for Zehnder ComfoConnect bridges.
+Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.comfoconnect/
@@ -24,10 +24,7 @@ SENSOR_TYPES = {}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ComfoConnect fan platform.
-    :type hass: homeassistant.core.HomeAssistant
-    """
-
+    """Setup the ComfoConnect fan platform."""
     from pycomfoconnect import (
         SENSOR_TEMPERATURE_EXTRACT, SENSOR_HUMIDITY_EXTRACT,
         SENSOR_TEMPERATURE_OUTDOOR, SENSOR_HUMIDITY_OUTDOOR,
@@ -103,7 +100,6 @@ class ComfoConnectSensor(Entity):
 
     def __init__(self, hass, name, ccb: ComfoConnectBridge, sensor_type):
         """Initialize the ComfoConnect sensor."""
-        self.hass = hass
         self._ccb = ccb
         self._sensor_type = sensor_type
         self._sensor_id = SENSOR_TYPES[self._sensor_type][3]
@@ -114,15 +110,16 @@ class ComfoConnectSensor(Entity):
 
         def _handle_update(var):
             if var == self._sensor_id:
-                _LOGGER.debug('Dispatcher update for %s' % var)
+                _LOGGER.debug('Dispatcher update for %s.' % var)
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates
         dispatcher_connect(
-            self.hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
+            hass, SIGNAL_COMFOCONNECT_UPDATE_RECEIVED, _handle_update)
 
     @property
     def state(self):
+        """Return the state of the entity."""
         try:
             return self._ccb.data[self._sensor_id]
         except KeyError:
