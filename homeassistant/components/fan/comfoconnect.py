@@ -58,7 +58,7 @@ class ComfoConnectFan(FanEntity):
 
         def _handle_update(var):
             if var == SENSOR_FAN_SPEED_MODE:
-                _LOGGER.debug('Dispatcher update for %s.' % var)
+                _LOGGER.debug('Dispatcher update for %s.', var)
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates
@@ -96,7 +96,7 @@ class ComfoConnectFan(FanEntity):
         """List of available fan modes."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str=None, **kwargs) -> None:
         """Turn on the fan."""
         if speed is None:
             speed = SPEED_LOW
@@ -108,7 +108,7 @@ class ComfoConnectFan(FanEntity):
 
     def set_speed(self, mode):
         """Set fan speed."""
-        _LOGGER.debug('Changing fan mode to %s.' % mode)
+        _LOGGER.debug('Changing fan mode to %s.', mode)
 
         from pycomfoconnect import (
             CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,
