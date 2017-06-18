@@ -1,5 +1,6 @@
 """The tests for the InfluxDB component."""
 import unittest
+import datetime
 from unittest import mock
 
 import influxdb as influx_client
@@ -123,7 +124,8 @@ class TestInfluxDB(unittest.TestCase):
                 'latitude': '2.2',
                 'battery_level': '99%',
                 'temperature': '20c',
-                'last_seen': 'Last seen 23 minutes ago'
+                'last_seen': 'Last seen 23 minutes ago',
+                'updated_at': datetime.datetime(2017, 1, 1, 0, 0)
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', object_id='entity', attributes=attrs)
@@ -144,7 +146,8 @@ class TestInfluxDB(unittest.TestCase):
                         'battery_level': 99.0,
                         'temperature_str': '20c',
                         'temperature': 20.0,
-                        'last_seen_str': 'Last seen 23 minutes ago'
+                        'last_seen_str': 'Last seen 23 minutes ago',
+                        'updated_at_str': '2017-01-01 00:00:00'
                     },
                 }]
 
@@ -164,7 +167,8 @@ class TestInfluxDB(unittest.TestCase):
                         'battery_level': 99.0,
                         'temperature_str': '20c',
                         'temperature': 20.0,
-                        'last_seen_str': 'Last seen 23 minutes ago'
+                        'last_seen_str': 'Last seen 23 minutes ago',
+                        'updated_at_str': '2017-01-01 00:00:00' 
                     },
                 }]
             self.handler_method(event)
