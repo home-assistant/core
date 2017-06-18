@@ -749,7 +749,7 @@ pyunifi==2.13
 pyvera==0.2.33
 
 # homeassistant.components.notify.html5
-pywebpush==1.0.4
+pywebpush==1.0.5
 
 # homeassistant.components.wemo
 pywemo==0.4.19
