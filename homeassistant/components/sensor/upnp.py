@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-""" sensor_type: [friendly_name, convert_unit, icon] """
+# sensor_type: [friendly_name, convert_unit, icon]
 SENSOR_TYPES = {
     'byte_received': ['received bytes', True, 'mdi:server-network'],
     'byte_sent': ['sent bytes', True, 'mdi:server-network'],
@@ -21,8 +21,7 @@ SENSOR_TYPES = {
 }
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the IGD sensors."""
     upnp = hass.data[DATA_UPNP]
     unit = discovery_info['unit']
@@ -65,8 +64,7 @@ class IGDSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self.unit
 
-    @asyncio.coroutine
-    def async_update(self):
+    def update(self):
         """Get the latest information from the IGD."""
         if self.type == "byte_received":
             self._state = self._upnp.totalbytereceived()
