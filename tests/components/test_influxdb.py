@@ -125,7 +125,8 @@ class TestInfluxDB(unittest.TestCase):
                 'battery_level': '99%',
                 'temperature': '20c',
                 'last_seen': 'Last seen 23 minutes ago',
-                'updated_at': datetime.datetime(2017, 1, 1, 0, 0)
+                'updated_at': datetime.datetime(2017, 1, 1, 0, 0),
+                'multi_periods': '0.120.240.2023873'
             }
             state = mock.MagicMock(
                 state=in_, domain='fake', object_id='entity', attributes=attrs)
@@ -147,7 +148,9 @@ class TestInfluxDB(unittest.TestCase):
                         'temperature_str': '20c',
                         'temperature': 20.0,
                         'last_seen_str': 'Last seen 23 minutes ago',
-                        'updated_at_str': '2017-01-01 00:00:00'
+                        'updated_at_str': '2017-01-01 00:00:00',
+                        'multi_periods_str': '0.120.240.2023873',
+                        'multi_periods': 0.1202402023873
                     },
                 }]
 
@@ -168,7 +171,9 @@ class TestInfluxDB(unittest.TestCase):
                         'temperature_str': '20c',
                         'temperature': 20.0,
                         'last_seen_str': 'Last seen 23 minutes ago',
-                        'updated_at_str': '2017-01-01 00:00:00'
+                        'updated_at_str': '2017-01-01 00:00:00',
+                        'multi_periods_str': '0.120.240.2023873',
+                        'multi_periods': 0.1202402023873
                     },
                 }]
             self.handler_method(event)

@@ -107,6 +107,10 @@ def setup(hass, config):
                       "the database exists and is READ/WRITE.", exc)
         return False
 
+    def decreplace(matchobj):
+        """Convert values such as 1.2.3.4 to 1.234 for Influx"""
+        return matchobj.group(1) + re.sub(r'\.', '', matchobj.group(2))
+
     def influx_event_listener(event):
         """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
@@ -170,8 +174,12 @@ def setup(hass, config):
                     if non_digit_tail.match(
                             json_body[0]['fields'][new_key]) and not isinstance(
                                 value, datetime.datetime):
-                        json_body[0]['fields'][key] = float(
-                            non_decimal.sub('', value))
+                        try:
+                            json_body[0]['fields'][key] = float(
+                                non_decimal.sub('', value))
+                        except (ValueError, TypeError):
+                            json_body[0]['fields'][key] = float(
+                                re.sub(r'^([^.]*\.)(.*)$', decreplace, value))
 
         json_body[0]['tags'].update(tags)
 
