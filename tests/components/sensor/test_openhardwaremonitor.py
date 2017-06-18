@@ -47,5 +47,6 @@ class TestOpenHardwareMonitorSetup(unittest.TestCase):
             self.hass, self.config, self.add_entities)
         self.assertEqual(len(self.entities), 38)
         self.assertEqual(self.entities[0].name,
-                         "TEST-PC_Intel Core i7-7700_Clocks_Bus Speed")
+                         "TEST-PC_Intel_Core_i7-7700_Clocks_Bus_Speed")
         self.assertEqual(self.entities[0].state, '100')
+        self.assertEqual(self.entities[0].unit_of_measurement, 'MHz')
