@@ -4,7 +4,6 @@ Support for UPnP Sensors (IGD).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.upnp/
 """
-import asyncio
 import logging
 
 from homeassistant.components.upnp import DATA_UPNP, UNITS
