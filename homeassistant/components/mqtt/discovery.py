@@ -17,8 +17,8 @@ from homeassistant.components.mqtt import CONF_STATE_TOPIC
 _LOGGER = logging.getLogger(__name__)
 
 TOPIC_MATCHER = re.compile(
-    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?P<object_id>[a-zA-Z0-9_-]+)'
-    '/config')
+    r'(?P<prefix_topic>\w+)/(?P<component>\w+)/(?:(?P<node_id>\w+)/)?'
+    r'(?P<object_id>[\w-]+)/config')
 
 SUPPORTED_COMPONENTS = ['binary_sensor', 'light', 'sensor', 'switch']
 
@@ -44,7 +44,7 @@ def async_start(hass, discovery_topic, hass_config):
         if not match:
             return
 
-        prefix_topic, component, object_id = match.groups()
+        prefix_topic, component, node_id, object_id = match.groups()
 
         try:
             payload = json.loads(payload)
@@ -65,8 +65,9 @@ def async_start(hass, discovery_topic, hass_config):
 
         payload[CONF_PLATFORM] = platform
         if CONF_STATE_TOPIC not in payload:
-            payload[CONF_STATE_TOPIC] = '{}/{}/{}/state'.format(
-                discovery_topic, component, object_id)
+            payload[CONF_STATE_TOPIC] = '{}/{}/{}{}/state'.format(
+                discovery_topic, component, '%s/' % node_id if node_id else '',
+                object_id)
 
         if ALREADY_DISCOVERED not in hass.data:
             hass.data[ALREADY_DISCOVERED] = set()
