@@ -167,8 +167,9 @@ def setup(hass, config):
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
                     json_body[0]['fields'][new_key] = str(value)
-                    if non_digit_tail.match(json_body[0]['fields'][new_key]) and not isinstance(
-                            value, datetime.datetime):
+                    if non_digit_tail.match(
+                            json_body[0]['fields'][new_key]) and not isinstance(
+                                value, datetime.datetime):
                         json_body[0]['fields'][key] = float(
                             non_decimal.sub('', value))
 
