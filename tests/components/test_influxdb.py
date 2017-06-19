@@ -175,7 +175,8 @@ class TestInfluxDB(unittest.TestCase):
                         'last_seen': 23.0,
                         'updated_at_str': '2017-01-01 00:00:00',
                         'updated_at': 20170101000000,
-                        'multi_periods_str': '0.120.240.2023873'                    },
+                        'multi_periods_str': '0.120.240.2023873'
+                    },
                 }]
             self.handler_method(event)
             self.assertEqual(
