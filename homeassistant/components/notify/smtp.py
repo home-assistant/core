@@ -98,7 +98,7 @@ class MailNotificationService(BaseNotificationService):
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        if self.encryption == "ssltls":
+        if self.encryption == "tls":
             mail = smtplib.SMTP_SSL(
                 self._server, self._port, timeout=self._timeout)
         else:
