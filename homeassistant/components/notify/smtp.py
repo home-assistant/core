@@ -38,7 +38,9 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 465
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
-DEFAULT_ENCRYPTION = 'ssltls'
+DEFAULT_ENCRYPTION = 'tls'
+
+ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -47,7 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION): vol.In(['ssltls','starttls','none']),
+    vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION):
+        vol.In(ENCRYPTION_OPTIONS),
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SENDER_NAME): cv.string,
@@ -96,9 +99,11 @@ class MailNotificationService(BaseNotificationService):
     def connect(self):
         """Connect/authenticate to SMTP Server."""
         if self.encryption == "ssltls":
-            mail = smtplib.SMTP_SSL(self._server, self._port, timeout=self._timeout)
+            mail = smtplib.SMTP_SSL(
+                self._server, self._port, timeout=self._timeout)
         else:
-            mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
+            mail = smtplib.SMTP(
+                self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.encryption == "starttls":
