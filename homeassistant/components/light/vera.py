@@ -80,6 +80,7 @@ class VeraLight(VeraDevice, Light):
         """Call to update state."""
         self._state = self.vera_device.is_switched_on()
         if self.vera_device.is_dimmable:
+            # If it is dimmable, both functions exist. In case color
+            # is not supported, it will return None
             self._brightness = self.vera_device.get_brightness()
-        if self._color:
             self._color = self.vera_device.get_color()
