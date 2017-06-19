@@ -58,7 +58,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-RE_DIGIT_TAIL = re.compile(r'^\w*\d+\.?\d+\w*$')
+RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
 RE_DECIMAL = re.compile(r'[^\d.]+')
 
 
