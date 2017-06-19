@@ -79,5 +79,7 @@ class VeraLight(VeraDevice, Light):
     def update(self):
         """Call to update state."""
         self._state = self.vera_device.is_switched_on()
-        self._brightness = self.vera_device.get_brightness()
-        self._color = self.vera_device.get_color()
+        if self.vera_device.is_dimmable:
+            self._brightness = self.vera_device.get_brightness()
+        if self._color:
+            self._color = self.vera_device.get_color()
