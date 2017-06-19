@@ -61,6 +61,7 @@ CONFIG_SCHEMA = vol.Schema({
 RE_DIGIT_TAIL = re.compile(r'^\w*\d+\.?\d+\w*$')
 RE_DECIMAL = re.compile(r'[^\d.]+')
 
+
 def setup(hass, config):
     """Set up the InfluxDB component."""
     from influxdb import InfluxDBClient, exceptions
