@@ -53,13 +53,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[CONF_DEVICE_CACHE] = []
 
     if discovery_info:
-        override = next(c for c in hass.data[CONF_DEVICE_CACHE]
-                        if c.get(CONF_NAME) == discovery_info.get(CONF_NAME))
+        # Find the discovered device in the list of user configurations
+        override = next((c for c in hass.data[CONF_DEVICE_CACHE]
+                        if c.get(CONF_NAME) == discovery_info.get(CONF_NAME)),
+                        False)
 
         port = DEFAULT_PORT
         if override:
             activity = override.get(ATTR_ACTIVITY)
             port = override.get(CONF_PORT, DEFAULT_PORT)
+
         host = (
             discovery_info.get(CONF_NAME),
             discovery_info.get(CONF_HOST),
