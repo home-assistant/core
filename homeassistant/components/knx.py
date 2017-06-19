@@ -213,9 +213,6 @@ class KNXMultiAddressDevice(Entity):
     to be controlled by multiple group addresses.
     """
 
-    names = {}
-    values = {}
-
     def __init__(self, hass, config, required, optional=None):
         """Initialize the device.
 
@@ -226,28 +223,34 @@ class KNXMultiAddressDevice(Entity):
         """
         from knxip.core import parse_group_address, KNXException
 
+        self.names = {}
+        self.values = {}
+
         self._config = config
         self._state = False
         self._data = None
         _LOGGER.debug("Initalizing KNX multi address device")
 
+        settings = self._config.config
         # parse required addresses
         for name in required:
             _LOGGER.info(name)
             paramname = '{}{}'.format(name, '_address')
-            addr = self._config.config.get(paramname)
+            addr = settings.get(paramname)
             if addr is None:
                 _LOGGER.exception(
                     "Required KNX group address %s missing", paramname)
                 raise KNXException(
                     "Group address for %s missing in configuration", paramname)
+            _LOGGER.debug("%s: %s=%s", settings.get('name'), paramname, addr)
             addr = parse_group_address(addr)
             self.names[addr] = name
 
         # parse optional addresses
         for name in optional:
             paramname = '{}{}'.format(name, '_address')
-            addr = self._config.config.get(paramname)
+            addr = settings.get(paramname)
+            _LOGGER.debug("%s: %s=%s", settings.get('name'), paramname, addr)
             if addr:
                 try:
                     addr = parse_group_address(addr)
@@ -284,6 +287,48 @@ class KNXMultiAddressDevice(Entity):
             if attributename == name:
                 return True
         return False
+
+    def set_percentage(self, name, percentage):
+        """Set a percentage in knx for a given attribute.
+
+        DPT_Scaling / DPT 5.001 is a single byte scaled percentage
+        """
+        percentage = abs(percentage)  # only accept positive values
+        scaled_value = percentage * 255 / 100
+        value = min(255, scaled_value)
+        self.set_int_value(name, value)
+
+    def get_percentage(self, name):
+        """Get a percentage from knx for a given attribute.
+
+        DPT_Scaling / DPT 5.001 is a single byte scaled percentage
+        """
+        value = self.get_int_value(name)
+        percentage = round(value * 100 / 255)
+        return percentage
+
+    def set_int_value(self, name, value, num_bytes=1):
+        """Set an integer value for a given attribute."""
+        # KNX packets are big endian
+        value = round(value)      # only accept integers
+        b_value = value.to_bytes(num_bytes, byteorder='big')
+        self.set_value(name, list(b_value))
+
+    def get_int_value(self, name):
+        """Get an integer value for a given attribute."""
+        # KNX packets are big endian
+        summed_value = 0
+        raw_value = self.value(name)
+        try:
+            # convert raw value in bytes
+            for val in raw_value:
+                summed_value *= 256
+                summed_value += val
+        except TypeError:
+            # pknx returns a non-iterable type for unsuccessful reads
+            pass
+
+        return summed_value
 
     def value(self, name):
         """Return the value to a given named attribute."""
