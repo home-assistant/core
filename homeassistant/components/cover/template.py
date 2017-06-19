@@ -328,7 +328,8 @@ class CoverTemplate(CoverDevice):
                 state = float(self._tilt_template.async_render())
                 if state < 0 or state > 100:
                     self._tilt_value = None
-                    _LOGGER.error("Tilt value must be between 0 and 100.  Value was: %.2f", state)
+                    _LOGGER.error("Tilt value must be between 0 and 100."
+                                  " Value was: %.2f", state)
                 else:
                     self._tilt_value = state
             except TemplateError as ex:
