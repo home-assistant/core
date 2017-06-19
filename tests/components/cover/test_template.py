@@ -5,7 +5,7 @@ import unittest
 
 from homeassistant.core import callback
 from homeassistant import setup
-import homeassistant.components as core
+import homeassistant.components.cover as cover
 from homeassistant.const import STATE_OPEN, STATE_CLOSED
 
 from tests.common import (
@@ -77,6 +77,7 @@ class TestTemplateCover(unittest.TestCase):
 
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_CLOSED
+
     def test_template_state_boolean(self):
         """"Test the state text of a template."""
         with assert_setup_component(1, 'cover'):
@@ -349,7 +350,7 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_CLOSED
 
-        core.cover.open_cover(self.hass, 'cover.test_template_cover')
+        cover.open_cover(self.hass, 'cover.test_template_cover')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -385,10 +386,10 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN
 
-        core.cover.close_cover(self.hass, 'cover.test_template_cover')
+        cover.close_cover(self.hass, 'cover.test_template_cover')
         self.hass.block_till_done()
 
-        core.cover.stop_cover(self.hass, 'cover.test_template_cover')
+        cover.stop_cover(self.hass, 'cover.test_template_cover')
         self.hass.block_till_done()
 
         assert len(self.calls) == 2
@@ -429,7 +430,8 @@ class TestTemplateCover(unittest.TestCase):
         state = self.hass.states.get('cover.test_template_cover')
         assert state.state == STATE_OPEN
 
-        core.cover.set_cover_position(self.hass, 42, 'cover.test_template_cover')
+        cover.set_cover_position(self.hass, 42,
+                                 'cover.test_template_cover')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -467,7 +469,8 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        core.cover.set_cover_tilt_position(self.hass, 42, 'cover.test_template_cover')
+        cover.set_cover_tilt_position(self.hass, 42,
+                                      'cover.test_template_cover')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -505,7 +508,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        core.cover.open_cover_tilt(self.hass, 'cover.test_template_cover')
+        cover.open_cover_tilt(self.hass, 'cover.test_template_cover')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1
@@ -543,7 +546,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.start()
         self.hass.block_till_done()
 
-        core.cover.close_cover_tilt(self.hass, 'cover.test_template_cover')
+        cover.close_cover_tilt(self.hass, 'cover.test_template_cover')
         self.hass.block_till_done()
 
         assert len(self.calls) == 1

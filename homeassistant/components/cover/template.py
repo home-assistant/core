@@ -80,9 +80,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tilt_action = device_config.get(TILT_ACTION)
 
         if ((position_template is None and state_template is None) or
-                (position_template is not None and state_template is not None)):
+                (position_template is not None and
+                 state_template is not None)):
             _LOGGER.error('Must specify only one of: %s',
-                          ', '.join([CONF_VALUE_TEMPLATE, CONF_VALUE_TEMPLATE]))
+                          ', '.join([CONF_VALUE_TEMPLATE,
+                                     CONF_VALUE_TEMPLATE]))
             continue
 
         template_entity_ids = set()
@@ -166,6 +168,7 @@ class CoverTemplate(CoverDevice):
             self._tilt_template.hass = self.hass
         if self._icon_template is not None:
             self._icon_template.hass = self.hass
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
@@ -292,7 +295,10 @@ class CoverTemplate(CoverDevice):
             try:
                 state = self._template.async_render().lower()
                 if state in _VALID_STATES:
-                    self._position = 100 if state in ('true', STATE_OPEN) else 0
+                    if state in ('true', STATE_OPEN):
+                        self._position = 100
+                    else:
+                        self._position = 0
                 else:
                     _LOGGER.error(
                         'Received invalid cover is_on state: %s. Expected: %s',
@@ -306,7 +312,8 @@ class CoverTemplate(CoverDevice):
                 state = float(self._position_template.async_render())
                 if state < 0 or state > 100:
                     self._position = None
-                    _LOGGER.error("Cover position value must be between 0 and 100."
+                    _LOGGER.error("Cover position value must be"
+                                  " between 0 and 100."
                                   " Value was: %.2f", state)
                 else:
                     self._position = state
