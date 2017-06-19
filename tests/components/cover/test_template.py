@@ -1,18 +1,15 @@
 """The tests the cover command line platform."""
 
 import logging
-import asyncio
 import unittest
-from unittest import mock
 
-from homeassistant.core import callback, State, CoreState
+from homeassistant.core import callback
 from homeassistant import setup
 import homeassistant.components as core
-from homeassistant.const import STATE_ON, STATE_OFF, STATE_OPEN, STATE_CLOSED
-from homeassistant.helpers.restore_state import DATA_RESTORE_CACHE
+from homeassistant.const import STATE_OPEN, STATE_CLOSED
 
 from tests.common import (
-    get_test_home_assistant, assert_setup_component, mock_component)
+    get_test_home_assistant, assert_setup_component)
 _LOGGER = logging.getLogger(__name__)
 
 

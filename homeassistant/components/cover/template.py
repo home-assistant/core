@@ -306,7 +306,8 @@ class CoverTemplate(CoverDevice):
                 state = float(self._position_template.async_render())
                 if state < 0 or state > 100:
                     self._position = None
-                    _LOGGER.error("Cover position value must be between 0 and 100.  Value was: %.2f", state)
+                    _LOGGER.error("Cover position value must be between 0 and 100."
+                                  " Value was: %.2f", state)
                 else:
                     self._position = state
             except TemplateError as ex:
