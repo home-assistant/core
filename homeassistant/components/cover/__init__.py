@@ -348,8 +348,3 @@ class CoverDevice(Entity):
         """
         return self.hass.async_add_job(
             ft.partial(self.stop_cover_tilt, **kwargs))
-
-    @property
-    def device_class(self):
-        """Return the class of this device, from component DEVICE_CLASSES."""
-        return None
