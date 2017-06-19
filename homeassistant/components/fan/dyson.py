@@ -75,7 +75,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     def async_added_to_hass(self):
         """Callback when entity is added to hass."""
         self.hass.async_add_job(
-            self._device.add_message_listener(self.on_message))
+            self._device.add_message_listener, self.on_message)
 
     def on_message(self, message):
         """Called when new messages received from the fan."""
