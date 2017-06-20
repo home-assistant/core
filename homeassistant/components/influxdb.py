@@ -165,11 +165,12 @@ def setup(hass, config):
                     json_body[0]['fields'][key] = float(value)
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
-                    json_body[0]['fields'][new_key] = str(value)
+                    new_value = str(value)
+                    json_body[0]['fields'][new_key] = new_value
 
-                    if RE_DIGIT_TAIL.match(json_body[0]['fields'][new_key]):
+                    if RE_DIGIT_TAIL.match(new_value):
                         json_body[0]['fields'][key] = float(
-                            RE_DECIMAL.sub('', value))
+                            RE_DECIMAL.sub('', new_value))
 
         json_body[0]['tags'].update(tags)
 
