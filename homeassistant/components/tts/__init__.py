@@ -29,7 +29,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["mutagen==1.37.0"]
+REQUIREMENTS = ['mutagen==1.38']
 
 DOMAIN = 'tts'
 DEPENDENCIES = ['http']
