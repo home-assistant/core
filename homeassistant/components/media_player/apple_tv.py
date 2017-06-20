@@ -6,7 +6,6 @@ https://home-assistant.io/components/media_player.apple_tv/
 """
 import asyncio
 import logging
-import hashlib
 
 import voluptuous as vol
 
@@ -24,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.2.1']
+REQUIREMENTS = ['pyatv==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +31,6 @@ CONF_LOGIN_ID = 'login_id'
 CONF_START_OFF = 'start_off'
 
 DEFAULT_NAME = 'Apple TV'
-
-DATA_APPLE_TV = 'apple_tv'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -58,13 +55,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host = config.get(CONF_HOST)
         login_id = config.get(CONF_LOGIN_ID)
         start_off = config.get(CONF_START_OFF)
-
-    if DATA_APPLE_TV not in hass.data:
-        hass.data[DATA_APPLE_TV] = []
-
-    if host in hass.data[DATA_APPLE_TV]:
-        return False
-    hass.data[DATA_APPLE_TV].append(host)
 
     details = pyatv.AppleTVDevice(name, host, login_id)
     session = async_get_clientsession(hass)
@@ -117,6 +107,11 @@ class AppleTvDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return an unique ID."""
+        return self._atv.metadata.device_id
+
+    @property
     def should_poll(self):
         """No polling needed."""
         return False
@@ -130,10 +125,10 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing is not None:
             from pyatv import const
             state = self._playing.play_state
-            if state == const.PLAY_STATE_NO_MEDIA:
-                return STATE_IDLE
-            elif state == const.PLAY_STATE_PLAYING or \
+            if state == const.PLAY_STATE_NO_MEDIA or \
                     state == const.PLAY_STATE_LOADING:
+                return STATE_IDLE
+            elif state == const.PLAY_STATE_PLAYING:
                 return STATE_PLAYING
             elif state == const.PLAY_STATE_PAUSED or \
                     state == const.PLAY_STATE_FAST_FORWARD or \
@@ -146,24 +141,9 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
+        self._artwork_hash = playing.hash
         self._playing = playing
-
-        if self.state == STATE_IDLE:
-            self._artwork_hash = None
-        elif self._has_playing_media_changed(playing):
-            base = str(playing.title) + str(playing.artist) + \
-                str(playing.album) + str(playing.total_time)
-            self._artwork_hash = hashlib.md5(
-                base.encode('utf-8')).hexdigest()
-
         self.hass.async_add_job(self.async_update_ha_state())
-
-    def _has_playing_media_changed(self, new_playing):
-        if self._playing is None:
-            return True
-        old_playing = self._playing
-        return new_playing.media_type != old_playing.media_type or \
-            new_playing.title != old_playing.title
 
     @callback
     def playstatus_error(self, updater, exception):
@@ -215,7 +195,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        yield from self._atv.remote_control.play_url(media_id, 0)
+        yield from self._atv.remote_control.play_url(media_id)
 
     @property
     def media_image_hash(self):
@@ -235,9 +215,9 @@ class AppleTvDevice(MediaPlayerDevice):
             if self.state == STATE_IDLE:
                 return 'Nothing playing'
             title = self._playing.title
-            return title if title else "No title"
+            return title if title else 'No title'
 
-        return 'Not connected to Apple TV'
+        return 'Establishing a connection to {0}...'.format(self._name)
 
     @property
     def supported_features(self):
@@ -280,6 +260,14 @@ class AppleTvDevice(MediaPlayerDevice):
         """
         if self._playing is not None:
             return self._atv.remote_control.play()
+
+    def async_media_stop(self):
+        """Stop the media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if self._playing is not None:
+            return self._atv.remote_control.stop()
 
     def async_media_pause(self):
         """Pause the media player.
