@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW, DOMAIN)
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW, DOMAIN, MEDIA_PLAYER_SCHEMA)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
     STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP, ATTR_ENTITY_ID)
@@ -34,11 +34,18 @@ SUPPORTED_BUTTONS = [
     'up', 'down', 'left', 'right', 'select', 'menu', 'top_menu']
 
 SERVICE_PRESS_BUTTONS = 'apple_tv_press_buttons'
+SERVICE_AUTHENTICATE = 'apple_tv_authenticate'
 
 ATTR_BUTTONS = 'buttons'
 
+KEY_CONFIG = 'apple_tv_configuring'
+
 CONF_LOGIN_ID = 'login_id'
 CONF_START_OFF = 'start_off'
+CONF_CREDENTIALS = 'credentials'
+
+NOTIFICATION_ID = 'apple_tv_notification'
+NOTIFICATION_TITLE = 'Apple TV Authentication'
 
 DEFAULT_NAME = 'Apple TV'
 
@@ -48,14 +55,52 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_LOGIN_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_CREDENTIALS, default=None): cv.string,
     vol.Optional(CONF_START_OFF, default=False): cv.boolean
 })
 
-APPLE_TV_PRESS_BUTTONS_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+APPLE_TV_PRESS_BUTTONS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_BUTTONS): vol.All(
         cv.ensure_list, [vol.In(SUPPORTED_BUTTONS)])
 })
+
+
+def request_configuration(hass, config, atv, credentials):
+    """Request configuration steps from the user."""
+    configurator = get_component('configurator')
+
+    @asyncio.coroutine
+    def configuration_callback(callback_data):
+        """Handle the submitted configuration."""
+        from pyatv import exceptions
+        pin = callback_data.get('pin')
+        notification = get_component('persistent_notification')
+
+        try:
+            yield from atv.airplay.finish_authentication(pin)
+            notification.async_create(
+                hass,
+                'Authentication succeeded!<br /><br />Add the following '
+                'to credentials: in your apple_tv configuration:<br /><br />'
+                '{0}'.format(credentials),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+        except exceptions.DeviceAuthenticationError as ex:
+            notification.async_create(
+                hass,
+                'Authentication failed! Did you enter correct PIN?<br /><br />'
+                'Details: {0}'.format(ex),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+
+        hass.async_add_job(configurator.request_done, instance)
+
+    instance = configurator.request_config(
+        hass, 'Apple TV Authentication', configuration_callback,
+        description='Please enter PIN code shown on screen.',
+        submit_caption='Confirm',
+        fields=[{'id': 'pin', 'name': 'PIN Code', 'type': 'password'}]
+    )
 
 
 @asyncio.coroutine
@@ -70,15 +115,20 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host = discovery_info['host']
         login_id = discovery_info['properties']['hG']
         start_off = False
+        credentials = None
     else:
         name = config.get(CONF_NAME)
         host = config.get(CONF_HOST)
         login_id = config.get(CONF_LOGIN_ID)
         start_off = config.get(CONF_START_OFF)
+        credentials = config.get(CONF_CREDENTIALS)
 
     details = pyatv.AppleTVDevice(name, host, login_id)
     session = async_get_clientsession(hass)
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
+    if credentials:
+        yield from atv.airplay.load_credentials(credentials)
+
     entity = AppleTvDevice(atv, name, start_off)
 
     # Save entity object for the service handler
@@ -101,6 +151,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 for button in service.data.get(ATTR_BUTTONS):
                     yield from device.async_press_button(button)
 
+            elif service.service == SERVICE_AUTHENTICATE:
+                credentials = yield from atv.airplay.generate_credentials()
+                yield from atv.airplay.load_credentials(credentials)
+                _LOGGER.debug('Generated new credentials: %s', credentials)
+                yield from atv.airplay.start_authentication()
+                hass.async_add_job(request_configuration,
+                                   hass, config, device.atv, credentials)
+
     @callback
     def on_hass_stop(event):
         """Stop push updates when hass stops."""
@@ -115,6 +173,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         descriptions.get(SERVICE_PRESS_BUTTONS),
         schema=APPLE_TV_PRESS_BUTTONS_SCHEMA)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_AUTHENTICATE, async_service_handler,
+        descriptions.get(SERVICE_AUTHENTICATE),
+        schema=MEDIA_PLAYER_SCHEMA)
+
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
     async_add_devices([entity])
@@ -125,29 +188,27 @@ class AppleTvDevice(MediaPlayerDevice):
 
     def __init__(self, atv, name, is_off):
         """Initialize the Apple TV device."""
-        self._atv = atv
+        self.atv = atv
         self._name = name
         self._is_off = is_off
         self._playing = None
-        self._artwork_hash = None
-        self._atv.push_updater.listener = self
+        self.atv.push_updater.listener = self
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
         if not self._is_off:
-            self._atv.push_updater.start()
+            self.atv.push_updater.start()
 
     @callback
     def _set_power_off(self, is_off):
         """Set the power to off."""
         self._playing = None
-        self._artwork_hash = None
         self._is_off = is_off
         if is_off:
-            self._atv.push_updater.stop()
+            self.atv.push_updater.stop()
         else:
-            self._atv.push_updater.start()
+            self.atv.push_updater.start()
         self.hass.async_add_job(self.async_update_ha_state())
 
     @property
@@ -158,7 +219,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return an unique ID."""
-        return self._atv.metadata.device_id
+        return self.atv.metadata.device_id
 
     @property
     def should_poll(self):
@@ -190,7 +251,6 @@ class AppleTvDevice(MediaPlayerDevice):
     @callback
     def playstatus_update(self, updater, playing):
         """Print what is currently playing when it changes."""
-        self._artwork_hash = playing.hash
         self._playing = playing
         self.hass.async_add_job(self.async_update_ha_state())
 
@@ -206,7 +266,6 @@ class AppleTvDevice(MediaPlayerDevice):
         # implemented here later.
         updater.start(initial_delay=10)
         self._playing = None
-        self._artwork_hash = None
         self.hass.async_add_job(self.async_update_ha_state())
 
     @property
@@ -244,18 +303,18 @@ class AppleTvDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_play_media(self, media_type, media_id, **kwargs):
         """Send the play_media command to the media player."""
-        yield from self._atv.remote_control.play_url(media_id)
+        yield from self.atv.airplay.play_url(media_id)
 
     @property
     def media_image_hash(self):
         """Hash value for media image."""
-        if self.state != STATE_IDLE:
-            return self._artwork_hash
+        if self._playing is not None and self.state != STATE_IDLE:
+            return self._playing.hash
 
     @asyncio.coroutine
     def async_get_media_image(self):
         """Fetch media image of current playing image."""
-        return (yield from self._atv.metadata.artwork()), 'image/png'
+        return (yield from self.atv.metadata.artwork()), 'image/png'
 
     @property
     def media_title(self):
@@ -297,7 +356,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return getattr(self._atv.remote_control, button)()
+            return getattr(self.atv.remote_control, button)()
 
     def async_media_play_pause(self):
         """Pause media on media player.
@@ -307,9 +366,9 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing is not None:
             state = self.state
             if state == STATE_PAUSED:
-                return self._atv.remote_control.play()
+                return self.atv.remote_control.play()
             elif state == STATE_PLAYING:
-                return self._atv.remote_control.pause()
+                return self.atv.remote_control.pause()
 
     def async_media_play(self):
         """Play media.
@@ -317,7 +376,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return self._atv.remote_control.play()
+            return self.atv.remote_control.play()
 
     def async_media_stop(self):
         """Stop the media player.
@@ -325,7 +384,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return self._atv.remote_control.stop()
+            return self.atv.remote_control.stop()
 
     def async_media_pause(self):
         """Pause the media player.
@@ -333,7 +392,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return self._atv.remote_control.pause()
+            return self.atv.remote_control.pause()
 
     def async_media_next_track(self):
         """Send next track command.
@@ -341,7 +400,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return self._atv.remote_control.next()
+            return self.atv.remote_control.next()
 
     def async_media_previous_track(self):
         """Send previous track command.
@@ -349,7 +408,7 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return self._atv.remote_control.previous()
+            return self.atv.remote_control.previous()
 
     def async_media_seek(self, position):
         """Send seek command.
@@ -357,4 +416,4 @@ class AppleTvDevice(MediaPlayerDevice):
         This method must be run in the event loop and returns a coroutine.
         """
         if self._playing is not None:
-            return self._atv.remote_control.set_position(position)
+            return self.atv.remote_control.set_position(position)
