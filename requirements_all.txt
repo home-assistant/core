@@ -382,7 +382,7 @@ miflora==0.1.16
 miniupnpc==1.9
 
 # homeassistant.components.tts
-mutagen==1.37.0
+mutagen==1.38
 
 # homeassistant.components.sensor.usps
 myusps==1.1.2
