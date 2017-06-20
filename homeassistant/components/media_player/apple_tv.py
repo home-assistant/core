@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.apple_tv/
 """
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 
@@ -14,11 +15,13 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
     SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW, DOMAIN)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP, ATTR_ENTITY_ID)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.loader import get_component
+from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -27,10 +30,19 @@ REQUIREMENTS = ['pyatv==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
+SUPPORTED_BUTTONS = [
+    'up', 'down', 'left', 'right', 'select', 'menu', 'top_menu']
+
+SERVICE_PRESS_BUTTONS = 'apple_tv_press_buttons'
+
+ATTR_BUTTONS = 'buttons'
+
 CONF_LOGIN_ID = 'login_id'
 CONF_START_OFF = 'start_off'
 
 DEFAULT_NAME = 'Apple TV'
+
+DATA_APPLE_TV = 'apple_tv'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -39,11 +51,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_START_OFF, default=False): cv.boolean
 })
 
+APPLE_TV_PRESS_BUTTONS_SCHEMA = vol.Schema({
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_BUTTONS): vol.All(
+        cv.ensure_list, [vol.In(SUPPORTED_BUTTONS)])
+})
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Apple TV platform."""
     import pyatv
+    if DATA_APPLE_TV not in hass.data:
+        hass.data[DATA_APPLE_TV] = []
 
     if discovery_info is not None:
         name = discovery_info['name']
@@ -61,10 +81,39 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
     entity = AppleTvDevice(atv, name, start_off)
 
+    # Save entity object for the service handler
+    if entity not in hass.data[DATA_APPLE_TV]:
+        hass.data[DATA_APPLE_TV].append(entity)
+
+    @asyncio.coroutine
+    def async_service_handler(service):
+        """Handler for service calls."""
+        entity_ids = service.data.get(ATTR_ENTITY_ID)
+
+        if entity_ids:
+            devices = [device for device in hass.data[DATA_APPLE_TV]
+                       if device.entity_id in entity_ids]
+        else:
+            devices = hass.data[DATA_APPLE_TV]
+
+        for device in devices:
+            if service.service == SERVICE_PRESS_BUTTONS:
+                for button in service.data.get(ATTR_BUTTONS):
+                    yield from device.async_press_button(button)
+
     @callback
     def on_hass_stop(event):
         """Stop push updates when hass stops."""
         atv.push_updater.stop()
+
+    descriptions = yield from hass.async_add_job(
+        load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_PRESS_BUTTONS, async_service_handler,
+        descriptions.get(SERVICE_PRESS_BUTTONS),
+        schema=APPLE_TV_PRESS_BUTTONS_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
 
@@ -240,6 +289,15 @@ class AppleTvDevice(MediaPlayerDevice):
     def async_turn_off(self):
         """Turn the media player off."""
         self._set_power_off(True)
+
+    @asyncio.coroutine
+    def async_press_button(self, button):
+        """Press a remote control button on media player.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        if self._playing is not None:
+            return getattr(self._atv.remote_control, button)()
 
     def async_media_play_pause(self):
         """Pause media on media player.

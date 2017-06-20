@@ -316,3 +316,14 @@ kodi_call_method:
     method:
       description: Name of the Kodi JSONRPC API method to be called.
       example: 'VideoLibrary.GetRecentlyAddedEpisodes'
+
+apple_tv_press_buttons:
+  description: Press one or more remote control buttons
+
+  fields:
+    entity_id:
+      description: Name(s) of entities to press buttons on.
+      example: 'media_player.apple_tv'
+    button:
+      description: Buttons to press.
+      example: ['top_menu', 'left', 'left', 'select']
