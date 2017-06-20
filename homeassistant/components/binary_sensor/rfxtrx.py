@@ -61,7 +61,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                     entity[ATTR_DATA_BITS],
                                     entity[CONF_COMMAND_ON],
                                     entity[CONF_COMMAND_OFF])
-
+        device.hass = hass
         sensors.append(device)
         rfxtrx.RFX_DEVICES[device_id] = device
 
