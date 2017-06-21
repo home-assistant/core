@@ -43,7 +43,8 @@ DATA_TYPES = OrderedDict([
     ('Total usage', 'W'),
     ('Sound', ''),
     ('Sensor Status', ''),
-    ('Counter value', '')])
+    ('Counter value', ''),
+    ('UV', 'uv')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
