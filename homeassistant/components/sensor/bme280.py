@@ -79,18 +79,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_DELTA_TEMP): vol.Coerce(float),
 })
 
-
+# pylint: disable=import-error
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BME280 sensor."""
-    # pylint: disable=import-error
     import smbus
     from i2csense.bme280 import BME280
-    
+
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
     i2c_address = config.get(CONF_I2C_ADDRESS)
-    
+
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
     sensor = yield from hass.async_add_job(
         partial(BME280, bus, i2c_address,
