@@ -62,10 +62,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = data.get(CONF_NAME)
         modaddr = int(data.get(CONF_MODADDR, 1))
         connaddr = int(data.get(CONF_CONNADDR, 1))
-        cmddata = ""
+        cmddatas = ""
         for cmd in data.get(CONF_COMMANDS):
-            cmddata += cmd[CONF_NAME] + "\n" + cmd[CONF_DATA] + "\n"
-        itachip2ir.addDevice(name, modaddr, connaddr, cmddata)
+            cmdname = cmd[CONF_NAME].strip()
+            if not cmdname:
+                cmdname = '""'
+            cmddata = cmd[CONF_DATA].strip()
+            if not cmddata:
+                cmddata = '""'
+            cmddatas += "{}\n{}\n".format(cmdname, cmddata)
+        itachip2ir.addDevice(name, modaddr, connaddr, cmddatas)
         devices.append(ITachIP2IRRemote(itachip2ir, name))
     add_devices(devices, True)
     return True
