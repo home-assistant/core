@@ -13,7 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
+    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES,
+    TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -40,7 +41,8 @@ SENSOR_TYPES = {
     'process_running': ['Running', 'Count'],
     'process_total': ['Total', 'Count'],
     'process_thread': ['Thread', 'Count'],
-    'process_sleeping': ['Sleeping', 'Count']
+    'process_sleeping': ['Sleeping', 'Count'],
+    'cpu_temp': ['CPU Temp', TEMP_CELSIUS],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -64,11 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         response = requests.get(url, timeout=10)
         if not response.ok:
-            _LOGGER.error("Response status is '%s'", response.status_code)
-            return False
+            _LOGGER.warning("Response status is '%s'", response.status_code)
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: %s", url)
-        return False
+        _LOGGER.warning("No route to resource/endpoint: %s", url)
 
     rest = GlancesData(url)
 
@@ -103,6 +103,11 @@ class GlancesSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self.rest.data is not None
 
     @property
     def state(self):
@@ -146,6 +151,11 @@ class GlancesSensor(Entity):
                 return value['processcount']['thread']
             elif self.type == 'process_sleeping':
                 return value['processcount']['sleeping']
+            elif self.type == 'cpu_temp':
+                for sensor in value['sensors']:
+                    if sensor['label'] == 'CPU':
+                        return sensor['value']
+                return None
 
     def update(self):
         """Get the latest data from REST API."""
@@ -167,5 +177,5 @@ class GlancesData(object):
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to host/endpoint: %s", self._resource)
+            _LOGGER.debug("Error connecting to glances: %s", self._resource)
             self.data = None
