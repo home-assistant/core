@@ -17,6 +17,9 @@ SPEED_METERPERSECOND = 'm/s'  # type: str
 # Illuminance units
 ILLUMINANCE_LUX = 'lx'  # type: str
 
+# Percentage units
+PERCENTAGE_UNIT = "%"
+
 #  Predefined Minimum, Maximum Values for Sensors
 #  Temperature as defined in KNX Standard 3.10 - 9.001 DPT_Value_Temp
 KNX_TEMP_MIN = -273
@@ -29,6 +32,9 @@ KNX_LUX_MAX = 670760
 #  Speed m/s as defined in KNX Standard 3.10 - 9.005 DPT_Value_Wsp
 KNX_SPEED_MS_MIN = 0
 KNX_SPEED_MS_MAX = 670760
+
+# Configuration string for percentage
+PERCENTAGE = 'percentage'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -66,6 +72,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             KNXSensorFloatClass(hass, KNXConfig(config), ILLUMINANCE_LUX,
                                 minimum_value, maximum_value)
         ])
+    # Add KNX Percentage Sensors(%)
+    # KNX Datapoint 5.001 DPT_Scaling
+    elif config[CONF_TYPE] == PERCENTAGE:
+        minimum_value, maximum_value = \
+            update_and_define_min_max(config, 0, 100)
+
+        add_entities([
+            KNXSensorDPTScalingClass(hass, KNXConfig(config), PERCENTAGE_UNIT,
+                                     minimum_value, maximum_value)
+        ])
 
 
 def update_and_define_min_max(config, minimum_default, maximum_default):
@@ -81,21 +97,8 @@ def update_and_define_min_max(config, minimum_default, maximum_default):
     return minimum_value, maximum_value
 
 
-class KNXSensorBaseClass():
+class KNXSensorBaseClass(KNXGroupAddress):
     """Sensor Base Class for all KNX Sensors."""
-
-    @property
-    def cache(self):
-        """We don't want to cache any Sensor Value."""
-        return False
-
-
-class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
-    """
-    Base Implementation of a 2byte Floating Point KNX Telegram.
-
-    Defined in KNX 3.7.2 - 3.10
-    """
 
     def __init__(self, hass, config, unit_of_measurement, minimum_sensor_value,
                  maximum_sensor_value):
@@ -117,15 +120,64 @@ class KNXSensorFloatClass(KNXGroupAddress, KNXSensorBaseClass):
         """Return the defined Unit of Measurement for the KNX Sensor."""
         return self._unit_of_measurement
 
+    def convert(self, raw_value):
+        """Convert value of data point.
+
+        This should be overriden in derived classes
+        """
+        return raw_value
+
     def update(self):
         """Update KNX sensor."""
-        from knxip.conversion import knx2_to_float
-
         super().update()
 
         self._value = None
 
         if self._data:
-            value = 0 if self._data == 0 else knx2_to_float(self._data)
+            if self._data == 0:
+                value = 0
+            else:
+                value = self.convert(self._data)
             if self._minimum_value <= value <= self._maximum_value:
                 self._value = value
+
+    @property
+    def cache(self):
+        """We don't want to cache any Sensor Value."""
+        return False
+
+
+class KNXSensorFloatClass(KNXSensorBaseClass):
+    """
+    Base Implementation of a 2byte Floating Point KNX Telegram.
+
+    Defined in KNX 3.7.2 - 3.10
+    """
+
+    def convert(self, raw_value):
+        """Conversion for 2 byte floating point values."""
+        from knxip.conversion import knx2_to_float
+
+        return knx2_to_float(raw_value)
+
+
+class KNXSensorDPTScalingClass(KNXSensorBaseClass):
+    """
+    Base Implementation of a 1byte percentage scaled KNX Telegram.
+
+    Defined in KNX 3.7.2 - 3.10
+    """
+
+    def convert(self, raw_value):
+        """Conversion for scaled byte values."""
+        summed_value = 0
+        try:
+            # convert raw value in bytes
+            for val in raw_value:
+                summed_value *= 256
+                summed_value += val
+        except TypeError:
+            # pknx returns a non-iterable type for unsuccessful reads
+            pass
+
+        return round(summed_value * 100 / 255)
