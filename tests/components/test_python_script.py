@@ -149,3 +149,18 @@ hass.stop()
     yield from hass.async_block_till_done()
 
     assert "Not allowed to access HomeAssistant.stop" in caplog.text
+
+
+@asyncio.coroutine
+def test_iterating(hass):
+    """Test compile error logs error."""
+    source = """
+for i in [1, 2]:
+    hass.states.set('hello.{}'.format(i), 'world')
+    """
+
+    hass.async_add_job(execute, hass, 'test.py', source, {})
+    yield from hass.async_block_till_done()
+
+    assert hass.states.is_state('hello.1', 'world')
+    assert hass.states.is_state('hello.2', 'world')
