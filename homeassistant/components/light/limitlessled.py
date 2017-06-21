@@ -30,12 +30,9 @@ DEFAULT_LED_TYPE = 'rgbw'
 DEFAULT_PORT = 5987
 DEFAULT_TRANSITION = 0
 DEFAULT_VERSION = 6
-DEFAULT_FADE = 'out'
+DEFAULT_FADE = False
 
 LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led']
-FADE_NONE = 'none'
-FADE_OUT = 'out'
-FADE = [FADE_NONE, FADE_OUT]
 
 RGB_BOUNDARY = 40
 
@@ -63,8 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                     vol.Optional(CONF_TYPE, default=DEFAULT_LED_TYPE):
                         vol.In(LED_TYPE),
                     vol.Required(CONF_NUMBER): cv.positive_int,
-                    vol.Optional(CONF_FADE, default=DEFAULT_FADE):
-                        vol.In(FADE),
+                    vol.Optional(CONF_FADE, default=DEFAULT_FADE): cv.boolean,
                 }
             ]),
         },
@@ -206,7 +202,7 @@ class LimitlessLEDGroup(Light):
     def turn_off(self, transition_time, pipeline, **kwargs):
         """Turn off a group."""
         if self.is_on:
-            if self.config[CONF_FADE] == FADE_OUT:
+            if self.config[CONF_FADE]:
                 pipeline.transition(transition_time, brightness=0.0)
             pipeline.off()
 
