@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['i2csense==0.0.2',
+REQUIREMENTS = ['i2csense==0.0.3',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +80,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BME280 sensor."""
@@ -89,8 +88,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
     try:
-        # noinspection PyUnresolvedReferences
+        # pylint: disable=import-error
         import smbus
+        # pylint: disable=import-error
         from i2csense.bme280 import BME280
     except ImportError as exc:
         _LOGGER.error("ImportError: %s", exc)
@@ -173,13 +173,13 @@ class BME280Sensor(Entity):
         yield from self.hass.async_add_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 2)
+                temperature = round(self.bme280_client.sensor.temperature, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     temperature = round(celsius_to_fahrenheit(temperature), 1)
                 self._state = temperature
             elif self.type == SENSOR_HUMID:
-                self._state = round(self.bme280_client.sensor.humidity, 2)
+                self._state = round(self.bme280_client.sensor.humidity, 1)
             elif self.type == SENSOR_PRESS:
-                self._state = round(self.bme280_client.sensor.pressure, 2)
+                self._state = round(self.bme280_client.sensor.pressure, 1)
         else:
             _LOGGER.warning("Bad update of sensor.%s", self.name)

@@ -310,7 +310,7 @@ https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
 # homeassistant.components.sensor.bme280
-i2csense==0.0.2
+# i2csense==0.0.3
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
