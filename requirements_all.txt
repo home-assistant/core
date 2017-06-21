@@ -568,7 +568,7 @@ pyhik==0.1.2
 pyhomematic==0.1.28
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==1.1.0
+pyhydroquebec==1.2.0
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
