@@ -28,7 +28,8 @@ COMMENT_REQUIREMENTS = (
     'face_recognition',
     'blinkt',
     'smbus-cffi',
-    'envirophat'
+    'envirophat',
+    'i2csense'
 )
 
 TEST_REQUIREMENTS = (

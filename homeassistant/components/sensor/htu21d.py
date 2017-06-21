@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['i2csense==0.0.2',
+REQUIREMENTS = ['i2csense==0.0.3',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the HTU21D sensor."""
@@ -47,8 +46,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     bus_number = config.get(CONF_I2C_BUS)
     temp_unit = hass.config.units.temperature_unit
     try:
-        # noinspection PyUnresolvedReferences
+        # pylint: disable=import-error
         import smbus
+        # pylint: disable=import-error
         from i2csense.htu21d import HTU21D
     except ImportError as exc:
         _LOGGER.error("ImportError: %s", exc)
@@ -121,3 +121,5 @@ class HTU21DSensor(Entity):
             else:
                 value = round(self._client.sensor.humidity, 1)
             self._state = value
+        else:
+            _LOGGER.warning("Bad sample")
