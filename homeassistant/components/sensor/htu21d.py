@@ -39,20 +39,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# pylint: disable=import-error
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the HTU21D sensor."""
+    import smbus
+    from i2csense.htu21d import HTU21D
+
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
     temp_unit = hass.config.units.temperature_unit
-    try:
-        # pylint: disable=import-error
-        import smbus
-        # pylint: disable=import-error
-        from i2csense.htu21d import HTU21D
-    except ImportError as exc:
-        _LOGGER.error("ImportError: %s", exc)
-        return False
 
     bus = smbus.SMBus(config.get(CONF_I2C_BUS))
     sensor = yield from hass.async_add_job(
@@ -66,6 +62,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = [HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
            HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, '%')]
+
     async_add_devices(dev)
 
 
