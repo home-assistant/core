@@ -66,9 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         response = requests.get(url, timeout=10)
         if not response.ok:
-            _LOGGER.warn("Response status is '%s'", response.status_code)
+            _LOGGER.warning("Response status is '%s'", response.status_code)
     except requests.exceptions.ConnectionError:
-        _LOGGER.warn("No route to resource/endpoint: %s", url)
+        _LOGGER.warning("No route to resource/endpoint: %s", url)
 
     rest = GlancesData(url)
 
@@ -103,6 +103,11 @@ class GlancesSensor(Entity):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
+
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self.rest.data is not None
 
     @property
     def state(self):
