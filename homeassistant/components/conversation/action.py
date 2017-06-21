@@ -12,7 +12,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.conversation import (ConversationEngine,
-    PLATFORM_SCHEMA, DOMAIN)
+                                                   PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import script
 
@@ -48,8 +48,7 @@ class ActionProvider(ConversationEngine):
 
     @asyncio.coroutine
     def process(self, text):
-        """Calls an action for processing of the text."""
-
+        """Call a config-defined action for processing of the text."""
         if not text.strip():
             return
 
@@ -60,4 +59,3 @@ class ActionProvider(ConversationEngine):
                            "Conversation action: {}".format(self.action))
 
         self.hass.async_add_job(si.async_run(parameters))
-

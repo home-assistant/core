@@ -11,8 +11,10 @@ import warnings
 
 import asyncio
 from homeassistant import core
+from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF,
+                                 ATTR_ENTITY_ID)
 from homeassistant.components.conversation import (ConversationEngine,
-                                                   PLATFORM_SCHEMA, DOMAIN)
+                                                   PLATFORM_SCHEMA)
 from homeassistant.helpers import script
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -43,13 +45,14 @@ def async_get_engine(hass, config):
 class FuzzyProvider(ConversationEngine):
     """Textfile conversation component. Simply writes each text to a file."""
 
-    warnings.filterwarnings('ignore', module='fuzzywuzzy')
-    from fuzzywuzzy import process as fuzzyExtract
-
     def __init__(self, hass, config):
         """Init Textfile conversation provider."""
         super().__init__(hass)
         self.name = 'fuzzy'
+
+        warnings.filterwarnings('ignore', module='fuzzywuzzy')
+        from fuzzywuzzy import process as fuzzyExtract
+        self._extract = fuzzyExtract.extractOne
 
         self.choices = {attrs[ATTR_SENTENCE]: script.Script(
             hass,
@@ -62,7 +65,7 @@ class FuzzyProvider(ConversationEngine):
         """Parse text into commands."""
         # if actually configured
         if self.choices:
-            match = fuzzyExtract.extractOne(text, self.choices.keys())
+            match = self._extract(text, self.choices.keys())
             scorelimit = 60  # arbitrary value
             logging.info(
                 'matched up text %s and found %s',
@@ -82,7 +85,7 @@ class FuzzyProvider(ConversationEngine):
         name, command = match.groups()
         entities = {state.entity_id: state.name
                     for state in self.hass.states.all()}
-        entity_ids = fuzzyExtract.extractOne(
+        entity_ids = self._extract(
             name, entities, score_cutoff=65)[2]
 
         if not entity_ids:
@@ -103,4 +106,3 @@ class FuzzyProvider(ConversationEngine):
         else:
             _LOGGER.error('Got unsupported command %s from text %s',
                           command, text)
-

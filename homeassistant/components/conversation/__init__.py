@@ -5,26 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/conversation/
 """
 import asyncio
-import ctypes
-import functools as ft
-import hashlib
 import logging
-import mimetypes
 import os
-import re
-import io
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.setup import async_prepare_setup_platform
-from homeassistant.core import callback
 from homeassistant.config import load_yaml_config_file
-from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
-    SERVICE_PLAY_MEDIA, MEDIA_TYPE_MUSIC, ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE, DOMAIN as DOMAIN_MP)
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 
@@ -44,16 +31,12 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 SCHEMA_SERVICE_PROCESS = vol.Schema({
     vol.Required(ATTR_TEXT): cv.string,
-    #vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up Conversation."""
-
-    provider = None
-    conf = config[DOMAIN][0] if config.get(DOMAIN, []) else {}
 
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file,
@@ -112,4 +95,3 @@ class ConversationEngine(object):
     def process(self, text):
         """Process the given message."""
         raise NotImplementedError()
-
