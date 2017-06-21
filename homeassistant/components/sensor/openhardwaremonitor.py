@@ -1,12 +1,12 @@
 """Support for Open Hardware Monitor Sensor Platform."""
 
-from threading import Timer
 from datetime import timedelta
 import logging
-
 import requests
 import voluptuous as vol
 
+from homeassistant.util.dt import utcnow
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -23,6 +23,7 @@ CONF_INTERVAL = 'interval'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
 SCAN_INTERVAL = timedelta(seconds=5)
+RETRY_INTERVAL = timedelta(seconds=30)
 
 OHM_VALUE = 'Value'
 OHM_MIN = 'Min'
@@ -38,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Open Hardware Monitor platform."""
-    data = OpenHardwareMonitorData(config)
+    data = OpenHardwareMonitorData(config, hass)
     add_devices(data.devices, True)
 
 
@@ -84,18 +85,19 @@ class OpenHardwareMonitorDevice(Entity):
 class OpenHardwareMonitorData(object):
     """Class used to pull data from OHM and create sensors."""
 
-    def __init__(self, config):
+    def __init__(self, config, hass):
         """Initialize the Open Hardware Monitor data-handler."""
         self._data = None
         self._config = config
+        self._hass = hass
         self.devices = []
-        self.initialize()
+        self.initialize(utcnow())
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Hit by the timer with the configured interval."""
         if self._data is None:
-            self.initialize()
+            self.initialize(utcnow())
         else:
             self.refresh()
 
@@ -114,10 +116,11 @@ class OpenHardwareMonitorData(object):
     def schedule_retry(self):
         """Schedule a retry in 30 seconds."""
         _LOGGER.info("Retrying in 30 seconds")
-        timer = Timer(30, self.initialize)
-        timer.start()
 
-    def initialize(self):
+        async_track_point_in_utc_time(
+            self._hass, self.initialize, utcnow() + RETRY_INTERVAL)
+
+    def initialize(self, now):
         """Initial parsing of the sensors and adding of devices."""
         self.refresh()
 
