@@ -141,7 +141,7 @@ datadog==0.15.0
 datapoint==0.4.3
 
 # homeassistant.components.light.decora
-# decora==0.4
+# decora==0.6
 
 # homeassistant.components.media_player.denonavr
 denonavr==0.4.4
