@@ -92,6 +92,7 @@ def execute(hass, filename, source, data=None):
         '_print_': StubPrinter,
         '_getattr_': protected_getattr,
         '_write_': full_write_guard,
+        '_getiter_': iter,
     }
     logger = logging.getLogger('{}.{}'.format(__name__, filename))
     local = {
