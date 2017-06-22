@@ -8,7 +8,6 @@ https://home-assistant.io/components/notify.clicksend/
 import logging
 import requests
 import json
-import base64
 
 import voluptuous as vol
 
