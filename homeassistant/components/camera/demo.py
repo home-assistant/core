@@ -6,7 +6,6 @@ https://home-assistant.io/components/demo/
 """
 import os
 import logging
-import asyncio
 import homeassistant.util.dt as dt_util
 from homeassistant.components.camera import Camera
 
