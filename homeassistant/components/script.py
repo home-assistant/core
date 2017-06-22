@@ -24,14 +24,15 @@ from homeassistant.helpers.script import Script
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'script'
+DEPENDENCIES = ['group']
+
 ATTR_CAN_CANCEL = 'can_cancel'
 ATTR_LAST_ACTION = 'last_action'
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 
 CONF_SEQUENCE = 'sequence'
-
-DOMAIN = 'script'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 

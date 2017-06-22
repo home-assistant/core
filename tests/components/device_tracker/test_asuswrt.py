@@ -57,7 +57,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     def test_password_or_pub_key_required(self): \
             # pylint: disable=invalid-name
         """Test creating an AsusWRT scanner without a pass or pubkey."""
-        with assert_setup_component(0):
+        with assert_setup_component(0, DOMAIN):
             assert setup_component(
                 self.hass, DOMAIN, {DOMAIN: {
                     CONF_PLATFORM: 'asuswrt',
@@ -82,7 +82,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             }
         }
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(self.hass, DOMAIN, conf_dict)
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
@@ -108,7 +108,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             }
         }
 
-        with assert_setup_component(1):
+        with assert_setup_component(1, DOMAIN):
             assert setup_component(self.hass, DOMAIN, conf_dict)
 
         conf_dict[DOMAIN][CONF_MODE] = 'router'
@@ -192,7 +192,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
 
-        with assert_setup_component(0):
+        with assert_setup_component(0, DOMAIN):
             assert setup_component(self.hass, DOMAIN,
                                    {DOMAIN: conf_dict})
         ssh.login.assert_not_called()
@@ -264,7 +264,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         update_mock.start()
         self.addCleanup(update_mock.stop)
 
-        with assert_setup_component(0):
+        with assert_setup_component(0, DOMAIN):
             assert setup_component(self.hass, DOMAIN,
                                    {DOMAIN: conf_dict})
         telnet.login.assert_not_called()

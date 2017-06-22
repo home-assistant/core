@@ -8,6 +8,8 @@ MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 #ENV INSTALL_LIBCEC no
 #ENV INSTALL_PHANTOMJS no
 #ENV INSTALL_COAP no
+#ENV INSTALL_SSOCR no
+
 
 VOLUME /config
 
