@@ -58,21 +58,24 @@ class IntentHandler(object):
 
         for name, intent in intents.items():
             if CONF_ACTION in intent:
-                a = intent[CONF_ACTION]
-                intent[CONF_ACTION] = script.Script(hass, intent[CONF_ACTION], "Snips intent {}".format(name))
+                intent[CONF_ACTION] = script.Script(hass, intent[CONF_ACTION],
+                    "Snips intent {}".format(name))
 
         self.intents = intents
 
     def handle_intent(self, payload):
-        if not payload: return
+        if not payload:
+            return
         response = json.loads(payload)
-        if not response: return
-        
+        if not response:
+            return
+
         name = self.get_name(response)
-        if not name: return
-        
+        if not name:
+            return
+
         config = self.intents.get(name)
-        
+
         if not config:
             LOGGER.warning("Received unknown intent %s", name)
             return
@@ -91,7 +94,8 @@ class IntentHandler(object):
 
     def parse_slots(self, response):
         slots = response["slots"]
-        if not slots: return {}
+        if not slots:
+            return {}
         parameters = {}
         for slot in slots:
             key = slot["slotName"]
@@ -100,10 +104,16 @@ class IntentHandler(object):
         return parameters
 
     def get_value(self, slot):
-        try: return slot["value"]["value"]["value"]
-        except: pass
-        try: return slot["value"]["value"]
-        except: pass
-        try: return slot["value"]
-        except: pass
+        try:
+            return slot["value"]["value"]["value"]
+        except:
+            pass
+        try:
+            return slot["value"]["value"]
+        except:
+            pass
+        try:
+            return slot["value"]
+        except:
+            pass
         return None
