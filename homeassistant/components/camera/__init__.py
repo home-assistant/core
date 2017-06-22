@@ -35,8 +35,6 @@ _LOGGER = logging.getLogger(__name__)
 
 SERVICE_EN_MOTION = 'enable_motion_detection'
 SERVICE_DISEN_MOTION = 'disable_motion_detection'
-MOTION_ENABLED = 'Enabled'
-MOTION_DISABLED = 'Disabled'
 DOMAIN = 'camera'
 DEPENDENCIES = ['http']
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -56,26 +54,26 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def en_motion_detection(hass, entity_id=None):
+def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
-    hass.add_job(async_en_motion_detection, hass, entity_id)
+    hass.add_job(async_enable_motion_detection, hass, entity_id)
 
 
 @callback
-def async_en_motion_detection(hass, entity_id=None):
+def async_enable_motion_detection(hass, entity_id=None):
     """Enable motion detection on given Entities."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(
         DOMAIN, SERVICE_EN_MOTION, data))
 
 
-def disen_motion_detection(hass, entity_id=None):
+def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
-    hass.add_job(async_disen_motion_detection, hass, entity_id)
+    hass.add_job(async_disable_motion_detection, hass, entity_id)
 
 
 @callback
-def async_disen_motion_detection(hass, entity_id=None):
+def async_disable_motion_detection(hass, entity_id=None):
     """Disable motion detection on given Entitiess."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.async_add_job(hass.services.async_call(
@@ -138,11 +136,11 @@ def async_setup(hass, config):
 
         for camera in target_cameras:
             if service.service == SERVICE_EN_MOTION:
-                if hasattr(camera, 'async_enable_motion_detect'):
-                    yield from camera.async_enable_motion_detect()
+                if hasattr(camera, 'async_enable_motion_detection'):
+                    yield from camera.async_enable_motion_detection()
             elif service.service == SERVICE_DISEN_MOTION:
-                if hasattr(camera, 'async_disable_motion_detect'):
-                    yield from camera.async_disable_motion_detect()
+                if hasattr(camera, 'async_disable_motion_detection'):
+                    yield from camera.async_disable_motion_detection()
 
         update_tasks = []
         for camera in target_cameras:
@@ -203,7 +201,7 @@ class Camera(Entity):
         return None
 
     @property
-    def get_motion_detection_status(self):
+    def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return None
 
@@ -295,8 +293,8 @@ class Camera(Entity):
         if self.brand:
             attr['brand'] = self.brand
 
-        if self.get_motion_detection_status:
-            attr['motion_detection'] = self.get_motion_detection_status
+        if self.motion_detection_enabled:
+            attr['motion_detection'] = self.motion_detection_enabled
 
         return attr
 

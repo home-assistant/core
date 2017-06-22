@@ -8,12 +8,9 @@ import os
 import logging
 import asyncio
 import homeassistant.util.dt as dt_util
-
 from homeassistant.components.camera import Camera
-from homeassistant.components.camera import (MOTION_ENABLED, MOTION_DISABLED)
 
 _LOGGER = logging.getLogger(__name__)
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo camera platform."""
@@ -30,7 +27,7 @@ class DemoCamera(Camera):
         super().__init__()
         self._parent = hass
         self._name = name
-        self._motion_status = MOTION_DISABLED
+        self._motion_status = False
 
     def camera_image(self):
         """Return a faked still image response."""
@@ -47,28 +44,33 @@ class DemoCamera(Camera):
         return self._name
 
     @property
-    def get_motion_detection_status(self):
+    def should_poll(self):
+        """Camera should poll periodically."""
+        return True
+
+    @property
+    def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
         return self._motion_status
 
-    @asyncio.coroutine
-    def async_enable_motion_detect(self):
-        """Camera arm."""
-        self._motion_status = MOTION_ENABLED
-        self.hass.async_add_job(self.async_update_ha_state())
-        self.hass.async_add_job(self.async_update())
+    def set_base_station_mode(self, status):
+        """Set the mode in the base station."""
+        self._base_stn.mode = status
 
-    @asyncio.coroutine
-    def async_disable_motion_detect(self):
-        """Camera disarm."""
-        self._motion_status = MOTION_DISABLED
-        self.hass.async_add_job(self.async_update_ha_state())
-        self.hass.async_add_job(self.async_update())
+    def async_enable_motion_detection(self):
+        """Add function to event loop and return coroutine."""
+        return self.hass.async_add_job(self.enable_motion_detection)
 
-    @asyncio.coroutine
-    def async_update(self):
-        """Perform the I/O operation with camera."""
-        if self._motion_status == MOTION_ENABLED:
-            _LOGGER.info("Enable Motion detection for this camera here")
-        else:
-            _LOGGER.info("Disable Motion detection for this camera here")
+    def enable_motion_detection(self):
+        """Enable the Motion detection in base station (Arm)."""
+        self._motion_status = True
+        self.set_base_station_mode(ARLO_MODE_ARMED)
+
+    def async_disable_motion_detection(self):
+        """Add function to event loop and return coroutine."""
+        return self.hass.async_add_job(self.disable_motion_detection)
+
+    def disable_motion_detection(self):
+        """Disable the motion detection in base station (Disarm)."""
+        self._motion_status = False
+        self.set_base_station_mode(ARLO_MODE_DISARMED)

@@ -12,7 +12,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.components.arlo import DEFAULT_BRAND
 from homeassistant.components.arlo import (ARLO_MODE_ARMED, ARLO_MODE_DISARMED)
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
-from homeassistant.components.camera import (MOTION_ENABLED, MOTION_DISABLED)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers.aiohttp_client import (
     async_aiohttp_proxy_stream)
@@ -55,7 +54,7 @@ class ArloCam(Camera):
         self._camera = camera
         self._base_stn = hass.data['arlo'].base_stations[0]
         self._name = self._camera.name
-        self._motion_status = MOTION_DISABLED
+        self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
 
@@ -96,28 +95,33 @@ class ArloCam(Camera):
         return DEFAULT_BRAND
 
     @property
-    def get_motion_detection_status(self):
+    def should_poll(self):
+        """Camera should poll periodically."""
+        return True
+
+    @property
+    def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
         return self._motion_status
 
-    @asyncio.coroutine
-    def async_enable_motion_detect(self):
-        """Camera arm."""
-        self._motion_status = MOTION_ENABLED
-        self.hass.async_add_job(self.async_update_ha_state())
-        self.hass.async_add_job(self.async_update())
+    def set_base_station_mode(self, mode):
+        """Set the mode in the base station."""
+        self._base_stn.mode = mode
 
-    @asyncio.coroutine
-    def async_disable_motion_detect(self):
-        """Camera disarm."""
-        self._motion_status = MOTION_DISABLED
-        self.hass.async_add_job(self.async_update_ha_state())
-        self.hass.async_add_job(self.async_update())
+    def async_enable_motion_detection(self):
+        """Add function to event loop and return coroutine."""
+        return self.hass.async_add_job(self.enable_motion_detection)
 
-    @asyncio.coroutine
-    def async_update(self):
-        """Perform the I/O operation with camera."""
-        if self._motion_status == MOTION_ENABLED:
-            self._base_stn.mode = ARLO_MODE_ARMED
-        else:
-            self._base_stn.mode = ARLO_MODE_DISARMED
+    def enable_motion_detection(self):
+        """Enable the Motion detection in base station (Arm)."""
+        self._motion_status = True
+        self.set_base_station_mode(ARLO_MODE_ARMED)
+
+    def async_disable_motion_detection(self):
+        """Add function to event loop and return coroutine."""
+        return self.hass.async_add_job(self.disable_motion_detection)
+
+    def disable_motion_detection(self):
+        """Disable the motion detection in base station (Disarm)."""
+        self._motion_status = False
+        self.set_base_station_mode(ARLO_MODE_DISARMED)
