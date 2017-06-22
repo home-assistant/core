@@ -1,13 +1,14 @@
 """
 Clicksend platform for notify component.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.clicksend/
 """
 
 # Import dependencies.
 import logging
-import requests
 import json
+import requests
 
 import voluptuous as vol
 
