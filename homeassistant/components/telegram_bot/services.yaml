@@ -225,3 +225,15 @@ answer_callback_query:
     show_alert:
       description: Show a permanent notification.
       example: true
+
+delete_message:
+  description: Delete a previously sent message.  
+
+  fields:
+    message_id:
+      description: id of the message to delete.
+      example: '{{ trigger.event.data.message.message_id }}'  
+
+    chat_id:
+      description: The chat_id where to delete the message.
+      example: 12345
