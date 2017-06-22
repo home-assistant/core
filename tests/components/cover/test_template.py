@@ -33,7 +33,7 @@ class TestTemplateCover(unittest.TestCase):
         self.hass.services.register('test', 'automation', record_call)
 
     def teardown_method(self, method):
-        """Stop down everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_template_state_text(self):
