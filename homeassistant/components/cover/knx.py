@@ -21,6 +21,7 @@ CONF_GETPOSITION_ADDRESS = 'getposition_address'
 CONF_SETPOSITION_ADDRESS = 'setposition_address'
 CONF_STOP = 'stop_address'
 CONF_UPDOWN = 'updown_address'
+CONF_INVERT_POSITION = 'invert_position'
 
 DEFAULT_NAME = 'KNX Cover'
 DEPENDENCIES = ['knx']
@@ -32,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_GETPOSITION_ADDRESS): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SETPOSITION_ADDRESS): cv.string,
+    vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
 })
 
 
@@ -51,6 +53,7 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
             optional=['setposition', 'getposition']
         )
         self._device_class = config.config.get(CONF_DEVICE_CLASS)
+        self._invert_position = config.config.get(CONF_INVERT_POSITION)
         self._hass = hass
         self._current_pos = None
         self._target_pos = None
@@ -88,6 +91,9 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         if position is None:
             return
 
+        if self._invert_position:
+            position = 100-position
+
         self._target_pos = position
         self.set_percentage('setposition', position)
         _LOGGER.debug("%s: Set target position to %d", self.name, position)
@@ -98,6 +104,8 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         value = self.get_percentage('getposition')
         if value is not None:
             self._current_pos = value
+            if self._invert_position:
+                self._current_pos = 100-value
             _LOGGER.debug("%s: position = %d", self.name, value)
 
     def open_cover(self, **kwargs):
