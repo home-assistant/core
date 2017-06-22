@@ -12,8 +12,9 @@ import base64
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_USERNAME, CONF_API_KEY, CONF_RECIPIENT,
-    HTTP_HEADER_CONTENT_TYPE, CONTENT_TYPE_JSON, HTTP_BASIC_AUTHENTICATION)
+from homeassistant.const import (CONF_USERNAME, CONF_API_KEY,
+                                 CONF_RECIPIENT,HTTP_HEADER_CONTENT_TYPE,
+                                 CONTENT_TYPE_JSON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
     PLATFORM_SCHEMA, BaseNotificationService)
@@ -60,7 +61,7 @@ class ClicksendNotificationService(BaseNotificationService):
         api_url = "{}/sms/send".format(BASE_API_URL)
 
         resp = requests.post(api_url, data=json.dumps(data), headers=headers,
-                            auth=(self.username, self.api_key), timeout=5)
+                             auth=(self.username, self.api_key), timeout=5)
 
         obj = json.loads(resp.text)
         response_msg = obj['response_msg']
@@ -71,13 +72,14 @@ class ClicksendNotificationService(BaseNotificationService):
             _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
                           response_msg, response_code)
 
-
+                          
 def _authenticate(config):
     """Authenticate with ClickSend."""
     api_url = '{}/account'.format(BASE_API_URL)
     headers = {HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON}
 
-    resp = requests.get(api_url, auth=(config.get(CONF_USERNAME),
+    resp = requests.get(api_url, headers=headers,
+                        auth=(config.get(CONF_USERNAME),
                         config.get(CONF_API_KEY)), timeout=5)
 
     if resp.status_code != 200:
