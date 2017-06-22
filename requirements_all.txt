@@ -270,9 +270,6 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
-# homeassistant.components.switch.rachio
-https://github.com/Klikini/rachiopy/archive/2c8996fcfa97a9f361a789e0c998797ed2805281.zip#rachiopy==0.1.1
-
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
@@ -767,6 +764,9 @@ pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
 qnapstats==0.2.4
+
+# homeassistant.components.switch.rachio
+rachiopy==0.1.2
 
 # homeassistant.components.climate.radiotherm
 radiotherm==1.2
