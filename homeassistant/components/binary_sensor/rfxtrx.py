@@ -118,8 +118,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                          cmd, sensor.masked_id)
             sensor.apply_cmd(int(cmd, 16))
         else:
-            if not sensor.is_on or sensor.should_fire_event:
-                sensor.update_state(True)
+            rfxtrx.apply_received_command(event)
 
         if (sensor.is_on and sensor.off_delay is not None and
                 sensor.delay_listener is None):
