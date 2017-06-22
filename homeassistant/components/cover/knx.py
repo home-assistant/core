@@ -79,8 +79,6 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         else:
             _LOGGER.debug("%s: Tilt not supported", self.name)
 
-        _LOGGER.debug("%s: supported features: %s", self.name, self._supported_features)
-
     @property
     def should_poll(self):
         """Polling is needed for the KNX cover."""
@@ -151,7 +149,7 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
                 self._current_pos = 100-value
             _LOGGER.debug("%s: position = %d", self.name, value)
 
-        if self._supported_features | SUPPORT_SET_TILT_POSITION:
+        if self._supported_features & SUPPORT_SET_TILT_POSITION:
             value = self.get_percentage('getangle')
             if value is not None:
                 self._current_tilt = value
