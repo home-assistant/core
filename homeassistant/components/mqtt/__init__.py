@@ -29,7 +29,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
 
-REQUIREMENTS = ['paho-mqtt==1.2.3']
+REQUIREMENTS = ['paho-mqtt==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -646,7 +646,7 @@ def _match_topic(subscription, topic):
         if sub_part == "+":
             reg_ex_parts.append(r"([^\/]+)")
         else:
-            reg_ex_parts.append(sub_part)
+            reg_ex_parts.append(re.escape(sub_part))
 
     reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
 

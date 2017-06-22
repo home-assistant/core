@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.unifi/
 """
 import logging
-import urllib
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -15,7 +14,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.const import CONF_VERIFY_SSL
 
-REQUIREMENTS = ['pyunifi==2.12']
+REQUIREMENTS = ['pyunifi==2.13']
 
 _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
@@ -40,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Set up the Unifi device_tracker."""
-    from pyunifi.controller import Controller
+    from pyunifi.controller import Controller, APIError
 
     host = config[DOMAIN].get(CONF_HOST)
     username = config[DOMAIN].get(CONF_USERNAME)
@@ -53,7 +52,7 @@ def get_scanner(hass, config):
     try:
         ctrl = Controller(host, username, password, port, version='v4',
                           site_id=site_id, ssl_verify=verify_ssl)
-    except urllib.error.HTTPError as ex:
+    except APIError as ex:
         _LOGGER.error("Failed to connect to Unifi: %s", ex)
         persistent_notification.create(
             hass, 'Failed to connect to Unifi. '
@@ -77,9 +76,10 @@ class UnifiScanner(DeviceScanner):
 
     def _update(self):
         """Get the clients from the device."""
+        from pyunifi.controller import APIError
         try:
             clients = self._controller.get_clients()
-        except urllib.error.HTTPError as ex:
+        except APIError as ex:
             _LOGGER.error("Failed to scan clients: %s", ex)
             clients = []
 

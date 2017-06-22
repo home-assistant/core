@@ -59,7 +59,7 @@ def test_default_setup(hass, monkeypatch):
     switch_after_first_command = hass.states.get('switch.test')
     assert switch_after_first_command.state == 'on'
     # also after receiving first command state not longer has to be assumed
-    assert 'assumed_state' not in switch_after_first_command.attributes
+    assert not switch_after_first_command.attributes.get('assumed_state')
 
     # mock incoming command event for this device
     event_callback({

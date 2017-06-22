@@ -13,9 +13,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, CONF_API_KEY, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    LENGTH_INCHES, LENGTH_KILOMETERS, LENGTH_MILES, LENGTH_FEET,
-    STATE_UNKNOWN, ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME)
+    CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
+    TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
+    LENGTH_MILES, LENGTH_FEET, STATE_UNKNOWN, ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -618,6 +619,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PWS_ID): cv.string,
     vol.Optional(CONF_LANG, default=DEFAULT_LANG):
     vol.All(vol.In(LANG_CODES)),
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
     vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
@@ -625,9 +630,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
+    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+
     rest = WUndergroundData(
         hass, config.get(CONF_API_KEY), config.get(CONF_PWS_ID),
-        config.get(CONF_LANG))
+        config.get(CONF_LANG), latitude, longitude)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(WUndergroundSensor(rest, variable))
@@ -658,7 +666,7 @@ class WUndergroundSensor(Entity):
         try:
             val = val(self.rest)
         except (KeyError, IndexError) as err:
-            _LOGGER.error("Failed to parse response from WU API: %s", err)
+            _LOGGER.warning("Failed to parse response from WU API: %s", err)
             val = default
         except TypeError:
             pass  # val was not callable - keep original value
@@ -684,6 +692,9 @@ class WUndergroundSensor(Entity):
                 attrs[attr] = callback(self.rest)
             except TypeError:
                 attrs[attr] = callback
+            except (KeyError, IndexError) as err:
+                _LOGGER.warning("Failed to parse response from WU API: %s",
+                                err)
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs[ATTR_FRIENDLY_NAME] = self._cfg_expand("friendly_name")
@@ -714,14 +725,14 @@ class WUndergroundSensor(Entity):
 class WUndergroundData(object):
     """Get data from WUnderground."""
 
-    def __init__(self, hass, api_key, pws_id, lang):
+    def __init__(self, hass, api_key, pws_id, lang, latitude, longitude):
         """Initialize the data object."""
         self._hass = hass
         self._api_key = api_key
         self._pws_id = pws_id
         self._lang = 'lang:{}'.format(lang)
-        self._latitude = hass.config.latitude
-        self._longitude = hass.config.longitude
+        self._latitude = latitude
+        self._longitude = longitude
         self._features = set()
         self.data = None
 

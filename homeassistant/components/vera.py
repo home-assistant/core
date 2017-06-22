@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.32']
+REQUIREMENTS = ['pyvera==0.2.33']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ class VeraDevice(Entity):
         attr = {}
 
         if self.vera_device.has_battery:
-            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level + '%'
+            attr[ATTR_BATTERY_LEVEL] = self.vera_device.battery_level
 
         if self.vera_device.is_armable:
             armed = self.vera_device.is_armed
