@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.cover import (
     CoverDevice, PLATFORM_SCHEMA, ATTR_POSITION, DEVICE_CLASSES_SCHEMA,
-    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION, SUPPORT_STOP,SUPPORT_SET_TILT_POSITION
+    SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION, SUPPORT_STOP,
+    SUPPORT_SET_TILT_POSITION
 )
 from homeassistant.components.knx import (KNXConfig, KNXMultiAddressDevice)
 from homeassistant.const import (CONF_NAME, CONF_DEVICE_CLASS)
@@ -68,15 +69,17 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         self._target_pos = None
         self._current_tilt = None
         self._target_tilt = None
-        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | \
+                                   SUPPORT_SET_POSITION | SUPPORT_STOP
 
         # Tilt is only supported, if there is a get and set address for the angle
         if (config.config.get(CONF_SETANGLE_ADDRESS) is not None) and \
            (config.config.get(CONF_GETANGLE_ADDRESS) is not None):
-            _LOGGER.debug("%s: Tilt supported at addresses %s, %s", 
+            _LOGGER.debug("%s: Tilt supported at addresses %s, %s",
                           self.name, config.config.get(CONF_SETANGLE_ADDRESS),
                           config.config.get(CONF_GETANGLE_ADDRESS))
-            self._supported_features = self._supported_features | SUPPORT_SET_TILT_POSITION
+            self._supported_features = self._supported_features | \
+                                       SUPPORT_SET_TILT_POSITION
         else:
             _LOGGER.debug("%s: Tilt not supported", self.name)
 
@@ -112,7 +115,6 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         """Return the position we are trying to reach: 0 - 100."""
         return self._target_pos
 
-
     @property
     def current_cover_tilt_position(self):
         """Return current position of cover.
@@ -120,7 +122,6 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._current_tilt
-
 
     @property
     def target_tilt(self):
@@ -180,7 +181,7 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
 
         self._set_tilt_position = round(tilt_position, -1)
         self.set_percentage('setangle', tilt_position)
-    
+
     @property
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
