@@ -9,8 +9,9 @@ import logging
 
 from homeassistant.core import callback
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, ATTR_TRANSITION,
+    SUPPORT_BRIGHTNESS, SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP,
+    SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -221,7 +222,7 @@ class TradfriLight(Light):
             transition = kwargs[ATTR_TRANSITION]
             self.hass.async_add_job(self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                                       transition_time=transition)))
+                                               transition_time=transition)))
         else:
             self.hass.async_add_job(self._api(
                 self._light_control.set_state(True)))
