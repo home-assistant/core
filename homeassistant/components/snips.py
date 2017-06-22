@@ -7,7 +7,6 @@ https://home-assistant.io/components/snips/
 from homeassistant.helpers import template, script, config_validation as cv
 import homeassistant.loader as loader
 import voluptuous as vol
-import asyncio
 import copy
 import json
 import logging
@@ -31,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
     }
 }, extra=vol.ALLOW_EXTRA)
 
+
 def setup(hass, config):
     LOGGER.info("The 'snips' component is ready!")
 
@@ -49,6 +49,7 @@ def setup(hass, config):
 
     return True
 
+
 class IntentHandler(object):
 
     def __init__(self, hass, intents):
@@ -58,8 +59,8 @@ class IntentHandler(object):
 
         for name, intent in intents.items():
             if CONF_ACTION in intent:
-                intent[CONF_ACTION] = script.Script(hass, intent[CONF_ACTION],
-                    "Snips intent {}".format(name))
+                intent[CONF_ACTION] = script.Script(
+                    hass, intent[CONF_ACTION], "Snips intent {}".format(name))
 
         self.intents = intents
 
