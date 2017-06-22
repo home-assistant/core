@@ -10,7 +10,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_RGB_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
+    SUPPORT_TRANSITION, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, Light)
 from homeassistant.components.light import \
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA
 from homeassistant.components.tradfri import KEY_GATEWAY, KEY_TRADFRI_GROUPS, \
@@ -23,6 +23,7 @@ DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
+SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 ALLOWED_TEMPERATURES = {
     IKEA: {2200: 'efd275', 2700: 'f1e0b5', 4000: 'f5faf6'}
 }
@@ -76,7 +77,7 @@ class TradfriGroup(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
+        return SUPPORTED_FEATURES
 
     @property
     def name(self):
@@ -102,8 +103,10 @@ class TradfriGroup(Light):
     def async_turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
         if ATTR_BRIGHTNESS in kwargs:
+            transition = kwargs[ATTR_TRANSITION]
             self.hass.async_add_job(self._api(
-                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS])))
+                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS],
+                                       transition_time=transition)))
         else:
             self.hass.async_add_job(self._api(self._group.set_state(1)))
 
@@ -142,7 +145,7 @@ class TradfriLight(Light):
         self._light_data = None
         self._name = None
         self._rgb_color = None
-        self._features = SUPPORT_BRIGHTNESS
+        self._features = SUPPORTED_FEATURES
         self._ok_temps = None
 
         self._refresh(light)
@@ -215,8 +218,10 @@ class TradfriLight(Light):
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
         if ATTR_BRIGHTNESS in kwargs:
+            transition = kwargs[ATTR_TRANSITION]
             self.hass.async_add_job(self._api(
-                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS])))
+                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
+                                       transition_time=transition)))
         else:
             self.hass.async_add_job(self._api(
                 self._light_control.set_state(True)))
@@ -256,7 +261,7 @@ class TradfriLight(Light):
         self._light_data = light.light_control.lights[0]
         self._name = light.name
         self._rgb_color = None
-        self._features = SUPPORT_BRIGHTNESS
+        self._features = SUPPORTED_FEATURES
 
         if self._light_data.hex_color is not None:
             if self._light.device_info.manufacturer == IKEA:
