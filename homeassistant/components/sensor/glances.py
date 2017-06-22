@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES,
     TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'api/2/all'
@@ -25,7 +24,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
@@ -63,20 +62,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = 'http://{}:{}/{}'.format(host, port, _RESOURCE)
     var_conf = config.get(CONF_RESOURCES)
 
-    try:
-        response = requests.get(url, timeout=10)
-        if not response.ok:
-            _LOGGER.warning("Response status is '%s'", response.status_code)
-    except requests.exceptions.ConnectionError:
-        _LOGGER.warning("No route to resource/endpoint: %s", url)
-
     rest = GlancesData(url)
+    rest.update()
 
     dev = []
     for resource in var_conf:
         dev.append(GlancesSensor(rest, name, resource))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class GlancesSensor(Entity):
@@ -89,7 +82,6 @@ class GlancesSensor(Entity):
         self.type = sensor_type
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -170,12 +162,11 @@ class GlancesData(object):
         self._resource = resource
         self.data = dict()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Glances REST API."""
         try:
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.debug("Error connecting to glances: %s", self._resource)
+            _LOGGER.error("Connection error: %s", self._resource)
             self.data = None
