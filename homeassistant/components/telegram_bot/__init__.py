@@ -116,19 +116,22 @@ SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
 })
 
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend({
-    vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
+    vol.Required(ATTR_MESSAGEID):
+        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
 })
 
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema({
-    vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
+    vol.Required(ATTR_MESSAGEID):
+        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     vol.Required(ATTR_CAPTION): cv.template,
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema({
-    vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
+    vol.Required(ATTR_MESSAGEID):
+        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
@@ -141,7 +144,8 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema({
 
 SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
+    vol.Required(ATTR_MESSAGEID):
+        vol.Any(cv.positive_int, vol.All(cv.string, 'last')),
 }, extra=vol.ALLOW_EXTRA)
 
 SERVICE_MAP = {
