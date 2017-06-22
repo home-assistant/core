@@ -19,7 +19,7 @@ from homeassistant.components.rfxtrx import (
     ATTR_DATA_BITS, CONF_DEVICES
 )
 from homeassistant.const import (
-    CONF_SENSOR_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
+    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
 )
 
 DEPENDENCIES = ["rfxtrx"]
@@ -52,10 +52,10 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                                                     entity[ATTR_DATA_BITS]))
 
         _LOGGER.info("Add %s rfxtrx.binary_sensor (class %s)",
-                     entity[ATTR_NAME], entity[CONF_SENSOR_CLASS])
+                     entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
 
         device = RfxtrxBinarySensor(event, entity[ATTR_NAME],
-                                    entity[CONF_SENSOR_CLASS],
+                                    entity[CONF_DEVICE_CLASS],
                                     entity[ATTR_FIREEVENT],
                                     entity[ATTR_OFF_DELAY],
                                     entity[ATTR_DATA_BITS],
@@ -118,8 +118,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                          cmd, sensor.masked_id)
             sensor.apply_cmd(int(cmd, 16))
         else:
-            if not sensor.is_on or sensor.should_fire_event:
-                sensor.update_state(True)
+            rfxtrx.apply_received_command(event)
 
         if (sensor.is_on and sensor.off_delay is not None and
                 sensor.delay_listener is None):
@@ -142,14 +141,14 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 class RfxtrxBinarySensor(BinarySensorDevice):
     """An Rfxtrx binary sensor."""
 
-    def __init__(self, event, name, sensor_class=None,
+    def __init__(self, event, name, device_class=None,
                  should_fire=False, off_delay=None, data_bits=None,
                  cmd_on=None, cmd_off=None):
         """Initialize the sensor."""
         self.event = event
         self._name = name
         self._should_fire_event = should_fire
-        self._sensor_class = sensor_class
+        self._device_class = device_class
         self._off_delay = off_delay
         self._state = False
         self.delay_listener = None
@@ -207,9 +206,9 @@ class RfxtrxBinarySensor(BinarySensorDevice):
         return self._should_fire_event
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the sensor class."""
-        return self._sensor_class
+        return self._device_class
 
     @property
     def off_delay(self):
@@ -231,4 +230,4 @@ class RfxtrxBinarySensor(BinarySensorDevice):
     def update_state(self, state):
         """Update the state of the device."""
         self._state = state
-        self.update_ha_state()
+        self.schedule_update_ha_state()
