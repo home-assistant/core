@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 group_conf.get(CONF_NAME),
                 group_conf.get(CONF_TYPE, DEFAULT_LED_TYPE))
             lights.append(LimitlessLEDGroup.factory(group, {
-                'fade': group_conf.get(CONF_FADE, DEFAULT_FADE)
+                'fade': group_conf[CONF_FADE]
             }))
     add_devices(lights)
 
