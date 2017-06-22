@@ -183,7 +183,18 @@ class APIStatesView(HomeAssistantView):
     @ha.callback
     def get(self, request):
         """Get current states."""
-        return self.json(request.app['hass'].states.async_all())
+        hass = request.app['hass']
+        json_response = []
+
+        restrict = request.query.get('restrict')
+
+        for entity in hass.states.async_all():
+            if restrict and entity.domain not in restrict:
+                continue
+
+            json_response.append(entity)
+
+        return self.json(json_response)
 
 
 class APIEntityStateView(HomeAssistantView):
@@ -311,11 +322,20 @@ class APIDomainServicesView(HomeAssistantView):
         hass = request.app['hass']
         body = yield from request.text()
         data = json.loads(body) if body else None
+        json_response = []
+
+        restrict = request.query.get('restrict')
 
         with AsyncTrackStates(hass) as changed_states:
             yield from hass.services.async_call(domain, service, data, True)
 
-        return self.json(changed_states)
+        for entity in changed_states:
+            if restrict and entity.domain not in restrict:
+                continue
+
+            json_response.append(entity)
+
+        return self.json(json_response)
 
 
 class APIComponentsView(HomeAssistantView):

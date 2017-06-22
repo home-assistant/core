@@ -30,6 +30,21 @@ def test_api_list_state_entities(hass, mock_api_client):
 
 
 @asyncio.coroutine
+def test_api_state_with_restricted(hass, mock_api_client):
+    """Test the states with restrictions."""
+    hass.states.async_set('show.hello', 'hello')
+    hass.states.async_set('hide.bye', 'bye')
+    resp = yield from mock_api_client.get(
+        '{}?restrict=show'.format(const.URL_API_STATES))
+    assert resp.status == 200
+    json = yield from resp.json()
+
+    remote_data = [ha.State.from_dict(item) for item in json]
+
+    assert len(remote_data) == 1 and remote_data[0].domain == 'show'
+
+
+@asyncio.coroutine
 def test_api_get_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     hass.states.async_set('hello.world', 'nice', {
