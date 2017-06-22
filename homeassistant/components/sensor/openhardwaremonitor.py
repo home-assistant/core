@@ -21,8 +21,8 @@ STATE_VALUE = 'value'
 STATE_OBJECT = 'object'
 CONF_INTERVAL = 'interval'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=1)
-SCAN_INTERVAL = timedelta(seconds=5)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
+SCAN_INTERVAL = timedelta(seconds=30)
 RETRY_INTERVAL = timedelta(seconds=30)
 
 OHM_VALUE = 'Value'
@@ -79,7 +79,29 @@ class OpenHardwareMonitorDevice(Entity):
     def update(self):
         """Update the device from a new JSON object."""
         self._data.update()
-        self._data.update_device(self)
+
+        array = self._data.data[OHM_CHILDREN]
+        _attributes = {}
+
+        for path_index in range(0, len(self.path)):
+            path_number = self.path[path_index]
+            values = array[path_number]
+
+            if path_index == len(self.path) - 1:
+                self.value = values[OHM_VALUE].split(' ')[0]
+                _attributes.update({
+                    'name': values[OHM_NAME],
+                    STATE_MIN_VALUE: values[OHM_MIN].split(' ')[0],
+                    STATE_MAX_VALUE: values[OHM_MAX].split(' ')[0]
+                })
+
+                self.attributes = _attributes
+                return
+            else:
+                array = array[path_number][OHM_CHILDREN]
+                _attributes.update({
+                    'level_%s' % path_index: values[OHM_NAME]
+                })
 
 
 class OpenHardwareMonitorData(object):
@@ -87,7 +109,7 @@ class OpenHardwareMonitorData(object):
 
     def __init__(self, config, hass):
         """Initialize the Open Hardware Monitor data-handler."""
-        self._data = None
+        self.data = None
         self._config = config
         self._hass = hass
         self.devices = []
@@ -96,7 +118,7 @@ class OpenHardwareMonitorData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Hit by the timer with the configured interval."""
-        if self._data is None:
+        if self.data is None:
             self.initialize(utcnow())
         else:
             self.refresh()
@@ -109,7 +131,7 @@ class OpenHardwareMonitorData(object):
 
         try:
             response = requests.get(data_url)
-            self._data = response.json()
+            self.data = response.json()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("ConnectionError: Is OpenHardwareMonitor running?")
 
@@ -124,11 +146,11 @@ class OpenHardwareMonitorData(object):
         """Initial parsing of the sensors and adding of devices."""
         self.refresh()
 
-        if self._data is None:
+        if self.data is None:
             self.schedule_retry()
             return
 
-        self.devices = self.parse_children(self._data, [], [], [])
+        self.devices = self.parse_children(self.data, [], [], [])
 
     def parse_children(self, json, devices, path, names):
         """Recursively loop through child objects, finding the values."""
@@ -168,28 +190,3 @@ class OpenHardwareMonitorData(object):
                 result.append(dev)
 
         return result
-
-    def update_device(self, device):
-        """Update device."""
-        array = self._data[OHM_CHILDREN]
-
-        attributes = {}
-        for path_index in range(0, len(device.path)):
-            path_number = device.path[path_index]
-            values = array[path_number]
-
-            if path_index == len(device.path) - 1:
-                device.value = values[OHM_VALUE].split(' ')[0]
-                attributes.update({
-                    'name': values[OHM_NAME],
-                    STATE_MIN_VALUE: values[OHM_MIN].split(' ')[0],
-                    STATE_MAX_VALUE: values[OHM_MAX].split(' ')[0]
-                })
-
-                device.attributes = attributes
-                return
-            else:
-                array = array[path_number][OHM_CHILDREN]
-                attributes.update({
-                    'level_%s' % path_index: values[OHM_NAME]
-                })
