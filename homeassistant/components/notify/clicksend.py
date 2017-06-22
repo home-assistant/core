@@ -13,7 +13,7 @@ import base64
 import voluptuous as vol
 
 from homeassistant.const import (CONF_USERNAME, CONF_API_KEY,
-                                 CONF_RECIPIENT,HTTP_HEADER_CONTENT_TYPE,
+                                 CONF_RECIPIENT, HTTP_HEADER_CONTENT_TYPE,
                                  CONTENT_TYPE_JSON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (
@@ -54,7 +54,7 @@ class ClicksendNotificationService(BaseNotificationService):
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
         data = ({'messages': [{'source': 'hass.notify', 'from': self.recipient,
-                'to': self.recipient, 'body': message}]})
+                               'to': self.recipient, 'body': message}]})
 
         headers = {HTTP_HEADER_CONTENT_TYPE: CONTENT_TYPE_JSON}
 
@@ -72,7 +72,7 @@ class ClicksendNotificationService(BaseNotificationService):
             _LOGGER.error("Error %s : %s (Code %s)", resp.status_code,
                           response_msg, response_code)
 
-                          
+
 def _authenticate(config):
     """Authenticate with ClickSend."""
     api_url = '{}/account'.format(BASE_API_URL)
@@ -80,7 +80,7 @@ def _authenticate(config):
 
     resp = requests.get(api_url, headers=headers,
                         auth=(config.get(CONF_USERNAME),
-                        config.get(CONF_API_KEY)), timeout=5)
+                              config.get(CONF_API_KEY)), timeout=5)
 
     if resp.status_code != 200:
         return False
