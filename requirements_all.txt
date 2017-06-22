@@ -316,6 +316,7 @@ https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
 # homeassistant.components.sensor.bme280
+# homeassistant.components.sensor.htu21d
 # i2csense==0.0.3
 
 # homeassistant.components.influxdb
@@ -823,6 +824,7 @@ sleepyq==0.6
 
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.envirophat
+# homeassistant.components.sensor.htu21d
 # smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast
