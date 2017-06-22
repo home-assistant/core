@@ -26,7 +26,8 @@ WEMO_MODEL_DISPATCH = {
     'Sensor':  'binary_sensor',
     'Socket':  'switch',
     'LightSwitch': 'switch',
-    'CoffeeMaker': 'switch'
+    'CoffeeMaker': 'switch',
+    'DLI emulated Belkin Socket': 'switch'
 }
 
 SUBSCRIPTION_REGISTRY = None
