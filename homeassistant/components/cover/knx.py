@@ -70,16 +70,16 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         self._current_tilt = None
         self._target_tilt = None
         self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | \
-                                   SUPPORT_SET_POSITION | SUPPORT_STOP
+            SUPPORT_SET_POSITION | SUPPORT_STOP
 
-        # Tilt is only supported, if there is a get and set address for the angle
+        # Tilt is only supported, if there is a angle get and set address
         if (config.config.get(CONF_SETANGLE_ADDRESS) is not None) and \
            (config.config.get(CONF_GETANGLE_ADDRESS) is not None):
             _LOGGER.debug("%s: Tilt supported at addresses %s, %s",
                           self.name, config.config.get(CONF_SETANGLE_ADDRESS),
                           config.config.get(CONF_GETANGLE_ADDRESS))
             self._supported_features = self._supported_features | \
-                                       SUPPORT_SET_TILT_POSITION
+                SUPPORT_SET_TILT_POSITION
         else:
             _LOGGER.debug("%s: Tilt not supported", self.name)
 
