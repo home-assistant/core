@@ -17,7 +17,7 @@ from homeassistant.const import CONF_HOST, CONF_API_KEY
 from homeassistant.loader import get_component
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 
-REQUIREMENTS = ['pytradfri==2.1']
+REQUIREMENTS = ['pytradfri==2.1.1']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = 'tradfri.conf'
