@@ -315,6 +315,7 @@ https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
+# homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.htu21d
 # i2csense==0.0.3
@@ -822,6 +823,7 @@ sleekxmpp==1.3.2
 # homeassistant.components.sleepiq
 sleepyq==0.6
 
+# homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.envirophat
 # homeassistant.components.sensor.htu21d
