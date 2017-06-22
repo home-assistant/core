@@ -70,6 +70,7 @@ SERVICE_EDIT_MESSAGE = 'edit_message'
 SERVICE_EDIT_CAPTION = 'edit_caption'
 SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
 SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
+SERVICE_DELETE_MESSAGE = 'delete_message'
 
 EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
@@ -138,6 +139,11 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema({
     vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_SCHEMA_DELETE_MESSAGE = vol.Schema({
+    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
+    vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
+}, extra=vol.ALLOW_EXTRA)
+
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
@@ -147,6 +153,7 @@ SERVICE_MAP = {
     SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
     SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
+    SERVICE_DELETE_MESSAGE: SERVICE_SCHEMA_DELETE_MESSAGE,
 }
 
 
@@ -271,6 +278,9 @@ def async_setup(hass, config):
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
             yield from hass.async_add_job(
                 partial(notify_service.answer_callback_query, **kwargs))
+        elif msgtype == SERVICE_DELETE_MESSAGE:
+            yield from hass.async_add_job(
+                partial(notify_service.delete_message, **kwargs))
         else:
             yield from hass.async_add_job(
                 partial(notify_service.edit_message, msgtype, **kwargs))
@@ -435,6 +445,20 @@ class TelegramNotificationService:
             self._send_msg(self.bot.sendMessage,
                            "Error sending message",
                            chat_id, text, **params)
+
+    def delete_message(self, chat_id=None, **kwargs):
+        """Delete a previously sent message."""
+        chat_id = self._get_target_chat_ids(chat_id)[0]
+        message_id, _ = self._get_msg_ids(kwargs, chat_id)
+        _LOGGER.debug("Delete message %s in chat ID %s", message_id, chat_id)
+        deleted = self._send_msg(self.bot.deleteMessage,
+                                 "Error deleting message",
+                                 chat_id, message_id)
+        # reduce message_id anyway:
+        if self._last_message_id[chat_id] is not None:
+            # change last msg_id for deque(n_msgs)?
+            self._last_message_id[chat_id] -= 1
+        return deleted
 
     def edit_message(self, type_edit, chat_id=None, **kwargs):
         """Edit a previously sent message."""
