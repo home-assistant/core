@@ -1,13 +1,12 @@
-"""
-Support for Linksys Smart Wifi routers.
-"""
+"""Support for Linksys Smart Wifi routers."""
 import logging
 import threading
 from datetime import timedelta
 
-import homeassistant.helpers.config_validation as cv
 import requests
 import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
@@ -47,7 +46,7 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             raise ConnectionError("Cannot connect to Linksys Access Point")
 
     def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs (MACs)."""
+        """Scan for new devices and return a list with device IDs (MACs)."""
         self._update_info()
 
         return self.last_results.keys()
@@ -65,7 +64,9 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             self.last_results = {}
             response = self._make_request()
             if response.status_code != 200:
-                _LOGGER.error("Unable to get device list from router, got HTTP status code %d", response.status_code)
+                _LOGGER.error(
+                    "Got HTTP status code %d when getting device list",
+                    response.status_code)
                 return False
             try:
                 data = response.json()
@@ -74,7 +75,8 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
                 for device in devices:
                     macs = device["knownMACAddresses"]
                     if not macs:
-                        _LOGGER.warn("Found device without known MAC address, skipping")
+                        _LOGGER.warning(
+                            "Skipping device without known MAC address")
                         continue
                     mac = macs[-1]
                     connections = device["connections"]
@@ -101,7 +103,8 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
             },
             "action": "http://linksys.com/jnap/devicelist/GetDevices"
         }]
+        headers = {"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"}
         return requests.post('http://{}/JNAP/'.format(self.host),
                              timeout=DEFAULT_TIMEOUT,
-                             headers={"X-JNAP-Action": "http://linksys.com/jnap/core/Transaction"},
+                             headers=headers,
                              json=data)
