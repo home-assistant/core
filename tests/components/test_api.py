@@ -30,6 +30,21 @@ def test_api_list_state_entities(hass, mock_api_client):
 
 
 @asyncio.coroutine
+def test_api_state_with_restricted(hass, mock_api_client):
+    """Test the states with restrictions."""
+    hass.states.async_set('show.hello', 'hello')
+    hass.states.async_set('hide.bye', 'bye')
+    resp = yield from mock_api_client.get(
+        '{}?restrict=show'.format(const.URL_API_STATES))
+    assert resp.status == 200
+    json = yield from resp.json()
+
+    remote_data = [ha.State.from_dict(item) for item in json]
+
+    assert len(remote_data) == 1 and remote_data[0].entity_id == 'show.hello'
+
+
+@asyncio.coroutine
 def test_api_get_state(hass, mock_api_client):
     """Test if the debug interface allows us to get a state."""
     hass.states.async_set('hello.world', 'nice', {
@@ -290,6 +305,33 @@ def test_api_call_service_with_data(hass, mock_api_client):
 
     yield from hass.async_block_till_done()
     assert len(test_value) == 1
+
+
+@asyncio.coroutine
+def test_api_call_service_with_restricted(hass, mock_api_client):
+    """Test if the API allows us to call a service."""
+
+    hass.states.async_set('show.hello', 'hello')
+    hass.states.async_set('hide.bye', 'bye')
+
+    @ha.callback
+    def listener(service_call):
+        """Helper method that will verify that our service got called.
+        And change some data
+        """
+        hass.states.async_set('show.hello', 'changed')
+        hass.states.async_set('hide.bye', 'changed')
+
+    hass.services.async_register("test_domain", "test_service", listener)
+
+    result = yield from mock_api_client.post(
+        '{}?restrict=show'.format(
+            const.URL_API_SERVICES_SERVICE.format(
+                "test_domain", "test_service")))
+
+    yield from hass.async_block_till_done()
+    json = yield from result.json()
+    assert len(json) == 1 and json[0]['entity_id'] == 'show.hello'
 
 
 @asyncio.coroutine
