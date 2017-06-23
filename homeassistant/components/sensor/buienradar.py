@@ -44,9 +44,9 @@ SENSOR_TYPES = {
     'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
     'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
     'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
-    'precipitation_forecast_average': ['Precipitation forecast average', 
+    'precipitation_forecast_average': ['Precipitation forecast average',
                                        'mm/h', 'mdi:weather-pouring'],
-    'precipitation_forecast_total': ['Precipitation forecast total', 
+    'precipitation_forecast_total': ['Precipitation forecast total',
                                      'mm/h', 'mdi:weather-pouring']
 }
 
@@ -246,7 +246,7 @@ class BrData(object):
     @asyncio.coroutine
     def async_update(self, *_):
         """Update the data from buienradar."""
-        from buienradar.buienradar import (parse_data, CONTENT, RAINCONTENT,
+        from buienradar.buienradar import (parse_data, CONTENT,
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
         content = yield from self.get_data('http://xml.buienradar.nl')
@@ -254,8 +254,9 @@ class BrData(object):
             content = yield from self.get_data('http://api.buienradar.nl')
 
         # rounding coordinates prevents unnecessary redirects/calls
-        rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'.format(
-            round(self.coordinates[CONF_LATITUDE], 2), 
+        rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'
+        rainurl = rainurl.format(
+            round(self.coordinates[CONF_LATITUDE], 2),
             round(self.coordinates[CONF_LONGITUDE], 2)
             )
         raincontent = yield from self.get_data(rainurl)
