@@ -645,7 +645,7 @@ def _match_topic(subscription, topic):
         subscription = subscription[:-2]
         suffix = "(.*)"
     if subscription.startswith('$'):
-        subscription = "\\" + subscription        
+        subscription = "\\" + subscription
     sub_parts = subscription.split('/')
     for sub_part in sub_parts:
         if sub_part == "+":
