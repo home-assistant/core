@@ -125,7 +125,7 @@ class KNXSensorBaseClass(KNXGroupAddress):
 
         This should be overriden in derived classes
         """
-        return raw_value
+        pass
 
     def update(self):
         """Update KNX sensor."""
