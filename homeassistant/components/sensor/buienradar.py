@@ -266,8 +266,7 @@ class BrData(object):
                                 raincontent.get(CONTENT),
                                 self.coordinates[CONF_LATITUDE],
                                 self.coordinates[CONF_LONGITUDE],
-                                self.timeframe
-                                )
+                                self.timeframe)
             if result.get(SUCCESS):
                 self.data = result.get(DATA)
 
