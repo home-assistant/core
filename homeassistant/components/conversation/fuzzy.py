@@ -58,12 +58,12 @@ class FuzzyProvider(ConversationEngine):
             hass,
             attrs['action'],
             name)
-            for name, attrs in config.items()}
+            for name, attrs in config.items() if name != 'platform'}
 
     @asyncio.coroutine
     def process(self, text):
         """Parse text into commands."""
-        # if actually configured
+        # If choices are  configured
         if self.choices:
             match = self._extract(text, self.choices.keys())
             scorelimit = 60  # arbitrary value
@@ -73,35 +73,40 @@ class FuzzyProvider(ConversationEngine):
                 [match[0] if match[1] > scorelimit else 'nothing']
                 )
             if match[1] > scorelimit:
-                self.choices[match[0]].run()  # run respective script
+                self.hass.async_add_job(self.choices[match[0]].async_run())
                 return
 
+        # If choices not configured or text didn't match any choice, use regexp
         match = REGEX_TURN_COMMAND.match(text)
 
         if not match:
             _LOGGER.error("Unable to process: %s", text)
             return
 
+        # Regexp was matched, try to find the entity referenced in the text
         name, command = match.groups()
+        states = self.hass.states.async_all()
         entities = {state.entity_id: state.name
-                    for state in self.hass.states.all()}
-        entity_ids = self._extract(
-            name, entities, score_cutoff=65)[2]
+                    for state in states}
+        entity_ids = self._extract(name, entities, score_cutoff=65)[2]
 
         if not entity_ids:
             _LOGGER.error(
                 "Could not find entity id %s from text %s", name, text)
             return
 
+        # Apply command to entity
         if command == 'on':
-            self.hass.services.call(core.DOMAIN, SERVICE_TURN_ON, {
-                ATTR_ENTITY_ID: entity_ids,
-            }, blocking=True)
+            yield from self.hass.services.async_call(
+                core.DOMAIN, SERVICE_TURN_ON, {
+                    ATTR_ENTITY_ID: entity_ids,
+                }, blocking=True)
 
         elif command == 'off':
-            self.hass.services.call(core.DOMAIN, SERVICE_TURN_OFF, {
-                ATTR_ENTITY_ID: entity_ids,
-            }, blocking=True)
+            yield from self.hass.services.async_call(
+                core.DOMAIN, SERVICE_TURN_OFF, {
+                    ATTR_ENTITY_ID: entity_ids,
+                }, blocking=True)
 
         else:
             _LOGGER.error('Got unsupported command %s from text %s',

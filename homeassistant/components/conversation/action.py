@@ -49,11 +49,14 @@ class ActionProvider(ConversationEngine):
     @asyncio.coroutine
     def process(self, text):
         """Call a config-defined action for processing of the text."""
-        if not text.strip():
+
+        # Ignore empty text
+        if not text or not text.strip():
             return
 
         _LOGGER.info("Conversation query: %s", (text))
 
+        # Run action script
         parameters = {'text': text}
         si = script.Script(self.hass, self.action,
                            "Conversation action: {}".format(self.action))

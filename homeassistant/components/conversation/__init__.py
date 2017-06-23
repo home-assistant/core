@@ -1,6 +1,12 @@
 """
 Support for functionality to have conversations with Home Assistant.
 
+This component provides a service that accepts text as input, usually
+natural language text that has been received via voice recognition or
+remote chat.
+
+This component purpose is to respond to input text.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/conversation/
 """
@@ -36,7 +42,7 @@ SCHEMA_SERVICE_PROCESS = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up Conversation."""
+    """Set up the conversation platform from configuration."""
 
     descriptions = yield from hass.async_add_job(
         load_yaml_config_file,
@@ -44,7 +50,7 @@ def async_setup(hass, config):
 
     @asyncio.coroutine
     def async_setup_platform(p_type, p_config, disc_info=None):
-        """Set up a Conversation platform."""
+        """Set up a conversation platform."""
         platform = yield from async_prepare_setup_platform(
             hass, config, DOMAIN, p_type)
         if platform is None:
