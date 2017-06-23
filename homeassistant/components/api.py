@@ -188,11 +188,14 @@ class APIStatesView(HomeAssistantView):
 
         restrict = request.query.get('restrict')
 
-        for entity in hass.states.async_all():
-            if restrict and entity.domain not in restrict:
-                continue
+        if restrict:
+            for entity in hass.states.async_all():
+                if restrict and entity.domain not in restrict:
+                    continue
 
-            json_response.append(entity)
+                json_response.append(entity)
+        else:
+            json_response = hass.states.async_all()
 
         return self.json(json_response)
 
@@ -329,11 +332,14 @@ class APIDomainServicesView(HomeAssistantView):
         with AsyncTrackStates(hass) as changed_states:
             yield from hass.services.async_call(domain, service, data, True)
 
-        for entity in changed_states:
-            if restrict and entity.domain not in restrict:
-                continue
+        if restrict:
+            for entity in changed_states:
+                if restrict and entity.domain not in restrict:
+                    continue
 
-            json_response.append(entity)
+                json_response.append(entity)
+        else:
+            json_response = changed_states
 
         return self.json(json_response)
 
