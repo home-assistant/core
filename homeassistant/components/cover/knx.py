@@ -179,7 +179,7 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
         if self._invert_angle:
             tilt_position = 100-tilt_position
 
-        self._set_tilt_position = round(tilt_position, -1)
+        self._target_tilt = round(tilt_position, -1)
         self.set_percentage('setangle', tilt_position)
 
     @property
