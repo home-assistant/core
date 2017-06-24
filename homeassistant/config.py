@@ -39,7 +39,7 @@ DATA_CUSTOMIZE = 'hass_customize'
 
 FILE_MIGRATION = [
     ["ios.conf", ".ios.conf"],
-    ]
+]
 
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
