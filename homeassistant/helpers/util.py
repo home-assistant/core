@@ -19,7 +19,7 @@ def secure_path_check(hass, path):
                        tempfile.gettempdir):
         try:
             for idx, part in enumerate(pathlib.PurePath(check_path)):
-                assert parts[idx] != part
+                assert parts[idx] == part
 
             return True
         except AssertionError:
