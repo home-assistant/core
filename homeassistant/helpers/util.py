@@ -1,5 +1,5 @@
 """Utils around HomeAssistant."""
-import pathlib
+from pathlib
 import tempfile
 
 
@@ -14,7 +14,7 @@ def secure_path_check(hass, path):
     Return True if valid or False.
     """
     try:
-        parts = pathlib.PurePath(path).resolve().parent().parts()
+        parts = pathlib.Path(path).resolve().parent().parts()
     except (FileNotFoundError, RuntimeError):
         return False
 
