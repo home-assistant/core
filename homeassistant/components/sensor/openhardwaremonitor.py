@@ -6,7 +6,6 @@ import requests
 import voluptuous as vol
 
 from homeassistant.util.dt import utcnow
-from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.const import CONF_HOST, CONF_PORT
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
