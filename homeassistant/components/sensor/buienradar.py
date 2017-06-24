@@ -22,6 +22,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
+from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
 REQUIREMENTS = ['buienradar==0.6']
 
@@ -57,20 +58,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=['symbol', 'temperature']): vol.All(
                      cv.ensure_list, vol.Length(min=1),
                      [vol.In(SENSOR_TYPES.keys())]),
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
-    vol.Optional(CONF_TIMEFRAME): cv.positive_int
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
+    vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME):
+    cv.positive_int
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the buienradar sensor."""
-    from homeassistant.components.weather.buienradar import (DEFAULT_TIMEFRAME)
-
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
+    timeframe = config.get(CONF_TIMEFRAME)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in HomeAssistant config")
@@ -241,9 +243,6 @@ class BrData(object):
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             result[MESSAGE] = "%s" % err
             return result
-        finally:
-            if resp is not None:
-                yield from resp.release()
 
     @asyncio.coroutine
     def async_update(self, *_):
@@ -252,7 +251,7 @@ class BrData(object):
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
         content = yield from self.get_data('http://xml.buienradar.nl')
-        if content.get(SUCCESS, False) is False:
+        if not content.get(SUCCESS, False):
             content = yield from self.get_data('http://api.buienradar.nl')
 
         # rounding coordinates prevents unnecessary redirects/calls
