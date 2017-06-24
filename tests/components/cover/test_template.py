@@ -241,8 +241,8 @@ class TestTemplateCover(unittest.TestCase):
         assert state.attributes.get('current_position') is None
 
     def test_template_mutex(self):
-        """Test tat only value or position template can be used."""
-        with assert_setup_component(1, 'cover'):
+        """Test that only value or position template can be used."""
+        with assert_setup_component(0, 'cover'):
             assert setup.setup_component(self.hass, 'cover', {
                 'cover': {
                     'platform': 'template',
@@ -252,6 +252,40 @@ class TestTemplateCover(unittest.TestCase):
                                 "{{ 1 == 1 }}",
                             'position_template':
                                 "{{ 42 }}",
+                            'open_cover': {
+                                'service': 'cover.open_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                            'close_cover': {
+                                'service': 'cover.close_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                            'stop_cover': {
+                                'service': 'cover.close_cover',
+                                'entity_id': 'cover.test_state'
+                            },
+                            'icon_template':
+                                "{% if states.cover.test_state.state %}"
+                                "mdi:check"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        assert self.hass.states.all() == []
+
+    def test_template_position_or_value(self):
+        """Test that at least one of value or position template is used."""
+        with assert_setup_component(1, 'cover'):
+            assert setup.setup_component(self.hass, 'cover', {
+                'cover': {
+                    'platform': 'template',
+                    'covers': {
+                        'test_template_cover': {
                             'open_cover': {
                                 'service': 'cover.open_cover',
                                 'entity_id': 'cover.test_state'

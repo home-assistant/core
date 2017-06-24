@@ -39,15 +39,19 @@ CLOSE_ACTION = 'close_cover'
 STOP_ACTION = 'stop_cover'
 POSITION_ACTION = 'set_cover_position'
 TILT_ACTION = 'set_cover_tilt_position'
+CONF_VALUE_OR_POSITION_TEMPLATE = 'value_or_position'
 
 TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
                  SUPPORT_SET_TILT_POSITION)
 
 COVER_SCHEMA = vol.Schema({
-    vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Required(OPEN_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CLOSE_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(STOP_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Exclusive(CONF_POSITION_TEMPLATE,
+                  CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
+    vol.Exclusive(CONF_VALUE_TEMPLATE,
+                  CONF_VALUE_OR_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_TILT_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
@@ -79,12 +83,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         position_action = device_config.get(POSITION_ACTION)
         tilt_action = device_config.get(TILT_ACTION)
 
-        if ((position_template is None and state_template is None) or
-                (position_template is not None and
-                 state_template is not None)):
-            _LOGGER.error('Must specify only one of: %s',
-                          ', '.join([CONF_VALUE_TEMPLATE,
-                                     CONF_VALUE_TEMPLATE]))
+        if position_template is None and state_template is None:
+            _LOGGER.error('Must specify either %s' or '%s',
+                          CONF_VALUE_TEMPLATE, CONF_VALUE_TEMPLATE)
             continue
 
         template_entity_ids = set()
