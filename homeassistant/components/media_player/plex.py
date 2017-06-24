@@ -148,6 +148,10 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
             _LOGGER.error("Could not connect to plex server at http://%s",
                           host)
             return
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Could not connect to plex server at http://%s",
+                          host)
+            return
 
         new_plex_clients = []
         for device in devices:
@@ -192,6 +196,10 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
             sessions = plexserver.sessions()
         except plexapi.exceptions.BadRequest:
             _LOGGER.exception("Error listing plex sessions")
+            return
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error("Could not connect to plex server at http://%s",
+                          host)
             return
 
         plex_sessions.clear()
