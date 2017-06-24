@@ -796,6 +796,7 @@ class TestConfig(unittest.TestCase):
             'time_zone': 'UTC',
             'components': set(),
             'config_dir': '/tmp/ha-config',
+            'whitelist_external_dirs': set(),
             'version': __version__,
         }
 

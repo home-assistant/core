@@ -428,6 +428,7 @@ class TestConfig(unittest.TestCase):
                                                          mock_elevation):
         """Test config remains unchanged if discovery fails."""
         self.hass.config = Config()
+        self.hass.config.config_dir = "/test/config"
 
         run_coroutine_threadsafe(
             config_util.async_process_ha_core_config(
@@ -441,6 +442,9 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == blankConfig.location_name
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
+        assert len(self.hass.config.whitelist_external_dirs) == 1
+        assert self.hass.config.whitelist_external_dirs[0] == \
+            "/test/config/www"
 
     @mock.patch('asyncio.create_subprocess_exec')
     def test_check_ha_config_file_correct(self, mock_create):

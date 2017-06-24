@@ -1079,7 +1079,9 @@ class Config(object):
 
         Async friendly.
         """
-        if not pathlib.PurePath(path).is_absolute:
+        try:
+            path = str(pathlib.Path(path).resolve())
+        except (FileNotFoundError, RuntimeError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
