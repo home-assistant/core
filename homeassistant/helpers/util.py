@@ -13,7 +13,10 @@ def secure_path_check(hass, path):
 
     Return True if valid or False.
     """
-    parts = pathlib.PurePath(path).parent().parts()
+    try:
+        parts = pathlib.PurePath(path).resolve().parent().parts()
+    except (FileNotFoundError, RuntimeError):
+        return False
 
     for check_path in (hass.config.path('output'), hass.config.path('www'),
                        tempfile.gettempdir):
