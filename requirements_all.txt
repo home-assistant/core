@@ -74,7 +74,7 @@ apns2==0.1.1
 # avion==0.6
 
 # homeassistant.components.axis
-axis==7
+axis==8
 
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
