@@ -224,16 +224,11 @@ class GTFSDepartureSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    @property
-    def offset(self):
-        """Return the offset to use to get the next departure."""
-        return self._offset
-
     def update(self):
         """Get the latest data from GTFS and update the states."""
         with self.lock:
             self._departure = get_next_departure(
-                self._pygtfs, self.origin, self.destination, self.offset)
+                self._pygtfs, self.origin, self.destination, self._offset)
             if not self._departure:
                 self._state = 0
                 self._attributes = {'Info': 'No more departures today'}
@@ -259,6 +254,7 @@ class GTFSDepartureSensor(Entity):
 
             # Build attributes
             self._attributes = {}
+            self._attributes['offset'] = self._offset.seconds / 60
 
             def dict_for_table(resource):
                 """Return a dict for the SQLAlchemy resource given."""
