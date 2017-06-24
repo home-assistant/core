@@ -801,6 +801,29 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(expected, self.config.as_dict())
 
+    def test_secure_path_check(self):
+        """Test secure_path_check method."""
+        self.config.whitelist_external_dirs = set((
+            "/hass/config/test",
+            "/tmp"
+        ))
+
+        valid = [
+            "/hass/config/test/test.jpg",
+            "/tmp/test.jpg",
+        ]
+        for path in valid:
+            assert self.config.secure_path_check(path)
+
+        unvalid = [
+            "/hass/config/secure",
+            "/etc/passwd",
+            "/root/secure_file",
+            "/hass/config/test/../../../etc/passwd",
+        ]
+        for path in unvalid:
+            assert not self.config.secure_path_check(path)
+
 
 @patch('homeassistant.core.monotonic')
 def test_create_timer(mock_monotonic, loop):

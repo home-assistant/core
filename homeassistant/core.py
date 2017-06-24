@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import enum
 import logging
 import os
+import pathlib
 import re
 import sys
 import threading
@@ -1053,6 +1054,9 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = None
 
+        # List of allowed external dirs to access
+        self.whitelist_external_dirs = set()
+
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
 
@@ -1070,6 +1074,20 @@ class Config(object):
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
+    def secure_path_check(self, path: str) -> bool:
+        """Check if the path is valid for access from outsite.
+
+        Async friendly.
+        """
+        if not pathlib.PurePath(path).is_absolute:
+            return False
+
+        for whitelisted_path in self.whitelist_external_dirs:
+            if path.startswith(whitelisted_path):
+                return True
+
+        return False
+
     def as_dict(self):
         """Create a dictionary representation of this dict.
 
@@ -1086,6 +1104,7 @@ class Config(object):
             'time_zone': time_zone.zone,
             'components': self.components,
             'config_dir': self.config_dir,
+            'whitelist_external_dirs': self.whitelist_external_dirs,
             'version': __version__
         }
 

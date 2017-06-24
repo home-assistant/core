@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
     HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.util import secure_path_check
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
@@ -192,7 +191,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
             _LOGGER.warning("Can't load photo in %s after %s retries.",
                             url, retry_num)
         elif filepath is not None:
-            if secure_path_check(hass, filepath):
+            if hass.config.secure_path_check(filepath):
                 return open(filepath, "rb")
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)
