@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE,
     HTTP_DIGEST_AUTHENTICATION)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.util import secure_path_check
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
