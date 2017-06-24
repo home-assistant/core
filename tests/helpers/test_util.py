@@ -22,7 +22,8 @@ def test_secure_path_check(hass):
         hass.config.path("secure.yaml"),
         hass.config.path("configuration.yaml"),
         "/etc/passwd",
-        "/root/secure_file"
+        "/root/secure_file",
+        hass.config.path("../../../etc/passwd"),
     ]
 
     for path in unvalid:
