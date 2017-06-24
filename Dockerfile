@@ -21,8 +21,11 @@ RUN virtualization/Docker/setup_docker_prereqs
 
 # Install hass component dependencies
 COPY requirements_all.txt requirements_all.txt
+# Uninstall enum34 because some depenndecies install it but breaks Python 3.4+.
+# See PR #8103 for more info.
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
-    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet
+    pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet && \
+    pip3 uninstall enum34
 
 # Copy source
 COPY . .
