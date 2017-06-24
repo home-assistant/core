@@ -2,7 +2,8 @@
 import asyncio
 from unittest.mock import patch
 
-from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.components.mqtt.discovery import async_start, \
+                                                    ALREADY_DISCOVERED
 
 from tests.common import async_fire_mqtt_message, mock_coro
 
@@ -73,6 +74,23 @@ def test_correct_config_discovery(hass, mqtt_mock, caplog):
 
     assert state is not None
     assert state.name == 'Beer'
+    assert ('binary_sensor', 'bla') in hass.data[ALREADY_DISCOVERED]
+
+
+@asyncio.coroutine
+def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
+    """Test sending in correct JSON with optional node_id included."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/my_node_id/bla'
+                            '/config', '{ "name": "Beer" }')
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('binary_sensor.beer')
+
+    assert state is not None
+    assert state.name == 'Beer'
+    assert ('binary_sensor', 'my_node_id_bla') in hass.data[ALREADY_DISCOVERED]
 
 
 @asyncio.coroutine
