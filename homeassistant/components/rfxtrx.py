@@ -13,7 +13,7 @@ from homeassistant.util import slugify
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     ATTR_ENTITY_ID, TEMP_CELSIUS,
-    CONF_SENSOR_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
+    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
 )
 from homeassistant.helpers.entity import Entity
 
@@ -123,7 +123,7 @@ DEVICE_SCHEMA_SENSOR = vol.Schema({
 
 DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
     vol.Optional(ATTR_NAME, default=None): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS, default=None): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS, default=None): cv.string,
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
     vol.Optional(ATTR_OFF_DELAY, default=None):
         vol.Any(cv.time_period, cv.positive_timedelta),

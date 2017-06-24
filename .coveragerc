@@ -245,6 +245,7 @@ omit =
     homeassistant/components/device_tracker/gpslogger.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/linksys_ap.py
+    homeassistant/components/device_tracker/linksys_smart.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
@@ -342,6 +343,7 @@ omit =
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
+    homeassistant/components/notify/clicksend.py
     homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py

@@ -693,8 +693,14 @@ class ClimateDevice(Entity):
 
     def _convert_for_display(self, temp):
         """Convert temperature into preferred units for display purposes."""
-        if temp is None or not isinstance(temp, Number):
+        if temp is None:
             return temp
+
+        # if the temperature is not a number this can cause issues
+        # with polymer components, so bail early there.
+        if not isinstance(temp, Number):
+            raise TypeError("Temperature is not a number: %s" % temp)
+
         if self.temperature_unit != self.unit_of_measurement:
             temp = convert_temperature(
                 temp, self.temperature_unit, self.unit_of_measurement)
