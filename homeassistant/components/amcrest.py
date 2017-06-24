@@ -33,7 +33,7 @@ CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 DEFAULT_NAME = 'Amcrest Camera'
 DEFAULT_PORT = 80
 DEFAULT_RESOLUTION = 'high'
-DEFAULT_STREAM_SOURCE = 'mjpeg'
+DEFAULT_STREAM_SOURCE = 'snapshot'
 TIMEOUT = 10
 
 DOMAIN = 'amcrest'
