@@ -130,24 +130,16 @@ class OpenHardwareMonitorData(object):
             self._config.get(CONF_PORT))
 
         try:
-            response = requests.get(data_url)
+            response = requests.get(data_url, timeout=30)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("ConnectionError: Is OpenHardwareMonitor running?")
-
-    def schedule_retry(self):
-        """Schedule a retry in 30 seconds."""
-        _LOGGER.info("Retrying in 30 seconds")
-
-        async_track_point_in_utc_time(
-            self._hass, self.initialize, utcnow() + RETRY_INTERVAL)
 
     def initialize(self, now):
         """Initial parsing of the sensors and adding of devices."""
         self.refresh()
 
         if self.data is None:
-            self.schedule_retry()
             return
 
         self.devices = self.parse_children(self.data, [], [], [])
@@ -171,22 +163,22 @@ class OpenHardwareMonitorData(object):
                     obj, devices, child_path, child_names)
 
                 result = result + added_devices
-        else:
-            if json[OHM_VALUE].find(' ') > -1:
-                unit_of_measurement = json[OHM_VALUE].split(' ')[1]
+            return result
 
-                child_names = names.copy()
-                child_names.append(json[OHM_NAME])
+        if json[OHM_VALUE].find(' ') == -1:
+            return result
 
-                fullname = '_'.join(child_names).replace(' ', '_')
+        unit_of_measurement = json[OHM_VALUE].split(' ')[1]
+        child_names = names.copy()
+        child_names.append(json[OHM_NAME])
+        fullname = ' '.join(child_names)
 
-                dev = OpenHardwareMonitorDevice(
-                    self,
-                    fullname,
-                    path,
-                    unit_of_measurement
-                )
+        dev = OpenHardwareMonitorDevice(
+            self,
+            fullname,
+            path,
+            unit_of_measurement
+        )
 
-                result.append(dev)
-
+        result.append(dev)
         return result
