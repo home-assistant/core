@@ -19,7 +19,7 @@ def secure_path_check(hass, path):
         return False
 
     for check_path in (hass.config.path('output'), hass.config.path('www'),
-                       tempfile.gettempdir):
+                       tempfile.gettempdir()):
         try:
             for idx, part in enumerate(pathlib.PurePath(check_path)):
                 assert parts[idx] == part

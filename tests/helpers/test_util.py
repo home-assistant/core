@@ -12,7 +12,7 @@ def test_secure_path_check(hass):
         hass.config.path("output/xy/test.jpg"),
         hass.config.path("www/test.jpg"),
         hass.config.path("www/xy/test.jpg"),
-        os.path.join(tempfile.gettempdir, "my_tempfile.jpg"),
+        os.path.join(tempfile.gettempdir(), "my_tempfile.jpg"),
     ]
 
     for path in valid:
