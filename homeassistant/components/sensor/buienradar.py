@@ -22,7 +22,6 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
-from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
 REQUIREMENTS = ['buienradar==0.6']
 
@@ -62,17 +61,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
-    vol.Optional(CONF_TIMEFRAME, default=DEFAULT_TIMEFRAME):
-    cv.positive_int
+    vol.Optional(CONF_TIMEFRAME): cv.positive_int
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the buienradar sensor."""
+    from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    timeframe = config.get(CONF_TIMEFRAME)
+    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in HomeAssistant config")
