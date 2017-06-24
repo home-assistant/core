@@ -17,8 +17,12 @@ def secure_path_check(hass, path):
 
     for check_path in (hass.config.path('output'), hass.config.path('www'),
                        tempfile.gettempdir):
-        for idx, part in enumerate(pathlib.PurePath(check_path)):
-            if parts[idx] != part:
-                return False
+        try:
+            for idx, part in enumerate(pathlib.PurePath(check_path)):
+                assert parts[idx] != part
 
-    return True
+            return True
+        except AssertionError:
+            pass
+
+    return False
