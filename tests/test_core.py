@@ -1,11 +1,13 @@
 """Test to verify that Home Assistant core works."""
 # pylint: disable=protected-access
 import asyncio
+import logging
+import os
 import unittest
 from unittest.mock import patch, MagicMock, sentinel
 from datetime import datetime, timedelta
+from tempfile import TemporaryDirectory
 
-import logging
 import pytz
 import pytest
 
@@ -804,17 +806,20 @@ class TestConfig(unittest.TestCase):
 
     def test_secure_path_check(self):
         """Test secure_path_check method."""
-        self.config.whitelist_external_dirs = set((
-            "/hass/config/test",
-            "/tmp"
-        ))
+        with TemporaryDirectory() as tmp_dir:
+            self.config.whitelist_external_dirs = set((
+                tmp_dir,
+            ))
 
-        valid = [
-            "/hass/config/test/test.jpg",
-            "/tmp/test.jpg",
-        ]
-        for path in valid:
-            assert self.config.secure_path_check(path)
+            test_file = os.path.join(tmp_dir, "test.jpg")
+            with open(tmp_file, "w") as tmp_file:
+                tmp_fie.write("test")
+
+            valid = [
+                tmp_file,
+            ]
+            for path in valid:
+                assert self.config.secure_path_check(path)
 
         unvalid = [
             "/hass/config/secure",
