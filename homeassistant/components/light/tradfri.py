@@ -103,11 +103,13 @@ class TradfriGroup(Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Instruct the group lights to turn on, or dim."""
+        keys = {}
+        if ATTR_TRANSITION in kwargs:
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+
         if ATTR_BRIGHTNESS in kwargs:
-            transition = kwargs[ATTR_TRANSITION]
             self.hass.async_add_job(self._api(
-                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                                       transition_time=transition)))
+                self._group.set_dimmer(kwargs[ATTR_BRIGHTNESS], **keys)))
         else:
             self.hass.async_add_job(self._api(self._group.set_state(1)))
 
@@ -218,11 +220,14 @@ class TradfriLight(Light):
         After adding "self._light_data.hexcolor is not None"
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
+        keys = {}
+        if ATTR_TRANSITION in kwargs:
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+
         if ATTR_BRIGHTNESS in kwargs:
-            transition = kwargs[ATTR_TRANSITION]
             self.hass.async_add_job(self._api(
                 self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                                               transition_time=transition)))
+                                               **keys)))
         else:
             self.hass.async_add_job(self._api(
                 self._light_control.set_state(True)))
