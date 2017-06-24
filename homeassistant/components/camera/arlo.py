@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.arlo import DEFAULT_BRAND
-from homeassistant.components.arlo import (ARLO_MODE_ARMED, ARLO_MODE_DISARMED)
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.helpers.aiohttp_client import (
@@ -21,6 +20,8 @@ DEPENDENCIES = ['arlo', 'ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+ARLO_MODE_ARMED = 'armed'
+ARLO_MODE_DISARMED = 'disarmed'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS):
