@@ -58,6 +58,9 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+RE_DIGIT_TAIL = re.compile(r'^[^\.]*\d+\.?\d+[^\.]*$')
+RE_DECIMAL = re.compile(r'[^\d.]+')
+
 
 def setup(hass, config):
     """Set up the InfluxDB component."""
@@ -149,8 +152,6 @@ def setup(hass, config):
             }
         ]
 
-        non_digit_tail = re.compile(r'[\d.]+')
-        non_decimal = re.compile(r'[^\d.]+')
         for key, value in state.attributes.items():
             if key != 'unit_of_measurement':
                 # If the key is already in fields
@@ -164,10 +165,12 @@ def setup(hass, config):
                     json_body[0]['fields'][key] = float(value)
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
-                    json_body[0]['fields'][new_key] = str(value)
-                    if non_digit_tail.match(json_body[0]['fields'][new_key]):
+                    new_value = str(value)
+                    json_body[0]['fields'][new_key] = new_value
+
+                    if RE_DIGIT_TAIL.match(new_value):
                         json_body[0]['fields'][key] = float(
-                            non_decimal.sub('', value))
+                            RE_DECIMAL.sub('', new_value))
 
         json_body[0]['tags'].update(tags)
 

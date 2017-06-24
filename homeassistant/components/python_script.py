@@ -9,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import sanitize_filename
 
 DOMAIN = 'python_script'
-REQUIREMENTS = ['restrictedpython==4.0a2']
+REQUIREMENTS = ['restrictedpython==4.0a3']
 FOLDER = 'python_scripts'
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +92,7 @@ def execute(hass, filename, source, data=None):
         '_print_': StubPrinter,
         '_getattr_': protected_getattr,
         '_write_': full_write_guard,
+        '_getiter_': iter,
     }
     logger = logging.getLogger('{}.{}'.format(__name__, filename))
     local = {
