@@ -132,6 +132,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
     CONF_UNIT_SYSTEM: cv.unit_system,
     CONF_TIME_ZONE: cv.time_zone,
     vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
+        # pylint: disable=no-value-for-parameter
         vol.All(cv.ensure_list, [vol.IsDir()], set),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
