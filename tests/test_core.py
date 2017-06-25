@@ -804,8 +804,8 @@ class TestConfig(unittest.TestCase):
 
         self.assertEqual(expected, self.config.as_dict())
 
-    def test_secure_path_check(self):
-        """Test secure_path_check method."""
+    def test_is_allowed_path(self):
+        """Test is_allowed_path method."""
         with TemporaryDirectory() as tmp_dir:
             self.config.whitelist_external_dirs = set((
                 tmp_dir,
@@ -819,7 +819,7 @@ class TestConfig(unittest.TestCase):
                 test_file,
             ]
             for path in valid:
-                assert self.config.secure_path_check(path)
+                assert self.config.is_allowed_path(path)
 
             self.config.whitelist_external_dirs = set(('/home'))
 
@@ -831,7 +831,7 @@ class TestConfig(unittest.TestCase):
                 test_file,
             ]
             for path in unvalid:
-                assert not self.config.secure_path_check(path)
+                assert not self.config.is_allowed_path(path)
 
 
 @patch('homeassistant.core.monotonic')

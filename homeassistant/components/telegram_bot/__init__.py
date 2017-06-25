@@ -191,7 +191,7 @@ def load_data(hass, url=None, filepath=None, username=None, password=None,
             _LOGGER.warning("Can't load photo in %s after %s retries.",
                             url, retry_num)
         elif filepath is not None:
-            if hass.config.secure_path_check(filepath):
+            if hass.config.is_allowed_path(filepath):
                 return open(filepath, "rb")
 
             _LOGGER.warning("'%s' are not secure to load data from!", filepath)

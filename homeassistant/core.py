@@ -1055,7 +1055,7 @@ class Config(object):
         self.config_dir = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs = None
+        self.whitelist_external_dirs = set()
 
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
@@ -1074,7 +1074,7 @@ class Config(object):
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
-    def secure_path_check(self, path: str) -> bool:
+    def is_allowed_path(self, path: str) -> bool:
         """Check if the path is valid for access from outside."""
         parent = pathlib.Path(path).parent
         try:
