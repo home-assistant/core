@@ -94,18 +94,19 @@ class VerisureDoorlock(LockDevice):
 
     def unlock(self, **kwargs):
         """Send unlock command."""
-        self.set_lock_state(kwargs[ATTR_CODE], 'unlock')
+        self.set_lock_state(kwargs[ATTR_CODE], STATE_UNLOCKED)
 
     def lock(self, **kwargs):
         """Send lock command."""
-        self.set_lock_state(kwargs[ATTR_CODE], 'lock')
+        self.set_lock_state(kwargs[ATTR_CODE], STATE_LOCKED)
 
     def set_lock_state(self, code, state):
         """Send set lock state command."""
+        lock_state = 'lock' if STATE_LOCKED else 'unlock'
         transaction_id = hub.session.set_lock_state(
             code,
             self._device_label,
-            state)['doorLockStateChangeTransactionId']
+            lock_state)['doorLockStateChangeTransactionId']
         _LOGGER.debug("Verisure doorlock %s", state)
         transaction = hub.session.get_lock_state_transaction(transaction_id)
         while ('result' not in transaction or
