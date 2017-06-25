@@ -161,7 +161,7 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, filepath=None, username=None, password=None,
+def load_data(hass, url=None, filepath=None, username=None, password=None,
               authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
@@ -191,8 +191,10 @@ def load_data(url=None, filepath=None, username=None, password=None,
             _LOGGER.warning("Can't load photo in %s after %s retries.",
                             url, retry_num)
         elif filepath is not None:
-            # Load photo from file
-            return open(filepath, "rb")
+            if hass.config.is_allowed_path(filepath):
+                return open(filepath, "rb")
+
+            _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
             _LOGGER.warning("Can't load photo. No photo found in params!")
 
@@ -510,6 +512,7 @@ class TelegramNotificationService:
         caption = kwargs.get(ATTR_CAPTION)
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
         file_content = load_data(
+            self.hass,
             url=kwargs.get(ATTR_URL),
             filepath=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),
