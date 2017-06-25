@@ -813,10 +813,10 @@ class TestConfig(unittest.TestCase):
 
             test_file = os.path.join(tmp_dir, "test.jpg")
             with open(tmp_file, "w") as tmp_file:
-                tmp_fie.write("test")
+                tmp_file.write("test")
 
             valid = [
-                tmp_file,
+                test_file,
             ]
             for path in valid:
                 assert self.config.secure_path_check(path)
