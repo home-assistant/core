@@ -446,8 +446,7 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
         assert len(self.hass.config.whitelist_external_dirs) == 1
-        assert self.hass.config.whitelist_external_dirs[0] == \
-            "/test/config/www"
+        assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
     @mock.patch('asyncio.create_subprocess_exec')
     def test_check_ha_config_file_correct(self, mock_create):

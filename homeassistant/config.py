@@ -133,7 +133,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
     CONF_TIME_ZONE: cv.time_zone,
     vol.Optional(CONF_WHITELIST_EXTERNAL_DIRS):
         # pylint: disable=no-value-for-parameter
-        vol.All(cv.ensure_list, [vol.IsDir()], set),
+        vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
 })
 
@@ -374,7 +374,7 @@ def async_process_ha_core_config(hass, config):
     hac.whitelist_external_dirs = set((hass.config.path('www'),))
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(
-            config[CONF_WHITELIST_EXTERNAL_DIRS])
+            set(config[CONF_WHITELIST_EXTERNAL_DIRS]))
 
     # Customize
     cust_exact = dict(config[CONF_CUSTOMIZE])
