@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if velux_component.VELUX_MODULE is None \
             or not velux_component.VELUX_MODULE.initialized:
-        _LOGGER.error('A connection has not been made to the VELUX KLF 200 controller.')
+        _LOGGER.error('No connection to VELUX KLF 200 controller.')
         return False
 
     entities = []
@@ -30,8 +30,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entities.append(VeluxScene(hass, scene))
     add_devices(entities)
     return True
-
-
 
 
 class VeluxScene(Scene):
@@ -42,24 +40,20 @@ class VeluxScene(Scene):
         self.hass = hass
         self.scene = scene
 
-
     @property
     def name(self):
         """Return the name of the scene."""
         return self.scene.name
-
 
     @property
     def should_poll(self):
         """Return that polling is not necessary."""
         return False
 
-
     @property
     def is_on(self):
-        """There is no way of detecting if a scene is active within VELUX KLF 200 (yet)"""
+        """There is no way of detecting if a scene is active (yet) """
         return False
-
 
     def activate(self, **kwargs):
         """Activate the scene."""

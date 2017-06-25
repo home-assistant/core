@@ -18,6 +18,7 @@ VELUX_MODULE = None
 
 REQUIREMENTS = ['pyvlx==0.1.1']
 
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup device tracker."""
@@ -41,10 +42,11 @@ class VeluxModule:
         from pyvlx import PyVLX
         self.initialized = False
         velux_config = VeluxConfig(hass, config)
-        self.pyvlx = PyVLX(host=velux_config.host, password=velux_config.password)
+        self.pyvlx = PyVLX(
+            host=velux_config.host,
+            password=velux_config.password)
         self.initialized = False
         self.hass = hass
-
 
     @asyncio.coroutine
     def async_start(self):
@@ -60,13 +62,11 @@ class VeluxConfig:
         self.hass = hass
         self.config = config
         self.velux_config = config.get(DOMAIN, {})
-
         self.host = self.get_config_value("host")
         self.password = self.get_config_value("password")
 
-
     def get_config_value(self, key, default_value=None):
         """ Get configuration value from VELUX Config """
-        if not key in self.velux_config:
+        if key not in self.velux_config:
             return default_value
         return self.velux_config[key]
