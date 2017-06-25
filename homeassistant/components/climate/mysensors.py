@@ -67,7 +67,12 @@ class MySensorsHVAC(mysensors.MySensorsDeviceEntity, ClimateDevice):
     @property
     def current_temperature(self):
         """Return the current temperature."""
-        return float(self._values.get(self.gateway.const.SetReq.V_TEMP))
+        value = self._values.get(self.gateway.const.SetReq.V_TEMP)
+
+        if value is not None:
+            value = float(value)
+
+        return value
 
     @property
     def target_temperature(self):
