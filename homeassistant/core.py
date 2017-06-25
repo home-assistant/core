@@ -1081,7 +1081,7 @@ class Config(object):
         """
         try:
             path = str(pathlib.Path(path).resolve())
-        except (FileNotFoundError, RuntimeError):
+        except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
