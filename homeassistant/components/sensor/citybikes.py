@@ -53,12 +53,12 @@ CITYBIKES_ATTRIBUTION = "Information provided by the CityBikes Project "\
 PLATFORM_SCHEMA = vol.All(
     cv.has_at_least_one_key(CONF_RADIUS, CONF_STATIONS_LIST),
     PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_NAME, default=''): cv.string,
         vol.Optional(CONF_NETWORK): cv.string,
         vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
         vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
-        vol.Exclusive(CONF_RADIUS, 'station_filter'): cv.positive_int,
-        vol.Exclusive(CONF_STATIONS_LIST, 'station_filter'):
+        vol.Optional(CONF_RADIUS, 'station_filter'): cv.positive_int,
+        vol.Optional(CONF_STATIONS_LIST, 'station_filter'):
             vol.All(
                 cv.ensure_list,
                 vol.Length(min=1),
@@ -108,11 +108,13 @@ def async_setup_platform(hass, config, async_add_entities,
     """Set up the CityBikes platform."""
     @asyncio.coroutine
     def async_setup_network(now=None):
+        """Set up a network with stations without blocking."""
         latitude = config.get(CONF_LATITUDE, hass.config.latitude)
         longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
         network_id = config.get(CONF_NETWORK)
         stations_list = set(config.get(CONF_STATIONS_LIST, []))
         radius = config.get(CONF_RADIUS, 0)
+        name = config.get(CONF_NAME)
         if not hass.config.units.is_metric:
             radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
 
@@ -146,7 +148,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
             if radius > dist or stations_list.intersection((station_id,
                                                             station_uid)):
-                entities.append(CityBikesStation(network, station_id))
+                entities.append(CityBikesStation(network, station_id, name))
 
         async_add_entities(entities, True)
 
@@ -203,7 +205,7 @@ class CityBikesNetwork:
         self._ready = False
 
     @property
-    def id(self):
+    def uid(self):
         """Return the network ID."""
         return self._network_id
 
@@ -248,11 +250,12 @@ class CityBikesNetwork:
 class CityBikesStation(Entity):
     """CityBikes API Sensor."""
 
-    def __init__(self, network, station_id):
+    def __init__(self, network, station_id, base_name=''):
         """Initialize the sensor."""
         self._network = network
         self._station_id = station_id
         self._station_data = {}
+        self._base_name = base_name
 
     @property
     def state(self):
@@ -265,7 +268,11 @@ class CityBikesStation(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._network.id, self._station_id)
+        if self._base_name:
+            return "{} {} {}".format(self._network.uid, self._base_name,
+                                     self._station_id)
+        else:
+            return "{} {}".format(self._network.uid, self._station_id)
 
     @asyncio.coroutine
     def async_update(self):
