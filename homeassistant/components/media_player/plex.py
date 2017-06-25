@@ -106,7 +106,8 @@ def setup_plexserver(host, port, token, hass, config, add_devices_callback):
     import plexapi.exceptions
 
     try:
-        plexserver = plexapi.server.PlexServer('http://%s:%s' % (host, port), token)
+        plexserver = plexapi.server.PlexServer('http://%s:%s' % (host, port),
+                                               token)
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
