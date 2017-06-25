@@ -4,10 +4,11 @@ Sensors of a KNX Device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/knx/
 """
+from enum import Enum
+
 import logging
 import voluptuous as vol
 
-from enum import Enum
 from homeassistant.const import (
     CONF_NAME, CONF_MAXIMUM, CONF_MINIMUM,
     CONF_TYPE, TEMP_CELSIUS
@@ -28,7 +29,13 @@ CONF_ILLUMINANCE = 'illuminance'
 CONF_PERCENTAGE = 'percentage'
 CONF_SPEED_MS = 'speed_ms'
 
-KNXAddressType = Enum('KNXAddressType', 'float percent')
+
+class KNXAddressType(Enum):
+    """Enum to indicate conversion type for the KNX address."""
+
+    FLOAT = 1
+    PERCENT = 2
+
 
 # define the fixed settings required for each sensor type
 FIXED_SETTINGS_MAP = {
@@ -37,28 +44,28 @@ FIXED_SETTINGS_MAP = {
         'unit': TEMP_CELSIUS,
         'default_minimum': -273,
         'default_maximum': 670760,
-        'address_type': KNXAddressType.float
+        'address_type': KNXAddressType.FLOAT
     },
     #  Speed m/s as defined in KNX Standard 3.10 - 9.005 DPT_Value_Wsp
     CONF_SPEED_MS: {
         'unit': 'm/s',
         'default_minimum': 0,
         'default_maximum': 670760,
-        'address_type': KNXAddressType.float
+        'address_type': KNXAddressType.FLOAT
     },
     #  Luminance(LUX) as defined in KNX Standard 3.10 - 9.004 DPT_Value_Lux
     CONF_ILLUMINANCE: {
         'unit': 'lx',
         'default_minimum': 0,
         'default_maximum': 670760,
-        'address_type': KNXAddressType.float
+        'address_type': KNXAddressType.FLOAT
     },
     #  Percentage(%) as defined in KNX Standard 3.10 - 5.001 DPT_Scaling
     CONF_PERCENTAGE: {
         'unit': '%',
         'default_minimum': 0,
         'default_maximum': 100,
-        'address_type': KNXAddressType.percent
+        'address_type': KNXAddressType.PERCENT
     }
 }
 
@@ -94,10 +101,10 @@ class KNXSensor(KNXGroupAddress):
 
         # set up the conversion function based on the address type
         address_type = sensor_config.get('address_type')
-        if address_type == KNXAddressType.float:
-            self.convert = self.convert_float
-        elif address_type == KNXAddressType.percent:
-            self.convert = self.convert_percent
+        if address_type == KNXAddressType.FLOAT:
+            self.convert = convert_float
+        elif address_type == KNXAddressType.PERCENT:
+            self.convert = convert_percent
         else:
             raise NotImplementedError()
 
@@ -145,30 +152,32 @@ class KNXSensor(KNXGroupAddress):
         """We don't want to cache any Sensor Value."""
         return False
 
-    def convert_float(self, raw_value):
-        """Conversion for 2 byte floating point values.
 
-        2byte Floating Point KNX Telegram.
-        Defined in KNX 3.7.2 - 3.10
-        """
-        from knxip.conversion import knx2_to_float
+def convert_float(raw_value):
+    """Conversion for 2 byte floating point values.
 
-        return knx2_to_float(raw_value)
+    2byte Floating Point KNX Telegram.
+    Defined in KNX 3.7.2 - 3.10
+    """
+    from knxip.conversion import knx2_to_float
 
-    def convert_percent(self, raw_value):
-        """Conversion for scaled byte values.
+    return knx2_to_float(raw_value)
 
-        1byte percentage scaled KNX Telegram.
-        Defined in KNX 3.7.2 - 3.10.
-        """
-        summed_value = 0
-        try:
-            # convert raw value in bytes
-            for val in raw_value:
-                summed_value *= 256
-                summed_value += val
-        except TypeError:
-            # pknx returns a non-iterable type for unsuccessful reads
-            pass
 
-        return round(summed_value * 100 / 255)
+def convert_percent(raw_value):
+    """Conversion for scaled byte values.
+
+    1byte percentage scaled KNX Telegram.
+    Defined in KNX 3.7.2 - 3.10.
+    """
+    summed_value = 0
+    try:
+        # convert raw value in bytes
+        for val in raw_value:
+            summed_value *= 256
+            summed_value += val
+    except TypeError:
+        # pknx returns a non-iterable type for unsuccessful reads
+        pass
+
+    return round(summed_value * 100 / 255)
