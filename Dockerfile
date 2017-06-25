@@ -22,6 +22,7 @@ RUN virtualization/Docker/setup_docker_prereqs
 
 # Install hass component dependencies
 COPY requirements_all.txt requirements_all.txt
+# Not installing uvloop because it doesn't work with pytradfri - PR #7815
 # Uninstall enum34 because some depenndecies install it but breaks Python 3.4+.
 # See PR #8103 for more info.
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
