@@ -89,7 +89,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
         # Parse discovery data
         host = discovery_info.get('host')
         port = discovery_info.get('port')
-        _LOGGER.info("Discovered PLEX server: %s on port %s", host, port)
+        host = '%s:%s' % (host, port)
+        _LOGGER.info("Discovered PLEX server: %s", host)
 
         if host in _CONFIGURING:
             return
@@ -97,17 +98,16 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     else:
         return
 
-    setup_plexserver(host, port, token, hass, config, add_devices_callback)
+    setup_plexserver(host, token, hass, config, add_devices_callback)
 
 
-def setup_plexserver(host, port, token, hass, config, add_devices_callback):
+def setup_plexserver(host, token, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
 
     try:
-        plexserver = plexapi.server.PlexServer('http://%s:%s' % (host, port),
-                                               token)
+        plexserver = plexapi.server.PlexServer('http://%s' % host, token)
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
@@ -122,8 +122,7 @@ def setup_plexserver(host, port, token, hass, config, add_devices_callback):
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
-    # Save config, including port number
-    host = '%s:%s' % (host, port)
+    # Save config
     if not config_from_file(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
                 'token': token
