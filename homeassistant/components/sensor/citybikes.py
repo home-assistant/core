@@ -257,11 +257,6 @@ class CityBikesStation(Entity):
         """Return the name of the sensor."""
         return "{} {}".format(self._network_id, self._station_id)
 
-    @property
-    def hidden(self):
-        """Return whether the sensor should be hidden."""
-        return self.state == STATE_UNKNOWN
-
     @asyncio.coroutine
     def async_update(self):
         """Update station state."""
