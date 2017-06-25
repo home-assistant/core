@@ -5,20 +5,20 @@ from tests.common import async_fire_mqtt_message, mock_service
 
 EXAMPLE_MSG = """
 {
-	"text": "turn the lights green",
-	"intent": {
-		"intent_name": "Lights",
-		"probability": 1
-	},
-	"slots": [
-		{
-			"slot_name": "light_color",
-			"value": {
-				"kind": "Custom",
-				"value": "green"
-			},
-		}
-	]
+    "text": "turn the lights green",
+    "intent": {
+        "intent_name": "Lights",
+        "probability": 1
+    },
+    "slots": [
+        {
+            "slot_name": "light_color",
+            "value": {
+                "kind": "Custom",
+                "value": "green"
+            },
+        }
+    ]
 }
 """
 
