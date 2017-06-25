@@ -821,7 +821,7 @@ class TestConfig(unittest.TestCase):
             for path in valid:
                 assert self.config.is_allowed_path(path)
 
-            self.config.whitelist_external_dirs = set(('/home'))
+            self.config.whitelist_external_dirs = set(('/home'),)
 
             unvalid = [
                 "/hass/config/secure",
