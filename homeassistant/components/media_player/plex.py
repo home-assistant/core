@@ -105,9 +105,14 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
+    configurator = get_component('configurator')
 
     try:
         plexserver = plexapi.server.PlexServer('http://%s' % host, token)
+        configurator.request_done('http://' + host)
+        _LOGGER.info("Discovery configuration done (no token needed)")
+
+
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
@@ -118,7 +123,6 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     # If we came here and configuring this host, mark as done
     if host in _CONFIGURING:
         request_id = _CONFIGURING.pop(host)
-        configurator = get_component('configurator')
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
