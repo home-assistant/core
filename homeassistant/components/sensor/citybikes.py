@@ -17,10 +17,11 @@ from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
     ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET)
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import location, distance
+from homeassistant.util import location, distance, dt as dt_util
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -118,17 +119,22 @@ def async_setup_platform(hass, config, async_add_entities,
         if not network_id:
             network_id = yield from CityBikesNetwork.get_closest_network_id(
                 hass, latitude, longitude)
+            if not network_id:
+                async_track_point_in_utc_time(hass, async_setup_network,
+                                              dt_util.utcnow() + SCAN_INTERVAL)
+                return
 
         if network_id not in MONITORED_NETWORKS:
             network = CityBikesNetwork(hass, network_id)
             MONITORED_NETWORKS[network_id] = network
-            yield from network.async_refresh()
+            hass.async_add_job(network.async_refresh)
             async_track_time_interval(hass, network.async_refresh,
                                       SCAN_INTERVAL)
         else:
             network = MONITORED_NETWORKS[network_id]
-            while not network.ready:
-                yield from asyncio.sleep(0.5)
+
+        while not network.ready:
+            yield from asyncio.sleep(0.5)
 
         entities = []
         for station in network.stations:
@@ -140,7 +146,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
             if radius > dist or stations_list.intersection((station_id,
                                                             station_uid)):
-                entities.append(CityBikesStation(network_id, station_id))
+                entities.append(CityBikesStation(network, station_id))
 
         async_add_entities(entities, True)
 
@@ -150,9 +156,9 @@ def async_setup_platform(hass, config, async_add_entities,
 class CityBikesNetwork:
     """Thin wrapper around a CityBikes network object."""
 
-    @staticmethod
+    @classmethod
     @asyncio.coroutine
-    def get_closest_network_id(hass, latitude, longitude):
+    def get_closest_network_id(cls, hass, latitude, longitude):
         """Return the id of the network closest to provided location."""
         try:
             session = async_get_clientsession(hass)
@@ -199,7 +205,7 @@ class CityBikesNetwork:
     @property
     def id(self):
         """Return the network ID."""
-        return self._network[ATTR_ID]
+        return self._network_id
 
     @property
     def stations(self):
@@ -242,9 +248,9 @@ class CityBikesNetwork:
 class CityBikesStation(Entity):
     """CityBikes API Sensor."""
 
-    def __init__(self, network_id, station_id):
+    def __init__(self, network, station_id):
         """Initialize the sensor."""
-        self._network_id = network_id
+        self._network = network
         self._station_id = station_id
         self._station_data = {}
 
@@ -259,15 +265,16 @@ class CityBikesStation(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return "{} {}".format(self._network_id, self._station_id)
+        return "{} {}".format(self._network.id, self._station_id)
 
     @asyncio.coroutine
     def async_update(self):
         """Update station state."""
-        for station in MONITORED_NETWORKS[self._network_id].stations:
-            if station[ATTR_ID] == self._station_id:
-                self._station_data = station
-                break
+        if self._network.ready:
+            for station in self._network.stations:
+                if station[ATTR_ID] == self._station_id:
+                    self._station_data = station
+                    break
 
     @property
     def device_state_attributes(self):
