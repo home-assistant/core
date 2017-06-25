@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.util import Throttle, location, distance
+from homeassistant.util import location, distance
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -105,7 +105,6 @@ MONITORED_NETWORKS = {}
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the CityBikes platform."""
-    
     @asyncio.coroutine
     def async_setup_network(now=None):
         latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -120,7 +119,7 @@ def async_setup_platform(hass, config, async_add_entities,
             network_id = yield from CityBikesNetwork.get_closest_network_id(
                 hass, latitude, longitude)
 
-        if not network_id in MONITORED_NETWORKS:
+        if network_id not in MONITORED_NETWORKS:
             network = CityBikesNetwork(hass, network_id)
             MONITORED_NETWORKS[network_id] = network
             yield from network.async_refresh()
@@ -138,7 +137,7 @@ def async_setup_platform(hass, config, async_add_entities,
                                      station[ATTR_LONGITUDE])
             station_id = station[ATTR_ID]
             station_uid = str(station.get(ATTR_EXTRA, {}).get(ATTR_UID, ''))
-            
+
             if radius > dist or stations_list.intersection((station_id,
                                                             station_uid)):
                 entities.append(CityBikesStation(network_id, station_id))
@@ -154,6 +153,7 @@ class CityBikesNetwork:
     @staticmethod
     @asyncio.coroutine
     def get_closest_network_id(hass, latitude, longitude):
+        """Return the id of the network closest to provided location."""
         try:
             session = async_get_clientsession(hass)
             with async_timeout.timeout(5, loop=hass.loop):
@@ -190,6 +190,7 @@ class CityBikesNetwork:
             return None
 
     def __init__(self, hass, network_id):
+        """Initialize the network object."""
         self._hass = hass
         self._network_id = network_id
         self._stations = []
@@ -197,14 +198,17 @@ class CityBikesNetwork:
 
     @property
     def id(self):
+        """Return the network ID."""
         return self._network[ATTR_ID]
 
     @property
     def stations(self):
+        """Return the stations of the network."""
         return self._stations
 
     @property
     def ready(self):
+        """Return the readiness state of the network object."""
         return self._ready
 
     @asyncio.coroutine
