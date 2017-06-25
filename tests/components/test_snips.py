@@ -27,12 +27,12 @@ def test_snips_call_action(hass, mqtt_mock):
     """Test calling action via Snips."""
     calls = mock_service(hass, 'test', 'service')
 
-    result = yield from async_setup_component(hass, 'snips', {
-        'snips': {
-            'intents': {
-                'Lights': {
-                    'action': {
-                        'service': 'test.service'
+    result = yield from async_setup_component(hass, "snips", {
+        "snips": {
+            "intents": {
+                "Lights": {
+                    "action": {
+                        "service": "test.service"
                     }
                 }
             }
