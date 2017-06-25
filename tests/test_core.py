@@ -812,7 +812,7 @@ class TestConfig(unittest.TestCase):
             ))
 
             test_file = os.path.join(tmp_dir, "test.jpg")
-            with open(tmp_file, "w") as tmp_file:
+            with open(test_file, "w") as tmp_file:
                 tmp_file.write("test")
 
             valid = [
