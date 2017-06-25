@@ -6,13 +6,13 @@ from homeassistant.core import CoreState
 from homeassistant.setup import async_setup_component
 import homeassistant.components.automation as automation
 
-from tests.common import mock_service, mock_coro
+from tests.common import async_mock_service, mock_coro
 
 
 @asyncio.coroutine
 def test_if_fires_on_hass_start(hass):
     """Test the firing when HASS starts."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
     hass.state = CoreState.not_running
     config = {
         automation.DOMAIN: {
@@ -48,7 +48,7 @@ def test_if_fires_on_hass_start(hass):
 @asyncio.coroutine
 def test_if_fires_on_hass_shutdown(hass):
     """Test the firing when HASS starts."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
     hass.state = CoreState.not_running
 
     res = yield from async_setup_component(hass, automation.DOMAIN, {
