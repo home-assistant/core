@@ -5,36 +5,43 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.citybikes/
 """
 import logging
-import asyncio
 from datetime import timedelta
 
+import asyncio
+import aiohttp
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_FRIENDLY_NAME,
-    STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET)
+    ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
+    ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle, location, distance
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/aronsky/python-citybikes'
-                '/archive/eb4a2dc25c7ef19812cef5a6163897465ae496b9.zip'
-                '#python-citybikes==0.1.3-async']
-
 _LOGGER = logging.getLogger(__name__)
+
+DEFAULT_ENDPOINT = 'https://api.citybik.es/{uri}'
+NETWORKS_URI = 'v2/networks'
+STATIONS_URI = 'v2/networks/{uid}?fields=network.stations'
 
 SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 DOMAIN = 'citybikes'
 CONF_NETWORK = 'network'
 CONF_RADIUS = 'radius'
 CONF_STATIONS_LIST = 'stations'
+ATTR_NETWORKS_LIST = 'networks'
+ATTR_NETWORK = 'network'
+ATTR_STATIONS_LIST = 'stations'
 ATTR_ID = 'id'
 ATTR_UID = 'uid'
-ATTR_STATION_NAME = 'name'
+ATTR_NAME = 'name'
 ATTR_EXTRA = 'extra'
+ATTR_TIMESTAMP = 'timestamp'
 ATTR_EMPTY_SLOTS = 'empty_slots'
 ATTR_FREE_BIKES = 'free_bikes'
 ATTR_TIMESTAMP = 'timestamp'
@@ -57,112 +64,178 @@ PLATFORM_SCHEMA = vol.All(
                 [cv.string])
     }))
 
+NETWORK_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ID): cv.string,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_LOCATION): vol.Schema({
+        vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+        vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+        }, extra=vol.REMOVE_EXTRA),
+    }, extra=vol.REMOVE_EXTRA)
+
+NETWORKS_RESPONSE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NETWORKS_LIST): [NETWORK_SCHEMA],
+    })
+
+STATION_SCHEMA = vol.Schema({
+    vol.Required(ATTR_FREE_BIKES): cv.positive_int,
+    vol.Required(ATTR_EMPTY_SLOTS): cv.positive_int,
+    vol.Required(ATTR_LATITUDE): vol.Coerce(float),
+    vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+    vol.Required(ATTR_ID): cv.string,
+    vol.Required(ATTR_NAME): cv.string,
+    vol.Required(ATTR_TIMESTAMP): cv.string,
+    vol.Optional(ATTR_EXTRA): vol.Schema({
+        vol.Optional(ATTR_UID): cv.string
+        }, extra=vol.REMOVE_EXTRA)
+    }, extra=vol.REMOVE_EXTRA)
+
+STATIONS_RESPONSE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NETWORK): vol.Schema({
+        vol.Required(ATTR_STATIONS_LIST): [STATION_SCHEMA]
+        }, extra=vol.REMOVE_EXTRA)
+    })
+
+
+MONITORED_NETWORKS = {}
+
 
 # pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the CityBikes platform."""
-    from citybikes import Client, Network
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    network_id = config.get(CONF_NETWORK)
-    stations_list = config.get(CONF_STATIONS_LIST, [])
-    radius = config.get(CONF_RADIUS, 0)
-    if not hass.config.units.is_metric:
-        radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
-
+    
     @asyncio.coroutine
-    def async_setup_network():
-        if not network_id:
-            client = Client(loop=hass.loop)
-            yield from client.networks.async_request()
-            network = client.networks.near(latitude, longitude)[0][0]
-            network_id = network[ATTR_ID]
-        else:
-            network = Network(Client(loop=hass.loop), uid=network_id)
+    def async_setup_network(now=None):
+        latitude = config.get(CONF_LATITUDE, hass.config.latitude)
+        longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+        network_id = config.get(CONF_NETWORK)
+        stations_list = set(config.get(CONF_STATIONS_LIST, []))
+        radius = config.get(CONF_RADIUS, 0)
+        if not hass.config.units.is_metric:
+            radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
 
-        yield from network.async_request()
+        if not network_id:
+            network_id = yield from CityBikesNetwork.get_closest_network_id(
+                hass, latitude, longitude)
+
+        if not network_id in MONITORED_NETWORKS:
+            network = CityBikesNetwork(hass, network_id)
+            MONITORED_NETWORKS[network_id] = network
+            yield from network.async_refresh()
+            async_track_time_interval(hass, network.async_refresh,
+                                      SCAN_INTERVAL)
+        else:
+            network = MONITORED_NETWORKS[network_id]
+            while not network.ready:
+                yield from asyncio.sleep(0.5)
+
+        entities = []
+        for station in network.stations:
+            dist = location.distance(latitude, longitude,
+                                     station[ATTR_LATITUDE],
+                                     station[ATTR_LONGITUDE])
+            station_id = station[ATTR_ID]
+            station_uid = str(station.get(ATTR_EXTRA, {}).get(ATTR_UID, ''))
+            
+            if radius > dist or stations_list.intersection((station_id,
+                                                            station_uid)):
+                entities.append(CityBikesStation(network_id, station_id))
+
+        async_add_entities(entities, True)
 
     hass.async_add_job(async_setup_network)
-
-
-@asyncio.coroutine
-def async_setup_with_network(network, hass, config, async_add_entities,
-                             discovery_info):
-    """Set up when the Network UID is known."""
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    stations_list = config.get(CONF_STATIONS_LIST, [])
-    radius = config.get(CONF_RADIUS, 0)
-    if not hass.config.units.is_metric:
-        radius = distance.convert(radius, LENGTH_FEET, LENGTH_METERS)
-
-    async_track_time_interval(hass, network.async_refresh, SCAN_INTERVAL)
-
-    if radius > 0:
-        @asyncio.coroutine
-        def get_nearest_stations(now=None):
-            yield from network.async_refresh()
-            yield from asyncio.sleep(15)
-            entities = []
-            for station, _ in network.stations.near(latitude, longitude):
-                dist = location.distance(latitude, longitude,
-                                         station[ATTR_LATITUDE],
-                                         station[ATTR_LONGITUDE])
-                if dist > radius:
-                    break
-                entities.append(CityBikesStationSensor(
-                                network.id, station[ATTR_ID]))
-            async_add_entities(entities, True)
-
-        hass.async_add_job(get_nearest_stations)
-    else:
-        @asyncio.coroutine
-        def get_stations_by_id(now=None):
-            yield from network.async_refresh()
-            yield from asyncio.sleep(30)
-            entities = []
-            for station in network.stations:
-                if station[ATTR_ID] in stations_list:
-                    entities.append(CityBikesStationSensor(
-                                    network.id, station[ATTR_ID]))
-                    continue
-                if ATTR_EXTRA in station:
-                    if ATTR_UID in station[ATTR_EXTRA]:
-                        uid = str(station[ATTR_EXTRA][ATTR_UID])
-                        if uid in stations_list:
-                            entities.append(CityBikesStationSensor(network.id,
-                                station[ATTR_ID]))
-            async_add_entities(entities, True)
-
-        hass.async_add_job(get_stations_by_id)
 
 
 class CityBikesNetwork:
     """Thin wrapper around a CityBikes network object."""
 
-    def __init__(self, network):
-        self._network = network
+    @staticmethod
+    @asyncio.coroutine
+    def get_closest_network_id(hass, latitude, longitude):
+        try:
+            session = async_get_clientsession(hass)
+            with async_timeout.timeout(5, loop=hass.loop):
+                req = yield from session.get(DEFAULT_ENDPOINT.format(
+                    uri=NETWORKS_URI))
+            json_response = yield from req.json()
+            networks = NETWORKS_RESPONSE_SCHEMA(json_response)
+            network = networks[ATTR_NETWORKS_LIST][0]
+            result = network[ATTR_ID]
+            minimum_dist = location.distance(
+                latitude, longitude,
+                network[ATTR_LOCATION][ATTR_LATITUDE],
+                network[ATTR_LOCATION][ATTR_LONGITUDE])
+            for network in networks[ATTR_NETWORKS_LIST][1:]:
+                network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
+                network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
+                dist = location.distance(latitude, longitude,
+                                         network_latitude, network_longitude)
+                if dist < minimum_dist:
+                    minimum_dist = dist
+                    result = network[ATTR_ID]
+
+            return result
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Could not connect to CityBikes API endpoint")
+            return None
+        except ValueError:
+            _LOGGER.error("Received non-JSON data from CityBikes"
+                          " API endpoint")
+            return None
+        except vol.Invalid as err:
+            _LOGGER.error("Received unexpected JSON from CityBikes"
+                          " API endpoint: %s", err)
+            return None
+
+    def __init__(self, hass, network_id):
+        self._hass = hass
+        self._network_id = network_id
         self._stations = []
+        self._ready = False
 
     @property
     def id(self):
-        return self._network['id']
+        return self._network[ATTR_ID]
 
     @property
     def stations(self):
         return self._stations
 
-    @Throttle(SCAN_INTERVAL)
+    @property
+    def ready(self):
+        return self._ready
+
     @asyncio.coroutine
     def async_refresh(self, now=None):
         """Refresh the state of the network."""
-        yield from self._network.async_request()
-        self._stations = self._network.stations
+        try:
+            session = async_get_clientsession(self._hass)
+
+            with async_timeout.timeout(5, loop=self._hass.loop):
+                req = yield from session.get(DEFAULT_ENDPOINT.format(
+                    uri=STATIONS_URI.format(uid=self._network_id)))
+
+            json_response = yield from req.json()
+            network = STATIONS_RESPONSE_SCHEMA(json_response)
+            self._stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
+            self._ready = True
+            return
+
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Could not connect to CityBikes API endpoint")
+        except ValueError:
+            _LOGGER.error("Received non-JSON data from CityBikes API"
+                          " endpoint")
+        except vol.Invalid as err:
+            _LOGGER.error("Received unexpected JSON from CityBikes API"
+                          " endpoint: %s", err)
+
+        self._ready = False
 
 
-class CityBikesStationSensor(Entity):
+class CityBikesStation(Entity):
     """CityBikes API Sensor."""
 
     def __init__(self, network_id, station_id):
@@ -191,17 +264,11 @@ class CityBikesStationSensor(Entity):
 
     @asyncio.coroutine
     def async_update(self):
-        """Update device state."""
+        """Update station state."""
         for station in MONITORED_NETWORKS[self._network_id].stations:
             if station[ATTR_ID] == self._station_id:
                 self._station_data = station
                 break
-            if ATTR_EXTRA in station:
-                if ATTR_UID in station[ATTR_EXTRA]:
-                    uid = str(station[ATTR_EXTRA][ATTR_UID])
-                    if uid == self._station_id:
-                        self._station_data = station
-                        break
 
     @property
     def device_state_attributes(self):
@@ -209,11 +276,11 @@ class CityBikesStationSensor(Entity):
         try:
             return {
                 ATTR_ATTRIBUTION: CITYBIKES_ATTRIBUTION,
-                ATTR_UID: self._station_data[ATTR_EXTRA][ATTR_UID],
+                ATTR_UID: self._station_data.get(ATTR_EXTRA, {}).get(ATTR_UID),
                 ATTR_LATITUDE: self._station_data[ATTR_LATITUDE],
                 ATTR_LONGITUDE: self._station_data[ATTR_LONGITUDE],
                 ATTR_EMPTY_SLOTS: self._station_data[ATTR_EMPTY_SLOTS],
-                ATTR_FRIENDLY_NAME: self._station_data[ATTR_STATION_NAME],
+                ATTR_FRIENDLY_NAME: self._station_data[ATTR_NAME],
                 ATTR_TIMESTAMP: self._station_data[ATTR_TIMESTAMP],
             }
         except KeyError:
