@@ -513,6 +513,8 @@ omit =
     homeassistant/components/tts/amazon_polly.py
     homeassistant/components/tts/picotts.py
     homeassistant/components/upnp.py
+    homeassistant/components/velux/*.py
+    homeassistant/components/*/velux.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/metoffice.py
