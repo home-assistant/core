@@ -38,6 +38,7 @@ STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
+DEFAULT_CONTENT_TYPE = 'image/jpeg'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
 TOKEN_CHANGE_INTERVAL = timedelta(minutes=5)
@@ -101,6 +102,7 @@ class Camera(Entity):
     def __init__(self):
         """Initialize a camera."""
         self.is_streaming = False
+        self.content_type = DEFAULT_CONTENT_TYPE
         self.access_tokens = collections.deque([], 2)
         self.async_update_token()
 
@@ -149,16 +151,17 @@ class Camera(Entity):
         response = web.StreamResponse()
 
         response.content_type = ('multipart/x-mixed-replace; '
-                                 'boundary=--jpegboundary')
+                                 'boundary=--frameboundary')
         yield from response.prepare(request)
 
         def write(img_bytes):
             """Write image to stream."""
             response.write(bytes(
-                '--jpegboundary\r\n'
-                'Content-Type: image/jpeg\r\n'
+                '--frameboundary\r\n'
+                'Content-Type: {}\r\n'
                 'Content-Length: {}\r\n\r\n'.format(
-                    len(img_bytes)), 'utf-8') + img_bytes + b'\r\n')
+                    self.content_type, len(img_bytes)),
+                'utf-8') + img_bytes + b'\r\n')
 
         last_image = None
 
@@ -269,7 +272,8 @@ class CameraImageView(CameraView):
                 image = yield from camera.async_camera_image()
 
             if image:
-                return web.Response(body=image, content_type='image/jpeg')
+                return web.Response(body=image,
+                                    content_type=camera.content_type)
 
         return web.Response(status=500)
 
