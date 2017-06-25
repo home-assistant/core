@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     if file_config:
         # Setup a configured PlexServer
-        host, token, port = file_config.popitem()
+        host, token = file_config.popitem()
         token = token['token']
     # Via discovery
     elif discovery_info is not None:
@@ -122,7 +122,8 @@ def setup_plexserver(host, port, token, hass, config, add_devices_callback):
         configurator.request_done(request_id)
         _LOGGER.info("Discovery configuration done")
 
-    # Save config
+    # Save config, including port number
+    host = '%s:%s' % (host, port)
     if not config_from_file(
             hass.config.path(PLEX_CONFIG_FILE), {host: {
                 'token': token
