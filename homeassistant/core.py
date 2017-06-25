@@ -1055,7 +1055,7 @@ class Config(object):
         self.config_dir = None
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs = set()
+        self.whitelist_external_dirs = None
 
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
@@ -1075,18 +1075,19 @@ class Config(object):
         return os.path.join(self.config_dir, *path)
 
     def secure_path_check(self, path: str) -> bool:
-        """Check if the path is valid for access from outsite.
-
-        Async friendly.
-        """
+        """Check if the path is valid for access from outside."""
+        parent = pathlib.Path(path).parent
         try:
-            path = str(pathlib.Path(path).resolve())
+            parent.resolve()
         except (FileNotFoundError, RuntimeError, PermissionError):
             return False
 
         for whitelisted_path in self.whitelist_external_dirs:
-            if path.startswith(whitelisted_path):
+            try:
+                parent.relative_to(whitelisted_path)
                 return True
+            except ValueError:
+                pass
 
         return False
 
