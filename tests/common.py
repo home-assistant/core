@@ -85,6 +85,7 @@ def get_test_home_assistant():
     def run_loop():
         """Run event loop."""
         # pylint: disable=protected-access
+        loop._thread_ident = threading.get_ident()
         loop.run_forever()
         stop_event.set()
 
