@@ -16,7 +16,8 @@ from homeassistant.helpers import entity
 from homeassistant.util.async import run_coroutine_threadsafe
 
 from tests.common import (
-    get_test_home_assistant, mock_service, patch_yaml_files, mock_coro)
+    get_test_home_assistant, mock_service, patch_yaml_files, mock_coro,
+    async_mock_service)
 
 
 class TestComponentsCore(unittest.TestCase):
@@ -77,7 +78,7 @@ class TestComponentsCore(unittest.TestCase):
     @patch('homeassistant.core.ServiceRegistry.call')
     def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
         """Test if turn_on is blocking domain with no service."""
-        mock_service(self.hass, 'light', SERVICE_TURN_ON)
+        async_mock_service(self.hass, 'light', SERVICE_TURN_ON)
 
         # We can't test if our service call results in services being called
         # because by mocking out the call service method, we mock out all
