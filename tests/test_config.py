@@ -363,6 +363,7 @@ class TestConfig(unittest.TestCase):
                 'name': 'Huis',
                 CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
                 'time_zone': 'America/New_York',
+                'whitelist_external_dirs': '/tmp',
             }), self.hass.loop).result()
 
         assert self.hass.config.latitude == 60
@@ -371,6 +372,8 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == 'Huis'
         assert self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
         assert self.hass.config.time_zone.zone == 'America/New_York'
+        assert len(self.hass.config.whitelist_external_dirs) == 2
+        assert '/tmp' in self.hass.config.whitelist_external_dirs
 
     def test_loading_configuration_temperature_unit(self):
         """Test backward compatibility when loading core config."""
@@ -428,6 +431,7 @@ class TestConfig(unittest.TestCase):
                                                          mock_elevation):
         """Test config remains unchanged if discovery fails."""
         self.hass.config = Config()
+        self.hass.config.config_dir = "/test/config"
 
         run_coroutine_threadsafe(
             config_util.async_process_ha_core_config(
@@ -441,6 +445,8 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == blankConfig.location_name
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
+        assert len(self.hass.config.whitelist_external_dirs) == 1
+        assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
     @mock.patch('asyncio.create_subprocess_exec')
     def test_check_ha_config_file_correct(self, mock_create):
