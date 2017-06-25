@@ -13,10 +13,10 @@ import logging
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
-CONF_TOPIC = 'topic'
-DEFAULT_TOPIC = '#'
 CONF_INTENTS = 'intents'
 CONF_ACTION = 'action'
+
+INTENT_TOPIC = 'hermes/nlu/intentParsed'
 
 LOGGER = logging.getLogger(__name__)
 
@@ -32,20 +32,15 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    LOGGER.info("The 'snips' component is ready!")
-
     mqtt = loader.get_component('mqtt')
-    topic = config[DOMAIN].get(CONF_TOPIC, DEFAULT_TOPIC)
     intents = config[DOMAIN].get(CONF_INTENTS, {})
     handler = IntentHandler(hass, intents)
 
     def message_received(topic, payload, qos):
-        if topic == 'hermes/nlu/intentParsed':
-            LOGGER.info("New intent: {}".format(payload))
-            handler.handle_intent(payload)
+        LOGGER.debug("New intent: {}".format(payload))
+        handler.handle_intent(payload)
 
-    LOGGER.info("Subscribing to topic " + str(topic))
-    mqtt.subscribe(hass, topic, message_received)
+    mqtt.subscribe(hass, INTENT_TOPIC, message_received)
 
     return True
 
@@ -65,19 +60,21 @@ class IntentHandler(object):
         self.intents = intents
 
     def handle_intent(self, payload):
-        if not payload:
+        try:
+            response = json.loads(payload)
+        except TypeError:
             return
-        response = json.loads(payload)
-        if not response:
+
+        if response is None:
             return
 
         name = self.get_name(response)
-        if not name:
+        if name is None:
             return
 
         config = self.intents.get(name)
 
-        if not config:
+        if config is None:
             LOGGER.warning("Received unknown intent %s", name)
             return
 
@@ -89,32 +86,63 @@ class IntentHandler(object):
 
     def get_name(self, response):
         try:
-            return response['intent']['intentName'].split('__')[-1]
-        except:
+            return response['intent']['intent_name'].split('__')[-1]
+        except KeyError:
             return None
 
     def parse_slots(self, response):
-        slots = response["slots"]
-        if not slots:
+        try:
+            slots = iter(response["slots"])
+        except KeyError:
             return {}
+
         parameters = {}
+
         for slot in slots:
-            key = slot["slotName"]
+            try:
+                key = slot["slot_name"]
+            except KeyError:
+                continue
             value = self.get_value(slot)
-            parameters[key] = value
+            if (key is not None) and (value is not None):
+                parameters[key] = value
+
         return parameters
 
     def get_value(self, slot):
+        """
+        Depending on the slot type, the value is found at various depths:
+        For instance, for user-defined ("Custom") types:
+
+            "value": {
+                "kind": "Custom",
+                "value": "soy"
+            }
+
+        For builtin types (numbers, datetimes etc):
+
+            "value": {
+                "kind": "Builtin",
+                "value": {
+                    "kind": "Number",
+                    "value": 3
+                }
+            }
+        """
         try:
-            return slot["value"]["value"]["value"]
-        except:
-            pass
-        try:
-            return slot["value"]["value"]
-        except:
-            pass
-        try:
-            return slot["value"]
-        except:
-            pass
+            value = slot["value"]
+            kind = value["kind"]
+        except KeyError:
+            return None
+
+        if kind == "Custom":
+            try:
+                return value["value"]
+            except KeyError:
+                return None
+        elif kind == "Builtin":
+            try:
+                return value["value"]["value"]
+            except KeyError:
+                return None
         return None
