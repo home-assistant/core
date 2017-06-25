@@ -371,7 +371,7 @@ def async_process_ha_core_config(hass, config):
         set_time_zone(config.get(CONF_TIME_ZONE))
 
     # init whitelist external dir
-    hac.whitelist_external_dirs = set(hass.config.path('www'))
+    hac.whitelist_external_dirs = set((hass.config.path('www'),))
     if CONF_WHITELIST_EXTERNAL_DIRS in config:
         hac.whitelist_external_dirs.update(
             config[CONF_WHITELIST_EXTERNAL_DIRS])
