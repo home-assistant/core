@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES,
     TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'api/2/all'
@@ -24,7 +25,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
 
-SCAN_INTERVAL = timedelta(minutes=1)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=60)
 
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
@@ -104,54 +105,55 @@ class GlancesSensor(Entity):
     @property
     def state(self):
         """Return the state of the resources."""
-        value = self.rest.data
-
-        if value is not None:
-            if self.type == 'disk_use_percent':
-                return value['fs'][0]['percent']
-            elif self.type == 'disk_use':
-                return round(value['fs'][0]['used'] / 1024**3, 1)
-            elif self.type == 'disk_free':
-                try:
-                    return round(value['fs'][0]['free'] / 1024**3, 1)
-                except KeyError:
-                    return round((value['fs'][0]['size'] -
-                                  value['fs'][0]['used']) / 1024**3, 1)
-            elif self.type == 'memory_use_percent':
-                return value['mem']['percent']
-            elif self.type == 'memory_use':
-                return round(value['mem']['used'] / 1024**2, 1)
-            elif self.type == 'memory_free':
-                return round(value['mem']['free'] / 1024**2, 1)
-            elif self.type == 'swap_use_percent':
-                return value['memswap']['percent']
-            elif self.type == 'swap_use':
-                return round(value['memswap']['used'] / 1024**3, 1)
-            elif self.type == 'swap_free':
-                return round(value['memswap']['free'] / 1024**3, 1)
-            elif self.type == 'processor_load':
-                # Windows systems don't provide load details
-                try:
-                    return value['load']['min15']
-                except KeyError:
-                    return value['cpu']['total']
-            elif self.type == 'process_running':
-                return value['processcount']['running']
-            elif self.type == 'process_total':
-                return value['processcount']['total']
-            elif self.type == 'process_thread':
-                return value['processcount']['thread']
-            elif self.type == 'process_sleeping':
-                return value['processcount']['sleeping']
-            elif self.type == 'cpu_temp':
-                for sensor in value['sensors']:
-                    if sensor['label'] == 'CPU':
-                        return sensor['value']
-                return None
+        return self._state
 
     def update(self):
         """Get the latest data from REST API."""
         self.rest.update()
+        value = self.rest.data
+
+        if value is not None:
+            if self.type == 'disk_use_percent':
+                self._state = value['fs'][0]['percent']
+            elif self.type == 'disk_use':
+                self._state = round(value['fs'][0]['used'] / 1024**3, 1)
+            elif self.type == 'disk_free':
+                try:
+                    self._state = round(value['fs'][0]['free'] / 1024**3, 1)
+                except KeyError:
+                    self._state = round((value['fs'][0]['size'] -
+                                  value['fs'][0]['used']) / 1024**3, 1)
+            elif self.type == 'memory_use_percent':
+                self._state = value['mem']['percent']
+            elif self.type == 'memory_use':
+                self._state = round(value['mem']['used'] / 1024**2, 1)
+            elif self.type == 'memory_free':
+                self._state = round(value['mem']['free'] / 1024**2, 1)
+            elif self.type == 'swap_use_percent':
+                self._state = value['memswap']['percent']
+            elif self.type == 'swap_use':
+                self._state = round(value['memswap']['used'] / 1024**3, 1)
+            elif self.type == 'swap_free':
+                self._state = round(value['memswap']['free'] / 1024**3, 1)
+            elif self.type == 'processor_load':
+                # Windows systems don't provide load details
+                try:
+                    self._state = value['load']['min15']
+                except KeyError:
+                    self._state = value['cpu']['total']
+            elif self.type == 'process_running':
+                self._state = value['processcount']['running']
+            elif self.type == 'process_total':
+                self._state = value['processcount']['total']
+            elif self.type == 'process_thread':
+                self._state = value['processcount']['thread']
+            elif self.type == 'process_sleeping':
+                self._state = value['processcount']['sleeping']
+            elif self.type == 'cpu_temp':
+                for sensor in value['sensors']:
+                    if sensor['label'] == 'CPU':
+                        self._state = sensor['value']
+                self._state = None
 
 
 class GlancesData(object):
@@ -162,6 +164,7 @@ class GlancesData(object):
         self._resource = resource
         self.data = dict()
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Glances REST API."""
         try:
