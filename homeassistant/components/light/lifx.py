@@ -39,14 +39,14 @@ UDP_BROADCAST_PORT = 56700
 
 CONF_SERVER = 'server'
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+})
+
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
 
 ATTR_INFRARED = 'infrared'
 ATTR_POWER = 'power'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
-})
 
 LIFX_SET_STATE_SCHEMA = LIGHT_TURN_ON_SCHEMA.extend({
     ATTR_INFRARED: vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255)),
@@ -102,8 +102,8 @@ LIFX_EFFECT_COLORLOOP_SCHEMA = LIFX_EFFECT_SCHEMA.extend({
 
 LIFX_EFFECT_STOP_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_POWER_ON, default=False): cv.boolean,
 })
+
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -133,6 +133,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     return True
 
+
 def find_hsbk(**kwargs):
     """Find the desired color from a number of possible inputs."""
     hue, saturation, brightness, kelvin = [None]*4
@@ -161,6 +162,7 @@ def find_hsbk(**kwargs):
 
     hsbk = [hue, saturation, brightness, kelvin]
     return None if hsbk == [None]*4 else hsbk
+
 
 def merge_hsbk(base, change):
     """Copy change on top of base, except when None."""
