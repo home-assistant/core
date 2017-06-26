@@ -256,14 +256,14 @@ class HomeAssistant(object):
         # To flush out any call_soon_threadsafe
         yield from asyncio.sleep(0, loop=self.loop)
 
-        while self._pending_tasks:
+        if self._pending_tasks:
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
             if pending:
                 yield from asyncio.wait(pending, loop=self.loop)
-            else:
-                yield from asyncio.sleep(0, loop=self.loop)
+
+        yield from asyncio.sleep(0, loop=self.loop)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
