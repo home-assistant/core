@@ -74,7 +74,7 @@ apns2==0.1.1
 # avion==0.6
 
 # homeassistant.components.axis
-axis==7
+axis==8
 
 # homeassistant.components.sensor.modem_callerid
 basicmodem==0.7
@@ -115,7 +115,7 @@ boto3==1.4.3
 broadlink==0.3
 
 # homeassistant.components.sensor.buienradar
-buienradar==0.4
+buienradar==0.6
 
 # homeassistant.components.notify.ciscospark
 ciscosparkapi==0.4.2
@@ -141,10 +141,10 @@ datadog==0.15.0
 datapoint==0.4.3
 
 # homeassistant.components.light.decora
-# decora==0.4
+# decora==0.6
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.4.4
+denonavr==0.5.1
 
 # homeassistant.components.media_player.directv
 directpy==0.1
@@ -270,9 +270,6 @@ holidays==0.8.1
 # homeassistant.components.camera.onvif
 http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip#suds-passworddigest-py3==0.1.2a
 
-# homeassistant.components.switch.rachio
-https://github.com/Klikini/rachiopy/archive/2c8996fcfa97a9f361a789e0c998797ed2805281.zip#rachiopy==0.1.1
-
 # homeassistant.components.switch.dlink
 https://github.com/LinuxChristian/pyW215/archive/v0.4.zip#pyW215==0.4
 
@@ -310,10 +307,15 @@ https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 https://github.com/tfriedel/python-lightify/archive/1bb1db0e7bd5b14304d7bb267e2398cd5160df46.zip#lightify==1.0.5
 
 # homeassistant.components.tado
-https://github.com/wmalgadey/PyTado/archive/0.1.10.zip#PyTado==0.1.10
+https://github.com/wmalgadey/PyTado/archive/0.2.1.zip#PyTado==0.2.1
 
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
+
+# homeassistant.components.sensor.bh1750
+# homeassistant.components.sensor.bme280
+# homeassistant.components.sensor.htu21d
+# i2csense==0.0.3
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -348,7 +350,7 @@ libpurecoollink==0.1.5
 librouteros==1.0.2
 
 # homeassistant.components.media_player.soundtouch
-libsoundtouch==0.3.0
+libsoundtouch==0.6.2
 
 # homeassistant.components.light.lifx_legacy
 liffylights==0.9.4
@@ -568,7 +570,7 @@ pyhik==0.1.2
 pyhomematic==0.1.28
 
 # homeassistant.components.sensor.hydroquebec
-pyhydroquebec==1.1.0
+pyhydroquebec==1.2.0
 
 # homeassistant.components.device_tracker.icloud
 pyicloud==0.9.1
@@ -722,7 +724,7 @@ python-roku==3.1.3
 python-synology==0.1.0
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==6.0.3
+python-telegram-bot==6.1.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
@@ -763,8 +765,11 @@ pyzabbix==0.7.4
 # homeassistant.components.sensor.qnap
 qnapstats==0.2.4
 
+# homeassistant.components.switch.rachio
+rachiopy==0.1.2
+
 # homeassistant.components.climate.radiotherm
-radiotherm==1.2
+radiotherm==1.3
 
 # homeassistant.components.raspihats
 # raspihats==2.2.1
@@ -818,7 +823,10 @@ sleekxmpp==1.3.2
 # homeassistant.components.sleepiq
 sleepyq==0.6
 
+# homeassistant.components.sensor.bh1750
+# homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.envirophat
+# homeassistant.components.sensor.htu21d
 # smbus-cffi==0.5.1
 
 # homeassistant.components.media_player.snapcast

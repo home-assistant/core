@@ -245,6 +245,7 @@ omit =
     homeassistant/components/device_tracker/gpslogger.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/linksys_ap.py
+    homeassistant/components/device_tracker/linksys_smart.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
@@ -342,6 +343,7 @@ omit =
     homeassistant/components/notify/aws_sns.py
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
+    homeassistant/components/notify/clicksend.py
     homeassistant/components/notify/discord.py
     homeassistant/components/notify/facebook.py
     homeassistant/components/notify/free_mobile.py
@@ -378,8 +380,10 @@ omit =
     homeassistant/components/sensor/arest.py
     homeassistant/components/sensor/arwn.py
     homeassistant/components/sensor/bbox.py
+    homeassistant/components/sensor/bh1750.py
     homeassistant/components/sensor/bitcoin.py
     homeassistant/components/sensor/blockchain.py
+    homeassistant/components/sensor/bme280.py
     homeassistant/components/sensor/bom.py
     homeassistant/components/sensor/broadlink.py
     homeassistant/components/sensor/buienradar.py
@@ -418,6 +422,7 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hddtemp.py
     homeassistant/components/sensor/hp_ilo.py
+    homeassistant/components/sensor/htu21d.py
     homeassistant/components/sensor/hydroquebec.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/imap_email_content.py

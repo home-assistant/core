@@ -151,7 +151,7 @@ CONFIG_SCHEMA = vol.Schema({
             cv.positive_int,
         vol.Optional(CONF_USB_STICK_PATH, default=DEFAULT_CONF_USB_STICK_PATH):
             cv.string,
-        vol.Optional(CONF_NEW_ENTITY_IDS, default=False): cv.boolean,
+        vol.Optional(CONF_NEW_ENTITY_IDS, default=True): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
