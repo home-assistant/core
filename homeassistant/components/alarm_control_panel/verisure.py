@@ -25,6 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         alarms.append(VerisureAlarm())
     add_devices(alarms)
 
+
 def set_arm_state(state, code=None):
     """Send set arm state command."""
     transaction_id = hub.session.set_arm_state(code, state)[
@@ -36,6 +37,7 @@ def set_arm_state(state, code=None):
         transaction = hub.session.get_arm_state_transaction(transaction_id)
     # pylint: disable=unexpected-keyword-arg
     hub.update_overview(no_throttle=True)
+
 
 class VerisureAlarm(alarm.AlarmControlPanel):
     """Representation of a Verisure alarm status."""
@@ -91,5 +93,3 @@ class VerisureAlarm(alarm.AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         set_arm_state('ARMED_AWAY', code)
-
-    
