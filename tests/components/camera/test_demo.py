@@ -9,7 +9,9 @@ def test_motion_detection(hass):
     """Test motion detection services."""
     # Setup platform
     yield from async_setup_component(hass, 'camera', {
-        'camera': { 'platform': 'demo' }
+        'camera': {
+            'platform': 'demo'
+        }
     })
 
     # Fetch state and check motion detection attribute
