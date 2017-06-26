@@ -8,61 +8,34 @@ import asyncio
 import logging
 import os
 
-import voluptuous as vol
-
 from homeassistant.core import callback
+from homeassistant.components.apple_tv import (
+    ATTR_ATV, ATTR_POWER, DATA_APPLE_TV)
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
+    SUPPORT_TURN_OFF, MediaPlayerDevice, MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW, DOMAIN, MEDIA_PLAYER_SCHEMA)
 from homeassistant.const import (
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
     STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP, ATTR_ENTITY_ID)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.loader import get_component
 from homeassistant.config import load_yaml_config_file
-import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['pyatv==0.3.2']
+DEPENDENCIES = ['apple_tv']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORTED_BUTTONS = [
-    'up', 'down', 'left', 'right', 'select', 'menu', 'top_menu']
-
-SERVICE_PRESS_BUTTONS = 'apple_tv_press_buttons'
 SERVICE_AUTHENTICATE = 'apple_tv_authenticate'
 
-ATTR_BUTTONS = 'buttons'
+DATA_ENTITIES = 'data_apple_tv_entities'
 
 KEY_CONFIG = 'apple_tv_configuring'
 
-CONF_LOGIN_ID = 'login_id'
-CONF_START_OFF = 'start_off'
-CONF_CREDENTIALS = 'credentials'
-
 NOTIFICATION_ID = 'apple_tv_notification'
 NOTIFICATION_TITLE = 'Apple TV Authentication'
-
-DEFAULT_NAME = 'Apple TV'
-
-DATA_APPLE_TV = 'apple_tv'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_LOGIN_ID): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_CREDENTIALS, default=None): cv.string,
-    vol.Optional(CONF_START_OFF, default=False): cv.boolean
-})
-
-APPLE_TV_PRESS_BUTTONS_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_BUTTONS): vol.All(
-        cv.ensure_list, [vol.In(SUPPORTED_BUTTONS)])
-})
 
 
 def request_configuration(hass, config, atv, credentials):
@@ -106,34 +79,18 @@ def request_configuration(hass, config, atv, credentials):
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Apple TV platform."""
-    import pyatv
-    if DATA_APPLE_TV not in hass.data:
-        hass.data[DATA_APPLE_TV] = []
+    if not discovery_info:
+        return
 
-    if discovery_info is not None:
-        name = discovery_info['name']
-        host = discovery_info['host']
-        login_id = discovery_info['properties']['hG']
-        start_off = False
-        credentials = None
-    else:
-        name = config.get(CONF_NAME)
-        host = config.get(CONF_HOST)
-        login_id = config.get(CONF_LOGIN_ID)
-        start_off = config.get(CONF_START_OFF)
-        credentials = config.get(CONF_CREDENTIALS)
+    # Manage entity cache for service handler
+    if DATA_ENTITIES not in hass.data:
+        hass.data[DATA_ENTITIES] = []
 
-    details = pyatv.AppleTVDevice(name, host, login_id)
-    session = async_get_clientsession(hass)
-    atv = pyatv.connect_to_apple_tv(details, hass.loop, session=session)
-    if credentials:
-        yield from atv.airplay.load_credentials(credentials)
-
-    entity = AppleTvDevice(atv, name, start_off)
-
-    # Save entity object for the service handler
-    if entity not in hass.data[DATA_APPLE_TV]:
-        hass.data[DATA_APPLE_TV].append(entity)
+    name = discovery_info[CONF_NAME]
+    host = discovery_info[CONF_HOST]
+    atv = hass.data[DATA_APPLE_TV][host][ATTR_ATV]
+    power = hass.data[DATA_APPLE_TV][host][ATTR_POWER]
+    entity = AppleTvDevice(atv, name, power)
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -141,17 +98,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         entity_ids = service.data.get(ATTR_ENTITY_ID)
 
         if entity_ids:
-            devices = [device for device in hass.data[DATA_APPLE_TV]
+            devices = [device for device in hass.data[DATA_ENTITIES]
                        if device.entity_id in entity_ids]
         else:
-            devices = hass.data[DATA_APPLE_TV]
+            devices = hass.data[DATA_ENTITIES]
 
         for device in devices:
-            if service.service == SERVICE_PRESS_BUTTONS:
-                for button in service.data.get(ATTR_BUTTONS):
-                    yield from device.async_press_button(button)
-
-            elif service.service == SERVICE_AUTHENTICATE:
+            if service.service == SERVICE_AUTHENTICATE:
                 credentials = yield from atv.airplay.generate_credentials()
                 yield from atv.airplay.load_credentials(credentials)
                 _LOGGER.debug('Generated new credentials: %s', credentials)
@@ -169,16 +122,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             os.path.dirname(__file__), 'services.yaml'))
 
     hass.services.async_register(
-        DOMAIN, SERVICE_PRESS_BUTTONS, async_service_handler,
-        descriptions.get(SERVICE_PRESS_BUTTONS),
-        schema=APPLE_TV_PRESS_BUTTONS_SCHEMA)
-
-    hass.services.async_register(
         DOMAIN, SERVICE_AUTHENTICATE, async_service_handler,
         descriptions.get(SERVICE_AUTHENTICATE),
         schema=MEDIA_PLAYER_SCHEMA)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+
+    if entity not in hass.data[DATA_ENTITIES]:
+        hass.data[DATA_ENTITIES].append(entity)
 
     async_add_devices([entity])
 
@@ -186,30 +137,19 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class AppleTvDevice(MediaPlayerDevice):
     """Representation of an Apple TV device."""
 
-    def __init__(self, atv, name, is_off):
+    def __init__(self, atv, name, power):
         """Initialize the Apple TV device."""
         self.atv = atv
         self._name = name
-        self._is_off = is_off
         self._playing = None
+        self._power = power
+        self._power.listeners.append(self)
         self.atv.push_updater.listener = self
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle when an entity is about to be added to Home Assistant."""
-        if not self._is_off:
-            self.atv.push_updater.start()
-
-    @callback
-    def _set_power_off(self, is_off):
-        """Set the power to off."""
-        self._playing = None
-        self._is_off = is_off
-        if is_off:
-            self.atv.push_updater.stop()
-        else:
-            self.atv.push_updater.start()
-        self.hass.async_add_job(self.async_update_ha_state())
+        self._power.init()
 
     @property
     def name(self):
@@ -229,7 +169,7 @@ class AppleTvDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._is_off:
+        if not self._power.turned_on:
             return STATE_OFF
 
         if self._playing is not None:
@@ -342,21 +282,13 @@ class AppleTvDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_turn_on(self):
         """Turn the media player on."""
-        self._set_power_off(False)
+        self._power.set_power_on(True)
 
     @asyncio.coroutine
     def async_turn_off(self):
         """Turn the media player off."""
-        self._set_power_off(True)
-
-    @asyncio.coroutine
-    def async_press_button(self, button):
-        """Press a remote control button on media player.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        if self._playing is not None:
-            return getattr(self.atv.remote_control, button)()
+        self._playing = None
+        self._power.set_power_on(False)
 
     def async_media_play_pause(self):
         """Pause media on media player.
