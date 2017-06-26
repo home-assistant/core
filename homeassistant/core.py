@@ -240,7 +240,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if is_callback(target):
+        if not asyncio.iscoroutine(target) and is_callback(target):
             target(*args)
         else:
             self.async_add_job(target, *args)
