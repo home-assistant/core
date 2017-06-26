@@ -81,8 +81,8 @@ NETWORKS_RESPONSE_SCHEMA = vol.Schema({
 STATION_SCHEMA = vol.Schema({
     vol.Required(ATTR_FREE_BIKES): cv.positive_int,
     vol.Required(ATTR_EMPTY_SLOTS): cv.positive_int,
-    vol.Required(ATTR_LATITUDE): vol.Coerce(float),
-    vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
+    vol.Required(ATTR_LATITUDE): cv.latitude,
+    vol.Required(ATTR_LONGITUDE): cv.latitude,
     vol.Required(ATTR_ID): cv.string,
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(ATTR_TIMESTAMP): cv.string,
