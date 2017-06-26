@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for tube in config.get(CONF_LINE):
         sensors.append(LondonTubeSensor(tube))
 
-    add_devices(sensors)
+    add_devices(sensors, True)
     _LOGGER.info("The tube_state component is ready!")
     _LOGGER.info(ATTRIBUTION)
 
