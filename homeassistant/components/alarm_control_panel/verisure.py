@@ -25,6 +25,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         alarms.append(VerisureAlarm())
     add_devices(alarms)
 
+def set_arm_state(state, code=None):
+    """Send set arm state command."""
+    transaction_id = hub.session.set_arm_state(code, state)[
+        'armStateChangeTransactionId']
+    _LOGGER.info('verisure set arm state %s', state)
+    transaction = {}
+    while 'result' not in transaction:
+        sleep(0.5)
+        transaction = hub.session.get_arm_state_transaction(transaction_id)
+    # pylint: disable=unexpected-keyword-arg
+    hub.update_overview(no_throttle=True)
 
 class VerisureAlarm(alarm.AlarmControlPanel):
     """Representation of a Verisure alarm status."""
@@ -71,24 +82,14 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
-        self.set_arm_state('DISARMED', code)
+        set_arm_state('DISARMED', code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self.set_arm_state('ARMED_HOME', code)
+        set_arm_state('ARMED_HOME', code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self.set_arm_state('ARMED_AWAY', code)
+        set_arm_state('ARMED_AWAY', code)
 
-    def set_arm_state(self, state, code=None):
-        """Send set arm state command."""
-        transaction_id = hub.session.set_arm_state(code, state)[
-            'armStateChangeTransactionId']
-        _LOGGER.info('verisure set arm state %s', state)
-        transaction = {}
-        while 'result' not in transaction:
-            sleep(0.5)
-            transaction = hub.session.get_arm_state_transaction(transaction_id)
-        # pylint: disable=unexpected-keyword-arg
-        hub.update_overview(no_throttle=True)
+    
