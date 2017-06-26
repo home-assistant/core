@@ -113,8 +113,6 @@ def get_test_home_assistant():
 @asyncio.coroutine
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
-    loop._thread_ident = threading.get_ident()
-
     hass = ha.HomeAssistant(loop)
     INSTANCES.append(hass)
 
@@ -177,7 +175,8 @@ def get_test_instance_port():
     return _TEST_INSTANCE_PORT
 
 
-def mock_service(hass, domain, service):
+@ha.callback
+def async_mock_service(hass, domain, service):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -186,12 +185,12 @@ def mock_service(hass, domain, service):
         """Mock service call."""
         calls.append(call)
 
-    if hass.loop.__dict__.get("_thread_ident", 0) == threading.get_ident():
-        hass.services.async_register(domain, service, mock_service_log)
-    else:
-        hass.services.register(domain, service, mock_service_log)
+    hass.services.async_register(domain, service, mock_service_log)
 
     return calls
+
+
+mock_service = threadsafe_callback_factory(async_mock_service)
 
 
 @ha.callback
