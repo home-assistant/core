@@ -179,8 +179,9 @@ class EntityComponent(object):
                 'Platform %s not ready yet. Retrying in %d seconds.',
                 platform_type, wait_time.total_seconds())
 
-            async_track_point_in_time(self.hass, self._async_setup_platform(
-                platform_type, platform_config, discovery_info, tries),
+            async_track_point_in_time(
+                self.hass, self._async_setup_platform(
+                    platform_type, platform_config, discovery_info, tries),
                 dt_util.utcnow() + wait_time)
         except asyncio.TimeoutError:
             self.logger.error(
