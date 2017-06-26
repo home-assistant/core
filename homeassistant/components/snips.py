@@ -4,12 +4,12 @@ Support for Snips on-device ASR and NLU.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/snips/
 """
-from homeassistant.helpers import template, script, config_validation as cv
-import homeassistant.loader as loader
-import voluptuous as vol
 import copy
 import json
 import logging
+import voluptuous as vol
+from homeassistant.helpers import template, script, config_validation as cv
+import homeassistant.loader as loader
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']
@@ -32,6 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
+    """Activate Snips component."""
     mqtt = loader.get_component('mqtt')
     intents = config[DOMAIN].get(CONF_INTENTS, {})
     handler = IntentHandler(hass, intents)
@@ -46,8 +47,10 @@ def setup(hass, config):
 
 
 class IntentHandler(object):
+    """Help handling intents."""
 
     def __init__(self, hass, intents):
+        """Initialize the intent handler."""
         self.hass = hass
         intents = copy.deepcopy(intents)
         template.attach(hass, intents)
@@ -60,6 +63,7 @@ class IntentHandler(object):
         self.intents = intents
 
     def handle_intent(self, payload):
+        """Handle an intent."""
         try:
             response = json.loads(payload)
         except TypeError:
@@ -85,12 +89,14 @@ class IntentHandler(object):
             action.run(slots)
 
     def get_name(self, response):
+        """Extract the name of an intent."""
         try:
             return response['intent']['intent_name'].split('__')[-1]
         except KeyError:
             return None
 
     def parse_slots(self, response):
+        """Parse the intent slots."""
         try:
             slots = iter(response["slots"])
         except KeyError:
@@ -110,25 +116,7 @@ class IntentHandler(object):
         return parameters
 
     def get_value(self, slot):
-        """
-        Depending on the slot type, the value is found at various depths:
-        For instance, for user-defined ("Custom") types:
-
-            "value": {
-                "kind": "Custom",
-                "value": "soy"
-            }
-
-        For builtin types (numbers, datetimes etc):
-
-            "value": {
-                "kind": "Builtin",
-                "value": {
-                    "kind": "Number",
-                    "value": 3
-                }
-            }
-        """
+        """Return the value of a given slot."""
         try:
             value = slot["value"]
             kind = value["kind"]
