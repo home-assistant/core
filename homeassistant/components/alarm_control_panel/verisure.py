@@ -86,7 +86,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         transaction_id = hub.session.set_arm_state(code, state)[
             'armStateChangeTransactionId']
         _LOGGER.info('verisure set arm state %s', state)
-        transaction = hub.session.get_arm_state_transaction(transaction_id)
+        transaction = {}
         while 'result' not in transaction:
             sleep(0.5)
             transaction = hub.session.get_arm_state_transaction(transaction_id)
