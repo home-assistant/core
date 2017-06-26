@@ -90,4 +90,5 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         while 'result' not in transaction:
             sleep(0.5)
             transaction = hub.session.get_arm_state_transaction(transaction_id)
+        #pylint: disable=unexpected-keyword-arg
         hub.update_overview(no_throttle=True)
