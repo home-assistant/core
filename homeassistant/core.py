@@ -256,7 +256,7 @@ class HomeAssistant(object):
         # To flush out any call_soon_threadsafe
         yield from asyncio.sleep(0, loop=self.loop)
 
-        if self._pending_tasks:
+        while self._pending_tasks:
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
