@@ -558,23 +558,23 @@ def test_platform_not_ready(hass):
 
     with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
         # Should not trigger attempt 2
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=4))
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 1
 
         # Should trigger attempt 2
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=30))
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 2
         assert 'test_domain.mod1' not in hass.config.components
 
         # This should not trigger attempt 3
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=9))
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=59))
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 2
 
         # Trigger attempt 3, which succeeds
-        async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
+        async_fire_time_changed(hass, utcnow + timedelta(seconds=60))
         yield from hass.async_block_till_done()
         assert len(platform1_setup.mock_calls) == 3
         assert 'test_domain.mod1' in hass.config.components

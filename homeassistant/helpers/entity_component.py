@@ -167,22 +167,14 @@ class EntityComponent(object):
                 '{}.{}'.format(self.domain, platform_type))
         except PlatformNotReady:
             tries += 1
-
-            if tries == PLATFORM_NOT_READY_RETRIES:
-                self.logger.error('Failed to setup %s. Tried %d times.',
-                                  platform_type, PLATFORM_NOT_READY_RETRIES)
-                return
-
-            wait_time = timedelta(seconds=min(tries, 6) * 5)
-
+            wait_time = min(tries, 6) * 30
             self.logger.warning(
                 'Platform %s not ready yet. Retrying in %d seconds.',
-                platform_type, wait_time.total_seconds())
-
+                platform_type, wait_time)
             async_track_point_in_time(
                 self.hass, self._async_setup_platform(
                     platform_type, platform_config, discovery_info, tries),
-                dt_util.utcnow() + wait_time)
+                dt_util.utcnow() + timedelta(seconds=wait_time))
         except asyncio.TimeoutError:
             self.logger.error(
                 "Setup of platform %s is taking longer than %s seconds."
