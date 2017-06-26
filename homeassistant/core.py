@@ -111,12 +111,11 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {
-            'max_workers': 10
-        }
+        executor_opts = {'max_workers': 10}
+        if sys.version_info[:2] >= (3, 5):
+            executor_opts['max_workers'] = None
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
-            executor_opts['max_workers'] = None
 
         self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
