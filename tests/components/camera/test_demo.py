@@ -3,6 +3,7 @@ import asyncio
 from homeassistant.components import camera
 from homeassistant.setup import async_setup_component
 
+
 @asyncio.coroutine
 def test_motion_detection(hass):
     """Test motion detection services."""
