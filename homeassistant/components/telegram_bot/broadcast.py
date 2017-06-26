@@ -22,5 +22,7 @@ def async_setup_platform(hass, config):
     # Check the API key works
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
-    _LOGGER.debug("Telegram broadcast platform setup with bot %s", bot.name)
+    bot_config = yield from hass.async_add_job(bot.getMe)
+    _LOGGER.debug("Telegram broadcast platform setup with bot %s",
+                  bot_config['username'])
     return True
