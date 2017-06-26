@@ -327,6 +327,9 @@ insteonlocal==0.52
 # homeassistant.components.insteon_plm
 insteonplm==0.7.4
 
+# homeassistant.components.verisure
+jsonpath==0.75
+
 # homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
 jsonrpc-async==0.6
@@ -893,7 +896,7 @@ uvcclient==0.10.0
 volvooncall==0.3.3
 
 # homeassistant.components.verisure
-vsure==0.11.1
+vsure==1.3.6
 
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.14
