@@ -20,6 +20,8 @@ from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
+from homeassistant.components.config.automation import (
+    CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
 
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, mock_coro)
@@ -28,6 +30,7 @@ CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
+AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -59,6 +62,9 @@ class TestConfig(unittest.TestCase):
         if os.path.isfile(GROUP_PATH):
             os.remove(GROUP_PATH)
 
+        if os.path.isfile(AUTOMATIONS_PATH):
+            os.remove(AUTOMATIONS_PATH)
+
         self.hass.stop()
 
     def test_create_default_config(self):
@@ -68,6 +74,7 @@ class TestConfig(unittest.TestCase):
         assert os.path.isfile(YAML_PATH)
         assert os.path.isfile(VERSION_PATH)
         assert os.path.isfile(GROUP_PATH)
+        assert os.path.isfile(AUTOMATIONS_PATH)
 
     def test_find_config_file_yaml(self):
         """Test if it finds a YAML config file."""
