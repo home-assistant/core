@@ -59,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         state_template = device_config[CONF_VALUE_TEMPLATE]
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
-        level_action = device_config[CONF_LEVEL_ACTION]
+        level_action = device_config.get(CONF_LEVEL_ACTION)
         level_template = device_config[CONF_LEVEL_TEMPLATE]
 
         template_entity_ids = set()
@@ -108,7 +108,9 @@ class LightTemplate(Light):
         self._template = state_template
         self._on_script = Script(hass, on_action)
         self._off_script = Script(hass, off_action)
-        self._level_script = Script(hass, level_action)
+        self._level_script = None
+        if level_action is not None:
+            self._level_script = Script(hass, level_action)
         self._level_template = level_template
 
         self._state = False

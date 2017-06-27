@@ -34,6 +34,14 @@ SUBSCRIPTION_3 = {
         },
     },
 }
+SUBSCRIPTION_4 = {
+    'browser': 'chrome',
+    'subscription': {
+        'endpoint': 'https://google.com',
+        'expirationTime': None,
+        'keys': {'auth': 'auth', 'p256dh': 'p256dh'}
+    },
+}
 
 REGISTER_URL = '/api/notify.html5'
 PUBLISH_URL = '/api/notify.html5/callback'
@@ -132,6 +140,44 @@ class TestHtml5Notify(object):
             hass.http.is_banned_ip.return_value = False
             resp = yield from client.post(REGISTER_URL,
                                           data=json.dumps(SUBSCRIPTION_1))
+
+            content = yield from resp.text()
+            assert resp.status == 200, content
+            assert view.registrations == expected
+            handle = m()
+            assert json.loads(handle.write.call_args[0][0]) == expected
+
+    @asyncio.coroutine
+    def test_registering_new_device_expiration_view(self, loop, test_client):
+        """Test that the HTML view works."""
+        hass = MagicMock()
+        expected = {
+            'unnamed device': SUBSCRIPTION_4,
+        }
+
+        m = mock_open()
+        with patch(
+                'homeassistant.components.notify.html5.open', m, create=True
+        ):
+            hass.config.path.return_value = 'file.conf'
+            service = html5.get_service(hass, {})
+
+            assert service is not None
+
+            # assert hass.called
+            assert len(hass.mock_calls) == 3
+
+            view = hass.mock_calls[1][1][0]
+            assert view.json_path == hass.config.path.return_value
+            assert view.registrations == {}
+
+            hass.loop = loop
+            app = mock_http_component_app(hass)
+            view.register(app.router)
+            client = yield from test_client(app)
+            hass.http.is_banned_ip.return_value = False
+            resp = yield from client.post(REGISTER_URL,
+                                          data=json.dumps(SUBSCRIPTION_4))
 
             content = yield from resp.text()
             assert resp.status == 200, content

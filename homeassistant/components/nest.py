@@ -29,8 +29,16 @@ NEST_CONFIG_FILE = 'nest.conf'
 CONF_CLIENT_ID = 'client_id'
 CONF_CLIENT_SECRET = 'client_secret'
 
+ATTR_HOME_MODE = 'home_mode'
+ATTR_STRUCTURE = 'structure'
+
 SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
+})
+
+AWAY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_HOME_MODE): cv.string,
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -126,6 +134,24 @@ def setup(hass, config):
         client_id=client_id, client_secret=client_secret)
     setup_nest(hass, nest, config)
 
+    def set_mode(service):
+        """Set the home/away mode for a Nest structure."""
+        if ATTR_STRUCTURE in service.data:
+            structures = service.data[ATTR_STRUCTURE]
+        else:
+            structures = hass.data[DATA_NEST].local_structure
+
+        for structure in nest.structures:
+            if structure.name in structures:
+                _LOGGER.info("Setting mode for %s", structure.name)
+                structure.away = service.data[ATTR_HOME_MODE]
+            else:
+                _LOGGER.error("Invalid structure %s",
+                              service.data[ATTR_STRUCTURE])
+
+    hass.services.register(
+        DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
+
     return True
 
 
@@ -138,21 +164,21 @@ class NestDevice(object):
         self.nest = nest
 
         if CONF_STRUCTURE not in conf:
-            self._structure = [s.name for s in nest.structures]
+            self.local_structure = [s.name for s in nest.structures]
         else:
-            self._structure = conf[CONF_STRUCTURE]
-        _LOGGER.debug("Structures to include: %s", self._structure)
+            self.local_structure = conf[CONF_STRUCTURE]
+        _LOGGER.debug("Structures to include: %s", self.local_structure)
 
     def thermostats(self):
         """Generate a list of thermostats and their location."""
         try:
             for structure in self.nest.structures:
-                if structure.name in self._structure:
+                if structure.name in self.local_structure:
                     for device in structure.thermostats:
                         yield (structure, device)
                 else:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self._structure)
+                                  structure.name, self.local_structure)
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
@@ -161,12 +187,12 @@ class NestDevice(object):
         """Generate a list of smoke co alarams."""
         try:
             for structure in self.nest.structures:
-                if structure.name in self._structure:
+                if structure.name in self.local_structure:
                     for device in structure.smoke_co_alarms:
                         yield(structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
-                                 structure.name, self._structure)
+                                 structure.name, self.local_structure)
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")
@@ -175,12 +201,12 @@ class NestDevice(object):
         """Generate a list of cameras."""
         try:
             for structure in self.nest.structures:
-                if structure.name in self._structure:
+                if structure.name in self.local_structure:
                     for device in structure.cameras:
                         yield(structure, device)
                 else:
                     _LOGGER.info("Ignoring structure %s, not in %s",
-                                 structure.name, self._structure)
+                                 structure.name, self.local_structure)
         except socket.error:
             _LOGGER.error(
                 "Connection error logging into the nest web service.")

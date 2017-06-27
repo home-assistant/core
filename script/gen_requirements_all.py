@@ -28,7 +28,8 @@ COMMENT_REQUIREMENTS = (
     'face_recognition',
     'blinkt',
     'smbus-cffi',
-    'envirophat'
+    'envirophat',
+    'i2csense'
 )
 
 TEST_REQUIREMENTS = (
@@ -40,6 +41,7 @@ TEST_REQUIREMENTS = (
     'aioautomatic',
     'SoCo',
     'libsoundtouch',
+    'libpurecoollink',
     'rxv',
     'apns2',
     'sqlalchemy',
@@ -65,6 +67,8 @@ TEST_REQUIREMENTS = (
     'gTTS-token',
     'pywebpush',
     'PyJWT',
+    'restrictedpython',
+    'pyunifi',
 )
 
 IGNORE_PACKAGES = (
