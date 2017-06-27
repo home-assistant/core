@@ -175,7 +175,7 @@ class CoverTemplate(CoverDevice):
         """Register callbacks."""
         state = yield from async_get_last_state(self.hass, self.entity_id)
         if state:
-            self._position = 100 if state.state else 0
+            self._position = 100 if state.state == STATE_OPEN else 0
 
         @callback
         def template_cover_state_listener(entity, old_state, new_state):
