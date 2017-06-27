@@ -227,7 +227,7 @@ def async_setup(hass, config):
     try:
         receiver_service = yield from \
             platform.async_setup_platform(hass, p_config)
-        if receiver_service is None:
+        if receiver_service is False:
             _LOGGER.error(
                 "Failed to initialize Telegram bot %s", p_type)
             return False
