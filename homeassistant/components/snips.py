@@ -64,29 +64,36 @@ class IntentHandler(object):
 
     def handle_intent(self, payload):
         """Handle an intent."""
+        print("*************** 1" + str(payload))
+        print("*************** 1" + str(json.loads(payload)))
         try:
             response = json.loads(payload)
         except TypeError:
             return
 
+        print("*************** 2")
         if response is None:
             return
 
+        print("*************** 3")
         name = self.get_name(response)
         if name is None:
             return
 
+        print("*************** 4")
         config = self.intents.get(name)
 
         if config is None:
             LOGGER.warning("Received unknown intent %s", name)
             return
 
+        print("*************** 5")
         action = config.get(CONF_ACTION)
 
         if action is not None:
             slots = self.parse_slots(response)
             action.run(slots)
+            print("*************** 6")
 
     def get_name(self, response):
         """Extract the name of an intent."""

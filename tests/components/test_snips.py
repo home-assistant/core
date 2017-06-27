@@ -15,8 +15,8 @@ EXAMPLE_MSG = """
             "slot_name": "light_color",
             "value": {
                 "kind": "Custom",
-                "value": "green"
-            },
+                "value": "blue"
+            }
         }
     ]
 }
