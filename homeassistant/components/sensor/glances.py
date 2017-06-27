@@ -25,7 +25,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
