@@ -181,6 +181,8 @@ class HomeAssistant(object):
                 'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
 
+        # Allow automations to set up the start triggers before changing state
+        yield from asyncio.sleep(0, loop=self.loop)
         self.state = CoreState.running
         _async_create_timer(self)
 
