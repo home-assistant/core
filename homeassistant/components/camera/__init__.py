@@ -56,22 +56,14 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
-    data = {}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_EN_MOTION, data)
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_EN_MOTION, data))
 
 
 def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
-    data = {}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_DISEN_MOTION, data)
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISEN_MOTION, data))
 
 
 @asyncio.coroutine
