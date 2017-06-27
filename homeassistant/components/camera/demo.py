@@ -53,17 +53,9 @@ class DemoCamera(Camera):
         """Camera Motion Detection Status."""
         return self._motion_status
 
-    def async_enable_motion_detection(self):
-        """Add function to event loop and return coroutine."""
-        return self.hass.async_add_job(self.enable_motion_detection)
-
     def enable_motion_detection(self):
         """Enable the Motion detection in base station (Arm)."""
         self._motion_status = True
-
-    def async_disable_motion_detection(self):
-        """Add function to event loop and return coroutine."""
-        return self.hass.async_add_job(self.disable_motion_detection)
 
     def disable_motion_detection(self):
         """Disable the motion detection in base station (Disarm)."""

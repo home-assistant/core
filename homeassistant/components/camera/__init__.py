@@ -56,28 +56,21 @@ CAMERA_SERVICE_SCHEMA = vol.Schema({
 
 def enable_motion_detection(hass, entity_id=None):
     """Enable Motion Detection."""
-    hass.add_job(async_enable_motion_detection, hass, entity_id)
+    data = {}
 
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
 
-@callback
-def async_enable_motion_detection(hass, entity_id=None):
-    """Enable motion detection on given Entities."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_EN_MOTION, data))
-
+    hass.services.call(DOMAIN, SERVICE_EN_MOTION, data)
 
 def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
-    hass.add_job(async_disable_motion_detection, hass, entity_id)
+    data = {}
 
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
 
-@callback
-def async_disable_motion_detection(hass, entity_id=None):
-    """Disable motion detection on given Entitiess."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DISEN_MOTION, data))
+    hass.services.call(DOMAIN, SERVICE_DISEN_MOTION, data)
 
 
 @asyncio.coroutine
@@ -136,11 +129,9 @@ def async_setup(hass, config):
 
         for camera in target_cameras:
             if service.service == SERVICE_EN_MOTION:
-                if hasattr(camera, 'async_enable_motion_detection'):
-                    yield from camera.async_enable_motion_detection()
+                yield from camera.async_enable_motion_detection()
             elif service.service == SERVICE_DISEN_MOTION:
-                if hasattr(camera, 'async_disable_motion_detection'):
-                    yield from camera.async_disable_motion_detection()
+                yield from camera.async_disable_motion_detection()
 
         update_tasks = []
         for camera in target_cameras:
@@ -279,6 +270,22 @@ class Camera(Entity):
             return STATE_STREAMING
         else:
             return STATE_IDLE
+
+    def enable_motion_detection(self):
+        """Enable motion detection in the camera."""
+        raise NotImplementedError()
+
+    def async_enable_motion_detection(self):
+        """Call the job and enable motion detection."""
+        return self.hass.async_add_job(self.enable_motion_detection)
+
+    def disable_motion_detection(self):
+        """Disable motion detection in camera."""
+        raise NotImplementedError()
+
+    def async_disable_motion_detection(self):
+        """Call the job and disable motion detection."""
+        return self.hass.async_add_job(self.disable_motion_detection)
 
     @property
     def state_attributes(self):

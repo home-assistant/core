@@ -109,18 +109,10 @@ class ArloCam(Camera):
         """Set the mode in the base station."""
         self._base_stn.mode = mode
 
-    def async_enable_motion_detection(self):
-        """Add function to event loop and return coroutine."""
-        return self.hass.async_add_job(self.enable_motion_detection)
-
     def enable_motion_detection(self):
         """Enable the Motion detection in base station (Arm)."""
         self._motion_status = True
         self.set_base_station_mode(ARLO_MODE_ARMED)
-
-    def async_disable_motion_detection(self):
-        """Add function to event loop and return coroutine."""
-        return self.hass.async_add_job(self.disable_motion_detection)
 
     def disable_motion_detection(self):
         """Disable the motion detection in base station (Disarm)."""
