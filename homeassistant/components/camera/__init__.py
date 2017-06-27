@@ -63,6 +63,7 @@ def enable_motion_detection(hass, entity_id=None):
 
     hass.services.call(DOMAIN, SERVICE_EN_MOTION, data)
 
+
 def disable_motion_detection(hass, entity_id=None):
     """Disable Motion Detection."""
     data = {}
