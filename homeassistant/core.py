@@ -48,9 +48,6 @@ SERVICE_CALL_LIMIT = 10  # seconds
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
 
-# Size of a executor pool
-EXECUTOR_POOL_SIZE = 10
-
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
 
@@ -114,9 +111,11 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {
-            'max_workers': EXECUTOR_POOL_SIZE
-        }
+        executor_opts = {'max_workers': 10}
+        if sys.version_info[:2] >= (3, 5):
+            # It will default set to the number of processors on the machine,
+            # multiplied by 5. That is better for overlap I/O workers.
+            executor_opts['max_workers'] = None
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 
@@ -182,6 +181,8 @@ class HomeAssistant(object):
                 'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
 
+        # Allow automations to set up the start triggers before changing state
+        yield from asyncio.sleep(0, loop=self.loop)
         self.state = CoreState.running
         _async_create_timer(self)
 
