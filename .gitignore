@@ -2,6 +2,7 @@ config/*
 
 tests/testing_config/deps
 tests/testing_config/home-assistant.log
+tests/testing_config/automations.yaml
 
 # Hide sublime text stuff
 *.sublime-project
