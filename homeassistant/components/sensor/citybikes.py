@@ -107,7 +107,7 @@ class CityBikesRequestError(Exception):
 
 
 @asyncio.coroutine
-def async_citybikes_request_with_schema(hass, uri, schema):
+def async_citybikes_request(hass, uri, schema):
     """Perform a request to CityBikes API endpoint, and parse the response."""
     try:
         session = async_get_clientsession(hass)
@@ -118,7 +118,7 @@ def async_citybikes_request_with_schema(hass, uri, schema):
         json_response = yield from req.json()
         return schema(json_response)
     except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Could not connect to CityBikes API endpoint")
+        _LOGGER.error("Could not connect to CityBikes API endpoint")
     except ValueError:
         _LOGGER.error("Received non-JSON data from CityBikes API endpoint")
     except vol.Invalid as err:
@@ -187,7 +187,7 @@ class CityBikesNetwork:
         try:
             yield from cls.NETWORKS_LIST_LOADING.acquire()
             if cls.NETWORKS_LIST is None:
-                networks = yield from async_citybikes_request_with_schema(
+                networks = yield from async_citybikes_request(
                     hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA)
                 cls.NETWORKS_LIST = networks[ATTR_NETWORKS_LIST]
             networks_list = cls.NETWORKS_LIST
@@ -223,7 +223,7 @@ class CityBikesNetwork:
     def async_refresh(self, now=None):
         """Refresh the state of the network."""
         try:
-            network = yield from async_citybikes_request_with_schema(
+            network = yield from async_citybikes_request(
                 self.hass, STATIONS_URI.format(uid=self.network_id),
                 STATIONS_RESPONSE_SCHEMA)
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
