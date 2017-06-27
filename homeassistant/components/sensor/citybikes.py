@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
     ATTR_ATTRIBUTION, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE,
     ATTR_FRIENDLY_NAME, STATE_UNKNOWN, LENGTH_METERS, LENGTH_FEET)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -29,6 +30,7 @@ DEFAULT_ENDPOINT = 'https://api.citybik.es/{uri}'
 NETWORKS_URI = 'v2/networks'
 STATIONS_URI = 'v2/networks/{uid}?fields=network.stations'
 
+REQUEST_TIMEOUT = 5  # In seconds; argument to asyncio.timeout
 SCAN_INTERVAL = timedelta(minutes=5)  # Timely, and doesn't suffocate the API
 DOMAIN = 'citybikes'
 MONITORED_NETWORKS = 'monitored-networks'
@@ -98,6 +100,33 @@ STATIONS_RESPONSE_SCHEMA = vol.Schema({
     })
 
 
+class CityBikesRequestError(Exception):
+    """Error to indicate a CityBikes API request has failed."""
+
+    pass
+
+
+@asyncio.coroutine
+def async_citybikes_request_with_schema(hass, uri, schema):
+    """Perform a request to CityBikes API endpoint, and parse the response."""
+    try:
+        session = async_get_clientsession(hass)
+
+        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+            req = yield from session.get(DEFAULT_ENDPOINT.format(uri=uri))
+
+        json_response = yield from req.json()
+        return schema(json_response)
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Could not connect to CityBikes API endpoint")
+    except ValueError:
+        _LOGGER.error("Received non-JSON data from CityBikes API endpoint")
+    except vol.Invalid as err:
+        _LOGGER.error("Received unexpected JSON from CityBikes"
+                      " API endpoint: %s", err)
+    raise CityBikesRequestError
+
+
 # pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities,
@@ -118,8 +147,6 @@ def async_setup_platform(hass, config, async_add_entities,
     if not network_id:
         network_id = yield from CityBikesNetwork.get_closest_network_id(
             hass, latitude, longitude)
-        if not network_id:
-            return
 
     if network_id not in hass.data[DOMAIN][MONITORED_NETWORKS]:
         network = CityBikesNetwork(hass, network_id)
@@ -150,24 +177,27 @@ def async_setup_platform(hass, config, async_add_entities,
 class CityBikesNetwork:
     """Thin wrapper around a CityBikes network object."""
 
+    NETWORKS_LIST = None
+    NETWORKS_LIST_LOADING = asyncio.Condition()
+
     @classmethod
     @asyncio.coroutine
     def get_closest_network_id(cls, hass, latitude, longitude):
         """Return the id of the network closest to provided location."""
         try:
-            session = async_get_clientsession(hass)
-            with async_timeout.timeout(5, loop=hass.loop):
-                req = yield from session.get(DEFAULT_ENDPOINT.format(
-                    uri=NETWORKS_URI))
-            json_response = yield from req.json()
-            networks = NETWORKS_RESPONSE_SCHEMA(json_response)
-            network = networks[ATTR_NETWORKS_LIST][0]
+            yield from cls.NETWORKS_LIST_LOADING.acquire()
+            if cls.NETWORKS_LIST is None:
+                networks = yield from async_citybikes_request_with_schema(
+                    hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA)
+                cls.NETWORKS_LIST = networks[ATTR_NETWORKS_LIST]
+            networks_list = cls.NETWORKS_LIST
+            network = networks_list[0]
             result = network[ATTR_ID]
             minimum_dist = location.distance(
                 latitude, longitude,
                 network[ATTR_LOCATION][ATTR_LATITUDE],
                 network[ATTR_LOCATION][ATTR_LONGITUDE])
-            for network in networks[ATTR_NETWORKS_LIST][1:]:
+            for network in networks_list[1:]:
                 network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
                 network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
                 dist = location.distance(latitude, longitude,
@@ -177,17 +207,10 @@ class CityBikesNetwork:
                     result = network[ATTR_ID]
 
             return result
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Could not connect to CityBikes API endpoint")
-            return None
-        except ValueError:
-            _LOGGER.error("Received non-JSON data from CityBikes"
-                          " API endpoint")
-            return None
-        except vol.Invalid as err:
-            _LOGGER.error("Received unexpected JSON from CityBikes"
-                          " API endpoint: %s", err)
-            return None
+        except CityBikesRequestError:
+            raise PlatformNotReady
+        finally:
+            cls.NETWORKS_LIST_LOADING.release()
 
     def __init__(self, hass, network_id):
         """Initialize the network object."""
@@ -200,28 +223,16 @@ class CityBikesNetwork:
     def async_refresh(self, now=None):
         """Refresh the state of the network."""
         try:
-            session = async_get_clientsession(self.hass)
-
-            with async_timeout.timeout(5, loop=self.hass.loop):
-                req = yield from session.get(DEFAULT_ENDPOINT.format(
-                    uri=STATIONS_URI.format(uid=self.network_id)))
-
-            json_response = yield from req.json()
-            network = STATIONS_RESPONSE_SCHEMA(json_response)
+            network = yield from async_citybikes_request_with_schema(
+                self.hass, STATIONS_URI.format(uid=self.network_id),
+                STATIONS_RESPONSE_SCHEMA)
             self.stations = network[ATTR_NETWORK][ATTR_STATIONS_LIST]
             self.ready.set()
-            return
-
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Could not connect to CityBikes API endpoint")
-        except ValueError:
-            _LOGGER.error("Received non-JSON data from CityBikes API"
-                          " endpoint")
-        except vol.Invalid as err:
-            _LOGGER.error("Received unexpected JSON from CityBikes API"
-                          " endpoint: %s", err)
-
-        self.ready.clear()
+        except CityBikesRequestError:
+            if now is not None:
+                self.ready.clear()
+            else:
+                raise PlatformNotReady
 
 
 class CityBikesStation(Entity):
