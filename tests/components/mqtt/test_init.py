@@ -275,7 +275,8 @@ class TestMQTT(unittest.TestCase):
         """Test the subscription of $ root and wildcard subtree topics."""
         mqtt.subscribe(self.hass, '$test-topic/subtree/#', self.record_calls)
 
-        fire_mqtt_message(self.hass, '$test-topic/subtree/some-topic', 'test-payload')
+        fire_mqtt_message(self.hass, '$test-topic/subtree/some-topic',
+                          'test-payload')
 
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
