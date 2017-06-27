@@ -182,6 +182,8 @@ class HomeAssistant(object):
                 'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
 
+        # Allow automations to set up the start triggers before changing state
+        yield from asyncio.sleep(0, loop=self.loop)
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -262,8 +264,8 @@ class HomeAssistant(object):
             self._pending_tasks.clear()
             if pending:
                 yield from asyncio.wait(pending, loop=self.loop)
-
-        yield from asyncio.sleep(0, loop=self.loop)
+            else:
+                yield from asyncio.sleep(0, loop=self.loop)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
