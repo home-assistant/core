@@ -38,7 +38,8 @@ def setup(hass, config):
     handler = IntentHandler(hass, intents)
 
     def message_received(topic, payload, qos):
-        LOGGER.debug("New intent: {}".format(payload))
+        """Handle new messages on MQTT."""
+        LOGGER.debug("New intent: %s", str(payload))
         handler.handle_intent(payload)
 
     mqtt.subscribe(hass, INTENT_TOPIC, message_received)
@@ -88,13 +89,6 @@ class IntentHandler(object):
             slots = self.parse_slots(response)
             action.run(slots)
 
-    def get_name(self, response):
-        """Extract the name of an intent."""
-        try:
-            return response['intent']['intent_name'].split('__')[-1]
-        except KeyError:
-            return None
-
     def parse_slots(self, response):
         """Parse the intent slots."""
         try:
@@ -115,7 +109,16 @@ class IntentHandler(object):
 
         return parameters
 
-    def get_value(self, slot):
+    @staticmethod
+    def get_name(response):
+        """Extract the name of an intent."""
+        try:
+            return response['intent']['intent_name'].split('__')[-1]
+        except KeyError:
+            return None
+
+    @staticmethod
+    def get_value(slot):
         """Return the value of a given slot."""
         try:
             value = slot["value"]
