@@ -15,10 +15,7 @@ from homeassistant.const import (
 from homeassistant.helpers import (discovery)
 from homeassistant.helpers.dispatcher import (dispatcher_send)
 
-REQUIREMENTS = [
-    'https://github.com/michaelarnauts/comfoconnect'
-    '/archive/0.2.zip#pycomfoconnect==0.2'
-]
+REQUIREMENTS = ['pycomfoconnect==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
