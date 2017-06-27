@@ -220,18 +220,6 @@ class TradfriLight(Light):
         After adding "self._light_data.hexcolor is not None"
         for ATTR_RGB_COLOR, this also supports Philips Hue bulbs.
         """
-        keys = {}
-        if ATTR_TRANSITION in kwargs:
-            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
-
-        if ATTR_BRIGHTNESS in kwargs:
-            self.hass.async_add_job(self._api(
-                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
-                                               **keys)))
-        else:
-            self.hass.async_add_job(self._api(
-                self._light_control.set_state(True)))
-
         if ATTR_RGB_COLOR in kwargs and self._light_data.hex_color is not None:
             self.hass.async_add_job(self._api(
                 self._light.light_control.set_hex_color(
@@ -245,6 +233,18 @@ class TradfriLight(Light):
             kelvin = min(self._ok_temps.keys(), key=lambda x: abs(x - kelvin))
             self.hass.async_add_job(self._api(
                 self._light_control.set_hex_color(self._ok_temps[kelvin])))
+
+        keys = {}
+        if ATTR_TRANSITION in kwargs:
+            keys['transition_time'] = int(kwargs[ATTR_TRANSITION])
+
+        if ATTR_BRIGHTNESS in kwargs:
+            self.hass.async_add_job(self._api(
+                self._light_control.set_dimmer(kwargs[ATTR_BRIGHTNESS],
+                                               **keys)))
+        else:
+            self.hass.async_add_job(self._api(
+                self._light_control.set_state(True)))
 
     @callback
     def _async_start_observe(self, exc=None):
