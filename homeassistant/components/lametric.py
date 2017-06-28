@@ -59,7 +59,7 @@ class HassLaMetricManager():
     A class that encapsulated requests to the LaMetric manager.
 
     As the original class does not have a re-connect feature that is needed
-    for applications running for a long  time as the OAuth tokens expire. This
+    for applications running for a long time as the OAuth tokens expire. This
     class implements this reconnect() feature.
     """
 
