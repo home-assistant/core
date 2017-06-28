@@ -20,7 +20,8 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN,
+    SUPPORT_TURN_ON)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -30,7 +31,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 
-REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
+REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5',
+                'wakeonlan==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +41,7 @@ EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
 CONF_ENABLE_WEBSOCKET = 'enable_websocket'
+CONF_MAC = 'mac'
 
 DEFAULT_NAME = 'Kodi'
 DEFAULT_PORT = 8080
@@ -81,6 +84,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
     vol.Optional(CONF_ENABLE_WEBSOCKET, default=DEFAULT_ENABLE_WEBSOCKET):
         cv.boolean,
+    vol.Optional(CONF_MAC, default=None): cv.string,
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
@@ -139,7 +143,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
-        timeout=config.get(CONF_TIMEOUT), websocket=websocket)
+        timeout=config.get(CONF_TIMEOUT), websocket=websocket,
+        mac=config.get(CONF_MAC))
 
     hass.data[DATA_KODI].append(entity)
     async_add_devices([entity], update_before_add=True)
@@ -211,12 +216,14 @@ class KodiDevice(MediaPlayerDevice):
 
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
                  username=None, password=None, turn_off_action=None,
-                 timeout=DEFAULT_TIMEOUT, websocket=True):
+                 timeout=DEFAULT_TIMEOUT, websocket=True, mac=None):
         """Initialize the Kodi device."""
         import jsonrpc_async
         import jsonrpc_websocket
+        from wakeonlan import wol
         self.hass = hass
         self._name = name
+        self._wol = wol
 
         kwargs = {
             'timeout': timeout,
@@ -264,6 +271,7 @@ class KodiDevice(MediaPlayerDevice):
 
         self._turn_off_action = turn_off_action
         self._enable_websocket = websocket
+        self._mac = mac
         self._players = list()
         self._properties = {}
         self._item = {}
@@ -523,7 +531,18 @@ class KodiDevice(MediaPlayerDevice):
         if self._turn_off_action in TURN_OFF_ACTION:
             supported_features |= SUPPORT_TURN_OFF
 
+        if self._mac:
+            supported_features |= SUPPORT_TURN_ON
+
         return supported_features
+
+    @cmd
+    def async_turn_on(self):
+        """Execute wol to turn on media player."""
+        if self._mac:
+            return self._wol.send_magic_packet(self._mac)
+        else:
+            _LOGGER.warning("turn_on requested but mac is none")
 
     @cmd
     @asyncio.coroutine
