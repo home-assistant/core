@@ -49,7 +49,10 @@ aiodns==1.1.1
 aiohttp_cors==0.5.3
 
 # homeassistant.components.light.lifx
-aiolifx==0.4.8
+aiolifx==0.5.0
+
+# homeassistant.components.light.lifx
+aiolifx_effects==0.1.0
 
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.4
@@ -326,6 +329,9 @@ insteonlocal==0.52
 
 # homeassistant.components.insteon_plm
 insteonplm==0.7.4
+
+# homeassistant.components.verisure
+jsonpath==0.75
 
 # homeassistant.components.media_player.kodi
 # homeassistant.components.notify.kodi
@@ -893,7 +899,7 @@ uvcclient==0.10.0
 volvooncall==0.3.3
 
 # homeassistant.components.verisure
-vsure==0.11.1
+vsure==1.3.6
 
 # homeassistant.components.sensor.vasttrafik
 vtjp==0.1.14
