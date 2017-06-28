@@ -31,7 +31,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
-
     try:
         return LaMetricNotificationService(config[CONF_ICON],
                                            config[CONF_DISPLAY_TIME] * 1000)
@@ -48,6 +47,7 @@ class LaMetricNotificationService(BaseNotificationService):
         self._icon = icon
         self._display_time = display_time
 
+    # pylint: disable=broad-except
     def send_message(self, message="", **kwargs):
         """Send a message to some LaMetric deviced."""
         from lmnotify import SimpleFrame, Sound, Model
@@ -72,25 +72,22 @@ class LaMetricNotificationService(BaseNotificationService):
                     _LOGGER.error("Sound ID %s unknown, ignoring",
                                   data["sound"])
 
-        textFrame = SimpleFrame(icon, message)
+        text_frame = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Duration: %s, %s, %d",
                       icon, message, self._display_time)
 
-        frames = [textFrame]
+        frames = [text_frame]
 
         if sound is not None:
             frames.append(sound)
 
-        # Find extra parameters in the data section
-
         _LOGGER.debug(frames)
 
         model = Model(frames=frames)
-
         lmn = HassLaMetricManager.manager()
         devices = lmn.get_devices()
-        for d in devices:
-            if (targets is None) or (d["name"] in targets):
-                lmn.set_device(d)
+        for dev in devices:
+            if (targets is None) or (dev["name"] in targets):
+                lmn.set_device(dev)
                 lmn.send_notification(model, lifetime=self._display_time)
-                _LOGGER.debug("Sent notification to LaMetric %s", d["name"])
+                _LOGGER.debug("Sent notification to LaMetric %s", dev["name"])
