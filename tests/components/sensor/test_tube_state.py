@@ -1,13 +1,9 @@
-"""The tests for the WSDOT platform."""
-import re
+"""The tests for the tube_state platform."""
 import unittest
-from datetime import timedelta, datetime, timezone
-
 import requests_mock
 
 from homeassistant.components.sensor import tube_state
-from homeassistant.components.sensor.tube_state import (
-    LondonTubeSensor, CONF_LINE)
+from homeassistant.components.sensor.tube_state import CONF_LINE
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 

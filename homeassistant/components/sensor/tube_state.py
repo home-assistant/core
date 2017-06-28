@@ -6,22 +6,19 @@ https://home-assistant.io/components/sensor.tube-state
 import voluptuous as vol
 import logging
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.util import Throttle
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import requests
-import json
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by TfL Open Data"
-CONF_LINE= 'line'
-DOMAIN = 'tube_state'     #  must match the name of the compoenent
+CONF_LINE = 'line'
+DOMAIN = 'tube_state'
 SCAN_INTERVAL = timedelta(minutes=1)
-TUBE_LINES= [
+TUBE_LINES = [
     'Bakerloo',
     'Central',
     'Circle',
@@ -35,10 +32,9 @@ TUBE_LINES= [
     'Waterloo & City']
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-    vol.Required(CONF_LINE): vol.In(TUBE_LINES)
-    })
+    DOMAIN: vol.Schema({vol.Required(CONF_LINE): vol.In(TUBE_LINES)})
 }, extra=vol.ALLOW_EXTRA)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     data = TubeData()
@@ -50,6 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
     _LOGGER.info("The tube_state component is ready!")
     _LOGGER.info(ATTRIBUTION)
+
 
 class LondonTubeSensor(Entity):
     """
@@ -112,6 +109,7 @@ class TubeData(object):
         else:
             self.data = parse_API_response(response.json())
 
+
 def parse_API_response(response):
     '''Take in the TFL API json response to
     https://api.tfl.gov.uk/line/mode/tube/status'''
@@ -120,7 +118,7 @@ def parse_API_response(response):
 
     for line in response:
         statuses = [status['statusSeverityDescription']
-            for status in line['lineStatuses']]
+                   for status in line['lineStatuses']]
         state = ' + '.join(sorted(set(statuses)))
 
         if state == 'Good Service':
