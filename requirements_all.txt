@@ -86,6 +86,7 @@ basicmodem==0.7
 batinfo==0.4.2
 
 # homeassistant.components.sensor.eddystone_temperature
+# homeassistant.components.sensor.eddystone_weatherurl
 # beacontools[scan]==1.0.1
 
 # homeassistant.components.device_tracker.linksys_ap
@@ -358,10 +359,6 @@ librouteros==1.0.2
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.6.2
 
-# homeassistant.components.lametric
-# homeassistant.components.notify.lametric
-lmnotify==0.0.4
-
 # homeassistant.components.light.lifx_legacy
 liffylights==0.9.4
 
@@ -370,6 +367,11 @@ limitlessled==1.0.8
 
 # homeassistant.components.media_player.liveboxplaytv
 liveboxplaytv==1.4.9
+
+# homeassistant.components.lametric
+# homeassistant.components.media_player.lametric
+# homeassistant.components.notify.lametric
+lmnotify==0.0.4
 
 # homeassistant.components.sensor.lyft
 lyft_rides==0.1.0b0
