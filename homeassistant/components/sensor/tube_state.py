@@ -62,7 +62,7 @@ class LondonTubeSensor(Entity):    # Entity
 
     def __init__(self, name, data):
         """Initialize the sensor."""
-        self._name = name             # the name of the line from the allowed list
+        self._name = name
         self._data = data
         self._state = None
         self._description = None
@@ -123,13 +123,15 @@ def parse_API_response(response):
     data_dict = dict.fromkeys(lines)
 
     for line in response:                     # Assign data via key
-        statuses = [status['statusSeverityDescription'] for status in line['lineStatuses']]
+        statuses = [status['statusSeverityDescription']
+                    for status in line['lineStatuses']]
         state = ' + '.join(sorted(set(statuses)))
 
-        if state == 'Good Service':   # if good status, this is the only status returned
+        if state == 'Good Service':   # if good status, this is the only status
             reason =  'Nothing to report'
         else:
-            reason = ' *** '.join([status['reason'] for status in line['lineStatuses']])
+            reason = ' *** '.join(
+            [status['reason'] for status in line['lineStatuses']])
 
         attr = {'State': state, 'Description': reason}
         data_dict[line['name']] = attr
