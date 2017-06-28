@@ -36,8 +36,7 @@ def get_service(hass, config, discovery_info=None):
         return LaMetricNotificationService(config[CONF_ICON],
                                            config[CONF_DISPLAY_TIME] * 1000)
     except HomeAssistantError:
-        _LOGGER.exception("Could not configure LaMetric device %s",
-                          config[CONF_DEVICENAME])
+        _LOGGER.exception("Could not configure LaMetric notifier")
         return None
 
 
@@ -69,9 +68,9 @@ class LaMetricNotificationService(BaseNotificationService):
                                   sound_id=data["sound"])
                     _LOGGER.debug("Adding notification sound %s",
                                   data["sound"])
-                    frames.append(sound)
                 except:
-                    _LOGGER.info("Sound ID %s unknown", data["sound"])
+                    _LOGGER.error("Sound ID %s unknown, ignoring",
+                                  data["sound"])
 
         sf = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Duration: %s, %s, %d",
@@ -94,3 +93,4 @@ class LaMetricNotificationService(BaseNotificationService):
             if (targets is None) or (d["name"] in targets):
                 lmn.set_device(d)
                 lmn.send_notification(model, lifetime=self._display_time)
+                _LOGGER.debug("Sent notification to LaMetric %s", d["name"])

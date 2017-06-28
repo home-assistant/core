@@ -1,7 +1,7 @@
 """
 Support for LaMetric time.
 
-This is the base platform to support LaMetric components: 
+This is the base platform to support LaMetric components:
 Notify, Light, Mediaplayer
 
 For more details about this component, please refer to the documentation at
@@ -34,12 +34,11 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the LaMetricManager."""
 
-    from lmnotify import LaMetricManager
-
     _LOGGER.debug("Setting up LaMetric platform")
     try:
-        lmn = HassLaMetricManager(client_id=config[DOMAIN][CONF_CLIENT_ID],
-                                  client_secret=config[DOMAIN][CONF_CLIENT_SECRET])
+        cf = config[DOMAIN]
+        lmn = HassLaMetricManager(client_id=cf[CONF_CLIENT_ID],
+                                  client_secret=cf[CONF_CLIENT_SECRET])
         devices = HassLaMetricManager.manager().get_devices()
     except Exception as e:
         _LOGGER.error("Could not setup LaMetric platform: %s", e)
@@ -60,8 +59,9 @@ class HassLaMetricManager():
     """
     A class that encapsulated requests to the LaMetric manager.
 
-    Implements a singleton pattern. Also monitors for "token" expired 
-    exceptions an reconnect with the same credentials.
+    As the original class does not have a re-connect feature that is needed
+    for applications running for a long time as the OAuth tokens expire. This
+    class implements this reconnect() feature.
     """
 
     def __init__(self, client_id, client_secret):
