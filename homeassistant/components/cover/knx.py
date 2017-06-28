@@ -39,8 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SETPOSITION_ADDRESS): cv.string,
     vol.Optional(CONF_INVERT_POSITION, default=False): cv.boolean,
-    vol.Optional(CONF_GETANGLE_ADDRESS): cv.string,
-    vol.Optional(CONF_SETANGLE_ADDRESS): cv.string,
+    vol.Inclusive(CONF_GETANGLE_ADDRESS, 'angle'): cv.string,
+    vol.Inclusive(CONF_SETANGLE_ADDRESS, 'angle'): cv.string,
     vol.Optional(CONF_INVERT_ANGLE, default=False): cv.boolean,
 })
 
@@ -73,15 +73,12 @@ class KNXCover(KNXMultiAddressDevice, CoverDevice):
             SUPPORT_SET_POSITION | SUPPORT_STOP
 
         # Tilt is only supported, if there is a angle get and set address
-        if (config.config.get(CONF_SETANGLE_ADDRESS) is not None) and \
-           (config.config.get(CONF_GETANGLE_ADDRESS) is not None):
+        if (config.config.get(CONF_SETANGLE_ADDRESS) is not None):
             _LOGGER.debug("%s: Tilt supported at addresses %s, %s",
                           self.name, config.config.get(CONF_SETANGLE_ADDRESS),
                           config.config.get(CONF_GETANGLE_ADDRESS))
             self._supported_features = self._supported_features | \
                 SUPPORT_SET_TILT_POSITION
-        else:
-            _LOGGER.debug("%s: Tilt not supported", self.name)
 
     @property
     def should_poll(self):
