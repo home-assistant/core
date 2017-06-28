@@ -68,15 +68,15 @@ class LaMetricNotificationService(BaseNotificationService):
                                   sound_id=data["sound"])
                     _LOGGER.debug("Adding notification sound %s",
                                   data["sound"])
-                except:
+                except Exception:
                     _LOGGER.error("Sound ID %s unknown, ignoring",
                                   data["sound"])
 
-        sf = SimpleFrame(icon, message)
+        textFrame = SimpleFrame(icon, message)
         _LOGGER.debug("Icon/Message/Duration: %s, %s, %d",
                       icon, message, self._display_time)
 
-        frames = [sf]
+        frames = [textFrame]
 
         if sound is not None:
             frames.append(sound)

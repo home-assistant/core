@@ -33,23 +33,22 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the LaMetricManager."""
-
     _LOGGER.debug("Setting up LaMetric platform")
     try:
-        cf = config[DOMAIN]
-        lmn = HassLaMetricManager(client_id=cf[CONF_CLIENT_ID],
-                                  client_secret=cf[CONF_CLIENT_SECRET])
+        conf = config[DOMAIN]
+        lmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
+                                  client_secret=conf[CONF_CLIENT_SECRET])
         devices = HassLaMetricManager.manager().get_devices()
-    except Exception as e:
-        _LOGGER.error("Could not setup LaMetric platform: %s", e)
+    except Exception as exception:
+        _LOGGER.error("Could not setup LaMetric platform: %s", exception)
         return False
 
     found = False
     hass.data[DOMAIN] = lmn
     hass.data[LAMETRIC_DEVICES] = []
-    for d in devices:
-        _LOGGER.debug("Discovered LaMetric device: %s", d)
-        hass.data[LAMETRIC_DEVICES].append(d)
+    for dev in devices:
+        _LOGGER.debug("Discovered LaMetric device: %s", dev)
+        hass.data[LAMETRIC_DEVICES].append(dev)
         found = True
 
     return found
@@ -65,6 +64,7 @@ class HassLaMetricManager():
     """
 
     def __init__(self, client_id, client_secret):
+        """Initialize HassLaMetricManager and connect to LaMetric."""
         from lmnotify import LaMetricManager
 
         _LOGGER.debug("Connecting to LaMetric")
@@ -74,6 +74,11 @@ class HassLaMetricManager():
 
     @classmethod
     def reconnect(cls):
+        """
+        Reconnect to LaMetric.
+
+        This is usually necessary when the OAuth token is expired.
+        """
         from lmnotify import LaMetricManager
         _LOGGER.debug("Reconnecting to LaMetric")
         HassLaMetricManager.lmn = \
