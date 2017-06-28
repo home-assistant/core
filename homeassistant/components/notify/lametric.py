@@ -1,5 +1,5 @@
 """
-Notify for LaMetric time
+Notify for LaMetric time.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.lametric/
