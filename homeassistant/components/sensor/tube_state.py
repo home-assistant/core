@@ -118,11 +118,11 @@ def parse_API_response(response):
 
     for line in response:
         statuses = [status['statusSeverityDescription']
-                   for status in line['lineStatuses']]
+                    for status in line['lineStatuses']]
         state = ' + '.join(sorted(set(statuses)))
 
         if state == 'Good Service':
-            reason =  'Nothing to report'
+            reason = 'Nothing to report'
         else:
             reason = ' *** '.join(
                 [status['reason'] for status in line['lineStatuses']])
