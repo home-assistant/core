@@ -28,7 +28,7 @@ class TestLondonTubeSensor(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.config = {
-            CONF_LINE: ['Hammersmith-city']
+            CONF_LINE: ['Piccadilly']
         }
         self.entities = []
 
@@ -44,12 +44,10 @@ class TestLondonTubeSensor(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
         """Test for operational WSDOT sensor with proper attributes."""
-        uri = 'https://api.tfl.gov.uk/line/hammersmith-city/status'
+        uri = 'https://api.tfl.gov.uk/line/mode/tube/status'
         mock_req.get(uri, text=load_fixture('tube_state.json'))
         tube_state.setup_platform(self.hass, self.config, self.add_entities)
         self.assertEqual(len(self.entities), 1)
         sensor = self.entities[0]
-        self.assertEqual(sensor.name, 'Hammersmith-city')
-        self.assertEqual(sensor.state, 'Minor Delays + Part Closure')
-        self.assertEqual(sensor._description, ['Ongoing investigations by Rob',
-         'More investigations'])
+        self.assertEqual(sensor.name, 'Piccadilly')
+        self.assertEqual(sensor.state, 'Part Suspended + Severe Delays')
