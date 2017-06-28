@@ -358,6 +358,10 @@ librouteros==1.0.2
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.6.2
 
+# homeassistant.components.lametric
+# homeassistant.components.notify.lametric
+lmnotify==0.0.4
+
 # homeassistant.components.light.lifx_legacy
 liffylights==0.9.4
 

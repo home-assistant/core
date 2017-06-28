@@ -1,0 +1,85 @@
+"""
+Support for LaMetric time.
+
+This is the base platform to support LaMetric components: 
+Notify, Light, Mediaplayer
+
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/lametric/
+"""
+import logging
+
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['lmnotify==0.0.4']
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_CLIENT_ID = 'client_id'
+CONF_CLIENT_SECRET = 'client_secret'
+
+DOMAIN = 'lametric'
+LAMETRIC_DEVICES = 'LAMETRIC_DEVICES'
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_CLIENT_ID): cv.string,
+        vol.Required(CONF_CLIENT_SECRET): cv.string,
+    }),
+}, extra=vol.ALLOW_EXTRA)
+
+
+def setup(hass, config):
+    """Set up the LaMetricManager."""
+
+    from lmnotify import LaMetricManager
+
+    _LOGGER.debug("Setting up LaMetric platform")
+    try:
+        lmn = HassLaMetricManager(client_id=config[DOMAIN][CONF_CLIENT_ID],
+                                  client_secret=config[DOMAIN][CONF_CLIENT_SECRET])
+        devices = HassLaMetricManager.manager().get_devices()
+    except Exception as e:
+        _LOGGER.error("Could not setup LaMetric platform: %s", e)
+        return False
+
+    found = False
+    hass.data[DOMAIN] = lmn
+    hass.data[LAMETRIC_DEVICES] = []
+    for d in devices:
+        _LOGGER.debug("Discovered LaMetric device: %s", d)
+        hass.data[LAMETRIC_DEVICES].append(d)
+        found = True
+
+    return found
+
+
+class HassLaMetricManager():
+    """
+    A class that encapsulated requests to the LaMetric manager.
+
+    Implements a singleton pattern. Also monitors for "token" expired 
+    exceptions an reconnect with the same credentials.
+    """
+
+    def __init__(self, client_id, client_secret):
+        from lmnotify import LaMetricManager
+
+        _LOGGER.debug("Connecting to LaMetric")
+        HassLaMetricManager.lmn = LaMetricManager(client_id, client_secret)
+        HassLaMetricManager._client_id = client_id
+        HassLaMetricManager._client_secret = client_secret
+
+    @classmethod
+    def reconnect(cls):
+        from lmnotify import LaMetricManager
+        _LOGGER.debug("Reconnecting to LaMetric")
+        HassLaMetricManager.lmn = \
+            LaMetricManager(HassLaMetricManager._client_id,
+                            HassLaMetricManager._client_secret)
+
+    @classmethod
+    def manager(cls):
+        return cls.lmn

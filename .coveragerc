@@ -86,6 +86,9 @@ omit =
     homeassistant/components/knx.py
     homeassistant/components/*/knx.py
 
+    homeassistant/components/lametric.py
+    homeassistant/components/*/lametric.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 
