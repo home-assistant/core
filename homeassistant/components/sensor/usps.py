@@ -125,7 +125,7 @@ class USPSMailSensor(Entity):
         import datetime
         import myusps
         self._state = len(myusps.get_mail(
-            self._session,datetime.datetime.now().date()))
+            self._session, datetime.datetime.now().date()))
 
     @property
     def device_state_attributes(self):
