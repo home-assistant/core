@@ -10,7 +10,8 @@ from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_HOST,
                                  CONF_PORT, CONF_PASSWORD)
 
-from homeassistant.const import (HTTP_BAD_REQUEST)
+from homeassistant.const import (HTTP_BAD_REQUEST,
+                                 HTTP_NOT_FOUND)
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
@@ -19,7 +20,7 @@ from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 
-REQUIREMENTS = ['asterisk_mbox==0.3.0']
+REQUIREMENTS = ['asterisk_mbox==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,9 +129,13 @@ class AsteriskMboxMP3View(HomeAssistantView):
     @asyncio.coroutine
     def get(self, request, sha):
         """Retrieve Asterisk mp3."""
+        from asterisk_mbox import ServerError
         client = self.data.client
         _LOGGER.info("Sending mp3 for %s", sha)
-        return client.mp3(sha, sync=True)
+        try:
+            return client.mp3(sha, sync=True)
+        except ServerError as err:
+            return self.json_message(err, HTTP_NOT_FOUND)
 
 
 class AsteriskMboxDeleteView(HomeAssistantView):
