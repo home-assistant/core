@@ -537,12 +537,14 @@ class KodiDevice(MediaPlayerDevice):
         return supported_features
 
     @cmd
+    @asyncio.coroutine
     def async_turn_on(self):
-        """Execute wol to turn on media player."""
+        """Execute turn_on action to turn on media player with WakeOnLan."""
         if self._mac:
-            return self._wol.send_magic_packet(self._mac)
+            yield from self.hass.async_add_job(
+                self._wol.send_magic_packet, self._mac)
         else:
-            _LOGGER.warning("turn_on requested but mac is none")
+            _LOGGER.warning("turn_on requested but MAC address is none")
 
     @cmd
     @asyncio.coroutine
