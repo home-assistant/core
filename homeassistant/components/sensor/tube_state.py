@@ -24,11 +24,14 @@ TUBE_LINES = [
     'Central',
     'Circle',
     'District',
+    'DLR',
     'Hammersmith & City',
     'Jubilee',
+    'London Overground',
     'Metropolitan',
     'Northern',
     'Piccadilly',
+    'TfL Rail',
     'Victoria',
     'Waterloo & City']
 
@@ -102,7 +105,7 @@ class TubeData(object):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from TFL."""
-        url = 'https://api.tfl.gov.uk/line/mode/tube/status'
+        url = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
         response = requests.get(url)
         _LOGGER.info("TFL Request made")
         if response.status_code != 200:
