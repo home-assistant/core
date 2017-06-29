@@ -69,9 +69,9 @@ class HassLaMetricManager():
         from lmnotify import LaMetricManager
 
         _LOGGER.debug("Connecting to LaMetric")
-        HassLaMetricManager.lmn = LaMetricManager(client_id, client_secret)
-        HassLaMetricManager._client_id = client_id
-        HassLaMetricManager._client_secret = client_secret
+        self.lmn = LaMetricManager(client_id, client_secret)
+        self._client_id = client_id
+        self._client_secret = client_secret
 
     def reconnect(self):
         """
@@ -81,9 +81,8 @@ class HassLaMetricManager():
         """
         from lmnotify import LaMetricManager
         _LOGGER.debug("Reconnecting to LaMetric")
-        HassLaMetricManager.lmn = \
-            LaMetricManager(self._client_id,
-                            self._client_secret)
+        self.lmn = LaMetricManager(self._client_id,
+                                   self._client_secret)
 
     def manager(self):
         """Return the global LaMetricManager instance."""
