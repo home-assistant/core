@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Powered by TfL Open Data"
 CONF_LINE = 'line'
 DOMAIN = 'tube_state'
-SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(seconds=30)
 TUBE_LINES = [
     'Bakerloo',
     'Central',
@@ -34,6 +34,7 @@ TUBE_LINES = [
     'TfL Rail',
     'Victoria',
     'Waterloo & City']
+URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({vol.Required(CONF_LINE): vol.In(TUBE_LINES)})
@@ -105,8 +106,7 @@ class TubeData(object):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from TFL."""
-        url = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
-        response = requests.get(url)
+        response = requests.get(URL)
         _LOGGER.info("TFL Request made")
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
