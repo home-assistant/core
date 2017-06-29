@@ -14,7 +14,7 @@ from homeassistant.const import CONF_ICON
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 
-from homeassistant.components.lametric import HassLaMetricManager
+from homeassistant.components.lametric import DOMAIN, HassLaMetricManager
 
 REQUIREMENTS = ['lmnotify==0.0.4']
 
@@ -31,8 +31,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
     """Get the Slack notification service."""
+    hlmn = hass.data.get(DOMAIN)
     try:
-        return LaMetricNotificationService(config[CONF_ICON],
+        return LaMetricNotificationService(hlmn,
+                                           config[CONF_ICON],
                                            config[CONF_DISPLAY_TIME] * 1000)
     except HomeAssistantError:
         _LOGGER.exception("Could not configure LaMetric notifier")
@@ -42,8 +44,9 @@ def get_service(hass, config, discovery_info=None):
 class LaMetricNotificationService(BaseNotificationService):
     """Implement the notification service for LaMetric."""
 
-    def __init__(self, icon, display_time):
+    def __init__(self, hasslametricmanager, icon, display_time):
         """Initialize the service."""
+        self.hasslametricmanager = hasslametricmanager
         self._icon = icon
         self._display_time = display_time
 
@@ -84,7 +87,7 @@ class LaMetricNotificationService(BaseNotificationService):
         _LOGGER.debug(frames)
 
         model = Model(frames=frames)
-        lmn = HassLaMetricManager.manager()
+        lmn = self.hasslametricmanager.manager()
         devices = lmn.get_devices()
         for dev in devices:
             if (targets is None) or (dev["name"] in targets):

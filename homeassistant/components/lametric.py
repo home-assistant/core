@@ -37,15 +37,15 @@ def setup(hass, config):
     _LOGGER.debug("Setting up LaMetric platform")
     try:
         conf = config[DOMAIN]
-        lmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
-                                  client_secret=conf[CONF_CLIENT_SECRET])
-        devices = HassLaMetricManager.manager().get_devices()
+        hlmn = HassLaMetricManager(client_id=conf[CONF_CLIENT_ID],
+                                   client_secret=conf[CONF_CLIENT_SECRET])
+        devices = hlmn.manager().get_devices()
     except Exception as exception:
         _LOGGER.error("Could not setup LaMetric platform: %s", exception)
         return False
 
     found = False
-    hass.data[DOMAIN] = lmn
+    hass.data[DOMAIN] = hlmn
     hass.data[LAMETRIC_DEVICES] = []
     for dev in devices:
         _LOGGER.debug("Discovered LaMetric device: %s", dev)
@@ -73,8 +73,7 @@ class HassLaMetricManager():
         HassLaMetricManager._client_id = client_id
         HassLaMetricManager._client_secret = client_secret
 
-    @classmethod
-    def reconnect(cls):
+    def reconnect(self):
         """
         Reconnect to LaMetric.
 
@@ -83,10 +82,9 @@ class HassLaMetricManager():
         from lmnotify import LaMetricManager
         _LOGGER.debug("Reconnecting to LaMetric")
         HassLaMetricManager.lmn = \
-            LaMetricManager(HassLaMetricManager._client_id,
-                            HassLaMetricManager._client_secret)
+            LaMetricManager(self._client_id,
+                            self._client_secret)
 
-    @classmethod
-    def manager(cls):
+    def manager(self):
         """Return the global LaMetricManager instance."""
-        return cls.lmn
+        return self.lmn
