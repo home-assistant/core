@@ -1,16 +1,17 @@
 """
+Sensor for checking the status of London Underground tube lines.
+
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.tube-state
 """
+import logging
+from datetime import timedelta
 
 import voluptuous as vol
-import logging
+import requests
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-
-from datetime import timedelta
-import requests
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +38,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Tube sensor."""
     data = TubeData()
     data.update()
     sensors = []
@@ -49,9 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LondonTubeSensor(Entity):
-    """
-    Sensor that reads the status of a line from TubeData.
-    """
+    """ Sensor that reads the status of a line from TubeData. """
+
     ICON = 'mdi:subway'
 
     def __init__(self, name, data):
@@ -101,18 +102,17 @@ class TubeData(object):
     @Throttle(SCAN_INTERVAL)
     def update(self):
         """Get the latest data from TFL."""
-        URL = 'https://api.tfl.gov.uk/line/mode/tube/status'
-        response = requests.get(URL)
+        url = 'https://api.tfl.gov.uk/line/mode/tube/status'
+        response = requests.get(url)
         _LOGGER.info("TFL Request made")
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
         else:
-            self.data = parse_API_response(response.json())
+            self.data = parse_api_response(response.json())
 
 
-def parse_API_response(response):
-    '''Take in the TFL API json response to
-    https://api.tfl.gov.uk/line/mode/tube/status'''
+def parse_api_response(response):
+    """Take in the TFL API json response."""
     lines = [line['name'] for line in response]
     data_dict = dict.fromkeys(lines)
 
