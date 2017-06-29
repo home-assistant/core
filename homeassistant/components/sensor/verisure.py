@@ -74,7 +74,8 @@ class VerisureThermometer(Entity):
         """Return the unit of measurement of this entity."""
         return TEMP_CELSIUS
 
-    def update(self):
+    @staticmethod
+    def update():
         """Update the sensor."""
         hub.update_overview()
 
@@ -112,7 +113,8 @@ class VerisureHygrometer(Entity):
         """Return the unit of measurement of this entity."""
         return '%'
 
-    def update(self):
+    @staticmethod
+    def update():
         """Update the sensor."""
         hub.update_overview()
 
@@ -150,6 +152,7 @@ class VerisureMouseDetection(Entity):
         """Return the unit of measurement of this entity."""
         return 'Mice'
 
-    def update(self):
+    @staticmethod
+    def update():
         """Update the sensor."""
         hub.update_overview()

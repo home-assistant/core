@@ -72,6 +72,7 @@ class VerisureSmartplug(SwitchDevice):
         self._state = False
         self._change_timestamp = time()
 
-    def update(self):
+    @staticmethod
+    def update():
         """Get the latest date of the smartplug."""
         hub.update_overview()

@@ -99,7 +99,7 @@ class OpenHardwareMonitorDevice(Entity):
             else:
                 array = array[path_number][OHM_CHILDREN]
                 _attributes.update({
-                    'level_%s' % path_index: values[OHM_NAME]
+                    'level_{}'.format(path_index): values[OHM_NAME]
                 })
 
 
@@ -124,7 +124,7 @@ class OpenHardwareMonitorData(object):
 
     def refresh(self):
         """Download and parse JSON from OHM."""
-        data_url = "http://%s:%d/data.json" % (
+        data_url = "http://{}:{}/data.json".format(
             self._config.get(CONF_HOST),
             self._config.get(CONF_PORT))
 

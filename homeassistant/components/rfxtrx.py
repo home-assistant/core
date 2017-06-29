@@ -225,7 +225,7 @@ def get_pt2262_deviceid(device_id, nb_data_bits):
 
     mask = 0xFF & ~((1 << nb_data_bits) - 1)
 
-    data[len(data)-1] &= mask
+    data[-1] &= mask
 
     return binascii.hexlify(data)
 
