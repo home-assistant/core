@@ -87,7 +87,7 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         """Send disarm command."""
         set_arm_state('DISARMED', code)
 
-    @staticmethod   
+    @staticmethod
     def alarm_arm_home(code=None):
         """Send arm home command."""
         set_arm_state('ARMED_HOME', code)
