@@ -1,11 +1,14 @@
 """Test Home Assistant package util methods."""
+import asyncio
 from distutils.sysconfig import get_python_lib
 import os
+import sys
 from subprocess import PIPE
 import unittest
-from unittest.mock import Mock, call, patch
+from unittest.mock import MagicMock, Mock, call, patch
 
 import pkg_resources
+import pytest
 
 from homeassistant.const import CONSTRAINT_FILE
 import homeassistant.util.package as package
@@ -17,6 +20,51 @@ TEST_EXIST_REQ = 'pip>=7.0.0'
 TEST_NEW_REQ = 'pyhelloworld3==1.0.0'
 TEST_ZIP_REQ = 'file://{}#{}' \
     .format(os.path.join(RESOURCE_DIR, 'pyhelloworld3.zip'), TEST_NEW_REQ)
+
+
+@pytest.fixture
+def deps_dir():
+    """Return path to deps directory."""
+    return os.path.abspath('/deps_dir')
+
+
+@pytest.fixture
+def lib_dir(deps_dir):
+    """Return path to lib directory."""
+    return os.path.join(deps_dir, 'lib_dir')
+
+
+@pytest.fixture
+def mock_subprocess(lib_dir):
+    """Return a Popen mock."""
+    with patch('homeassistant.util.package.Popen') as mock_popen:
+        mock_popen.return_value.communicate.return_value = (
+            bytes(lib_dir, 'utf-8'), b'error')
+        mock_popen.return_value.returncode = 0
+        yield mock_popen
+
+
+@pytest.fixture
+def mock_env():
+    """Mock os.environ."""
+    with patch('homeassistant.util.package.os.environ.copy') as env_copy:
+        env_copy.return_value = {}
+        yield env_copy
+
+
+@asyncio.coroutine
+def mock_async_subprocess():
+    """Return an async Popen mock."""
+    async_popen = MagicMock()
+
+    @asyncio.coroutine
+    def communicate(input=None):
+        """Communicate mock."""
+        stdout = bytes('/deps_dir/lib_dir', 'utf-8')
+        return (stdout, None)
+
+    async_popen.communicate = communicate
+    return async_popen
 
 
 @patch('homeassistant.util.package.Popen')
@@ -169,3 +217,33 @@ class TestPackageUtilCheckPackageExists(unittest.TestCase):
     def test_check_package_zip(self):
         """Test for an installed zip package."""
         self.assertFalse(package.check_package_exists(TEST_ZIP_REQ, None))
+
+
+def test_get_user_site(hass, deps_dir, lib_dir, mock_env, mock_subprocess):
+    """Test get user site directory."""
+    env = mock_env()
+    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
+    args = [sys.executable, '-m', 'site', '--user-site']
+    ret = package.get_user_site(deps_dir)
+    assert mock_subprocess.called
+    assert mock_subprocess.call_args == call(
+        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    assert ret == lib_dir
+
+
+@asyncio.coroutine
+def test_async_get_user_site(hass, mock_env):
+    """Test async get user site directory."""
+    deps_dir = '/deps_dir'
+    env = mock_env()
+    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
+    args = [sys.executable, '-m', 'site', '--user-site']
+    with patch('homeassistant.util.package.asyncio.create_subprocess_exec',
+               return_value=mock_async_subprocess()) as popen_mock:
+        ret = yield from package.async_get_user_site(deps_dir, hass.loop)
+    assert popen_mock.called
+    assert popen_mock.call_args == call(
+        *args, loop=hass.loop, stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
+        env=env)
+    assert ret == '{}/lib_dir'.format(deps_dir)

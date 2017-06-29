@@ -3,7 +3,6 @@ import asyncio
 import logging
 import logging.handlers
 import os
-import sys
 from timeit import default_timer as timer
 
 from types import ModuleType
@@ -78,7 +77,7 @@ def _async_process_requirements(hass: core.HomeAssistant, name: str,
 
     def pip_install(mod):
         """Install packages."""
-        if hasattr(sys, 'real_prefix'):
+        if pkg_util.is_virtual_env():
             return pkg_util.install_package(
                 mod, constraints=os.path.join(
                     os.path.dirname(__file__), CONSTRAINT_FILE))

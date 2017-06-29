@@ -7,7 +7,7 @@ import logging
 from typing import List
 
 from homeassistant.config import get_default_config_dir
-from homeassistant.util.package import install_package
+from homeassistant.util.package import install_package, is_virtual_env
 from homeassistant.bootstrap import mount_local_lib_path
 
 
@@ -40,7 +40,7 @@ def run(args: List) -> int:
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
     for req in getattr(script, 'REQUIREMENTS', []):
-        if hasattr(sys, 'real_prefix'):
+        if is_virtual_env():
             returncode = install_package(req)
         else:
             returncode = install_package(req, target=deps_dir)

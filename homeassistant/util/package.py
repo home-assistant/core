@@ -1,4 +1,5 @@
 """Helpers to install PyPi packages."""
+import asyncio
 import logging
 import os
 import sys
@@ -66,3 +67,41 @@ def check_package_exists(package: str, lib_dir: str) -> bool:
 
     env = pkg_resources.Environment()
     return any(dist in req for dist in env[req.project_name])
+
+
+def is_virtual_env() -> bool:
+    """Return true if environment is a virtual environment."""
+    return hasattr(sys, 'real_prefix')
+
+
+def _get_user_site(deps_dir: str) -> tuple:
+    """Get arguments and environment for subprocess used in get_user_site."""
+    env = os.environ.copy()
+    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
+    args = [sys.executable, '-m', 'site', '--user-site']
+    return args, env
+
+
+def get_user_site(deps_dir: str) -> str:
+    """Return user local library path."""
+    args, env = _get_user_site(deps_dir)
+    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
+    stdout, _ = process.communicate()
+    lib_dir = stdout.decode().strip()
+    return lib_dir
+
+
+@asyncio.coroutine
+def async_get_user_site(deps_dir: str, loop: asyncio.AbstractEventLoop) -> str:
+    """Return user local library path.
+
+    This function is a coroutine.
+    """
+    args, env = _get_user_site(deps_dir)
+    process = yield from asyncio.create_subprocess_exec(
+        *args, loop=loop, stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
+        env=env)
+    stdout, _ = yield from process.communicate()
+    lib_dir = stdout.decode().strip()
+    return lib_dir

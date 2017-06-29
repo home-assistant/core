@@ -204,7 +204,7 @@ class TestSetup:
         assert 'comp' not in self.hass.config.components
 
     @mock.patch('homeassistant.setup.os.path.dirname')
-    @mock.patch('homeassistant.setup.sys')
+    @mock.patch('homeassistant.util.package.sys')
     @mock.patch('homeassistant.util.package.install_package',
                 return_value=True)
     def test_requirement_installed_in_venv(
@@ -222,7 +222,7 @@ class TestSetup:
             constraints=os.path.join('ha_package_path', CONSTRAINT_FILE))
 
     @mock.patch('homeassistant.setup.os.path.dirname')
-    @mock.patch('homeassistant.setup.sys', spec=object())
+    @mock.patch('homeassistant.util.package.sys', spec=object())
     @mock.patch('homeassistant.util.package.install_package',
                 return_value=True)
     def test_requirement_installed_in_deps(
