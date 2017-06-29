@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class LondonTubeSensor(Entity):
-    """ Sensor that reads the status of a line from TubeData. """
+    """Sensor that reads the status of a line from TubeData."""
 
     ICON = 'mdi:subway'
 
