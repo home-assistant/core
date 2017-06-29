@@ -25,7 +25,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
+    CONF_TIMEOUT, CONF_MAC, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -41,7 +41,6 @@ EVENT_KODI_CALL_METHOD_RESULT = 'kodi_call_method_result'
 CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
 CONF_ENABLE_WEBSOCKET = 'enable_websocket'
-CONF_MAC = 'mac'
 
 DEFAULT_NAME = 'Kodi'
 DEFAULT_PORT = 8080
