@@ -423,11 +423,11 @@ class TelegramNotificationService:
                     [_make_row_inline_keyboard(row) for row in keys])
         return params
 
-    def _send_msg(self, func_send, msg_error, *args_rep, **kwargs_rep):
+    def _send_msg(self, func_send, msg_error, *args_msg, **kwargs_msg):
         """Send one message."""
         from telegram.error import TelegramError
         try:
-            out = func_send(*args_rep, **kwargs_rep)
+            out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
@@ -437,8 +437,9 @@ class TelegramNotificationService:
                 _LOGGER.warning("Update last message: out_type:%s, out=%s",
                                 type(out), out)
             return out
-        except TelegramError:
-            _LOGGER.exception(msg_error)
+        except TelegramError as exc:
+            _LOGGER.error("%s: %s. Args: %s, kwargs: %s",
+                          msg_error, exc, args_msg, kwargs_msg)
 
     def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
