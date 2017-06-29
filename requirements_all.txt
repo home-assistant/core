@@ -680,7 +680,7 @@ python-blockchain-api==0.0.2
 python-clementine-remote==1.0.1
 
 # homeassistant.components.digital_ocean
-python-digitalocean==1.11
+python-digitalocean==1.12
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.0.7
