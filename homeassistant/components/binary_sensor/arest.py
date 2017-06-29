@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([ArestBinarySensor(
         arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-        device_class, pin)])
+        device_class, pin)], True)
 
 
 class ArestBinarySensor(BinarySensorDevice):
@@ -64,7 +64,6 @@ class ArestBinarySensor(BinarySensorDevice):
         self._name = name
         self._device_class = device_class
         self._pin = pin
-        self.update()
 
         if self._pin is not None:
             request = requests.get(
