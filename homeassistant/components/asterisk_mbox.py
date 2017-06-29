@@ -6,26 +6,28 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import discovery
 from homeassistant.const import (CONF_HOST,
                                  CONF_PORT, CONF_PASSWORD)
 
 from homeassistant.const import (HTTP_BAD_REQUEST)
 
 from homeassistant.core import callback
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
 
 from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 
-REQUIREMENTS = ['asterisk_mbox']
+REQUIREMENTS = ['asterisk_mbox==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
+SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
+
 DOMAIN = 'asterisk_mbox'
-DATA_AC = 'asterisk_client'
-DATA_MSGS = 'asterisk_msgs'
+ASTERISK = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -36,11 +38,10 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+def setup(hass, config):
     """Set up for the Asterisk Voicemail box."""
-    from asterisk_mbox import Client as asteriskClient
-    import asterisk_mbox.commands as cmd
+    # pylint: disable=global-statement, import-error
+    global ASTERISK
 
     conf = config.get(DOMAIN)
 
@@ -48,41 +49,52 @@ def async_setup(hass, config):
     port = conf.get(CONF_PORT)
     password = conf.get(CONF_PASSWORD)
 
-    @callback
-    def handle_data(command, msg):
-        """Handle changes to the mailbox."""
-        if command == cmd.CMD_MESSAGE_LIST:
-            _LOGGER.info("Signalling Callback")
-            _LOGGER.info("AsteriskVM sent updated message list")
-            msgs = sorted(msg,
-                          key=lambda item: item['info']['origtime'],
-                          reverse=True)
-            hass.data[DATA_MSGS] = msgs
-            async_dispatcher_send(hass, SIGNAL_MESSAGE_UPDATE,
-                                  hass.data[DATA_MSGS])
+    ASTERISK = AsteriskData(hass, host, port, password)
 
-    # @callback
-    # def stop_asterisk_client(_service_or_event):
-    #     """Stop Asterisk listener."""
-    #     _LOGGER.info("Stopping Asterisk listener...")
-    #     client = hass.data[DATA_AC]
-    #     client.stop()
-
-    hass.data[DATA_MSGS] = []
-
-    hass.async_add_job(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-
-    hass.data[DATA_AC] = asteriskClient(host, port, password, handle_data)
-    # hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_asterisk_client)
+    discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
 
     if 'frontend' in hass.config.components:
         register_built_in_panel(hass, 'mailbox', 'Mailbox',
                                 'mdi:account-location')
-        hass.http.register_view(AsteriskMboxMsgView)
-        hass.http.register_view(AsteriskMboxMP3View)
-        hass.http.register_view(AsteriskMboxDeleteView)
+        hass.http.register_view(AsteriskMboxMsgView(ASTERISK))
+        hass.http.register_view(AsteriskMboxMP3View(ASTERISK))
+        hass.http.register_view(AsteriskMboxDeleteView(ASTERISK))
 
     return True
+
+
+class AsteriskData(object):
+    """Store Asterisk mailbox data."""
+
+    def __init__(self, hass, host, port, password):
+        """Init the Asterisk data object."""
+        from asterisk_mbox import Client as asteriskClient
+
+        self.hass = hass
+        self.client = asteriskClient(host, port, password, self.handle_data)
+        self.messages = []
+
+        async_dispatcher_connect(
+            self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
+
+    @callback
+    def handle_data(self, command, msg):
+        """Handle changes to the mailbox."""
+        from asterisk_mbox.commands import CMD_MESSAGE_LIST
+
+        if command == CMD_MESSAGE_LIST:
+            _LOGGER.info("AsteriskVM sent updated message list")
+            self.messages = sorted(msg,
+                                   key=lambda item: item['info']['origtime'],
+                                   reverse=True)
+            async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
+                                  self.messages)
+
+    @callback
+    def _request_messages(self):
+        """Handle changes to the mailbox."""
+        _LOGGER.info("Requesting message list")
+        self.client.messages()
 
 
 class AsteriskMboxMsgView(HomeAssistantView):
@@ -91,11 +103,14 @@ class AsteriskMboxMsgView(HomeAssistantView):
     url = "/api/asteriskmbox/messages"
     name = "api:asteriskmbox:messages"
 
+    def __init__(self, data):
+        """Initialize."""
+        self.data = data
+
     @asyncio.coroutine
     def get(self, request):
         """Retrieve Asterisk messages."""
-        hass = request.app['hass']
-        msgs = hass.data.get(DATA_MSGS)
+        msgs = self.data.messages
         _LOGGER.info("Sending: %s", msgs)
         return self.json(msgs)
 
@@ -103,19 +118,19 @@ class AsteriskMboxMsgView(HomeAssistantView):
 class AsteriskMboxMP3View(HomeAssistantView):
     """View to return an MP3."""
 
-    url = r"/api/asteriskmbox/mp3/{index:\d+}"
+    url = r"/api/asteriskmbox/mp3/{sha:[0-9a-f]+}"
     name = "api:asteriskmbox:mp3"
 
-    # pylint: disable=no-self-use
+    def __init__(self, data):
+        """Initialize."""
+        self.data = data
+
     @asyncio.coroutine
-    def get(self, request, index):
+    def get(self, request, sha):
         """Retrieve Asterisk mp3."""
-        hass = request.app['hass']
-        msgs = hass.data.get(DATA_MSGS)
-        index = int(index)
-        client = hass.data[DATA_AC]
-        _LOGGER.info("Sending mp3 for %d", index)
-        return client.mp3(msgs[index]['sha'], sync=True)
+        client = self.data.client
+        _LOGGER.info("Sending mp3 for %s", sha)
+        return client.mp3(sha, sync=True)
 
 
 class AsteriskMboxDeleteView(HomeAssistantView):
@@ -124,13 +139,16 @@ class AsteriskMboxDeleteView(HomeAssistantView):
     url = "/api/asteriskmbox/delete"
     name = "api:asteriskmbox:delete"
 
+    def __init__(self, data):
+        """Initialize."""
+        self.data = data
+
     @asyncio.coroutine
     def post(self, request):
         """Delete items."""
         try:
             data = yield from request.json()
-            hass = request.app['hass']
-            client = hass.data[DATA_AC]
+            client = self.data.client
             for sha in data:
                 _LOGGER.info("Deleting: %s", sha)
                 client.delete(sha)

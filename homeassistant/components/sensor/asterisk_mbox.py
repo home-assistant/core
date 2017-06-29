@@ -10,16 +10,13 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-
-DATA_AC = 'asterisk_client'
-DATA_MSGS = 'asterisk_msgs'
-
-REQUIREMENTS = ['asterisk_mbox']
+from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
+                                              async_dispatcher_send)
 
 _LOGGER = logging.getLogger(__name__)
 
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
+SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 DOMAIN = 'Voicemail'
 
 
@@ -36,13 +33,14 @@ class AsteriskVMSensor(Entity):
         """Initialize the sensor."""
         self._name = None
         self._attributes = None
-        self._state = len(hass.data[DATA_MSGS])
+        self._state = 0
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_UPDATE, self._update_callback)
+        async_dispatcher_send(self.hass, SIGNAL_MESSAGE_REQUEST)
 
     @callback
     def _update_callback(self, msg):
