@@ -1,7 +1,7 @@
 """
 Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.comfoconnect/
 """
 import logging
@@ -27,28 +27,19 @@ SPEED_MAPPING = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ComfoConnect fan platform."""
+    """Set up the ComfoConnect fan platform."""
     ccb = hass.data[DOMAIN]
 
-    add_devices([
-        ComfoConnectFan(
-            hass,
-            name=ccb.name,
-            ccb=ccb
-        )
-    ], True)
-
+    add_devices([ComfoConnectFan(hass, name=ccb.name, ccb=ccb)], True)
     return
 
 
 class ComfoConnectFan(FanEntity):
-    """Representation of the fan platform."""
+    """Representation of the ComfoConnect fan platform."""
 
     def __init__(self, hass, name, ccb: ComfoConnectBridge):
         """Initialize the ComfoConnect fan."""
-        from pycomfoconnect import (
-            SENSOR_FAN_SPEED_MODE
-        )
+        from pycomfoconnect import SENSOR_FAN_SPEED_MODE
 
         self._ccb = ccb
         self._name = name
@@ -58,7 +49,7 @@ class ComfoConnectFan(FanEntity):
 
         def _handle_update(var):
             if var == SENSOR_FAN_SPEED_MODE:
-                _LOGGER.debug('Dispatcher update for %s.', var)
+                _LOGGER.debug("Dispatcher update for %s", var)
                 self.schedule_update_ha_state()
 
         # Register for dispatcher updates
@@ -112,8 +103,7 @@ class ComfoConnectFan(FanEntity):
 
         from pycomfoconnect import (
             CMD_FAN_MODE_AWAY, CMD_FAN_MODE_LOW, CMD_FAN_MODE_MEDIUM,
-            CMD_FAN_MODE_HIGH
-        )
+            CMD_FAN_MODE_HIGH)
 
         if mode == SPEED_OFF:
             self._ccb.comfoconnect.cmd_rmi_request(CMD_FAN_MODE_AWAY)
