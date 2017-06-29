@@ -318,7 +318,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.htu21d
-# i2csense==0.0.3
+# i2csense==0.0.4
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
