@@ -11,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
-from homeassistant.components.arlo import DEFAULT_BRAND
+from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 
