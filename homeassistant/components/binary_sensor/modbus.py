@@ -49,6 +49,10 @@ class ModbusCoilSensor(BinarySensorDevice):
         self._slave = int(slave) if slave else None
         self._coil = int(coil)
         self._value = None
+        
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name    
 
     @property
     def is_on(self):
