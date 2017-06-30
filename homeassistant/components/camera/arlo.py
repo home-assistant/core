@@ -6,15 +6,14 @@ https://home-assistant.io/components/camera.arlo/
 """
 import asyncio
 import logging
+
 import voluptuous as vol
 
-from homeassistant.helpers import config_validation as cv
-from homeassistant.components.arlo import DEFAULT_BRAND
-
-from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
+from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.helpers.aiohttp_client import (
-    async_aiohttp_proxy_stream)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['arlo', 'ffmpeg']
 
@@ -23,15 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS):
-        cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
-    arlo = hass.data.get('arlo')
+    arlo = hass.data.get(DATA_ARLO)
     if not arlo:
         return False
 
@@ -40,7 +38,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         cameras.append(ArloCam(hass, camera, config))
 
     async_add_devices(cameras, True)
-    return True
 
 
 class ArloCam(Camera):
@@ -56,7 +53,7 @@ class ArloCam(Camera):
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
 
     def camera_image(self):
-        """Return a still image reponse from the camera."""
+        """Return a still image response from the camera."""
         return self._camera.last_image
 
     @asyncio.coroutine
