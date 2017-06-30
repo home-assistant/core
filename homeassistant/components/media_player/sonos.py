@@ -903,8 +903,8 @@ class SonosDevice(MediaPlayerDevice):
                     namespaces = {'item':
                                   'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
                                   'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
-                    desc = root.find('item:item', namespaces).
-                        find('desc:desc', namespaces).text
+                    desc = root.find('item:item', namespaces).find('desc:desc',
+                                                                   namespaces).text
 
                     res = [soco.data_structures.DidlResource(uri=src['uri'],
                                                              protocol_info="DUMMY")]
