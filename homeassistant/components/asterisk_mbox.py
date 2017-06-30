@@ -2,8 +2,13 @@
 
 import asyncio
 import logging
+from contextlib import suppress
 
+import async_timeout
 import voluptuous as vol
+
+
+from aiohttp import web
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
@@ -116,28 +121,6 @@ class AsteriskMboxMsgView(HomeAssistantView):
         return self.json(msgs)
 
 
-class AsteriskMboxMP3View(HomeAssistantView):
-    """View to return an MP3."""
-
-    url = r"/api/asteriskmbox/mp3/{sha:[0-9a-f]+}"
-    name = "api:asteriskmbox:mp3"
-
-    def __init__(self, data):
-        """Initialize."""
-        self.data = data
-
-    @asyncio.coroutine
-    def get(self, request, sha):
-        """Retrieve Asterisk mp3."""
-        from asterisk_mbox import ServerError
-        client = self.data.client
-        _LOGGER.info("Sending mp3 for %s", sha)
-        try:
-            return client.mp3(sha, sync=True)
-        except ServerError as err:
-            return self.json_message(err, HTTP_NOT_FOUND)
-
-
 class AsteriskMboxDeleteView(HomeAssistantView):
     """View to delete selected messages."""
 
@@ -159,3 +142,47 @@ class AsteriskMboxDeleteView(HomeAssistantView):
                 client.delete(sha)
         except ValueError:
             return self.json_message('Bad item id', HTTP_BAD_REQUEST)
+
+
+class AsteriskMboxMP3View(HomeAssistantView):
+    """View to return an MP3."""
+
+    url = r"/api/asteriskmbox/mp3/{sha:[0-9a-f]+}"
+    name = "api:asteriskmbox:mp3"
+
+    def __init__(self, data):
+        """Initialize."""
+        self.data = data
+
+    @asyncio.coroutine
+    def get(self, request, sha):
+        """Retrieve Asterisk mp3."""
+        _LOGGER.info("Sending mp3 for %s", sha)
+
+        response = yield from self.handle(request, sha)
+        return response
+
+    @asyncio.coroutine
+    def handle(self, request, sha):
+        """Server MP3."""
+        client = self.data.client
+        hass = self.data.hass
+
+        def fetch():
+            """Read MP3 from server."""
+            from asterisk_mbox import ServerError
+
+            try:
+                return client.mp3(sha, sync=True)
+            except ServerError as err:
+                _LOGGER.error("Error getting camera image: %s", err)
+                return self.json_message(err, HTTP_NOT_FOUND)
+
+        with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+            with async_timeout.timeout(10, loop=request.app['hass'].loop):
+                stream = yield from hass.async_add_job(fetch)
+
+            if stream:
+                return web.Response(body=stream, content_type="audio/mpeg")
+
+        return web.Response(status=500)
