@@ -16,8 +16,8 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['https://github.com/wmalgadey/PyTado/archive/'
-                '0.1.10.zip#'
-                'PyTado==0.1.10']
+                '0.2.1.zip#'
+                'PyTado==0.2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ def setup(hass, config):
 
     try:
         tado = Tado(username, password)
+        tado.setDebugging(True)
     except (RuntimeError, urllib.error.HTTPError):
         _LOGGER.error("Unable to connect to mytado with username and password")
         return False

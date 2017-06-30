@@ -88,6 +88,8 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     elif discovery_info is not None:
         # Parse discovery data
         host = discovery_info.get('host')
+        port = discovery_info.get('port')
+        host = '%s:%s' % (host, port)
         _LOGGER.info("Discovered PLEX server: %s", host)
 
         if host in _CONFIGURING:
@@ -106,6 +108,7 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
 
     try:
         plexserver = plexapi.server.PlexServer('http://%s' % host, token)
+        _LOGGER.info("Discovery configuration done (no token needed)")
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
@@ -134,7 +137,6 @@ def setup_plexserver(host, token, hass, config, add_devices_callback):
     track_utc_time_change(hass, lambda now: update_devices(), second=30)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
-    # pylint: disable=too-many-branches
     def update_devices():
         """Update the devices objects."""
         try:
@@ -231,11 +233,9 @@ def request_configuration(host, hass, config, add_devices_callback):
         }])
 
 
-# pylint: disable=too-many-instance-attributes, too-many-public-methods
 class PlexClient(MediaPlayerDevice):
     """Representation of a Plex device."""
 
-    # pylint: disable=too-many-arguments
     def __init__(self, config, device, session, plex_sessions,
                  update_devices, update_sessions):
         """Initialize the Plex device."""
@@ -299,7 +299,6 @@ class PlexClient(MediaPlayerDevice):
                         'media_player', prefix,
                         self.name.lower().replace('-', '_'))
 
-    # pylint: disable=too-many-branches, too-many-statements
     def refresh(self, device, session):
         """Refresh key device data."""
         # new data refresh

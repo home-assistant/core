@@ -27,6 +27,7 @@ from homeassistant.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'cover'
+DEPENDENCIES = ['group']
 SCAN_INTERVAL = timedelta(seconds=15)
 
 GROUP_NAME_ALL_COVERS = 'all covers'
@@ -38,6 +39,8 @@ DEVICE_CLASSES = [
     'window',        # Window control
     'garage',        # Garage door control
 ]
+
+DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
 SUPPORT_OPEN = 1
 SUPPORT_CLOSE = 2

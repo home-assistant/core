@@ -158,6 +158,11 @@ class MikrotikScanner(DeviceScanner):
                     for device in devices
                 }
             else:
-                self.last_results = mac_names
+                self.last_results = {
+                    device.get('mac-address'):
+                        mac_names.get(device.get('mac-address'))
+                    for device in device_names
+                    if device.get('active-address')
+                }
 
             return True
