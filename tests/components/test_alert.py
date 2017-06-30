@@ -199,6 +199,7 @@ class TestAlert(unittest.TestCase):
         self.assertEqual(True, entity.hidden)
 
     def test_done_message_state_tracker_reset_on_cancel(self):
+        """Test that the done message is reset when cancelled."
         entity = alert.Alert(self.hass, *TEST_NOACK)
         entity._cancel = lambda *args: None
         assert entity._send_done_message is False
