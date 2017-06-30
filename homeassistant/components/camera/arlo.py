@@ -48,7 +48,6 @@ class ArloCam(Camera):
     def __init__(self, hass, camera, device_info):
         """Initialize an Arlo camera."""
         super().__init__()
-        self._parent = hass
         self._camera = camera
         self._base_stn = hass.data['arlo'].base_stations[0]
         self._name = self._camera.name
