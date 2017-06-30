@@ -20,6 +20,8 @@ from homeassistant.util.async import run_coroutine_threadsafe
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.config.group import (
     CONFIG_PATH as GROUP_CONFIG_PATH)
+from homeassistant.components.config.automation import (
+    CONFIG_PATH as AUTOMATIONS_CONFIG_PATH)
 
 from tests.common import (
     get_test_config_dir, get_test_home_assistant, mock_coro)
@@ -28,6 +30,7 @@ CONFIG_DIR = get_test_config_dir()
 YAML_PATH = os.path.join(CONFIG_DIR, config_util.YAML_CONFIG_FILE)
 VERSION_PATH = os.path.join(CONFIG_DIR, config_util.VERSION_FILE)
 GROUP_PATH = os.path.join(CONFIG_DIR, GROUP_CONFIG_PATH)
+AUTOMATIONS_PATH = os.path.join(CONFIG_DIR, AUTOMATIONS_CONFIG_PATH)
 ORIG_TIMEZONE = dt_util.DEFAULT_TIME_ZONE
 
 
@@ -59,6 +62,9 @@ class TestConfig(unittest.TestCase):
         if os.path.isfile(GROUP_PATH):
             os.remove(GROUP_PATH)
 
+        if os.path.isfile(AUTOMATIONS_PATH):
+            os.remove(AUTOMATIONS_PATH)
+
         self.hass.stop()
 
     def test_create_default_config(self):
@@ -68,6 +74,7 @@ class TestConfig(unittest.TestCase):
         assert os.path.isfile(YAML_PATH)
         assert os.path.isfile(VERSION_PATH)
         assert os.path.isfile(GROUP_PATH)
+        assert os.path.isfile(AUTOMATIONS_PATH)
 
     def test_find_config_file_yaml(self):
         """Test if it finds a YAML config file."""
@@ -363,6 +370,7 @@ class TestConfig(unittest.TestCase):
                 'name': 'Huis',
                 CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
                 'time_zone': 'America/New_York',
+                'whitelist_external_dirs': '/tmp',
             }), self.hass.loop).result()
 
         assert self.hass.config.latitude == 60
@@ -371,6 +379,8 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == 'Huis'
         assert self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL
         assert self.hass.config.time_zone.zone == 'America/New_York'
+        assert len(self.hass.config.whitelist_external_dirs) == 2
+        assert '/tmp' in self.hass.config.whitelist_external_dirs
 
     def test_loading_configuration_temperature_unit(self):
         """Test backward compatibility when loading core config."""
@@ -428,6 +438,7 @@ class TestConfig(unittest.TestCase):
                                                          mock_elevation):
         """Test config remains unchanged if discovery fails."""
         self.hass.config = Config()
+        self.hass.config.config_dir = "/test/config"
 
         run_coroutine_threadsafe(
             config_util.async_process_ha_core_config(
@@ -441,6 +452,8 @@ class TestConfig(unittest.TestCase):
         assert self.hass.config.location_name == blankConfig.location_name
         assert self.hass.config.units == blankConfig.units
         assert self.hass.config.time_zone == blankConfig.time_zone
+        assert len(self.hass.config.whitelist_external_dirs) == 1
+        assert "/test/config/www" in self.hass.config.whitelist_external_dirs
 
     @mock.patch('asyncio.create_subprocess_exec')
     def test_check_ha_config_file_correct(self, mock_create):

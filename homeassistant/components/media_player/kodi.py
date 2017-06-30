@@ -540,7 +540,7 @@ class KodiDevice(MediaPlayerDevice):
         elif self._turn_off_action == 'shutdown':
             yield from self.server.System.Shutdown()
         else:
-            _LOGGER.warning('turn_off requested but turn_off_action is none')
+            _LOGGER.warning("turn_off requested but turn_off_action is none")
 
     @cmd
     @asyncio.coroutine
@@ -694,22 +694,26 @@ class KodiDevice(MediaPlayerDevice):
     def async_call_method(self, method, **kwargs):
         """Run Kodi JSONRPC API method with params."""
         import jsonrpc_base
-        _LOGGER.debug('Run API method "%s", kwargs=%s', method, kwargs)
+        _LOGGER.debug("Run API method %s, kwargs=%s", method, kwargs)
         result_ok = False
         try:
             result = yield from getattr(self.server, method)(**kwargs)
             result_ok = True
         except jsonrpc_base.jsonrpc.ProtocolError as exc:
             result = exc.args[2]['error']
-            _LOGGER.error('Run API method %s.%s(%s) error: %s',
+            _LOGGER.error("Run API method %s.%s(%s) error: %s",
                           self.entity_id, method, kwargs, result)
+        except jsonrpc_base.jsonrpc.TransportError:
+            result = None
+            _LOGGER.warning("TransportError trying to run API method "
+                            "%s.%s(%s)", self.entity_id, method, kwargs)
 
         if isinstance(result, dict):
             event_data = {'entity_id': self.entity_id,
                           'result': result,
                           'result_ok': result_ok,
                           'input': {'method': method, 'params': kwargs}}
-            _LOGGER.debug('EVENT kodi_call_method_result: %s', event_data)
+            _LOGGER.debug("EVENT kodi_call_method_result: %s", event_data)
             self.hass.bus.async_fire(EVENT_KODI_CALL_METHOD_RESULT,
                                      event_data=event_data)
         return result
@@ -753,10 +757,13 @@ class KodiDevice(MediaPlayerDevice):
                 yield from self.server.Playlist.Add(params)
             except jsonrpc_base.jsonrpc.ProtocolError as exc:
                 result = exc.args[2]['error']
-                _LOGGER.error('Run API method %s.Playlist.Add(%s) error: %s',
+                _LOGGER.error("Run API method %s.Playlist.Add(%s) error: %s",
                               self.entity_id, media_type, result)
+            except jsonrpc_base.jsonrpc.TransportError:
+                _LOGGER.warning("TransportError trying to add playlist to %s",
+                                self.entity_id)
         else:
-            _LOGGER.warning('No media detected for Playlist.Add')
+            _LOGGER.warning("No media detected for Playlist.Add")
 
     @asyncio.coroutine
     def async_add_all_albums(self, artist_name):
@@ -800,7 +807,7 @@ class KodiDevice(MediaPlayerDevice):
                 artist_name, [a['artist'] for a in artists['artists']])
             return artists['artists'][out[0][0]]['artistid']
         except KeyError:
-            _LOGGER.warning('No artists were found: %s', artist_name)
+            _LOGGER.warning("No artists were found: %s", artist_name)
             return None
 
     @asyncio.coroutine
@@ -839,7 +846,7 @@ class KodiDevice(MediaPlayerDevice):
                 album_name, [a['label'] for a in albums['albums']])
             return albums['albums'][out[0][0]]['albumid']
         except KeyError:
-            _LOGGER.warning('No albums were found with artist: %s, album: %s',
+            _LOGGER.warning("No albums were found with artist: %s, album: %s",
                             artist_name, album_name)
             return None
 

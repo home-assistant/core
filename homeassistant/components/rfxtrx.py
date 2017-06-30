@@ -10,9 +10,12 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP,
+    ATTR_ENTITY_ID, TEMP_CELSIUS,
+    CONF_DEVICE_CLASS, CONF_COMMAND_ON, CONF_COMMAND_OFF
+)
 from homeassistant.helpers.entity import Entity
-from homeassistant.const import (ATTR_ENTITY_ID, TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyRFXtrx==0.18.0']
 
@@ -27,7 +30,9 @@ ATTR_STATE = 'state'
 ATTR_NAME = 'name'
 ATTR_FIREEVENT = 'fire_event'
 ATTR_DATA_TYPE = 'data_type'
+ATTR_DATA_BITS = 'data_bits'
 ATTR_DUMMY = 'dummy'
+ATTR_OFF_DELAY = 'off_delay'
 CONF_SIGNAL_REPETITIONS = 'signal_repetitions'
 CONF_DEVICES = 'devices'
 EVENT_BUTTON_PRESSED = 'button_pressed'
@@ -43,7 +48,8 @@ DATA_TYPES = OrderedDict([
     ('Total usage', 'W'),
     ('Sound', ''),
     ('Sensor Status', ''),
-    ('Counter value', '')])
+    ('Counter value', ''),
+    ('UV', 'uv')])
 
 RECEIVED_EVT_SUBSCRIBERS = []
 RFX_DEVICES = {}
@@ -77,6 +83,8 @@ def _valid_device(value, device_type):
 
         if device_type == 'sensor':
             config[key] = DEVICE_SCHEMA_SENSOR(device)
+        elif device_type == 'binary_sensor':
+            config[key] = DEVICE_SCHEMA_BINARYSENSOR(device)
         elif device_type == 'light_switch':
             config[key] = DEVICE_SCHEMA(device)
         else:
@@ -90,6 +98,11 @@ def _valid_device(value, device_type):
 def valid_sensor(value):
     """Validate sensor configuration."""
     return _valid_device(value, "sensor")
+
+
+def valid_binary_sensor(value):
+    """Validate binary sensor configuration."""
+    return _valid_device(value, "binary_sensor")
 
 
 def _valid_light_switch(value):
@@ -106,6 +119,17 @@ DEVICE_SCHEMA_SENSOR = vol.Schema({
     vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
     vol.Optional(ATTR_DATA_TYPE, default=[]):
         vol.All(cv.ensure_list, [vol.In(DATA_TYPES.keys())]),
+})
+
+DEVICE_SCHEMA_BINARYSENSOR = vol.Schema({
+    vol.Optional(ATTR_NAME, default=None): cv.string,
+    vol.Optional(CONF_DEVICE_CLASS, default=None): cv.string,
+    vol.Optional(ATTR_FIREEVENT, default=False): cv.boolean,
+    vol.Optional(ATTR_OFF_DELAY, default=None):
+        vol.Any(cv.time_period, cv.positive_timedelta),
+    vol.Optional(ATTR_DATA_BITS, default=None): cv.positive_int,
+    vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
+    vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
 })
 
 DEFAULT_SCHEMA = vol.Schema({
@@ -189,6 +213,78 @@ def get_rfx_object(packetid):
     else:
         obj = rfxtrxmod.ControlEvent(pkt)
     return obj
+
+
+def get_pt2262_deviceid(device_id, nb_data_bits):
+    """Extract and return the address bits from a Lighting4/PT2262 packet."""
+    import binascii
+    try:
+        data = bytearray.fromhex(device_id)
+    except ValueError:
+        return None
+
+    mask = 0xFF & ~((1 << nb_data_bits) - 1)
+
+    data[len(data)-1] &= mask
+
+    return binascii.hexlify(data)
+
+
+def get_pt2262_cmd(device_id, data_bits):
+    """Extract and return the data bits from a Lighting4/PT2262 packet."""
+    try:
+        data = bytearray.fromhex(device_id)
+    except ValueError:
+        return None
+
+    mask = 0xFF & ((1 << data_bits) - 1)
+
+    return hex(data[-1] & mask)
+
+
+# pylint: disable=unused-variable
+def get_pt2262_device(device_id):
+    """Look for the device which id matches the given device_id parameter."""
+    for dev_id, device in RFX_DEVICES.items():
+        try:
+            if (device.is_pt2262 and
+                    device.masked_id == get_pt2262_deviceid(
+                        device_id,
+                        device.data_bits)):
+                _LOGGER.info("rfxtrx: found matching device %s for %s",
+                             device_id,
+                             get_pt2262_deviceid(device_id, device.data_bits))
+                return device
+        except AttributeError:
+            continue
+    return None
+
+
+# pylint: disable=unused-variable
+def find_possible_pt2262_device(device_id):
+    """Look for the device which id matches the given device_id parameter."""
+    for dev_id, device in RFX_DEVICES.items():
+        if len(dev_id) == len(device_id):
+            size = None
+            for i in range(0, len(dev_id)):
+                if dev_id[i] != device_id[i]:
+                    break
+                size = i
+
+            if size is not None:
+                size = len(dev_id) - size - 1
+                _LOGGER.info("rfxtrx: found possible device %s for %s "
+                             "with the following configuration:\n"
+                             "data_bits=%d\n"
+                             "command_on=0x%s\n"
+                             "command_off=0x%s\n",
+                             device_id,
+                             dev_id,
+                             size * 4,
+                             dev_id[-size:], device_id[-size:])
+                return device
+
+    return None
 
 
 def get_devices_from_config(config, device, hass):
@@ -317,6 +413,11 @@ class RfxtrxDevice(Entity):
     def should_fire_event(self):
         """Return is the device must fire event."""
         return self._should_fire_event
+
+    @property
+    def is_pt2262(self):
+        """Return true if the device is PT2262-based."""
+        return False
 
     @property
     def is_on(self):

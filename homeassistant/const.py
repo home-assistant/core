@@ -1,8 +1,8 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 47
-PATCH_VERSION = '1'
+MINOR_VERSION = 48
+PATCH_VERSION = 0
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
 REQUIRED_PYTHON_VER = (3, 4, 2)
@@ -161,6 +161,7 @@ CONF_VALUE_TEMPLATE = 'value_template'
 CONF_VERIFY_SSL = 'verify_ssl'
 CONF_WEEKDAY = 'weekday'
 CONF_WHITELIST = 'whitelist'
+CONF_WHITELIST_EXTERNAL_DIRS = 'whitelist_external_dirs'
 CONF_WHITE_VALUE = 'white_value'
 CONF_XY = 'xy'
 CONF_ZONE = 'zone'

@@ -101,5 +101,5 @@ class WOLSwitch(SwitchDevice):
             ping_cmd = ['ping', '-c', '1', '-W',
                         str(DEFAULT_PING_TIMEOUT), str(self._host)]
 
-        status = sp.call(ping_cmd, stdout=sp.DEVNULL)
+        status = sp.call(ping_cmd, stdout=sp.DEVNULL, stderr=sp.DEVNULL)
         self._state = not bool(status)
