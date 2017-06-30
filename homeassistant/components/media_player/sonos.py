@@ -900,15 +900,19 @@ class SonosDevice(MediaPlayerDevice):
                     import xml.etree.ElementTree as ET
 
                     root = ET.fromstring(src['meta'])
-                    namespaces = { 'item' : 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/', 'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/' }
-                    desc = root.find('item:item', namespaces).find('desc:desc', namespaces).text
+                    namespaces = {'item':
+                        'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
+                        'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
+                    desc = root.find('item:item', namespaces).find('desc:desc',
+                        namespaces).text
 
-                    res = [soco.data_structures.DidlResource(uri=src['uri'], protocol_info="DUMMY")]
-                    didl = soco.data_structures.DidlItem(title="DUMMY", # Sonos gets the title from the item_id
-                        parent_id="DUMMY",  # Ditto
-                        item_id=src['uri'],
-                        desc=desc,
-                        resources=res)
+                    res = [soco.data_structures.DidlResource(uri=src['uri'],
+                                                             protocol_info="DUMMY")]
+                    didl = soco.data_structures.DidlItem(title="DUMMY",
+                                                         parent_id="DUMMY",
+                                                         item_id=src['uri'],
+                                                         desc=desc,
+                                                         resources=res)
 
                     self._player.stop()
                     self._player.clear_queue()
@@ -916,7 +920,8 @@ class SonosDevice(MediaPlayerDevice):
                     self._player.add_to_queue(didl)
                     self._player.play_from_queue(0)
                 else:
-                    self._player.play_uri(src['uri'], src['meta'], src['title'])
+                    self._player.play_uri(src['uri'], src['meta'],
+                            src['title'])
 
     @property
     def source_list(self):
