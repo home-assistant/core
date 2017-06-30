@@ -901,10 +901,10 @@ class SonosDevice(MediaPlayerDevice):
 
                     root = ET.fromstring(src['meta'])
                     namespaces = {'item':
-                        'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-                        'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
-                    desc = root.find('item:item', namespaces).find('desc:desc',
-                        namespaces).text
+                                  'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
+                                  'desc': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/'}
+                    desc = root.find('item:item', namespaces).
+                        find('desc:desc', namespaces).text
 
                     res = [soco.data_structures.DidlResource(uri=src['uri'],
                                                              protocol_info="DUMMY")]
@@ -921,7 +921,7 @@ class SonosDevice(MediaPlayerDevice):
                     self._player.play_from_queue(0)
                 else:
                     self._player.play_uri(src['uri'], src['meta'],
-                            src['title'])
+                                          src['title'])
 
     @property
     def source_list(self):
