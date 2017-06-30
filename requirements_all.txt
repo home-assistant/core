@@ -347,7 +347,7 @@ keyring>=9.3,<10.0
 knxip==0.3.3
 
 # homeassistant.components.device_tracker.owntracks
-libnacl==1.5.0
+libnacl==1.5.1
 
 # homeassistant.components.dyson
 libpurecoollink==0.1.5
