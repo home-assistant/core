@@ -19,7 +19,7 @@ add_node:
   description: Add a new (unsecure) node to the Z-Wave network. Refer to OZW.log for progress.
 
 add_node_secure:
-  description: Add a new node to the Z-Wave network with secure communications. Node must support this, and network key must be set. Note that unsecure devices can't directly talk to secure devices. Refer to OZW.log for progress.
+  description: Add a new node to the Z-Wave network with secure communications. Secure network key must be set, this process will fallback to add_node (unsecure) for unsupported devices. Note that unsecure devices can't directly talk to secure devices. Refer to OZW.log for progress.
 
 cancel_command:
   description: Cancel a running Z-Wave controller command. Use this to exit add_node, if you wasn't going to use it but activated it.
