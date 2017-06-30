@@ -38,9 +38,18 @@ REQUIREMENTS = ['aiolifx==0.5.0', 'aiolifx_effects==0.1.0']
 UDP_BROADCAST_PORT = 56700
 
 CONF_SERVER = 'server'
+CONF_DISCOVERY_INTERVAL = 'discovery_interval'
+CONF_MESSAGE_TIMEOUT = 'message_timeout'
+CONF_MESSAGE_RETRIES = 'message_retries'
+CONF_UNAVAILABLE_GRACE = 'unavailable_grace'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default='0.0.0.0'): cv.string,
+    # The following are for testing only, they will be removed without warning
+    vol.Optional(CONF_DISCOVERY_INTERVAL, default=10): cv.positive_int,
+    vol.Optional(CONF_MESSAGE_TIMEOUT, default=2.0): vol.Coerce(float),
+    vol.Optional(CONF_MESSAGE_RETRIES, default=4): cv.positive_int,
+    vol.Optional(CONF_UNAVAILABLE_GRACE, default=60): cv.positive_int,
 })
 
 SERVICE_LIFX_SET_STATE = 'lifx_set_state'
@@ -116,8 +125,17 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     server_addr = config.get(CONF_SERVER)
 
-    lifx_manager = LIFXManager(hass, async_add_devices)
-    lifx_discovery = aiolifx.LifxDiscovery(hass.loop, lifx_manager)
+    lifx_manager = LIFXManager(
+        hass,
+        async_add_devices,
+        timeout=config.get(CONF_MESSAGE_TIMEOUT),
+        retries=config.get(CONF_MESSAGE_RETRIES),
+        grace=config.get(CONF_UNAVAILABLE_GRACE))
+
+    lifx_discovery = aiolifx.LifxDiscovery(
+        hass.loop,
+        lifx_manager,
+        discovery_interval=config.get(CONF_DISCOVERY_INTERVAL))
 
     coro = hass.loop.create_datagram_endpoint(
         lambda: lifx_discovery, local_addr=(server_addr, UDP_BROADCAST_PORT))
@@ -174,12 +192,15 @@ def merge_hsbk(base, change):
 class LIFXManager(object):
     """Representation of all known LIFX entities."""
 
-    def __init__(self, hass, async_add_devices):
+    def __init__(self, hass, async_add_devices, timeout, retries, grace):
         """Initialize the light."""
         import aiolifx_effects
         self.entities = {}
         self.hass = hass
         self.async_add_devices = async_add_devices
+        self.message_timeout = timeout
+        self.message_retries = retries
+        self.unavailable_grace = timedelta(seconds=grace)
         self.effects_conductor = aiolifx_effects.Conductor(loop=hass.loop)
 
         descriptions = load_yaml_config_file(
@@ -281,12 +302,12 @@ class LIFXManager(object):
         """Handle for newly detected bulb."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
-            entity.device = device
-            entity.registered = True
             _LOGGER.debug("%s register AGAIN", entity.who)
-            self.hass.async_add_job(entity.async_update_ha_state())
+            self.hass.async_add_job(entity.set_available())
         else:
             _LOGGER.debug("%s register NEW", device.ip_addr)
+            device.timeout = self.message_timeout
+            device.retry_count = self.message_retries
             device.get_version(self.got_version)
 
     @callback
@@ -304,12 +325,14 @@ class LIFXManager(object):
 
     @callback
     def unregister(self, device):
-        """Handle disappearing bulbs."""
+        """Message lost; schedule light to be unavailable."""
         if device.mac_addr in self.entities:
             entity = self.entities[device.mac_addr]
             _LOGGER.debug("%s unregister", entity.who)
-            entity.registered = False
-            self.hass.async_add_job(entity.async_update_ha_state())
+            if entity.available and entity.unavailable_task is None:
+                entity.unavailable_task = async_track_point_in_utc_time(
+                    self.hass, entity.set_unavailable,
+                    util.dt.utcnow() + self.unavailable_grace)
 
 
 class AwaitAioLIFX:
@@ -359,6 +382,7 @@ class LIFXLight(Light):
         self.device = device
         self.effects_conductor = effects_conductor
         self.registered = True
+        self.unavailable_task = None
         self.product = device.product
         self.postponed_update = None
 
@@ -372,6 +396,23 @@ class LIFXLight(Light):
     def available(self):
         """Return the availability of the device."""
         return self.registered
+
+    @asyncio.coroutine
+    def set_available(self):
+        """Handle bulbs returning to service."""
+        self.registered = True
+        if self.unavailable_task:
+            self.unavailable_task()
+            self.unavailable_task = None
+        yield from self.async_update()
+        yield from self.async_update_ha_state()
+
+    @asyncio.coroutine
+    def set_unavailable(self, now):
+        """Handle bulbs disappearing."""
+        self.registered = False
+        self.unavailable_task = None
+        yield from self.async_update_ha_state()
 
     @property
     def name(self):
