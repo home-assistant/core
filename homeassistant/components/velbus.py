@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
                                 CONF_PORT
 
-REQUIREMENTS = ['python-velbus==2.0.8']
+REQUIREMENTS = ['python-velbus==2.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
