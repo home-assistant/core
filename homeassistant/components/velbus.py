@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
                                 CONF_PORT
 
-REQUIREMENTS = ['python-velbus==2.0.9']
+REQUIREMENTS = ['python-velbus==2.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +24,8 @@ VELBUS_MESSAGE = 'velbus.message'
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
-    }),
-})
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 def setup(hass, config):
     """Set up the Velbus platform."""

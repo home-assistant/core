@@ -7,15 +7,22 @@ https://home-assistant.io/components/velbus/
 import asyncio
 import logging
 
-from homeassistant.core import callback
-from homeassistant.const import CONF_NAME
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+
+import voluptuous as vol
+
+from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.velbus import (VELBUS_MESSAGE)
+from homeassistant.components.binary_sensor import PLATFORM_SCHEMA
+from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+
+
+REQUIREMENTS = ['python-velbus==2.0.10']
+DEPENDENCIES = ['velbus']
+DOMAIN = 'binary_sensor'
 
 _LOGGER = logging.getLogger(__name__)
 
-"""
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [
         {
@@ -26,23 +33,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         }
     ])
 })
-"""
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Velbus binary sensors."""
-    controller = hass.data['VelbusController']
-    async_add_entities(
-        VelbusBinarySensor(hass, binary_sensor, controller)
-        for binary_sensor in discovery_info)
+    add_devices(VelbusBinarySensor(sensor) for sensor in config[CONF_DEVICES])
     return True
 
 
 class VelbusBinarySensor(BinarySensorDevice):
     """Representation of a Velbus Binary Sensor."""
 
-    def __init__(self, hass, binary_sensor, controller):
+    def __init__(self, binary_sensor):
         """Initialize a Velbus light."""
         self._name = binary_sensor[CONF_NAME]
         self._module = binary_sensor['module']
@@ -50,15 +51,12 @@ class VelbusBinarySensor(BinarySensorDevice):
         self._is_pushbutton = 'is_pushbutton' in binary_sensor \
                               and binary_sensor['is_pushbutton']
         self._state = False
-        self._controller = controller
-        self._hass = hass
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        async_dispatcher_connect(
-            self._hass, VELBUS_MESSAGE, self._on_message
-        )
+        self.hass.data['VelbusController'].subscribe(self._on_message)
+        self.get_status()
 
     @callback
     def _on_message(self, message):
@@ -79,7 +77,7 @@ class VelbusBinarySensor(BinarySensorDevice):
             self._state = False
         else:
             self._state = True
-        self._hass.async_add_job(self.async_update_ha_state())
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self):
