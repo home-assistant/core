@@ -46,4 +46,4 @@ class TestLondonTubeSensor(unittest.TestCase):
         self.assertEqual(sensor.name, 'London Overground')
         self.assertEqual(sensor.state, 'Minor Delays')
         self.assertEqual(sensor.device_state_attributes['Description'],
-                                                        'something')
+                         'something')
