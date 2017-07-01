@@ -239,10 +239,17 @@ class LIFXManager(object):
 
         if service == SERVICE_EFFECT_PULSE:
             effect = aiolifx_effects.EffectPulse(
+<<<<<<< HEAD:homeassistant/components/light/lifx.py
                 power_on=kwargs.get(ATTR_POWER_ON, None),
                 period=kwargs.get(ATTR_PERIOD, None),
                 cycles=kwargs.get(ATTR_CYCLES, None),
                 mode=kwargs.get(ATTR_MODE, None),
+=======
+                power_on=kwargs.get(ATTR_POWER_ON),
+                period=kwargs.get(ATTR_PERIOD),
+                cycles=kwargs.get(ATTR_CYCLES),
+                mode=kwargs.get(ATTR_MODE),
+>>>>>>> home-assistant/dev:homeassistant/components/light/lifx.py
                 hsbk=find_hsbk(**kwargs),
             )
             yield from self.effects_conductor.start(effect, devices)
@@ -254,11 +261,19 @@ class LIFXManager(object):
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
 
             effect = aiolifx_effects.EffectColorloop(
+<<<<<<< HEAD:homeassistant/components/light/lifx.py
                 power_on=kwargs.get(ATTR_POWER_ON, None),
                 period=kwargs.get(ATTR_PERIOD, None),
                 change=kwargs.get(ATTR_CHANGE, None),
                 spread=kwargs.get(ATTR_SPREAD, None),
                 transition=kwargs.get(ATTR_TRANSITION, None),
+=======
+                power_on=kwargs.get(ATTR_POWER_ON),
+                period=kwargs.get(ATTR_PERIOD),
+                change=kwargs.get(ATTR_CHANGE),
+                spread=kwargs.get(ATTR_SPREAD),
+                transition=kwargs.get(ATTR_TRANSITION),
+>>>>>>> home-assistant/dev:homeassistant/components/light/lifx.py
                 brightness=brightness,
             )
             yield from self.effects_conductor.start(effect, devices)
@@ -335,10 +350,15 @@ class AwaitAioLIFX:
         self.device = None
         self.message = None
         self.event.clear()
+<<<<<<< HEAD:homeassistant/components/light/lifx.py
         method(self.callback)
 
         yield from self.event.wait()
+=======
+        method(callb=self.callback)
+>>>>>>> home-assistant/dev:homeassistant/components/light/lifx.py
 
+        yield from self.event.wait()
         return self.message
 
 
@@ -382,10 +402,7 @@ class LIFXLight(Light):
     @property
     def who(self):
         """Return a string identifying the device."""
-        ip_addr = '-'
-        if self.device:
-            ip_addr = self.device.ip_addr[0]
-        return "%s (%s)" % (ip_addr, self.name)
+        return "%s (%s)" % (self.device.ip_addr, self.name)
 
     @property
     def rgb_color(self):
@@ -521,11 +538,19 @@ class LIFXLight(Light):
         power_off = not kwargs.get(ATTR_POWER, True)
 
         hsbk = merge_hsbk(self.device.color, find_hsbk(**kwargs))
+<<<<<<< HEAD:homeassistant/components/light/lifx.py
 
         # Send messages, waiting for ACK each time
         ack = AwaitAioLIFX(self).wait
         bulb = self.device
 
+=======
+
+        # Send messages, waiting for ACK each time
+        ack = AwaitAioLIFX(self).wait
+        bulb = self.device
+
+>>>>>>> home-assistant/dev:homeassistant/components/light/lifx.py
         if not self.is_on:
             if power_off:
                 yield from ack(partial(bulb.set_power, False))
@@ -540,6 +565,7 @@ class LIFXLight(Light):
                 yield from ack(partial(bulb.set_color, hsbk, duration=fade))
             if power_off:
                 yield from ack(partial(bulb.set_power, False, duration=fade))
+<<<<<<< HEAD:homeassistant/components/light/lifx.py
 
         # Avoid state ping-pong by holding off updates while the state settles
         yield from asyncio.sleep(0.25)
@@ -556,9 +582,29 @@ class LIFXLight(Light):
         }
         yield from self.hass.services.async_call(DOMAIN, service, data)
 
+=======
+
+        # Schedule an update when the transition is complete
+        self.update_later(fade)
+
+    @asyncio.coroutine
+    def default_effect(self, **kwargs):
+        """Start an effect with default parameters."""
+        service = kwargs[ATTR_EFFECT]
+        data = {
+            ATTR_ENTITY_ID: self.entity_id,
+        }
+        yield from self.hass.services.async_call(DOMAIN, service, data)
+
+>>>>>>> home-assistant/dev:homeassistant/components/light/lifx.py
     @asyncio.coroutine
     def async_update(self):
         """Update bulb status."""
         _LOGGER.debug("%s async_update", self.who)
         if self.available:
+<<<<<<< HEAD:homeassistant/components/light/lifx.py
+=======
+            # Avoid state ping-pong by holding off updates as the state settles
+            yield from asyncio.sleep(0.25)
+>>>>>>> home-assistant/dev:homeassistant/components/light/lifx.py
             yield from AwaitAioLIFX(self).wait(self.device.get_color)

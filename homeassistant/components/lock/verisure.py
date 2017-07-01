@@ -45,7 +45,11 @@ class VerisureDoorlock(LockDevice):
         """Return the name of the lock."""
         return hub.get_first(
             "$.doorLockStatusList[?(@.deviceLabel=='%s')].area",
+<<<<<<< HEAD
             self._device_label) + " lock"
+=======
+            self._device_label)
+>>>>>>> home-assistant/dev
 
     @property
     def state(self):

@@ -6,6 +6,9 @@ set -e
 
 apt-get install -y --no-install-recommends git autoconf automake libtool
 
+cd /usr/src/app/
+mkdir -p build && cd build
+
 git clone --depth 1 --recursive -b dtls https://github.com/home-assistant/libcoap.git
 cd libcoap
 ./autogen.sh

@@ -41,7 +41,11 @@ class VerisureSmartplug(SwitchDevice):
         """Return the name or location of the smartplug."""
         return hub.get_first(
             "$.smartPlugs[?(@.deviceLabel == '%s')].area",
+<<<<<<< HEAD
             self._device_label) + " switch"
+=======
+            self._device_label)
+>>>>>>> home-assistant/dev
 
     @property
     def is_on(self):

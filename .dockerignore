@@ -1,2 +1,14 @@
-.tox
+# General files
 .git
+.github
+config
+
+# Test related files
+.tox
+
+# Other virtualization methods
+venv
+.vagrant
+
+# Temporary files
+**/__pycache__
