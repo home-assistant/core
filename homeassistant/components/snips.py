@@ -4,6 +4,7 @@ Support for Snips on-device ASR and NLU.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/snips/
 """
+import asyncio
 import copy
 import json
 import logging
@@ -30,19 +31,35 @@ CONFIG_SCHEMA = vol.Schema({
     }
 }, extra=vol.ALLOW_EXTRA)
 
+INTENT_SCHEMA = vol.Schema({
+    vol.Required('text'): str,
+    vol.Required('intent'): {
+        vol.Required('intent_name'): str
+    },
+    vol.Optional('slots'): [{
+        vol.Required('slot_name'): str,
+        vol.Required('value'): {
+            vol.Required('kind'): str,
+            vol.Required('value'): cv.match_all
+        }
+    }]
+}, extra=vol.ALLOW_EXTRA)
 
-def setup(hass, config):
+
+@asyncio.coroutine
+def async_setup(hass, config):
     """Activate Snips component."""
     mqtt = loader.get_component('mqtt')
     intents = config[DOMAIN].get(CONF_INTENTS, {})
     handler = IntentHandler(hass, intents)
 
+    @asyncio.coroutine
     def message_received(topic, payload, qos):
         """Handle new messages on MQTT."""
-        LOGGER.debug("New intent: %s", str(payload))
-        handler.handle_intent(payload)
+        LOGGER.debug("New intent: %s", payload)
+        yield from handler.handle_intent(payload)
 
-    mqtt.subscribe(hass, INTENT_TOPIC, message_received)
+    yield from mqtt.async_subscribe(hass, INTENT_TOPIC, message_received)
 
     return True
 
@@ -63,77 +80,59 @@ class IntentHandler(object):
 
         self.intents = intents
 
+    @asyncio.coroutine
     def handle_intent(self, payload):
         """Handle an intent."""
         try:
             response = json.loads(payload)
         except TypeError:
+            LOGGER.error('Received invalid JSON: %s', payload)
             return
 
-        if response is None:
+        try:
+            response = INTENT_SCHEMA(response)
+        except vol.Invalid as err:
+            LOGGER.error('Intent has invalid schema: %s. %s', err, response)
             return
 
-        name = self.get_name(response)
-        if name is None:
-            return
-
-        config = self.intents.get(name)
+        intent = response['intent']['intent_name'].split('__')[-1]
+        config = self.intents.get(intent)
 
         if config is None:
-            LOGGER.warning("Received unknown intent %s", name)
+            LOGGER.warning("Received unknown intent %s. %s", intent, response)
             return
 
         action = config.get(CONF_ACTION)
 
         if action is not None:
             slots = self.parse_slots(response)
-            action.run(slots)
+            yield from action.async_run(slots)
 
     def parse_slots(self, response):
         """Parse the intent slots."""
-        try:
-            slots = iter(response["slots"])
-        except KeyError:
-            return {}
-
         parameters = {}
 
-        for slot in slots:
-            try:
-                key = slot["slotName"]
-            except KeyError:
-                continue
-            value = self.get_value(slot)
-            if (key is not None) and (value is not None):
+        for slot in response.get('slots', []):
+            key = slot['slot_name']
+            value = self.get_value(slot['value'])
+            if value is not None:
                 parameters[key] = value
 
         return parameters
 
     @staticmethod
-    def get_name(response):
-        """Extract the name of an intent."""
-        try:
-            return response['intent']['intentName'].split('__')[-1]
-        except KeyError:
-            return None
-
-    @staticmethod
-    def get_value(slot):
+    def get_value(value):
         """Return the value of a given slot."""
-        try:
-            value = slot["value"]
-            kind = value["kind"]
-        except KeyError:
-            return None
+        kind = value['kind']
 
         if kind == "Custom":
-            try:
-                return value["value"]
-            except KeyError:
-                return None
+            return value["value"]
         elif kind == "Builtin":
             try:
                 return value["value"]["value"]
             except KeyError:
                 return None
+        else:
+            LOGGER.warning('Received unknown slot type: %s', kind)
+
         return None
