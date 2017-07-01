@@ -223,7 +223,8 @@
       grid: {
         type: Boolean,
         value: false,
-        reflectToAttribute: true
+        reflectToAttribute: true,
+        observer: '_gridChanged'
       },
 
       /**
@@ -493,7 +494,8 @@
      * The largest n-th value for an item such that it can be rendered in `_physicalStart`.
      */
     get _maxVirtualStart() {
-      return Math.max(0, this._virtualCount - this._physicalCount);
+      var virtualCount = this._convertIndexToCompleteRow(this._virtualCount);
+      return Math.max(0, virtualCount - this._physicalCount);
     },
 
     set _virtualStart(val) {
@@ -837,6 +839,14 @@
     _increasePoolIfNeeded: function(count) {
       var nextPhysicalCount = this._clamp(this._physicalCount + count,
           DEFAULT_PHYSICAL_COUNT, this._virtualCount - this._virtualStart);
+      nextPhysicalCount = this._convertIndexToCompleteRow(nextPhysicalCount);
+      if (this.grid) {
+        var correction = nextPhysicalCount % this._itemsPerRow;
+        if (correction && nextPhysicalCount - correction <= this._physicalCount) {
+          nextPhysicalCount += this._itemsPerRow;
+        }
+        nextPhysicalCount -= correction;
+      }
       var delta = nextPhysicalCount - this._physicalCount;
       var nextIncrease = Math.round(this._physicalCount * 0.5);
 
@@ -861,7 +871,9 @@
         this._templateCost = (window.performance.now() - ts) / delta;
         nextIncrease = Math.round(this._physicalCount * 0.5);
       }
-      if (this._virtualEnd === this._virtualCount - 1 || nextIncrease === 0) {
+      // The upper bounds is not fixed when dealing with a grid that doesn't
+      // fill it's last row with the exact number of items per row.
+      if (this._virtualEnd >= this._virtualCount - 1 || nextIncrease === 0) {
         // Do nothing.
       } else if (!this._isClientFull()) {
         this._debounceRender(
@@ -920,6 +932,13 @@
       instanceProps.tabIndex = true;
       this._instanceProps = instanceProps;
       this.templatize(this._userTemplate, this.mutableData);
+    },
+
+    _gridChanged: function(newGrid, oldGrid) {
+      if (typeof oldGrid === 'undefined') return;
+      this.notifyResize();
+      Polymer.flush ? Polymer.flush() : Polymer.dom.flush();
+      this._updateGridMetrics();
     },
 
     /**
@@ -1021,6 +1040,7 @@
       // remove the current focused item
       if (this._focusedItem && this.modelForElement(this._focusedItem)[this.as] === item) {
         this._removeFocusedItem();
+        document.activeElement && document.activeElement.blur && document.activeElement.blur();
       }
     },
 
@@ -1121,7 +1141,9 @@
         this._updateGridMetrics();
         this._physicalSize = Math.ceil(this._physicalCount / this._itemsPerRow) * this._rowHeight;
       } else {
+        oldPhysicalSize = (this._itemsPerRow === 1) ? oldPhysicalSize :  Math.ceil(this._physicalCount / this._itemsPerRow) * this._rowHeight;
         this._physicalSize = this._physicalSize + newPhysicalSize - oldPhysicalSize;
+        this._itemsPerRow = 1;
       }
       // Update the average if it measured something.
       if (this._physicalAverageCount !== prevAvgCount) {
@@ -1310,6 +1332,9 @@
      */
     _resizeHandler: function() {
       this._debounceRender(function() {
+        // clear cached visible index.
+        this._firstVisibleIndexVal = null;
+        this._lastVisibleIndexVal = null;
         // Skip the resize event on touch devices when the address bar slides up.
         var delta = Math.abs(this._viewportHeight - this._scrollTargetHeight);
         this.updateViewportBoundaries();
@@ -1532,6 +1557,16 @@
       }
     },
 
+    /**
+     * Converts a random index to the index of the item that completes it's row.
+     * Allows for better order and fill computation when grid == true.
+     */
+    _convertIndexToCompleteRow: function(idx) {
+      // when grid == false _itemPerRow can be unset.
+      this._itemsPerRow = this._itemsPerRow || 1;
+      return this.grid ? Math.ceil(idx / this._itemsPerRow) * this._itemsPerRow : idx;
+    },
+
     _isIndexRendered: function(idx) {
       return idx >= this._virtualStart && idx <= this._virtualEnd;
     },
@@ -1586,7 +1621,6 @@
       this._focusedItem = null;
       this._focusedVirtualIndex = -1;
       this._focusedPhysicalIndex = -1;
-      document.activeElement && document.activeElement.blur && document.activeElement.blur();
     },
 
     _createFocusBackfillItem: function() {
