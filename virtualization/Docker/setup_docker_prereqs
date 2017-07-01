@@ -30,8 +30,8 @@ PACKAGES=(
 
 # Required debian packages for building dependencies
 PACKAGES_DEV=(
-  cmake git
-  # libcec
+  cmake
+  git
   swig
 )
 
@@ -73,4 +73,4 @@ apt-get -y --purge autoremove
 
 # Cleanup
 apt-get clean
-rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* build/
+rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/src/app/build/

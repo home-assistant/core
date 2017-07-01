@@ -10,6 +10,7 @@ from concurrent.futures import ThreadPoolExecutor
 import enum
 import logging
 import os
+import pathlib
 import re
 import sys
 import threading
@@ -46,9 +47,6 @@ SERVICE_CALL_LIMIT = 10  # seconds
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
 ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
-
-# Size of a executor pool
-EXECUTOR_POOL_SIZE = 10
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
@@ -113,9 +111,11 @@ class HomeAssistant(object):
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {
-            'max_workers': EXECUTOR_POOL_SIZE
-        }
+        executor_opts = {'max_workers': 10}
+        if sys.version_info[:2] >= (3, 5):
+            # It will default set to the number of processors on the machine,
+            # multiplied by 5. That is better for overlap I/O workers.
+            executor_opts['max_workers'] = None
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 
@@ -181,6 +181,8 @@ class HomeAssistant(object):
                 'report the following info at http://bit.ly/2ogP58T : %s',
                 ', '.join(self.config.components))
 
+        # Allow automations to set up the start triggers before changing state
+        yield from asyncio.sleep(0, loop=self.loop)
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -239,7 +241,7 @@ class HomeAssistant(object):
         target: target to call.
         args: parameters for method to call.
         """
-        if is_callback(target):
+        if not asyncio.iscoroutine(target) and is_callback(target):
             target(*args)
         else:
             self.async_add_job(target, *args)
@@ -1053,6 +1055,9 @@ class Config(object):
         # Directory that holds the configuration
         self.config_dir = None
 
+        # List of allowed external dirs to access
+        self.whitelist_external_dirs = set()
+
     def distance(self: object, lat: float, lon: float) -> float:
         """Calculate distance from Home Assistant.
 
@@ -1070,6 +1075,23 @@ class Config(object):
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
+    def is_allowed_path(self, path: str) -> bool:
+        """Check if the path is valid for access from outside."""
+        parent = pathlib.Path(path).parent
+        try:
+            parent.resolve()  # pylint: disable=no-member
+        except (FileNotFoundError, RuntimeError, PermissionError):
+            return False
+
+        for whitelisted_path in self.whitelist_external_dirs:
+            try:
+                parent.relative_to(whitelisted_path)
+                return True
+            except ValueError:
+                pass
+
+        return False
+
     def as_dict(self):
         """Create a dictionary representation of this dict.
 
@@ -1086,6 +1108,7 @@ class Config(object):
             'time_zone': time_zone.zone,
             'components': self.components,
             'config_dir': self.config_dir,
+            'whitelist_external_dirs': self.whitelist_external_dirs,
             'version': __version__
         }
 

@@ -14,7 +14,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_SET, SUPPORT_PLAY_MEDIA, SUPPORT_PLAY, MEDIA_TYPE_PLAYLIST,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_SHUFFLE_SET,
+    SUPPORT_SEEK, MediaPlayerDevice)
 from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_PORT, CONF_PASSWORD,
     CONF_HOST, CONF_NAME)
@@ -32,7 +33,8 @@ PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
 SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_TURN_OFF | \
     SUPPORT_TURN_ON | SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE
+    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
+    SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -266,3 +268,20 @@ class MpdDevice(MediaPlayerDevice):
             self.client.clear()
             self.client.add(media_id)
             self.client.play()
+
+    @property
+    def shuffle(self):
+        """Boolean if shuffle is enabled."""
+        return bool(self.status['random'])
+
+    def set_shuffle(self, shuffle):
+        """Enable/disable shuffle mode."""
+        self.client.random(int(shuffle))
+
+    def clear_playlist(self):
+        """Clear players playlist."""
+        self.client.clear()
+
+    def media_seek(self, position):
+        """Send seek command."""
+        self.client.seekcur(position)

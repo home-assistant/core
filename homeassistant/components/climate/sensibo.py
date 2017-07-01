@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, CONF_API_KEY, CONF_ID, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, PLATFORM_SCHEMA)
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
@@ -52,9 +53,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 yield from client.async_get_devices(_INITIAL_FETCH_FIELDS)):
             if config[CONF_ID] == ALL or dev['id'] in config[CONF_ID]:
                 devices.append(SensiboClimate(client, dev))
-    except aiohttp.client_exceptions.ClientConnectorError:
+    except (aiohttp.client_exceptions.ClientConnectorError,
+            asyncio.TimeoutError):
         _LOGGER.exception('Failed to connct to Sensibo servers.')
-        return False
+        raise PlatformNotReady
 
     if devices:
         async_add_devices(devices)

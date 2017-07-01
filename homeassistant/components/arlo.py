@@ -1,27 +1,27 @@
 """
 This component provides basic support for Netgear Arlo IP cameras.
 
-For more details about this platform, please refer to the documentation at
+For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/arlo/
 """
 import logging
+
 import voluptuous as vol
-from homeassistant.helpers import config_validation as cv
-
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-import homeassistant.loader as loader
-
 from requests.exceptions import HTTPError, ConnectTimeout
+
+import homeassistant.loader as loader
+from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 REQUIREMENTS = ['pyarlo==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = 'Data provided by arlo.netgear.com'
+CONF_ATTRIBUTION = "Data provided by arlo.netgear.com"
 
-DOMAIN = 'arlo'
-
+DATA_ARLO = 'data_arlo'
 DEFAULT_BRAND = 'Netgear Arlo'
+DOMAIN = 'arlo'
 
 NOTIFICATION_ID = 'arlo_notification'
 NOTIFICATION_TITLE = 'Arlo Camera Setup'
@@ -47,7 +47,7 @@ def setup(hass, config):
         arlo = PyArlo(username, password, preload=False)
         if not arlo.is_connected:
             return False
-        hass.data['arlo'] = arlo
+        hass.data[DATA_ARLO] = arlo
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Netgar Arlo: %s", str(ex))
         persistent_notification.create(
