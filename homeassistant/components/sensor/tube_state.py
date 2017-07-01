@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by TfL Open Data"
 CONF_LINE = 'line'
-DOMAIN = 'tube_state'
 SCAN_INTERVAL = timedelta(seconds=30)
 TUBE_LINES = [
     'Bakerloo',
@@ -36,9 +35,9 @@ TUBE_LINES = [
     'Waterloo & City']
 URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({vol.Required(CONF_LINE): vol.In(TUBE_LINES)})
-}, extra=vol.ALLOW_EXTRA)
+PLATFORM_SCHEMA = vol.Schema({
+    vol.Required(CONF_LINE): vol.In(TUBE_LINES),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -50,8 +49,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(LondonTubeSensor(line, data))
 
     add_devices(sensors, True)
-    _LOGGER.info("The tube_state component is ready!")
-    _LOGGER.info(ATTRIBUTION)
 
 
 class LondonTubeSensor(Entity):
@@ -107,7 +104,6 @@ class TubeData(object):
     def update(self):
         """Get the latest data from TFL."""
         response = requests.get(URL)
-        _LOGGER.info("TFL Request made")
         if response.status_code != 200:
             _LOGGER.warning("Invalid response from API")
         else:
