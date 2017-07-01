@@ -10,6 +10,8 @@ from datetime import timedelta
 import voluptuous as vol
 import requests
 
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -35,8 +37,9 @@ TUBE_LINES = [
     'Waterloo & City']
 URL = 'https://api.tfl.gov.uk/line/mode/tube,overground,dlr,tflrail/status'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_LINE): vol.In(TUBE_LINES),
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_LINE):
+        vol.All(cv.ensure_list, [vol.In(list(TUBE_LINES))]),
 })
 
 

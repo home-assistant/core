@@ -30,17 +30,14 @@ class TestLondonTubeSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_with_config(self):
-        """Test the platform setup with configuration."""
-        self.assertTrue(
-            setup_component(self.hass, 'sensor', {'tube_state': self.config}))
 
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
         """Test for operational WSDOT sensor with proper attributes."""
         mock_req.get(URL, text=load_fixture('tube_state.json'))
         tube_state.setup_platform(self.hass, self.config, self.add_entities)
-        self.assertEqual(len(self.entities), 1)
-        sensor = self.entities[0]
-        self.assertEqual(sensor.name, 'London Overground')
-        self.assertEqual(sensor.state, 'Minor Delays')
+        self.assertTrue(
+            setup_component(self.hass, 'sensor', {'tube_state': self.config}))
+        state = self.hass.states.get('sensor.london_overground')
+        assert state.state == 'Minor Delays'
+        assert state.attributes.get('Description') == 'Something'
