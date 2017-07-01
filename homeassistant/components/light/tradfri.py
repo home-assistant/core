@@ -116,14 +116,19 @@ class TradfriGroup(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        from pytradfri.error import PyTradFriError
         if exc:
-            _LOGGER.info("Observation failed for %s", self._name,
+            _LOGGER.warn("Observation failed for %s", self._name,
                          exc_info=exc)
 
-        cmd = self._group.observe(callback=self._observe_update,
-                                  err_callback=self._async_start_observe,
-                                  duration=0)
-        self.hass.async_add_job(self._api(cmd))
+        try:
+            cmd = self._group.observe(callback=self._observe_update,
+                                      err_callback=self._async_start_observe,
+                                      duration=0)
+            self.hass.async_add_job(self._api(cmd))
+        except PyTradFriError as e:
+            _LOGGER.warn("Observation failed, trying again", exc_info=e)
+            self._async_start_observe()
 
     def _refresh(self, group):
         """Refresh the light data."""
@@ -249,14 +254,19 @@ class TradfriLight(Light):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of light."""
+        from pytradfri.error import PyTradFriError
         if exc:
-            _LOGGER.info("Observation failed for %s", self._name,
+            _LOGGER.warn("Observation failed for %s", self._name,
                          exc_info=exc)
 
-        cmd = self._light.observe(callback=self._observe_update,
-                                  err_callback=self._async_start_observe,
-                                  duration=0)
-        self.hass.async_add_job(self._api(cmd))
+        try:
+            cmd = self._light.observe(callback=self._observe_update,
+                                      err_callback=self._async_start_observe,
+                                      duration=0)
+            self.hass.async_add_job(self._api(cmd))
+        except PyTradFriError as e:
+            _LOGGER.warn("Observation failed, trying again", exc_info=e)
+            self._async_start_observe()
 
     def _refresh(self, light):
         """Refresh the light data."""
