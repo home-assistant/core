@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.6.1']
+REQUIREMENTS = ['pyowm==2.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
