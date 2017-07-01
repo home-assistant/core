@@ -9,17 +9,19 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 
 DEPENDENCIES = ['arlo', 'ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_FFMPEG_ARGUMENTS = 'ffmpeg_arguments'
+ARLO_MODE_ARMED = 'armed'
+ARLO_MODE_DISARMED = 'disarmed'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
@@ -46,9 +48,10 @@ class ArloCam(Camera):
     def __init__(self, hass, camera, device_info):
         """Initialize an Arlo camera."""
         super().__init__()
-
         self._camera = camera
+        self._base_stn = hass.data['arlo'].base_stations[0]
         self._name = self._camera.name
+        self._motion_status = False
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
 
@@ -87,3 +90,27 @@ class ArloCam(Camera):
     def brand(self):
         """Camera brand."""
         return DEFAULT_BRAND
+
+    @property
+    def should_poll(self):
+        """Camera should poll periodically."""
+        return True
+
+    @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        return self._motion_status
+
+    def set_base_station_mode(self, mode):
+        """Set the mode in the base station."""
+        self._base_stn.mode = mode
+
+    def enable_motion_detection(self):
+        """Enable the Motion detection in base station (Arm)."""
+        self._motion_status = True
+        self.set_base_station_mode(ARLO_MODE_ARMED)
+
+    def disable_motion_detection(self):
+        """Disable the motion detection in base station (Disarm)."""
+        self._motion_status = False
+        self.set_base_station_mode(ARLO_MODE_DISARMED)
