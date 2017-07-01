@@ -14,7 +14,7 @@ from homeassistant.components.light import Light, PLATFORM_SCHEMA
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-velbus==2.0.10']
+REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
 DOMAIN = 'light'
 

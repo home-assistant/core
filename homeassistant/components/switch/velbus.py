@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                 [vol.Any(SINGLE_SWITCH_SCHEMA, DOUBLE_SWITCH_SCHEMA)])
 })
 
-REQUIREMENTS = ['python-velbus==2.0.10']
+REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
 DOMAIN = 'switch'
 

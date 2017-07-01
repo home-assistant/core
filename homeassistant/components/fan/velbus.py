@@ -15,7 +15,7 @@ from homeassistant.const import CONF_NAME, CONF_DEVICES, STATE_OFF
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-velbus==2.0.10']
+REQUIREMENTS = ['python-velbus==2.0.11']
 DEPENDENCIES = ['velbus']
 DOMAIN = 'fan'
 
