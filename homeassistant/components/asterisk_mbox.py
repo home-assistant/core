@@ -178,7 +178,7 @@ class AsteriskMboxMP3View(HomeAssistantView):
             try:
                 return client.mp3(sha, sync=True)
             except ServerError as err:
-                _LOGGER.error("Error getting camera image: %s", err)
+                _LOGGER.error("Error getting MP3: %s", err)
                 return self.json_message(err, HTTP_NOT_FOUND)
 
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
