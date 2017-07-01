@@ -21,15 +21,16 @@ DOMAIN = 'velbus'
 
 VELBUS_MESSAGE = 'velbus.message'
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PORT): cv.string,
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PORT): cv.string,
+    }),
 })
-
 
 def setup(hass, config):
     """Set up the Velbus platform."""
     import velbus
-    port = config[DOMAIN][0][CONF_PORT]
+    port = config[DOMAIN].get(CONF_PORT)
     connection = velbus.VelbusUSBConnection(port)
     controller = velbus.Controller(connection)
     hass.data['VelbusController'] = controller
