@@ -97,12 +97,12 @@ class VelbusFan(FanEntity):
                self._channels_state[2] is False
 
     def _is_medium(self):
-        return self._channels_state[0] is False and \
+        return self._channels_state[0] is True and \
                self._channels_state[1] is True and \
                self._channels_state[2] is False
 
     def _is_high(self):
-        return self._channels_state[0] is False and \
+        return self._channels_state[0] is True and \
                self._channels_state[1] is False and \
                self._channels_state[2] is True
 
@@ -146,11 +146,11 @@ class VelbusFan(FanEntity):
             channels_off = [self._channel_medium, self._channel_high]
             channels_on = [self._channel_low]
         elif speed == SPEED_MEDIUM:
-            channels_off = [self._channel_low, self._channel_high]
-            channels_on = [self._channel_medium]
+            channels_off = [self._channel_high]
+            channels_on = [self._channel_low, self._channel_medium]
         elif speed == SPEED_HIGH:
-            channels_off = [self._channel_low, self._channel_medium]
-            channels_on = [self._channel_high]
+            channels_off = [self._channel_medium]
+            channels_on = [self._channel_low, self._channel_high]
         for channel in channels_off:
             self._relay_off(channel)
         for channel in channels_on:
