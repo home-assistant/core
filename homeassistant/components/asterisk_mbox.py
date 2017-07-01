@@ -26,14 +26,17 @@ from homeassistant.components.frontend import register_built_in_panel
 from homeassistant.components.http import HomeAssistantView
 
 REQUIREMENTS = ['asterisk_mbox==0.4.0']
+DEPENDENCIES = ['http']
 
-_LOGGER = logging.getLogger(__name__)
-
+CONTENT_TYPE_MPEG = 'audio/mpeg'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 
 DOMAIN = 'asterisk_mbox'
 ASTERISK = None
+
+_LOGGER = logging.getLogger(__name__)
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -183,6 +186,7 @@ class AsteriskMboxMP3View(HomeAssistantView):
                 stream = yield from hass.async_add_job(fetch)
 
             if stream:
-                return web.Response(body=stream, content_type="audio/mpeg")
+                return web.Response(body=stream,
+                                    content_type=CONTENT_TYPE_MPEG)
 
         return web.Response(status=500)
