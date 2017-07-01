@@ -265,7 +265,7 @@ class TradfriLight(Light):
                                       duration=0)
             self.hass.async_add_job(self._api(cmd))
         except PyTradFriError as exc:
-            _LOGGER.warning("Observation failed, trying again", exc_info=e)
+            _LOGGER.warning("Observation failed, trying again", exc_info=exc)
             self._async_start_observe()
 
     def _refresh(self, light):
