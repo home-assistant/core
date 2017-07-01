@@ -13,8 +13,12 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['dyson']
 
-SENSOR_UNITS = {'filter_life': 'hours',
-                "humidity": '%'}
+SENSOR_UNITS = {
+    "filter_life": "hours",
+    "humidity": "%",
+    "dust": "level",
+    "air_quality": "level"
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,6 +111,11 @@ class DysonDustSensor(DysonSensor):
         else:
             return STATE_UNKNOWN
 
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS['dust']
+
 
 class DysonHumiditySensor(DysonSensor):
     """Representation of Dyson Humidity sensor."""
@@ -173,3 +182,8 @@ class DysonAirQualitySensor(DysonSensor):
             return self._device.environmental_state.volatil_organic_compounds
         else:
             return STATE_UNKNOWN
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS['air_quality']

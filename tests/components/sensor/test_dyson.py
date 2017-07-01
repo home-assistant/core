@@ -93,7 +93,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, STATE_UNKNOWN)
-        self.assertIsNone(sensor.unit_of_measurement)
+        self.assertEqual(sensor.unit_of_measurement, 'level')
         self.assertEqual(sensor.name, "Device_name dust")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
 
@@ -103,7 +103,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 5)
-        self.assertIsNone(sensor.unit_of_measurement)
+        self.assertEqual(sensor.unit_of_measurement, 'level')
         self.assertEqual(sensor.name, "Device_name dust")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
 
@@ -169,7 +169,7 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, STATE_UNKNOWN)
-        self.assertIsNone(sensor.unit_of_measurement)
+        self.assertEqual(sensor.unit_of_measurement, 'level')
         self.assertEqual(sensor.name, "Device_name air quality")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
 
@@ -179,6 +179,6 @@ class DysonTest(unittest.TestCase):
         sensor.entity_id = "sensor.dyson_1"
         self.assertFalse(sensor.should_poll)
         self.assertEqual(sensor.state, 2)
-        self.assertIsNone(sensor.unit_of_measurement)
+        self.assertEqual(sensor.unit_of_measurement, 'level')
         self.assertEqual(sensor.name, "Device_name air quality")
         self.assertEqual(sensor.entity_id, "sensor.dyson_1")
