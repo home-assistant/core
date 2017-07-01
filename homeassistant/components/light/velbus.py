@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_DEVICES
 from homeassistant.components.light import Light, PLATFORM_SCHEMA
 from homeassistant.core import callback
-from homeassistant.helpers.config_validation as cv
+import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-velbus==2.0.7']
+REQUIREMENTS = ['python-velbus==2.0.9']
 DEPENDENCIES = ['velbus']
 DOMAIN = 'light'
 

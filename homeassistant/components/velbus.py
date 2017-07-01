@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, \
                                 CONF_PORT
 
-REQUIREMENTS = ['python-velbus==2.0.7']
+REQUIREMENTS = ['python-velbus==2.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Velbus platform."""
     import velbus
-    port = config[DOMAIN][CONF_PORT]
+    port = config[DOMAIN][0][CONF_PORT]
     connection = velbus.VelbusUSBConnection(port)
     controller = velbus.Controller(connection)
     hass.data['VelbusController'] = controller
