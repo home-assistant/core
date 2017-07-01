@@ -35,6 +35,9 @@ omit =
     homeassistant/components/bloomsky.py
     homeassistant/components/*/bloomsky.py
 
+    homeassistant/components/comfoconnect.py
+    homeassistant/components/*/comfoconnect.py
+
     homeassistant/components/digital_ocean.py
     homeassistant/components/*/digital_ocean.py
 
@@ -245,6 +248,7 @@ omit =
     homeassistant/components/device_tracker/gpslogger.py
     homeassistant/components/device_tracker/icloud.py
     homeassistant/components/device_tracker/linksys_ap.py
+    homeassistant/components/device_tracker/linksys_smart.py
     homeassistant/components/device_tracker/luci.py
     homeassistant/components/device_tracker/mikrotik.py
     homeassistant/components/device_tracker/netgear.py
@@ -279,7 +283,7 @@ omit =
     homeassistant/components/light/flux_led.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
-    homeassistant/components/light/lifx/*.py
+    homeassistant/components/light/lifx.py
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/limitlessled.py
     homeassistant/components/light/mystrom.py

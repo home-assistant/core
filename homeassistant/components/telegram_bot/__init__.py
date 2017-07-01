@@ -161,7 +161,7 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, filepath=None, username=None, password=None,
+def load_data(hass, url=None, filepath=None, username=None, password=None,
               authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
@@ -191,8 +191,10 @@ def load_data(url=None, filepath=None, username=None, password=None,
             _LOGGER.warning("Can't load photo in %s after %s retries.",
                             url, retry_num)
         elif filepath is not None:
-            # Load photo from file
-            return open(filepath, "rb")
+            if hass.config.is_allowed_path(filepath):
+                return open(filepath, "rb")
+
+            _LOGGER.warning("'%s' are not secure to load data from!", filepath)
         else:
             _LOGGER.warning("Can't load photo. No photo found in params!")
 
@@ -225,7 +227,7 @@ def async_setup(hass, config):
     try:
         receiver_service = yield from \
             platform.async_setup_platform(hass, p_config)
-        if receiver_service is None:
+        if receiver_service is False:
             _LOGGER.error(
                 "Failed to initialize Telegram bot %s", p_type)
             return False
@@ -421,11 +423,11 @@ class TelegramNotificationService:
                     [_make_row_inline_keyboard(row) for row in keys])
         return params
 
-    def _send_msg(self, func_send, msg_error, *args_rep, **kwargs_rep):
+    def _send_msg(self, func_send, msg_error, *args_msg, **kwargs_msg):
         """Send one message."""
         from telegram.error import TelegramError
         try:
-            out = func_send(*args_rep, **kwargs_rep)
+            out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out[ATTR_MESSAGEID]
@@ -435,8 +437,9 @@ class TelegramNotificationService:
                 _LOGGER.warning("Update last message: out_type:%s, out=%s",
                                 type(out), out)
             return out
-        except TelegramError:
-            _LOGGER.exception(msg_error)
+        except TelegramError as exc:
+            _LOGGER.error("%s: %s. Args: %s, kwargs: %s",
+                          msg_error, exc, args_msg, kwargs_msg)
 
     def send_message(self, message="", target=None, **kwargs):
         """Send a message to one or multiple pre-allowed chat IDs."""
@@ -510,6 +513,7 @@ class TelegramNotificationService:
         caption = kwargs.get(ATTR_CAPTION)
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
         file_content = load_data(
+            self.hass,
             url=kwargs.get(ATTR_URL),
             filepath=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),

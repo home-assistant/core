@@ -21,6 +21,8 @@ import voluptuous as vol
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_TIMEFRAME = 60
+
 CONF_FORECAST = 'forecast'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -45,7 +47,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                    CONF_LONGITUDE: float(longitude)}
 
     # create weather data:
-    data = BrData(hass, coordinates, None)
+    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, None)
     # create weather device:
     async_add_devices([BrWeather(data, config.get(CONF_FORECAST, True),
                                  config.get(CONF_NAME, None))])
