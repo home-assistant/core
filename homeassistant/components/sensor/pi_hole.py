@@ -17,13 +17,16 @@ from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL, CONF_MONITORED_CONDITIONS)
 
 _LOGGER = logging.getLogger(__name__)
-_ENDPOINT = '/admin/api.php'
+_ENDPOINT = '/api.php'
 
 ATTR_BLOCKED_DOMAINS = 'domains_blocked'
 ATTR_PERCENTAGE_TODAY = 'percentage_today'
 ATTR_QUERIES_TODAY = 'queries_today'
 
+CONF_LOCATION = 'location'
 DEFAULT_HOST = 'localhost'
+
+DEFAULT_LOCATION = 'admin'
 DEFAULT_METHOD = 'GET'
 DEFAULT_NAME = 'Pi-Hole'
 DEFAULT_SSL = False
@@ -44,6 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+    vol.Optional(CONF_LOCATION, default=DEFAULT_LOCATION): cv.string,
     vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
@@ -55,13 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     use_ssl = config.get(CONF_SSL)
+    location = config.get(CONF_LOCATION)
     verify_ssl = config.get(CONF_VERIFY_SSL)
 
-    api = PiHoleAPI(host, use_ssl, verify_ssl)
-
-    if api.data is None:
-        _LOGGER.error("Unable to fetch data from Pi-Hole")
-        return False
+    api = PiHoleAPI('{}/{}'.format(host, location), use_ssl, verify_ssl)
 
     sensors = [PiHoleSensor(hass, api, name, condition)
                for condition in config[CONF_MONITORED_CONDITIONS]]
@@ -113,6 +114,11 @@ class PiHoleSensor(Entity):
             ATTR_BLOCKED_DOMAINS: self._api.data['domains_being_blocked'],
         }
 
+    @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self._api.available
+
     def update(self):
         """Get the latest data from the Pi-Hole API."""
         self._api.update()
@@ -130,7 +136,7 @@ class PiHoleAPI(object):
 
         self._rest = RestData('GET', resource, None, None, None, verify_ssl)
         self.data = None
-
+        self.available = True
         self.update()
 
     def update(self):
@@ -138,5 +144,7 @@ class PiHoleAPI(object):
         try:
             self._rest.update()
             self.data = json.loads(self._rest.data)
+            self.available = True
         except TypeError:
             _LOGGER.error("Unable to fetch data from Pi-Hole")
+            self.available = False

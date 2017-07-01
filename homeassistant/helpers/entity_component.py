@@ -8,19 +8,22 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_SCAN_INTERVAL, CONF_ENTITY_NAMESPACE,
     DEVICE_DEFAULT_NAME)
 from homeassistant.core import callback, valid_entity_id
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.loader import get_component
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import (
+    async_track_time_interval, async_track_point_in_time)
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.util import slugify
 from homeassistant.util.async import (
     run_callback_threadsafe, run_coroutine_threadsafe)
+import homeassistant.util.dt as dt_util
 
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
+PLATFORM_NOT_READY_RETRIES = 10
 
 
 class EntityComponent(object):
@@ -113,7 +116,7 @@ class EntityComponent(object):
 
     @asyncio.coroutine
     def _async_setup_platform(self, platform_type, platform_config,
-                              discovery_info=None):
+                              discovery_info=None, tries=0):
         """Set up a platform for this component.
 
         This method must be run in the event loop.
@@ -162,6 +165,16 @@ class EntityComponent(object):
             yield from entity_platform.async_block_entities_done()
             self.hass.config.components.add(
                 '{}.{}'.format(self.domain, platform_type))
+        except PlatformNotReady:
+            tries += 1
+            wait_time = min(tries, 6) * 30
+            self.logger.warning(
+                'Platform %s not ready yet. Retrying in %d seconds.',
+                platform_type, wait_time)
+            async_track_point_in_time(
+                self.hass, self._async_setup_platform(
+                    platform_type, platform_config, discovery_info, tries),
+                dt_util.utcnow() + timedelta(seconds=wait_time))
         except asyncio.TimeoutError:
             self.logger.error(
                 "Setup of platform %s is taking longer than %s seconds."

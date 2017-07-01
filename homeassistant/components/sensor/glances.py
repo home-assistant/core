@@ -13,7 +13,8 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
+    CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES,
+    TEMP_CELSIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -24,7 +25,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     'disk_use_percent': ['Disk Use', '%'],
@@ -40,7 +41,8 @@ SENSOR_TYPES = {
     'process_running': ['Running', 'Count'],
     'process_total': ['Total', 'Count'],
     'process_thread': ['Thread', 'Count'],
-    'process_sleeping': ['Sleeping', 'Count']
+    'process_sleeping': ['Sleeping', 'Count'],
+    'cpu_temp': ['CPU Temp', TEMP_CELSIUS],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -61,22 +63,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = 'http://{}:{}/{}'.format(host, port, _RESOURCE)
     var_conf = config.get(CONF_RESOURCES)
 
-    try:
-        response = requests.get(url, timeout=10)
-        if not response.ok:
-            _LOGGER.error("Response status is '%s'", response.status_code)
-            return False
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: %s", url)
-        return False
-
     rest = GlancesData(url)
+    rest.update()
 
     dev = []
     for resource in var_conf:
         dev.append(GlancesSensor(rest, name, resource))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class GlancesSensor(Entity):
@@ -89,7 +83,6 @@ class GlancesSensor(Entity):
         self.type = sensor_type
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -105,51 +98,62 @@ class GlancesSensor(Entity):
         return self._unit_of_measurement
 
     @property
+    def available(self):
+        """Could the device be accessed during the last update call."""
+        return self.rest.data is not None
+
+    @property
     def state(self):
         """Return the state of the resources."""
-        value = self.rest.data
-
-        if value is not None:
-            if self.type == 'disk_use_percent':
-                return value['fs'][0]['percent']
-            elif self.type == 'disk_use':
-                return round(value['fs'][0]['used'] / 1024**3, 1)
-            elif self.type == 'disk_free':
-                try:
-                    return round(value['fs'][0]['free'] / 1024**3, 1)
-                except KeyError:
-                    return round((value['fs'][0]['size'] -
-                                  value['fs'][0]['used']) / 1024**3, 1)
-            elif self.type == 'memory_use_percent':
-                return value['mem']['percent']
-            elif self.type == 'memory_use':
-                return round(value['mem']['used'] / 1024**2, 1)
-            elif self.type == 'memory_free':
-                return round(value['mem']['free'] / 1024**2, 1)
-            elif self.type == 'swap_use_percent':
-                return value['memswap']['percent']
-            elif self.type == 'swap_use':
-                return round(value['memswap']['used'] / 1024**3, 1)
-            elif self.type == 'swap_free':
-                return round(value['memswap']['free'] / 1024**3, 1)
-            elif self.type == 'processor_load':
-                # Windows systems don't provide load details
-                try:
-                    return value['load']['min15']
-                except KeyError:
-                    return value['cpu']['total']
-            elif self.type == 'process_running':
-                return value['processcount']['running']
-            elif self.type == 'process_total':
-                return value['processcount']['total']
-            elif self.type == 'process_thread':
-                return value['processcount']['thread']
-            elif self.type == 'process_sleeping':
-                return value['processcount']['sleeping']
+        return self._state
 
     def update(self):
         """Get the latest data from REST API."""
         self.rest.update()
+        value = self.rest.data
+
+        if value is not None:
+            if self.type == 'disk_use_percent':
+                self._state = value['fs'][0]['percent']
+            elif self.type == 'disk_use':
+                self._state = round(value['fs'][0]['used'] / 1024**3, 1)
+            elif self.type == 'disk_free':
+                try:
+                    self._state = round(value['fs'][0]['free'] / 1024**3, 1)
+                except KeyError:
+                    self._state = round((value['fs'][0]['size'] -
+                                         value['fs'][0]['used']) / 1024**3, 1)
+            elif self.type == 'memory_use_percent':
+                self._state = value['mem']['percent']
+            elif self.type == 'memory_use':
+                self._state = round(value['mem']['used'] / 1024**2, 1)
+            elif self.type == 'memory_free':
+                self._state = round(value['mem']['free'] / 1024**2, 1)
+            elif self.type == 'swap_use_percent':
+                self._state = value['memswap']['percent']
+            elif self.type == 'swap_use':
+                self._state = round(value['memswap']['used'] / 1024**3, 1)
+            elif self.type == 'swap_free':
+                self._state = round(value['memswap']['free'] / 1024**3, 1)
+            elif self.type == 'processor_load':
+                # Windows systems don't provide load details
+                try:
+                    self._state = value['load']['min15']
+                except KeyError:
+                    self._state = value['cpu']['total']
+            elif self.type == 'process_running':
+                self._state = value['processcount']['running']
+            elif self.type == 'process_total':
+                self._state = value['processcount']['total']
+            elif self.type == 'process_thread':
+                self._state = value['processcount']['thread']
+            elif self.type == 'process_sleeping':
+                self._state = value['processcount']['sleeping']
+            elif self.type == 'cpu_temp':
+                for sensor in value['sensors']:
+                    if sensor['label'] == 'CPU':
+                        self._state = sensor['value']
+                self._state = None
 
 
 class GlancesData(object):
@@ -167,5 +171,5 @@ class GlancesData(object):
             response = requests.get(self._resource, timeout=10)
             self.data = response.json()
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to host/endpoint: %s", self._resource)
+            _LOGGER.error("Connection error: %s", self._resource)
             self.data = None

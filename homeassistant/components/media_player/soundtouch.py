@@ -20,7 +20,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, CONF_PORT,
                                  STATE_PAUSED, STATE_PLAYING,
                                  STATE_UNAVAILABLE)
 
-REQUIREMENTS = ['libsoundtouch==0.3.0']
+REQUIREMENTS = ['libsoundtouch==0.6.2']
 
 _LOGGER = logging.getLogger(__name__)
 

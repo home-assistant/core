@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['decora==0.4']
+REQUIREMENTS = ['decora==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class DecoraLight(Light):
         self._switch = decora.decora(self._address, self._key)
         self._switch.connect()
         self._state = self._switch.get_on()
-        self._brightness = self._switch.get_brightness()
+        self._brightness = self._switch.get_brightness() * 2.55
         self.is_valid = True
 
     @property
@@ -99,7 +99,7 @@ class DecoraLight(Light):
 
     def set_state(self, brightness):
         """Set the state of this lamp to the provided brightness."""
-        self._switch.set_brightness(brightness)
+        self._switch.set_brightness(int(brightness / 2.55))
         self._brightness = brightness
         return True
 
@@ -120,5 +120,5 @@ class DecoraLight(Light):
 
     def update(self):
         """Synchronise internal state with the actual light state."""
-        self._brightness = self._switch.get_brightness()
+        self._brightness = self._switch.get_brightness() * 2.55
         self._state = self._switch.get_on()

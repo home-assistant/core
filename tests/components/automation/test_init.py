@@ -14,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     assert_setup_component, get_test_home_assistant, fire_time_changed,
-    mock_service, mock_restore_cache)
+    mock_service, async_mock_service, mock_restore_cache)
 
 
 # pylint: disable=invalid-name
@@ -565,7 +565,7 @@ def test_automation_restore_state(hass):
     assert state.state == STATE_OFF
     assert state.attributes.get('last_triggered') == time
 
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
 
     assert automation.is_on(hass, 'automation.bye') is False
 
@@ -584,7 +584,7 @@ def test_automation_restore_state(hass):
 @asyncio.coroutine
 def test_initial_value_off(hass):
     """Test initial value off."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
 
     res = yield from async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -611,7 +611,7 @@ def test_initial_value_off(hass):
 @asyncio.coroutine
 def test_initial_value_on(hass):
     """Test initial value on."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
 
     res = yield from async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -638,7 +638,7 @@ def test_initial_value_on(hass):
 @asyncio.coroutine
 def test_initial_value_off_but_restore_on(hass):
     """Test initial value off and restored state is turned on."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_ON),
     ))
@@ -668,7 +668,7 @@ def test_initial_value_off_but_restore_on(hass):
 @asyncio.coroutine
 def test_initial_value_on_but_restore_off(hass):
     """Test initial value on and restored state is turned off."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_OFF),
     ))
@@ -698,7 +698,7 @@ def test_initial_value_on_but_restore_off(hass):
 @asyncio.coroutine
 def test_no_initial_value_and_restore_off(hass):
     """Test initial value off and restored state is turned on."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
     mock_restore_cache(hass, (
         State('automation.hello', STATE_OFF),
     ))
@@ -727,7 +727,7 @@ def test_no_initial_value_and_restore_off(hass):
 @asyncio.coroutine
 def test_automation_is_on_if_no_initial_state_or_restore(hass):
     """Test initial value is on when no initial state or restored state."""
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
 
     res = yield from async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
@@ -754,7 +754,7 @@ def test_automation_is_on_if_no_initial_state_or_restore(hass):
 def test_automation_not_trigger_on_bootstrap(hass):
     """Test if automation is not trigger on bootstrap."""
     hass.state = CoreState.not_running
-    calls = mock_service(hass, 'test', 'automation')
+    calls = async_mock_service(hass, 'test', 'automation')
 
     res = yield from async_setup_component(hass, automation.DOMAIN, {
         automation.DOMAIN: {
