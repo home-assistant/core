@@ -56,7 +56,6 @@ class VelbusBinarySensor(BinarySensorDevice):
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
         self.hass.data['VelbusController'].subscribe(self._on_message)
-        self.get_status()
 
     @callback
     def _on_message(self, message):

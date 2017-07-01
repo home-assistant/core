@@ -48,9 +48,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     for switch in config[CONF_DEVICES]:
         if switch[CONF_TYPE] == 'single':
-            devices.push(VelbusSingleSwitch(switch))
+            devices.append(VelbusSingleSwitch(switch))
         elif switch[CONF_TYPE] == 'double':
-            devices.push(VelbusDoubleSwitch(switch))
+            devices.append(VelbusDoubleSwitch(switch))
     add_devices(devices)
     return True
 
