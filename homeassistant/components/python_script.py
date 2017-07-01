@@ -9,7 +9,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import sanitize_filename
 
 DOMAIN = 'python_script'
-REQUIREMENTS = ['restrictedpython==4.0a2']
+REQUIREMENTS = ['restrictedpython==4.0a3']
 FOLDER = 'python_scripts'
 _LOGGER = logging.getLogger(__name__)
 

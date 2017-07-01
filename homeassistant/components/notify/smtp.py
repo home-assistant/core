@@ -29,16 +29,18 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_IMAGES = 'images'  # optional embedded image file attachments
 ATTR_HTML = 'html'
 
-CONF_STARTTLS = 'starttls'
+CONF_ENCRYPTION = 'encryption'
 CONF_DEBUG = 'debug'
 CONF_SERVER = 'server'
 CONF_SENDER_NAME = 'sender_name'
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 25
+DEFAULT_PORT = 587
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
-DEFAULT_STARTTLS = False
+DEFAULT_ENCRYPTION = 'starttls'
+
+ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -47,7 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SERVER, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_STARTTLS, default=DEFAULT_STARTTLS): cv.boolean,
+    vol.Optional(CONF_ENCRYPTION, default=DEFAULT_ENCRYPTION):
+        vol.In(ENCRYPTION_OPTIONS),
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SENDER_NAME): cv.string,
@@ -62,7 +65,7 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_PORT),
         config.get(CONF_TIMEOUT),
         config.get(CONF_SENDER),
-        config.get(CONF_STARTTLS),
+        config.get(CONF_ENCRYPTION),
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         config.get(CONF_RECIPIENT),
@@ -78,28 +81,32 @@ def get_service(hass, config, discovery_info=None):
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-mail messages."""
 
-    def __init__(self, server, port, timeout, sender, starttls, username,
+    def __init__(self, server, port, timeout, sender, encryption, username,
                  password, recipients, sender_name, debug):
         """Initialize the SMTP service."""
         self._server = server
         self._port = port
         self._timeout = timeout
         self._sender = sender
-        self.starttls = starttls
+        self.encryption = encryption
         self.username = username
         self.password = password
         self.recipients = recipients
         self._sender_name = sender_name
-        self._timeout = timeout
         self.debug = debug
         self.tries = 2
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        mail = smtplib.SMTP(self._server, self._port, timeout=self._timeout)
+        if self.encryption == "tls":
+            mail = smtplib.SMTP_SSL(
+                self._server, self._port, timeout=self._timeout)
+        else:
+            mail = smtplib.SMTP(
+                self._server, self._port, timeout=self._timeout)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
-        if self.starttls:
+        if self.encryption == "starttls":
             mail.starttls()
             mail.ehlo()
         if self.username and self.password:

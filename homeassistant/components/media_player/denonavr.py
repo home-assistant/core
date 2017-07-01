@@ -6,6 +6,7 @@ https://home-assistant.io/components/media_player.denon/
 """
 
 import logging
+from collections import namedtuple
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -16,16 +17,19 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, SUPPORT_VOLUME_SET, SUPPORT_PLAY)
 from homeassistant.const import (
     CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    CONF_NAME, STATE_ON)
+    CONF_NAME, STATE_ON, CONF_ZONE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.4.4']
+REQUIREMENTS = ['denonavr==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = None
 DEFAULT_SHOW_SOURCES = False
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
+CONF_ZONES = 'zones'
+CONF_VALID_ZONES = ['Zone2', 'Zone3']
+CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
 KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
@@ -36,16 +40,26 @@ SUPPORT_MEDIA_MODES = SUPPORT_PLAY_MEDIA | \
     SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
     SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_SET | SUPPORT_PLAY
 
+DENON_ZONE_SCHEMA = vol.Schema({
+    vol.Required(CONF_ZONE): vol.In(CONF_VALID_ZONES, CONF_INVALID_ZONES_ERR),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+})
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
         cv.boolean,
+    vol.Optional(CONF_ZONES):
+        vol.All(cv.ensure_list, [DENON_ZONE_SCHEMA])
 })
+
+NewHost = namedtuple('NewHost', ['host', 'name'])
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Denon platform."""
+    # pylint: disable=import-error
     import denonavr
 
     # Initialize list with receivers to be started
@@ -55,28 +69,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if cache is None:
         cache = hass.data[KEY_DENON_CACHE] = set()
 
-    # Start assignment of host and name
+    # Get config option for show_all_sources
     show_all_sources = config.get(CONF_SHOW_ALL_SOURCES)
+
+    # Get config option for additional zones
+    zones = config.get(CONF_ZONES)
+    if zones is not None:
+        add_zones = {}
+        for entry in zones:
+            add_zones[entry[CONF_ZONE]] = entry[CONF_NAME]
+    else:
+        add_zones = None
+
+    # Start assignment of host and name
+    new_hosts = []
     # 1. option: manual setting
     if config.get(CONF_HOST) is not None:
         host = config.get(CONF_HOST)
         name = config.get(CONF_NAME)
-        # Check if host not in cache, append it and save for later starting
-        if host not in cache:
-            cache.add(host)
-            receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name, show_all_sources)))
-            _LOGGER.info("Denon receiver at host %s initialized", host)
+        new_hosts.append(NewHost(host=host, name=name))
+
     # 2. option: discovery using netdisco
     if discovery_info is not None:
         host = discovery_info.get('host')
         name = discovery_info.get('name')
-        # Check if host not in cache, append it and save for later starting
-        if host not in cache:
-            cache.add(host)
-            receivers.append(
-                DenonDevice(denonavr.DenonAVR(host, name, show_all_sources)))
-            _LOGGER.info("Denon receiver at host %s initialized", host)
+        new_hosts.append(NewHost(host=host, name=name))
+
     # 3. option: discovery using denonavr library
     if config.get(CONF_HOST) is None and discovery_info is None:
         d_receivers = denonavr.discover()
@@ -85,14 +103,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for d_receiver in d_receivers:
                 host = d_receiver["host"]
                 name = d_receiver["friendlyName"]
-                # Check if host not in cache, append it and save for later
-                # starting
-                if host not in cache:
-                    cache.add(host)
-                    receivers.append(
-                        DenonDevice(
-                            denonavr.DenonAVR(host, name, show_all_sources)))
-                    _LOGGER.info("Denon receiver at host %s initialized", host)
+                new_hosts.append(NewHost(host=host, name=name))
+
+    for entry in new_hosts:
+        # Check if host not in cache, append it and save for later
+        # starting
+        if entry.host not in cache:
+            new_device = denonavr.DenonAVR(
+                entry.host, entry.name, show_all_sources, add_zones)
+            for new_zone in new_device.zones.values():
+                receivers.append(DenonDevice(new_zone))
+            cache.add(host)
+            _LOGGER.info("Denon receiver at host %s initialized", host)
 
     # Add all freshly discovered receivers
     if receivers:

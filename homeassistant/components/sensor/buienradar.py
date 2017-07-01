@@ -23,7 +23,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time)
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['buienradar==0.4']
+REQUIREMENTS = ['buienradar==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,30 +37,42 @@ SENSOR_TYPES = {
                           'mdi:thermometer'],
     'windspeed': ['Wind speed', 'm/s', 'mdi:weather-windy'],
     'windforce': ['Wind force', 'Bft', 'mdi:weather-windy'],
-    'winddirection': ['Wind direction', '°', 'mdi:compass-outline'],
-    'windazimuth': ['Wind direction azimuth', None, 'mdi:compass-outline'],
+    'winddirection': ['Wind direction', None, 'mdi:compass-outline'],
+    'windazimuth': ['Wind direction azimuth', '°', 'mdi:compass-outline'],
     'pressure': ['Pressure', 'hPa', 'mdi:gauge'],
     'visibility': ['Visibility', 'm', None],
     'windgust': ['Wind gust', 'm/s', 'mdi:weather-windy'],
     'precipitation': ['Precipitation', 'mm/h', 'mdi:weather-pouring'],
     'irradiance': ['Irradiance', 'W/m2', 'mdi:sunglasses'],
+    'precipitation_forecast_average': ['Precipitation forecast average',
+                                       'mm/h', 'mdi:weather-pouring'],
+    'precipitation_forecast_total': ['Precipitation forecast total',
+                                     'mm/h', 'mdi:weather-pouring']
 }
+
+CONF_TIMEFRAME = 'timeframe'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS,
                  default=['symbol', 'temperature']): vol.All(
                      cv.ensure_list, vol.Length(min=1),
                      [vol.In(SENSOR_TYPES.keys())]),
-    vol.Optional(CONF_LATITUDE): cv.latitude,
-    vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Inclusive(CONF_LATITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.latitude,
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates',
+                  'Latitude and longitude must exist together'): cv.longitude,
+    vol.Optional(CONF_TIMEFRAME): cv.positive_int
 })
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the buienradar sensor."""
+    from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
+
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    timeframe = config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in HomeAssistant config")
@@ -74,7 +86,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br')))
     async_add_devices(dev)
 
-    data = BrData(hass, coordinates, dev)
+    data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:
     _LOGGER.debug("Start running....")
     yield from data.schedule_update(1)
@@ -97,8 +109,8 @@ class BrSensor(Entity):
     def load_data(self, data):
         """Load the sensor with relevant data."""
         # Find sensor
-        from buienradar.buienradar import (ATTRIBUTION, IMAGE,
-                                           STATIONNAME, SYMBOL)
+        from buienradar.buienradar import (ATTRIBUTION, IMAGE, STATIONNAME,
+                                           SYMBOL, PRECIPITATION_FORECAST)
 
         self._attribution = data.get(ATTRIBUTION)
         self._stationname = data.get(STATIONNAME)
@@ -111,6 +123,14 @@ class BrSensor(Entity):
             if new_state != self._state or img != self._entity_picture:
                 self._state = new_state
                 self._entity_picture = img
+                return True
+        elif self.type.startswith(PRECIPITATION_FORECAST):
+            # update nested precipitation forecast sensors
+            nested = data.get(PRECIPITATION_FORECAST)
+            new_state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
+            # pylint: disable=protected-access
+            if new_state != self._state:
+                self._state = new_state
                 return True
         else:
             # update all other sensors
@@ -172,12 +192,13 @@ class BrSensor(Entity):
 class BrData(object):
     """Get the latest data and updates the states."""
 
-    def __init__(self, hass, coordinates, devices):
+    def __init__(self, hass, coordinates, timeframe, devices):
         """Initialize the data object."""
         self.devices = devices
         self.data = {}
         self.hass = hass
         self.coordinates = coordinates
+        self.timeframe = timeframe
 
     @asyncio.coroutine
     def update_devices(self):
@@ -222,9 +243,6 @@ class BrData(object):
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             result[MESSAGE] = "%s" % err
             return result
-        finally:
-            if resp is not None:
-                yield from resp.release()
 
     @asyncio.coroutine
     def async_update(self, *_):
@@ -232,14 +250,24 @@ class BrData(object):
         from buienradar.buienradar import (parse_data, CONTENT,
                                            DATA, MESSAGE, STATUS_CODE, SUCCESS)
 
-        result = yield from self.get_data('http://xml.buienradar.nl')
-        if result.get(SUCCESS, False) is False:
-            result = yield from self.get_data('http://api.buienradar.nl')
+        content = yield from self.get_data('http://xml.buienradar.nl')
+        if not content.get(SUCCESS, False):
+            content = yield from self.get_data('http://api.buienradar.nl')
 
-        if result.get(SUCCESS):
-            result = parse_data(result.get(CONTENT),
-                                latitude=self.coordinates[CONF_LATITUDE],
-                                longitude=self.coordinates[CONF_LONGITUDE])
+        # rounding coordinates prevents unnecessary redirects/calls
+        rainurl = 'http://gadgets.buienradar.nl/data/raintext/?lat={}&lon={}'
+        rainurl = rainurl.format(
+            round(self.coordinates[CONF_LATITUDE], 2),
+            round(self.coordinates[CONF_LONGITUDE], 2)
+            )
+        raincontent = yield from self.get_data(rainurl)
+
+        if content.get(SUCCESS) and raincontent.get(SUCCESS):
+            result = parse_data(content.get(CONTENT),
+                                raincontent.get(CONTENT),
+                                self.coordinates[CONF_LATITUDE],
+                                self.coordinates[CONF_LONGITUDE],
+                                self.timeframe)
             if result.get(SUCCESS):
                 self.data = result.get(DATA)
 

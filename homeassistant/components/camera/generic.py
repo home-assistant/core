@@ -17,13 +17,15 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD, CONF_AUTHENTICATION,
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION)
 from homeassistant.exceptions import TemplateError
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.components.camera import (
+    PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.async import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
 CONF_STILL_IMAGE_URL = 'still_image_url'
 
@@ -37,6 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
 })
 
 
@@ -59,6 +62,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
         self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
+        self.content_type = device_info[CONF_CONTENT_TYPE]
 
         username = device_info.get(CONF_USERNAME)
         password = device_info.get(CONF_PASSWORD)
