@@ -38,11 +38,12 @@ class TestLondonTubeSensor(unittest.TestCase):
         self.assertEqual(len(self.entities), 1)
         self.assertTrue(
             setup_component(self.hass, 'sensor', {'tube_state': self.config}))
-        #state = self.hass.states.get('sensor.london_overground')
-        #assert state.state == 'Minor Delays'
-        #assert state.attributes.get('Description') == 'something'
+        # state = self.hass.states.get('sensor.london_overground')
+        # assert state.state == 'Minor Delays'
+        # assert state.attributes.get('Description') == 'something'
 
         sensor = self.entities[0]
         self.assertEqual(sensor.name, 'London Overground')
         self.assertEqual(sensor.state, 'Minor Delays')
-        self.assertEqual(sensor.device_state_attributes['Description'], 'something')
+        self.assertEqual(sensor.device_state_attributes['Description'],
+                                                        'something')
