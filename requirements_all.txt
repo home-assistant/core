@@ -723,7 +723,7 @@ pyvera==0.2.31
 pywebpush==1.0.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.6
+python-velbus==2.0.8
 
 # homeassistant.components.wemo
 pywemo==0.4.19

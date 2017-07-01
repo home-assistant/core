@@ -7,50 +7,52 @@ https://home-assistant.io/components/velbus/
 import asyncio
 import logging
 
-from homeassistant.const import CONF_NAME
-from homeassistant.components.light import Light
-from homeassistant.components.velbus import (VELBUS_MESSAGE)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+import voluptuous as vol
+
+from homeassistant.const import CONF_NAME, CONF_DEVICES
+from homeassistant.components.light import Light, PLATFORM_SCHEMA
 from homeassistant.core import callback
+from homeassistant.helpers.config_validation as cv
+
+REQUIREMENTS = ['python-velbus==2.0.8']
+DEPENDENCIES = ['velbus']
+DOMAIN = 'light'
 
 _LOGGER = logging.getLogger(__name__)
 
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [
+        {
+            vol.Required('module'): cv.positive_int,
+            vol.Required('channel'): cv.positive_int,
+            vol.Required(CONF_NAME): cv.string,
+            vol.Optional('is_pushbutton'): cv.boolean
+        }
+    ])
+})
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Lights."""
-    controller = hass.data['VelbusController']
-    lights = []
-    for light in discovery_info:
-        lights.append(VelbusLight(hass, light, controller))
-    async_add_entities(lights)
-    delay = 10
-    loop = asyncio.get_event_loop()
-    for light in lights:
-        loop.call_later(delay, light.get_status)
-        delay = delay + 2
+    add_devices(VelbusLight(light) for light in config[CONF_DEVICES])
     return True
 
 
 class VelbusLight(Light):
     """Representation of a Velbus Light."""
 
-    def __init__(self, hass, light, controller):
+    def __init__(self, light):
         """Initialize a Velbus light."""
         self._name = light[CONF_NAME]
         self._module = light['module']
         self._channel = light['channel']
         self._state = False
-        self._hass = hass
-        self._controller = controller
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
-        async_dispatcher_connect(
-            self._hass, VELBUS_MESSAGE, self._on_message
-        )
+        self.hass.data['VelbusController'].subscribe(self._on_message)
+        self.get_status()
 
     @callback
     def _on_message(self, message):
@@ -59,7 +61,7 @@ class VelbusLight(Light):
            message.address == self._module and \
            message.channel == self._channel:
             self._state = message.is_on()
-            self._hass.async_add_job(self.async_update_ha_state())
+            self.schedule_update_ha_state()
 
     @property
     def name(self):
@@ -82,7 +84,7 @@ class VelbusLight(Light):
         message = velbus.SwitchRelayOnMessage()
         message.set_defaults(self._module)
         message.relay_channels = [self._channel]
-        self._controller.send(message)
+        self.hass.data['VelbusController'].send(message)
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -90,7 +92,7 @@ class VelbusLight(Light):
         message = velbus.SwitchRelayOffMessage()
         message.set_defaults(self._module)
         message.relay_channels = [self._channel]
-        self._controller.send(message)
+        self.hass.data['VelbusController'].send(message)
 
     def get_status(self):
         """Retrieve current status."""
@@ -98,4 +100,4 @@ class VelbusLight(Light):
         message = velbus.ModuleStatusRequestMessage()
         message.set_defaults(self._module)
         message.channels = [self._channel]
-        self._controller.send(message)
+        self.hass.data['VelbusController'].send(message)
