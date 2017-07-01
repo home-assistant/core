@@ -40,4 +40,4 @@ class TestLondonTubeSensor(unittest.TestCase):
             setup_component(self.hass, 'sensor', {'tube_state': self.config}))
         state = self.hass.states.get('sensor.london_overground')
         assert state.state == 'Minor Delays'
-        assert state.attributes.get('Description') == 'Something'
+        assert state.attributes.get('Description') == 'something'
