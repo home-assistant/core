@@ -1,5 +1,5 @@
 """
-Platform to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
+Support to control a Zehnder ComfoAir Q350/450/600 ventilation unit.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/comfoconnect/
@@ -10,8 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_TOKEN, CONF_PIN,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_TOKEN, CONF_PIN, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import (discovery)
 from homeassistant.helpers.dispatcher import (dispatcher_send)
 
@@ -32,10 +31,12 @@ ATTR_AIR_FLOW_EXHAUST = 'air_flow_exhaust'
 
 CONF_USER_AGENT = 'user_agent'
 
+DEFAULT_NAME = 'ComfoAirQ'
 DEFAULT_PIN = 0
 DEFAULT_TOKEN = '00000000000000000000000000000001'
-DEFAULT_NAME = 'ComfoAirQ'
 DEFAULT_USER_AGENT = 'Home Assistant'
+
+DEVICE = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -43,17 +44,14 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_TOKEN, default=DEFAULT_TOKEN):
             vol.Length(min=32, max=32, msg='invalid token'),
-        vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT):
-            cv.string,
+        vol.Optional(CONF_USER_AGENT, default=DEFAULT_USER_AGENT): cv.string,
         vol.Optional(CONF_PIN, default=DEFAULT_PIN): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
-DEVICE = None
-
 
 def setup(hass, config):
-    """Setup the ComfoConnect bridge."""
+    """Set up the ComfoConnect bridge."""
     from pycomfoconnect import (Bridge)
 
     conf = config[DOMAIN]
@@ -66,10 +64,10 @@ def setup(hass, config):
     # Run discovery on the configured ip
     bridges = Bridge.discover(host)
     if not bridges:
-        _LOGGER.error('Could not connect to ComfoConnect bridge on %s', host)
+        _LOGGER.error("Could not connect to ComfoConnect bridge on %s", host)
         return False
     bridge = bridges[0]
-    _LOGGER.info('Bridge found: %s (%s)', bridge.uuid.hex(), bridge.host)
+    _LOGGER.info("Bridge found: %s (%s)", bridge.uuid.hex(), bridge.host)
 
     # Setup ComfoConnect Bridge
     ccb = ComfoConnectBridge(hass, bridge, name, token, user_agent, pin)
@@ -101,25 +99,24 @@ class ComfoConnectBridge(object):
         self.name = name
         self.hass = hass
 
-        self.comfoconnect = ComfoConnect(bridge=bridge,
-                                         local_uuid=bytes.fromhex(token),
-                                         local_devicename=friendly_name,
-                                         pin=pin)
+        self.comfoconnect = ComfoConnect(
+            bridge=bridge, local_uuid=bytes.fromhex(token),
+            local_devicename=friendly_name, pin=pin)
         self.comfoconnect.callback_sensor = self.sensor_callback
 
     def connect(self):
         """Connect with the bridge."""
-        _LOGGER.debug('Connecting with bridge.')
+        _LOGGER.debug("Connecting with bridge")
         self.comfoconnect.connect(True)
 
     def disconnect(self):
         """Disconnect from the bridge."""
-        _LOGGER.debug('Disconnecting from bridge.')
+        _LOGGER.debug("Disconnecting from bridge")
         self.comfoconnect.disconnect()
 
     def sensor_callback(self, var, value):
         """Callback function for sensor updates."""
-        _LOGGER.debug('Got value from bridge: %d = %d', var, value)
+        _LOGGER.debug("Got value from bridge: %d = %d", var, value)
 
         from pycomfoconnect import (
             SENSOR_TEMPERATURE_EXTRACT, SENSOR_TEMPERATURE_OUTDOOR)

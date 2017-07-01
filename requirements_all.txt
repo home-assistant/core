@@ -318,7 +318,7 @@ https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 # homeassistant.components.sensor.bh1750
 # homeassistant.components.sensor.bme280
 # homeassistant.components.sensor.htu21d
-# i2csense==0.0.3
+# i2csense==0.0.4
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -347,7 +347,7 @@ keyring>=9.3,<10.0
 knxip==0.3.3
 
 # homeassistant.components.device_tracker.owntracks
-libnacl==1.5.0
+libnacl==1.5.1
 
 # homeassistant.components.dyson
 libpurecoollink==0.1.5
@@ -680,7 +680,7 @@ python-blockchain-api==0.0.2
 python-clementine-remote==1.0.1
 
 # homeassistant.components.digital_ocean
-python-digitalocean==1.11
+python-digitalocean==1.12
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.0.7

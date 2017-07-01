@@ -6,8 +6,8 @@ set -e
 
 python3 -m pip install cython
 
-mkdir -p /usr/src/build
-cd /usr/src/build
+cd /usr/src/app/
+mkdir -p build && cd build
 
 git clone --depth 1 https://git.fslab.de/jkonra2m/tinydtls
 cd tinydtls

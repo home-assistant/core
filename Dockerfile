@@ -1,3 +1,7 @@
+# Notice:
+# When updating this file, please also update virtualization/Docker/Dockerfile.dev
+# This way, the development image and the production image are kept in sync.
+
 FROM python:3.6
 MAINTAINER Paulus Schoutsen <Paulus@PaulusSchoutsen.nl>
 
