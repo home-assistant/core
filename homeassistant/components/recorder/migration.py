@@ -64,6 +64,8 @@ def _apply_update(engine, new_version):
         # Create indexes for states
         _create_index(engine, "states", "ix_states_last_updated")
         _create_index(engine, "states", "ix_states_entity_id_created")
+    elif new_version == 3:
+        _create_index(engine, "states", "ix_states_created_domain")
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))
