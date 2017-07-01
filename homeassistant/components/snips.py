@@ -100,7 +100,7 @@ class IntentHandler(object):
 
         for slot in slots:
             try:
-                key = slot["slot_name"]
+                key = slot["slotName"]
             except KeyError:
                 continue
             value = self.get_value(slot)
@@ -113,7 +113,7 @@ class IntentHandler(object):
     def get_name(response):
         """Extract the name of an intent."""
         try:
-            return response['intent']['intent_name'].split('__')[-1]
+            return response['intent']['intentName'].split('__')[-1]
         except KeyError:
             return None
 
