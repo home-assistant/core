@@ -29,6 +29,7 @@ GOOD_CONFIG = {
 
 
 class _MockState(object):
+    """Mock implementing 'state' property."""
 
     def __init__(self, state=None):
         self.state = state
