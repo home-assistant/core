@@ -130,7 +130,7 @@ class VelbusDoubleSwitch(SwitchDevice):
         self._name = switch[CONF_NAME]
         self._module = switch['module']
         self._open_channel = switch['open_channel']
-        self._closed_channel = switch['close_channel']
+        self._close_channel = switch['close_channel']
 
     @asyncio.coroutine
     def async_added_to_hass(self):
