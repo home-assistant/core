@@ -210,6 +210,7 @@ def async_setup(hass, config):
             description=("Press the button on the bridge to register Philips "
                          "Hue with Home Assistant."),
             description_image="/static/images/config_philips_hue.jpg",
+            fields=[{'id': 'username', 'name': 'Username'}],
             submit_caption="I have pressed the button"
         )
         configurator_ids.append(request_id)

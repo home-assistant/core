@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyhydroquebec==1.1.0']
+REQUIREMENTS = ['pyhydroquebec==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,8 @@ REQUESTS_TIMEOUT = 15
 MIN_TIME_BETWEEN_UPDATES = timedelta(hours=1)
 
 SENSOR_TYPES = {
+    'balance':
+    ['Balance', PRICE, 'mdi:square-inc-cash'],
     'period_total_bill':
     ['Current period bill', PRICE, 'mdi:square-inc-cash'],
     'period_length':
