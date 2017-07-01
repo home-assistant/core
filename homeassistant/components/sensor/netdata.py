@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.netdata/
 """
 import logging
 from datetime import timedelta
+from urllib.parse import urlsplit
 
 import requests
 import voluptuous as vol
@@ -15,7 +16,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, STATE_UNKNOWN, CONF_NAME, CONF_RESOURCES)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'api/v1'
@@ -25,7 +25,7 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Netdata'
 DEFAULT_PORT = '19999'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 SENSOR_TYPES = {
     'memory_free': ['RAM Free', 'MiB', 'system.ram', 'free', 1],
@@ -61,18 +61,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     url = 'http://{}:{}'.format(host, port)
-    version_url = '{}/version.txt'.format(url)
     data_url = '{}/{}/data?chart='.format(url, _RESOURCE)
     resources = config.get(CONF_RESOURCES)
-
-    try:
-        response = requests.get(version_url, timeout=10)
-        if not response.ok:
-            _LOGGER.error("Response status is '%s'", response.status_code)
-            return False
-    except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to resource/endpoint: %s", url)
-        return False
 
     values = {}
     for key, value in sorted(SENSOR_TYPES.items()):
@@ -83,23 +73,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for chart in values:
         rest_url = '{}{}&{}'.format(data_url, chart, _REALTIME)
         rest = NetdataData(rest_url)
+        rest.update()
         for sensor_type in values[chart]:
             dev.append(NetdataSensor(rest, name, sensor_type))
 
-    add_devices(dev)
+    add_devices(dev, True)
 
 
 class NetdataSensor(Entity):
     """Implementation of a Netdata sensor."""
 
     def __init__(self, rest, name, sensor_type):
-        """Initialize the sensor."""
+        """Initialize the Netdata sensor."""
         self.rest = rest
         self.type = sensor_type
         self._name = '{} {}'.format(name, SENSOR_TYPES[self.type][0])
         self._precision = SENSOR_TYPES[self.type][4]
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
-        self.update()
 
     @property
     def name(self):
@@ -123,6 +113,11 @@ class NetdataSensor(Entity):
             else:
                 return STATE_UNKNOWN
 
+    @property
+    def available(self):
+        """Could the resource be accessed during the last update call."""
+        return self.rest.available
+
     def update(self):
         """Get the latest data from Netdata REST API."""
         self.rest.update()
@@ -135,15 +130,16 @@ class NetdataData(object):
         """Initialize the data object."""
         self._resource = resource
         self.data = None
+        self.available = True
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from the Netdata REST API."""
         try:
             response = requests.get(self._resource, timeout=5)
             det = response.json()
             self.data = {k: v for k, v in zip(det['labels'], det['data'][0])}
-
+            self.available = True
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to host/endpoint: %s", self._resource)
+            _LOGGER.error("Connection error: %s", urlsplit(self._resource)[1])
             self.data = None
+            self.available = False
