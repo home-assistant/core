@@ -30,7 +30,6 @@ class TestLondonTubeSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
         """Test for operational WSDOT sensor with proper attributes."""
