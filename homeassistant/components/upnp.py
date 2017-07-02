@@ -91,5 +91,5 @@ def setup(hass, config):
             ''.format(external_port),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
-        return False 
+        return False
     return True
