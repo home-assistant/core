@@ -34,10 +34,15 @@ CONFIG_SCHEMA = vol.Schema({
 def async_setup(hass, config):
     """Set up the velux component."""
 
+    try:
+        if DOMAIN not in hass.data:
+            hass.data[DOMAIN] = VeluxModule(hass, config)
+            yield from hass.data[DOMAIN].async_start()
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = VeluxModule(hass, config)
-        yield from hass.data[DOMAIN].async_start()
+    except Exception as ex:
+        _LOGGER.exception("Can't connect to velux interface: %s", ex)
+        hass.data[DOMAIN] = None
+        return False
 
     for component in SUPPORTED_DOMAINS:
         hass.async_add_job(
