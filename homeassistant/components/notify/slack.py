@@ -55,49 +55,20 @@ def get_service(hass, config, discovery_info=None):
             config[CONF_CHANNEL],
             config[CONF_API_KEY],
             config.get(CONF_USERNAME, None),
-            config.get(CONF_ICON, None))
+            config.get(CONF_ICON, None),
+            hass.config.is_allowed_path)
 
     except slacker.Error:
         _LOGGER.exception("Authentication failed")
         return None
 
 
-def load_file(url=None, local_path=None,
-              username=None, password=None, auth=None):
-    """Load image/document/etc from a local path or url."""
-    try:
-        if url is not None:
-            # check whether authentication parameters are provided
-            if username is not None and password is not None:
-                # Use digest or basic authentication
-                if ATTR_FILE_AUTH_DIGEST == auth:
-                    auth_ = HTTPDigestAuth(username, password)
-                else:
-                    auth_ = HTTPBasicAuth(username, password)
-                # load file from url with authentication
-                req = requests.get(url, auth=auth_, timeout=CONF_TIMEOUT)
-            else:
-                # load file from url without authentication
-                req = requests.get(url, timeout=CONF_TIMEOUT)
-            return req.content
-
-        elif local_path is not None:
-            # load file from local path on server
-            return open(local_path, "rb")
-        else:
-            # neither url nor path provided
-            _LOGGER.warning("Neither url nor local path found in params!")
-
-    except OSError as error:
-        _LOGGER.error("Can't load from url or local path: %s", error)
-
-    return None
-
-
 class SlackNotificationService(BaseNotificationService):
     """Implement the notification service for Slack."""
 
-    def __init__(self, default_channel, api_token, username, icon):
+    def __init__(self, default_channel,
+                 api_token, username,
+                 icon, is_allowed_path):
         """Initialize the service."""
         from slacker import Slacker
         self._default_channel = default_channel
@@ -109,6 +80,7 @@ class SlackNotificationService(BaseNotificationService):
         else:
             self._as_user = True
 
+        self.is_allowed_path = is_allowed_path
         self.slack = Slacker(self._api_token)
         self.slack.auth.test()
 
@@ -130,7 +102,7 @@ class SlackNotificationService(BaseNotificationService):
             try:
                 if file is not None:
                     # Load from file or url
-                    file_as_bytes = load_file(
+                    file_as_bytes = self.load_file(
                         url=file.get(ATTR_FILE_URL),
                         local_path=file.get(ATTR_FILE_PATH),
                         username=file.get(ATTR_FILE_USERNAME),
@@ -162,3 +134,38 @@ class SlackNotificationService(BaseNotificationService):
                         attachments=attachments, link_names=True)
             except slacker.Error as err:
                 _LOGGER.error("Could not send notification. Error: %s", err)
+
+    def load_file(self, url=None, local_path=None,
+                  username=None, password=None, auth=None):
+        """Load image/document/etc from a local path or url."""
+        try:
+            if url is not None:
+                # check whether authentication parameters are provided
+                if username is not None and password is not None:
+                    # Use digest or basic authentication
+                    if ATTR_FILE_AUTH_DIGEST == auth:
+                        auth_ = HTTPDigestAuth(username, password)
+                    else:
+                        auth_ = HTTPBasicAuth(username, password)
+                    # load file from url with authentication
+                    req = requests.get(url, auth=auth_, timeout=CONF_TIMEOUT)
+                else:
+                    # load file from url without authentication
+                    req = requests.get(url, timeout=CONF_TIMEOUT)
+                return req.content
+
+            elif local_path is not None:
+                # Check whether path is whitelisted in configuration.yaml
+                if self.is_allowed_path(local_path):
+                    # load file from local path on server
+                    return open(local_path, "rb")
+                _LOGGER.warning("'%s' is not secure to load data from!",
+                                local_path)
+            else:
+                # neither url nor path provided
+                _LOGGER.warning("Neither url nor local path found in params!")
+
+        except OSError as error:
+            _LOGGER.error("Can't load from url or local path: %s", error)
+
+        return None
