@@ -114,3 +114,4 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
                              timeout=DEFAULT_TIMEOUT,
                              headers=headers,
                              json=data)
+    
