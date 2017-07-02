@@ -143,7 +143,6 @@ class BrSensor(Entity):
                 self._state = new_state
                 self._entity_picture = img
                 return True
-
             return False
 
         if self.type.startswith(PRECIPITATION_FORECAST):
@@ -155,6 +154,7 @@ class BrSensor(Entity):
             if new_state != self._state:
                 self._state = new_state
                 return True
+            return False
 
         # update all other sensors
         new_state = data.get(self.type)
