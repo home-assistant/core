@@ -83,11 +83,17 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
                     if not connections:
                         _LOGGER.debug("Device %s is not connected", mac)
                         continue
-                    name = device["friendlyName"]
-                    properties = device["properties"]
-                    for prop in properties:
+
+                    name = None
+                    for prop in device["properties"]:
                         if prop["name"] == "userDeviceName":
                             name = prop["value"]
+                    if not name:
+                        try:
+                            name = device["friendlyName"]
+                        except KeyError:
+                            name = device["deviceID"]
+
                     _LOGGER.debug("Device %s is connected", mac)
                     self.last_results[mac] = name
             except (KeyError, IndexError):
