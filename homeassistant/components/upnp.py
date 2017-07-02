@@ -70,6 +70,8 @@ def setup(hass, config):
     host = base_url.hostname
     external_port = internal_port = base_url.port
 
+    persistent_notification = loader.get_component('persistent_notification')
+
     try:
         upnp.addportmapping(
             external_port, 'TCP', host, internal_port, 'Home Assistant', '')
@@ -80,10 +82,11 @@ def setup(hass, config):
 
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 
-    except ConflictInMappingEntry as ex:
+    except Exception as ex:
         _LOGGER.error("UPnP failed to configure port mapping: %s", str(ex))
         persistent_notification.create(
-            hass, 'Port {} is already mapped, please disable port_mapping<br />'
+            hass, 'Port {} is already mapped,'
+            'please disable port_mapping in upnp configuration section<br />'
             'You will need to restart hass after fixing.'
             ''.format(external_port),
             title=NOTIFICATION_TITLE,
