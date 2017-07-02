@@ -14,21 +14,18 @@ from homeassistant.helpers import discovery
 DOMAIN = "velux"
 SUPPORTED_DOMAINS = ['scene']
 _LOGGER = logging.getLogger(__name__)
-VELUX_MODULE = None
 
 REQUIREMENTS = ['pyvlx==0.1.1']
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup device tracker."""
+    """Set up the velux component."""
 
-    # pylint: disable=global-statement, import-error
-    global VELUX_MODULE
 
-    if VELUX_MODULE is None:
-        VELUX_MODULE = VeluxModule(hass, config)
-        yield from VELUX_MODULE.async_start()
+    if DOMAIN not in hass.data:
+        hass.data[DOMAIN] = VeluxModule(hass, config)
+        yield from hass.data[DOMAIN].async_start()
 
     for component in SUPPORTED_DOMAINS:
         hass.async_add_job(
@@ -37,8 +34,10 @@ def async_setup(hass, config):
 
 
 class VeluxModule:
-    """Abstraction for Velux Compoent"""
+    """Abstraction for velux component."""
+
     def __init__(self, hass, config):
+        """Initialize for velux component."""
         from pyvlx import PyVLX
         self.initialized = False
         velux_config = VeluxConfig(hass, config)
@@ -50,15 +49,15 @@ class VeluxModule:
 
     @asyncio.coroutine
     def async_start(self):
-        """ Start VELUX compoent """
+        """Start velux component."""
         yield from self.pyvlx.load_scenes()
         self.initialized = True
 
 
 class VeluxConfig:
-    """Representation of Configuration Velux Config"""
+    """Representation of configuration celux config"""
     def __init__(self, hass, config):
-        """ Init VELUX Configuration """
+        """Init velux configuration."""
         self.hass = hass
         self.config = config
         self.velux_config = config.get(DOMAIN, {})
@@ -66,7 +65,7 @@ class VeluxConfig:
         self.password = self.get_config_value("password")
 
     def get_config_value(self, key, default_value=None):
-        """ Get configuration value from VELUX Config """
+        """Get configuration value from velux config."""
         if key not in self.velux_config:
             return default_value
         return self.velux_config[key]

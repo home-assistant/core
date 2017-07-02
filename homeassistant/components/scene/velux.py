@@ -18,24 +18,25 @@ DOMAIN = "velux"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """ Setup velux scene platt form """
+    """Setup velux scene plattform."""
 
-    if velux_component.VELUX_MODULE is None \
-            or not velux_component.VELUX_MODULE.initialized:
+    if DOMAIN not in hass.data \
+            or not hass.data[DOMAIN].initialized:
         _LOGGER.error('No connection to VELUX KLF 200 controller.')
         return False
 
     entities = []
-    for scene in velux_component.VELUX_MODULE.pyvlx.scenes:
+    for scene in hass.data[DOMAIN].pyvlx.scenes:
         entities.append(VeluxScene(hass, scene))
     add_devices(entities)
     return True
 
 
 class VeluxScene(Scene):
-    """Representation of a Velux scene."""
+    """Representation of a velux scene."""
 
     def __init__(self, hass, scene):
+        """Init velux scene."""
         _LOGGER.info("Adding VELUX scene: %s", scene)
         self.hass = hass
         self.scene = scene
