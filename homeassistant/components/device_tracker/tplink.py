@@ -354,8 +354,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
 
 
 class Tplink5DeviceScanner(TplinkDeviceScanner):
-    """This class queries a TP-Link EAP-225 AP with newer version of TP-Link
-    firmware."""
+    """This class queries a TP-Link EAP-225 AP with newer TP-Link FW."""
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device MAC
