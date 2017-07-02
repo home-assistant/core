@@ -74,7 +74,7 @@ def setup(hass, config):
     host = base_url.hostname
     internal_port = base_url.port
     external_port = int(config[DOMAIN].get(CONF_EXTERNAL_PORT))
-    
+
     if external_port == 0:
         external_port = internal_port
 
