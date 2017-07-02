@@ -9,6 +9,8 @@ from urllib.parse import urlsplit
 
 import voluptuous as vol
 
+import homeassistant.loader as loader
+
 from homeassistant.const import (EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
@@ -24,6 +26,9 @@ DATA_UPNP = 'UPNP'
 
 CONF_ENABLE_PORT_MAPPING = 'port_mapping'
 CONF_UNITS = 'unit'
+
+NOTIFICATION_ID = 'upnp_notification'
+NOTIFICATION_TITLE = 'UPnP Setup'
 
 UNITS = {
     "Bytes": 1,
@@ -67,13 +72,26 @@ def setup(hass, config):
     host = base_url.hostname
     external_port = internal_port = base_url.port
 
-    upnp.addportmapping(
-        external_port, 'TCP', host, internal_port, 'Home Assistant', '')
+    persistent_notification = loader.get_component('persistent_notification')
 
-    def deregister_port(event):
-        """De-register the UPnP port mapping."""
-        upnp.deleteportmapping(hass.config.api.port, 'TCP')
+    try:
+        upnp.addportmapping(
+            external_port, 'TCP', host, internal_port, 'Home Assistant', '')
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+        def deregister_port(event):
+            """De-register the UPnP port mapping."""
+            upnp.deleteportmapping(hass.config.api.port, 'TCP')
 
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+
+    except Exception as ex:
+        _LOGGER.error("UPnP failed to configure port mapping: %s", str(ex))
+        persistent_notification.create(
+            hass, 'Port {} is already mapped,'
+            'please disable port_mapping in upnp configuration section<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(external_port),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
     return True
