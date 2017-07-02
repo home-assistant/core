@@ -13,7 +13,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_HOST, CONF_PORT)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['knxip==0.3.3']
+REQUIREMENTS = ['knxip==0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
