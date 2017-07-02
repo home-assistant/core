@@ -9,13 +9,25 @@ https://home-assistant.io/components/scene.velux/
 
 import logging
 import asyncio
+
+import voluptuous as vol
+
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
 DOMAIN = "velux"
 SUPPORTED_DOMAINS = ['scene']
 _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['pyvlx==0.1.1']
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_HOST): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 @asyncio.coroutine
@@ -40,10 +52,11 @@ class VeluxModule:
         """Initialize for velux component."""
         from pyvlx import PyVLX
         self.initialized = False
-        velux_config = VeluxConfig(hass, config)
+        host = config[DOMAIN].get(CONF_HOST)
+        password = config[DOMAIN].get(CONF_PASSWORD)
         self.pyvlx = PyVLX(
-            host=velux_config.host,
-            password=velux_config.password)
+            host=host,
+            password=password)
         self.initialized = False
         self.hass = hass
 
@@ -52,20 +65,3 @@ class VeluxModule:
         """Start velux component."""
         yield from self.pyvlx.load_scenes()
         self.initialized = True
-
-
-class VeluxConfig:
-    """Representation of configuration celux config"""
-    def __init__(self, hass, config):
-        """Init velux configuration."""
-        self.hass = hass
-        self.config = config
-        self.velux_config = config.get(DOMAIN, {})
-        self.host = self.get_config_value("host")
-        self.password = self.get_config_value("password")
-
-    def get_config_value(self, key, default_value=None):
-        """Get configuration value from velux config."""
-        if key not in self.velux_config:
-            return default_value
-        return self.velux_config[key]
