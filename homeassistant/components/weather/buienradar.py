@@ -56,9 +56,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([BrWeather(data, config.get(CONF_FORECAST, True),
                                  config.get(CONF_NAME, None))])
 
-    # Update weather every 10 minutes, since
-    # the data gets updated every 10 minutes
-    async_track_time_interval(hass, data.async_update, timedelta(minutes=10))
     # schedule the first update in 1 minute from now:
     yield from data.schedule_update(1)
 
