@@ -35,10 +35,10 @@ CONF_SERVER = 'server'
 CONF_SENDER_NAME = 'sender_name'
 
 DEFAULT_HOST = 'localhost'
-DEFAULT_PORT = 465
+DEFAULT_PORT = 587
 DEFAULT_TIMEOUT = 5
 DEFAULT_DEBUG = False
-DEFAULT_ENCRYPTION = 'tls'
+DEFAULT_ENCRYPTION = 'starttls'
 
 ENCRYPTION_OPTIONS = ['tls', 'starttls', 'none']
 
