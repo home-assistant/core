@@ -15,9 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['https://github.com/wmalgadey/PyTado/archive/'
-                '0.2.1.zip#'
-                'PyTado==0.2.1']
+REQUIREMENTS = ['python-tado==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
