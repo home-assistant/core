@@ -68,7 +68,7 @@ amcrest==1.2.0
 anthemav==1.1.8
 
 # homeassistant.components.apcupsd
-apcaccess==0.0.10
+apcaccess==0.0.13
 
 # homeassistant.components.notify.apns
 apns2==0.1.1
