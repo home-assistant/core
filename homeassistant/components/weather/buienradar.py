@@ -6,7 +6,6 @@ https://home-assistant.io/components/weather.buienradar/
 """
 import logging
 import asyncio
-from datetime import timedelta
 from homeassistant.components.weather import (
     WeatherEntity, PLATFORM_SCHEMA)
 from homeassistant.const import \
@@ -15,8 +14,6 @@ from homeassistant.helpers import config_validation as cv
 # Reuse data and API logic from the sensor implementation
 from homeassistant.components.sensor.buienradar import (
     BrData)
-from homeassistant.helpers.event import (
-    async_track_time_interval)
 import voluptuous as vol
 
 REQUIREMENTS = ['buienradar==0.7']
