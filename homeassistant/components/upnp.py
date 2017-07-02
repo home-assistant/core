@@ -25,6 +25,9 @@ DATA_UPNP = 'UPNP'
 CONF_ENABLE_PORT_MAPPING = 'port_mapping'
 CONF_UNITS = 'unit'
 
+NOTIFICATION_ID = 'upnp_notification'
+NOTIFICATION_TITLE = 'UPnP Setup'
+
 UNITS = {
     "Bytes": 1,
     "KBytes": 1024,
@@ -67,13 +70,23 @@ def setup(hass, config):
     host = base_url.hostname
     external_port = internal_port = base_url.port
 
-    upnp.addportmapping(
-        external_port, 'TCP', host, internal_port, 'Home Assistant', '')
+    try:
+        upnp.addportmapping(
+            external_port, 'TCP', host, internal_port, 'Home Assistant', '')
 
-    def deregister_port(event):
-        """De-register the UPnP port mapping."""
-        upnp.deleteportmapping(hass.config.api.port, 'TCP')
+        def deregister_port(event):
+            """De-register the UPnP port mapping."""
+            upnp.deleteportmapping(hass.config.api.port, 'TCP')
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, deregister_port)
 
+    except ConflictInMappingEntry as ex:
+        _LOGGER.error("UPnP failed to configure port mapping: %s", str(ex))
+        persistent_notification.create(
+            hass, 'Port {} is already mapped, please disable port_mapping<br />'
+            'You will need to restart hass after fixing.'
+            ''.format(external_port),
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False 
     return True
