@@ -2,13 +2,13 @@
 import unittest
 import requests_mock
 
-from homeassistant.components.sensor import london_tube
-from homeassistant.components.sensor.london_tube import CONF_LINE, URL
+from homeassistant.components.sensor import london_underground
+from homeassistant.components.sensor.london_underground import CONF_LINE, URL
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
 VALID_CONFIG = {
-    'platform': 'london_tube',
+    'platform': 'london_underground',
     CONF_LINE: [
         'London Overground',
     ]
@@ -30,7 +30,7 @@ class TestLondonTubeSensor(unittest.TestCase):
     @requests_mock.Mocker()
     def test_setup(self, mock_req):
         """Test for operational tube_state sensor with proper attributes."""
-        mock_req.get(URL, text=load_fixture('london_tube.json'))
+        mock_req.get(URL, text=load_fixture('london_underground.json'))
         self.assertTrue(
             setup_component(self.hass, 'sensor', {'sensor': self.config}))
 
